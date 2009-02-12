@@ -1,0 +1,41 @@
+EXPORTS
+  ; acr122.c
+  acr122_connect
+  acr122_disconnect
+  acr122_transceive
+  acr122_firmware
+  acr122_led_red
+
+  ; libnfc.c
+  nfc_configure_handle_crc
+  nfc_configure_handle_parity
+  nfc_configure_field
+  nfc_configure_list_passive_infinite
+  nfc_configure_accept_invalid_frames
+  nfc_configure_accept_multiple_frames
+  nfc_reader_init
+  nfc_reader_transceive_7bits
+  nfc_reader_transceive_bytes
+  nfc_reader_transceive_bits
+  nfc_reader_list_passive
+  nfc_reader_mifare_cmd
+  nfc_target_init
+  nfc_target_receive_bytes
+  nfc_target_receive_bits
+  nfc_target_send_bytes
+  nfc_target_send_bits
+ 
+  ; bitutils.c
+  oddparity
+  oddparity_bytes
+  mirror
+  mirror32
+  mirror64
+  mirror_bytes
+  swap_endian32
+  swap_endian64
+  append_iso14443a_crc
+  print_hex
+  print_hex_par
+  
+  
