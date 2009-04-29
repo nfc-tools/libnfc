@@ -21,6 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef _LIBNFC_DEFINES_H_
 #define _LIBNFC_DEFINES_H_
 
+// #define _LIBNFC_VERBOSE_
+
 typedef unsigned char       byte;
 typedef unsigned char       ui8;
 typedef unsigned short      ui16;
@@ -33,13 +35,16 @@ typedef int                 i32;
 
 #define null 0
 
-typedef void*               dev_id; // Device Id
-#define INVALID_DEVICE_ID   null
+typedef void*               dev_spec; // Device connection specification
+#define INVALID_DEVICE_INFO null
 #define MAX_FRAME_LEN       264
+#define DEVICE_NAME_LENGTH  256
 
-#define min(a,b) (((a) < (b)) ? (a) : (b))
-#define max(a,b) (((a) > (b)) ? (a) : (b))
-
-// #define _LIBNFC_VERBOSE_
+// Useful macros
+#define MIN(a,b) (((a) < (b)) ? (a) : (b))
+#define MAX(a,b) (((a) > (b)) ? (a) : (b))
+#define INNER_XOR8(n) {n ^= (n >> 4); n ^= (n >> 2); n ^= (n >> 1); n &= 0x01; }
+#define INNER_XOR32(n) {n ^= (n >> 16); n ^= (n >> 8); INNER_XOR8(n); }
+#define INNER_XOR64(n) {n ^= (n >> 32); INNER_XOR32(n); }
 
 #endif // _LIBNFC_DEFINES_H_

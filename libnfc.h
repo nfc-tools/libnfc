@@ -24,27 +24,24 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "defines.h"
 #include "types.h"
 #include "bitutils.h"
-#include "acr122.h"
+#include "devices.h"
 
-bool nfc_configure_handle_crc(const dev_id di, const bool bEnable);
-bool nfc_configure_handle_parity(const dev_id di, const bool bEnable);
-bool nfc_configure_field(const dev_id di, const bool bEnable);
-bool nfc_configure_list_passive_infinite(const dev_id di, const bool bEnable);
-bool nfc_configure_accept_invalid_frames(const dev_id di, const bool bEnable);
-bool nfc_configure_accept_multiple_frames(const dev_id di, const bool bEnable);
+dev_info* nfc_connect();
+void nfc_disconnect(dev_info* pdi);
+bool nfc_configure(dev_info* pdi, const dev_config_option dco, const bool bEnable);
 
-bool nfc_reader_init(const dev_id di);
-bool nfc_reader_list_passive(const dev_id di, const ModulationType mt, const byte* pbtInitData, const ui32 uiInitDataLen, byte* pbtTag, ui32* puiTagLen);
-bool nfc_reader_transceive_7bits(const dev_id di, const byte btTx, byte* pbtRx, ui32* puiRxLen);
-bool nfc_reader_transceive_bytes(const dev_id di, const byte* pbtTx, const ui32 uiTxLen, byte* pbtRx, ui32* puiRxLen);
-bool nfc_reader_transceive_bits(const dev_id di, const byte* pbtTx, const ui32 uiTxBits, const byte* pbtTxPar, byte* pbtRx, ui32* puiRxBits, byte* pbtRxPar);
-bool nfc_reader_mifare_cmd(const dev_id di, const MifareCmd mc, const ui8 ui8Block, MifareParam* pmp);
+bool nfc_reader_init(const dev_info* pdi);
+bool nfc_reader_select(const dev_info* pdi, const init_modulation im, const byte* pbtInitData, const ui32 uiInitDataLen, tag_info* pti);
+bool nfc_reader_deselect(const dev_info* pdi);
+bool nfc_reader_transceive_bits(const dev_info* pdi, const byte* pbtTx, const ui32 uiTxBits, const byte* pbtTxPar, byte* pbtRx, ui32* puiRxBits, byte* pbtRxPar);
+bool nfc_reader_transceive_bytes(const dev_info* pdi, const byte* pbtTx, const ui32 uiTxLen, byte* pbtRx, ui32* puiRxLen);
+bool nfc_reader_mifare_cmd(const dev_info* pdi, const mifare_cmd mc, const ui8 ui8Block, mifare_param* pmp);
 
-bool nfc_target_init(const dev_id di, byte* pbtRx, ui32* puiRxLen);
-bool nfc_target_receive_bytes(const dev_id di, byte* pbtRx, ui32* puiRxLen);
-bool nfc_target_receive_bits(const dev_id di, byte* pbtRx, ui32* puiRxBits, byte* pbtRxPar);
-bool nfc_target_send_bytes(const dev_id di, const byte* pbtTx, const ui32 uiTxLen);
-bool nfc_target_send_bits(const dev_id di, const byte* pbtTx, const ui32 uiTxBits, const byte* pbtTxPar);
+bool nfc_target_init(const dev_info* pdi, byte* pbtRx, ui32* puiRxBits);
+bool nfc_target_receive_bits(const dev_info* pdi, byte* pbtRx, ui32* puiRxBits, byte* pbtRxPar);
+bool nfc_target_receive_bytes(const dev_info* pdi, byte* pbtRx, ui32* puiRxLen);
+bool nfc_target_send_bits(const dev_info* pdi, const byte* pbtTx, const ui32 uiTxBits, const byte* pbtTxPar);
+bool nfc_target_send_bytes(const dev_info* pdi, const byte* pbtTx, const ui32 uiTxLen);
 
 #endif // _LIBNFC_H_
 

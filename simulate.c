@@ -24,8 +24,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "libnfc.h"
 
 static byte abtRecv[MAX_FRAME_LEN];
-static ui32 uiRecvLen;
-static dev_id di;
+static ui32 uiRecvBits;
+static dev_info* pdi;
 
 // ISO14443A Anti-Collision response
 byte abtAtqa      [2] = { 0x04,0x00 };
@@ -34,75 +34,78 @@ byte abtSak       [9] = { 0x08,0xb6,0xdd };
 
 int main(int argc, const char* argv[])
 {			
-  byte* pbtTx;
-  ui32 uiTxLen;
+  byte* pbtTx = null;
+  ui32 uiTxBits;
   
   // Try to open the NFC reader
-  di = acr122_connect(0);
+  pdi = nfc_connect();
   
-  if (di == INVALID_DEVICE_ID)
+  if (pdi == INVALID_DEVICE_INFO)
   {
-    printf("Error connecting NFC reader\n");
+    printf("Error connecting NFC second reader\n");
     return 1;
   }
 
   printf("\n");
-  printf("[+] Connected to NFC target\n");
-  acr122_led_red(di,true);
-  printf("[+] Identified simulated tag by setting the red light\n");
-  printf("[+] First we have to come out auto-simulation\n");
-  printf("[+] To do this, please send any command after the\n");
-  printf("[+] anti-collision, for example, the RATS command\n\n");
-  nfc_target_init(di,abtRecv,&uiRecvLen);
-  printf("[+] Initiator command: ");
-  print_hex(abtRecv,uiRecvLen);
-  printf("[+] Configuring communication");
-  nfc_configure_accept_invalid_frames(di,true);
-  nfc_configure_handle_crc(di,false);
-  printf("[+] Done, the simulated tag is initialized \n");
-
+  printf("[+] Connected to NFC reader: %s\n",pdi->acName);
+  printf("[+] Try to break out the auto-simulation, this requires a second reader!\n");
+  printf("[+] To do this, please send any command after the anti-collision\n");
+  printf("[+] For example, send a RATS command or use the \"anticol\" tool\n");
+  if (!nfc_target_init(pdi,abtRecv,&uiRecvBits))
+  {
+    printf("Error: Could not come out of auto-simulation, no command was received\n");
+    return 1;
+  }
+  printf("[+] Received initiator command: ");
+  print_hex_bits(abtRecv,uiRecvBits);
+  printf("[+] Configuring communication\n");
+  nfc_configure(pdi,DCO_HANDLE_CRC,false);
+  nfc_configure(pdi,DCO_HANDLE_PARITY,true);
+  printf("[+] Done, the simulated tag is initialized\n\n");
 
   while(true)
   {
     // Test if we received a frame
-    if (nfc_target_receive_bytes(di,abtRecv,&uiRecvLen))
+    if (nfc_target_receive_bits(pdi,abtRecv,&uiRecvBits,null))
     {
       // Prepare the command to send back for the anti-collision request
-      switch(uiRecvLen)
+      switch(uiRecvBits)
       {
-        case 1: // Request or Wakeup
+        case 7: // Request or Wakeup
           pbtTx = abtAtqa;
-          uiTxLen = 2;
+          uiTxBits = 16;
           // New anti-collsion session started
           printf("\n"); 
         break;
 
-        case 2: // Select All
+        case 16: // Select All
           pbtTx = abtUidBcc;
-          uiTxLen = 5;
+          uiTxBits = 40;
         break;
 
-        case 9: // Select Tag
+        case 72: // Select Tag
           pbtTx = abtSak;
-          uiTxLen = 3;
+          uiTxBits = 24;
         break;
 
         default: // unknown length?
-          uiTxLen = 0;
+          uiTxBits = 0;
         break;
       }
 
       printf("R: ");
-      print_hex(abtRecv,uiRecvLen);
+      print_hex_bits(abtRecv,uiRecvBits);
 
       // Test if we know how to respond
-      if(uiTxLen)
+      if(uiTxBits)
       {
         // Send and print the command to the screen
-        nfc_target_send_bytes(di,pbtTx,uiTxLen);
+        nfc_target_send_bits(pdi,pbtTx,uiTxBits,null);
         printf("T: ");
-        print_hex(pbtTx,uiTxLen);
+        print_hex_bits(pbtTx,uiTxBits);
       }
     }
   }
+
+  nfc_disconnect(pdi);
 }

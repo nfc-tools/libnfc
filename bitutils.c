@@ -116,7 +116,7 @@ ui32 swap_endian32(const void* pui32)
 ui64 swap_endian64(const void* pui64)
 {
   ui64 ui64N = *((ui64*)pui64);
-  return (((ui64N&0xFF)<<56)+((ui64N&0xFF00)<<40)+((ui64N&0xFF0000)<<24)+((ui64N&0xFF000000)<<8)+((ui64N&0xFF00000000)>>8)+((ui64N&0xFF0000000000)>>24)+((ui64N&0xFF000000000000)>>40)+((ui64N&0xFF00000000000000)>>56));
+  return (((ui64N&0xFF)<<56)+((ui64N&0xFF00)<<40)+((ui64N&0xFF0000)<<24)+((ui64N&0xFF000000)<<8)+((ui64N&0xFF00000000ull)>>8)+((ui64N&0xFF0000000000ull)>>24)+((ui64N&0xFF000000000000ull)>>40)+((ui64N&0xFF00000000000000ull)>>56));
 }
 
 void append_iso14443a_crc(byte* pbtData, ui32 uiLen)
@@ -135,13 +135,30 @@ void append_iso14443a_crc(byte* pbtData, ui32 uiLen)
   *pbtData = (byte) ((wCrc >> 8) & 0xFF);
 }
 
-void print_hex(const byte* pbtData, const ui32 uiLen)
+void print_hex(const byte* pbtData, const ui32 uiBytes)
 {
   ui32 uiPos;
-  for (uiPos=0; uiPos < uiLen; uiPos++)
+
+  for (uiPos=0; uiPos < uiBytes; uiPos++)
   {
     printf("%02x  ",pbtData[uiPos]);
   }
+  printf("\n");
+}
+
+void print_hex_bits(const byte* pbtData, const ui32 uiBits)
+{
+  ui32 uiPos;
+  ui32 uiBytes = uiBits/8;
+
+  for (uiPos=0; uiPos < uiBytes; uiPos++)
+  {
+    printf("%02x  ",pbtData[uiPos]);
+  }
+
+  // Print the rest bits, these cannot have no parity bit
+  if (uiBits%8 != 0) printf("%02x",pbtData[uiBytes]);
+
   printf("\n");
 }
 
@@ -162,10 +179,7 @@ void print_hex_par(const byte* pbtData, const ui32 uiBits, const byte* pbtDataPa
   }
   
   // Print the rest bits, these cannot have no parity bit
-  if (uiBits%8 != 0)
-  {
-    printf("%02x",pbtData[uiBytes]);
-  }
+  if (uiBits%8 != 0) printf("%02x",pbtData[uiBytes]);
 
   printf("\n");
 }

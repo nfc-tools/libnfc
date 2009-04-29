@@ -23,91 +23,100 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string.h>
 #include "libnfc.h"
 
-static byte abtRecv[MAX_FRAME_LEN];
-static ui32 uiRecvLen;
+#define SAK_FLAG_ATS_SUPPORTED 0x20
+
+static byte abtRx[MAX_FRAME_LEN];
+static ui32 uiRxBits;
+static ui32 uiRxLen;
 static byte abtUid[10];
 static ui32 uiUidLen = 4;
-static dev_id di;
+static dev_info* pdi;
 
 // ISO14443A Anti-Collision Commands
-byte abtWupa      [1] = { 0x52 };
+byte abtReqa      [1] = { 0x26 };
 byte abtSelectAll [2] = { 0x93,0x20 };
 byte abtSelectTag [9] = { 0x93,0x70,0x00,0x00,0x00,0x00,0x00,0x00,0x00 };
 byte abtRats      [4] = { 0xe0,0x50,0xbc,0xa5 };
 byte abtHalt      [4] = { 0x50,0x00,0x57,0xcd };
 
-bool transmit_7bits(const byte btTx)
+bool transmit_bits(const byte* pbtTx, const ui32 uiTxBits)
 {
-  bool bResult;
-  printf("R: %02x\n",btTx); 
-  uiRecvLen = MAX_FRAME_LEN;
-  bResult = nfc_reader_transceive_7bits(di,btTx,abtRecv,&uiRecvLen);
-  if (bResult)
-  {
-    printf("T: "); 
-    print_hex(abtRecv,uiRecvLen);
-  }
-  return bResult;
+  // Show transmitted command
+  printf("R: "); print_hex_bits(pbtTx,uiTxBits);
+
+  // Transmit the bit frame command, we don't use the arbitrary parity feature
+  if (!nfc_reader_transceive_bits(pdi,pbtTx,uiTxBits,null,abtRx,&uiRxBits,null)) return false;
+
+  // Show received answer
+  printf("T: "); print_hex_bits(abtRx,uiRxBits);
+
+  // Succesful transfer
+  return true;
 }
+
 
 bool transmit_bytes(const byte* pbtTx, const ui32 uiTxLen)
 {
-  bool bResult;
-  printf("R: ");
-  print_hex(pbtTx,uiTxLen);
-  uiRecvLen = MAX_FRAME_LEN;
-  bResult = nfc_reader_transceive_bytes(di,pbtTx,uiTxLen,abtRecv,&uiRecvLen);
-  if (bResult)
-  {
-    printf("T: ");
-    print_hex(abtRecv,uiRecvLen);
-  }
-  return bResult;
+  // Show transmitted command
+  printf("R: "); print_hex(pbtTx,uiTxLen);
+
+  // Transmit the command bytes
+  if (!nfc_reader_transceive_bytes(pdi,pbtTx,uiTxLen,abtRx,&uiRxLen)) return false;
+
+  // Show received answer
+  printf("T: "); print_hex(abtRx,uiRxLen);
+
+  // Succesful transfer
+  return true;
 }
 
 int main(int argc, const char* argv[])
-{			
+{
   // Try to open the NFC reader
-  di = acr122_connect(0);
+  pdi = nfc_connect();
   
-  if (di == INVALID_DEVICE_ID)
+  if (!pdi)
   {
     printf("Error connecting NFC reader\n");
     return 1;
   }
-  nfc_reader_init(di);
+  nfc_reader_init(pdi);
 
-  // Let the reader only try once to find a tag
-  nfc_configure_list_passive_infinite(di,false);
+  // Drop the field for a while
+  nfc_configure(pdi,DCO_ACTIVATE_FIELD,false);
 
-  // Drop the field so the tag will be reset
-  nfc_configure_field(di,false);
+  // Configure the CRC and Parity settings
+  nfc_configure(pdi,DCO_HANDLE_CRC,false);
+  nfc_configure(pdi,DCO_HANDLE_PARITY,true);
 
-  // Configure the communication channel, we use our own CRC
-  nfc_configure_handle_crc(di,false);
-  nfc_configure_handle_parity(di,true);
+  // Enable field so more power consuming cards can power themselves up
+  nfc_configure(pdi,DCO_ACTIVATE_FIELD,true);
+  
+  printf("\nConnected to NFC reader: %s\n\n",pdi->acName);
 
-  // Enable the field so the more power consuming tags will respond
-  nfc_configure_field(di,true);
-
-  printf("\nConnected to NFC reader\n\n");
-
-  if (!transmit_7bits(*abtWupa))
+  // Send the 7 bits request command specified in ISO 14443A (0x26)
+  if (!transmit_bits(abtReqa,7))
   {
     printf("Error: No tag available\n");
+    nfc_disconnect(pdi);
     return 1;
   }
+
   // Anti-collision
   transmit_bytes(abtSelectAll,2);
   
   // Save the UID
-  memcpy(abtUid,abtRecv,4);
-  memcpy(abtSelectTag+2,abtRecv,5);
+  memcpy(abtUid,abtRx,4);
+  memcpy(abtSelectTag+2,abtRx,5);
   append_iso14443a_crc(abtSelectTag,7);
   transmit_bytes(abtSelectTag,9);
 
-  if (abtUid[0] == 0x88)
+  // Test if we are dealing with a 4 bytes uid
+  if (abtUid[0]!= 0x88)
   {
+    uiUidLen = 4;
+  } else {
+    // We have to do the anti-collision for cascade level 2
     abtSelectAll[0] = 0x95;
     abtSelectTag[0] = 0x95;
 
@@ -115,22 +124,19 @@ int main(int argc, const char* argv[])
     transmit_bytes(abtSelectAll,2);
     
     // Save the UID
-    memcpy(abtUid+4,abtRecv,4);
-    memcpy(abtSelectTag+2,abtRecv,5);
+    memcpy(abtUid+4,abtRx,4);
+    memcpy(abtSelectTag+2,abtRx,5);
     append_iso14443a_crc(abtSelectTag,7);
     transmit_bytes(abtSelectTag,9);
     uiUidLen = 7;
   }
   
   // Request ATS, this only applies to tags that support ISO 14443A-4
-  if (abtRecv[0] & 0x20)
-  {
-    transmit_bytes(abtRats,4);
-  }
+  if (abtRx[0] & SAK_FLAG_ATS_SUPPORTED) transmit_bytes(abtRats,4);
 
   // Done, halt the tag now
   transmit_bytes(abtHalt,4);
-
+  
   printf("\nFound tag with UID: ");
   if (uiUidLen == 4)
   {
@@ -138,5 +144,7 @@ int main(int argc, const char* argv[])
   } else {
     printf("%014llx\n",swap_endian64(abtUid)&0x00ffffffffffffffull);
   }
+
+  nfc_disconnect(pdi);
   return 0;
 }

@@ -1,31 +1,33 @@
 EXPORTS
-  ; acr122.c
-  acr122_connect
-  acr122_disconnect
-  acr122_transceive
-  acr122_firmware
-  acr122_led_red
+  ; dev_acr122.h
+  dev_acr122_connect
+  dev_acr122_disconnect
+  dev_acr122_transceive
+  dev_acr122_firmware
+  dev_acr122_led_red
+  
+  ; dev_pn531.h
+  dev_pn531_connect
+  dev_pn531_disconnect
+  dev_pn531_transceive
 
-  ; libnfc.c
-  nfc_configure_handle_crc
-  nfc_configure_handle_parity
-  nfc_configure_field
-  nfc_configure_list_passive_infinite
-  nfc_configure_accept_invalid_frames
-  nfc_configure_accept_multiple_frames
+  ; libnfc.h
+  nfc_connect
+  nfc_disconnect
+  nfc_configure
   nfc_reader_init
-  nfc_reader_transceive_7bits
-  nfc_reader_transceive_bytes
   nfc_reader_transceive_bits
-  nfc_reader_list_passive
+  nfc_reader_transceive_bytes
+  nfc_reader_select
+  nfc_reader_deselect
   nfc_reader_mifare_cmd
   nfc_target_init
-  nfc_target_receive_bytes
   nfc_target_receive_bits
-  nfc_target_send_bytes
+  nfc_target_receive_bytes
   nfc_target_send_bits
+  nfc_target_send_bytes
  
-  ; bitutils.c
+  ; bitutils.h
   oddparity
   oddparity_bytes
   mirror
@@ -36,6 +38,7 @@ EXPORTS
   swap_endian64
   append_iso14443a_crc
   print_hex
+  print_hex_bits
   print_hex_par
   
   

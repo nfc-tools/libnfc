@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8,00"
+	Version="8.00"
 	Name="libnfc"
 	ProjectGUID="{AAEEDA5F-F86F-452D-BFA3-53B1C00B8884}"
 	RootNamespace="libnfc"
@@ -40,7 +40,8 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;LIBNFC_EXPORTS"
+				AdditionalIncludeDirectories="libusb"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;LIBNFC_EXPORTS;_CRT_SECURE_NO_WARNINGS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -61,8 +62,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="winscard.lib"
+				AdditionalDependencies="winscard.lib libusb.lib"
 				LinkIncremental="2"
+				AdditionalLibraryDirectories="libusb"
 				ModuleDefinitionFile="libnfc.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -118,7 +120,8 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;LIBNFC_EXPORTS"
+				AdditionalIncludeDirectories="libusb"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;LIBNFC_EXPORTS;_CRT_SECURE_NO_WARNINGS"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
@@ -137,8 +140,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="winscard.lib"
+				AdditionalDependencies="winscard.lib libusb.lib"
 				LinkIncremental="1"
+				AdditionalLibraryDirectories="libusb"
 				ModuleDefinitionFile="libnfc.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -176,14 +180,6 @@
 	</References>
 	<Files>
 		<File
-			RelativePath="..\acr122.c"
-			>
-		</File>
-		<File
-			RelativePath="..\acr122.h"
-			>
-		</File>
-		<File
 			RelativePath="..\bitutils.c"
 			>
 		</File>
@@ -193,6 +189,26 @@
 		</File>
 		<File
 			RelativePath="..\defines.h"
+			>
+		</File>
+		<File
+			RelativePath="..\dev_acr122.c"
+			>
+		</File>
+		<File
+			RelativePath="..\dev_acr122.h"
+			>
+		</File>
+		<File
+			RelativePath="..\dev_pn531.c"
+			>
+		</File>
+		<File
+			RelativePath="..\dev_pn531.h"
+			>
+		</File>
+		<File
+			RelativePath="..\devices.h"
 			>
 		</File>
 		<File

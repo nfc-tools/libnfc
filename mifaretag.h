@@ -18,37 +18,37 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 */
 
-#ifndef _MIFARE_TAG_H_
-#define _MIFARE_TAG_H_
+#ifndef _LIBNFC_MIFARE_TAG_H_
+#define _LIBNFC_MIFARE_TAG_H_
 
 #include "defines.h"
 
-typedef struct tagBlockManufacturer {
+typedef struct {
   byte abtUID[4];
   byte btBCC;
   byte btUnknown;
   byte abtATQA[2];
   byte abtUnknown[8];
-} BlockManufacturer;
+} mifare_block_manufacturer;
 
-typedef struct tagBlockData {
-  byte abtContent[16];
-} BlockData;
+typedef struct {
+  byte abtData[16];
+} mifare_block_data;
 
-typedef struct tagBlockTrailer {
+typedef struct {
   byte abtKeyA[6];
   byte abtAccessBits[4];
   byte abtKeyB[6];
-} BlockTrailer;
+} mifare_block_trailer;
 
-typedef union tagBlock {
-  BlockManufacturer bm;
-  BlockData bd;
-  BlockTrailer bt;
-} Block;
+typedef union {
+  mifare_block_manufacturer mbm;
+  mifare_block_data mbd;
+  mifare_block_trailer mbt;
+} mifare_block;
 
-typedef struct tagMifareTag {
-  Block blContent[256];
-} MifareTag;
+typedef struct {
+  mifare_block amb[256];
+} mifare_tag;
 
-#endif // _MIFARE_TAG_H_
+#endif // _LIBNFC_MIFARE_TAG_H_

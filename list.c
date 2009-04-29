@@ -23,61 +23,74 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string.h>
 #include "libnfc.h"
 
-static byte abtRecv[MAX_FRAME_LEN];
-static ui32 uiRecvLen;
-static dev_id di;
+static dev_info* pdi;
+static byte abtFelica[5] = { 0x00, 0xff, 0xff, 0x00, 0x00 };
 
 int main(int argc, const char* argv[])
 {			
+  tag_info ti;
+
   // Try to open the NFC reader
-  di = acr122_connect(0);
+  pdi = nfc_connect();
   
-  if (di == INVALID_DEVICE_ID)
+  if (pdi == INVALID_DEVICE_INFO)
   {
     printf("Error connecting NFC reader\n");
     return 1;
   }
-  nfc_reader_init(di);
+  nfc_reader_init(pdi);
+
+  // Drop the field for a while
+  nfc_configure(pdi,DCO_ACTIVATE_FIELD,false);
 
   // Let the reader only try once to find a tag
-  nfc_configure_list_passive_infinite(di,false);
+  nfc_configure(pdi,DCO_INFINITE_SELECT,false);
 
-  // Drop the field so the tag will be reset
-  nfc_configure_field(di,false);
+  // Configure the CRC and Parity settings
+  nfc_configure(pdi,DCO_HANDLE_CRC,true);
+  nfc_configure(pdi,DCO_HANDLE_PARITY,true);
 
-  // Configure the communication channel
-  nfc_configure_handle_crc(di,true);
-  nfc_configure_handle_parity(di,true);
+  // Enable field so more power consuming cards can power themselves up
+  nfc_configure(pdi,DCO_ACTIVATE_FIELD,true);
 
-  printf("\nConnected to NFC reader\n\n");
-
-  uiRecvLen = MAX_FRAME_LEN;
-  if (nfc_reader_list_passive(di,MT_ISO14443A_106,null,null,abtRecv,&uiRecvLen))
+  printf("\nConnected to NFC reader: %s\n\n",pdi->acName);
+  
+  // Poll for a ISO14443A (MIFARE) tag
+  if (nfc_reader_select(pdi,IM_ISO14443A_106,null,null,&ti))
   {
-    // ISO14443A tag info = ( tag_count[1], tag_nr[1], ATQA[2], SAK[1], uid_len[1], UID[uid_len], ats_len[1], ATS[ats_len-1] )
-    // ATS is optional
     printf("The following (NFC) ISO14443A tag was found:\n\n");
-    printf("%17s","ATQA (SENS_RES): ");
-    print_hex(abtRecv+2,2);
-    printf("%17s","UID (NFCID1): ");
-    print_hex(abtRecv+6,abtRecv[5]);
-    printf("%17s","SAK (SEL_RES): ");
-    print_hex(abtRecv+4,1);
-    if (uiRecvLen > 6+(ui32)abtRecv[5])
+    printf("    ATQA (SENS_RES): "); print_hex(ti.tia.abtAtqa,2);
+    printf("       UID (NFCID%c): ",(ti.tia.abtUid[0]==0x08?'3':'1')); print_hex(ti.tia.abtUid,ti.tia.uiUidLen);
+    printf("      SAK (SEL_RES): "); print_hex(&ti.tia.btSak,1);
+    if (ti.tia.uiAtsLen)
     {
-      printf("%17s","ATS (ATR): ");
-      print_hex(abtRecv+6+abtRecv[5]+1,abtRecv[6+abtRecv[5]]-1);
+      printf("          ATS (ATR): ");
+      print_hex(ti.tia.abtAts,ti.tia.uiAtsLen);
     }
-  } else {
-    printf("Error: no tag was found\n");
   }
 
-  // Todo: listing the folllowing tags types 
-  // 
-  // MT_FELICA_212
-  // MT_FELICA_424
-  // MT_ISO14443B_106
-  // MT_TOPAZ_106
+  // Poll for a Felica tag
+  if (nfc_reader_select(pdi,IM_FELICA_212,abtFelica,5,&ti) || nfc_reader_select(pdi,IM_FELICA_424,abtFelica,5,&ti))
+  {
+    printf("The following (NFC) Felica tag was found:\n\n");
+    printf("%18s","ID (NFCID2): "); print_hex(ti.tif.abtId,8);
+    printf("%18s","Parameter (PAD): "); print_hex(ti.tif.abtPad,8);
+  }
 
-  return 0;
+  // Poll for a ISO14443B tag
+  if (nfc_reader_select(pdi,IM_ISO14443B_106,null,null,&ti))
+  {
+    // No test results yet
+    printf("iso14443b\n");
+  }
+
+  // Poll for a Jewel tag
+  if (nfc_reader_select(pdi,IM_JEWEL_106,null,null,&ti))
+  {
+    // No test results yet
+    printf("jewel\n");
+  }
+
+  nfc_disconnect(pdi);
+  return 1;
 }

@@ -23,24 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "defines.h"
 
-#define INNER_XOR8(n) {\
-  n ^= (n >> 4); \
-  n ^= (n >> 2); \
-  n ^= (n >> 1); \
-  n &= 0x01; \
-}
-
-#define INNER_XOR32(n) {\
-  n ^= (n >> 16); \
-  n ^= (n >> 8); \
-  INNER_XOR8(n); \
-}
-
-#define INNER_XOR64(n) {\
-  n ^= (n >> 32); \
-  INNER_XOR32(n); \
-}
-
 byte oddparity(const byte bt);
 void oddparity_bytes(const byte* pbtData, const ui32 uiLen, byte* pbtPar);
 
@@ -55,6 +37,7 @@ ui64 swap_endian64(const void* pui64);
 void append_iso14443a_crc(byte* pbtData, ui32 uiLen);
 
 void print_hex(const byte* pbtData, const ui32 uiLen);
+void print_hex_bits(const byte* pbtData, const ui32 uiBits);
 void print_hex_par(const byte* pbtData, const ui32 uiBits, const byte* pbtDataPar);
 
 #endif // _LIBNFC_BITUTILS_H_
