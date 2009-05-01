@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="simulate"
+	Name="emulate"
 	ProjectGUID="{9F813EB4-8F43-4E58-8C62-8E43D9AC137D}"
-	RootNamespace="simulate"
+	RootNamespace="emulate"
 	Keyword="Win32Proj"
 	>
 	<Platforms>
@@ -173,7 +173,7 @@
 	</References>
 	<Files>
 		<File
-			RelativePath="..\simulate.c"
+			RelativePath="..\emulate.c"
 			>
 		</File>
 	</Files>

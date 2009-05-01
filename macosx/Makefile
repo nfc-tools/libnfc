@@ -27,7 +27,7 @@ LDFLAGS = -fPIC -Wall -O4
 OBJS = dev_pn531.o dev_acr122.o bitutils.o libnfc.o
 HEADERS = devices.h bitutils.h defines.h libnfc.h
 LIBNFC = libnfc.$(LIBNFC_TYPE)
-EXES = anticol list simulate relay mftool
+EXES = anticol emulate list mftool relay
 
 all: $(LIBNFC) $(EXES)
 
