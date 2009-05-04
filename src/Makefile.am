@@ -1,4 +1,4 @@
-bin_PROGRAMS = anticol list mftool relay emulate
+bin_PROGRAMS = nfc-anticol nfc-list nfc-mftool nfc-relay nfc-emulate
 
 # set the include path found by configure
 INCLUDES= $(all_includes)
@@ -12,17 +12,17 @@ libnfc_la_CFLAGS = @LIBUSB_CFLAGS@ @LIBPCSCLITE_CFLAGS@
 libnfc_la_SOURCES = dev_pn531.c dev_acr122.c bitutils.c libnfc.c
 libnfc_la_LIBADD = @LIBUSB_LIBS@ @LIBPCSCLITE_LIBS@
 
-anticol_SOURCES = anticol.c
-anticol_LDADD = libnfc.la
+nfc_anticol_SOURCES = anticol.c
+nfc_anticol_LDADD = libnfc.la
 
-list_SOURCES = list.c
-list_LDADD = libnfc.la
+nfc_list_SOURCES = list.c
+nfc_list_LDADD = libnfc.la
 
-mftool_SOURCES = mftool.c
-mftool_LDADD = libnfc.la
+nfc_mftool_SOURCES = mftool.c
+nfc_mftool_LDADD = libnfc.la
 
-relay_SOURCES = relay.c
-relay_LDADD = libnfc.la
+nfc_relay_SOURCES = relay.c
+nfc_relay_LDADD = libnfc.la
 
-emulate_SOURCES = emulate.c
-emulate_LDADD = libnfc.la
+nfc_emulate_SOURCES = emulate.c
+nfc_emulate_LDADD = libnfc.la
