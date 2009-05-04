@@ -34,6 +34,7 @@ AC_SUBST(LIBPCSCLITE_CFLAGS)
 
 AC_CONFIG_FILES([
 		Makefile
+		src/Makefile
 		libnfc.pc
 		])
 
