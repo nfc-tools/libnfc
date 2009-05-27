@@ -20,11 +20,13 @@ Thanks to d18c7db and Okko for example code
 
 */
 
-#include "defines.h"
+#include <stdio.h>
+#include <stddef.h>
 
 #include <usb.h>
-#include <stdio.h>
 #include <string.h>
+
+#include "defines.h"
 #include "dev_pn531.h"
 #include "bitutils.h"
 
@@ -87,7 +89,7 @@ dev_info* dev_pn531_connect(const uint32_t uiIndex)
 
   dsp.uiEndPointIn = 0;
   dsp.uiEndPointOut = 0;
-  dsp.pudh = null;
+  dsp.pudh = NULL;
                                                                         
   usb_init();
   if (usb_find_busses() < 0) return INVALID_DEVICE_INFO;
@@ -234,7 +236,7 @@ bool dev_pn531_transceive(const dev_spec ds, const byte* pbtTx, const uint32_t u
     }
 
     // When the answer should be ignored, just return a succesful result    
-    if(pbtRx == null || puiRxLen == null) return true;
+    if(pbtRx == NULL || puiRxLen == NULL) return true;
 
     // Only succeed when the result is at least 00 00 FF xx Fx Dx xx .. .. .. xx 00 (x = variable)
     if(ret < 9) return false;

@@ -19,8 +19,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include <stdio.h>
+#include <stddef.h>
 #include <stdlib.h>
+
 #include <string.h>
+
 #include "libnfc.h"
 
 static dev_info* pdi;
@@ -56,7 +59,7 @@ int main(int argc, const char* argv[])
   printf("\nConnected to NFC reader: %s\n\n",pdi->acName);
   
   // Poll for a ISO14443A (MIFARE) tag
-  if (nfc_reader_select(pdi,IM_ISO14443A_106,null,null,&ti))
+  if (nfc_reader_select(pdi,IM_ISO14443A_106,NULL,NULL,&ti))
   {
     printf("The following (NFC) ISO14443A tag was found:\n\n");
     printf("    ATQA (SENS_RES): "); print_hex(ti.tia.abtAtqa,2);
@@ -78,14 +81,14 @@ int main(int argc, const char* argv[])
   }
 
   // Poll for a ISO14443B tag
-  if (nfc_reader_select(pdi,IM_ISO14443B_106,null,null,&ti))
+  if (nfc_reader_select(pdi,IM_ISO14443B_106,NULL,NULL,&ti))
   {
     // No test results yet
     printf("iso14443b\n");
   }
 
   // Poll for a Jewel tag
-  if (nfc_reader_select(pdi,IM_JEWEL_106,null,null,&ti))
+  if (nfc_reader_select(pdi,IM_JEWEL_106,NULL,NULL,&ti))
   {
     // No test results yet
     printf("jewel\n");

@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <string.h>
 
@@ -47,7 +48,7 @@ bool transmit_bits(const byte* pbtTx, const uint32_t uiTxBits)
   printf("R: "); print_hex_bits(pbtTx,uiTxBits);
 
   // Transmit the bit frame command, we don't use the arbitrary parity feature
-  if (!nfc_reader_transceive_bits(pdi,pbtTx,uiTxBits,null,abtRx,&uiRxBits,null)) return false;
+  if (!nfc_reader_transceive_bits(pdi,pbtTx,uiTxBits,NULL,abtRx,&uiRxBits,NULL)) return false;
 
   // Show received answer
   printf("T: "); print_hex_bits(abtRx,uiRxBits);

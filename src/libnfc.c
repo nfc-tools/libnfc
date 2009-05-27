@@ -19,9 +19,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "libnfc.h"
-#include "bitutils.h"
+
 #include <stdio.h>
+#include <stddef.h>
 #include <string.h>
+
+#include "bitutils.h"
 
 // Registers and symbols masks used to covers parts within a register
 #define REG_CIU_TX_MODE           0x6302
@@ -120,13 +123,13 @@ bool pn53x_set_reg(const dev_info* pdi, uint16_t ui16Reg, uint8_t ui8SybmolMask,
   pncmd_set_register[2] = ui16Reg >> 8;
   pncmd_set_register[3] = ui16Reg & 0xff;
   pncmd_set_register[4] = ui8Value | (pn53x_get_reg(pdi,ui16Reg) & (~ui8SybmolMask));
-  return pdi->pdc->transceive(pdi->ds,pncmd_set_register,5,null,null);
+  return pdi->pdc->transceive(pdi->ds,pncmd_set_register,5,NULL,NULL);
 }
 
 bool pn53x_set_parameters(const dev_info* pdi, uint8_t ui8Value)
 {
   pncmd_set_parameters[2] = ui8Value;
-  return pdi->pdc->transceive(pdi->ds,pncmd_set_parameters,3,null,null);
+  return pdi->pdc->transceive(pdi->ds,pncmd_set_parameters,3,NULL,NULL);
 }
 
 bool pn53x_set_tx_bits(const dev_info* pdi, uint8_t ui8Bits)
@@ -233,7 +236,7 @@ bool pn53x_unwrap_frame(const byte* pbtFrame, const uint32_t uiFrameBits, byte* 
       btFrame = mirror(pbtFramePos[uiDataPos+1]);
       btData |= (btFrame >> (8-uiBitPos));
       pbtRx[uiDataPos] = mirror(btData);
-      if(pbtRxPar != null) pbtRxPar[uiDataPos] = ((btFrame >> (7-uiBitPos)) & 0x01);
+      if(pbtRxPar != NULL) pbtRxPar[uiDataPos] = ((btFrame >> (7-uiBitPos)) & 0x01);
       // Increase the data (without parity bit) position
       uiDataPos++;
       // Test if we are done
@@ -263,7 +266,7 @@ dev_info* nfc_connect()
     {
       // Great we have claimed a device
 		  pdi->pdc = &(dev_callbacks_list[uiDev]);
-      pdi->pdc->transceive(pdi->ds,pncmd_get_register,4,null,null);
+      pdi->pdc->transceive(pdi->ds,pncmd_get_register,4,NULL,NULL);
 
       // Try to retrieve PN53x chip revision
       if (!pdi->pdc->transceive(pdi->ds,pncmd_get_firmware_version,2,abtFw,&uiFwLen))
@@ -332,7 +335,7 @@ bool nfc_configure(dev_info* pdi, const dev_config_option dco, const bool bEnabl
 
     case DCO_ACTIVATE_FIELD:
       pncmd_rf_configure_field[3] = (bEnable) ? 1 : 0;
-      if (!pdi->pdc->transceive(pdi->ds,pncmd_rf_configure_field,4,null,null)) return false;
+      if (!pdi->pdc->transceive(pdi->ds,pncmd_rf_configure_field,4,NULL,NULL)) return false;
     break;
 
     case DCO_ACTIVATE_CRYPTO1:
@@ -345,7 +348,7 @@ bool nfc_configure(dev_info* pdi, const dev_config_option dco, const bool bEnabl
       pncmd_rf_configure_retry_select[3] = (bEnable) ? 0xff : 0x00; // MxRtyATR, default: active = 0xff, passive = 0x02
       pncmd_rf_configure_retry_select[4] = (bEnable) ? 0xff : 0x00; // MxRtyPSL, default: 0x01
       pncmd_rf_configure_retry_select[5] = (bEnable) ? 0xff : 0x00; // MxRtyPassiveActivation, default: 0xff
-      if(!pdi->pdc->transceive(pdi->ds,pncmd_rf_configure_retry_select,6,null,null)) return false;
+      if(!pdi->pdc->transceive(pdi->ds,pncmd_rf_configure_retry_select,6,NULL,NULL)) return false;
     break;
 
     case DCO_ACCEPT_INVALID_FRAMES:
@@ -477,7 +480,7 @@ bool nfc_reader_select(const dev_info* pdi, const init_modulation im, const byte
 
 bool nfc_reader_deselect(const dev_info* pdi)
 {
-  return (pdi->pdc->transceive(pdi->ds,pncmd_reader_deselect,3,null,null));
+  return (pdi->pdc->transceive(pdi->ds,pncmd_reader_deselect,3,NULL,NULL));
 }
 
 bool nfc_reader_transceive_bits(const dev_info* pdi, const byte* pbtTx, const uint32_t uiTxBits, const byte* pbtTxPar, byte* pbtRx, uint32_t* puiRxBits, byte* pbtRxPar)

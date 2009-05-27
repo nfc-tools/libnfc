@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <string.h>
 
@@ -36,7 +37,7 @@ byte abtSak       [9] = { 0x08,0xb6,0xdd };
 
 int main(int argc, const char* argv[])
 {                       
-  byte* pbtTx = null;
+  byte* pbtTx = NULL;
   uint32_t uiTxBits;
   
   // Try to open the NFC reader
@@ -68,7 +69,7 @@ int main(int argc, const char* argv[])
   while(true)
   {
     // Test if we received a frame
-    if (nfc_target_receive_bits(pdi,abtRecv,&uiRecvBits,null))
+    if (nfc_target_receive_bits(pdi,abtRecv,&uiRecvBits,NULL))
     {
       // Prepare the command to send back for the anti-collision request
       switch(uiRecvBits)
@@ -102,7 +103,7 @@ int main(int argc, const char* argv[])
       if(uiTxBits)
       {
         // Send and print the command to the screen
-        nfc_target_send_bits(pdi,pbtTx,uiTxBits,null);
+        nfc_target_send_bits(pdi,pbtTx,uiTxBits,NULL);
         printf("T: ");
         print_hex_bits(pbtTx,uiTxBits);
       }

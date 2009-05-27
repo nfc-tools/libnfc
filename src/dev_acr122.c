@@ -17,14 +17,16 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 */
+#include "dev_acr122.h"
 
-#include "defines.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <stddef.h>
+#include <string.h>
 
 #include <winscard.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include "dev_acr122.h"
+
+#include "defines.h"
 #include "bitutils.h"
 
 // WINDOWS: #define IOCTL_CCID_ESCAPE_SCARD_CTL_CODE SCARD_CTL_CODE(3500)
@@ -53,7 +55,7 @@ static byte abtTxBuf[ACR122_WRAP_LEN+ACR122_COMMAND_LEN] = { 0xFF, 0x00, 0x00, 0
 static byte abtRxCmd[5] = { 0xFF,0xC0,0x00,0x00 };
 static byte uiRxCmdLen = sizeof(abtRxCmd);
 static byte abtRxBuf[ACR122_RESPONSE_LEN];
-static ulong ulRxBufLen;
+static size_t ulRxBufLen;
 static byte abtGetFw[5] = { 0xFF,0x00,0x48,0x00,0x00 };
 static byte abtLed[9] = { 0xFF,0x00,0x40,0x05,0x04,0x00,0x00,0x00,0x00 };
 
@@ -61,7 +63,7 @@ dev_info* dev_acr122_connect(const uint32_t uiIndex)
 {
   char* pacReaders[MAX_READERS];
   char acList[256+64*MAX_READERS];
-  ulong ulListLen = sizeof(acList);
+  size_t ulListLen = sizeof(acList);
   uint32_t uiPos;
   uint32_t uiReaderCount;
   uint32_t uiReader;
@@ -75,10 +77,10 @@ dev_info* dev_acr122_connect(const uint32_t uiIndex)
   memset(acList,0x00,ulListLen);
 
   // Test if context succeeded
-  if (SCardEstablishContext(SCARD_SCOPE_USER,null,null,&(dsa.hCtx)) != SCARD_S_SUCCESS) return INVALID_DEVICE_INFO;
+  if (SCardEstablishContext(SCARD_SCOPE_USER,NULL,NULL,&(dsa.hCtx)) != SCARD_S_SUCCESS) return INVALID_DEVICE_INFO;
 
   // Retrieve the string array of all available pcsc readers
-  if (SCardListReaders(dsa.hCtx,null,acList,(void*)&ulListLen) != SCARD_S_SUCCESS) return INVALID_DEVICE_INFO;
+  if (SCardListReaders(dsa.hCtx,NULL,acList,(void*)&ulListLen) != SCARD_S_SUCCESS) return INVALID_DEVICE_INFO;
   
   #ifdef DEBUG
       printf("Found the following PCSC device(s)\n");
@@ -132,7 +134,7 @@ dev_info* dev_acr122_connect(const uint32_t uiIndex)
     
     // Retrieve the current firmware version
     pcFirmware = dev_acr122_firmware((dev_info*)&dsa);
-    if (strstr(pcFirmware,FIRMWARE_TEXT) != null)
+    if (strstr(pcFirmware,FIRMWARE_TEXT) != NULL)
     {
       // We found a occurence, test if it has the right index
       if (uiDevIndex != 0)
@@ -194,7 +196,7 @@ bool dev_acr122_transceive(const dev_spec ds, const byte* pbtTx, const uint32_t 
   {
     if (SCardControl(pdsa->hCard,IOCTL_CCID_ESCAPE_SCARD_CTL_CODE,abtTxBuf,uiTxLen+5,abtRxBuf,ulRxBufLen,(void*)&ulRxBufLen) != SCARD_S_SUCCESS) return false;
   } else {
-    if (SCardTransmit(pdsa->hCard,&(pdsa->ioCard),abtTxBuf,uiTxLen+5,null,abtRxBuf,(void*)&ulRxBufLen) != SCARD_S_SUCCESS) return false;
+    if (SCardTransmit(pdsa->hCard,&(pdsa->ioCard),abtTxBuf,uiTxLen+5,NULL,abtRxBuf,(void*)&ulRxBufLen) != SCARD_S_SUCCESS) return false;
   }
 
   if (pdsa->ioCard.dwProtocol == SCARD_PROTOCOL_T0)
@@ -208,7 +210,7 @@ bool dev_acr122_transceive(const dev_spec ds, const byte* pbtTx, const uint32_t 
     // Retrieve the response bytes
     abtRxCmd[4] = abtRxBuf[1];
     ulRxBufLen = sizeof(abtRxBuf);
-    if (SCardTransmit(pdsa->hCard,&(pdsa->ioCard),abtRxCmd,uiRxCmdLen,null,abtRxBuf,(void*)&ulRxBufLen) != SCARD_S_SUCCESS) return false;
+    if (SCardTransmit(pdsa->hCard,&(pdsa->ioCard),abtRxCmd,uiRxCmdLen,NULL,abtRxBuf,(void*)&ulRxBufLen) != SCARD_S_SUCCESS) return false;
   }
 
   #ifdef DEBUG
@@ -217,7 +219,7 @@ bool dev_acr122_transceive(const dev_spec ds, const byte* pbtTx, const uint32_t 
   #endif
 
   // When the answer should be ignored, just return a succesful result
-  if (pbtRx == null || puiRxLen == null) return true;
+  if (pbtRx == NULL || puiRxLen == NULL) return true;
 
   // Make sure we have an emulated answer that fits the return buffer
   if (ulRxBufLen < 4 || (ulRxBufLen-4) > *puiRxLen) return false;
@@ -235,13 +237,13 @@ char* dev_acr122_firmware(const dev_spec ds)
   
   dev_spec_acr122* pdsa = (dev_spec_acr122*)ds;
   static char abtFw[11];
-  ulong ulFwLen = sizeof(abtFw);
+  size_t ulFwLen = sizeof(abtFw);
   memset(abtFw,0x00,ulFwLen);
   if (pdsa->ioCard.dwProtocol == SCARD_PROTOCOL_UNDEFINED)
   {
     uiResult = SCardControl(pdsa->hCard,IOCTL_CCID_ESCAPE_SCARD_CTL_CODE,abtGetFw,sizeof(abtGetFw),abtFw,ulFwLen,(void*)&ulFwLen);
   } else {
-    uiResult = SCardTransmit(pdsa->hCard,&(pdsa->ioCard),abtGetFw,sizeof(abtGetFw),null,(byte*)abtFw,(void*)&ulFwLen);
+    uiResult = SCardTransmit(pdsa->hCard,&(pdsa->ioCard),abtGetFw,sizeof(abtGetFw),NULL,(byte*)abtFw,(void*)&ulFwLen);
   }
 
   #ifdef DEBUG
@@ -258,12 +260,12 @@ bool dev_acr122_led_red(const dev_spec ds, bool bOn)
 {
   dev_spec_acr122* pdsa = (dev_spec_acr122*)ds;
   byte abtBuf[2];
-  ulong ulBufLen = sizeof(abtBuf);
+  size_t ulBufLen = sizeof(abtBuf);
   if (pdsa->ioCard.dwProtocol == SCARD_PROTOCOL_UNDEFINED)
   {
     return (SCardControl(pdsa->hCard,IOCTL_CCID_ESCAPE_SCARD_CTL_CODE,abtLed,sizeof(abtLed),abtBuf,ulBufLen,(void*)&ulBufLen) == SCARD_S_SUCCESS);
   } else {
-    return (SCardTransmit(pdsa->hCard,&(pdsa->ioCard),abtLed,sizeof(abtLed),null,(byte*)abtBuf,(void*)&ulBufLen) == SCARD_S_SUCCESS);
+    return (SCardTransmit(pdsa->hCard,&(pdsa->ioCard),abtLed,sizeof(abtLed),NULL,(byte*)abtBuf,(void*)&ulBufLen) == SCARD_S_SUCCESS);
   }
 }
 

@@ -21,15 +21,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef _LIBNFC_DEFINES_H_
 #define _LIBNFC_DEFINES_H_
 
-// #define DEBUG
+// #define DEBUG   /* DEBUG flag can also be enabled using ./configure --enable-debug */
 
 typedef unsigned char       byte;
-typedef unsigned long       ulong;
-
-#define null 0
 
 typedef void*               dev_spec; // Device connection specification
-#define INVALID_DEVICE_INFO null
+#define INVALID_DEVICE_INFO 0
 #define MAX_FRAME_LEN       264
 #define DEVICE_NAME_LENGTH  256
 

@@ -21,6 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <stddef.h>
+
 #include <string.h>
 #include <ctype.h>
 
@@ -72,7 +74,7 @@ bool read_card()
       {
         printf("x");
         // When a failure occured we need to redo the anti-collision
-        if (!nfc_reader_select(pdi,IM_ISO14443A_106,null,null,&ti))
+        if (!nfc_reader_select(pdi,IM_ISO14443A_106,NULL,NULL,&ti))
         {
           printf("!\nError: tag was removed\n");
           return 1;
@@ -155,7 +157,7 @@ bool write_card()
       {
         printf("x");
         // When a failure occured we need to redo the anti-collision
-        if (!nfc_reader_select(pdi,IM_ISO14443A_106,null,null,&ti))
+        if (!nfc_reader_select(pdi,IM_ISO14443A_106,NULL,NULL,&ti))
         {
           printf("!\nError: tag was removed\n");
           return false;
@@ -251,7 +253,7 @@ int main(int argc, const char* argv[])
   bUseKeyA = (tolower(*(argv[2])) == 'a');
 
   pfKeys = fopen(argv[3],"rb");
-  if (pfKeys == null)
+  if (pfKeys == NULL)
   {
     printf("Could not open file: %s\n",argv[3]);
     return 1;
@@ -270,7 +272,7 @@ int main(int argc, const char* argv[])
   } else {
     pfDump = fopen(argv[4],"rb");
 
-    if (pfDump == null)
+    if (pfDump == NULL)
     {
       printf("Could not open dump file: %s\n",argv[4]);
       return 1;
@@ -310,7 +312,7 @@ int main(int argc, const char* argv[])
   printf("Connected to NFC reader: %s\n",pdi->acName);
 
   // Try to find a MIFARE Classic tag
-  if (!nfc_reader_select(pdi,IM_ISO14443A_106,null,null,&ti))
+  if (!nfc_reader_select(pdi,IM_ISO14443A_106,NULL,NULL,&ti))
   {
     printf("Error: no tag was found\n");
     nfc_disconnect(pdi);
@@ -349,7 +351,7 @@ int main(int argc, const char* argv[])
       printf("Writing data to file: %s\n",argv[4]);
       fflush(stdout);
       pfDump = fopen(argv[4],"wb");
-      if (pfKeys == null)
+      if (pfKeys == NULL)
       {
         printf("Could not open file: %s\n",argv[4]);
         return 1;
