@@ -59,7 +59,7 @@ int main(int argc, const char* argv[])
   printf("\nConnected to NFC reader: %s\n\n",pdi->acName);
   
   // Poll for a ISO14443A (MIFARE) tag
-  if (nfc_reader_select(pdi,IM_ISO14443A_106,NULL,NULL,&ti))
+  if (nfc_reader_select(pdi,IM_ISO14443A_106,NULL,0,&ti))
   {
     printf("The following (NFC) ISO14443A tag was found:\n\n");
     printf("    ATQA (SENS_RES): "); print_hex(ti.tia.abtAtqa,2);
@@ -81,14 +81,14 @@ int main(int argc, const char* argv[])
   }
 
   // Poll for a ISO14443B tag
-  if (nfc_reader_select(pdi,IM_ISO14443B_106,NULL,NULL,&ti))
+  if (nfc_reader_select(pdi,IM_ISO14443B_106,NULL,0,&ti))
   {
     // No test results yet
     printf("iso14443b\n");
   }
 
   // Poll for a Jewel tag
-  if (nfc_reader_select(pdi,IM_JEWEL_106,NULL,NULL,&ti))
+  if (nfc_reader_select(pdi,IM_JEWEL_106,NULL,0,&ti))
   {
     // No test results yet
     printf("jewel\n");

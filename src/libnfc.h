@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define _LIBNFC_H_
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #include "defines.h"
 #include "types.h"

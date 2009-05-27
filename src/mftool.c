@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <stdlib.h>
 #include <stdint.h>
 #include <stddef.h>
+#include <stdbool.h>
 
 #include <string.h>
 #include <ctype.h>
@@ -74,7 +75,7 @@ bool read_card()
       {
         printf("x");
         // When a failure occured we need to redo the anti-collision
-        if (!nfc_reader_select(pdi,IM_ISO14443A_106,NULL,NULL,&ti))
+        if (!nfc_reader_select(pdi,IM_ISO14443A_106,NULL,0,&ti))
         {
           printf("!\nError: tag was removed\n");
           return 1;
@@ -157,7 +158,7 @@ bool write_card()
       {
         printf("x");
         // When a failure occured we need to redo the anti-collision
-        if (!nfc_reader_select(pdi,IM_ISO14443A_106,NULL,NULL,&ti))
+        if (!nfc_reader_select(pdi,IM_ISO14443A_106,NULL,0,&ti))
         {
           printf("!\nError: tag was removed\n");
           return false;
@@ -312,7 +313,7 @@ int main(int argc, const char* argv[])
   printf("Connected to NFC reader: %s\n",pdi->acName);
 
   // Try to find a MIFARE Classic tag
-  if (!nfc_reader_select(pdi,IM_ISO14443A_106,NULL,NULL,&ti))
+  if (!nfc_reader_select(pdi,IM_ISO14443A_106,NULL,0,&ti))
   {
     printf("Error: no tag was found\n");
     nfc_disconnect(pdi);

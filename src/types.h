@@ -22,16 +22,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define _LIBNFC_TYPES_H_
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #include "defines.h"
 
 // Compiler directive, set struct alignment to 1 byte for compatibility
 #pragma pack(1)
-
-typedef enum {
-  false = 0x00,
-  true  = 0x01
-} bool;
 
 typedef enum {
   CT_PN531                    = 0x10,

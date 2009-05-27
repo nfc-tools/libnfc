@@ -13,29 +13,21 @@ AC_PATH_PROG(PKG_CONFIG, pkg-config)
 
 # Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS([stdio.h stdlib.h stdint.h stddef.h])
+AC_HEADER_STDBOOL
+AC_CHECK_HEADERS([stdio.h stdlib.h stdint.h stddef.h stdbool.h])
 
-
-# libusb
-PKG_CHECK_MODULES(LIBUSB, libusb, [WITH_USB=1], [WITH_USB=0])
-if test "$WITH_USB" == "0" ; then
-  AC_MSG_ERROR([libusb is mandatory.])
-fi
-AC_SUBST(LIBUSB_LIBS)
-AC_SUBST(LIBUSB_CFLAGS)
-
-# libpcsclite
-PKG_CHECK_MODULES(LIBPCSCLITE, libpcsclite, [WITH_PCSC=1], [WITH_PCSC=0])
-if test "$WITH_PCSC" == "0" ; then
-  AC_MSG_ERROR([libpcsclite is mandatory.])
-fi
-AC_SUBST(LIBPCSCLITE_LIBS)
-AC_SUBST(LIBPCSCLITE_CFLAGS)
+# Checks for types
+AC_TYPE_SIZE_T
+AC_TYPE_UINT8_T
+AC_TYPE_UINT16_T
+AC_TYPE_UINT32_T
+AC_TYPE_UINT64_T
+AC_TYPE_INT32_T
 
 # --enable-debug support
 AC_ARG_ENABLE([debug],AS_HELP_STRING([--enable-debug],[Debug flags]),[enable_debug=$enableval],[enable_debug="no"])
  
-AC_MSG_CHECKING(debug)
+AC_MSG_CHECKING(for debug flag)
 AC_MSG_RESULT($enable_debug)
  
 if test "x$enable_debug" = "xyes"
@@ -44,6 +36,24 @@ then
 fi
 AC_SUBST([DEBUG_CFLAGS])
 
+# pkg-config check for
+## libusb
+PKG_CHECK_MODULES(LIBUSB, libusb, [WITH_USB=1], [WITH_USB=0])
+if test "$WITH_USB" == "0" ; then
+  AC_MSG_ERROR([libusb is mandatory.])
+fi
+AC_SUBST(LIBUSB_LIBS)
+AC_SUBST(LIBUSB_CFLAGS)
+
+## libpcsclite
+PKG_CHECK_MODULES(LIBPCSCLITE, libpcsclite, [WITH_PCSC=1], [WITH_PCSC=0])
+if test "$WITH_PCSC" == "0" ; then
+  AC_MSG_ERROR([libpcsclite is mandatory.])
+fi
+AC_SUBST(LIBPCSCLITE_LIBS)
+AC_SUBST(LIBPCSCLITE_CFLAGS)
+
+# Set C standard to C99
 CFLAGS="$CFLAGS -std=c99"
 
 AC_CONFIG_FILES([
