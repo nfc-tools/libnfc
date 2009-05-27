@@ -57,15 +57,15 @@ static ulong ulRxBufLen;
 static byte abtGetFw[5] = { 0xFF,0x00,0x48,0x00,0x00 };
 static byte abtLed[9] = { 0xFF,0x00,0x40,0x05,0x04,0x00,0x00,0x00,0x00 };
 
-dev_info* dev_acr122_connect(const ui32 uiIndex)
+dev_info* dev_acr122_connect(const uint32_t uiIndex)
 {
   char* pacReaders[MAX_READERS];
   char acList[256+64*MAX_READERS];
   ulong ulListLen = sizeof(acList);
-  ui32 uiPos;
-  ui32 uiReaderCount;
-  ui32 uiReader;
-  ui32 uiDevIndex;
+  uint32_t uiPos;
+  uint32_t uiReaderCount;
+  uint32_t uiReader;
+  uint32_t uiDevIndex;
   dev_info* pdi;
   dev_spec_acr122* pdsa;
   dev_spec_acr122 dsa;
@@ -172,7 +172,7 @@ void dev_acr122_disconnect(dev_info* pdi)
   free(pdi);
 }
 
-bool dev_acr122_transceive(const dev_spec ds, const byte* pbtTx, const ui32 uiTxLen, byte* pbtRx, ui32* puiRxLen)
+bool dev_acr122_transceive(const dev_spec ds, const byte* pbtTx, const uint32_t uiTxLen, byte* pbtRx, uint32_t* puiRxLen)
 {
   dev_spec_acr122* pdsa = (dev_spec_acr122*)ds;
 
@@ -231,7 +231,7 @@ bool dev_acr122_transceive(const dev_spec ds, const byte* pbtTx, const ui32 uiTx
 
 char* dev_acr122_firmware(const dev_spec ds)
 {
-  ui32 uiResult;
+  uint32_t uiResult;
   
   dev_spec_acr122* pdsa = (dev_spec_acr122*)ds;
   static char abtFw[11];

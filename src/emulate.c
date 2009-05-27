@@ -20,11 +20,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
+
 #include "libnfc.h"
 
 static byte abtRecv[MAX_FRAME_LEN];
-static ui32 uiRecvBits;
+static uint32_t uiRecvBits;
 static dev_info* pdi;
 
 // ISO14443A Anti-Collision response
@@ -35,7 +37,7 @@ byte abtSak       [9] = { 0x08,0xb6,0xdd };
 int main(int argc, const char* argv[])
 {                       
   byte* pbtTx = null;
-  ui32 uiTxBits;
+  uint32_t uiTxBits;
   
   // Try to open the NFC reader
   pdi = nfc_connect();

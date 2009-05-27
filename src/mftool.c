@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 #include <ctype.h>
 
@@ -32,21 +33,21 @@ static mifare_param mp;
 static mifare_tag mtKeys;
 static mifare_tag mtDump;
 static bool bUseKeyA;
-static ui32 uiBlocks;
+static uint32_t uiBlocks;
 
-bool is_first_block(ui32 uiBlock)
+bool is_first_block(uint32_t uiBlock)
 {
   // Test if we are in the small or big sectors
   if (uiBlock < 128) return ((uiBlock)%4 == 0); else return ((uiBlock)%16 == 0);
 }
 
-bool is_trailer_block(ui32 uiBlock)
+bool is_trailer_block(uint32_t uiBlock)
 {
   // Test if we are in the small or big sectors
   if (uiBlock < 128) return ((uiBlock+1)%4 == 0); else return ((uiBlock+1)%16 == 0);
 }
 
-ui32 get_trailer_block(ui32 uiFirstBlock)
+uint32_t get_trailer_block(uint32_t uiFirstBlock)
 {
   // Test if we are in the small or big sectors
   if (uiFirstBlock<128) return uiFirstBlock+3; else return uiFirstBlock+15;
@@ -54,7 +55,7 @@ ui32 get_trailer_block(ui32 uiFirstBlock)
 
 bool read_card()
 {
-  i32 iBlock;
+  int32_t iBlock;
   mifare_cmd mc;
   bool bFailure = false;
 
@@ -136,8 +137,8 @@ bool read_card()
 
 bool write_card()
 {
-  ui32 uiBlock;
-  ui32 uiTrailerBlock;
+  uint32_t uiBlock;
+  uint32_t uiTrailerBlock;
   bool bFailure = false;
   mifare_cmd mc;
 

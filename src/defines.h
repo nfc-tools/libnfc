@@ -24,14 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // #define DEBUG
 
 typedef unsigned char       byte;
-typedef unsigned char       ui8;
-typedef unsigned short      ui16;
-typedef unsigned int        ui32;
-typedef unsigned long long  ui64;
 typedef unsigned long       ulong;
-typedef char                i8;
-typedef short               i16;
-typedef int                 i32;
 
 #define null 0
 

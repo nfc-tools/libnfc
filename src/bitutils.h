@@ -21,24 +21,26 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef _LIBNFC_BITUTILS_H_
 #define _LIBNFC_BITUTILS_H_
 
+#include <stdint.h>
+
 #include "defines.h"
 
 byte oddparity(const byte bt);
-void oddparity_bytes(const byte* pbtData, const ui32 uiLen, byte* pbtPar);
+void oddparity_bytes(const byte* pbtData, const uint32_t uiLen, byte* pbtPar);
 
 byte mirror(byte bt);
-ui32 mirror32(ui32 ui32Bits);
-ui64 mirror64(ui64 ui64Bits);
-void mirror_bytes(byte *pbts, ui32 uiLen);
+uint32_t mirror32(uint32_t ui32Bits);
+uint64_t mirror64(uint64_t ui64Bits);
+void mirror_bytes(byte *pbts, uint32_t uiLen);
 
-ui32 swap_endian32(const void* pui32);
-ui64 swap_endian64(const void* pui64);
+uint32_t swap_endian32(const void* pui32);
+uint64_t swap_endian64(const void* pui64);
 
-void append_iso14443a_crc(byte* pbtData, ui32 uiLen);
+void append_iso14443a_crc(byte* pbtData, uint32_t uiLen);
 
-void print_hex(const byte* pbtData, const ui32 uiLen);
-void print_hex_bits(const byte* pbtData, const ui32 uiBits);
-void print_hex_par(const byte* pbtData, const ui32 uiBits, const byte* pbtDataPar);
+void print_hex(const byte* pbtData, const uint32_t uiLen);
+void print_hex_bits(const byte* pbtData, const uint32_t uiBits);
+void print_hex_par(const byte* pbtData, const uint32_t uiBits, const byte* pbtDataPar);
 
 #endif // _LIBNFC_BITUTILS_H_
 

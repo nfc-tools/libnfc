@@ -21,6 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef _LIBNFC_TYPES_H_
 #define _LIBNFC_TYPES_H_
 
+#include <stdint.h>
+
 #include "defines.h"
 
 // Compiler directive, set struct alignment to 1 byte for compatibility
@@ -47,13 +49,13 @@ typedef struct {
   bool bActive;                      // This represents if the PN53X device was initialized succesful
   bool bCrc;                         // Is the crc automaticly added, checked and removed from the frames
   bool bPar;                         // Does the PN53x chip handles parity bits, all parities are handled as data
-  ui8 ui8TxBits;                     // The last tx bits setting, we need to reset this if it does not apply anymore
+  uint8_t ui8TxBits;                     // The last tx bits setting, we need to reset this if it does not apply anymore
 } dev_info;
 
 struct dev_callbacks {
   const char* acDriver;              // Driver description
-  dev_info* (*connect)(const ui32 uiIndex);
-  bool (*transceive)(const dev_spec ds, const byte* pbtTx, const ui32 uiTxLen, byte* pbtRx, ui32* puiRxLen);
+  dev_info* (*connect)(const uint32_t uiIndex);
+  bool (*transceive)(const dev_spec ds, const byte* pbtTx, const uint32_t uiTxLen, byte* pbtRx, uint32_t* puiRxLen);
   void (*disconnect)(dev_info* pdi);
 };
 
@@ -81,14 +83,14 @@ typedef enum {
 typedef struct {
   byte abtAtqa[2];
   byte btSak;
-  ui32 uiUidLen;
+  uint32_t uiUidLen;
   byte abtUid[10];
-  ui32 uiAtsLen;
+  uint32_t uiAtsLen;
   byte abtAts[36];
 }tag_info_iso14443a;
 
 typedef struct {
-  ui32 uiLen;
+  uint32_t uiLen;
   byte btResCode;
   byte abtId[8];
   byte abtPad[8];
@@ -103,7 +105,7 @@ typedef struct {
   byte btParam3;
   byte btParam4;
   byte btCid;
-  ui32 uiInfLen;
+  uint32_t uiInfLen;
   byte abtInf[64];
 }tag_info_iso14443b;
 

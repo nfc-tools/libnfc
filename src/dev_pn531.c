@@ -34,15 +34,15 @@ static char buffer[BUFFER_LENGTH] = { 0x00, 0x00, 0xff }; // Every packet must s
 
 typedef struct {
   usb_dev_handle* pudh;
-  ui32 uiEndPointIn;
-  ui32 uiEndPointOut;
+  uint32_t uiEndPointIn;
+  uint32_t uiEndPointOut;
 } dev_spec_pn531;
 
 // Find transfer endpoints for bulk transfers
 void get_end_points(struct usb_device *dev, dev_spec_pn531* pdsp)
 {
-  ui32 uiIndex;
-  ui32 uiEndPoint;
+  uint32_t uiIndex;
+  uint32_t uiEndPoint;
   struct usb_interface_descriptor* puid = dev->config->interface->altsetting;
 
   // 3 Endpoints maximum: Interrupt In, Bulk In, Bulk Out
@@ -74,7 +74,7 @@ void get_end_points(struct usb_device *dev, dev_spec_pn531* pdsp)
   }
 }                                                                                  
 
-dev_info* dev_pn531_connect(const ui32 uiIndex)
+dev_info* dev_pn531_connect(const uint32_t uiIndex)
 {                                                
   int idvendor = 0x04CC;
   int idproduct = 0x0531;
@@ -83,7 +83,7 @@ dev_info* dev_pn531_connect(const ui32 uiIndex)
   dev_info* pdi = INVALID_DEVICE_INFO;
   dev_spec_pn531* pdsp;
   dev_spec_pn531 dsp;
-  ui32 uiDevIndex;
+  uint32_t uiDevIndex;
 
   dsp.uiEndPointIn = 0;
   dsp.uiEndPointOut = 0;
@@ -164,9 +164,9 @@ void dev_pn531_disconnect(dev_info* pdi)
   free(pdi);
 }                                        
 
-bool dev_pn531_transceive(const dev_spec ds, const byte* pbtTx, const ui32 uiTxLen, byte* pbtRx, ui32* puiRxLen)
+bool dev_pn531_transceive(const dev_spec ds, const byte* pbtTx, const uint32_t uiTxLen, byte* pbtRx, uint32_t* puiRxLen)
 {                                                                          
-    ui32 uiPos = 0;                                                             
+    uint32_t uiPos = 0;                                                             
     int ret = 0;                                                           
     char buf[BUFFER_LENGTH];
     dev_spec_pn531* pdsp = (dev_spec_pn531*)ds;

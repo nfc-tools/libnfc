@@ -20,15 +20,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
+
 #include "libnfc.h"
 
 static byte abtReaderRx[MAX_FRAME_LEN];
 static byte abtReaderRxPar[MAX_FRAME_LEN];
-static ui32 uiReaderRxBits;
+static uint32_t uiReaderRxBits;
 static byte abtTagRx[MAX_FRAME_LEN];
 static byte abtTagRxPar[MAX_FRAME_LEN];
-static ui32 uiTagRxBits;
+static uint32_t uiTagRxBits;
 static dev_info* pdiReader;
 static dev_info* pdiTag;
 

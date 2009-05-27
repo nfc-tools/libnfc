@@ -20,16 +20,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
+
 #include "libnfc.h"
 
 #define SAK_FLAG_ATS_SUPPORTED 0x20
 
 static byte abtRx[MAX_FRAME_LEN];
-static ui32 uiRxBits;
-static ui32 uiRxLen;
+static uint32_t uiRxBits;
+static uint32_t uiRxLen;
 static byte abtUid[10];
-static ui32 uiUidLen = 4;
+static uint32_t uiUidLen = 4;
 static dev_info* pdi;
 
 // ISO14443A Anti-Collision Commands
@@ -39,7 +41,7 @@ byte abtSelectTag [9] = { 0x93,0x70,0x00,0x00,0x00,0x00,0x00,0x00,0x00 };
 byte abtRats      [4] = { 0xe0,0x50,0xbc,0xa5 };
 byte abtHalt      [4] = { 0x50,0x00,0x57,0xcd };
 
-bool transmit_bits(const byte* pbtTx, const ui32 uiTxBits)
+bool transmit_bits(const byte* pbtTx, const uint32_t uiTxBits)
 {
   // Show transmitted command
   printf("R: "); print_hex_bits(pbtTx,uiTxBits);
@@ -55,7 +57,7 @@ bool transmit_bits(const byte* pbtTx, const ui32 uiTxBits)
 }
 
 
-bool transmit_bytes(const byte* pbtTx, const ui32 uiTxLen)
+bool transmit_bytes(const byte* pbtTx, const uint32_t uiTxLen)
 {
   // Show transmitted command
   printf("R: "); print_hex(pbtTx,uiTxLen);

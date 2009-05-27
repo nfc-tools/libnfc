@@ -13,7 +13,7 @@ AC_PATH_PROG(PKG_CONFIG, pkg-config)
 
 # Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS([stdlib.h])
+AC_CHECK_HEADERS([stdlib.h stdint.h])
 
 
 # libusb
@@ -40,10 +40,11 @@ AC_MSG_RESULT($enable_debug)
  
 if test "x$enable_debug" = "xyes"
 then
-        CFLAGS="$CFLAGS -g -Wall -DDEBUG"
+        CFLAGS="$CFLAGS -g -Wall -DDEBUG -pedantic"
 fi
 AC_SUBST([DEBUG_CFLAGS])
 
+CFLAGS="$CFLAGS -std=c99"
 
 AC_CONFIG_FILES([
 		Makefile
