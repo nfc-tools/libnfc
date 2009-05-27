@@ -32,6 +32,19 @@ fi
 AC_SUBST(LIBPCSCLITE_LIBS)
 AC_SUBST(LIBPCSCLITE_CFLAGS)
 
+# --enable-debug support
+AC_ARG_ENABLE([debug],AS_HELP_STRING([--enable-debug],[Debug flags]),[enable_debug=$enableval],[enable_debug="no"])
+ 
+AC_MSG_CHECKING(debug)
+AC_MSG_RESULT($enable_debug)
+ 
+if test "x$enable_debug" = "xyes"
+then
+        CFLAGS="$CFLAGS -g -Wall -DDEBUG"
+fi
+AC_SUBST([DEBUG_CFLAGS])
+
+
 AC_CONFIG_FILES([
 		Makefile
 		src/Makefile

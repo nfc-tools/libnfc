@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef _LIBNFC_DEFINES_H_
 #define _LIBNFC_DEFINES_H_
 
-// #define _LIBNFC_VERBOSE_
+// #define DEBUG
 
 typedef unsigned char       byte;
 typedef unsigned char       ui8;

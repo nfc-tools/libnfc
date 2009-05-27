@@ -80,7 +80,7 @@ dev_info* dev_acr122_connect(const ui32 uiIndex)
   // Retrieve the string array of all available pcsc readers
   if (SCardListReaders(dsa.hCtx,null,acList,(void*)&ulListLen) != SCARD_S_SUCCESS) return INVALID_DEVICE_INFO;
   
-  #ifdef _LIBNFC_VERBOSE_
+  #ifdef DEBUG
       printf("Found the following PCSC device(s)\n");
       printf("- %s\n",acList);
   #endif
@@ -105,7 +105,7 @@ dev_info* dev_acr122_connect(const ui32 uiIndex)
       uiReaderCount++;
 
       // Debug info
-      #ifdef _LIBNFC_VERBOSE_
+      #ifdef DEBUG
         printf("- %s\n",acList+uiPos+1);
       #endif
     }
@@ -185,7 +185,7 @@ bool dev_acr122_transceive(const dev_spec ds, const byte* pbtTx, const ui32 uiTx
   // Prepare and transmit the send buffer
   memcpy(abtTxBuf+5,pbtTx,uiTxLen);
   ulRxBufLen = sizeof(abtRxBuf);
-  #ifdef _LIBNFC_VERBOSE_
+  #ifdef DEBUG
     printf("Tx: ");
     print_hex(abtTxBuf,uiTxLen+5);
   #endif
@@ -211,7 +211,7 @@ bool dev_acr122_transceive(const dev_spec ds, const byte* pbtTx, const ui32 uiTx
     if (SCardTransmit(pdsa->hCard,&(pdsa->ioCard),abtRxCmd,uiRxCmdLen,null,abtRxBuf,(void*)&ulRxBufLen) != SCARD_S_SUCCESS) return false;
   }
 
-  #ifdef _LIBNFC_VERBOSE_
+  #ifdef DEBUG
     printf("Rx: ");
     print_hex(abtRxBuf,ulRxBufLen);
   #endif
@@ -244,7 +244,7 @@ char* dev_acr122_firmware(const dev_spec ds)
     uiResult = SCardTransmit(pdsa->hCard,&(pdsa->ioCard),abtGetFw,sizeof(abtGetFw),null,(byte*)abtFw,(void*)&ulFwLen);
   }
 
-  #ifdef _LIBNFC_VERBOSE_
+  #ifdef DEBUG
   if (uiResult != SCARD_S_SUCCESS)
   {
     printf("No ACR122 firmware received, Error: %08x\n",uiResult);
