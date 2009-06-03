@@ -14,7 +14,7 @@ AC_PATH_PROG(PKG_CONFIG, pkg-config)
 # Checks for header files.
 AC_HEADER_STDC
 AC_HEADER_STDBOOL
-AC_CHECK_HEADERS([stdio.h stdlib.h stdint.h stddef.h stdbool.h])
+AC_CHECK_HEADERS([stdio.h stdlib.h stdint.h stddef.h stdbool.h usb.h])
 
 # Checks for types
 AC_TYPE_SIZE_T

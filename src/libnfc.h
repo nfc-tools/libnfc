@@ -29,7 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "bitutils.h"
 #include "devices.h"
 
-dev_info* nfc_connect();
+dev_info* nfc_connect(void);
 void nfc_disconnect(dev_info* pdi);
 bool nfc_configure(dev_info* pdi, const dev_config_option dco, const bool bEnable);
 
