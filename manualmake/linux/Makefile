@@ -13,7 +13,7 @@ LIBNFC_LINK=-Wl,-rpath,.
 # General settings
 ###############################################
 LIBNFC_LDFLAGS=$(LIBPCSC_LIB) $(LIBUSB_LIB)
-LIBNFC_PATH=..
+LIBNFC_PATH=../../
 VPATH=$(LIBNFC_PATH)
 
 ###############################################
