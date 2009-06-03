@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifdef _WIN32
   #define SERIAL_STRING "COM"
 #endif
-#ifdef _LINUX
+#ifdef linux
   #define SERIAL_STRING "/dev/ttyusb"
 #endif
 #ifdef __APPLE__
