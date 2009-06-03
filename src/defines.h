@@ -39,6 +39,7 @@ typedef void*               dev_spec; // Device connection specification
 #define INVALID_DEVICE_INFO null
 #define MAX_FRAME_LEN       264
 #define DEVICE_NAME_LENGTH  256
+#define MAX_DEVICES         16
 
 // Useful macros
 #define MIN(a,b) (((a) < (b)) ? (a) : (b))
