@@ -18,23 +18,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 */
 
-#ifndef _LIBNFC_DEVICES_H_
-#define _LIBNFC_DEVICES_H_
+#ifndef _LIBNFC_DEV_PN533_H_
+#define _LIBNFC_DEV_PN533_H_
 
 #include "defines.h"
 #include "types.h"
-#include "dev_acr122.h"
-#include "dev_pn531.h"
-#include "dev_pn533.h"
-#include "dev_arygon.h"
 
-const static struct dev_callbacks dev_callbacks_list[] = {
-//  Driver Name        Connect                  Transceive                    Disconect
-  { "ACR122",          dev_acr122_connect,      dev_acr122_transceive,        dev_acr122_disconnect       },
-  { "PN531USB",        dev_pn531_connect,       dev_pn531_transceive,         dev_pn531_disconnect        },
-  { "PN533USB",        dev_pn533_connect,       dev_pn533_transceive,         dev_pn533_disconnect        },
-  { "ARYGON",          dev_arygon_connect,      dev_arygon_transceive,        dev_arygon_disconnect       }
-};
+// Functions used by developer to handle connection to this device
+dev_info* dev_pn533_connect(const ui32 uiIndex);
+void dev_pn533_disconnect(dev_info* pdi);
 
-#endif // _LIBNFC_DEVICES_H_
+// Callback function used by libnfc to transmit commands to the PN53X chip
+bool dev_pn533_transceive(const dev_spec ds, const byte* pbtTx, const ui32 uiTxLen, byte* pbtRx, ui32* puiRxLen);
+
+#endif // _LIBNFC_DEV_PN533_H_
 

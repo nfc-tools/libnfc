@@ -25,7 +25,7 @@ Thanks to d18c7db and Okko for example code
 #include <usb.h>
 #include <stdio.h>
 #include <string.h>
-#include "dev_pn531.h"
+#include "dev_pn533.h"
 #include "bitutils.h"
 
 #define BUFFER_LENGTH 256
@@ -36,10 +36,10 @@ typedef struct {
   usb_dev_handle* pudh;
   ui32 uiEndPointIn;
   ui32 uiEndPointOut;
-} dev_spec_pn531;
+} dev_spec_pn533;
 
 // Find transfer endpoints for bulk transfers
-static void get_end_points(struct usb_device *dev, dev_spec_pn531* pdsp)
+static void get_end_points(struct usb_device *dev, dev_spec_pn533* pdsp)
 {
   ui32 uiIndex;
   ui32 uiEndPoint;
@@ -74,17 +74,15 @@ static void get_end_points(struct usb_device *dev, dev_spec_pn531* pdsp)
   }
 }                                                                                  
 
-dev_info* dev_pn531_connect(const ui32 uiIndex)
+dev_info* dev_pn533_connect(const ui32 uiIndex)
 {                                                
-  int idvendor = 0x04CC;
-  int idproduct = 0x0531;
-  int idvendor_alt = 0x054c;
-  int idproduct_alt = 0x0193;
+  int idvendor = 0x04e6;
+  int idproduct = 0x5591;
   struct usb_bus *bus;
   struct usb_device *dev;
   dev_info* pdi = INVALID_DEVICE_INFO;
-  dev_spec_pn531* pdsp;
-  dev_spec_pn531 dsp;
+  dev_spec_pn533* pdsp;
+  dev_spec_pn533 dsp;
   ui32 uiDevIndex;
 
   dsp.uiEndPointIn = 0;
@@ -102,8 +100,7 @@ dev_info* dev_pn531_connect(const ui32 uiIndex)
   {                                                 
     for (dev = bus->devices; dev; dev = dev->next)
     {                                             
-      if ((idvendor==dev->descriptor.idVendor && idproduct==dev->descriptor.idProduct) ||
-          (idvendor_alt==dev->descriptor.idVendor && idproduct_alt==dev->descriptor.idProduct))
+      if (idvendor==dev->descriptor.idVendor && idproduct==dev->descriptor.idProduct)
       {                                                                              
         // Make sure there are 2 endpoints available
         if (dev->config->interface->altsetting->bNumEndpoints < 2) return pdi;
@@ -116,10 +113,10 @@ dev_info* dev_pn531_connect(const ui32 uiIndex)
           continue;
         }
         #ifdef _LIBNFC_VERBOSE_
-          printf("Found PN531 device\n");
+          printf("Found PN533 device\n");
         #endif
 
-        // Open the PN531 USB device
+        // Open the PN533 USB device
         dsp.pudh = usb_open(dev);
 
         get_end_points(dev,&dsp);                                                       
@@ -141,11 +138,11 @@ dev_info* dev_pn531_connect(const ui32 uiIndex)
           return INVALID_DEVICE_INFO;
         }
         // Allocate memory for the device info and specification, fill it and return the info
-        pdsp = malloc(sizeof(dev_spec_pn531));
+        pdsp = malloc(sizeof(dev_spec_pn533));
         *pdsp = dsp;
         pdi = malloc(sizeof(dev_info));
-        strcpy(pdi->acName,"PN531USB");
-        pdi->ct = CT_PN531;
+        strcpy(pdi->acName,"PN533USB");
+        pdi->ct = CT_PN533;
         pdi->ds = (dev_spec)pdsp;
         pdi->bActive = true;
         pdi->bCrc = true;
@@ -158,21 +155,21 @@ dev_info* dev_pn531_connect(const ui32 uiIndex)
   return pdi;
 }                                                                                          
 
-void dev_pn531_disconnect(dev_info* pdi)
+void dev_pn533_disconnect(dev_info* pdi)
 {
-  dev_spec_pn531* pdsp = (dev_spec_pn531*)pdi->ds;
+  dev_spec_pn533* pdsp = (dev_spec_pn533*)pdi->ds;
   usb_release_interface(pdsp->pudh,0);
 	usb_close(pdsp->pudh);
   free(pdi->ds);
   free(pdi);
 }                                        
 
-bool dev_pn531_transceive(const dev_spec ds, const byte* pbtTx, const ui32 uiTxLen, byte* pbtRx, ui32* puiRxLen)
+bool dev_pn533_transceive(const dev_spec ds, const byte* pbtTx, const ui32 uiTxLen, byte* pbtRx, ui32* puiRxLen)
 {                                                                          
     ui32 uiPos = 0;                                                             
     int ret = 0;                                                           
     char buf[BUFFER_LENGTH];
-    dev_spec_pn531* pdsp = (dev_spec_pn531*)ds;
+    dev_spec_pn533* pdsp = (dev_spec_pn533*)ds;
 
     // Packet length = data length (len) + checksum (1) + end of stream marker (1)
     buffer[3] = uiTxLen;                                                                
@@ -244,6 +241,15 @@ bool dev_pn531_transceive(const dev_spec ds, const byte* pbtTx, const ui32 uiTxL
 
     // Remove the preceding and appending bytes 00 00 FF xx Fx .. .. .. xx 00 (x = variable)
     *puiRxLen = ret - 7 - 2;
+
+    // Get register: nuke extra byte (awful hack)
+    if ((buf[5]==(char)0xd5) && (buf[6]==(char)0x07) && (*puiRxLen==2)) {
+        // printf("Got %02x %02x, keep %02x\n", buf[7], buf[8], buf[8]);
+        *puiRxLen = (*puiRxLen) - 1;
+        memcpy( pbtRx, buf + 8, *puiRxLen);
+        return true;
+    }
+
     memcpy( pbtRx, buf + 7, *puiRxLen);
 
     return true;

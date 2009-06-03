@@ -24,7 +24,7 @@ LD = gcc
 CFLAGS = -fPIC -Wall -O4 $(LIBPCSC_HEADERS) $(LIBUSB_HEADERS)
 LDFLAGS = -fPIC -Wall -O4
 
-OBJS = dev_pn531.o dev_acr122.o dev_arygon.o bitutils.o libnfc.o rs232.o
+OBJS = dev_pn531.o dev_pn533.o dev_acr122.o dev_arygon.o bitutils.o libnfc.o rs232.o
 HEADERS = devices.h bitutils.h defines.h libnfc.h
 LIBNFC = libnfc.$(LIBNFC_TYPE)
 EXES = anticol emulate list mftool relay
