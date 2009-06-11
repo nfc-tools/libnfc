@@ -43,7 +43,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define ACR122_WRAP_LEN 5
 #define ACR122_COMMAND_LEN 266
 #define ACR122_RESPONSE_LEN 268
-#define MAX_READERS 16
 
 typedef struct {
   SCARDCONTEXT hCtx;
@@ -61,8 +60,8 @@ static byte abtLed[9] = { 0xFF,0x00,0x40,0x05,0x04,0x00,0x00,0x00,0x00 };
 
 dev_info* dev_acr122_connect(const uint32_t uiIndex)
 {
-  char* pacReaders[MAX_READERS];
-  char acList[256+64*MAX_READERS];
+  char* pacReaders[MAX_DEVICES];
+  char acList[256+64*MAX_DEVICES];
   size_t ulListLen = sizeof(acList);
   uint32_t uiPos;
   uint32_t uiReaderCount;
@@ -92,7 +91,7 @@ dev_info* dev_acr122_connect(const uint32_t uiIndex)
   for (uiPos=0; uiPos<ulListLen; uiPos++)
   {
     // Make sure don't break out of our reader array
-    if (uiReaderCount == MAX_READERS) break;
+    if (uiReaderCount == MAX_DEVICES) break;
 
     // Test if there is a next reader available
     if (acList[uiPos] == 0x00)

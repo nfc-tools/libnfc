@@ -25,11 +25,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "types.h"
 #include "dev_acr122.h"
 #include "dev_pn531.h"
+#include "dev_arygon.h"
 
 const static struct dev_callbacks dev_callbacks_list[] = {
 //  Driver Name        Connect                  Transceive                    Disconect
   { "ACR122",          dev_acr122_connect,      dev_acr122_transceive,        dev_acr122_disconnect       },
-  { "PN531USB",        dev_pn531_connect,       dev_pn531_transceive,         dev_pn531_disconnect        }
+  { "PN531USB",        dev_pn531_connect,       dev_pn531_transceive,         dev_pn531_disconnect        },
+  { "ARYGON",          dev_arygon_connect,      dev_arygon_transceive,        dev_arygon_disconnect       }
 };
 
 #endif // _LIBNFC_DEVICES_H_
