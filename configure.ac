@@ -24,13 +24,25 @@ AC_TYPE_UINT32_T
 AC_TYPE_UINT64_T
 AC_TYPE_INT32_T
 
+# --enable-pcsc-lite support (default: yes)
+AC_ARG_ENABLE([pcsc-lite],AS_HELP_STRING([--enable-pcsc-lite],[pcsc-lite feature flag]),[enable_pcsc_lite=$enableval],[enable_pcsc_lite="yes"])
+ 
+AC_MSG_CHECKING(for pcsc-lite support)
+AC_MSG_RESULT($enable_pcsc_lite)
+ 
+if test x"$enable_pcsc_lite" = "xno"
+then
+        WITH_PCSC=0
+fi
+AM_CONDITIONAL(PCSC_LITE_ENABLED, [test x"$enable_pcsc_lite" = xyes])
+
 # --enable-debug support
 AC_ARG_ENABLE([debug],AS_HELP_STRING([--enable-debug],[Debug flags]),[enable_debug=$enableval],[enable_debug="no"])
  
 AC_MSG_CHECKING(for debug flag)
 AC_MSG_RESULT($enable_debug)
  
-if test "x$enable_debug" = "xyes"
+if test x"$enable_debug" = "xyes"
 then
         CFLAGS="$CFLAGS -g -Wall -DDEBUG -pedantic"
 fi
@@ -46,12 +58,15 @@ AC_SUBST(LIBUSB_LIBS)
 AC_SUBST(LIBUSB_CFLAGS)
 
 ## libpcsclite
-PKG_CHECK_MODULES(LIBPCSCLITE, libpcsclite, [WITH_PCSC=1], [WITH_PCSC=0])
-if test "$WITH_PCSC" == "0" ; then
-  AC_MSG_ERROR([libpcsclite is mandatory.])
+if test "x$enable_pcsc_lite" = "xyes"
+then
+  PKG_CHECK_MODULES(LIBPCSCLITE, libpcsclite, [WITH_PCSC=1], [WITH_PCSC=0])
+  if test "$WITH_PCSC" == "0" ; then
+    AC_MSG_ERROR([libpcsclite is mandatory.])
+  fi
+  AC_SUBST(LIBPCSCLITE_LIBS)
+  AC_SUBST(LIBPCSCLITE_CFLAGS)
 fi
-AC_SUBST(LIBPCSCLITE_LIBS)
-AC_SUBST(LIBPCSCLITE_CFLAGS)
 
 # Set C standard to C99
 CFLAGS="$CFLAGS -std=c99"
