@@ -5,18 +5,18 @@ bin_PROGRAMS = nfc-anticol nfc-list nfc-mftool nfc-relay nfc-emulate
 # set the include path found by configure
 INCLUDES= $(all_includes)
 
-nfcinclude_HEADERS = libnfc.h bitutils.h defines.h types.h mifaretag.h devices.h
+nfcinclude_HEADERS = libnfc.h bitutils.h defines.h types.h mifaretag.h devices.h rs232.h dev_arygon.h
 nfcincludedir = $(includedir)/libnfc
 
 lib_LTLIBRARIES = libnfc.la
-libnfc_la_SOURCES = bitutils.c libnfc.c
+libnfc_la_SOURCES = bitutils.c libnfc.c rs232.c dev_arygon.c
 libnfc_la_CFLAGS =
 libnfc_la_LIBADD = 
 
 if PCSC_LITE_ENABLED
-  nfcinclude_HEADERS += dev_acr122.h dev_pn531.h
+  nfcinclude_HEADERS += dev_acr122.h dev_pn531.h dev_pn533.h
   libnfc_la_CFLAGS += @LIBUSB_CFLAGS@ @LIBPCSCLITE_CFLAGS@
-  libnfc_la_SOURCES += dev_pn531.c dev_acr122.c
+  libnfc_la_SOURCES += dev_acr122.c dev_pn531.c dev_pn533.c
   libnfc_la_LIBADD += @LIBUSB_LIBS@ @LIBPCSCLITE_LIBS@
 endif
 

@@ -93,15 +93,15 @@ void rs232_close(const serial_port sp)
 
 bool rs232_cts(const serial_port sp)
 {
-  ulong ulStatus;
-  if (ioctl(((serial_port_unix*)sp)->fd,TIOCMGET,&ulStatus) < 0) return false;
-  return (ulStatus & TIOCM_CTS);
+  char status;
+  if (ioctl(((serial_port_unix*)sp)->fd,TIOCMGET,&status) < 0) return false;
+  return (status & TIOCM_CTS);
 }
 
-bool rs232_receive(const serial_port sp, byte* pbtRx, ui32* puiRxLen)
+bool rs232_receive(const serial_port sp, byte* pbtRx, uint32_t* puiRxLen)
 {
   int iResult;
-  ui32 uiCount = 0;
+  uint32_t uiCount = 0;
   fd_set rfds;
   
   while (true)
@@ -129,7 +129,7 @@ bool rs232_receive(const serial_port sp, byte* pbtRx, ui32* puiRxLen)
   }
 }
 
-bool rs232_send(const serial_port sp, const byte* pbtTx, const ui32 uiTxLen)
+bool rs232_send(const serial_port sp, const byte* pbtTx, const uint32_t uiTxLen)
 {
   int iResult;
   iResult = write(((serial_port_unix*)sp)->fd,pbtTx,uiTxLen);

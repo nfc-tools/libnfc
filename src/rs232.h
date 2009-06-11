@@ -36,6 +36,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
   #include <sys/types.h>
   #include <sys/stat.h>
   #include <limits.h>
+  #include <sys/time.h>
 #else
   #include <windows.h>
 #endif
@@ -48,8 +49,8 @@ typedef void* serial_port;
 serial_port rs232_open(const char* pcPortName);
 void rs232_close(const serial_port sp);
 bool rs232_cts(const serial_port sp);
-bool rs232_receive(const serial_port sp, byte* pbtRx, ui32* puiRxLen);
-bool rs232_send(const serial_port sp, const byte* pbtTx, const ui32 uiTxLen);
+bool rs232_receive(const serial_port sp, byte* pbtRx, uint32_t* puiRxLen);
+bool rs232_send(const serial_port sp, const byte* pbtTx, const uint32_t uiTxLen);
 
 #endif // _LIBNFC_RS232_H_
 

@@ -24,26 +24,26 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #ifdef _WIN32
   #define SERIAL_STRING "COM"
-#endif
-#ifdef _LINUX
-  #define SERIAL_STRING "/dev/ttyusb"
-#endif
-#ifdef __APPLE__
-  #define SERIAL_STRING "/dev/tty.SLAB_USBtoUART"
+#else
+  #ifdef __APPLE__
+    #define SERIAL_STRING "/dev/tty.SLAB_USBtoUART"
+  #else
+    #define SERIAL_STRING "/dev/ttyUSB"
+  #endif
 #endif
 
 #define BUFFER_LENGTH 256
 #define USB_TIMEOUT   30000
 static byte abtTxBuf[BUFFER_LENGTH] = { 0x32, 0x00, 0x00, 0xff }; // Every packet must start with "00 00 ff"
 
-dev_info* dev_arygon_connect(const ui32 uiIndex)
+dev_info* dev_arygon_connect(const uint32_t uiIndex)
 {
-  ui32 uiDevNr;
+  uint32_t uiDevNr;
   serial_port sp;
   char acConnect[BUFFER_LENGTH];
   dev_info* pdi = INVALID_DEVICE_INFO;
   
-#ifdef _LIBNFC_VERBOSE_
+#ifdef DEBUG
   printf("Trying to find ARYGON device on serial port: %s#\n",SERIAL_STRING);
 #endif
   
@@ -58,7 +58,7 @@ dev_info* dev_arygon_connect(const ui32 uiIndex)
       sp = rs232_open(acConnect);
     #endif
     if ((sp != INVALID_SERIAL_PORT) && (sp != CLAIMED_SERIAL_PORT)) break;
-    #ifdef _LIBNFC_VERBOSE_
+    #ifdef DEBUG
       if (sp == INVALID_SERIAL_PORT) printf("invalid serial port: %s\n",acConnect);
       if (sp == CLAIMED_SERIAL_PORT) printf("serial port already claimed: %s\n",acConnect);
     #endif
@@ -66,7 +66,7 @@ dev_info* dev_arygon_connect(const ui32 uiIndex)
   // Test if we have found a device
   if (uiDevNr == MAX_DEVICES) return INVALID_DEVICE_INFO;
   
-#ifdef _LIBNFC_VERBOSE_
+#ifdef DEBUG
   printf("Succesfully connected to: %s\n",acConnect);
 #endif
   
@@ -88,11 +88,11 @@ void dev_arygon_disconnect(dev_info* pdi)
   free(pdi);
 }                                        
 
-bool dev_arygon_transceive(const dev_spec ds, const byte* pbtTx, const ui32 uiTxLen, byte* pbtRx, ui32* puiRxLen)
+bool dev_arygon_transceive(const dev_spec ds, const byte* pbtTx, const uint32_t uiTxLen, byte* pbtRx, uint32_t* puiRxLen)
 {
   byte abtRxBuf[BUFFER_LENGTH];
-  ui32 uiRxBufLen = BUFFER_LENGTH;
-  ui32 uiPos;
+  uint32_t uiRxBufLen = BUFFER_LENGTH;
+  uint32_t uiPos;
     
   // Packet length = data length (len) + checksum (1) + end of stream marker (1)
   abtTxBuf[4] = uiTxLen;                                                                
@@ -111,7 +111,7 @@ bool dev_arygon_transceive(const dev_spec ds, const byte* pbtTx, const ui32 uiTx
   // End of stream marker
   abtTxBuf[uiTxLen+7] = 0;        
   
-#ifdef _LIBNFC_VERBOSE_
+#ifdef DEBUG
   printf("Tx: ");
   print_hex(abtTxBuf,uiTxLen+8);
 #endif
@@ -120,13 +120,13 @@ bool dev_arygon_transceive(const dev_spec ds, const byte* pbtTx, const ui32 uiTx
   if (!rs232_receive((serial_port)ds,abtRxBuf,&uiRxBufLen)) return false;
   
 
-#ifdef _LIBNFC_VERBOSE_
+#ifdef DEBUG
   printf("Rx: ");
   print_hex(abtRxBuf,uiRxBufLen);
 #endif
   
   // When the answer should be ignored, just return a succesful result    
-  if(pbtRx == null || puiRxLen == null) return true;
+  if(pbtRx == NULL || puiRxLen == NULL) return true;
 
   // Only succeed when the result is at least 00 00 ff 00 ff 00 00 00 FF xx Fx Dx xx .. .. .. xx 00 (x = variable)
   if(uiRxBufLen < 15) return false;
