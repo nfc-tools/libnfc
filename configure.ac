@@ -36,7 +36,7 @@ then
 fi
 AM_CONDITIONAL(PCSC_LITE_ENABLED, [test x"$enable_pcsc_lite" = xyes])
 
-# --enable-debug support
+# --enable-debug support (default:no)
 AC_ARG_ENABLE([debug],AS_HELP_STRING([--enable-debug],[Debug flags]),[enable_debug=$enableval],[enable_debug="no"])
  
 AC_MSG_CHECKING(for debug flag)
