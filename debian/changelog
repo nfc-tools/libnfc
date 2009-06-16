@@ -1,0 +1,12 @@
+libnfc (1.1.1-0) unstable; urgency=low
+
+  * New upstream version.
+
+ -- Romuald Conty <romuald.conty@free.fr>  Wed, 29 Apr 2009 16:42:42 +0100
+
+libnfc (1.1.0-0) unstable; urgency=low
+
+  * Initial debian package.
+
+ -- Romuald Conty <romuald.conty@free.fr>  Wed, 22 Apr 2009 10:42:42 +0100
+
