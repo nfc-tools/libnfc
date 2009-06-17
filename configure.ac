@@ -1,4 +1,4 @@
-AC_INIT(libnfc, 1.1.1, roel@libnfc.org)
+AC_INIT(libnfc, 1.1.1, info@libnfc.org)
 
 AC_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE
@@ -51,7 +51,7 @@ AC_SUBST([DEBUG_CFLAGS])
 # pkg-config check for
 ## libusb
 PKG_CHECK_MODULES(LIBUSB, libusb, [WITH_USB=1], [WITH_USB=0])
-if test "$WITH_USB" == "0" ; then
+if test "$WITH_USB" = "0" ; then
   AC_MSG_ERROR([libusb is mandatory.])
 fi
 AC_SUBST(LIBUSB_LIBS)
@@ -61,7 +61,7 @@ AC_SUBST(LIBUSB_CFLAGS)
 if test "x$enable_pcsc_lite" = "xyes"
 then
   PKG_CHECK_MODULES(LIBPCSCLITE, libpcsclite, [WITH_PCSC=1], [WITH_PCSC=0])
-  if test "$WITH_PCSC" == "0" ; then
+  if test "$WITH_PCSC" = "0" ; then
     AC_MSG_ERROR([libpcsclite is mandatory.])
   fi
   AC_SUBST(LIBPCSCLITE_LIBS)
