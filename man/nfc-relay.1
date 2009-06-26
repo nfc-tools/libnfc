@@ -1,0 +1,28 @@
+.TH NFC-RELAY 1 "June 26, 2009"
+.SH NAME
+nfc-relay \- Relay attack command line tool based on libnfc
+.SH SYNOPSIS
+.B nfc-relay
+.SH DESCRIPTION
+.B nfc-relay
+is an utility that demonstrates an relay attack. For this it requires two
+NFC devices. One will emulate an ISO/IEC 14443 type A tag, while the 2nd
+device will act as a reader. The genuine tag can be placed on the 2nd reader and
+the tag emulator can be placed close to the original reader. All communication
+is now relayed and shown in the screen on real-time.
+
+.SH BUGS
+Please report any bugs on the
+.B libnfc
+forum at
+.BR http://www.libnfc.org/community/ "."
+.SH LICENCE
+.B libnfc
+and
+.B nfc-tools
+are covered by the GNU Lesser General Public License (LGPL), version 3.
+.SH AUTHORS
+Roel Verdult <roel@libnfc.org>
+.PP
+This manual page was written by Romuald Conty <romuald.conty@free.fr>.
+It is licensed under the terms of the GNU GPL (version 2 or later).

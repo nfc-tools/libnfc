@@ -1,0 +1,30 @@
+.TH NFC-ANTICOL 1 "June 26, 2009"
+.SH NAME
+nfc-anticol \- Demonstration NFC anti-collison command line tool based on libnfc
+.SH SYNOPSIS
+.B nfc-anticol
+.SH DESCRIPTION
+.B nfc-anticol
+is an anti-collision demonstration tool for ISO/IEC 14443-A tags, performed
+by custom constructed frames. The first frame must be a short frame which
+is only 7 bits long. Commercial SDK's often don't support a feature to send
+frames that are not a multiple of 8 bits (1 byte) long.
+This makes it impossible to do the anti-collision yourself.
+The developer has to rely on closed proprietary software and should hope it does not contain vulnerabilities during the anti-collision phase.
+Performing the anti-collision using custom frames could protect against a malicious tag that, for example, violates the standard by sending frames with unsupported lengths.
+
+.SH BUGS
+Please report any bugs on the
+.B libnfc
+forum at
+.BR http://www.libnfc.org/community/ "."
+.SH LICENCE
+.B libnfc
+and
+.B nfc-tools
+are covered by the GNU Lesser General Public License (LGPL), version 3.
+.SH AUTHORS
+Roel Verdult <roel@libnfc.org>
+.PP
+This manual page was written by Romuald Conty <romuald.conty@free.fr>.
+It is licensed under the terms of the GNU GPL (version 2 or later).
