@@ -27,10 +27,23 @@ if [ ! -f $LIBNFC_MACOSX_ARCHIVE ]; then
 	if [ -d $LIBNFC_MACOSX_DIR ]; then
 		rm -rf $LIBNFC_MACOSX_DIR
 	fi
+
 	mkdir -p $LIBNFC_MACOSX_DIR
+
+	# Copy sources
 	cp src/*.c $LIBNFC_MACOSX_DIR/
 	cp src/*.h $LIBNFC_MACOSX_DIR/
+
+	# Copy important files
+	cp LICENSE $LIBNFC_MACOSX_DIR/
+	cp README $LIBNFC_MACOSX_DIR/
+
+	# Copy MacOSX specific files
 	cp macosx/* $LIBNFC_MACOSX_DIR/
+	# Fix MacOSX Makefile
+	sed -i 's/LIBNFC_PATH=\.\./LIBNFC_PATH=./' Makefile
+
+	# Build archive
 	tar cvzf $LIBNFC_MACOSX_DIR.tgz $LIBNFC_MACOSX_DIR
 	rm -rf $LIBNFC_MACOSX_DIR
 else
@@ -45,11 +58,24 @@ if [ ! -f $LIBNFC_WINDOWS_ARCHIVE ]; then
 	if [ -d $LIBNFC_WINDOWS_DIR ]; then
 		rm -rf $LIBNFC_WINDOWS_DIR
 	fi
+
 	mkdir -p $LIBNFC_WINDOWS_DIR
+
+	# Copy sources
 	cp src/*.c $LIBNFC_WINDOWS_DIR/
 	cp src/*.h $LIBNFC_WINDOWS_DIR/
+
+	# Copy important files
+	cp LICENSE $LIBNFC_WINDOWS_DIR/
+	cp README $LIBNFC_WINDOWS_DIR/
+
+	# Copy Visual C++ project files
 	cp -r win32 $LIBNFC_WINDOWS_DIR/vc-project
+
+	# Remove svn stuff
 	find $LIBNFC_WINDOWS_DIR -name ".svn" -type d | xargs rm -rf 
+
+	# Build archive
 	zip -r $LIBNFC_WINDOWS_ARCHIVE $LIBNFC_WINDOWS_DIR
 	rm -rf $LIBNFC_WINDOWS_DIR
 else
