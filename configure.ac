@@ -60,10 +60,18 @@ AC_SUBST(LIBUSB_CFLAGS)
 ## libpcsclite
 if test "x$enable_pcsc_lite" = "xyes"
 then
+case "$host" in
+  *darwin*)
+    AC_MSG_WARN(Using darwin PCSC Framework)
+    LIBPCSCLITE_LIBS=-Wl,-framework,PCSC
+  ;;
+  *)
   PKG_CHECK_MODULES(LIBPCSCLITE, libpcsclite, [WITH_PCSC=1], [WITH_PCSC=0])
   if test "$WITH_PCSC" = "0" ; then
     AC_MSG_ERROR([libpcsclite is mandatory.])
   fi
+  ;;
+esac
   AC_SUBST(LIBPCSCLITE_LIBS)
   AC_SUBST(LIBPCSCLITE_CFLAGS)
 fi

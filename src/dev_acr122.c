@@ -25,7 +25,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <stddef.h>
 #include <string.h>
 
+#ifndef __APPLE__
 #include <winscard.h>
+#else
+#include <PCSC/winscard.h>
+#endif
 
 #include "defines.h"
 #include "bitutils.h"
