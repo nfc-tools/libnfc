@@ -44,7 +44,7 @@ AC_MSG_RESULT($enable_debug)
  
 if test x"$enable_debug" = "xyes"
 then
-        CFLAGS="$CFLAGS -g -Wall -DDEBUG -pedantic"
+  CFLAGS="$CFLAGS -g -Wall -DDEBUG -pedantic"
 fi
 AC_SUBST([DEBUG_CFLAGS])
 
@@ -52,7 +52,13 @@ AC_SUBST([DEBUG_CFLAGS])
 ## libusb
 PKG_CHECK_MODULES(LIBUSB, libusb, [WITH_USB=1], [WITH_USB=0])
 if test "$WITH_USB" = "0" ; then
-  AC_MSG_ERROR([libusb is mandatory.])
+  AC_PATH_PROG(LIBUSB_CONFIG,libusb-config)
+  if test "$LIBUSB_CONFIG" = "" ; then
+    AC_MSG_ERROR([libusb is mandatory.])
+  fi
+  WITH_USB=1
+  LIBUSB_CFLAGS=`$LIBUSB_CONFIG --cflags`
+  LIBUSB_LIBS=`$LIBUSB_CONFIG --libs`
 fi
 AC_SUBST(LIBUSB_LIBS)
 AC_SUBST(LIBUSB_CFLAGS)
@@ -66,10 +72,10 @@ case "$host" in
     LIBPCSCLITE_LIBS=-Wl,-framework,PCSC
   ;;
   *)
-  PKG_CHECK_MODULES(LIBPCSCLITE, libpcsclite, [WITH_PCSC=1], [WITH_PCSC=0])
-  if test "$WITH_PCSC" = "0" ; then
-    AC_MSG_ERROR([libpcsclite is mandatory.])
-  fi
+    PKG_CHECK_MODULES(LIBPCSCLITE, libpcsclite, [WITH_PCSC=1], [WITH_PCSC=0])
+    if test "$WITH_PCSC" = "0" ; then
+      AC_MSG_ERROR([libpcsclite is mandatory.])
+    fi
   ;;
 esac
   AC_SUBST(LIBPCSCLITE_LIBS)
