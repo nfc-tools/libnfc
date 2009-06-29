@@ -34,3 +34,8 @@ nfc_relay_LDADD = libnfc.la
 
 nfc_emulate_SOURCES = emulate.c
 nfc_emulate_LDADD = libnfc.la
+
+dist_man_MANS = nfc-anticol.1 nfc-emulate.1 nfc-list.1 nfc-mftool.1 nfc-relay.1
+#dist_man_MANS = $(man_MANS)
+#EXTRA_DIST = $(man_MANS)
+

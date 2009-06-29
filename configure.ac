@@ -74,6 +74,7 @@ CFLAGS="$CFLAGS -std=c99"
 AC_CONFIG_FILES([
 		Makefile
 		src/Makefile
+		man/Makefile
 		libnfc.pc
 		])
 
