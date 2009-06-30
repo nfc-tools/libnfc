@@ -48,17 +48,22 @@ then
 fi
 AC_SUBST([DEBUG_CFLAGS])
 
-# pkg-config check for
 ## libusb
-PKG_CHECK_MODULES(LIBUSB, libusb, [WITH_USB=1], [WITH_USB=0])
-if test "$WITH_USB" = "0" ; then
+if test x"$PKG_CONFIG" = "x"; then
   AC_PATH_PROG(LIBUSB_CONFIG,libusb-config)
-  if test "$LIBUSB_CONFIG" = "" ; then
-    AC_MSG_ERROR([libusb is mandatory.])
+  if test x"$LIBUSB_CONFIG" = "x" ; then
+    WITH_USB=0
+  else
+    LIBUSB_CFLAGS=`$LIBUSB_CONFIG --cflags`
+    LIBUSB_LIBS=`$LIBUSB_CONFIG --libs`
+    WITH_USB=1
   fi
-  WITH_USB=1
-  LIBUSB_CFLAGS=`$LIBUSB_CONFIG --cflags`
-  LIBUSB_LIBS=`$LIBUSB_CONFIG --libs`
+else
+  PKG_CHECK_MODULES(LIBUSB, libusb, [WITH_USB=1], [WITH_USB=0])
+fi
+
+if test x"$WITH_USB" = "x0"; then
+  AC_MSG_ERROR([libusb is mandatory.])
 fi
 AC_SUBST(LIBUSB_LIBS)
 AC_SUBST(LIBUSB_CFLAGS)
