@@ -27,7 +27,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "defines.h"
 #include "types.h"
 #include "bitutils.h"
-#include "devices.h"
 
 dev_info* nfc_connect(void);
 void nfc_disconnect(dev_info* pdi);

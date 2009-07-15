@@ -24,6 +24,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <stddef.h>
 #include <string.h>
 
+#include "devices.h"
+
 #include "bitutils.h"
 
 // Registers and symbols masks used to covers parts within a register
