@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "bitutils.h"
 
-const static byte OddParity[256] = {
+const static byte_t OddParity[256] = {
   1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1,
   0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0,
   0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0,
@@ -41,7 +41,7 @@ const static byte OddParity[256] = {
   1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1
 };
 
-const static byte ByteMirror[256] = {
+const static byte_t ByteMirror[256] = {
   0x00, 0x80, 0x40, 0xc0, 0x20, 0xa0, 0x60, 0xe0, 0x10, 0x90, 0x50, 0xd0, 0x30, 
   0xb0, 0x70, 0xf0, 0x08, 0x88, 0x48, 0xc8, 0x28, 0xa8, 0x68, 0xe8, 0x18, 0x98, 
   0x58, 0xd8, 0x38, 0xb8, 0x78, 0xf8, 0x04, 0x84, 0x44, 0xc4, 0x24, 0xa4, 0x64, 
@@ -64,12 +64,12 @@ const static byte ByteMirror[256] = {
   0xef, 0x1f, 0x9f, 0x5f, 0xdf, 0x3f, 0xbf, 0x7f, 0xff
 };
 
-byte oddparity(const byte bt)
+byte_t oddparity(const byte_t bt)
 {
   return OddParity[bt];
 }
 
-void oddparity_bytes(const byte* pbtData, const uint32_t uiLen, byte* pbtPar)
+void oddparity_bytes(const byte_t* pbtData, const uint32_t uiLen, byte_t* pbtPar)
 {
   uint32_t uiByteNr;
 
@@ -80,24 +80,12 @@ void oddparity_bytes(const byte* pbtData, const uint32_t uiLen, byte* pbtPar)
   }
 }
 
-byte mirror(byte bt)
+byte_t mirror(byte_t bt)
 {
   return ByteMirror[bt];
 }
 
-uint32_t mirror32(uint32_t ui32Bits)
-{
-  mirror_bytes((byte*)&ui32Bits,4);
-  return ui32Bits;
-}
-
-uint64_t mirror64(uint64_t ui64Bits)
-{
-  mirror_bytes((byte*)&ui64Bits,8);
-  return ui64Bits;
-}
-
-void mirror_bytes(byte *pbts, uint32_t uiLen)
+void mirror_bytes(byte_t *pbts, uint32_t uiLen)
 {
   uint32_t btNr;
 
@@ -106,6 +94,18 @@ void mirror_bytes(byte *pbts, uint32_t uiLen)
     *pbts = ByteMirror[*pbts];
     pbts++;
   }
+}
+
+uint32_t mirror32(uint32_t ui32Bits)
+{
+  mirror_bytes((byte_t*)&ui32Bits,4);
+  return ui32Bits;
+}
+
+uint64_t mirror64(uint64_t ui64Bits)
+{
+  mirror_bytes((byte_t*)&ui64Bits,8);
+  return ui64Bits;
 }
 
 uint32_t swap_endian32(const void* pui32)
@@ -120,23 +120,23 @@ uint64_t swap_endian64(const void* pui64)
   return (((ui64N&0xFF)<<56)+((ui64N&0xFF00)<<40)+((ui64N&0xFF0000)<<24)+((ui64N&0xFF000000)<<8)+((ui64N&0xFF00000000ull)>>8)+((ui64N&0xFF0000000000ull)>>24)+((ui64N&0xFF000000000000ull)>>40)+((ui64N&0xFF00000000000000ull)>>56));
 }
 
-void append_iso14443a_crc(byte* pbtData, uint32_t uiLen)
+void append_iso14443a_crc(byte_t* pbtData, uint32_t uiLen)
 {
-  byte bt;
+  byte_t bt;
   uint32_t wCrc = 0x6363;
 
   do {
     bt = *pbtData++;
-    bt = (bt^(byte)(wCrc & 0x00FF));
+    bt = (bt^(byte_t)(wCrc & 0x00FF));
     bt = (bt^(bt<<4));
     wCrc = (wCrc >> 8)^((uint32_t)bt << 8)^((uint32_t)bt<<3)^((uint32_t)bt>>4);
   } while (--uiLen);
 
-  *pbtData++ = (byte) (wCrc & 0xFF);
-  *pbtData = (byte) ((wCrc >> 8) & 0xFF);
+  *pbtData++ = (byte_t) (wCrc & 0xFF);
+  *pbtData = (byte_t) ((wCrc >> 8) & 0xFF);
 }
 
-void print_hex(const byte* pbtData, const uint32_t uiBytes)
+void print_hex(const byte_t* pbtData, const uint32_t uiBytes)
 {
   uint32_t uiPos;
 
@@ -147,7 +147,7 @@ void print_hex(const byte* pbtData, const uint32_t uiBytes)
   printf("\n");
 }
 
-void print_hex_bits(const byte* pbtData, const uint32_t uiBits)
+void print_hex_bits(const byte_t* pbtData, const uint32_t uiBits)
 {
   uint32_t uiPos;
   uint32_t uiBytes = uiBits/8;
@@ -163,7 +163,7 @@ void print_hex_bits(const byte* pbtData, const uint32_t uiBits)
   printf("\n");
 }
 
-void print_hex_par(const byte* pbtData, const uint32_t uiBits, const byte* pbtDataPar)
+void print_hex_par(const byte_t* pbtData, const uint32_t uiBits, const byte_t* pbtDataPar)
 {
   uint32_t uiPos;
   uint32_t uiBytes = uiBits/8;

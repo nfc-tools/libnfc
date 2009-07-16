@@ -26,7 +26,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "defines.h"
 
-// Compiler directive, set struct alignment to 1 byte for compatibility
+typedef uint8_t byte_t;
+
+// Compiler directive, set struct alignment to 1 byte_t for compatibility
 #pragma pack(1)
 
 typedef enum {
@@ -51,7 +53,7 @@ typedef struct {
 struct dev_callbacks {
   const char* acDriver;              // Driver description
   dev_info* (*connect)(const uint32_t uiIndex);
-  bool (*transceive)(const dev_spec ds, const byte* pbtTx, const uint32_t uiTxLen, byte* pbtRx, uint32_t* puiRxLen);
+  bool (*transceive)(const dev_spec ds, const byte_t* pbtTx, const uint32_t uiTxLen, byte_t* pbtRx, uint32_t* puiRxLen);
   void (*disconnect)(dev_info* pdi);
 };
 
@@ -77,37 +79,37 @@ typedef enum {
 }init_modulation;
 
 typedef struct {
-  byte abtAtqa[2];
-  byte btSak;
+  byte_t abtAtqa[2];
+  byte_t btSak;
   uint32_t uiUidLen;
-  byte abtUid[10];
+  byte_t abtUid[10];
   uint32_t uiAtsLen;
-  byte abtAts[36];
+  byte_t abtAts[36];
 }tag_info_iso14443a;
 
 typedef struct {
   uint32_t uiLen;
-  byte btResCode;
-  byte abtId[8];
-  byte abtPad[8];
-  byte abtSysCode[2];
+  byte_t btResCode;
+  byte_t abtId[8];
+  byte_t abtPad[8];
+  byte_t abtSysCode[2];
 }tag_info_felica;
 
 typedef struct {
-  byte abtAtqb[12];
-  byte abtId[4];
-  byte btParam1;
-  byte btParam2;
-  byte btParam3;
-  byte btParam4;
-  byte btCid;
+  byte_t abtAtqb[12];
+  byte_t abtId[4];
+  byte_t btParam1;
+  byte_t btParam2;
+  byte_t btParam3;
+  byte_t btParam4;
+  byte_t btCid;
   uint32_t uiInfLen;
-  byte abtInf[64];
+  byte_t abtInf[64];
 }tag_info_iso14443b;
 
 typedef struct {
-  byte btSensRes[2];
-  byte btId[4];
+  byte_t btSensRes[2];
+  byte_t btId[4];
 }tag_info_jewel;
 
 typedef union {
@@ -133,16 +135,16 @@ typedef enum {
 
 // MIFARE Classic command params
 typedef struct {
-  byte abtKey[6];
-  byte abtUid[4];
+  byte_t abtKey[6];
+  byte_t abtUid[4];
 }mifare_param_auth;
 
 typedef struct {
-  byte abtData[16];
+  byte_t abtData[16];
 }mifare_param_data;
 
 typedef struct {
-  byte abtValue[4];
+  byte_t abtValue[4];
 }mifare_param_value;
 
 typedef union {

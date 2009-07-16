@@ -23,8 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 // #define DEBUG   /* DEBUG flag can also be enabled using ./configure --enable-debug */
 
-typedef unsigned char       byte;
-
 typedef void*               dev_spec; // Device connection specification
 #define INVALID_DEVICE_INFO 0
 #define MAX_FRAME_LEN       264
@@ -32,8 +30,8 @@ typedef void*               dev_spec; // Device connection specification
 #define MAX_DEVICES         16
 
 // Useful macros
-#define MIN(a,b) (((a) < (b)) ? (a) : (b))
-#define MAX(a,b) (((a) > (b)) ? (a) : (b))
+//#define MIN(a,b) (((a) < (b)) ? (a) : (b))
+//#define MAX(a,b) (((a) > (b)) ? (a) : (b))
 #define INNER_XOR8(n) {n ^= (n >> 4); n ^= (n >> 2); n ^= (n >> 1); n &= 0x01; }
 #define INNER_XOR32(n) {n ^= (n >> 16); n ^= (n >> 8); INNER_XOR8(n); }
 #define INNER_XOR64(n) {n ^= (n >> 32); INNER_XOR32(n); }

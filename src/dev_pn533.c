@@ -166,7 +166,7 @@ void dev_pn533_disconnect(dev_info* pdi)
   free(pdi);
 }                                        
 
-bool dev_pn533_transceive(const dev_spec ds, const byte* pbtTx, const uint32_t uiTxLen, byte* pbtRx, uint32_t* puiRxLen)
+bool dev_pn533_transceive(const dev_spec ds, const byte_t* pbtTx, const uint32_t uiTxLen, byte_t* pbtRx, uint32_t* puiRxLen)
 {                                                                          
     uint32_t uiPos = 0;                                                             
     int ret = 0;                                                           
@@ -192,7 +192,7 @@ bool dev_pn533_transceive(const dev_spec ds, const byte* pbtTx, const uint32_t u
 
     #ifdef DEBUG
       printf("Tx: ");
-      print_hex((byte*)buffer,uiTxLen+7);
+      print_hex((byte_t*)buffer,uiTxLen+7);
     #endif
 
     ret = usb_bulk_write(pdsp->pudh, pdsp->uiEndPointOut, buffer, uiTxLen+7, USB_TIMEOUT);
@@ -215,7 +215,7 @@ bool dev_pn533_transceive(const dev_spec ds, const byte* pbtTx, const uint32_t u
 
     #ifdef DEBUG
       printf("Rx: ");
-      print_hex((byte*)buf,ret);
+      print_hex((byte_t*)buf,ret);
     #endif
 
     if( ret == 6 )
@@ -231,7 +231,7 @@ bool dev_pn533_transceive(const dev_spec ds, const byte* pbtTx, const uint32_t u
 
       #ifdef DEBUG
         printf("Rx: ");
-        print_hex((byte*)buf,ret);
+        print_hex((byte_t*)buf,ret);
       #endif
     }
 

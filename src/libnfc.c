@@ -58,44 +58,44 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #define PARAM_NO_AMBLE        0x40
 
 // PN53X configuration
-byte pncmd_get_firmware_version       [  2] = { 0xD4,0x02 };
-byte pncmd_get_general_status         [  2] = { 0xD4,0x04 };
-byte pncmd_get_register               [  4] = { 0xD4,0x06 };
-byte pncmd_set_register               [  5] = { 0xD4,0x08 };
-byte pncmd_set_parameters             [  3] = { 0xD4,0x12 };
+byte_t pncmd_get_firmware_version       [  2] = { 0xD4,0x02 };
+byte_t pncmd_get_general_status         [  2] = { 0xD4,0x04 };
+byte_t pncmd_get_register               [  4] = { 0xD4,0x06 };
+byte_t pncmd_set_register               [  5] = { 0xD4,0x08 };
+byte_t pncmd_set_parameters             [  3] = { 0xD4,0x12 };
 
 // RF field configuration
-byte pncmd_rf_configure_field         [  4] = { 0xD4,0x32,0x01 };
-byte pncmd_rf_configure_timing        [  4] = { 0xD4,0x32,0x02 };
-byte pncmd_rf_configure_retry_data    [  4] = { 0xD4,0x32,0x04 };
-byte pncmd_rf_configure_retry_select  [  6] = { 0xD4,0x32,0x05 };
+byte_t pncmd_rf_configure_field         [  4] = { 0xD4,0x32,0x01 };
+byte_t pncmd_rf_configure_timing        [  4] = { 0xD4,0x32,0x02 };
+byte_t pncmd_rf_configure_retry_data    [  4] = { 0xD4,0x32,0x04 };
+byte_t pncmd_rf_configure_retry_select  [  6] = { 0xD4,0x32,0x05 };
 
 // Reader
-byte pncmd_reader_list_passive        [264] = { 0xD4,0x4A };
-byte pncmd_reader_select              [  3] = { 0xD4,0x54 };
-byte pncmd_reader_deselect            [  3] = { 0xD4,0x44,0x00 };
-byte pncmd_reader_release             [  3] = { 0xD4,0x52,0x00 };
-byte pncmd_reader_set_baud_rate       [  5] = { 0xD4,0x4E };
-byte pncmd_reader_exchange_data       [265] = { 0xD4,0x40 };
-byte pncmd_reader_auto_poll           [  5] = { 0xD4,0x60 };
+byte_t pncmd_reader_list_passive        [264] = { 0xD4,0x4A };
+byte_t pncmd_reader_select              [  3] = { 0xD4,0x54 };
+byte_t pncmd_reader_deselect            [  3] = { 0xD4,0x44,0x00 };
+byte_t pncmd_reader_release             [  3] = { 0xD4,0x52,0x00 };
+byte_t pncmd_reader_set_baud_rate       [  5] = { 0xD4,0x4E };
+byte_t pncmd_reader_exchange_data       [265] = { 0xD4,0x40 };
+byte_t pncmd_reader_auto_poll           [  5] = { 0xD4,0x60 };
 
 // Target
-byte pncmd_target_get_data            [  2] = { 0xD4,0x86 };
-byte pncmd_target_init                [ 39] = { 0xD4,0x8C };
-byte pncmd_target_virtual_card        [  4] = { 0xD4,0x14 };
-byte pncmd_target_receive             [  2] = { 0xD4,0x88 };
-byte pncmd_target_send                [264] = { 0xD4,0x90 };
-byte pncmd_target_get_status          [  2] = { 0xD4,0x8A };
+byte_t pncmd_target_get_data            [  2] = { 0xD4,0x86 };
+byte_t pncmd_target_init                [ 39] = { 0xD4,0x8C };
+byte_t pncmd_target_virtual_card        [  4] = { 0xD4,0x14 };
+byte_t pncmd_target_receive             [  2] = { 0xD4,0x88 };
+byte_t pncmd_target_send                [264] = { 0xD4,0x90 };
+byte_t pncmd_target_get_status          [  2] = { 0xD4,0x8A };
 
 // Exchange raw data frames
-byte pncmd_exchange_raw_data          [266] = { 0xD4,0x42 };
+byte_t pncmd_exchange_raw_data          [266] = { 0xD4,0x42 };
 
 // Global buffers used for communication with the PN53X chip
 #define MAX_FRAME_LEN 264
-static byte abtRx[MAX_FRAME_LEN];
+static byte_t abtRx[MAX_FRAME_LEN];
 static uint32_t uiRxLen;
 
-bool pn53x_transceive(const dev_info* pdi, const byte* pbtTx, const uint32_t uiTxLen)
+bool pn53x_transceive(const dev_info* pdi, const byte_t* pbtTx, const uint32_t uiTxLen)
 {
   // Reset the receiving buffer
   uiRxLen = MAX_FRAME_LEN;
@@ -110,7 +110,7 @@ bool pn53x_transceive(const dev_info* pdi, const byte* pbtTx, const uint32_t uiT
   return true;
 }
 
-byte pn53x_get_reg(const dev_info* pdi, uint16_t ui16Reg)
+byte_t pn53x_get_reg(const dev_info* pdi, uint16_t ui16Reg)
 {
   uint8_t ui8Value;
   uint32_t uiValueLen = 1;
@@ -148,10 +148,10 @@ bool pn53x_set_tx_bits(const dev_info* pdi, uint8_t ui8Bits)
   return true;
 }
 
-bool pn53x_wrap_frame(const byte* pbtTx, const uint32_t uiTxBits, const byte* pbtTxPar, byte* pbtFrame, uint32_t* puiFrameBits)
+bool pn53x_wrap_frame(const byte_t* pbtTx, const uint32_t uiTxBits, const byte_t* pbtTxPar, byte_t* pbtFrame, uint32_t* puiFrameBits)
 {
-  byte btFrame;
-  byte btData;
+  byte_t btFrame;
+  byte_t btData;
   uint32_t uiBitPos;
   uint32_t uiDataPos = 0;
   uint32_t uiBitsLeft = uiTxBits;
@@ -204,13 +204,13 @@ bool pn53x_wrap_frame(const byte* pbtTx, const uint32_t uiTxBits, const byte* pb
   }
 }
 
-bool pn53x_unwrap_frame(const byte* pbtFrame, const uint32_t uiFrameBits, byte* pbtRx, uint32_t* puiRxBits, byte* pbtRxPar)
+bool pn53x_unwrap_frame(const byte_t* pbtFrame, const uint32_t uiFrameBits, byte_t* pbtRx, uint32_t* puiRxBits, byte_t* pbtRxPar)
 {
-  byte btFrame;
-  byte btData;
+  byte_t btFrame;
+  byte_t btData;
   uint8_t uiBitPos;
   uint32_t uiDataPos = 0;
-  byte* pbtFramePos = (byte*) pbtFrame;
+  byte_t* pbtFramePos = (byte_t*) pbtFrame;
   uint32_t uiBitsLeft = uiFrameBits;
 
   // Make sure we should frame at least something
@@ -254,7 +254,7 @@ dev_info* nfc_connect()
 {
   dev_info* pdi;
   uint32_t uiDev;
-  byte abtFw[4];
+  byte_t abtFw[4];
   uint32_t uiFwLen = sizeof(abtFw);
   
   // Search through the device list for an available device
@@ -312,7 +312,7 @@ void nfc_disconnect(dev_info* pdi)
 
 bool nfc_configure(dev_info* pdi, const dev_config_option dco, const bool bEnable)
 {
-	byte btValue;
+	byte_t btValue;
   
   // Make sure we are dealing with a active device
   if (!pdi->bActive) return false;
@@ -384,7 +384,7 @@ bool nfc_reader_init(const dev_info* pdi)
   return true;
 }
 
-bool nfc_reader_select(const dev_info* pdi, const init_modulation im, const byte* pbtInitData, const uint32_t uiInitDataLen, tag_info* pti)
+bool nfc_reader_select(const dev_info* pdi, const init_modulation im, const byte_t* pbtInitData, const uint32_t uiInitDataLen, tag_info* pti)
 {
 	// Make sure we are dealing with a active device
   if (!pdi->bActive) return false;
@@ -485,7 +485,7 @@ bool nfc_reader_deselect(const dev_info* pdi)
   return (pdi->pdc->transceive(pdi->ds,pncmd_reader_deselect,3,NULL,NULL));
 }
 
-bool nfc_reader_transceive_bits(const dev_info* pdi, const byte* pbtTx, const uint32_t uiTxBits, const byte* pbtTxPar, byte* pbtRx, uint32_t* puiRxBits, byte* pbtRxPar)
+bool nfc_reader_transceive_bits(const dev_info* pdi, const byte_t* pbtTx, const uint32_t uiTxBits, const byte_t* pbtTxPar, byte_t* pbtRx, uint32_t* puiRxBits, byte_t* pbtRxPar)
 {
   uint32_t uiFrameBits = 0;
   uint32_t uiFrameBytes = 0;
@@ -539,7 +539,7 @@ bool nfc_reader_transceive_bits(const dev_info* pdi, const byte* pbtTx, const ui
   return true;
 }
 
-bool nfc_reader_transceive_bytes(const dev_info* pdi, const byte* pbtTx, const uint32_t uiTxLen, byte* pbtRx, uint32_t* puiRxLen)
+bool nfc_reader_transceive_bytes(const dev_info* pdi, const byte_t* pbtTx, const uint32_t uiTxLen, byte_t* pbtRx, uint32_t* puiRxLen)
 {
   // We can not just send bytes without parity if while the PN53X expects we handled them
   if (!pdi->bPar) return false;
@@ -608,7 +608,7 @@ bool nfc_reader_mifare_cmd(const dev_info* pdi, const mifare_cmd mc, const uint8
   }
   
   // When available, copy the parameter bytes
-  if (uiParamLen) memcpy(pncmd_reader_exchange_data+5,(byte*)pmp,uiParamLen);
+  if (uiParamLen) memcpy(pncmd_reader_exchange_data+5,(byte_t*)pmp,uiParamLen);
   
   // Fire the mifare command
   if (!pn53x_transceive(pdi,pncmd_reader_exchange_data,5+uiParamLen)) return false;
@@ -620,7 +620,7 @@ bool nfc_reader_mifare_cmd(const dev_info* pdi, const mifare_cmd mc, const uint8
   return true;
 }
 
-bool nfc_target_init(const dev_info* pdi, byte* pbtRx, uint32_t* puiRxBits)
+bool nfc_target_init(const dev_info* pdi, byte_t* pbtRx, uint32_t* puiRxBits)
 {
   uint8_t ui8Bits;
 
@@ -670,7 +670,7 @@ bool nfc_target_init(const dev_info* pdi, byte* pbtRx, uint32_t* puiRxBits)
   return true;
 }
 
-bool nfc_target_receive_bits(const dev_info* pdi, byte* pbtRx, uint32_t* puiRxBits, byte* pbtRxPar)
+bool nfc_target_receive_bits(const dev_info* pdi, byte_t* pbtRx, uint32_t* puiRxBits, byte_t* pbtRxPar)
 {
 	uint32_t uiFrameBits;
   uint8_t ui8Bits;
@@ -700,7 +700,7 @@ bool nfc_target_receive_bits(const dev_info* pdi, byte* pbtRx, uint32_t* puiRxBi
 	return true;
 }
 
-bool nfc_target_receive_bytes(const dev_info* pdi, byte* pbtRx, uint32_t* puiRxLen)
+bool nfc_target_receive_bytes(const dev_info* pdi, byte_t* pbtRx, uint32_t* puiRxLen)
 {
 	// Try to gather a received frame from the reader
 	if (!pn53x_transceive(pdi,pncmd_target_receive,2)) return false;
@@ -715,7 +715,7 @@ bool nfc_target_receive_bytes(const dev_info* pdi, byte* pbtRx, uint32_t* puiRxL
   return true;
 }
 
-bool nfc_target_send_bits(const dev_info* pdi, const byte* pbtTx, const uint32_t uiTxBits, const byte* pbtTxPar)
+bool nfc_target_send_bits(const dev_info* pdi, const byte_t* pbtTx, const uint32_t uiTxBits, const byte_t* pbtTxPar)
 {
   uint32_t uiFrameBits = 0;
   uint32_t uiFrameBytes = 0;
@@ -750,7 +750,7 @@ bool nfc_target_send_bits(const dev_info* pdi, const byte* pbtTx, const uint32_t
 }
 
 
-bool nfc_target_send_bytes(const dev_info* pdi, const byte* pbtTx, const uint32_t uiTxLen)
+bool nfc_target_send_bytes(const dev_info* pdi, const byte_t* pbtTx, const uint32_t uiTxLen)
 {
   // We can not just send bytes without parity if while the PN53X expects we handled them
   if (!pdi->bPar) return false;

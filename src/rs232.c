@@ -101,7 +101,7 @@ bool rs232_cts(const serial_port sp)
   return (status & TIOCM_CTS);
 }
 
-bool rs232_receive(const serial_port sp, byte* pbtRx, uint32_t* puiRxLen)
+bool rs232_receive(const serial_port sp, byte_t* pbtRx, uint32_t* puiRxLen)
 {
   int iResult;
   uint32_t uiCount = 0;
@@ -132,7 +132,7 @@ bool rs232_receive(const serial_port sp, byte* pbtRx, uint32_t* puiRxLen)
   }
 }
 
-bool rs232_send(const serial_port sp, const byte* pbtTx, const uint32_t uiTxLen)
+bool rs232_send(const serial_port sp, const byte_t* pbtTx, const uint32_t uiTxLen)
 {
   int iResult;
   iResult = write(((serial_port_unix*)sp)->fd,pbtTx,uiTxLen);
@@ -209,12 +209,12 @@ bool rs232_cts(const serial_port sp)
   return (dwStatus & MS_CTS_ON);
 }
 
-bool rs232_receive(const serial_port sp, byte* pbtRx, uint32_t* puiRxLen)
+bool rs232_receive(const serial_port sp, byte_t* pbtRx, uint32_t* puiRxLen)
 {
   return (ReadFile(((serial_port_windows*)sp)->hPort,pbtRx,*puiRxLen,(LPDWORD)puiRxLen,NULL) != NULL);
 }
 
-bool rs232_send(const serial_port sp, const byte* pbtTx, const uint32_t uiTxLen)
+bool rs232_send(const serial_port sp, const byte_t* pbtTx, const uint32_t uiTxLen)
 {
   DWORD dwTxLen;
   return (WriteFile(((serial_port_windows*)sp)->hPort,pbtTx,uiTxLen,&dwTxLen,NULL) != NULL);

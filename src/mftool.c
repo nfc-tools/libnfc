@@ -231,7 +231,7 @@ int main(int argc, const char* argv[])
 {			
   bool b4K;
   bool bReadAction;
-  byte* pbtUID;
+  byte_t* pbtUID;
   FILE* pfKeys;
   FILE* pfDump;
 

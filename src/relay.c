@@ -25,11 +25,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "libnfc.h"
 
-static byte abtReaderRx[MAX_FRAME_LEN];
-static byte abtReaderRxPar[MAX_FRAME_LEN];
+static byte_t abtReaderRx[MAX_FRAME_LEN];
+static byte_t abtReaderRxPar[MAX_FRAME_LEN];
 static uint32_t uiReaderRxBits;
-static byte abtTagRx[MAX_FRAME_LEN];
-static byte abtTagRxPar[MAX_FRAME_LEN];
+static byte_t abtTagRx[MAX_FRAME_LEN];
+static byte_t abtTagRxPar[MAX_FRAME_LEN];
 static uint32_t uiTagRxBits;
 static dev_info* pdiReader;
 static dev_info* pdiTag;

@@ -34,7 +34,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #define BUFFER_LENGTH 256
 #define USB_TIMEOUT   30000
-static byte abtTxBuf[BUFFER_LENGTH] = { 0x32, 0x00, 0x00, 0xff }; // Every packet must start with "00 00 ff"
+static byte_t abtTxBuf[BUFFER_LENGTH] = { 0x32, 0x00, 0x00, 0xff }; // Every packet must start with "00 00 ff"
 
 dev_info* dev_arygon_connect(const uint32_t uiIndex)
 {
@@ -88,9 +88,9 @@ void dev_arygon_disconnect(dev_info* pdi)
   free(pdi);
 }                                        
 
-bool dev_arygon_transceive(const dev_spec ds, const byte* pbtTx, const uint32_t uiTxLen, byte* pbtRx, uint32_t* puiRxLen)
+bool dev_arygon_transceive(const dev_spec ds, const byte_t* pbtTx, const uint32_t uiTxLen, byte_t* pbtRx, uint32_t* puiRxLen)
 {
-  byte abtRxBuf[BUFFER_LENGTH];
+  byte_t abtRxBuf[BUFFER_LENGTH];
   uint32_t uiRxBufLen = BUFFER_LENGTH;
   uint32_t uiPos;
     

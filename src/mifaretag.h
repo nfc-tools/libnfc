@@ -24,21 +24,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "defines.h"
 
 typedef struct {
-  byte abtUID[4];
-  byte btBCC;
-  byte btUnknown;
-  byte abtATQA[2];
-  byte abtUnknown[8];
+  byte_t abtUID[4];
+  byte_t btBCC;
+  byte_t btUnknown;
+  byte_t abtATQA[2];
+  byte_t abtUnknown[8];
 } mifare_block_manufacturer;
 
 typedef struct {
-  byte abtData[16];
+  byte_t abtData[16];
 } mifare_block_data;
 
 typedef struct {
-  byte abtKeyA[6];
-  byte abtAccessBits[4];
-  byte abtKeyB[6];
+  byte_t abtKeyA[6];
+  byte_t abtAccessBits[4];
+  byte_t abtKeyB[6];
 } mifare_block_trailer;
 
 typedef union {

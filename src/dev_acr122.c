@@ -55,13 +55,13 @@ typedef struct {
   SCARD_IO_REQUEST ioCard;
 } dev_spec_acr122;
 
-static byte abtTxBuf[ACR122_WRAP_LEN+ACR122_COMMAND_LEN] = { 0xFF, 0x00, 0x00, 0x00 };
-static byte abtRxCmd[5] = { 0xFF,0xC0,0x00,0x00 };
-static byte uiRxCmdLen = sizeof(abtRxCmd);
-static byte abtRxBuf[ACR122_RESPONSE_LEN];
+static byte_t abtTxBuf[ACR122_WRAP_LEN+ACR122_COMMAND_LEN] = { 0xFF, 0x00, 0x00, 0x00 };
+static byte_t abtRxCmd[5] = { 0xFF,0xC0,0x00,0x00 };
+static byte_t uiRxCmdLen = sizeof(abtRxCmd);
+static byte_t abtRxBuf[ACR122_RESPONSE_LEN];
 static size_t ulRxBufLen;
-static byte abtGetFw[5] = { 0xFF,0x00,0x48,0x00,0x00 };
-static byte abtLed[9] = { 0xFF,0x00,0x40,0x05,0x04,0x00,0x00,0x00,0x00 };
+static byte_t abtGetFw[5] = { 0xFF,0x00,0x48,0x00,0x00 };
+static byte_t abtLed[9] = { 0xFF,0x00,0x40,0x05,0x04,0x00,0x00,0x00,0x00 };
 
 dev_info* dev_acr122_connect(const uint32_t uiIndex)
 {
@@ -178,7 +178,7 @@ void dev_acr122_disconnect(dev_info* pdi)
   free(pdi);
 }
 
-bool dev_acr122_transceive(const dev_spec ds, const byte* pbtTx, const uint32_t uiTxLen, byte* pbtRx, uint32_t* puiRxLen)
+bool dev_acr122_transceive(const dev_spec ds, const byte_t* pbtTx, const uint32_t uiTxLen, byte_t* pbtRx, uint32_t* puiRxLen)
 {
   dev_spec_acr122* pdsa = (dev_spec_acr122*)ds;
 
@@ -247,7 +247,7 @@ char* dev_acr122_firmware(const dev_spec ds)
   {
     uiResult = SCardControl(pdsa->hCard,IOCTL_CCID_ESCAPE_SCARD_CTL_CODE,abtGetFw,sizeof(abtGetFw),abtFw,ulFwLen,(void*)&ulFwLen);
   } else {
-    uiResult = SCardTransmit(pdsa->hCard,&(pdsa->ioCard),abtGetFw,sizeof(abtGetFw),NULL,(byte*)abtFw,(void*)&ulFwLen);
+    uiResult = SCardTransmit(pdsa->hCard,&(pdsa->ioCard),abtGetFw,sizeof(abtGetFw),NULL,(byte_t*)abtFw,(void*)&ulFwLen);
   }
 
   #ifdef DEBUG
@@ -263,13 +263,13 @@ char* dev_acr122_firmware(const dev_spec ds)
 bool dev_acr122_led_red(const dev_spec ds, bool bOn)
 {
   dev_spec_acr122* pdsa = (dev_spec_acr122*)ds;
-  byte abtBuf[2];
+  byte_t abtBuf[2];
   size_t ulBufLen = sizeof(abtBuf);
   if (pdsa->ioCard.dwProtocol == SCARD_PROTOCOL_UNDEFINED)
   {
     return (SCardControl(pdsa->hCard,IOCTL_CCID_ESCAPE_SCARD_CTL_CODE,abtLed,sizeof(abtLed),abtBuf,ulBufLen,(void*)&ulBufLen) == SCARD_S_SUCCESS);
   } else {
-    return (SCardTransmit(pdsa->hCard,&(pdsa->ioCard),abtLed,sizeof(abtLed),NULL,(byte*)abtBuf,(void*)&ulBufLen) == SCARD_S_SUCCESS);
+    return (SCardTransmit(pdsa->hCard,&(pdsa->ioCard),abtLed,sizeof(abtLed),NULL,(byte_t*)abtBuf,(void*)&ulBufLen) == SCARD_S_SUCCESS);
   }
 }
 

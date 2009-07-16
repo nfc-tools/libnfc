@@ -29,7 +29,7 @@ dev_info* dev_pn533_connect(const uint32_t uiIndex);
 void dev_pn533_disconnect(dev_info* pdi);
 
 // Callback function used by libnfc to transmit commands to the PN53X chip
-bool dev_pn533_transceive(const dev_spec ds, const byte* pbtTx, const uint32_t uiTxLen, byte* pbtRx, uint32_t* puiRxLen);
+bool dev_pn533_transceive(const dev_spec ds, const byte_t* pbtTx, const uint32_t uiTxLen, byte_t* pbtRx, uint32_t* puiRxLen);
 
 #endif // _LIBNFC_DEV_PN533_H_
 

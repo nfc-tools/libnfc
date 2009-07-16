@@ -26,18 +26,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "libnfc.h"
 
-static byte abtRecv[MAX_FRAME_LEN];
+static byte_t abtRecv[MAX_FRAME_LEN];
 static uint32_t uiRecvBits;
 static dev_info* pdi;
 
 // ISO14443A Anti-Collision response
-byte abtAtqa      [2] = { 0x04,0x00 };
-byte abtUidBcc    [5] = { 0xDE,0xAD,0xBE,0xAF,0x62 };
-byte abtSak       [9] = { 0x08,0xb6,0xdd };
+byte_t abtAtqa      [2] = { 0x04,0x00 };
+byte_t abtUidBcc    [5] = { 0xDE,0xAD,0xBE,0xAF,0x62 };
+byte_t abtSak       [9] = { 0x08,0xb6,0xdd };
 
 int main(int argc, const char* argv[])
 {                       
-  byte* pbtTx = NULL;
+  byte_t* pbtTx = NULL;
   uint32_t uiTxBits;
   
   // Try to open the NFC reader

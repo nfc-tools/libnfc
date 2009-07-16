@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "libnfc.h"
 
 static dev_info* pdi;
-static byte abtFelica[5] = { 0x00, 0xff, 0xff, 0x00, 0x00 };
+static byte_t abtFelica[5] = { 0x00, 0xff, 0xff, 0x00, 0x00 };
 
 int main(int argc, const char* argv[])
 {			
