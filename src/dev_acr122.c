@@ -28,7 +28,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #ifndef __APPLE__
 #include <winscard.h>
 #else
-#include <PCSC/winscard.h>
+#include <wintypes.h>
+#include <winscard.h>
 #endif
 
 #include "defines.h"
