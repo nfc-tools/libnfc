@@ -19,37 +19,6 @@ else
 	echo "Autotooled archive (GNU/Linux, BSD, etc.) is already done: skipped."
 fi
 
-# MacOSX part (will be removed if we can use autotools under MacOSX)
-LIBNFC_MACOSX_DIR=libnfc-$LIBNFC_VERSION-macosx
-LIBNFC_MACOSX_ARCHIVE=$LIBNFC_MACOSX_DIR.tgz
-
-if [ ! -f $LIBNFC_MACOSX_ARCHIVE ]; then
-	if [ -d $LIBNFC_MACOSX_DIR ]; then
-		rm -rf $LIBNFC_MACOSX_DIR
-	fi
-
-	mkdir -p $LIBNFC_MACOSX_DIR
-
-	# Copy sources
-	cp src/*.c $LIBNFC_MACOSX_DIR/
-	cp src/*.h $LIBNFC_MACOSX_DIR/
-
-	# Copy important files
-	cp LICENSE $LIBNFC_MACOSX_DIR/
-	cp README $LIBNFC_MACOSX_DIR/
-
-	# Copy MacOSX specific files
-	cp macosx/* $LIBNFC_MACOSX_DIR/
-	# Fix MacOSX Makefile
-	sed -i 's/LIBNFC_PATH=\.\./LIBNFC_PATH=./' Makefile
-
-	# Build archive
-	tar cvzf $LIBNFC_MACOSX_DIR.tgz $LIBNFC_MACOSX_DIR
-	rm -rf $LIBNFC_MACOSX_DIR
-else
-	echo "MacOSX archive is already done: skipped."
-fi
-
 # Windows part
 LIBNFC_WINDOWS_DIR=libnfc-$LIBNFC_VERSION-windows
 LIBNFC_WINDOWS_ARCHIVE=$LIBNFC_WINDOWS_DIR.zip
