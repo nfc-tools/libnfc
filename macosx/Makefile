@@ -1,19 +1,19 @@
 ###############################################
-# Linux settings
+# Mac OS X settings
 ###############################################
-LIBPCSC_HEADERS=`pkg-config --cflags libpcsclite`
-LIBPCSC_LIB=`pkg-config --libs libpcsclite`
-LIBUSB_HEADERS=`pkg-config --cflags libusb`
-LIBUSB_LIB=`pkg-config --libs libusb`
-LIBNFC_TYPE=so
-LIBNFC_CFLAGS=-shared
-LIBNFC_LINK=-Wl,-rpath,.
+LIBPCSC_HEADERS=-I/System/Library/Frameworks/PCSC.framework/Headers
+LIBPCSC_LIB=-framework PCSC
+LIBUSB_HEADERS=`libusb-config --cflags`
+LIBUSB_LIB=`libusb-config --libs`
+LIBNFC_TYPE=dylib
+LIBNFC_CFLAGS=-dynamiclib
+LIBNFC_LINK=
 
 ###############################################
 # General settings
 ###############################################
 LIBNFC_LDFLAGS=$(LIBPCSC_LIB) $(LIBUSB_LIB)
-LIBNFC_PATH=../../src
+LIBNFC_PATH=..
 VPATH=$(LIBNFC_PATH)
 
 ###############################################

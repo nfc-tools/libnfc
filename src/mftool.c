@@ -4,7 +4,7 @@ Public platform independent Near Field Communication (NFC) library
 Copyright (C) 2009, Roel Verdult
  
 This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
+it under the terms of the GNU Lesser General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
@@ -13,13 +13,17 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
+You should have received a copy of the GNU Lesser General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 */
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
+#include <stddef.h>
+#include <stdbool.h>
+
 #include <string.h>
 #include <ctype.h>
 
@@ -32,21 +36,21 @@ static mifare_param mp;
 static mifare_tag mtKeys;
 static mifare_tag mtDump;
 static bool bUseKeyA;
-static ui32 uiBlocks;
+static uint32_t uiBlocks;
 
-bool is_first_block(ui32 uiBlock)
+bool is_first_block(uint32_t uiBlock)
 {
   // Test if we are in the small or big sectors
   if (uiBlock < 128) return ((uiBlock)%4 == 0); else return ((uiBlock)%16 == 0);
 }
 
-bool is_trailer_block(ui32 uiBlock)
+bool is_trailer_block(uint32_t uiBlock)
 {
   // Test if we are in the small or big sectors
   if (uiBlock < 128) return ((uiBlock+1)%4 == 0); else return ((uiBlock+1)%16 == 0);
 }
 
-ui32 get_trailer_block(ui32 uiFirstBlock)
+uint32_t get_trailer_block(uint32_t uiFirstBlock)
 {
   // Test if we are in the small or big sectors
   if (uiFirstBlock<128) return uiFirstBlock+3; else return uiFirstBlock+15;
@@ -54,7 +58,7 @@ ui32 get_trailer_block(ui32 uiFirstBlock)
 
 bool read_card()
 {
-  i32 iBlock;
+  int32_t iBlock;
   mifare_cmd mc;
   bool bFailure = false;
 
@@ -71,7 +75,7 @@ bool read_card()
       {
         printf("x");
         // When a failure occured we need to redo the anti-collision
-        if (!nfc_reader_select(pdi,IM_ISO14443A_106,null,null,&ti))
+        if (!nfc_reader_select(pdi,IM_ISO14443A_106,NULL,0,&ti))
         {
           printf("!\nError: tag was removed\n");
           return 1;
@@ -136,8 +140,8 @@ bool read_card()
 
 bool write_card()
 {
-  ui32 uiBlock;
-  ui32 uiTrailerBlock;
+  uint32_t uiBlock;
+  uint32_t uiTrailerBlock;
   bool bFailure = false;
   mifare_cmd mc;
 
@@ -154,7 +158,7 @@ bool write_card()
       {
         printf("x");
         // When a failure occured we need to redo the anti-collision
-        if (!nfc_reader_select(pdi,IM_ISO14443A_106,null,null,&ti))
+        if (!nfc_reader_select(pdi,IM_ISO14443A_106,NULL,0,&ti))
         {
           printf("!\nError: tag was removed\n");
           return false;
@@ -227,7 +231,7 @@ int main(int argc, const char* argv[])
 {			
   bool b4K;
   bool bReadAction;
-  byte* pbtUID;
+  byte_t* pbtUID;
   FILE* pfKeys;
   FILE* pfDump;
 
@@ -250,7 +254,7 @@ int main(int argc, const char* argv[])
   bUseKeyA = (tolower(*(argv[2])) == 'a');
 
   pfKeys = fopen(argv[3],"rb");
-  if (pfKeys == null)
+  if (pfKeys == NULL)
   {
     printf("Could not open file: %s\n",argv[3]);
     return 1;
@@ -269,7 +273,7 @@ int main(int argc, const char* argv[])
   } else {
     pfDump = fopen(argv[4],"rb");
 
-    if (pfDump == null)
+    if (pfDump == NULL)
     {
       printf("Could not open dump file: %s\n",argv[4]);
       return 1;
@@ -309,7 +313,7 @@ int main(int argc, const char* argv[])
   printf("Connected to NFC reader: %s\n",pdi->acName);
 
   // Try to find a MIFARE Classic tag
-  if (!nfc_reader_select(pdi,IM_ISO14443A_106,null,null,&ti))
+  if (!nfc_reader_select(pdi,IM_ISO14443A_106,NULL,0,&ti))
   {
     printf("Error: no tag was found\n");
     nfc_disconnect(pdi);
@@ -348,7 +352,7 @@ int main(int argc, const char* argv[])
       printf("Writing data to file: %s\n",argv[4]);
       fflush(stdout);
       pfDump = fopen(argv[4],"wb");
-      if (pfKeys == null)
+      if (pfKeys == NULL)
       {
         printf("Could not open file: %s\n",argv[4]);
         return 1;

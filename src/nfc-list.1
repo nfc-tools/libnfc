@@ -1,0 +1,27 @@
+.TH NFC-LIST 1 "June 26, 2009"
+.SH NAME
+nfc-list \- List NFC targets command line tool based on libnfc
+.SH SYNOPSIS
+.B nfc-list
+.SH DESCRIPTION
+.B nfc-list
+utility attempts to select available tags in the field. The NFC
+controller is used to perform the selection procedure. This is different for each modulation type.
+It tries to ﬁnd a ISO/IEC 14443 type A, type B, Felica or Jewel Topaz tags.
+This tool demonstrates that it is possible to setup a simple NFC system using less than 10 lines of code.
+
+.SH BUGS
+Please report any bugs on the
+.B libnfc
+forum at
+.BR http://www.libnfc.org/community/ "."
+.SH LICENCE
+.B libnfc
+and
+.B nfc-tools
+are covered by the GNU Lesser General Public License (LGPL), version 3.
+.SH AUTHORS
+Roel Verdult <roel@libnfc.org>
+.PP
+This manual page was written by Romuald Conty <romuald.conty@free.fr>.
+It is licensed under the terms of the GNU GPL (version 2 or later).

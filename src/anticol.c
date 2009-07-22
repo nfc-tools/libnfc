@@ -4,7 +4,7 @@ Public platform independent Near Field Communication (NFC) library
 Copyright (C) 2009, Roel Verdult
  
 This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
+it under the terms of the GNU Lesser General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
@@ -13,39 +13,44 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
+You should have received a copy of the GNU Lesser General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 */
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <stdbool.h>
+
 #include <string.h>
+
 #include "libnfc.h"
 
 #define SAK_FLAG_ATS_SUPPORTED 0x20
 
-static byte abtRx[MAX_FRAME_LEN];
-static ui32 uiRxBits;
-static ui32 uiRxLen;
-static byte abtUid[10];
-static ui32 uiUidLen = 4;
+static byte_t abtRx[MAX_FRAME_LEN];
+static uint32_t uiRxBits;
+static uint32_t uiRxLen;
+static byte_t abtUid[10];
+static uint32_t uiUidLen = 4;
 static dev_info* pdi;
 
 // ISO14443A Anti-Collision Commands
-byte abtReqa      [1] = { 0x26 };
-byte abtSelectAll [2] = { 0x93,0x20 };
-byte abtSelectTag [9] = { 0x93,0x70,0x00,0x00,0x00,0x00,0x00,0x00,0x00 };
-byte abtRats      [4] = { 0xe0,0x50,0xbc,0xa5 };
-byte abtHalt      [4] = { 0x50,0x00,0x57,0xcd };
+byte_t abtReqa      [1] = { 0x26 };
+byte_t abtSelectAll [2] = { 0x93,0x20 };
+byte_t abtSelectTag [9] = { 0x93,0x70,0x00,0x00,0x00,0x00,0x00,0x00,0x00 };
+byte_t abtRats      [4] = { 0xe0,0x50,0xbc,0xa5 };
+byte_t abtHalt      [4] = { 0x50,0x00,0x57,0xcd };
 
-bool transmit_bits(const byte* pbtTx, const ui32 uiTxBits)
+bool transmit_bits(const byte_t* pbtTx, const uint32_t uiTxBits)
 {
   // Show transmitted command
   printf("R: "); print_hex_bits(pbtTx,uiTxBits);
 
   // Transmit the bit frame command, we don't use the arbitrary parity feature
-  if (!nfc_reader_transceive_bits(pdi,pbtTx,uiTxBits,null,abtRx,&uiRxBits,null)) return false;
+  if (!nfc_reader_transceive_bits(pdi,pbtTx,uiTxBits,NULL,abtRx,&uiRxBits,NULL)) return false;
 
   // Show received answer
   printf("T: "); print_hex_bits(abtRx,uiRxBits);
@@ -55,7 +60,7 @@ bool transmit_bits(const byte* pbtTx, const ui32 uiTxBits)
 }
 
 
-bool transmit_bytes(const byte* pbtTx, const ui32 uiTxLen)
+bool transmit_bytes(const byte_t* pbtTx, const uint32_t uiTxLen)
 {
   // Show transmitted command
   printf("R: "); print_hex(pbtTx,uiTxLen);

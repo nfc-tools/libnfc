@@ -1,0 +1,28 @@
+This package was debianized by Romuald Conty <romuald.conty@free.fr> on
+Wed, 22 Apr 2009 10:42:42 +0100.
+
+It was downloaded from: http://www.libnfc.org/
+
+Copyright (C) 2005-2007 by Harald Welte <laforge@gnumonks.org>
+Copyright (C) 2009 by Roel Verdult <roel@libnfc.org>
+
+License: GNU General Public License version 3
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License version 3 
+  as published by the Free Software Foundation
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+On Debian GNU/Linux systems, the complete text of the GNU General Public
+License, version 3, can be found in `/usr/share/common-licenses/GPL-3'.
+
+The Debian packaging is (C) 2009, Romuald Conty <romuald.conty@free.fr> and
+is licensed under the GPL, see `/usr/share/common-licenses/GPL'.

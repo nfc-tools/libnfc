@@ -4,7 +4,7 @@ Public platform independent Near Field Communication (NFC) library
 Copyright (C) 2009, Roel Verdult
  
 This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
+it under the terms of the GNU Lesser General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
@@ -13,18 +13,22 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-Thanks to d18c7db and Okko for example code
+You should have received a copy of the GNU Lesser General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 */
 
-#include "defines.h"
+/*
+Thanks to d18c7db and Okko for example code
+*/
+
+#include <stdio.h>
+#include <stddef.h>
 
 #include <usb.h>
-#include <stdio.h>
 #include <string.h>
+
+#include "defines.h"
 #include "dev_pn531.h"
 #include "bitutils.h"
 
@@ -34,15 +38,15 @@ static char buffer[BUFFER_LENGTH] = { 0x00, 0x00, 0xff }; // Every packet must s
 
 typedef struct {
   usb_dev_handle* pudh;
-  ui32 uiEndPointIn;
-  ui32 uiEndPointOut;
+  uint32_t uiEndPointIn;
+  uint32_t uiEndPointOut;
 } dev_spec_pn531;
 
 // Find transfer endpoints for bulk transfers
 static void get_end_points(struct usb_device *dev, dev_spec_pn531* pdsp)
 {
-  ui32 uiIndex;
-  ui32 uiEndPoint;
+  uint32_t uiIndex;
+  uint32_t uiEndPoint;
   struct usb_interface_descriptor* puid = dev->config->interface->altsetting;
 
   // 3 Endpoints maximum: Interrupt In, Bulk In, Bulk Out
@@ -57,7 +61,7 @@ static void get_end_points(struct usb_device *dev, dev_spec_pn531* pdsp)
     // Test if we dealing with a bulk IN endpoint
     if((uiEndPoint & USB_ENDPOINT_DIR_MASK) == USB_ENDPOINT_IN)
     {
-      #ifdef _LIBNFC_VERBOSE_
+      #ifdef DEBUG
         printf("Bulk endpoint in  : 0x%02X\n", uiEndPoint);
       #endif
       pdsp->uiEndPointIn = uiEndPoint;
@@ -66,7 +70,7 @@ static void get_end_points(struct usb_device *dev, dev_spec_pn531* pdsp)
     // Test if we dealing with a bulk OUT endpoint
     if((uiEndPoint & USB_ENDPOINT_DIR_MASK) == USB_ENDPOINT_OUT)
     {
-      #ifdef _LIBNFC_VERBOSE_
+      #ifdef DEBUG
         printf("Bulk endpoint in  : 0x%02X\n", uiEndPoint);
       #endif
       pdsp->uiEndPointOut = uiEndPoint;
@@ -74,7 +78,7 @@ static void get_end_points(struct usb_device *dev, dev_spec_pn531* pdsp)
   }
 }                                                                                  
 
-dev_info* dev_pn531_connect(const ui32 uiIndex)
+dev_info* dev_pn531_connect(const uint32_t uiIndex)
 {                                                
   int idvendor = 0x04CC;
   int idproduct = 0x0531;
@@ -85,11 +89,11 @@ dev_info* dev_pn531_connect(const ui32 uiIndex)
   dev_info* pdi = INVALID_DEVICE_INFO;
   dev_spec_pn531* pdsp;
   dev_spec_pn531 dsp;
-  ui32 uiDevIndex;
+  uint32_t uiDevIndex;
 
   dsp.uiEndPointIn = 0;
   dsp.uiEndPointOut = 0;
-  dsp.pudh = null;
+  dsp.pudh = NULL;
                                                                         
   usb_init();
   if (usb_find_busses() < 0) return INVALID_DEVICE_INFO;
@@ -115,7 +119,7 @@ dev_info* dev_pn531_connect(const ui32 uiIndex)
           uiDevIndex--;
           continue;
         }
-        #ifdef _LIBNFC_VERBOSE_
+        #ifdef DEBUG
           printf("Found PN531 device\n");
         #endif
 
@@ -125,7 +129,7 @@ dev_info* dev_pn531_connect(const ui32 uiIndex)
         get_end_points(dev,&dsp);                                                       
         if(usb_set_configuration(dsp.pudh,1) < 0)                                  
         {                                                                          
-          #ifdef _LIBNFC_VERBOSE_
+          #ifdef DEBUG
             printf("Setting config failed\n");                                     
           #endif
           usb_close(dsp.pudh);                                                      
@@ -134,7 +138,7 @@ dev_info* dev_pn531_connect(const ui32 uiIndex)
 
         if(usb_claim_interface(dsp.pudh,0) < 0)
         {
-          #ifdef _LIBNFC_VERBOSE_
+          #ifdef DEBUG
             printf("Can't claim interface\n");
           #endif
           usb_close(dsp.pudh);
@@ -167,39 +171,39 @@ void dev_pn531_disconnect(dev_info* pdi)
   free(pdi);
 }                                        
 
-bool dev_pn531_transceive(const dev_spec ds, const byte* pbtTx, const ui32 uiTxLen, byte* pbtRx, ui32* puiRxLen)
+bool dev_pn531_transceive(const dev_spec ds, const byte_t* pbtTx, const uint32_t uiTxLen, byte_t* pbtRx, uint32_t* puiRxLen)
 {                                                                          
-    ui32 uiPos = 0;                                                             
+    uint32_t uiPos = 0;                                                             
     int ret = 0;                                                           
     char buf[BUFFER_LENGTH];
     dev_spec_pn531* pdsp = (dev_spec_pn531*)ds;
 
     // Packet length = data length (len) + checksum (1) + end of stream marker (1)
-    buffer[3] = uiTxLen;                                                                
-    // Packet length checksum 
-    buffer[4] = BUFFER_LENGTH - buffer[3];                                                  
+    buffer[3] = uiTxLen;
+    // Packet length checksum
+    buffer[4] = BUFFER_LENGTH - buffer[3];
     // Copy the PN53X command into the packet buffer
     memmove(buffer+5,pbtTx,uiTxLen);
 
     // Calculate data payload checksum
-    buffer[uiTxLen+5] = 0;                   
+    buffer[uiTxLen+5] = 0;
     for(uiPos=0; uiPos < uiTxLen; uiPos++) 
     {
       buffer[uiTxLen+5] -= buffer[uiPos+5];
     }
 
     // End of stream marker
-    buffer[uiTxLen+6] = 0;        
+    buffer[uiTxLen+6] = 0;
 
-    #ifdef _LIBNFC_VERBOSE_
+    #ifdef DEBUG
       printf("Tx: ");
-      print_hex((byte*)buffer,uiTxLen+7);
+      print_hex((byte_t*)buffer,uiTxLen+7);
     #endif
 
     ret = usb_bulk_write(pdsp->pudh, pdsp->uiEndPointOut, buffer, uiTxLen+7, USB_TIMEOUT);
     if( ret < 0 )
     {
-      #ifdef _LIBNFC_VERBOSE_
+      #ifdef DEBUG
         printf("usb_bulk_write failed with error %d\n", ret);
       #endif
       return false;
@@ -208,15 +212,15 @@ bool dev_pn531_transceive(const dev_spec ds, const byte* pbtTx, const ui32 uiTxL
     ret = usb_bulk_read(pdsp->pudh, pdsp->uiEndPointIn, buf, BUFFER_LENGTH, USB_TIMEOUT);
     if( ret < 0 )
     {
-      #ifdef _LIBNFC_VERBOSE_
+      #ifdef DEBUG
         printf( "usb_bulk_read failed with error %d\n", ret);
       #endif
       return false;
     }
 
-    #ifdef _LIBNFC_VERBOSE_
+    #ifdef DEBUG
       printf("Rx: ");
-      print_hex((byte*)buf,ret);
+      print_hex((byte_t*)buf,ret);
     #endif
 
     if( ret == 6 )
@@ -224,20 +228,20 @@ bool dev_pn531_transceive(const dev_spec ds, const byte* pbtTx, const ui32 uiTxL
       ret = usb_bulk_read(pdsp->pudh, pdsp->uiEndPointIn, buf, BUFFER_LENGTH, USB_TIMEOUT);
       if( ret < 0 )
       {
-        #ifdef _LIBNFC_VERBOSE_
+        #ifdef DEBUG
           printf("usb_bulk_read failed with error %d\n", ret);
         #endif
         return false;
       }
 
-      #ifdef _LIBNFC_VERBOSE_
+      #ifdef DEBUG
         printf("Rx: ");
-        print_hex((byte*)buf,ret);
+        print_hex((byte_t*)buf,ret);
       #endif
     }
 
     // When the answer should be ignored, just return a succesful result    
-    if(pbtRx == null || puiRxLen == null) return true;
+    if(pbtRx == NULL || puiRxLen == NULL) return true;
 
     // Only succeed when the result is at least 00 00 FF xx Fx Dx xx .. .. .. xx 00 (x = variable)
     if(ret < 9) return false;

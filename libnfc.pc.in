@@ -6,5 +6,5 @@ Name: libnfc
 Description: Near Field Communication (NFC) library
 Version: @VERSION@
 Requires: libusb, libpcsclite
-Libs: -L${libdir} -lmytoolkit
+Libs: -L${libdir} -lnfc
 Cflags: -I${includedir}

@@ -4,7 +4,7 @@ Public platform independent Near Field Communication (NFC) library
 Copyright (C) 2009, Roel Verdult
  
 This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
+it under the terms of the GNU Lesser General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
@@ -13,18 +13,21 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
+You should have received a copy of the GNU Lesser General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 */
 
 #include <stdio.h>
+#include <stddef.h>
 #include <stdlib.h>
+
 #include <string.h>
+
 #include "libnfc.h"
 
 static dev_info* pdi;
-static byte abtFelica[5] = { 0x00, 0xff, 0xff, 0x00, 0x00 };
+static byte_t abtFelica[5] = { 0x00, 0xff, 0xff, 0x00, 0x00 };
 
 int main(int argc, const char* argv[])
 {			
@@ -56,7 +59,7 @@ int main(int argc, const char* argv[])
   printf("\nConnected to NFC reader: %s\n\n",pdi->acName);
   
   // Poll for a ISO14443A (MIFARE) tag
-  if (nfc_reader_select(pdi,IM_ISO14443A_106,null,null,&ti))
+  if (nfc_reader_select(pdi,IM_ISO14443A_106,NULL,0,&ti))
   {
     printf("The following (NFC) ISO14443A tag was found:\n\n");
     printf("    ATQA (SENS_RES): "); print_hex(ti.tia.abtAtqa,2);
@@ -78,14 +81,14 @@ int main(int argc, const char* argv[])
   }
 
   // Poll for a ISO14443B tag
-  if (nfc_reader_select(pdi,IM_ISO14443B_106,null,null,&ti))
+  if (nfc_reader_select(pdi,IM_ISO14443B_106,NULL,0,&ti))
   {
     // No test results yet
     printf("iso14443b\n");
   }
 
   // Poll for a Jewel tag
-  if (nfc_reader_select(pdi,IM_JEWEL_106,null,null,&ti))
+  if (nfc_reader_select(pdi,IM_JEWEL_106,NULL,0,&ti))
   {
     // No test results yet
     printf("jewel\n");

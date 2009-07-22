@@ -4,7 +4,7 @@ Public platform independent Near Field Communication (NFC) library
 Copyright (C) 2009, Roel Verdult
  
 This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
+it under the terms of the GNU Lesser General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
@@ -13,29 +13,32 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
+You should have received a copy of the GNU Lesser General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 */
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stddef.h>
+#include <stdint.h>
 #include <string.h>
+
 #include "libnfc.h"
 
-static byte abtRecv[MAX_FRAME_LEN];
-static ui32 uiRecvBits;
+static byte_t abtRecv[MAX_FRAME_LEN];
+static uint32_t uiRecvBits;
 static dev_info* pdi;
 
 // ISO14443A Anti-Collision response
-byte abtAtqa      [2] = { 0x04,0x00 };
-byte abtUidBcc    [5] = { 0xDE,0xAD,0xBE,0xAF,0x62 };
-byte abtSak       [9] = { 0x08,0xb6,0xdd };
+byte_t abtAtqa      [2] = { 0x04,0x00 };
+byte_t abtUidBcc    [5] = { 0xDE,0xAD,0xBE,0xAF,0x62 };
+byte_t abtSak       [9] = { 0x08,0xb6,0xdd };
 
 int main(int argc, const char* argv[])
 {                       
-  byte* pbtTx = null;
-  ui32 uiTxBits;
+  byte_t* pbtTx = NULL;
+  uint32_t uiTxBits;
   
   // Try to open the NFC reader
   pdi = nfc_connect();
@@ -66,7 +69,7 @@ int main(int argc, const char* argv[])
   while(true)
   {
     // Test if we received a frame
-    if (nfc_target_receive_bits(pdi,abtRecv,&uiRecvBits,null))
+    if (nfc_target_receive_bits(pdi,abtRecv,&uiRecvBits,NULL))
     {
       // Prepare the command to send back for the anti-collision request
       switch(uiRecvBits)
@@ -100,7 +103,7 @@ int main(int argc, const char* argv[])
       if(uiTxBits)
       {
         // Send and print the command to the screen
-        nfc_target_send_bits(pdi,pbtTx,uiTxBits,null);
+        nfc_target_send_bits(pdi,pbtTx,uiTxBits,NULL);
         printf("T: ");
         print_hex_bits(pbtTx,uiTxBits);
       }

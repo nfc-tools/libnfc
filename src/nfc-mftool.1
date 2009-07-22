@@ -1,0 +1,57 @@
+.TH NFC-MFTOOL 1 "June 26, 2009"
+.SH NAME
+nfc-mftool \- Mifare Classic command line tool based on libnfc
+.SH SYNOPSIS
+.B nfc-mftool
+.RI \fR\fBr\fR|\fBw\fR
+.RI \fR\fBa\fR|\fBb\fR
+.IR KEYS
+.IR DUMP
+
+.SH DESCRIPTION
+.B nfc-mftool
+is an Mifare Classic tool that allow to read or write
+.IR DUMP
+file using Mifare keys provide in 
+.IR KEYS
+file.
+
+The Mifare Classic tag is one of the most widely used RFID tags.
+The firmware in the NFC controller supports authenticating, reading and writing to/from Mifare Classic tags.
+This tool demonstrate the speed of this library and its easy-of-use.
+It possible to read and write the complete content of a Mifare Classic 4KB tag within 1 second.
+It uses a binary Mifare Dump File to store the keys and date for all sectors.
+
+.SH OPTIONS
+.BR r " | " w
+Perform read from (
+.B r
+) or write to (
+.B w
+)card.
+.TP
+.BR a " | " b
+Use A or B Mifare keys.
+.TP
+.IR KEYS
+Mifare dump that contain Mifare keys.
+.TP
+.IR DUMP
+Used to write card to file ( r ) or file to card ( w )
+
+
+.SH BUGS
+Please report any bugs on the
+.B libnfc
+forum at
+.BR http://www.libnfc.org/community/ "."
+.SH LICENCE
+.B libnfc
+and
+.B nfc-tools
+are covered by the GNU Lesser General Public License (LGPL), version 3.
+.SH AUTHORS
+Roel Verdult <roel@libnfc.org>
+.PP
+This manual page was written by Romuald Conty <romuald.conty@free.fr>.
+It is licensed under the terms of the GNU GPL (version 2 or later).
