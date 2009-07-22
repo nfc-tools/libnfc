@@ -1,1 +1,2 @@
 debian/tmp/usr/bin/nfc-*
+debian/tmp/usr/share/man/man1/nfc-*
