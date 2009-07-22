@@ -1,0 +1,13 @@
+Jul 22, 2009 - 1.1.1
+ - License changed from GPLv3 to LGPLv3
+ - ARYGON ADRA-USB/ADRB-USB reader support
+ - PN533 support
+ - C99 standard (all custom defined types have been renamed)
+ - Autotoolized for GNU/Linux, *BSD
+ - nfc tools (emulate, relay, list, mftool) are now prefixed by nfc in GNU/Linux and *BSD
+
+Mar 27, 2009 - 1.1.0
+ - Next generation, support for ACR122v2 and PN531 USB devices
+
+Feb 12, 2009 - 1.0.0
+ - Initial release
