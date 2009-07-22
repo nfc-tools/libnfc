@@ -74,7 +74,8 @@ then
 case "$host" in
   *darwin*)
     AC_MSG_WARN(Using darwin PCSC Framework)
-    LIBPCSCLITE_LIBS=-Wl,-framework,PCSC
+    LIBPCSCLITE_LIBS="-Wl,-framework,PCSC"
+    LIBPCSCLITE_CFLAGS="-I/System/Library/Frameworks/PCSC.framework/Headers"
   ;;
   *)
     PKG_CHECK_MODULES(LIBPCSCLITE, libpcsclite, [WITH_PCSC=1], [WITH_PCSC=0])
