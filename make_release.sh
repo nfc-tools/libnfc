@@ -28,11 +28,11 @@ if [ ! -f $LIBNFC_WINDOWS_ARCHIVE ]; then
 		rm -rf $LIBNFC_WINDOWS_DIR
 	fi
 
-	mkdir -p $LIBNFC_WINDOWS_DIR
+	mkdir -p $LIBNFC_WINDOWS_DIR/src
 
 	# Copy sources
-	cp src/*.c $LIBNFC_WINDOWS_DIR/
-	cp src/*.h $LIBNFC_WINDOWS_DIR/
+	cp src/*.c $LIBNFC_WINDOWS_DIR/src/
+	cp src/*.h $LIBNFC_WINDOWS_DIR/src/
 
 	# Copy important files
 	cp LICENSE $LIBNFC_WINDOWS_DIR/
