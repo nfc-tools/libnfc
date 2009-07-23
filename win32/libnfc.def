@@ -11,16 +11,26 @@ EXPORTS
   dev_pn531_disconnect
   dev_pn531_transceive
 
+  ; dev_pn533.h
+  dev_pn533_connect
+  dev_pn533_disconnect
+  dev_pn533_transceive
+
+  ; dev_arygon.h
+  dev_arygon_connect
+  dev_arygon_disconnect
+  dev_arygon_transceive
+
   ; libnfc.h
   nfc_connect
   nfc_disconnect
   nfc_configure
-  nfc_reader_init
-  nfc_reader_transceive_bits
-  nfc_reader_transceive_bytes
-  nfc_reader_select
-  nfc_reader_deselect
-  nfc_reader_mifare_cmd
+  nfc_initiator_init
+  nfc_initiator_transceive_bits
+  nfc_initiator_transceive_bytes
+  nfc_initiator_select_tag
+  nfc_initiator_deselect_tag
+  nfc_initiator_mifare_cmd
   nfc_target_init
   nfc_target_receive_bits
   nfc_target_receive_bytes

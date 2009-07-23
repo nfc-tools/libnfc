@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8.00"
+	Version="8,00"
 	Name="libnfc"
 	ProjectGUID="{AAEEDA5F-F86F-452D-BFA3-53B1C00B8884}"
 	RootNamespace="libnfc"
@@ -40,7 +40,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="libusb"
+				AdditionalIncludeDirectories="libusb;stdint"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;LIBNFC_EXPORTS;_CRT_SECURE_NO_WARNINGS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -50,6 +50,7 @@
 				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="4"
 				CompileAs="1"
+				DisableSpecificWarnings="4996"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -120,14 +121,15 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="libusb"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;LIBNFC_EXPORTS;_CRT_SECURE_NO_WARNINGS"
+				AdditionalIncludeDirectories="libusb;stdint"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;LIBNFC_EXPORTS;_CRT_SECURE_NO_WARNINGS;HAVE_PCSC_LITE"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="3"
 				CompileAs="1"
+				DisableSpecificWarnings="4996"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -180,39 +182,55 @@
 	</References>
 	<Files>
 		<File
-			RelativePath="..\bitutils.c"
+			RelativePath="..\src\bitutils.c"
 			>
 		</File>
 		<File
-			RelativePath="..\bitutils.h"
+			RelativePath="..\src\bitutils.h"
 			>
 		</File>
 		<File
-			RelativePath="..\defines.h"
+			RelativePath="..\src\defines.h"
 			>
 		</File>
 		<File
-			RelativePath="..\dev_acr122.c"
+			RelativePath="..\src\dev_acr122.c"
 			>
 		</File>
 		<File
-			RelativePath="..\dev_acr122.h"
+			RelativePath="..\src\dev_acr122.h"
 			>
 		</File>
 		<File
-			RelativePath="..\dev_pn531.c"
+			RelativePath="..\src\dev_arygon.c"
 			>
 		</File>
 		<File
-			RelativePath="..\dev_pn531.h"
+			RelativePath="..\src\dev_arygon.h"
 			>
 		</File>
 		<File
-			RelativePath="..\devices.h"
+			RelativePath="..\src\dev_pn531.c"
 			>
 		</File>
 		<File
-			RelativePath="..\libnfc.c"
+			RelativePath="..\src\dev_pn531.h"
+			>
+		</File>
+		<File
+			RelativePath="..\src\dev_pn533.c"
+			>
+		</File>
+		<File
+			RelativePath="..\src\dev_pn533.h"
+			>
+		</File>
+		<File
+			RelativePath="..\src\devices.h"
+			>
+		</File>
+		<File
+			RelativePath="..\src\libnfc.c"
 			>
 		</File>
 		<File
@@ -220,11 +238,19 @@
 			>
 		</File>
 		<File
-			RelativePath="..\libnfc.h"
+			RelativePath="..\src\libnfc.h"
 			>
 		</File>
 		<File
-			RelativePath="..\types.h"
+			RelativePath="..\src\rs232.c"
+			>
+		</File>
+		<File
+			RelativePath="..\src\rs232.h"
+			>
+		</File>
+		<File
+			RelativePath="..\src\types.h"
 			>
 		</File>
 	</Files>
