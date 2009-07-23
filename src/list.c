@@ -41,7 +41,7 @@ int main(int argc, const char* argv[])
     printf("Error connecting NFC reader\n");
     return 1;
   }
-  nfc_reader_init(pdi);
+  nfc_initiator_init(pdi);
 
   // Drop the field for a while
   nfc_configure(pdi,DCO_ACTIVATE_FIELD,false);
@@ -59,7 +59,7 @@ int main(int argc, const char* argv[])
   printf("\nConnected to NFC reader: %s\n\n",pdi->acName);
   
   // Poll for a ISO14443A (MIFARE) tag
-  if (nfc_reader_select(pdi,IM_ISO14443A_106,NULL,0,&ti))
+  if (nfc_initiator_select_tag(pdi,IM_ISO14443A_106,NULL,0,&ti))
   {
     printf("The following (NFC) ISO14443A tag was found:\n\n");
     printf("    ATQA (SENS_RES): "); print_hex(ti.tia.abtAtqa,2);
@@ -73,7 +73,7 @@ int main(int argc, const char* argv[])
   }
 
   // Poll for a Felica tag
-  if (nfc_reader_select(pdi,IM_FELICA_212,abtFelica,5,&ti) || nfc_reader_select(pdi,IM_FELICA_424,abtFelica,5,&ti))
+  if (nfc_initiator_select_tag(pdi,IM_FELICA_212,abtFelica,5,&ti) || nfc_initiator_select_tag(pdi,IM_FELICA_424,abtFelica,5,&ti))
   {
     printf("The following (NFC) Felica tag was found:\n\n");
     printf("%18s","ID (NFCID2): "); print_hex(ti.tif.abtId,8);
@@ -81,14 +81,21 @@ int main(int argc, const char* argv[])
   }
 
   // Poll for a ISO14443B tag
-  if (nfc_reader_select(pdi,IM_ISO14443B_106,NULL,0,&ti))
+  if (nfc_initiator_select_tag(pdi,IM_ISO14443B_106,"\x00",1,&ti))
   {
-    // No test results yet
-    printf("iso14443b\n");
+    printf("The following (NFC) ISO14443-B tag was found:\n\n");
+    printf("  ATQB: "); print_hex(ti.tib.abtAtqb,12);
+    printf("    ID: "); print_hex(ti.tib.abtId,4);
+    printf("   CID: %02x\n",ti.tib.btCid);
+    if (ti.tib.uiInfLen>0)
+    {
+      printf("   INF: "); print_hex(ti.tib.abtInf,ti.tib.uiInfLen);
+    }
+    printf("PARAMS: %02x %02x %02x %02x\n",ti.tib.btParam1,ti.tib.btParam2,ti.tib.btParam3,ti.tib.btParam4);
   }
 
   // Poll for a Jewel tag
-  if (nfc_reader_select(pdi,IM_JEWEL_106,NULL,0,&ti))
+  if (nfc_initiator_select_tag(pdi,IM_JEWEL_106,NULL,0,&ti))
   {
     // No test results yet
     printf("jewel\n");

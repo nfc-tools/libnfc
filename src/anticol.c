@@ -50,7 +50,7 @@ bool transmit_bits(const byte_t* pbtTx, const uint32_t uiTxBits)
   printf("R: "); print_hex_bits(pbtTx,uiTxBits);
 
   // Transmit the bit frame command, we don't use the arbitrary parity feature
-  if (!nfc_reader_transceive_bits(pdi,pbtTx,uiTxBits,NULL,abtRx,&uiRxBits,NULL)) return false;
+  if (!nfc_initiator_transceive_bits(pdi,pbtTx,uiTxBits,NULL,abtRx,&uiRxBits,NULL)) return false;
 
   // Show received answer
   printf("T: "); print_hex_bits(abtRx,uiRxBits);
@@ -66,7 +66,7 @@ bool transmit_bytes(const byte_t* pbtTx, const uint32_t uiTxLen)
   printf("R: "); print_hex(pbtTx,uiTxLen);
 
   // Transmit the command bytes
-  if (!nfc_reader_transceive_bytes(pdi,pbtTx,uiTxLen,abtRx,&uiRxLen)) return false;
+  if (!nfc_initiator_transceive_bytes(pdi,pbtTx,uiTxLen,abtRx,&uiRxLen)) return false;
 
   // Show received answer
   printf("T: "); print_hex(abtRx,uiRxLen);
@@ -85,7 +85,7 @@ int main(int argc, const char* argv[])
     printf("Error connecting NFC reader\n");
     return 1;
   }
-  nfc_reader_init(pdi);
+  nfc_initiator_init(pdi);
 
   // Drop the field for a while
   nfc_configure(pdi,DCO_ACTIVATE_FIELD,false);

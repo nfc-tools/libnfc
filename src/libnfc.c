@@ -370,7 +370,7 @@ bool nfc_configure(dev_info* pdi, const dev_config_option dco, const bool bEnabl
   return true;
 }
 
-bool nfc_reader_init(const dev_info* pdi)
+bool nfc_initiator_init(const dev_info* pdi)
 {
   // Make sure we are dealing with a active device
   if (!pdi->bActive) return false;
@@ -384,7 +384,7 @@ bool nfc_reader_init(const dev_info* pdi)
   return true;
 }
 
-bool nfc_reader_select(const dev_info* pdi, const init_modulation im, const byte_t* pbtInitData, const uint32_t uiInitDataLen, tag_info* pti)
+bool nfc_initiator_select_tag(const dev_info* pdi, const init_modulation im, const byte_t* pbtInitData, const uint32_t uiInitDataLen, tag_info* pti)
 {
 	// Make sure we are dealing with a active device
   if (!pdi->bActive) return false;
@@ -480,12 +480,12 @@ bool nfc_reader_select(const dev_info* pdi, const init_modulation im, const byte
   return true;
 }
 
-bool nfc_reader_deselect(const dev_info* pdi)
+bool nfc_initiator_deselect_tag(const dev_info* pdi)
 {
   return (pdi->pdc->transceive(pdi->ds,pncmd_reader_deselect,3,NULL,NULL));
 }
 
-bool nfc_reader_transceive_bits(const dev_info* pdi, const byte_t* pbtTx, const uint32_t uiTxBits, const byte_t* pbtTxPar, byte_t* pbtRx, uint32_t* puiRxBits, byte_t* pbtRxPar)
+bool nfc_initiator_transceive_bits(const dev_info* pdi, const byte_t* pbtTx, const uint32_t uiTxBits, const byte_t* pbtTxPar, byte_t* pbtRx, uint32_t* puiRxBits, byte_t* pbtRxPar)
 {
   uint32_t uiFrameBits = 0;
   uint32_t uiFrameBytes = 0;
@@ -539,7 +539,7 @@ bool nfc_reader_transceive_bits(const dev_info* pdi, const byte_t* pbtTx, const 
   return true;
 }
 
-bool nfc_reader_transceive_bytes(const dev_info* pdi, const byte_t* pbtTx, const uint32_t uiTxLen, byte_t* pbtRx, uint32_t* puiRxLen)
+bool nfc_initiator_transceive_bytes(const dev_info* pdi, const byte_t* pbtTx, const uint32_t uiTxLen, byte_t* pbtRx, uint32_t* puiRxLen)
 {
   // We can not just send bytes without parity if while the PN53X expects we handled them
   if (!pdi->bPar) return false;
@@ -564,7 +564,7 @@ bool nfc_reader_transceive_bytes(const dev_info* pdi, const byte_t* pbtTx, const
   return true;
 }
 
-bool nfc_reader_mifare_cmd(const dev_info* pdi, const mifare_cmd mc, const uint8_t ui8Block, mifare_param* pmp)
+bool nfc_initiator_mifare_cmd(const dev_info* pdi, const mifare_cmd mc, const uint8_t ui8Block, mifare_param* pmp)
 {
   uint32_t uiParamLen;
 

@@ -32,12 +32,12 @@ dev_info* nfc_connect(void);
 void nfc_disconnect(dev_info* pdi);
 bool nfc_configure(dev_info* pdi, const dev_config_option dco, const bool bEnable);
 
-bool nfc_reader_init(const dev_info* pdi);
-bool nfc_reader_select(const dev_info* pdi, const init_modulation im, const byte_t* pbtInitData, const uint32_t uiInitDataLen, tag_info* pti);
-bool nfc_reader_deselect(const dev_info* pdi);
-bool nfc_reader_transceive_bits(const dev_info* pdi, const byte_t* pbtTx, const uint32_t uiTxBits, const byte_t* pbtTxPar, byte_t* pbtRx, uint32_t* puiRxBits, byte_t* pbtRxPar);
-bool nfc_reader_transceive_bytes(const dev_info* pdi, const byte_t* pbtTx, const uint32_t uiTxLen, byte_t* pbtRx, uint32_t* puiRxLen);
-bool nfc_reader_mifare_cmd(const dev_info* pdi, const mifare_cmd mc, const uint8_t ui8Block, mifare_param* pmp);
+bool nfc_initiator_init(const dev_info* pdi);
+bool nfc_initiator_select_tag(const dev_info* pdi, const init_modulation im, const byte_t* pbtInitData, const uint32_t uiInitDataLen, tag_info* pti);
+bool nfc_initiator_deselect_tag(const dev_info* pdi);
+bool nfc_initiator_transceive_bits(const dev_info* pdi, const byte_t* pbtTx, const uint32_t uiTxBits, const byte_t* pbtTxPar, byte_t* pbtRx, uint32_t* puiRxBits, byte_t* pbtRxPar);
+bool nfc_initiator_transceive_bytes(const dev_info* pdi, const byte_t* pbtTx, const uint32_t uiTxLen, byte_t* pbtRx, uint32_t* puiRxLen);
+bool nfc_initiator_mifare_cmd(const dev_info* pdi, const mifare_cmd mc, const uint8_t ui8Block, mifare_param* pmp);
 
 bool nfc_target_init(const dev_info* pdi, byte_t* pbtRx, uint32_t* puiRxBits);
 bool nfc_target_receive_bits(const dev_info* pdi, byte_t* pbtRx, uint32_t* puiRxBits, byte_t* pbtRxPar);

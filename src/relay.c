@@ -84,7 +84,7 @@ int main(int argc, const char* argv[])
       print_hex_par(abtReaderRx,uiReaderRxBits,abtReaderRxPar);
 
       // Forward the frame to the original tag
-      if (nfc_reader_transceive_bits(pdiReader,abtReaderRx,uiReaderRxBits,abtReaderRxPar,abtTagRx,&uiTagRxBits,abtTagRxPar))
+      if (nfc_initiator_transceive_bits(pdiReader,abtReaderRx,uiReaderRxBits,abtReaderRxPar,abtTagRx,&uiTagRxBits,abtTagRxPar))
       {
         // Redirect the answer back to the reader
         nfc_target_send_bits(pdiTag,abtTagRx,uiTagRxBits,abtTagRxPar);

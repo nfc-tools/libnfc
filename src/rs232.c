@@ -158,7 +158,7 @@ serial_port rs232_open(const char* pcPortName)
   _strupr(acPortName);
 
   // Try to open the serial port
-  sp->hPort = CreateFileA(acPortName,GENERIC_READ|GENERIC_WRITE,NULL,NULL,OPEN_EXISTING,NULL,NULL);
+  sp->hPort = CreateFileA(acPortName,GENERIC_READ|GENERIC_WRITE,0,NULL,OPEN_EXISTING,0,NULL);
   if (sp->hPort == INVALID_HANDLE_VALUE)
   {
     rs232_close(sp);
@@ -181,11 +181,11 @@ serial_port rs232_open(const char* pcPortName)
     return INVALID_SERIAL_PORT;
   }
 
-  sp->ct.ReadIntervalTimeout         = 30;
+  sp->ct.ReadIntervalTimeout         = 0;
   sp->ct.ReadTotalTimeoutMultiplier  = 0;
-  sp->ct.ReadTotalTimeoutConstant    = 0;
+  sp->ct.ReadTotalTimeoutConstant    = 30;
   sp->ct.WriteTotalTimeoutMultiplier = 0;
-  sp->ct.WriteTotalTimeoutConstant   = 0;
+  sp->ct.WriteTotalTimeoutConstant   = 30;
   
   if(!SetCommTimeouts(sp->hPort,&sp->ct))
   {
@@ -205,19 +205,21 @@ void rs232_close(const serial_port sp)
 bool rs232_cts(const serial_port sp)
 {
   DWORD dwStatus;
-  if (GetCommModemStatus(((serial_port_windows*)sp)->hPort,&dwStatus) == NULL) return false;
+  if (!GetCommModemStatus(((serial_port_windows*)sp)->hPort,&dwStatus)) return false;
   return (dwStatus & MS_CTS_ON);
 }
 
 bool rs232_receive(const serial_port sp, byte_t* pbtRx, uint32_t* puiRxLen)
 {
-  return (ReadFile(((serial_port_windows*)sp)->hPort,pbtRx,*puiRxLen,(LPDWORD)puiRxLen,NULL) != NULL);
+  ReadFile(((serial_port_windows*)sp)->hPort,pbtRx,*puiRxLen,(LPDWORD)puiRxLen,NULL);
+  return (*puiRxLen != 0);
 }
 
 bool rs232_send(const serial_port sp, const byte_t* pbtTx, const uint32_t uiTxLen)
 {
-  DWORD dwTxLen;
-  return (WriteFile(((serial_port_windows*)sp)->hPort,pbtTx,uiTxLen,&dwTxLen,NULL) != NULL);
+  DWORD dwTxLen = 0;
+  return WriteFile(((serial_port_windows*)sp)->hPort,pbtTx,uiTxLen,&dwTxLen,NULL);
+  return (dwTxLen != 0);
 }
 
 #endif
