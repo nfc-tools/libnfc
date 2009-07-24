@@ -227,7 +227,7 @@ bool dev_acr122_transceive(const dev_spec ds, const byte_t* pbtTx, const uint32_
   // Make sure we have an emulated answer that fits the return buffer
   if (ulRxBufLen < 4 || (ulRxBufLen-4) > *puiRxLen) return false;
   // Wipe out the 4 APDU emulation bytes: D5 4B .. .. .. 90 00
-  *puiRxLen = ulRxBufLen-4;
+  *puiRxLen = ((uint32_t)ulRxBufLen)-4;
   memcpy(pbtRx,abtRxBuf+2,*puiRxLen);
 
   // Transmission went successful
