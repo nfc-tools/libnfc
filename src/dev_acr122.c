@@ -58,7 +58,7 @@ static byte_t abtTxBuf[ACR122_WRAP_LEN+ACR122_COMMAND_LEN] = { 0xFF, 0x00, 0x00,
 static byte_t abtRxCmd[5] = { 0xFF,0xC0,0x00,0x00 };
 static byte_t uiRxCmdLen = sizeof(abtRxCmd);
 static byte_t abtRxBuf[ACR122_RESPONSE_LEN];
-static uint32_t uiRxBufLen;
+static size_t ulRxBufLen;
 static byte_t abtGetFw[5] = { 0xFF,0x00,0x48,0x00,0x00 };
 static byte_t abtLed[9] = { 0xFF,0x00,0x40,0x05,0x04,0x00,0x00,0x00,0x00 };
 
@@ -189,7 +189,7 @@ bool dev_acr122_transceive(const dev_spec ds, const byte_t* pbtTx, const uint32_
 
   // Prepare and transmit the send buffer
   memcpy(abtTxBuf+5,pbtTx,uiTxLen);
-  uiRxBufLen = sizeof(abtRxBuf);
+  ulRxBufLen = sizeof(abtRxBuf);
   #ifdef DEBUG
     printf("Tx: ");
     print_hex(abtTxBuf,uiTxLen+5);
@@ -197,37 +197,37 @@ bool dev_acr122_transceive(const dev_spec ds, const byte_t* pbtTx, const uint32_
 
   if (pdsa->ioCard.dwProtocol == SCARD_PROTOCOL_UNDEFINED)
   {
-    if (SCardControl(pdsa->hCard,IOCTL_CCID_ESCAPE_SCARD_CTL_CODE,abtTxBuf,uiTxLen+5,abtRxBuf,uiRxBufLen,(void*)&uiRxBufLen) != SCARD_S_SUCCESS) return false;
+    if (SCardControl(pdsa->hCard,IOCTL_CCID_ESCAPE_SCARD_CTL_CODE,abtTxBuf,uiTxLen+5,abtRxBuf,ulRxBufLen,(void*)&ulRxBufLen) != SCARD_S_SUCCESS) return false;
   } else {
-    if (SCardTransmit(pdsa->hCard,&(pdsa->ioCard),abtTxBuf,uiTxLen+5,NULL,abtRxBuf,(void*)&uiRxBufLen) != SCARD_S_SUCCESS) return false;
+    if (SCardTransmit(pdsa->hCard,&(pdsa->ioCard),abtTxBuf,uiTxLen+5,NULL,abtRxBuf,(void*)&ulRxBufLen) != SCARD_S_SUCCESS) return false;
   }
 
   if (pdsa->ioCard.dwProtocol == SCARD_PROTOCOL_T0)
   {
     // Make sure we received the byte-count we expected
-    if (uiRxBufLen != 2) return false;
+    if (ulRxBufLen != 2) return false;
 
     // Check if the operation was successful, so an answer is available
     if (*abtRxBuf == SCARD_OPERATION_ERROR) return false;
 
     // Retrieve the response bytes
     abtRxCmd[4] = abtRxBuf[1];
-    uiRxBufLen = sizeof(abtRxBuf);
-    if (SCardTransmit(pdsa->hCard,&(pdsa->ioCard),abtRxCmd,uiRxCmdLen,NULL,abtRxBuf,(void*)&uiRxBufLen) != SCARD_S_SUCCESS) return false;
+    ulRxBufLen = sizeof(abtRxBuf);
+    if (SCardTransmit(pdsa->hCard,&(pdsa->ioCard),abtRxCmd,uiRxCmdLen,NULL,abtRxBuf,(void*)&ulRxBufLen) != SCARD_S_SUCCESS) return false;
   }
 
   #ifdef DEBUG
     printf("Rx: ");
-    print_hex(abtRxBuf,uiRxBufLen);
+    print_hex(abtRxBuf,ulRxBufLen);
   #endif
 
   // When the answer should be ignored, just return a succesful result
   if (pbtRx == NULL || puiRxLen == NULL) return true;
 
   // Make sure we have an emulated answer that fits the return buffer
-  if (uiRxBufLen < 4 || (uiRxBufLen-4) > *puiRxLen) return false;
+  if (ulRxBufLen < 4 || (ulRxBufLen-4) > *puiRxLen) return false;
   // Wipe out the 4 APDU emulation bytes: D5 4B .. .. .. 90 00
-  *puiRxLen = uiRxBufLen-4;
+  *puiRxLen = ulRxBufLen-4;
   memcpy(pbtRx,abtRxBuf+2,*puiRxLen);
 
   // Transmission went successful
@@ -240,7 +240,7 @@ char* dev_acr122_firmware(const dev_spec ds)
   
   dev_spec_acr122* pdsa = (dev_spec_acr122*)ds;
   static char abtFw[11];
-  uint32_t ulFwLen = sizeof(abtFw);
+  size_t ulFwLen = sizeof(abtFw);
   memset(abtFw,0x00,ulFwLen);
   if (pdsa->ioCard.dwProtocol == SCARD_PROTOCOL_UNDEFINED)
   {
@@ -263,7 +263,7 @@ bool dev_acr122_led_red(const dev_spec ds, bool bOn)
 {
   dev_spec_acr122* pdsa = (dev_spec_acr122*)ds;
   byte_t abtBuf[2];
-  uint32_t ulBufLen = sizeof(abtBuf);
+  size_t ulBufLen = sizeof(abtBuf);
   if (pdsa->ioCard.dwProtocol == SCARD_PROTOCOL_UNDEFINED)
   {
     return (SCardControl(pdsa->hCard,IOCTL_CCID_ESCAPE_SCARD_CTL_CODE,abtLed,sizeof(abtLed),abtBuf,ulBufLen,(void*)&ulBufLen) == SCARD_S_SUCCESS);
