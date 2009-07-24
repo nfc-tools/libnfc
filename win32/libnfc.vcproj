@@ -181,6 +181,30 @@
 	<References>
 	</References>
 	<Files>
+		<Filter
+			Name="stdint"
+			>
+			<File
+				RelativePath=".\stdint\inttypes.h"
+				>
+			</File>
+			<File
+				RelativePath=".\stdint\stdbool.h"
+				>
+			</File>
+			<File
+				RelativePath=".\stdint\stdint.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="libusb"
+			>
+			<File
+				RelativePath=".\libusb\usb.h"
+				>
+			</File>
+		</Filter>
 		<File
 			RelativePath="..\src\bitutils.c"
 			>
