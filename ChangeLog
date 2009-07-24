@@ -1,3 +1,6 @@
+Jul 24, 2009 - 1.2.1
+ - Fix ACR122 on 64 bits architecture under GNU/Linux.
+
 Jul 22, 2009 - 1.2.0
  - License changed from GPLv3 to LGPLv3
  - ARYGON ADRA-USB/ADRB-USB reader support

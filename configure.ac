@@ -1,4 +1,4 @@
-AC_INIT(libnfc, 1.2.0, info@libnfc.org)
+AC_INIT(libnfc, 1.2.1, info@libnfc.org)
 
 AC_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE

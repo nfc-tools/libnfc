@@ -1,3 +1,9 @@
+libnfc (1.2.1-0) unstable; urgency=low
+
+  * New upstream version.
+
+ -- Romuald Conty <rconty@il4p.fr>  Fri, 24 Jul 2009 16:42:42 +0100
+
 libnfc (1.2.0-0) unstable; urgency=low
 
   * New upstream version.
