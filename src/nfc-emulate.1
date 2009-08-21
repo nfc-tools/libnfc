@@ -2,14 +2,15 @@
 .SH NAME
 nfc-emulate \- NFC target emulation command line tool based on libnfc
 .SH SYNOPSIS
-.B nfc-emulate
+.B nfc-emulate [8 digit HEX ID]
 .SH DESCRIPTION
 .B nfc-emulate
 is an tag emulatation tool. Tag emulation is one of the main added features in NFC.
 To avoid abuse of existing systems, manufacturers of the NFC controller intentionally did not
 support emulation of custom UID numbers.
-The emulate tool demonstrates that this can still be done using transmission of raw-frames.
-Fast communication is necessary to in time to respond during the anti-collision protocol.
+The emulate tool demonstrates that this can still be done using transmission of raw-frames,
+and the desired UID can be optionally specified (default is DEADBEAF).
+Fast communication is necessary to respond in time during the anti-collision protocol.
 Using the USB interface gives some timing issues but an embedded microprocessor could
 be fast enough to emulate a tag with any UID. This makes it a serious thread
 for security systems that rely only on the uniqueness of the UID.
