@@ -34,18 +34,33 @@ static dev_info* pdi;
 byte_t abtAtqa      [2] = { 0x04,0x00 };
 byte_t abtUidBcc    [5] = { 0xDE,0xAD,0xBE,0xAF,0x62 };
 byte_t abtSak       [9] = { 0x08,0xb6,0xdd };
+byte_t Tmp          [3] = { 0x00,0x00,0x00 };
 
 int main(int argc, const char* argv[])
 {                       
   byte_t* pbtTx = NULL;
   uint32_t uiTxBits;
-  
+  int i;
+
+  // See if UID was specified as HEX string
+  if(argc == 2 && strlen(argv[1]) == 8)
+  {
+    printf("[+] Using UID: %s",argv[1]);
+    abtUidBcc[4]= 0x00;
+    for(i= 0; i < 4; ++i)
+    { 
+      memcpy(Tmp,argv[1]+i*2,2);
+      abtUidBcc[i]= (byte_t) strtol(Tmp,NULL,16);
+      abtUidBcc[4] ^= abtUidBcc[i];
+    }
+  }
+
   // Try to open the NFC reader
   pdi = nfc_connect();
   
   if (pdi == INVALID_DEVICE_INFO)
   {
-    printf("Error connecting NFC second reader\n");
+    printf("Error connecting NFC reader\n");
     return 1;
   }
 
@@ -64,7 +79,7 @@ int main(int argc, const char* argv[])
   printf("[+] Configuring communication\n");
   nfc_configure(pdi,DCO_HANDLE_CRC,false);
   nfc_configure(pdi,DCO_HANDLE_PARITY,true);
-  printf("[+] Done, the emulated tag is initialized\n\n");
+  printf("[+] Done, the emulated tag is initialized with UID: %02X%02X%02X%02X\n\n",abtUidBcc[0],abtUidBcc[1],abtUidBcc[2],abtUidBcc[3]);
 
   while(true)
   {
