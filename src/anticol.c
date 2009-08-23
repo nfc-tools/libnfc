@@ -37,6 +37,8 @@ static byte_t abtUid[10];
 static uint32_t uiUidLen = 4;
 static dev_info* pdi;
 
+int Quiet= 0;
+
 // ISO14443A Anti-Collision Commands
 byte_t abtReqa      [1] = { 0x26 };
 byte_t abtSelectAll [2] = { 0x93,0x20 };
@@ -47,13 +49,21 @@ byte_t abtHalt      [4] = { 0x50,0x00,0x57,0xcd };
 bool transmit_bits(const byte_t* pbtTx, const uint32_t uiTxBits)
 {
   // Show transmitted command
-  printf("R: "); print_hex_bits(pbtTx,uiTxBits);
+  if(!Quiet)
+  {
+    printf("R: "); 
+    print_hex_bits(pbtTx,uiTxBits);
+  }
 
   // Transmit the bit frame command, we don't use the arbitrary parity feature
   if (!nfc_initiator_transceive_bits(pdi,pbtTx,uiTxBits,NULL,abtRx,&uiRxBits,NULL)) return false;
 
   // Show received answer
-  printf("T: "); print_hex_bits(abtRx,uiRxBits);
+  if(!Quiet)
+  {
+    printf("T: "); 
+    print_hex_bits(abtRx,uiRxBits);
+  }
 
   // Succesful transfer
   return true;
@@ -63,20 +73,48 @@ bool transmit_bits(const byte_t* pbtTx, const uint32_t uiTxBits)
 bool transmit_bytes(const byte_t* pbtTx, const uint32_t uiTxLen)
 {
   // Show transmitted command
-  printf("R: "); print_hex(pbtTx,uiTxLen);
+  if(!Quiet)
+  {
+    printf("R: "); 
+    print_hex(pbtTx,uiTxLen);
+  }
 
   // Transmit the command bytes
   if (!nfc_initiator_transceive_bytes(pdi,pbtTx,uiTxLen,abtRx,&uiRxLen)) return false;
 
   // Show received answer
-  printf("T: "); print_hex(abtRx,uiRxLen);
+  if(!Quiet)
+  {
+    printf("T: "); 
+    print_hex(abtRx,uiRxLen);
+  }
 
   // Succesful transfer
   return true;
 }
 
-int main(int argc, const char* argv[])
+int main(int argc,char* argv[])
 {
+  int i;
+
+  // Get commandline options
+  while ((i= getopt(argc, argv, "hq")) != -1)
+    switch (i)
+    {
+    case 'q':
+      Quiet= 1;
+      break;
+    case 'h':
+    default:
+      printf("\n\tusage:\n");
+      printf("\t\tnfc-anticol [OPTIONS]\n\n");
+      printf("\toptions:\n");
+      printf("\t\t-h\tHelp. Print this message.\n");
+      printf("\t\t-q\tQuiet mode. Suppress output of READER and EMULATOR data (improves timing).\n");
+      printf("\n");
+      return -1;
+    }
+
   // Try to open the NFC reader
   pdi = nfc_connect();
   

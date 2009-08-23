@@ -34,8 +34,29 @@ static uint32_t uiTagRxBits;
 static dev_info* pdiReader;
 static dev_info* pdiTag;
 
-int main(int argc, const char* argv[])
-{			
+int main(int argc,char* argv[])
+{	
+  int quiet= 0, i;
+
+  // Get commandline options
+  while ((i= getopt(argc, argv, "hq")) != -1)
+    switch (i)
+    {
+    case 'q':
+      quiet= 1;
+      break;
+    case 'h':
+    default:
+      printf("\n\tusage:\n");
+      printf("\t\tnfc-relay [OPTIONS]\n\n");
+      printf("\toptions:\n");
+      printf("\t\t-h\tHelp. Print this message.\n");
+      printf("\t\t-q\tQuiet mode. Suppress output of READER and EMULATOR data (improves timing).\n");
+      printf("\n");
+      return -1;
+    }
+
+		
   // Try to open the NFC emulator device
   pdiTag = nfc_connect();
   if (pdiTag == INVALID_DEVICE_INFO)
@@ -75,14 +96,17 @@ int main(int argc, const char* argv[])
       {
         // Drop down field for a very short time (original tag will reboot)
         nfc_configure(pdiReader,DCO_ACTIVATE_FIELD,false);
-        printf("\n");
+        if(!quiet)
+          printf("\n");
         nfc_configure(pdiReader,DCO_ACTIVATE_FIELD,true);
       }
 
       // Print the reader frame to the screen
-      printf("R: ");
-      print_hex_par(abtReaderRx,uiReaderRxBits,abtReaderRxPar);
-
+      if(!quiet)
+      {
+        printf("R: ");
+        print_hex_par(abtReaderRx,uiReaderRxBits,abtReaderRxPar);
+      }
       // Forward the frame to the original tag
       if (nfc_initiator_transceive_bits(pdiReader,abtReaderRx,uiReaderRxBits,abtReaderRxPar,abtTagRx,&uiTagRxBits,abtTagRxPar))
       {
@@ -90,8 +114,11 @@ int main(int argc, const char* argv[])
         nfc_target_send_bits(pdiTag,abtTagRx,uiTagRxBits,abtTagRxPar);
         
         // Print the tag frame to the screen
-        printf("T: ");
-        print_hex_par(abtTagRx,uiTagRxBits,abtTagRxPar);
+        if(!quiet)
+        {
+          printf("T: ");
+          print_hex_par(abtTagRx,uiTagRxBits,abtTagRxPar);
+        }
       }
     }
   }

@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
+#include <getopt.h>
 
 #include "libnfc.h"
 
@@ -36,20 +37,41 @@ byte_t abtUidBcc    [5] = { 0xDE,0xAD,0xBE,0xAF,0x62 };
 byte_t abtSak       [9] = { 0x08,0xb6,0xdd };
 byte_t Tmp          [3] = { 0x00,0x00,0x00 };
 
-int main(int argc, const char* argv[])
+int main(int argc, char *argv[])
 {                       
   byte_t* pbtTx = NULL;
   uint32_t uiTxBits;
-  int i;
+  int i, quiet= 0;
+
+  // Get commandline options
+  while ((i= getopt(argc, argv, "hq")) != -1)
+    switch (i)
+    {
+    case 'q':
+      quiet= 1;
+      break;
+    case 'h':
+    default:
+      printf("\n\tusage:\n");
+      printf("\t\tnfc-emulate [OPTIONS] [UID]\n\n");
+      printf("\toptions:\n");
+      printf("\t\t-h\tHelp. Print this message.\n");
+      printf("\t\t-q\tQuiet mode. Suppress output of READER and EMULATOR data (improves timing).\n");
+      printf("\n");
+      printf("\targs:\n");
+      printf("\t\t[UID]\tThe UID to emulate, specified as 8 HEX digits. Default is DEADBEAF.\n");
+      printf("\n");
+      return -1;
+    }
 
   // See if UID was specified as HEX string
-  if(argc == 2 && strlen(argv[1]) == 8)
+  if(argc > 1 && strlen(argv[optind]) == 8)
   {
-    printf("[+] Using UID: %s",argv[1]);
+    printf("[+] Using UID: %s\n",argv[optind]);
     abtUidBcc[4]= 0x00;
     for(i= 0; i < 4; ++i)
     { 
-      memcpy(Tmp,argv[1]+i*2,2);
+      memcpy(Tmp,argv[optind]+i*2,2);
       abtUidBcc[i]= (byte_t) strtol(Tmp,NULL,16);
       abtUidBcc[4] ^= abtUidBcc[i];
     }
@@ -93,7 +115,7 @@ int main(int argc, const char* argv[])
           pbtTx = abtAtqa;
           uiTxBits = 16;
           // New anti-collsion session started
-          printf("\n"); 
+          if (!quiet) printf("\n"); 
         break;
 
         case 16: // Select All
@@ -111,16 +133,22 @@ int main(int argc, const char* argv[])
         break;
       }
 
-      printf("R: ");
-      print_hex_bits(abtRecv,uiRecvBits);
+      if(!quiet)
+      {
+        printf("R: ");
+        print_hex_bits(abtRecv,uiRecvBits);
+      }
 
       // Test if we know how to respond
       if(uiTxBits)
       {
         // Send and print the command to the screen
         nfc_target_send_bits(pdi,pbtTx,uiTxBits,NULL);
-        printf("T: ");
-        print_hex_bits(pbtTx,uiTxBits);
+        if(!quiet)
+        {
+          printf("T: ");
+          print_hex_bits(pbtTx,uiTxBits);
+        }
       }
     }
   }
