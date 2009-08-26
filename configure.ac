@@ -88,7 +88,7 @@ case "$host" in
   ;;
   *)
     PKG_CHECK_MODULES(LIBPCSCLITE, libpcsclite, [WITH_PCSC=1], [WITH_PCSC=0])
-    if test "$WITH_PCSC" = "0" ; then
+    if test x"$WITH_PCSC" = "x0" ; then
       AC_MSG_ERROR([libpcsclite is mandatory.])
     fi
   ;;
@@ -98,7 +98,16 @@ esac
 fi
 
 # Set C standard to C99
-CFLAGS="$CFLAGS -std=c99"
+# --disable-std-c99 support (default: no)
+AC_ARG_ENABLE([std-c99],AS_HELP_STRING([--disable-pcsc-lite],[compile using C99 standard]),[enable_std_c99=$enableval],[enable_std_c99="yes"])
+ 
+AC_MSG_CHECKING(for C99 support)
+AC_MSG_RESULT($enable_std_c99)
+ 
+if test x"$enable_std_c99" != "xno"
+then
+	CFLAGS="$CFLAGS -std=c99"
+fi
 
 AC_CONFIG_FILES([
 		Makefile
