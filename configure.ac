@@ -6,7 +6,16 @@ AM_INIT_AUTOMAKE
 AC_LANG_C
 AC_PROG_CC
 AC_PROG_MAKE_SET
+
+# Libtool
 AC_PROG_LIBTOOL
+case "$host" in
+   *-pc-linux-gnu)
+     AC_MSG_RESULT([Fixing libtool for -rpath problems.])
+     sed -i -r 's/(hardcode_into_libs)=.*$/\1=no/' libtool
+   ;;
+esac
+
 AC_PROG_RANLIB
 
 AC_PATH_PROG(PKG_CONFIG, pkg-config)
