@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <getopt.h>
 
 #include <string.h>
 
@@ -37,7 +38,7 @@ static byte_t abtUid[10];
 static uint32_t uiUidLen = 4;
 static dev_info* pdi;
 
-int Quiet= 0;
+bool quiet_output = false;
 
 // ISO14443A Anti-Collision Commands
 byte_t abtReqa      [1] = { 0x26 };
@@ -49,7 +50,7 @@ byte_t abtHalt      [4] = { 0x50,0x00,0x57,0xcd };
 bool transmit_bits(const byte_t* pbtTx, const uint32_t uiTxBits)
 {
   // Show transmitted command
-  if(!Quiet)
+  if(!quiet_output)
   {
     printf("R: "); 
     print_hex_bits(pbtTx,uiTxBits);
@@ -59,7 +60,7 @@ bool transmit_bits(const byte_t* pbtTx, const uint32_t uiTxBits)
   if (!nfc_initiator_transceive_bits(pdi,pbtTx,uiTxBits,NULL,abtRx,&uiRxBits,NULL)) return false;
 
   // Show received answer
-  if(!Quiet)
+  if(!quiet_output)
   {
     printf("T: "); 
     print_hex_bits(abtRx,uiRxBits);
@@ -73,7 +74,7 @@ bool transmit_bits(const byte_t* pbtTx, const uint32_t uiTxBits)
 bool transmit_bytes(const byte_t* pbtTx, const uint32_t uiTxLen)
 {
   // Show transmitted command
-  if(!Quiet)
+  if(!quiet_output)
   {
     printf("R: "); 
     print_hex(pbtTx,uiTxLen);
@@ -83,7 +84,7 @@ bool transmit_bytes(const byte_t* pbtTx, const uint32_t uiTxLen)
   if (!nfc_initiator_transceive_bytes(pdi,pbtTx,uiTxLen,abtRx,&uiRxLen)) return false;
 
   // Show received answer
-  if(!Quiet)
+  if(!quiet_output)
   {
     printf("T: "); 
     print_hex(abtRx,uiRxLen);
@@ -102,7 +103,7 @@ int main(int argc,char* argv[])
     switch (i)
     {
     case 'q':
-      Quiet= 1;
+      quiet_output = true;
       break;
     case 'h':
     default:

@@ -35,20 +35,20 @@ static dev_info* pdi;
 byte_t abtAtqa      [2] = { 0x04,0x00 };
 byte_t abtUidBcc    [5] = { 0xDE,0xAD,0xBE,0xAF,0x62 };
 byte_t abtSak       [9] = { 0x08,0xb6,0xdd };
-byte_t Tmp          [3] = { 0x00,0x00,0x00 };
 
 int main(int argc, char *argv[])
 {                       
   byte_t* pbtTx = NULL;
   uint32_t uiTxBits;
-  int i, quiet= 0;
+  int i;
+  bool quiet_output = false;
 
   // Get commandline options
   while ((i= getopt(argc, argv, "hq")) != -1)
     switch (i)
     {
     case 'q':
-      quiet= 1;
+      quiet_output = true;
       break;
     case 'h':
     default:
@@ -67,12 +67,14 @@ int main(int argc, char *argv[])
   // See if UID was specified as HEX string
   if(argc > 1 && strlen(argv[optind]) == 8)
   {
+    byte_t abtTmp[3] = { 0x00,0x00,0x00 };
+
     printf("[+] Using UID: %s\n",argv[optind]);
     abtUidBcc[4]= 0x00;
     for(i= 0; i < 4; ++i)
     { 
-      memcpy(Tmp,argv[optind]+i*2,2);
-      abtUidBcc[i]= (byte_t) strtol(Tmp,NULL,16);
+      memcpy(abtTmp,argv[optind]+i*2,2);
+      abtUidBcc[i]= (byte_t) strtol(abtTmp,NULL,16);
       abtUidBcc[4] ^= abtUidBcc[i];
     }
   }
@@ -90,7 +92,7 @@ int main(int argc, char *argv[])
   printf("[+] Connected to NFC reader: %s\n",pdi->acName);
   printf("[+] Try to break out the auto-emulation, this requires a second reader!\n");
   printf("[+] To do this, please send any command after the anti-collision\n");
-  printf("[+] For example, send a RATS command or use the \"anticol\" tool\n");
+  printf("[+] For example, send a RATS command or use the \"nfc-anticol\" tool\n");
   if (!nfc_target_init(pdi,abtRecv,&uiRecvBits))
   {
     printf("Error: Could not come out of auto-emulation, no command was received\n");
@@ -115,7 +117,7 @@ int main(int argc, char *argv[])
           pbtTx = abtAtqa;
           uiTxBits = 16;
           // New anti-collsion session started
-          if (!quiet) printf("\n"); 
+          if (!quiet_output) printf("\n"); 
         break;
 
         case 16: // Select All
@@ -133,7 +135,7 @@ int main(int argc, char *argv[])
         break;
       }
 
-      if(!quiet)
+      if(!quiet_output)
       {
         printf("R: ");
         print_hex_bits(abtRecv,uiRecvBits);
@@ -144,7 +146,7 @@ int main(int argc, char *argv[])
       {
         // Send and print the command to the screen
         nfc_target_send_bits(pdi,pbtTx,uiTxBits,NULL);
-        if(!quiet)
+        if(!quiet_output)
         {
           printf("T: ");
           print_hex_bits(pbtTx,uiTxBits);

@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <getopt.h>
 
 #include "libnfc.h"
 
@@ -36,14 +37,15 @@ static dev_info* pdiTag;
 
 int main(int argc,char* argv[])
 {	
-  int quiet= 0, i;
+  int i;
+  bool quiet_output = false;
 
   // Get commandline options
   while ((i= getopt(argc, argv, "hq")) != -1)
     switch (i)
     {
     case 'q':
-      quiet= 1;
+      quiet_output = true;
       break;
     case 'h':
     default:
@@ -67,9 +69,9 @@ int main(int argc,char* argv[])
 
   printf("\n");
   printf("[+] Connected to the NFC emulator device\n");
-  printf("[+] Try to break out the auto-simulation, this requires a second reader!\n");
+  printf("[+] Try to break out the auto-emulation, this requires a second reader!\n");
   printf("[+] To do this, please send any command after the anti-collision\n");
-  printf("[+] For example, send a RATS command or use the \"anticol\" tool\n");
+  printf("[+] For example, send a RATS command or use the \"nfc-anticol\" tool\n");
   nfc_target_init(pdiTag,abtReaderRx,&uiReaderRxBits);
   printf("[+] Configuring emulator settings\n");
   nfc_configure(pdiTag,DCO_HANDLE_CRC,false);
@@ -96,13 +98,13 @@ int main(int argc,char* argv[])
       {
         // Drop down field for a very short time (original tag will reboot)
         nfc_configure(pdiReader,DCO_ACTIVATE_FIELD,false);
-        if(!quiet)
+        if(!quiet_output)
           printf("\n");
         nfc_configure(pdiReader,DCO_ACTIVATE_FIELD,true);
       }
 
       // Print the reader frame to the screen
-      if(!quiet)
+      if(!quiet_output)
       {
         printf("R: ");
         print_hex_par(abtReaderRx,uiReaderRxBits,abtReaderRxPar);
@@ -114,7 +116,7 @@ int main(int argc,char* argv[])
         nfc_target_send_bits(pdiTag,abtTagRx,uiTagRxBits,abtTagRxPar);
         
         // Print the tag frame to the screen
-        if(!quiet)
+        if(!quiet_output)
         {
           printf("T: ");
           print_hex_par(abtTagRx,uiTagRxBits,abtTagRxPar);
