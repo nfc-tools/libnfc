@@ -17,11 +17,17 @@ FreeBSD)
   ;;
 esac
 
-echo "Running aclocal..." ; aclocal $ACLOCAL_ARGS || exit 1
-echo "Running autoheader..." ; autoheader || exit 1
-echo "Running autoconf..." ; autoconf || exit 1
-echo "Running libtoolize..." ; $LIBTOOLIZE --copy --automake || exit 1
-echo "Running automake..." ; automake --add-missing --copy --gnu || exit 1
+ACLOCAL_TITLE=`aclocal --version | head -n 1`
+AUTOHEADER_TITLE=`autoheader --version | head -n 1`
+AUTOCONF_TITLE=`autoconf --version | head -n 1`
+LIBTOOLIZE_TITLE=`$LIBTOOLIZE --version | head -n 1`
+AUTOMAKE_TITLE=`automake --version | head -n 1`
+
+echo "Running $ACLOCAL_TITLE..." ; aclocal $ACLOCAL_ARGS || exit 1
+echo "Running $AUTOHEADER_TITLE..." ; autoheader || exit 1
+echo "Running $AUTOCONF_TITLE..." ; autoconf || exit 1
+echo "Running $LIBTOOLIZE_TITLE..." ; $LIBTOOLIZE --copy --automake || exit 1
+echo "Running $AUTOMAKE_TITLE..." ; automake --add-missing --copy --gnu || exit 1
 
 if [ -z "$NOCONFIGURE" ]; then
 	./configure "$@"
