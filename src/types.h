@@ -21,6 +21,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #ifndef _LIBNFC_TYPES_H_
 #define _LIBNFC_TYPES_H_
 
+/**
+ * @file types.h
+ * @brief libnfc-defined types
+ *
+ * Define libnfc specific types: typedef, enum, struct, etc.
+ */
+
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -39,15 +46,27 @@ typedef enum {
 
 struct dev_callbacks;                // Prototype the callback struct
 
+/**
+ * @struct dev_info
+ * @brief struct that describe NFC device
+ */
 typedef struct {
-  const struct dev_callbacks* pdc;   // Callback functions for handling device specific wrapping
-  char acName[DEVICE_NAME_LENGTH];   // Device name string, including device wrapper firmware
-  chip_type ct;                      // PN53X chip type, this is useful for some "bug" work-arounds
-  dev_spec ds;                       // Pointer to the device connection specification
-  bool bActive;                      // This represents if the PN53X device was initialized succesful
-  bool bCrc;                         // Is the crc automaticly added, checked and removed from the frames
-  bool bPar;                         // Does the PN53x chip handles parity bits, all parities are handled as data
-  uint8_t ui8TxBits;                     // The last tx bits setting, we need to reset this if it does not apply anymore
+/** Callback functions for handling device specific wrapping */
+  const struct dev_callbacks* pdc;
+/** Device name string, including device wrapper firmware */
+  char acName[DEVICE_NAME_LENGTH];
+/** PN53X chip type, this is useful for some "bug" work-arounds */
+  chip_type ct;
+/** Pointer to the device connection specification */
+  dev_spec ds;
+/** This represents if the PN53X device was initialized succesful */
+  bool bActive;
+/** Is the crc automaticly added, checked and removed from the frames */
+  bool bCrc;
+/** Does the PN53x chip handles parity bits, all parities are handled as data */
+  bool bPar;
+/** The last tx bits setting, we need to reset this if it does not apply anymore */
+  uint8_t ui8TxBits;
 } dev_info;
 
 struct dev_callbacks {
@@ -57,24 +76,44 @@ struct dev_callbacks {
   void (*disconnect)(dev_info* pdi);
 };
 
+/**
+ * @enum dev_config_option
+ * @brief NFC device option
+ */
 typedef enum {
+/** Let the PN53X chip handle the CRC bytes. This means that the chip appends the CRC bytes to the frames that are transmitted. It will parse the last bytes from received frames as incoming CRC bytes. They will be verified against the used modulation and protocol. If an frame is expected with incorrect CRC bytes this option should be disabled. Example frames where this is useful are the ATQA and UID+BCC that are transmitted without CRC bytes during the anti-collision phase of the ISO14443-A protocol. */
   DCO_HANDLE_CRC              = 0x00,
+/** Parity bits in the network layer of ISO14443-A are by default generated and validated in the PN53X chip. This is a very convenient feature. On certain times though it is useful to get full control of the transmitted data. The proprietary MIFARE Classic protocol uses for example custom (encrypted) parity bits. For interoperability it is required to be completely compatible, including the arbitrary parity bits. When this option is disabled, the functions to communicating bits should be used. */
   DCO_HANDLE_PARITY           = 0x01,
+/** This option can be used to enable or disable the electronic field of the NFC device. */
   DCO_ACTIVATE_FIELD          = 0x10,
+/** The internal CRYPTO1 co-processor can be used to transmit messages encrypted. This option is automatically activated after a successful MIFARE Classic authentication. */
   DCO_ACTIVATE_CRYPTO1        = 0x11,
+/** The default configuration defines that the PN53X chip will try indefinitely to invite a tag in the field to respond. This could be desired when it is certain a tag will enter the field. On the other hand, when this is uncertain, it will block the application. This option could best be compared to the (NON)BLOCKING option used by (socket)network programming. */
   DCO_INFINITE_SELECT         = 0x20,
+/** If this option is enabled, frames that carry less than 4 bits are allowed. According to the standards these frames should normally be handles as invalid frames. */
   DCO_ACCEPT_INVALID_FRAMES   = 0x30,
+/** If the NFC device should only listen to frames, it could be useful to let it gather multiple frames in a sequence. They will be stored in the internal FIFO of the PN53X chip. This could be retrieved by using the receive data functions. Note that if the chip runs out of bytes (FIFO = 64 bytes long), it will overwrite the first received frames, so quick retrieving of the received data is desirable. */
   DCO_ACCEPT_MULTIPLE_FRAMES  = 0x31
 }dev_config_option;
 
 ////////////////////////////////////////////////////////////////////
 // nfc_reader_list_passive - using InListPassiveTarget 
 
+/**
+ * @enum init_modulation
+ * @brief NFC modulation
+ */
 typedef enum {
+/** ISO14443-A (NXP MIFARE) http://en.wikipedia.org/wiki/MIFARE */
   IM_ISO14443A_106  = 0x00,
+/** JIS X 6319-4 (Sony Felica) http://en.wikipedia.org/wiki/FeliCa */
   IM_FELICA_212     = 0x01,
+/** JIS X 6319-4 (Sony Felica) http://en.wikipedia.org/wiki/FeliCa */
   IM_FELICA_424     = 0x02,
+/** ISO14443-B http://en.wikipedia.org/wiki/ISO/IEC_14443 */
   IM_ISO14443B_106  = 0x03,
+/** Jewel Topaz (Innovision Research & Development) */
   IM_JEWEL_106      = 0x04
 }init_modulation;
 
