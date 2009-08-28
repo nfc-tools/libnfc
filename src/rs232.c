@@ -73,12 +73,24 @@ serial_port rs232_open(const char* pcPortName)
   
   // Copy the old terminal info struct
   sp->tiNew = sp->tiOld;
+
+  /** @todo provide this settings dynamically using model provide in configuration file */
   sp->tiNew.c_cflag = CS8 | CLOCAL | CREAD;
   sp->tiNew.c_iflag = CCLAIMED | IGNPAR;
   sp->tiNew.c_oflag = 0;
   sp->tiNew.c_lflag = 0;
-  sp->tiNew.c_cc[VMIN] = 0;      // block untill n bytes are received
-  sp->tiNew.c_cc[VTIME] = 0;     // block untill a timer expires (n * 100 mSec.)
+
+  /**
+   * @note ARYGON-ADRA (PN531): ???,n,8,1
+   * @note ARYGON-ADRB (PN532): ???,n,8,1
+   * @note ARYGON-APDA (PN531): 9600,n,8,1
+   * @note ARYGON-APDB (PN532): 115200,n,8,1
+   */
+  cfsetispeed(&(sp->tiNew), B115200);
+  cfsetospeed(&(sp->tiNew), B115200);
+
+  sp->tiNew.c_cc[VMIN] = 0;      // block until n bytes are received
+  sp->tiNew.c_cc[VTIME] = 0;     // block until a timer expires (n * 100 mSec.)
   if(tcsetattr(sp->fd,TCSANOW,&sp->tiNew) == -1)
   {
     rs232_close(sp);
@@ -106,7 +118,7 @@ bool rs232_receive(const serial_port sp, byte_t* pbtRx, uint32_t* puiRxLen)
   int iResult;
   uint32_t uiCount = 0;
   fd_set rfds;
-  
+
   while (true)
   {
     // Reset file descriptor
@@ -115,18 +127,24 @@ bool rs232_receive(const serial_port sp, byte_t* pbtRx, uint32_t* puiRxLen)
     iResult = select(((serial_port_unix*)sp)->fd+1, &rfds, NULL, NULL, &tv);
 
     // Read error
-    if (iResult < 0) return false;
-  
+    if (iResult < 0) {
+      DBG("RX error.");
+      return false;
+    }
+
     // Read time-out
     if (iResult == 0)
     {
       // Test if we at least have received something
       if (uiCount == 0) return false;
+
+      DBG("RX time-out.");
+
       // Store the received byte count and return succesful
       *puiRxLen = uiCount;
       return true;
     }
-    
+
     // There is something available, read the data
     uiCount += read(((serial_port_unix*)sp)->fd,pbtRx+uiCount,*puiRxLen-uiCount);
   }
@@ -139,7 +157,7 @@ bool rs232_send(const serial_port sp, const byte_t* pbtTx, const uint32_t uiTxLe
   return (iResult >= 0);
 }
 
-#else         
+#else
 // The windows serial port implementation
 
 typedef struct { 
@@ -186,7 +204,7 @@ serial_port rs232_open(const char* pcPortName)
   sp->ct.ReadTotalTimeoutConstant    = 30;
   sp->ct.WriteTotalTimeoutMultiplier = 0;
   sp->ct.WriteTotalTimeoutConstant   = 30;
-  
+
   if(!SetCommTimeouts(sp->hPort,&sp->ct))
   {
     rs232_close(sp);

@@ -256,18 +256,18 @@ dev_info* nfc_connect()
   uint32_t uiDev;
   byte_t abtFw[4];
   uint32_t uiFwLen = sizeof(abtFw);
-  
+
   // Search through the device list for an available device
   for (uiDev=0; uiDev<sizeof(dev_callbacks_list)/sizeof(dev_callbacks_list[0]); uiDev++)
   {
-	  // Try to claim the device
+    // Try to claim the device
     pdi = dev_callbacks_list[uiDev].connect(0);
-	  
+
     // Test if the connection was successful
     if (pdi != INVALID_DEVICE_INFO)
     {
       // Great we have claimed a device
-		  pdi->pdc = &(dev_callbacks_list[uiDev]);
+      pdi->pdc = &(dev_callbacks_list[uiDev]);
       pdi->pdc->transceive(pdi->ds,pncmd_get_register,4,NULL,NULL);
 
       // Try to retrieve PN53x chip revision

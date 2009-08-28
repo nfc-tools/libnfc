@@ -30,15 +30,15 @@ static dev_info* pdi;
 static byte_t abtFelica[5] = { 0x00, 0xff, 0xff, 0x00, 0x00 };
 
 int main(int argc, const char* argv[])
-{			
+{
   tag_info ti;
 
   // Try to open the NFC reader
   pdi = nfc_connect();
-  
+
   if (pdi == INVALID_DEVICE_INFO)
   {
-    printf("Error connecting NFC reader\n");
+    ERR("Unable to connect to NFC device.");
     return 1;
   }
   nfc_initiator_init(pdi);
@@ -57,7 +57,7 @@ int main(int argc, const char* argv[])
   nfc_configure(pdi,DCO_ACTIVATE_FIELD,true);
 
   printf("\nConnected to NFC reader: %s\n\n",pdi->acName);
-  
+
   // Poll for a ISO14443A (MIFARE) tag
   if (nfc_initiator_select_tag(pdi,IM_ISO14443A_106,NULL,0,&ti))
   {
