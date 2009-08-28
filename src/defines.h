@@ -30,6 +30,17 @@ typedef void*               dev_spec; // Device connection specification
 #define MAX_DEVICES         16
 
 // Useful macros
+#ifdef DEBUG
+//   #define DBG(x, args...) printf("DBG %s:%d: " x "\n", __FILE__, __LINE__,## args )
+  #define DBG(x, ...) printf("DBG %s:%d: " x "\n", __FILE__, __LINE__, ## __VA_ARGS__ )
+#else
+  #define DBG(...) {}
+#endif
+
+#define INFO(x, ...) printf("INFO: " x "\n", ## __VA_ARGS__ )
+#define WARN(x, ...) printf("WARNING: " x "\n", ## __VA_ARGS__ )
+#define ERR(x, ...) printf("ERROR: " x "\n", ## __VA_ARGS__ )
+
 //#define MIN(a,b) (((a) < (b)) ? (a) : (b))
 //#define MAX(a,b) (((a) > (b)) ? (a) : (b))
 #define INNER_XOR8(n) {n ^= (n >> 4); n ^= (n >> 2); n ^= (n >> 1); n &= 0x01; }
