@@ -48,7 +48,7 @@ struct dev_callbacks;                // Prototype the callback struct
 
 /**
  * @struct dev_info
- * @brief struct that describe NFC device
+ * @brief NFC device information
  */
 typedef struct {
 /** Callback functions for handling device specific wrapping */
@@ -69,10 +69,18 @@ typedef struct {
   uint8_t ui8TxBits;
 } dev_info;
 
+/**
+ * @struct dev_callbacks
+ * @brief NFC defice callbacks
+ */
 struct dev_callbacks {
-  const char* acDriver;              // Driver description
+  /** Driver name */
+  const char* acDriver;
+  /** Connect callback */
   dev_info* (*connect)(const uint32_t uiIndex);
+  /** Transceive callback */
   bool (*transceive)(const dev_spec ds, const byte_t* pbtTx, const uint32_t uiTxLen, byte_t* pbtRx, uint32_t* puiRxLen);
+  /** Disconnect callback */
   void (*disconnect)(dev_info* pdi);
 };
 
