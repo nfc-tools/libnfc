@@ -86,6 +86,8 @@ serial_port rs232_open(const char* pcPortName)
    * @note ARYGON-APDB (PN532): 115200,n,8,1
    */
   /** @todo provide this settings dynamically */
+#define DEBUG__TRY_ARYGON_APDB
+
 #ifdef DEBUG__TRY_ARYGON_APDB
   cfsetispeed(&(sp->tiNew), B115200);
   cfsetospeed(&(sp->tiNew), B115200);
@@ -138,9 +140,10 @@ bool rs232_receive(const serial_port sp, byte_t* pbtRx, uint32_t* puiRxLen)
     if (iResult == 0)
     {
       // Test if we at least have received something
-      if (uiCount == 0) return false;
-
-      DBG("RX time-out.");
+      if (uiCount == 0) {
+        DBG("RX time-out without received data.");
+        return false;
+      }
 
       // Store the received byte count and return succesful
       *puiRxLen = uiCount;
