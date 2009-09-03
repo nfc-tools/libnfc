@@ -10,21 +10,20 @@ Package: libnfc0
 Architecture: any
 Depends: ${shlibs:Depends}, libusb-0.1-4, libpcsclite1 (>= 1.5), libccid (>= 1.3.10)
 Description: Near Field Communication (NFC) library
- libnfc is a Free Software NFC library. The supported NFC hardware devices are
- the ACS ACR122(U) NFC reader and various NFC-dongles. In principle all 
- hardware based on the NXP PN53x NFC Controller chip is supported. 
+ libnfc is a Free Software library for Near Field Communication. Supported NFC hardware 
+ devices are, theorically, all hardware based on the NXP PN531, PN532 or PN533 NFC 
+ Controller chip.
 
 Package: libnfc-dev
 Architecture: any
 Depends: libnfc0, libusb-dev, libpcsclite-dev
 Description: Near Field Communication library (development files)
- libnfc is a Free Software NFC library. The supported NFC hardware devices are
- the ACS ACR122(U) NFC reader and various NFC-dongles. In principle all 
- hardware based on the NXP PN53x NFC Controller chip is supported. 
+ libnfc is a Free Software library for Near Field Communication. Supported NFC hardware 
+ devices are, theorically, all hardware based on the NXP PN531, PN532 or PN533 NFC 
+ Controller chip.
 
-Package: nfc-tools
+Package: libnfc-examples
 Architecture: any
 Depends: libnfc0
 Description: Near Field Communication tools
- NFC tools are provide by libnfc team to be able to use NFC devices 
- "out-of-the-box".
+ Some examples are provided with libnfc to show basics functions (list, anticol, etc.).

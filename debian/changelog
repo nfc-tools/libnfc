@@ -1,3 +1,10 @@
+libnfc (1.2.1-1) unstable; urgency=low
+
+  * Description have been updated.
+  * Provided binairies should not be consider as tools but as examples.
+
+ -- Romuald Conty <rconty@il4p.fr>  Fri, 03 Sep 2009 18:42:42 +0100
+
 libnfc (1.2.1-0) unstable; urgency=low
 
   * New upstream version.
