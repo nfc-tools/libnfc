@@ -74,7 +74,6 @@ serial_port rs232_open(const char* pcPortName)
   // Copy the old terminal info struct
   sp->tiNew = sp->tiOld;
 
-  /** @todo provide this settings dynamically using model provide in configuration file */
   sp->tiNew.c_cflag = CS8 | CLOCAL | CREAD;
   sp->tiNew.c_iflag = CCLAIMED | IGNPAR;
   sp->tiNew.c_oflag = 0;
@@ -86,8 +85,11 @@ serial_port rs232_open(const char* pcPortName)
    * @note ARYGON-APDA (PN531): 9600,n,8,1
    * @note ARYGON-APDB (PN532): 115200,n,8,1
    */
+  /** @todo provide this settings dynamically */
+#ifdef DEBUG__TRY_ARYGON_APDB
   cfsetispeed(&(sp->tiNew), B115200);
   cfsetospeed(&(sp->tiNew), B115200);
+#endif
 
   sp->tiNew.c_cc[VMIN] = 0;      // block until n bytes are received
   sp->tiNew.c_cc[VTIME] = 0;     // block until a timer expires (n * 100 mSec.)
