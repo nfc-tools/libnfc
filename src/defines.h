@@ -41,6 +41,20 @@ typedef void*               dev_spec; // Device connection specification
 #define WARN(x, ...) printf("WARNING: " x "\n", ## __VA_ARGS__ )
 #define ERR(x, ...) printf("ERROR: " x "\n", ## __VA_ARGS__ )
 
+#if defined __cplusplus 
+  #define LIBNFC_EXPORT extern "C" 
+#else
+  #ifdef _WIN32
+    #ifdef nfc_EXPORTS
+      #define LIBNFC_EXPORT  __declspec( dllexport )
+    #else
+      #define LIBNFC_EXPORT  __declspec( dllimport )
+    #endif
+  #else
+    #define LIBNFC_EXPORT 
+  #endif
+#endif
+
 //#define MIN(a,b) (((a) < (b)) ? (a) : (b))
 //#define MAX(a,b) (((a) > (b)) ? (a) : (b))
 #define INNER_XOR8(n) {n ^= (n >> 4); n ^= (n >> 2); n ^= (n >> 1); n &= 0x01; }
