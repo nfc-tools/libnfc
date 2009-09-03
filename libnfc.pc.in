@@ -1,6 +1,6 @@
 prefix=@prefix@
 exec_prefix=@exec_prefix@
-libdir=@libdir@/@PACKAGE@
+libdir=@libdir@
 includedir=@includedir@/@PACKAGE@
 Name: libnfc
 Description: Near Field Communication (NFC) library
