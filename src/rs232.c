@@ -87,7 +87,6 @@ serial_port rs232_open(const char* pcPortName)
    */
   /** @todo provide this settings dynamically */
 #define DEBUG__TRY_ARYGON_APDB
-
 #ifdef DEBUG__TRY_ARYGON_APDB
   cfsetispeed(&(sp->tiNew), B115200);
   cfsetospeed(&(sp->tiNew), B115200);

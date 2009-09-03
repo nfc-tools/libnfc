@@ -28,6 +28,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
   #ifdef __APPLE__
     #define SERIAL_STRING "/dev/tty.SLAB_USBtoUART"
   #else
+    // unistd.h is needed for udelay() fct.
+    #include "unistd.h"
     #define SERIAL_STRING "/dev/ttyUSB"
   #endif
 #endif
@@ -133,6 +135,12 @@ bool dev_arygon_transceive(const dev_spec ds, const byte_t* pbtTx, const uint32_
     ERR("Unable to transmit data. (TX)");
     return false;
   }
+
+  /** @note ARYGON-APDB need 20ms between sending and receiving frame. No information regarding this in ARYGON datasheet... */
+  usleep(20000);
+
+  /** @note ARYGON-APDB need 20ms more to be able to report (correctly) present tag. */
+  usleep(20000);
 
   if (!rs232_receive((serial_port)ds,abtRxBuf,&uiRxBufLen)) {
     ERR("Unable to receive data. (RX)");
