@@ -122,8 +122,21 @@ typedef enum {
 /** ISO14443-B http://en.wikipedia.org/wiki/ISO/IEC_14443 */
   IM_ISO14443B_106  = 0x03,
 /** Jewel Topaz (Innovision Research & Development) */
-  IM_JEWEL_106      = 0x04
+  IM_JEWEL_106      = 0x04,
+/** Active DEP */
+  IM_ACTIVE_DEP = 0x05,
+/** Passive DEP */
+  IM_PASSIVE_DEP = 0x06,
+
+
 }init_modulation;
+
+typedef struct {
+  byte_t NFCID3i[10];
+  byte_t btDID;
+  byte_t btBSt;
+  byte_t btBRt;
+}tag_info_dep;
 
 typedef struct {
   byte_t abtAtqa[2];
@@ -164,6 +177,7 @@ typedef union {
   tag_info_felica tif;
   tag_info_iso14443b tib;
   tag_info_jewel tij;
+  tag_info_dep tid;
 }tag_info;
 
 ////////////////////////////////////////////////////////////////////

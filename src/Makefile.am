@@ -1,6 +1,6 @@
 enable_pcsc_lite = @enable_pcsc_lite@
 
-bin_PROGRAMS = nfc-anticol nfc-list nfc-mftool nfc-mfultool nfc-relay nfc-emulate
+bin_PROGRAMS = nfc-anticol nfc-list nfc-mftool nfc-mfultool nfc-relay nfc-emulate nfcip-target nfcip-initiator
 
 # set the include path found by configure
 INCLUDES= $(all_includes)
@@ -37,6 +37,12 @@ nfc_relay_LDADD = libnfc.la
 
 nfc_emulate_SOURCES = emulate.c
 nfc_emulate_LDADD = libnfc.la
+
+nfcip_target_SOURCES = target.c
+nfcip_target_LDADD = libnfc.la
+
+nfcip_initiator_SOURCES = initiator.c
+nfcip_initiator_LDADD = libnfc.la
 
 dist_man_MANS = nfc-anticol.1 nfc-emulate.1 nfc-list.1 nfc-mftool.1 nfc-relay.1
 #dist_man_MANS = $(man_MANS)
