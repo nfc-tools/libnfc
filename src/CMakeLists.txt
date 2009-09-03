@@ -1,7 +1,10 @@
-SET(LIBRARY-SOURCES libnfc dev_pn531 dev_pn533 dev_acr122 rs232 bitutils dev_arygon)
+SET(LIBRARY-SOURCES libnfc dev_pn531 dev_pn533 rs232 bitutils dev_arygon)
 SET(TOOLS-SOURCES list mftool mfultool)
 
-ADD_DEFINITIONS("-DHAVE_PCSC_LITE=1")
+IF(LIBNFC_PCSC)
+  ADD_DEFINITIONS("-DHAVE_PCSC_LITE=1")
+  SET(LIBRARY-SOURCES ${LIBRARY-SOURCES} "dev_acr122")
+ENDIF(LIBNFC_PCSC)
 
 IF(LIBNFC_VERBOSE_OUTPUT)
   ADD_DEFINITIONS("-DDEBUG")
@@ -24,15 +27,19 @@ IF(MSVC)
   SET(LIBUSB_INCLUDE_DIRS $ENV{ProgramFiles}/LibUSB-Win32/include)
   SET(LIBUSB_LIBRARIES $ENV{ProgramFiles}/LibUSB-Win32/lib/msvc/libusb.lib)
 
-  # This is included with Visual Studio Express 2008, we should really use 
-  # something that finds this library, whatever the MSVC version
-  SET(LIBPCSCLITE_LIBRARIES "$ENV{ProgramFiles}/Microsoft SDKs/Windows/v6.0A/Lib/WinSCard.Lib")
-  # On MSVC we don't need the winscard.h header in the include path because
-  # it already is there...
+  IF(LIBNFC_PCSC)
+    # This is included with Visual Studio Express 2008, we should really use 
+    # something that finds this library, whatever the MSVC version
+    SET(LIBPCSCLITE_LIBRARIES "$ENV{ProgramFiles}/Microsoft SDKs/Windows/v6.0A/Lib/WinSCard.Lib")
+    # On MSVC we don't need the winscard.h header in the include path because
+    # it already is there...
+  ENDIF(LIBNFC_PCSC)
 ELSE(MSVC)
   # On Unix we just use pkg-config
   PKG_CHECK_MODULES(LIBUSB      REQUIRED libusb)
-  PKG_CHECK_MODULES(LIBPCSCLITE REQUIRED libpcsclite)
+  IF(LIBNFC_PCSC)
+    PKG_CHECK_MODULES(LIBPCSCLITE REQUIRED libpcsclite)
+  ENDIF(LIBNFC_PCSC)
 ENDIF(MSVC)
 
 INCLUDE_DIRECTORIES(${LIBUSB_INCLUDE_DIRS} ${LIBPCSCLITE_INCLUDE_DIRS})
