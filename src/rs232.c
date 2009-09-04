@@ -119,39 +119,38 @@ bool rs232_cts(const serial_port sp)
 bool rs232_receive(const serial_port sp, byte_t* pbtRx, uint32_t* puiRxLen)
 {
   int iResult;
-  uint32_t uiCount = 0;
+  int byteCount;
   fd_set rfds;
 
-  while (true)
-  {
-    // Reset file descriptor
-    FD_ZERO(&rfds);
-    FD_SET(((serial_port_unix*)sp)->fd,&rfds);
-    iResult = select(((serial_port_unix*)sp)->fd+1, &rfds, NULL, NULL, &tv);
+  // Reset file descriptor
+  FD_ZERO(&rfds);
+  FD_SET(((serial_port_unix*)sp)->fd,&rfds);
+  iResult = select(((serial_port_unix*)sp)->fd+1, &rfds, NULL, NULL, &tv);
 
-    // Read error
-    if (iResult < 0) {
-      DBG("RX error.");
-      return false;
-    }
-
-    // Read time-out
-    if (iResult == 0)
-    {
-      // Test if we at least have received something
-      if (uiCount == 0) {
-        DBG("RX time-out without received data.");
-        return false;
-      }
-
-      // Store the received byte count and return succesful
-      *puiRxLen = uiCount;
-      return true;
-    }
-
-    // There is something available, read the data
-    uiCount += read(((serial_port_unix*)sp)->fd,pbtRx+uiCount,*puiRxLen-uiCount);
+  // Read error
+  if (iResult < 0) {
+    DBG("RX error.");
+    return false;
   }
+
+  // Number of bytes in the input buffer
+  ioctl(((serial_port_unix*)sp)->fd, FIONREAD, &byteCount);
+
+  // Read time-out or empty buffer
+#ifdef DEBUG
+  if (iResult == 0) {
+    DBG("RX time-out");
+  }
+  if (byteCount == 0) {
+    DBG("RX empty buffer");
+  }
+#endif
+  if (iResult == 0 || byteCount == 0) return false;
+
+  // There is something available, read the data
+  *puiRxLen = read(((serial_port_unix*)sp)->fd,pbtRx,byteCount);
+
+  return (*puiRxLen > 0);
 }
 
 bool rs232_send(const serial_port sp, const byte_t* pbtTx, const uint32_t uiTxLen)
