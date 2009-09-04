@@ -1,5 +1,5 @@
 SET(LIBRARY-SOURCES libnfc dev_pn531 dev_pn533 rs232 bitutils dev_arygon)
-SET(TOOLS-SOURCES list mftool mfultool)
+SET(TOOLS-SOURCES list mftool mfultool initiator target)
 
 IF(LIBNFC_PCSC)
   ADD_DEFINITIONS("-DHAVE_PCSC_LITE=1")
@@ -21,7 +21,7 @@ ENDIF(MSVC)
 
 IF(MSVC)
   # Include the stdint headers, because MSVC does not have them
-  INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/msvc)
+  INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/../win32/stdint)
 
   # This is from libusb-win32.sourceforge.net
   SET(LIBUSB_INCLUDE_DIRS $ENV{ProgramFiles}/LibUSB-Win32/include)
