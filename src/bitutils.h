@@ -33,12 +33,12 @@ uint32_t mirror32(uint32_t ui32Bits);
 uint64_t mirror64(uint64_t ui64Bits);
 void mirror_byte_ts(byte_t *pbts, uint32_t uiLen);
 
-uint32_t swap_endian32(const void* pui32);
+LIBNFC_EXPORT uint32_t swap_endian32(const void* pui32);
 uint64_t swap_endian64(const void* pui64);
 
 void append_iso14443a_crc(byte_t* pbtData, uint32_t uiLen);
 
-void print_hex(const byte_t* pbtData, const uint32_t uiLen);
+LIBNFC_EXPORT void print_hex(const byte_t* pbtData, const uint32_t uiLen);
 void print_hex_bits(const byte_t* pbtData, const uint32_t uiBits);
 void print_hex_par(const byte_t* pbtData, const uint32_t uiBits, const byte_t* pbtDataPar);
 
