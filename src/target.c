@@ -6,7 +6,7 @@ int main(int argc, const char *argv[])
   byte_t abtRecv[MAX_FRAME_LEN];
   uint32_t uiRecvBits;
   byte_t send[] = "Hello Mars!";
-  dev_info *pdi = nfc_connect();
+  dev_info *pdi = nfc_connect(NULL);
 
   if (!pdi || !nfc_target_init(pdi, abtRecv, &uiRecvBits)) {
     printf("unable to connect or initialize\n");

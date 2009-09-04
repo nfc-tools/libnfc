@@ -35,16 +35,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "bitutils.h"
 
 /**
- * @fn dev_info* nfc_connect()
+ * @fn dev_info* nfc_connect(nfc_device_desc_t* device_desc)
  * @brief Connect to a NFC device
+ * @param device_desc Device description if specific device is wanted, NULL otherwise
  * @return Returns pointer to a dev_info struct if successfull; otherwise returns INVALID_DEVICE_INFO value.
  *
- * The first available NFC device is claimed by libnfc.
+ * If device_desc is NULL, the first available NFC device is claimed by libnfc.
  * It will automatically search the system using all available drivers to determine a device is free.
+ *
+ * If device_desc is passed then libnfc will try to claim the right device using information provided by this struct.
+ *
  * When it has successfully claimed a NFC device, memory is allocated to save the device information. It will return a pointer to a dev_info struct.
  * This pointer should be supplied by every next function of libnfc that should perform an action with this device.
  */
-LIBNFC_EXPORT dev_info* nfc_connect(void);
+LIBNFC_EXPORT dev_info* nfc_connect(nfc_device_desc_t* device_desc);
 
 /**
  * @fn void nfc_disconnect(dev_info* pdi)

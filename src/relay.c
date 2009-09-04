@@ -60,7 +60,7 @@ int main(int argc,char* argv[])
 
 		
   // Try to open the NFC emulator device
-  pdiTag = nfc_connect();
+  pdiTag = nfc_connect(NULL);
   if (pdiTag == INVALID_DEVICE_INFO)
   {
     printf("Error connecting NFC emulator device\n");
@@ -81,7 +81,7 @@ int main(int argc,char* argv[])
 
   // Try to open the NFC reader
   pdiReader = INVALID_DEVICE_INFO;
-  while (pdiReader == INVALID_DEVICE_INFO) pdiReader = nfc_connect();
+  while (pdiReader == INVALID_DEVICE_INFO) pdiReader = nfc_connect(NULL);
   printf("[+] Configuring NFC reader settings\n");
   nfc_configure(pdiReader,DCO_HANDLE_CRC,false);
   nfc_configure(pdiReader,DCO_HANDLE_PARITY,false);

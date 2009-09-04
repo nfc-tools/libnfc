@@ -10,7 +10,7 @@ int main(int argc, const char *argv[])
   uint32_t uiRecvBits;
   byte_t send[] = "Hello World!";
 
-  pdi = nfc_connect();
+  pdi = nfc_connect(NULL);
   if (!pdi || !nfc_initiator_init(pdi)
       || !nfc_initiator_select_dep_target(pdi, IM_PASSIVE_DEP, NULL, 0,
 					  NULL, 0, NULL, 0, &ti)) {

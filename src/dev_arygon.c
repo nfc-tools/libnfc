@@ -28,8 +28,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
   #ifdef __APPLE__
     #define SERIAL_STRING "/dev/tty.SLAB_USBtoUART"
   #else
-    // unistd.h is needed for udelay() fct.
-    #include "unistd.h"
+    // unistd.h is needed for usleep() fct.
+    #include <unistd.h>
     #define SERIAL_STRING "/dev/ttyUSB"
   #endif
 #endif
@@ -56,33 +56,45 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 static byte_t abtTxBuf[BUFFER_LENGTH] = { DEV_ARYGON_PROTOCOL_TAMA, 0x00, 0x00, 0xff }; // Every packet must start with "00 00 ff"
 
-dev_info* dev_arygon_connect(const uint32_t uiIndex)
+dev_info* dev_arygon_connect(const nfc_device_desc_t* device_desc)
 {
   uint32_t uiDevNr;
   serial_port sp;
   char acConnect[BUFFER_LENGTH];
   dev_info* pdi = INVALID_DEVICE_INFO;
 
-  DBG("Trying to find ARYGON device on serial port: %s#",SERIAL_STRING);
-
-  // I have no idea how MAC OS X deals with multiple devices, so a quick workaround
-  for (uiDevNr=0; uiDevNr<MAX_DEVICES; uiDevNr++)
-  {
-    #ifdef __APPLE__
+  if( device_desc == NULL ) {
+#ifdef DISABLE_SERIAL_AUTOPROBE
+    INFO("Sorry, serial auto-probing have been disabled at compile time.");
+    return INVALID_DEVICE_INFO;
+#else
+    DBG("Trying to find ARYGON device on serial port: %s#",SERIAL_STRING);
+    // I have no idea how MAC OS X deals with multiple devices, so a quick workaround
+    for (uiDevNr=0; uiDevNr<MAX_DEVICES; uiDevNr++)
+    {
+#ifdef __APPLE__
       strcpy(acConnect,SERIAL_STRING);
       sp = rs232_open(acConnect);
-    #else
+#else
       sprintf(acConnect,"%s%d",SERIAL_STRING,uiDevNr);
       sp = rs232_open(acConnect);
-    #endif
-    if ((sp != INVALID_SERIAL_PORT) && (sp != CLAIMED_SERIAL_PORT)) break;
-    #ifdef DEBUG
+#endif /* __APPLE__ */
+      if ((sp != INVALID_SERIAL_PORT) && (sp != CLAIMED_SERIAL_PORT)) break;
+#ifdef DEBUG
       if (sp == INVALID_SERIAL_PORT) DBG("Invalid serial port: %s",acConnect);
       if (sp == CLAIMED_SERIAL_PORT) DBG("Serial port already claimed: %s",acConnect);
-    #endif
+#endif /* DEBUG */
+    }
+#endif
+    // Test if we have found a device
+    if (uiDevNr == MAX_DEVICES) return INVALID_DEVICE_INFO;
+  } else {
+    strcpy(acConnect,device_desc->port);
+    sp = rs232_open(acConnect);
+    if (sp == INVALID_SERIAL_PORT) ERR("Invalid serial port: %s",acConnect);
+    if (sp == CLAIMED_SERIAL_PORT) ERR("Serial port already claimed: %s",acConnect);
+    if ((sp == CLAIMED_SERIAL_PORT) || (sp == INVALID_SERIAL_PORT)) return INVALID_DEVICE_INFO;
   }
-  // Test if we have found a device
-  if (uiDevNr == MAX_DEVICES) return INVALID_DEVICE_INFO;
 
   DBG("Successfully connected to: %s",acConnect);
 

@@ -117,7 +117,7 @@ int main(int argc,char* argv[])
     }
 
   // Try to open the NFC reader
-  pdi = nfc_connect();
+  pdi = nfc_connect(NULL);
   
   if (!pdi)
   {

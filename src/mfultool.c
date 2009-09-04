@@ -144,7 +144,7 @@ int main(int argc, const char* argv[])
   printf("Succesful opened the dump file\n");
 
   // Try to open the NFC reader
-  pdi = nfc_connect();
+  pdi = nfc_connect(NULL);
   if (pdi == INVALID_DEVICE_INFO)
   {
     printf("Error connecting NFC reader\n");

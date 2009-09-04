@@ -51,7 +51,7 @@ static void get_end_points(struct usb_device *dev, dev_spec_pn531* pdsp)
 
   // 3 Endpoints maximum: Interrupt In, Bulk In, Bulk Out
   for(uiIndex = 0; uiIndex < puid->bNumEndpoints; uiIndex++)
-  {                                                                       
+  {
     // Only accept bulk transfer endpoints (ignore interrupt endpoints)
     if(puid->endpoint[uiIndex].bmAttributes != USB_ENDPOINT_TYPE_BULK) continue;
 
@@ -76,10 +76,10 @@ static void get_end_points(struct usb_device *dev, dev_spec_pn531* pdsp)
       pdsp->uiEndPointOut = uiEndPoint;
     }
   }
-}                                                                                  
+}
 
-dev_info* dev_pn531_connect(const uint32_t uiIndex)
-{                                                
+dev_info* dev_pn531_connect(const nfc_device_desc_t* device_desc)
+{
   int idvendor = 0x04CC;
   int idproduct = 0x0531;
   int idvendor_alt = 0x054c;
@@ -94,24 +94,28 @@ dev_info* dev_pn531_connect(const uint32_t uiIndex)
   dsp.uiEndPointIn = 0;
   dsp.uiEndPointOut = 0;
   dsp.pudh = NULL;
-                                                                        
+
   usb_init();
   if (usb_find_busses() < 0) return INVALID_DEVICE_INFO;
   if (usb_find_devices() < 0) return INVALID_DEVICE_INFO;
 
   // Initialize the device index we are seaching for
-  uiDevIndex = uiIndex;
+  if( device_desc == NULL ) {
+    uiDevIndex = 0;
+  } else {
+    uiDevIndex = device_desc->index;
+  }
 
   for (bus = usb_get_busses(); bus; bus = bus->next)
-  {                                                 
+  {
     for (dev = bus->devices; dev; dev = dev->next)
-    {                                             
+    {
       if ((idvendor==dev->descriptor.idVendor && idproduct==dev->descriptor.idProduct) ||
           (idvendor_alt==dev->descriptor.idVendor && idproduct_alt==dev->descriptor.idProduct))
-      {                                                                              
+      {
         // Make sure there are 2 endpoints available
         if (dev->config->interface->altsetting->bNumEndpoints < 2) return pdi;
-        
+
         // Test if we are looking for this device according to the current index
         if (uiDevIndex != 0)
         {
@@ -126,13 +130,13 @@ dev_info* dev_pn531_connect(const uint32_t uiIndex)
         // Open the PN531 USB device
         dsp.pudh = usb_open(dev);
 
-        get_end_points(dev,&dsp);                                                       
-        if(usb_set_configuration(dsp.pudh,1) < 0)                                  
-        {                                                                          
+        get_end_points(dev,&dsp);
+        if(usb_set_configuration(dsp.pudh,1) < 0)
+        {
           #ifdef DEBUG
-            printf("Setting config failed\n");                                     
+            printf("Setting config failed\n");
           #endif
-          usb_close(dsp.pudh);                                                      
+          usb_close(dsp.pudh);
           return INVALID_DEVICE_INFO;
         }
 
@@ -160,21 +164,21 @@ dev_info* dev_pn531_connect(const uint32_t uiIndex)
     }
   }
   return pdi;
-}                                                                                          
+}
 
 void dev_pn531_disconnect(dev_info* pdi)
 {
   dev_spec_pn531* pdsp = (dev_spec_pn531*)pdi->ds;
   usb_release_interface(pdsp->pudh,0);
-	usb_close(pdsp->pudh);
+  usb_close(pdsp->pudh);
   free(pdi->ds);
   free(pdi);
-}                                        
+}
 
 bool dev_pn531_transceive(const dev_spec ds, const byte_t* pbtTx, const uint32_t uiTxLen, byte_t* pbtRx, uint32_t* puiRxLen)
-{                                                                          
-    uint32_t uiPos = 0;                                                             
-    int ret = 0;                                                           
+{
+    uint32_t uiPos = 0;
+    int ret = 0;
     char buf[BUFFER_LENGTH];
     dev_spec_pn531* pdsp = (dev_spec_pn531*)ds;
 

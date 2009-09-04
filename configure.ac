@@ -33,18 +33,6 @@ AC_TYPE_UINT32_T
 AC_TYPE_UINT64_T
 AC_TYPE_INT32_T
 
-# --enable-pcsc-lite support (default: yes)
-AC_ARG_ENABLE([pcsc-lite],AS_HELP_STRING([--enable-pcsc-lite],[pcsc-lite feature flag]),[enable_pcsc_lite=$enableval],[enable_pcsc_lite="yes"])
- 
-AC_MSG_CHECKING(for pcsc-lite support)
-AC_MSG_RESULT($enable_pcsc_lite)
- 
-if test x"$enable_pcsc_lite" = "xno"
-then
-        WITH_PCSC=0
-fi
-AM_CONDITIONAL(PCSC_LITE_ENABLED, [test x"$enable_pcsc_lite" = xyes])
-
 # --enable-debug support (default:no)
 AC_ARG_ENABLE([debug],AS_HELP_STRING([--enable-debug],[Debug flags]),[enable_debug=$enableval],[enable_debug="no"])
  
@@ -56,6 +44,29 @@ then
   CFLAGS="$CFLAGS -g -Wall -DDEBUG -pedantic"
 fi
 AC_SUBST([DEBUG_CFLAGS])
+
+# --enable-serial-autoprobe support (default:yes)
+AC_ARG_ENABLE([serial-autoprobe],AS_HELP_STRING([--enable-serial-autoprobe],[Serial autoprobing flag]),[enable_serial_autoprobe=$enableval],[enable_serial_autoprobe="yes"])
+ 
+AC_MSG_CHECKING(for serial autoprobe flag)
+AC_MSG_RESULT($enable_serial_autoprobe)
+
+if test x"$enable_serial_autoprobe" = "xno"
+then
+  CFLAGS="$CFLAGS -DDISABLE_SERIAL_AUTOPROBE"
+fi
+
+# --enable-pcsc-lite support (default: yes)
+AC_ARG_ENABLE([pcsc-lite],AS_HELP_STRING([--enable-pcsc-lite],[pcsc-lite feature flag]),[enable_pcsc_lite=$enableval],[enable_pcsc_lite="yes"])
+ 
+AC_MSG_CHECKING(for pcsc-lite support)
+AC_MSG_RESULT($enable_pcsc_lite)
+ 
+if test x"$enable_pcsc_lite" = "xno"
+then
+        WITH_PCSC=0
+fi
+AM_CONDITIONAL(PCSC_LITE_ENABLED, [test x"$enable_pcsc_lite" = xyes])
 
 ## libusb
 if test x"$PKG_CONFIG" = "x"; then

@@ -62,7 +62,7 @@ static size_t ulRxBufLen;
 static byte_t abtGetFw[5] = { 0xFF,0x00,0x48,0x00,0x00 };
 static byte_t abtLed[9] = { 0xFF,0x00,0x40,0x05,0x04,0x00,0x00,0x00,0x00 };
 
-dev_info* dev_acr122_connect(const uint32_t uiIndex)
+dev_info* dev_acr122_connect(const nfc_device_desc_t* device_desc)
 {
   char* pacReaders[MAX_DEVICES];
   char acList[256+64*MAX_DEVICES];
@@ -117,8 +117,12 @@ dev_info* dev_acr122_connect(const uint32_t uiIndex)
   }
 
   // Initialize the device index we are seaching for
-  uiDevIndex = uiIndex;
-  
+  if( device_desc == NULL ) {
+    uiDevIndex = 0;
+  } else {
+    uiDevIndex = device_desc->index;
+  }
+
   // Iterate through all readers and try to find the ACR122 on requested index
   for (uiReader=0; uiReader<uiReaderCount; uiReader++)
   {
@@ -134,7 +138,7 @@ dev_info* dev_acr122_connect(const uint32_t uiIndex)
     }
     // Configure I/O settings for card communication
     dsa.ioCard.cbPciLength = sizeof(SCARD_IO_REQUEST);
-    
+
     // Retrieve the current firmware version
     pcFirmware = dev_acr122_firmware((dev_info*)&dsa);
     if (strstr(pcFirmware,FIRMWARE_TEXT) != NULL)

@@ -70,6 +70,21 @@ typedef struct {
 } dev_info;
 
 /**
+ * @struct nfc_device_desc_t
+ * @brief NFC device description
+ *
+ * This struct is used to try to connect to a specified nfc device when nfc_connect(...)
+ */
+typedef struct {
+  /** Driver name */
+  char* driver;
+  /** Port (i.e. /dev/ttyUSB2) */
+  char* port;
+  /** Device index for backward compatibility (used to choose one specific device in USB or PSCS devices list) */
+  uint32_t index;
+} nfc_device_desc_t;
+
+/**
  * @struct dev_callbacks
  * @brief NFC defice callbacks
  */
@@ -77,7 +92,7 @@ struct dev_callbacks {
   /** Driver name */
   const char* acDriver;
   /** Connect callback */
-  dev_info* (*connect)(const uint32_t uiIndex);
+  dev_info* (*connect)(const nfc_device_desc_t* device_desc);
   /** Transceive callback */
   bool (*transceive)(const dev_spec ds, const byte_t* pbtTx, const uint32_t uiTxLen, byte_t* pbtRx, uint32_t* puiRxLen);
   /** Disconnect callback */

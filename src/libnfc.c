@@ -253,7 +253,7 @@ bool pn53x_unwrap_frame(const byte_t* pbtFrame, const uint32_t uiFrameBits, byte
   }
 }
 
-dev_info* nfc_connect()
+dev_info* nfc_connect(nfc_device_desc_t* device_desc)
 {
   dev_info* pdi;
   uint32_t uiDev;
@@ -263,8 +263,20 @@ dev_info* nfc_connect()
   // Search through the device list for an available device
   for (uiDev=0; uiDev<sizeof(dev_callbacks_list)/sizeof(dev_callbacks_list[0]); uiDev++)
   {
-    // Try to claim the device
-    pdi = dev_callbacks_list[uiDev].connect(0);
+    if (device_desc == NULL) {
+      // No device description specified: try to automatically claim a device
+      pdi = dev_callbacks_list[uiDev].connect(device_desc);
+    } else {
+      // Specific device is requested: using device description device_desc
+      if( 0 != strcmp(dev_callbacks_list[uiDev].acDriver, device_desc->driver ) )
+      {
+        DBG("Looking for %s, found %s... Skip it.", device_desc->driver, dev_callbacks_list[uiDev].acDriver);
+        continue;
+      } else {
+        DBG("Looking for %s, found %s... Use it.", device_desc->driver, dev_callbacks_list[uiDev].acDriver);
+        pdi = dev_callbacks_list[uiDev].connect(device_desc);
+      }
+    }
 
     // Test if the connection was successful
     if (pdi != INVALID_DEVICE_INFO)

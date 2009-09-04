@@ -49,7 +49,7 @@ static void get_end_points(struct usb_device *dev, dev_spec_pn533* pdsp)
 
   // 3 Endpoints maximum: Interrupt In, Bulk In, Bulk Out
   for(uiIndex = 0; uiIndex < puid->bNumEndpoints; uiIndex++)
-  {                                                                       
+  {
     // Only accept bulk transfer endpoints (ignore interrupt endpoints)
     if(puid->endpoint[uiIndex].bmAttributes != USB_ENDPOINT_TYPE_BULK) continue;
 
@@ -74,10 +74,10 @@ static void get_end_points(struct usb_device *dev, dev_spec_pn533* pdsp)
       pdsp->uiEndPointOut = uiEndPoint;
     }
   }
-}                                                                                  
+}
 
-dev_info* dev_pn533_connect(const uint32_t uiIndex)
-{                                                
+dev_info* dev_pn533_connect(const nfc_device_desc_t* device_desc)
+{
   int idvendor = 0x04e6;
   int idproduct = 0x5591;
   struct usb_bus *bus;
@@ -90,23 +90,27 @@ dev_info* dev_pn533_connect(const uint32_t uiIndex)
   dsp.uiEndPointIn = 0;
   dsp.uiEndPointOut = 0;
   dsp.pudh = NULL;
-                                                                        
+
   usb_init();
   if (usb_find_busses() < 0) return INVALID_DEVICE_INFO;
   if (usb_find_devices() < 0) return INVALID_DEVICE_INFO;
 
   // Initialize the device index we are seaching for
-  uiDevIndex = uiIndex;
+  if( device_desc == NULL ) {
+    uiDevIndex = 0;
+  } else {
+    uiDevIndex = device_desc->index;
+  }
 
   for (bus = usb_get_busses(); bus; bus = bus->next)
-  {                                                 
+  {
     for (dev = bus->devices; dev; dev = dev->next)
-    {                                             
+    {
       if (idvendor==dev->descriptor.idVendor && idproduct==dev->descriptor.idProduct)
-      {                                                                              
+      {
         // Make sure there are 2 endpoints available
         if (dev->config->interface->altsetting->bNumEndpoints < 2) return pdi;
-        
+
         // Test if we are looking for this device according to the current index
         if (uiDevIndex != 0)
         {

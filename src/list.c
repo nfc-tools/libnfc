@@ -33,8 +33,17 @@ int main(int argc, const char* argv[])
 {
   tag_info ti;
 
-  // Try to open the NFC reader
-  pdi = nfc_connect();
+  // Try to open the NFC device
+  pdi = nfc_connect(NULL);
+
+  // If specific device is wanted, i.e. an ARYGON device on /dev/ttyUSB0
+  /*
+  nfc_device_desc_t device_desc;
+  device_desc.driver = "ARYGON";
+  device_desc.port = "/dev/ttyUSB0";
+
+  pdi = nfc_connect(&device_desc);
+  */
 
   if (pdi == INVALID_DEVICE_INFO)
   {

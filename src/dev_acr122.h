@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "types.h"
 
 // Functions used by developer to handle connection to this device
-dev_info* dev_acr122_connect(const uint32_t uiIndex);
+dev_info* dev_acr122_connect(const nfc_device_desc_t* device_desc);
 void dev_acr122_disconnect(dev_info* pdi);
 
 // Callback function used by libnfc to transmit commands to the PN53X chip
