@@ -41,19 +41,23 @@ typedef void*               dev_spec; // Device connection specification
 #define WARN(x, ...) printf("WARNING: " x "\n", ## __VA_ARGS__ )
 #define ERR(x, ...) printf("ERROR: " x "\n", ## __VA_ARGS__ )
 
-#if defined __cplusplus 
-  #define LIBNFC_EXPORT extern "C" 
+#if defined __cplusplus
+  #define LIBNFC_EXTERN_C extern "C"
 #else
-  #ifdef _WIN32
-    #ifdef nfc_EXPORTS
-      #define LIBNFC_EXPORT  __declspec( dllexport )
-    #else
-      #define LIBNFC_EXPORT  __declspec( dllimport )
-    #endif
-  #else
-    #define LIBNFC_EXPORT 
-  #endif
+  #define LIBNFC_EXTERN_C 
 #endif
+
+#ifdef _WIN32
+  #ifdef nfc_EXPORTS
+    #define LIBNFC_DECLSPEC  __declspec( dllexport )
+  #else
+    #define LIBNFC_DECLSPEC  __declspec( dllimport )
+  #endif
+#else
+  #define LIBNFC_DECLSPEC 
+#endif
+
+#define LIBNFC_EXPORT LIBNFC_EXTERN_C LIBNFC_DECLSPEC
 
 //#define MIN(a,b) (((a) < (b)) ? (a) : (b))
 //#define MAX(a,b) (((a) > (b)) ? (a) : (b))
