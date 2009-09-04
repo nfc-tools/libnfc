@@ -137,10 +137,18 @@ bool dev_arygon_transceive(const dev_spec ds, const byte_t* pbtTx, const uint32_
   }
 
   /** @note ARYGON-APDB need 20ms between sending and receiving frame. No information regarding this in ARYGON datasheet... */
-  usleep(20000);
+  #ifdef _WIN32
+    Sleep(20);
+  #else
+    usleep(20000);
+  #endif
 
   /** @note ARYGON-APDB need 20ms more to be able to report (correctly) present tag. */
-  usleep(20000);
+  #ifdef _WIN32
+    Sleep(20);
+  #else
+    usleep(20000);
+  #endif
 
   if (!rs232_receive((serial_port)ds,abtRxBuf,&uiRxBufLen)) {
     ERR("Unable to receive data. (RX)");

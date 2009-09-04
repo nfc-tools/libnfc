@@ -389,12 +389,13 @@ bool nfc_initiator_init(const dev_info* pdi)
 
 bool nfc_initiator_select_dep_target(const dev_info* pdi, const init_modulation im, const byte_t* pbtPidData, const uint32_t uiPidDataLen, const byte_t* pbtNFCID3i, const uint32_t uiNFCID3iDataLen, const byte_t *pbtGbData, const uint32_t uiGbDataLen, tag_info* pti)
 {
+  uint32_t offset;
   if(im == IM_ACTIVE_DEP) {
     pncmd_reader_jump_for_dep[2] = 0x01; /* active DEP */
   }
   pncmd_reader_jump_for_dep[3] = 0x00; /* baud rate = 106kbps */
 
-  uint32_t offset = 5;
+  offset = 5;
   if(pbtPidData && im != IM_ACTIVE_DEP) { /* can't have passive initiator data when using active mode */
     pncmd_reader_jump_for_dep[4] |= 0x01;
     memcpy(pncmd_reader_jump_for_dep+offset,pbtPidData,uiPidDataLen);
