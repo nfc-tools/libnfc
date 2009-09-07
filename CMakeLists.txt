@@ -5,6 +5,7 @@ SET(VERSION "1.2.2")
 SET(LIBNFC_VERBOSE_OUTPUT OFF CACHE BOOL "Verbose output of communication with the NFC chip")
 SET(LIBNFC_LANG_C99 OFF CACHE BOOL "Use C99 language standard (GCC only)")
 SET(LIBNFC_PCSC ON CACHE BOOL "Enable PC/SC support")
+SET(LIBNFC_DISABLE_SERIAL_AUTOPROBE OFF CACHE BOOL "Disable serial autoprobe")
 
 # Set some pkg-config variables
 SET(prefix ${CMAKE_INSTALL_PREFIX})
