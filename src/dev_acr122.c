@@ -84,11 +84,9 @@ dev_info* dev_acr122_connect(const nfc_device_desc_t* device_desc)
 
   // Retrieve the string array of all available pcsc readers
   if (SCardListReaders(dsa.hCtx,NULL,acList,(void*)&ulListLen) != SCARD_S_SUCCESS) return INVALID_DEVICE_INFO;
-  
-  #ifdef DEBUG
-      printf("Found the following PCSC device(s)\n");
-      printf("- %s\n",acList);
-  #endif
+
+  DBG("PCSC reports following device(s):");
+  DBG("- %s",acList);
 
   pacReaders[0] = acList;
   uiReaderCount = 1;
@@ -109,10 +107,7 @@ dev_info* dev_acr122_connect(const nfc_device_desc_t* device_desc)
       pacReaders[uiReaderCount] = acList+uiPos+1;
       uiReaderCount++;
 
-      // Debug info
-      #ifdef DEBUG
-        printf("- %s\n",acList+uiPos+1);
-      #endif
+      DBG("- %s",acList+uiPos+1);
     }
   }
 
@@ -157,7 +152,7 @@ dev_info* dev_acr122_connect(const nfc_device_desc_t* device_desc)
 
       // Done, we found the reader we are looking for
       pdi = malloc(sizeof(dev_info));
-      strcpy(pdi->acName,pcFirmware);      
+      strcpy(pdi->acName,pcFirmware);
       pdi->ct = CT_PN532;
       pdi->ds = (dev_spec)pdsa;
       pdi->bActive = true;
@@ -187,7 +182,7 @@ bool dev_acr122_transceive(const dev_spec ds, const byte_t* pbtTx, const uint32_
 
   // Make sure the command does not overflow the send buffer
   if (uiTxLen > ACR122_COMMAND_LEN) return false;
-    
+
   // Store the length of the command we are going to send
   abtTxBuf[4] = uiTxLen;
 
@@ -195,7 +190,7 @@ bool dev_acr122_transceive(const dev_spec ds, const byte_t* pbtTx, const uint32_
   memcpy(abtTxBuf+5,pbtTx,uiTxLen);
   ulRxBufLen = sizeof(abtRxBuf);
   #ifdef DEBUG
-    printf("Tx: ");
+    printf(" TX: ");
     print_hex(abtTxBuf,uiTxLen+5);
   #endif
 
@@ -221,7 +216,7 @@ bool dev_acr122_transceive(const dev_spec ds, const byte_t* pbtTx, const uint32_
   }
 
   #ifdef DEBUG
-    printf("Rx: ");
+    printf(" RX: ");
     print_hex(abtRxBuf,ulRxBufLen);
   #endif
 
@@ -241,7 +236,7 @@ bool dev_acr122_transceive(const dev_spec ds, const byte_t* pbtTx, const uint32_
 char* dev_acr122_firmware(const dev_spec ds)
 {
   uint32_t uiResult;
-  
+
   dev_spec_acr122* pdsa = (dev_spec_acr122*)ds;
   static char abtFw[11];
   size_t ulFwLen = sizeof(abtFw);

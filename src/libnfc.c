@@ -281,6 +281,7 @@ dev_info* nfc_connect(nfc_device_desc_t* device_desc)
     // Test if the connection was successful
     if (pdi != INVALID_DEVICE_INFO)
     {
+      DBG("%s have been claimed.", pdi->acName);
       // Great we have claimed a device
       pdi->pdc = &(dev_callbacks_list[uiDev]);
       pdi->pdc->transceive(pdi->ds,pncmd_get_register,4,NULL,NULL);
@@ -289,6 +290,7 @@ dev_info* nfc_connect(nfc_device_desc_t* device_desc)
       if (!pdi->pdc->transceive(pdi->ds,pncmd_get_firmware_version,2,abtFw,&uiFwLen))
       {
         // Failed to get firmware revision??, whatever...let's disconnect and clean up and return err
+        ERR("Failed to get firmware revision for: %s", pdi->acName);
         pdi->pdc->disconnect(pdi);
         return INVALID_DEVICE_INFO;
       }
@@ -312,9 +314,10 @@ dev_info* nfc_connect(nfc_device_desc_t* device_desc)
       if (!nfc_configure(pdi,DCO_ACTIVATE_CRYPTO1,false)) return INVALID_DEVICE_INFO;
 
       return pdi;
-	  }
+    } else {
+      DBG("No device found using driver: %s", dev_callbacks_list[uiDev].acDriver);
+    }
   }
-  
   // To bad, no reader is ready to be claimed
   return INVALID_DEVICE_INFO;
 }
@@ -327,8 +330,8 @@ void nfc_disconnect(dev_info* pdi)
 
 bool nfc_configure(dev_info* pdi, const dev_config_option dco, const bool bEnable)
 {
-	byte_t btValue;
-  
+  byte_t btValue;
+
   // Make sure we are dealing with a active device
   if (!pdi->bActive) return false;
 

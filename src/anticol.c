@@ -23,8 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include <getopt.h>
-
 #include <string.h>
 
 #include "libnfc.h"
@@ -94,31 +92,36 @@ bool transmit_bytes(const byte_t* pbtTx, const uint32_t uiTxLen)
   return true;
 }
 
+void print_usage(void)
+{
+  printf("Usage: nfc-anticol [OPTIONS]\n");
+  printf("Options:\n");
+  printf("\t-h\tHelp. Print this message.\n");
+  printf("\t-q\tQuiet mode. Suppress output of READER and EMULATOR data (improves timing).\n");
+}
+
 int main(int argc,char* argv[])
 {
-  int i;
+  int arg;
 
   // Get commandline options
-  while ((i= getopt(argc, argv, "hq")) != -1)
-    switch (i)
-    {
-    case 'q':
+  for (arg=1;arg<argc;arg++) {
+    if (0 == strcmp(argv[arg], "-h")) {
+      print_usage();
+      return 0;
+    } else if (0 == strcmp(argv[arg], "-q")) {
+      INFO("Quiet mode.");
       quiet_output = true;
-      break;
-    case 'h':
-    default:
-      printf("\n\tusage:\n");
-      printf("\t\tnfc-anticol [OPTIONS]\n\n");
-      printf("\toptions:\n");
-      printf("\t\t-h\tHelp. Print this message.\n");
-      printf("\t\t-q\tQuiet mode. Suppress output of READER and EMULATOR data (improves timing).\n");
-      printf("\n");
+    } else {
+      ERR("%s is not supported option.", argv[arg]);
+      print_usage();
       return -1;
     }
+  }
 
   // Try to open the NFC reader
   pdi = nfc_connect(NULL);
-  
+
   if (!pdi)
   {
     printf("Error connecting NFC reader\n");

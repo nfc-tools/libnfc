@@ -23,7 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
-#include <getopt.h>
 
 #include "libnfc.h"
 
@@ -36,52 +35,52 @@ byte_t abtAtqa      [2] = { 0x04,0x00 };
 byte_t abtUidBcc    [5] = { 0xDE,0xAD,0xBE,0xAF,0x62 };
 byte_t abtSak       [9] = { 0x08,0xb6,0xdd };
 
+void print_usage(void)
+{
+  printf("Usage: nfc-emulate [OPTIONS] [UID]\n");
+  printf("Options:\n");
+  printf("\t-h\tHelp. Print this message.\n");
+  printf("\t-q\tQuiet mode. Suppress output of READER and EMULATOR data (improves timing).\n");
+  printf("\n");
+  printf("\t[UID]\tUID to emulate, specified as 8 HEX digits (default is DEADBEAF).\n");
+}
+
 int main(int argc, char *argv[])
-{                       
+{
   byte_t* pbtTx = NULL;
   uint32_t uiTxBits;
-  int i;
   bool quiet_output = false;
 
+  int arg, i;
+
   // Get commandline options
-  while ((i= getopt(argc, argv, "hq")) != -1)
-    switch (i)
-    {
-    case 'q':
+  for (arg=1;arg<argc;arg++) {
+    if (0 == strcmp(argv[arg], "-h")) {
+      print_usage();
+      return 0;
+    } else if (0 == strcmp(argv[arg], "-q")) {
+      INFO("Quiet mode.");
       quiet_output = true;
-      break;
-    case 'h':
-    default:
-      printf("\n\tusage:\n");
-      printf("\t\tnfc-emulate [OPTIONS] [UID]\n\n");
-      printf("\toptions:\n");
-      printf("\t\t-h\tHelp. Print this message.\n");
-      printf("\t\t-q\tQuiet mode. Suppress output of READER and EMULATOR data (improves timing).\n");
-      printf("\n");
-      printf("\targs:\n");
-      printf("\t\t[UID]\tThe UID to emulate, specified as 8 HEX digits. Default is DEADBEAF.\n");
-      printf("\n");
+    } else if((arg == argc-1) && (strlen(argv[arg]) == 8)) { // See if UID was specified as HEX string
+      byte_t abtTmp[3] = { 0x00,0x00,0x00 };
+      printf("[+] Using UID: %s\n",argv[arg]);
+      abtUidBcc[4]= 0x00;
+      for(i= 0; i < 4; ++i)
+      {
+        memcpy(abtTmp,argv[arg]+i*2,2);
+        abtUidBcc[i]= (byte_t) strtol(abtTmp,NULL,16);
+        abtUidBcc[4] ^= abtUidBcc[i];
+      }
+    } else {
+      ERR("%s is not supported option.", argv[arg]);
+      print_usage();
       return -1;
-    }
-
-  // See if UID was specified as HEX string
-  if(argc > 1 && strlen(argv[optind]) == 8)
-  {
-    byte_t abtTmp[3] = { 0x00,0x00,0x00 };
-
-    printf("[+] Using UID: %s\n",argv[optind]);
-    abtUidBcc[4]= 0x00;
-    for(i= 0; i < 4; ++i)
-    { 
-      memcpy(abtTmp,argv[optind]+i*2,2);
-      abtUidBcc[i]= (byte_t) strtol(abtTmp,NULL,16);
-      abtUidBcc[4] ^= abtUidBcc[i];
     }
   }
 
   // Try to open the NFC reader
   pdi = nfc_connect(NULL);
-  
+
   if (pdi == INVALID_DEVICE_INFO)
   {
     printf("Error connecting NFC reader\n");
