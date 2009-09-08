@@ -29,18 +29,6 @@ typedef void*               dev_spec; // Device connection specification
 #define DEVICE_NAME_LENGTH  256
 #define MAX_DEVICES         16
 
-// Useful macros
-#ifdef DEBUG
-//   #define DBG(x, args...) printf("DBG %s:%d: " x "\n", __FILE__, __LINE__,## args )
-  #define DBG(x, ...) printf("DBG %s:%d: " x "\n", __FILE__, __LINE__, ## __VA_ARGS__ )
-#else
-  #define DBG(...) {}
-#endif
-
-#define INFO(x, ...) printf("INFO: " x "\n", ## __VA_ARGS__ )
-#define WARN(x, ...) printf("WARNING: " x "\n", ## __VA_ARGS__ )
-#define ERR(x, ...) printf("ERROR: " x "\n", ## __VA_ARGS__ )
-
 #if defined __cplusplus
   #define LIBNFC_EXTERN_C extern "C"
 #else

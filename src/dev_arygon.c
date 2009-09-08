@@ -19,8 +19,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
 #include "dev_arygon.h"
+
 #include "rs232.h"
 #include "bitutils.h"
+#include "messages.h"
 
 #ifdef _WIN32
   #define SERIAL_STRING "COM"

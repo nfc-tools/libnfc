@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <string.h>
 
 #include "libnfc.h"
+#include "messages.h"
 
 static dev_info* pdi;
 static byte_t abtFelica[5] = { 0x00, 0xff, 0xff, 0x00, 0x00 };

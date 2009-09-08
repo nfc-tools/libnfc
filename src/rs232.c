@@ -26,6 +26,8 @@ available: http://www.teuniz.net/RS-232/index.html
 
 #include "rs232.h"
 
+#include "messages.h"
+
 // Test if we are dealing with unix operating systems
 #ifndef _WIN32
 

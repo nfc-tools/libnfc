@@ -5,7 +5,11 @@ bin_PROGRAMS = nfc-anticol nfc-list nfc-mftool nfc-mfultool nfc-relay nfc-emulat
 # set the include path found by configure
 INCLUDES= $(all_includes)
 
-nfcinclude_HEADERS = libnfc.h bitutils.h defines.h types.h mifaretag.h mifareultag.h devices.h rs232.h dev_arygon.h dev_pn531.h dev_pn533.h
+nfc_devices_headers = dev_arygon.h dev_pn531.h dev_pn533.h
+nfc_examples_headers = mifaretag.h mifareultag.h
+nfcinclude_HEADERS = libnfc.h bitutils.h defines.h types.h rs232.h devices.h messages.h
+nfcinclude_HEADERS += $(nfc_devices_headers)
+nfcinclude_HEADERS += $(nfc_examples_headers)
 nfcincludedir = $(includedir)/libnfc
 
 lib_LTLIBRARIES = libnfc.la

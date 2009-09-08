@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <string.h>
 
 #include "libnfc.h"
+#include "messages.h"
 
 static byte_t abtRecv[MAX_FRAME_LEN];
 static uint32_t uiRecvBits;

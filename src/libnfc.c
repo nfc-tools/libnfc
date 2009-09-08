@@ -27,6 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "devices.h"
 
 #include "bitutils.h"
+#include "messages.h"
 
 // Registers and symbols masks used to covers parts within a register
 #define REG_CIU_TX_MODE           0x6302

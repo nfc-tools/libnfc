@@ -27,6 +27,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "libnfc.h"
 
+#include "messages.h"
+
 #define SAK_FLAG_ATS_SUPPORTED 0x20
 
 static byte_t abtRx[MAX_FRAME_LEN];

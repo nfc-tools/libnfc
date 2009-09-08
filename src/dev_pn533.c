@@ -21,14 +21,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 /*
 Thanks to d18c7db and Okko for example code
 */
-
-#include "defines.h"
+#include "dev_pn533.h"
 
 #include <usb.h>
 #include <stdio.h>
 #include <string.h>
-#include "dev_pn533.h"
+
+#include "defines.h"
 #include "bitutils.h"
+#include "messages.h"
 
 #define BUFFER_LENGTH 256
 #define USB_TIMEOUT   30000
