@@ -31,7 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "dev_arygon.h"
 
 const static struct dev_callbacks dev_callbacks_list[] = {
-//  Driver Name        Connect                  Transceive                    Disconect
+//  Driver Name        Connect                  Transceive                    Disconnect
 #ifdef HAVE_PCSC_LITE
   { "ACR122",          dev_acr122_connect,      dev_acr122_transceive,        dev_acr122_disconnect       },
 #endif

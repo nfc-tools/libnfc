@@ -92,7 +92,7 @@ bool read_card()
 
       // Set the authentication information (uid)
       memcpy(mp.mpa.abtUid,ti.tia.abtUid,4);
-      
+
       // Determin if we should use the a or the b key
       if (bUseKeyA)
       {

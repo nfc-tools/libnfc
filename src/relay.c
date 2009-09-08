@@ -117,7 +117,7 @@ int main(int argc,char* argv[])
       {
         // Redirect the answer back to the reader
         nfc_target_send_bits(pdiTag,abtTagRx,uiTagRxBits,abtTagRxPar);
-        
+
         // Print the tag frame to the screen
         if(!quiet_output)
         {

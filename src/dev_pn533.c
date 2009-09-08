@@ -118,28 +118,22 @@ dev_info* dev_pn533_connect(const nfc_device_desc_t* device_desc)
           uiDevIndex--;
           continue;
         }
-        #ifdef DEBUG
-          printf("Found PN533 device\n");
-        #endif
+        DBG("Found PN533 device.");
 
         // Open the PN533 USB device
         dsp.pudh = usb_open(dev);
 
-        get_end_points(dev,&dsp);                                                       
-        if(usb_set_configuration(dsp.pudh,1) < 0)                                  
-        {                                                                          
-          #ifdef DEBUG
-            printf("Setting config failed\n");                                     
-          #endif
-          usb_close(dsp.pudh);                                                      
+        get_end_points(dev,&dsp);
+        if(usb_set_configuration(dsp.pudh,1) < 0)
+        {
+          DBG("Setting config failed");
+          usb_close(dsp.pudh);
           return INVALID_DEVICE_INFO;
         }
 
         if(usb_claim_interface(dsp.pudh,0) < 0)
         {
-          #ifdef DEBUG
-            printf("Can't claim interface\n");
-          #endif
+          DBG("Can't claim interface");
           usb_close(dsp.pudh);
           return INVALID_DEVICE_INFO;
         }
@@ -159,43 +153,43 @@ dev_info* dev_pn533_connect(const nfc_device_desc_t* device_desc)
     }
   }
   return pdi;
-}                                                                                          
+}
 
 void dev_pn533_disconnect(dev_info* pdi)
 {
   dev_spec_pn533* pdsp = (dev_spec_pn533*)pdi->ds;
   usb_release_interface(pdsp->pudh,0);
-	usb_close(pdsp->pudh);
+  usb_close(pdsp->pudh);
   free(pdi->ds);
   free(pdi);
-}                                        
+}
 
 bool dev_pn533_transceive(const dev_spec ds, const byte_t* pbtTx, const uint32_t uiTxLen, byte_t* pbtRx, uint32_t* puiRxLen)
-{                                                                          
-    uint32_t uiPos = 0;                                                             
-    int ret = 0;                                                           
+{
+    uint32_t uiPos = 0;
+    int ret = 0;
     char buf[BUFFER_LENGTH];
     dev_spec_pn533* pdsp = (dev_spec_pn533*)ds;
 
     // Packet length = data length (len) + checksum (1) + end of stream marker (1)
-    buffer[3] = uiTxLen;                                                                
+    buffer[3] = uiTxLen;
     // Packet length checksum 
-    buffer[4] = BUFFER_LENGTH - buffer[3];                                                  
+    buffer[4] = BUFFER_LENGTH - buffer[3];
     // Copy the PN53X command into the packet buffer
     memmove(buffer+5,pbtTx,uiTxLen);
 
     // Calculate data payload checksum
-    buffer[uiTxLen+5] = 0;                   
+    buffer[uiTxLen+5] = 0;
     for(uiPos=0; uiPos < uiTxLen; uiPos++) 
     {
       buffer[uiTxLen+5] -= buffer[uiPos+5];
     }
 
     // End of stream marker
-    buffer[uiTxLen+6] = 0;        
+    buffer[uiTxLen+6] = 0;
 
     #ifdef DEBUG
-      printf("Tx: ");
+      printf(" TX: ");
       print_hex((byte_t*)buffer,uiTxLen+7);
     #endif
 
@@ -218,7 +212,7 @@ bool dev_pn533_transceive(const dev_spec ds, const byte_t* pbtTx, const uint32_t
     }
 
     #ifdef DEBUG
-      printf("Rx: ");
+      printf(" RX: ");
       print_hex((byte_t*)buf,ret);
     #endif
 
@@ -234,12 +228,12 @@ bool dev_pn533_transceive(const dev_spec ds, const byte_t* pbtTx, const uint32_t
       }
 
       #ifdef DEBUG
-        printf("Rx: ");
+        printf(" RX: ");
         print_hex((byte_t*)buf,ret);
       #endif
     }
 
-    // When the answer should be ignored, just return a succesful result    
+    // When the answer should be ignored, just return a succesful result
     if(pbtRx == NULL || puiRxLen == NULL) return true;
 
     // Only succeed when the result is at least 00 00 FF xx Fx Dx xx .. .. .. xx 00 (x = variable)

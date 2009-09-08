@@ -144,7 +144,7 @@ bool pn53x_set_tx_bits(const dev_info* pdi, uint8_t ui8Bits)
   {
     // Set the amount of transmission bits in the PN53X chip register
     if (!pn53x_set_reg(pdi,REG_CIU_BIT_FRAMING,SYMBOL_TX_LAST_BITS,ui8Bits)) return false;
-    
+
     // Store the new setting
     ((dev_info*)pdi)->ui8TxBits = ui8Bits;
   }
@@ -161,7 +161,7 @@ bool pn53x_wrap_frame(const byte_t* pbtTx, const uint32_t uiTxBits, const byte_t
 
   // Make sure we should frame at least something
   if (uiBitsLeft == 0) return false;
-  
+
   // Handle a short response (1byte) as a special case
   if (uiBitsLeft < 9)
   {
@@ -172,7 +172,7 @@ bool pn53x_wrap_frame(const byte_t* pbtTx, const uint32_t uiTxBits, const byte_t
 
   // We start by calculating the frame length in bits
   *puiFrameBits = uiTxBits + (uiTxBits/8);
-    
+
   // Parse the data bytes and add the parity bits
   // This is really a sensitive process, mirror the frame bytes and append parity bits
   // buffer = mirror(frame-byte) + parity + mirror(frame-byte) + parity + ...
@@ -226,7 +226,7 @@ bool pn53x_unwrap_frame(const byte_t* pbtFrame, const uint32_t uiFrameBits, byte
     *puiRxBits = uiFrameBits;
     return true;
   }
-  
+
   // Calculate the data length in bits
   *puiRxBits = uiFrameBits - (uiFrameBits/9);
 
