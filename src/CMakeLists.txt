@@ -1,10 +1,5 @@
 SET(LIBRARY-SOURCES libnfc dev_pn531 dev_pn533 rs232 bitutils dev_arygon)
-SET(TOOLS-SOURCES list mftool mfultool initiator target)
-
-# disabled for now on Windows, due to lacking getopt
-IF(NOT MSVC)
-  SET(TOOLS-SOURCES ${TOOLS-SOURCES} anticol emulate relay)
-ENDIF(NOT MSVC)
+SET(TOOLS-SOURCES list mftool mfultool initiator target anticol emulate relay)
 
 IF(LIBNFC_PCSC)
   ADD_DEFINITIONS("-DHAVE_PCSC_LITE=1")
