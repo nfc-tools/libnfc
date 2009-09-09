@@ -150,6 +150,7 @@ bool dev_arygon_transceive(const dev_spec ds, const byte_t* pbtTx, const uint32_
     return false;
   }
 
+  /** @todo Find why this delay are needed. Maybe in PN532 datasheet, but I (Romuald) haven't it... */
   /** @note ARYGON-APDB need 20ms between sending and receiving frame. No information regarding this in ARYGON datasheet... */
   #ifdef _WIN32
     Sleep(20);
@@ -157,11 +158,11 @@ bool dev_arygon_transceive(const dev_spec ds, const byte_t* pbtTx, const uint32_
     usleep(20000);
   #endif
 
-  /** @note ARYGON-APDB need 20ms more to be able to report (correctly) present tag. */
+  /** @note ARYGON-APDB need 30ms more to be stable (report correctly present tag, at each try: 20ms seems to be enought for one shot...) */
   #ifdef _WIN32
-    Sleep(20);
+    Sleep(30);
   #else
-    usleep(20000);
+    usleep(30000);
   #endif
 
   if (!rs232_receive((serial_port)ds,abtRxBuf,&uiRxBufLen)) {
