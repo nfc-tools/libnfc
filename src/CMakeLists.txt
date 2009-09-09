@@ -24,8 +24,8 @@ IF(LIBNFC_LANG_C99 AND NOT MSVC)
 ENDIF(LIBNFC_LANG_C99 AND NOT MSVC)
 
 IF(MSVC)
-  # Hide some warnings, this should be fixed in the code instead!
-  ADD_DEFINITIONS("-D_CRT_SECURE_NO_WARNINGS")
+  # We should fix the code, not hide warning!
+  #ADD_DEFINITIONS("-D_CRT_SECURE_NO_WARNINGS")
   # Include the stdint headers, because MSVC does not have them
   INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/../win32/stdint)
 ENDIF(MSVC)
