@@ -26,8 +26,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #ifdef HAVE_PCSC_LITE
   #include "dev_acr122.h"
 #endif
-#include "dev_pn531.h"
-#include "dev_pn533.h"
+#ifdef HAVE_LIBUSB
+  #include "dev_pn531.h"
+  #include "dev_pn533.h"
+#endif HAVE_LIBUSB
 #include "dev_arygon.h"
 
 const static struct dev_callbacks dev_callbacks_list[] = {
@@ -35,8 +37,10 @@ const static struct dev_callbacks dev_callbacks_list[] = {
 #ifdef HAVE_PCSC_LITE
   { "ACR122",          dev_acr122_connect,      dev_acr122_transceive,        dev_acr122_disconnect       },
 #endif
+#ifdef HAVE_LIBUSB
   { "PN531USB",        dev_pn531_connect,       dev_pn531_transceive,         dev_pn531_disconnect        },
   { "PN533USB",        dev_pn533_connect,       dev_pn533_transceive,         dev_pn533_disconnect        },
+#endif HAVE_LIBUSB
   { "ARYGON",          dev_arygon_connect,      dev_arygon_transceive,        dev_arygon_disconnect       }
 };
 

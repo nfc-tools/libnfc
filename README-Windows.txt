@@ -1,10 +1,9 @@
 Requirements - Running
 ======================
-In order to run the included tools, at least these dependencies should be 
-installed:
+In order to use the library and run included examples, at least this
+dependency should be installed:
 
-- LibUsb-Win32 0.1.12.2 [1]
-- Microsoft Visual C++ 2008 SP1 Redistributable Package [2]
+- Microsoft Visual C++ 2008 SP1 Redistributable Package [1]
 
 These C++ 2008 SP1 libraries are also part of "Microsoft .NET Framework 3.5 
 Service Pack 1 and .NET Framework 3.5 Family" which can be obtained through 
@@ -13,17 +12,25 @@ Windows Update.
 There are two versions of the redistributable package (one for x86 and one for 
 x64). Be sure which one is needed.
 
+An optional requirement is:
+
+- LibUsb-Win32 0.1.12.2 [2]
+
+In case support for the PN531USB and PN533USB is needed. LibUsb has serious issues 
+on Windows systems newer than Windows XP (and on 64 bit). See LibUsb support
+mailing lists for more information.
+
 Requirements - Development
 ==========================
 This project uses CMake for creating a Visual Studio project from the 
-source files. 
+source files.
 
 The following software was used to create the libnfc distribution:
 
 - CMake 2.6.4 [3]
 - Microsoft Windows SDK for Windows 7 (7.0) [4]
 - Microsoft .NET framework 3.5 SP1 (Windows Update)
-- LibUsb-Win32 0.1.12.2 [1]
+- LibUsb-Win32 0.1.12.2 (only on Windows XP builds) [2]
 - NSIS 2.45 (to create the installer) [5]
 - 7-Zip 4.65 (for generating source archive) [6]
 
@@ -48,6 +55,11 @@ path, this is optional during installation of CMake):
 Now you can configure the build. Press "Configure", specify "NMake Makefiles" 
 and then you have the opportunity to set some configuration variables. If you
 don't want a Debug build change the variable CMAKE_BUILD_TYPE to "Release".
+
+If a non-GUI solution is preferred one can use:
+
+  C:\dev\libnfc-read-only\bin> cmake -G "NMake Makefiles" 
+                                     -DCMAKE_BUILD_TYPE=Release ..
 
 Now run NMake:
 
@@ -95,8 +107,8 @@ however.
 
 References
 ==========
-[1] http://libusb-win32.sourceforge.net/
-[2] http://www.microsoft.com/downloads/details.aspx?familyid=A5C84275-3B97-4AB7-A40D-3802B2AF5FC2
+[1] http://www.microsoft.com/downloads/details.aspx?familyid=A5C84275-3B97-4AB7-A40D-3802B2AF5FC2
+[2] http://libusb-win32.sourceforge.net/
 [3] http://www.cmake.org
 [4] http://msdn.microsoft.com/en-us/windows/bb980924.aspx
 [5] http://nsis.sourceforge.net/Main_Page

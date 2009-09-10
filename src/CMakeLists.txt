@@ -1,4 +1,4 @@
-SET(LIBRARY-SOURCES libnfc dev_pn531 dev_pn533 rs232 bitutils dev_arygon)
+SET(LIBRARY-SOURCES libnfc rs232 bitutils dev_arygon)
 SET(TOOLS-SOURCES list mftool mfultool initiator target anticol emulate relay)
 
 # find PCSC library and headers
@@ -9,7 +9,11 @@ IF(LIBNFC_PCSC)
 ENDIF(LIBNFC_PCSC)
 
 # find libusb library and headers
-FIND_PACKAGE(LIBUSB REQUIRED)
+IF(LIBNFC_USB)
+  FIND_PACKAGE(LIBUSB REQUIRED)
+  ADD_DEFINITIONS("-DHAVE_LIBUSB=1")
+  SET(LIBRARY-SOURCES ${LIBRARY-SOURCES} "dev_pn531 dev_pn533")
+ENDIF(LIBNFC_USB)
 
 IF(LIBNFC_VERBOSE_OUTPUT)
   ADD_DEFINITIONS("-DDEBUG")
