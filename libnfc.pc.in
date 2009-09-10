@@ -5,6 +5,6 @@ includedir=@includedir@/@PACKAGE@
 Name: libnfc
 Description: Near Field Communication (NFC) library
 Version: @VERSION@
-Requires: libusb, libpcsclite
+Requires: @PKG_CONFIG_REQUIRES@
 Libs: -L${libdir} -lnfc
 Cflags: -I${includedir}

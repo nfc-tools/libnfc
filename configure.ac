@@ -80,6 +80,8 @@ then
 fi
 AM_CONDITIONAL(LIBUSB_ENABLED, [test x"$enable_libusb" = xyes])
 
+# Dependencies
+PKG_CONFIG_REQUIRES=""
 ## libusb
 if test "x$enable_libusb" = "xyes"; then
   if test x"$PKG_CONFIG" = "x"; then
@@ -93,6 +95,10 @@ if test "x$enable_libusb" = "xyes"; then
     fi
   else
     PKG_CHECK_MODULES(LIBUSB, libusb, [WITH_USB=1], [WITH_USB=0])
+    if test x"$PKG_CONFIG_REQUIRES" != x""; then
+      PKG_CONFIG_REQUIRES="$PKG_CONFIG_REQUIRES,"
+    fi
+    PKG_CONFIG_REQUIRES="$PKG_CONFIG_REQUIRES libusb"
   fi
   
   if test x"$WITH_USB" = "x0"; then
@@ -115,11 +121,17 @@ if test "x$enable_pcsc_lite" = "xyes"; then
       if test x"$WITH_PCSC" = "x0" ; then
         AC_MSG_ERROR([libpcsclite is mandatory.])
       fi
+      if test x"$PKG_CONFIG_REQUIRES" != x""; then
+        PKG_CONFIG_REQUIRES="$PKG_CONFIG_REQUIRES,"
+      fi
+      PKG_CONFIG_REQUIRES="$PKG_CONFIG_REQUIRES libpcsclite"
     ;;
   esac
   AC_SUBST(LIBPCSCLITE_LIBS)
   AC_SUBST(LIBPCSCLITE_CFLAGS)
 fi
+
+AC_SUBST(PKG_CONFIG_REQUIRES)
 
 # Set C standard to C99
 # C99 standard support (default: yes)
