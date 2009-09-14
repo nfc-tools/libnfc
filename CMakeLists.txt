@@ -11,11 +11,6 @@ SET(LIBNFC_PCSC ON CACHE BOOL "Enable PC/SC support (PN532)")
 SET(LIBNFC_USB OFF CACHE BOOL "Enable direct USB communication support (PN531 and PN533)")
 SET(LIBNFC_DISABLE_SERIAL_AUTOPROBE OFF CACHE BOOL "Disable serial autoprobe")
 
-# Set some pkg-config variables
-SET(prefix ${CMAKE_INSTALL_PREFIX})
-SET(exec_prefix ${CMAKE_INSTALL_PREFIX})
-SET(PACKAGE "libnfc")
-
 IF(DEFINED CMAKE_INSTALL_LIBDIR)
   SET(libdir ${CMAKE_INSTALL_LIBDIR})
 ELSE(DEFINED CMAKE_INSTALL_LIBDIR)
@@ -35,7 +30,18 @@ IF(NOT DEFINED SHARE_INSTALL_PREFIX)
 ENDIF(NOT DEFINED SHARE_INSTALL_PREFIX)
 
 IF(NOT MSVC)
-  #INCLUDE(FindPkgConfig)
+  # Set some pkg-config variables
+  SET(prefix ${CMAKE_INSTALL_PREFIX})
+  SET(exec_prefix ${CMAKE_INSTALL_PREFIX})
+  SET(PACKAGE "libnfc")
+  IF(LIBNFC_USB)
+    SET(PKG_REQ ${PKG_REQ} "libusb")
+  ENDIF(LIBNFC_USB)
+  IF(LIBNFC_PCSC)
+    SET(PKG_REQ ${PKG_REQ} "libpcsclite")
+  ENDIF(LIBNFC_PCSC)
+  # CMake lists are separated by a semi colon, replace with colon
+  STRING(REPLACE ";" "," PKG_CONFIG_REQUIRES "${PKG_REQ}")
   CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/libnfc.pc.in ${CMAKE_CURRENT_BINARY_DIR}/libnfc.pc @ONLY) 
   INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/libnfc.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
 ENDIF(NOT MSVC)
