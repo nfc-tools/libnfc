@@ -81,19 +81,6 @@ serial_port rs232_open(const char* pcPortName)
   sp->tiNew.c_oflag = 0;
   sp->tiNew.c_lflag = 0;
 
-  /**
-   * @note ARYGON-ADRA (PN531): ???,n,8,1
-   * @note ARYGON-ADRB (PN532): ???,n,8,1
-   * @note ARYGON-APDA (PN531): 9600,n,8,1
-   * @note ARYGON-APDB (PN532): 115200,n,8,1
-   */
-  /** @todo provide this settings dynamically */
-#define DEBUG__TRY_ARYGON_APDB
-#ifdef DEBUG__TRY_ARYGON_APDB
-  cfsetispeed(&(sp->tiNew), B115200);
-  cfsetospeed(&(sp->tiNew), B115200);
-#endif
-
   sp->tiNew.c_cc[VMIN] = 0;      // block until n bytes are received
   sp->tiNew.c_cc[VTIME] = 0;     // block until a timer expires (n * 100 mSec.)
   if(tcsetattr(sp->fd,TCSANOW,&sp->tiNew) == -1)
@@ -102,6 +89,38 @@ serial_port rs232_open(const char* pcPortName)
     return INVALID_SERIAL_PORT;
   }
   return sp;
+}
+
+void rs232_set_speed(const serial_port sp, const uint32_t uiPortSpeed)
+{
+  DBG("Serial port speed requested to be set to %d bauds.", uiPortSpeed);
+  // Set port speed (Input and Output)
+  speed_t portSpeed = B9600;
+  switch(uiPortSpeed) {
+    case 9600: portSpeed = B9600;
+    break;
+    case 19200: portSpeed = B19200;
+    break;
+    case 38400: portSpeed = B38400;
+    break;
+    case 57600: portSpeed = B57600;
+    break;
+    case 115200: portSpeed = B115200;
+    break;
+    case 230400: portSpeed = B230400;
+    break;
+    case 460800: portSpeed = B460800;
+    break;
+    default:
+      ERR("Unable to set serial port speed to %d bauds. Speed value must be one of these constants: 9600 (default), 19200, 38400, 57600, 115200, 230400 or 460800.", uiPortSpeed);
+  };
+  const serial_port_unix* spu = (serial_port_unix*)sp;
+  cfsetispeed(&spu->tiNew, portSpeed);
+  cfsetospeed(&spu->tiNew, portSpeed);
+  if( tcsetattr(spu->fd, TCSADRAIN, &spu->tiNew)  == -1)
+  {
+    ERR("Unable to apply new speed settings.");
+  }
 }
 
 void rs232_close(const serial_port sp)

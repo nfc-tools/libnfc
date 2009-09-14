@@ -80,6 +80,8 @@ typedef struct {
   char* driver;
   /** Port (i.e. /dev/ttyUSB2) */
   char* port;
+  /** Port speed (i.e. 115200) */
+  uint32_t speed;
   /** Device index for backward compatibility (used to choose one specific device in USB or PSCS devices list) */
   uint32_t index;
 } nfc_device_desc_t;
@@ -142,8 +144,6 @@ typedef enum {
   IM_ACTIVE_DEP = 0x05,
 /** Passive DEP */
   IM_PASSIVE_DEP = 0x06,
-
-
 }init_modulation;
 
 typedef struct {

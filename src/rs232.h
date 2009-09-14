@@ -48,7 +48,11 @@ typedef void* serial_port;
 
 serial_port rs232_open(const char* pcPortName);
 void rs232_close(const serial_port sp);
+
+void rs232_set_speed(const serial_port sp, uint32_t uiPortSpeed);
+
 bool rs232_cts(const serial_port sp);
+
 bool rs232_receive(const serial_port sp, byte_t* pbtRx, uint32_t* puiRxLen);
 bool rs232_send(const serial_port sp, const byte_t* pbtTx, const uint32_t uiTxLen);
 
