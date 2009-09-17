@@ -89,7 +89,7 @@ serial_port rs232_open(const char* pcPortName)
     return INVALID_SERIAL_PORT;
   }
 
-  tcflush(sp, TCIFLUSH);
+  tcflush(sp->fd, TCIFLUSH);
   return sp;
 }
 
