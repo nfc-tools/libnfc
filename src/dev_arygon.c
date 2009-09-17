@@ -68,14 +68,14 @@ static byte_t abtTxBuf[BUFFER_LENGTH] = { DEV_ARYGON_PROTOCOL_TAMA, 0x00, 0x00, 
  * @note ARYGON-APDB2UA33 (PN532 + ARYGON µC): 9600,n,8,1
  */
 
-dev_info* dev_arygon_connect(const nfc_device_desc_t* device_desc)
+dev_info* dev_arygon_connect(const nfc_device_desc_t* pndd)
 {
   uint32_t uiDevNr;
   serial_port sp;
   char acConnect[BUFFER_LENGTH];
   dev_info* pdi = INVALID_DEVICE_INFO;
 
-  if( device_desc == NULL ) {
+  if( pndd == NULL ) {
 #ifdef DISABLE_SERIAL_AUTOPROBE
     INFO("Sorry, serial auto-probing have been disabled at compile time.");
     return INVALID_DEVICE_INFO;
@@ -105,14 +105,14 @@ dev_info* dev_arygon_connect(const nfc_device_desc_t* device_desc)
     // Test if we have found a device
     if (uiDevNr == MAX_DEVICES) return INVALID_DEVICE_INFO;
   } else {
-    DBG("Connecting to: %s at %d bauds.",device_desc->port, device_desc->speed);
-    strcpy(acConnect,device_desc->port);
+    DBG("Connecting to: %s at %d bauds.",pndd->port, pndd->speed);
+    strcpy(acConnect,pndd->port);
     sp = rs232_open(acConnect);
     if (sp == INVALID_SERIAL_PORT) ERR("Invalid serial port: %s",acConnect);
     if (sp == CLAIMED_SERIAL_PORT) ERR("Serial port already claimed: %s",acConnect);
     if ((sp == CLAIMED_SERIAL_PORT) || (sp == INVALID_SERIAL_PORT)) return INVALID_DEVICE_INFO;
 
-    rs232_set_speed(sp, device_desc->speed);
+    rs232_set_speed(sp, pndd->speed);
   }
 
   DBG("Successfully connected to: %s",acConnect);

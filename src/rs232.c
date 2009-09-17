@@ -32,7 +32,7 @@ available: http://www.teuniz.net/RS-232/index.html
 #ifndef _WIN32
 
 typedef struct termios term_info;
-typedef struct { 
+typedef struct {
   int fd;           // Serial port file descriptor
   term_info tiOld;  // Terminal info before using the port
   term_info tiNew;  // Terminal info during the transaction
@@ -40,7 +40,7 @@ typedef struct {
 
 // Set time-out on 30 miliseconds
 struct timeval tv = { 
-  .tv_sec = 0,      // No seconds
+  .tv_sec = 0,      // 0 second
   .tv_usec = 30000 // 30,000 micro seconds
 };
 
@@ -88,6 +88,8 @@ serial_port rs232_open(const char* pcPortName)
     rs232_close(sp);
     return INVALID_SERIAL_PORT;
   }
+
+  tcflush(sp, TCIFLUSH);
   return sp;
 }
 
@@ -151,22 +153,25 @@ bool rs232_receive(const serial_port sp, byte_t* pbtRx, uint32_t* puiRxLen)
   // Read error
   if (iResult < 0) {
     DBG("RX error.");
+    *puiRxLen = 0;
+    return false;
+  }
+  // Read time-out
+  if (iResult == 0) {
+    DBG("RX time-out.");
+    *puiRxLen = 0;
     return false;
   }
 
   // Number of bytes in the input buffer
   ioctl(((serial_port_unix*)sp)->fd, FIONREAD, &byteCount);
 
-  // Read time-out or empty buffer
-#ifdef DEBUG
-  if (iResult == 0) {
-    DBG("RX time-out");
-  }
+  // Empty buffer
   if (byteCount == 0) {
-    DBG("RX empty buffer");
+    DBG("RX empty buffer.");
+    *puiRxLen = 0;
+    return false;
   }
-#endif
-  if (iResult == 0 || byteCount == 0) return false;
 
   // There is something available, read the data
   *puiRxLen = read(((serial_port_unix*)sp)->fd,pbtRx,byteCount);
