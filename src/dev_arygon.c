@@ -26,18 +26,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #ifdef _WIN32
   #define SERIAL_STRING "COM"
+  #define delay_ms( X ) Sleep( X )
 #else
   #ifdef __APPLE__
     #define SERIAL_STRING "/dev/tty.SLAB_USBtoUART"
   #else
     // unistd.h is needed for usleep() fct.
     #include <unistd.h>
+    #define delay_ms( X ) usleep( X * 1000 )
     #define SERIAL_STRING "/dev/ttyUSB"
   #endif
 #endif
 
 #define BUFFER_LENGTH 256
-#define USB_TIMEOUT   30000
 
 /** @def DEV_ARYGON_PROTOCOL_ARYGON_ASCII
  * @brief High level language in ASCII format. (Common µC commands and Mifare® commands) 
@@ -169,18 +170,15 @@ bool dev_arygon_transceive(const dev_spec ds, const byte_t* pbtTx, const uint32_
 
   /** @todo Find why this delay are needed. (in PN532 datasheet, but I (Romuald) haven't it...) */
   /** @note PN532 need 20ms between sending and receiving frame. No information regarding this in ARYGON datasheet... */
-  #ifdef _WIN32
-    Sleep(20);
-  #else
-    usleep(20000);
-  #endif
+  /** @note It seems to be a required delay to able to send from host to device, plus the device computation then device respond transmission */
+  delay_ms(20);
 
   /** @note PN532 need 30ms more to be stable (report correctly present tag, at each try: 20ms seems to be enought for one shot...) */
-  #ifdef _WIN32
-    Sleep(30);
-  #else
-    usleep(30000);
-#endif
+  delay_ms(30);
+
+  /** @note PN532 seems to work correctly with 50ms at 115200 bauds */
+  /** @note PN532 seems to work correctly with 70ms at 9600 bauds */
+  delay_ms(20);
 
   if (!rs232_receive((serial_port)ds,abtRxBuf,&uiRxBufLen)) {
     ERR("Unable to receive data. (RX)");
