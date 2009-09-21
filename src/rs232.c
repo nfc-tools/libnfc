@@ -147,7 +147,7 @@ uint32_t rs232_get_speed(const serial_port sp)
     case B230400: uiPortSpeed = 230400;
     break;
 #ifdef B460800
-    case 460800: uiPortSpeed = B460800;
+    case B460800: uiPortSpeed = 460800;
     break;
 #endif
   }
