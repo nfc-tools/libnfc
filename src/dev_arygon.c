@@ -168,17 +168,20 @@ bool dev_arygon_transceive(const dev_spec ds, const byte_t* pbtTx, const uint32_
     return false;
   }
 
-  /** @todo Find why this delay are needed. (in PN532 datasheet, but I (Romuald) haven't it...) */
-  /** @note PN532 need 20ms between sending and receiving frame. No information regarding this in ARYGON datasheet... */
-  /** @note It seems to be a required delay to able to send from host to device, plus the device computation then device respond transmission */
+  /** @note PN532 (at 115200 bauds) need 20ms between sending and receiving frame. No information regarding this in ARYGON datasheet... 
+   * It seems to be a required delay to able to send from host to device, plus the device computation then device respond transmission 
+   */
   delay_ms(20);
 
-  /** @note PN532 need 30ms more to be stable (report correctly present tag, at each try: 20ms seems to be enought for one shot...) */
+  /** @note PN532 (at 115200 bauds) need 30ms more to be stable (report correctly present tag, at each try: 20ms seems to be enought for one shot...)
+   * PN532 seems to work correctly with 50ms at 115200 bauds.
+   */
   delay_ms(30);
 
-  /** @note PN532 seems to work correctly with 50ms at 115200 bauds */
-  /** @note PN532 seems to work correctly with 70ms at 9600 bauds */
-  delay_ms(20);
+  /** @note Unfortunately, adding delay is not enought for ARYGON readers which are equipped with an ARYGON µC + PN532 running at 9600 bauds.
+   * There are too many timing problem to solve them by adding more and more delay.
+   * For more information, see Issue 23 on development site : http://code.google.com/p/libnfc/issues/detail?id=23
+   */
 
   if (!rs232_receive((serial_port)ds,abtRxBuf,&uiRxBufLen)) {
     ERR("Unable to receive data. (RX)");

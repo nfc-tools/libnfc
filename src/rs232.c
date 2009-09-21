@@ -50,29 +50,29 @@ struct timeval tv = {
 serial_port rs232_open(const char* pcPortName)
 {
   serial_port_unix* sp = malloc(sizeof(serial_port_unix));
-  
+
   if (sp == 0) return INVALID_SERIAL_PORT;
-  
+
   sp->fd = open(pcPortName, O_RDWR | O_NOCTTY | O_NDELAY | O_NONBLOCK);
   if(sp->fd == -1)
   {
     rs232_close(sp);
     return INVALID_SERIAL_PORT;
   }
-  
+
   if(tcgetattr(sp->fd,&sp->tiOld) == -1)
   {
     rs232_close(sp);
     return INVALID_SERIAL_PORT;
   }
-  
+
   // Make sure the port is not claimed already
   if (sp->tiOld.c_iflag & CCLAIMED)
   {
     rs232_close(sp);
     return CLAIMED_SERIAL_PORT;
   }
-  
+
   // Copy the old terminal info struct
   sp->tiNew = sp->tiOld;
 
@@ -83,6 +83,7 @@ serial_port rs232_open(const char* pcPortName)
 
   sp->tiNew.c_cc[VMIN] = 0;      // block until n bytes are received
   sp->tiNew.c_cc[VTIME] = 0;     // block until a timer expires (n * 100 mSec.)
+
   if(tcsetattr(sp->fd,TCSANOW,&sp->tiNew) == -1)
   {
     rs232_close(sp);
@@ -97,32 +98,57 @@ void rs232_set_speed(const serial_port sp, const uint32_t uiPortSpeed)
 {
   DBG("Serial port speed requested to be set to %d bauds.", uiPortSpeed);
   // Set port speed (Input and Output)
-  speed_t portSpeed = B9600;
+  speed_t stPortSpeed = B9600;
   switch(uiPortSpeed) {
-    case 9600: portSpeed = B9600;
+    case 9600: stPortSpeed = B9600;
     break;
-    case 19200: portSpeed = B19200;
+    case 19200: stPortSpeed = B19200;
     break;
-    case 38400: portSpeed = B38400;
+    case 38400: stPortSpeed = B38400;
     break;
-    case 57600: portSpeed = B57600;
+    case 57600: stPortSpeed = B57600;
     break;
-    case 115200: portSpeed = B115200;
+    case 115200: stPortSpeed = B115200;
     break;
-    case 230400: portSpeed = B230400;
+    case 230400: stPortSpeed = B230400;
     break;
-    case 460800: portSpeed = B460800;
+    case 460800: stPortSpeed = B460800;
     break;
     default:
       ERR("Unable to set serial port speed to %d bauds. Speed value must be one of these constants: 9600 (default), 19200, 38400, 57600, 115200, 230400 or 460800.", uiPortSpeed);
   };
   const serial_port_unix* spu = (serial_port_unix*)sp;
-  cfsetispeed(&spu->tiNew, portSpeed);
-  cfsetospeed(&spu->tiNew, portSpeed);
+  cfsetispeed(&spu->tiNew, stPortSpeed);
+  cfsetospeed(&spu->tiNew, stPortSpeed);
   if( tcsetattr(spu->fd, TCSADRAIN, &spu->tiNew)  == -1)
   {
     ERR("Unable to apply new speed settings.");
   }
+}
+
+uint32_t rs232_get_speed(const serial_port sp)
+{
+  uint32_t uiPortSpeed = 0;
+  const serial_port_unix* spu = (serial_port_unix*)sp;
+  switch (cfgetispeed(&spu->tiNew))
+  {
+    case B9600: uiPortSpeed = 9600;
+    break;
+    case B19200: uiPortSpeed = 19200;
+    break;
+    case B38400: uiPortSpeed = 38400;
+    break;
+    case B57600: uiPortSpeed = 57600;
+    break;
+    case B115200: uiPortSpeed = 115200;
+    break;
+    case B230400: uiPortSpeed = 230400;
+    break;
+    case B460800: uiPortSpeed = 460800;
+    break;
+  }
+
+  return uiPortSpeed;
 }
 
 void rs232_close(const serial_port sp)
@@ -240,6 +266,8 @@ serial_port rs232_open(const char* pcPortName)
     return INVALID_SERIAL_PORT;
   }
 
+  PurgeComm(sp->hPort, PURGE_RXABORT | PURGE_RXCLEAR);
+
   return sp;
 }
 
@@ -247,6 +275,40 @@ void rs232_close(const serial_port sp)
 {
   CloseHandle(((serial_port_windows*)sp)->hPort);
   free(sp);
+}
+
+void rs232_set_speed(const serial_port sp, const uint32_t uiPortSpeed)
+{
+  DBG("Serial port speed requested to be set to %d bauds.", uiPortSpeed);
+  // Set port speed (Input and Output)
+  switch(uiPortSpeed) {
+    case 9600:
+    case 19200:
+    case 38400:
+    case 57600:
+    case 115200:
+    case 230400:
+    case 460800:
+    break;
+    default:
+      ERR("Unable to set serial port speed to %d bauds. Speed value must be one of these constants: 9600 (default), 19200, 38400, 57600, 115200, 230400 or 460800.", uiPortSpeed);
+  };
+
+  serial_port_windows* spw = (serial_port_windows*)sp;
+  spw->dcb.BaudRate = uiPortSpeed;
+  if (!SetCommState(spw->hPort, &spw->dcb))
+  {
+    ERR("Unable to apply new speed settings.");
+  }
+}
+
+uint32_t rs232_get_speed(const serial_port sp)
+{
+  const serial_port_windows* spw = (serial_port_windows*)sp;
+  if (!GetCommState(spw->hPort, &spw->dcb))
+    return spw->dcb.BaudRate;
+  
+  return 0;
 }
 
 bool rs232_cts(const serial_port sp)

@@ -50,6 +50,7 @@ serial_port rs232_open(const char* pcPortName);
 void rs232_close(const serial_port sp);
 
 void rs232_set_speed(const serial_port sp, uint32_t uiPortSpeed);
+uint32_t rs232_get_speed(const serial_port sp);
 
 bool rs232_cts(const serial_port sp);
 
