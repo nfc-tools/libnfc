@@ -1,3 +1,9 @@
+libnfc (1.2.1-2) unstable; urgency=low
+
+  * Add missing dependencies for ACR122 devices (pcscd).
+
+ -- Romuald Conty <rconty@il4p.fr>  Fri, 23 Sep 2009 16:42:42 +0100
+
 libnfc (1.2.1-1) unstable; urgency=low
 
   * Description have been updated.

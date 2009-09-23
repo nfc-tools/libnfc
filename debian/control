@@ -8,7 +8,7 @@ Homepage: http://www.libnfc.org/
 
 Package: libnfc0
 Architecture: any
-Depends: ${shlibs:Depends}, libusb-0.1-4, libpcsclite1 (>= 1.5), libccid (>= 1.3.10)
+Depends: ${shlibs:Depends}, libusb-0.1-4, libpcsclite1 (>= 1.5), libccid (>= 1.3.10), pcscd (>= 1.5)
 Description: Near Field Communication (NFC) library
  libnfc is a Free Software library for Near Field Communication. Supported NFC hardware 
  devices are, theorically, all hardware based on the NXP PN531, PN532 or PN533 NFC 
