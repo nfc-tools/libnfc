@@ -89,6 +89,8 @@ LIBNFC_EXPORT bool nfc_initiator_init(const dev_info* pdi);
  * @return Returns true if action was successfully performed; otherwise returns false.
  * @param pdi dev_info struct pointer that represent currently used device
  * @param im Desired modulation
+ * @param pbtInitData Optional initiator data used for Felica, ISO14443B, Topaz Polling or for ISO14443A selecting a specific UID.
+ * @param uiInitDataLen Length of initiator data \a pbtInitData.
  *
  * The NFC device will try to find the available passive tags. Some NFC devices are capable to emulate passive tags. The standards (ISO18092 and ECMA-340) describe the modulation that can be used for reader to passive communications. The chip needs to know with what kind of tag it is dealing with, therefore the initial modulation and speed (106, 212 or 424 kbps) should be supplied.
  * @note For every initial modulation type there is a different collection of information returned (in tag_info pointer pti) They all fit in the data-type which is called tag_info. This is a union which contains the tag information that belongs to the according initial modulation type. 

@@ -453,7 +453,7 @@ bool nfc_initiator_select_dep_target(const dev_info* pdi, const init_modulation 
 
 bool nfc_initiator_select_tag(const dev_info* pdi, const init_modulation im, const byte_t* pbtInitData, const uint32_t uiInitDataLen, tag_info* pti)
 {
-	// Make sure we are dealing with a active device
+  // Make sure we are dealing with a active device
   if (!pdi->bActive) return false;
 
   pncmd_reader_list_passive[2] = 1; // MaxTg, we only want to select 1 tag at the time

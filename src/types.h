@@ -146,6 +146,10 @@ typedef enum {
   IM_PASSIVE_DEP = 0x06,
 }init_modulation;
 
+/**
+ * @struct tag_info_dep
+ * @brief NFC tag information in Data Exchange Protocol
+ */
 typedef struct {
   byte_t NFCID3i[10];
   byte_t btDID;
@@ -153,6 +157,10 @@ typedef struct {
   byte_t btBRt;
 }tag_info_dep;
 
+/**
+ * @struct tag_info_iso14443a
+ * @brief NFC ISO14443A tag (MIFARE) information
+ */
 typedef struct {
   byte_t abtAtqa[2];
   byte_t btSak;
@@ -162,6 +170,10 @@ typedef struct {
   byte_t abtAts[36];
 }tag_info_iso14443a;
 
+/**
+ * @struct tag_info_felica
+ * @brief NFC FeLiCa tag information
+ */
 typedef struct {
   uint32_t uiLen;
   byte_t btResCode;
@@ -170,6 +182,10 @@ typedef struct {
   byte_t abtSysCode[2];
 }tag_info_felica;
 
+/**
+ * @struct tag_info_iso14443b
+ * @brief NFC ISO14443B tag information
+ */
 typedef struct {
   byte_t abtAtqb[12];
   byte_t abtId[4];
@@ -182,11 +198,19 @@ typedef struct {
   byte_t abtInf[64];
 }tag_info_iso14443b;
 
+/**
+ * @struct tag_info_jewel
+ * @brief NFC Jewel tag information
+ */
 typedef struct {
   byte_t btSensRes[2];
   byte_t btId[4];
 }tag_info_jewel;
 
+/**
+ * @union tag_info
+ * @brief Union between all kind of tags information structures.
+ */
 typedef union {
   tag_info_iso14443a tia;
   tag_info_felica tif;
