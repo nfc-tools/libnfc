@@ -55,14 +55,6 @@ typedef struct {
   SCARD_IO_REQUEST ioCard;
 } dev_spec_acr122;
 
-static byte_t abtTxBuf[ACR122_WRAP_LEN+ACR122_COMMAND_LEN] = { 0xFF, 0x00, 0x00, 0x00 };
-static byte_t abtRxCmd[5] = { 0xFF,0xC0,0x00,0x00 };
-static byte_t uiRxCmdLen = sizeof(abtRxCmd);
-static byte_t abtRxBuf[ACR122_RESPONSE_LEN];
-static size_t ulRxBufLen;
-static byte_t abtGetFw[5] = { 0xFF,0x00,0x48,0x00,0x00 };
-static byte_t abtLed[9] = { 0xFF,0x00,0x40,0x05,0x04,0x00,0x00,0x00,0x00 };
-
 dev_info* dev_acr122_connect(const nfc_device_desc_t* device_desc)
 {
   char* pacReaders[MAX_DEVICES];
@@ -179,6 +171,11 @@ void dev_acr122_disconnect(dev_info* pdi)
 
 bool dev_acr122_transceive(const dev_spec ds, const byte_t* pbtTx, const uint32_t uiTxLen, byte_t* pbtRx, uint32_t* puiRxLen)
 {
+  byte_t abtRxCmd[5] = { 0xFF,0xC0,0x00,0x00 };
+  byte_t uiRxCmdLen = sizeof(abtRxCmd);
+  byte_t abtRxBuf[ACR122_RESPONSE_LEN];
+  size_t ulRxBufLen;
+  byte_t abtTxBuf[ACR122_WRAP_LEN+ACR122_COMMAND_LEN] = { 0xFF, 0x00, 0x00, 0x00 };
   dev_spec_acr122* pdsa = (dev_spec_acr122*)ds;
 
   // Make sure the command does not overflow the send buffer
@@ -236,6 +233,7 @@ bool dev_acr122_transceive(const dev_spec ds, const byte_t* pbtTx, const uint32_
 
 char* dev_acr122_firmware(const dev_spec ds)
 {
+  byte_t abtGetFw[5] = { 0xFF,0x00,0x48,0x00,0x00 };
   uint32_t uiResult;
 
   dev_spec_acr122* pdsa = (dev_spec_acr122*)ds;
@@ -261,6 +259,7 @@ char* dev_acr122_firmware(const dev_spec ds)
 
 bool dev_acr122_led_red(const dev_spec ds, bool bOn)
 {
+  byte_t abtLed[9] = { 0xFF,0x00,0x40,0x05,0x04,0x00,0x00,0x00,0x00 };
   dev_spec_acr122* pdsa = (dev_spec_acr122*)ds;
   byte_t abtBuf[2];
   size_t ulBufLen = sizeof(abtBuf);

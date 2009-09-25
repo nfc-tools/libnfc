@@ -33,7 +33,6 @@ Thanks to d18c7db and Okko for example code
 
 #define BUFFER_LENGTH 256
 #define USB_TIMEOUT   30000
-static char buffer[BUFFER_LENGTH] = { 0x00, 0x00, 0xff }; // Every packet must start with "00 00 ff"
 
 typedef struct {
   usb_dev_handle* pudh;
@@ -119,7 +118,7 @@ dev_info* dev_pn533_connect(const nfc_device_desc_t* device_desc)
           uiDevIndex--;
           continue;
         }
-        DBG("Found PN533 device.");
+        DBG("Found PN533 device");
 
         // Open the PN533 USB device
         dsp.pudh = usb_open(dev);
@@ -169,32 +168,33 @@ bool dev_pn533_transceive(const dev_spec ds, const byte_t* pbtTx, const uint32_t
 {
     uint32_t uiPos = 0;
     int ret = 0;
-    char buf[BUFFER_LENGTH];
+    char abtTx[BUFFER_LENGTH] = { 0x00, 0x00, 0xff }; // Every packet must start with "00 00 ff"
+    char abtRx[BUFFER_LENGTH];
     dev_spec_pn533* pdsp = (dev_spec_pn533*)ds;
 
     // Packet length = data length (len) + checksum (1) + end of stream marker (1)
-    buffer[3] = uiTxLen;
+    abtTx[3] = uiTxLen;
     // Packet length checksum 
-    buffer[4] = BUFFER_LENGTH - buffer[3];
-    // Copy the PN53X command into the packet buffer
-    memmove(buffer+5,pbtTx,uiTxLen);
+    abtTx[4] = BUFFER_LENGTH - abtTx[3];
+    // Copy the PN53X command into the packet abtTx
+    memmove(abtTx+5,pbtTx,uiTxLen);
 
     // Calculate data payload checksum
-    buffer[uiTxLen+5] = 0;
+    abtTx[uiTxLen+5] = 0;
     for(uiPos=0; uiPos < uiTxLen; uiPos++) 
     {
-      buffer[uiTxLen+5] -= buffer[uiPos+5];
+      abtTx[uiTxLen+5] -= abtTx[uiPos+5];
     }
 
     // End of stream marker
-    buffer[uiTxLen+6] = 0;
+    abtTx[uiTxLen+6] = 0;
 
     #ifdef DEBUG
       printf(" TX: ");
-      print_hex((byte_t*)buffer,uiTxLen+7);
+      print_hex((byte_t*)abtTx,uiTxLen+7);
     #endif
 
-    ret = usb_bulk_write(pdsp->pudh, pdsp->uiEndPointOut, buffer, uiTxLen+7, USB_TIMEOUT);
+    ret = usb_bulk_write(pdsp->pudh, pdsp->uiEndPointOut, abtTx, uiTxLen+7, USB_TIMEOUT);
     if( ret < 0 )
     {
       #ifdef DEBUG
@@ -203,7 +203,7 @@ bool dev_pn533_transceive(const dev_spec ds, const byte_t* pbtTx, const uint32_t
       return false;
     }
 
-    ret = usb_bulk_read(pdsp->pudh, pdsp->uiEndPointIn, buf, BUFFER_LENGTH, USB_TIMEOUT);
+    ret = usb_bulk_read(pdsp->pudh, pdsp->uiEndPointIn, abtRx, BUFFER_LENGTH, USB_TIMEOUT);
     if( ret < 0 )
     {
       #ifdef DEBUG
@@ -214,12 +214,12 @@ bool dev_pn533_transceive(const dev_spec ds, const byte_t* pbtTx, const uint32_t
 
     #ifdef DEBUG
       printf(" RX: ");
-      print_hex((byte_t*)buf,ret);
+      print_hex((byte_t*)abtRx,ret);
     #endif
 
     if( ret == 6 )
     {
-      ret = usb_bulk_read(pdsp->pudh, pdsp->uiEndPointIn, buf, BUFFER_LENGTH, USB_TIMEOUT);
+      ret = usb_bulk_read(pdsp->pudh, pdsp->uiEndPointIn, abtRx, BUFFER_LENGTH, USB_TIMEOUT);
       if( ret < 0 )
       {
         #ifdef DEBUG
@@ -230,7 +230,7 @@ bool dev_pn533_transceive(const dev_spec ds, const byte_t* pbtTx, const uint32_t
 
       #ifdef DEBUG
         printf(" RX: ");
-        print_hex((byte_t*)buf,ret);
+        print_hex((byte_t*)abtRx,ret);
       #endif
     }
 
@@ -244,14 +244,14 @@ bool dev_pn533_transceive(const dev_spec ds, const byte_t* pbtTx, const uint32_t
     *puiRxLen = ret - 7 - 2;
 
     // Get register: nuke extra byte (awful hack)
-    if ((buf[5]==(char)0xd5) && (buf[6]==(char)0x07) && (*puiRxLen==2)) {
-        // printf("Got %02x %02x, keep %02x\n", buf[7], buf[8], buf[8]);
+    if ((abtRx[5]==(char)0xd5) && (abtRx[6]==(char)0x07) && (*puiRxLen==2)) {
+        // printf("Got %02x %02x, keep %02x\n", abtRx[7], abtRx[8], abtRx[8]);
         *puiRxLen = (*puiRxLen) - 1;
-        memcpy( pbtRx, buf + 8, *puiRxLen);
+        memcpy( pbtRx, abtRx + 8, *puiRxLen);
         return true;
     }
 
-    memcpy( pbtRx, buf + 7, *puiRxLen);
+    memcpy( pbtRx, abtRx + 7, *puiRxLen);
 
     return true;
 }

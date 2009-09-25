@@ -57,8 +57,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
 #define DEV_ARYGON_PROTOCOL_TAMA_WAB            '3'
 
-static byte_t abtTxBuf[BUFFER_LENGTH] = { DEV_ARYGON_PROTOCOL_TAMA, 0x00, 0x00, 0xff }; // Every packet must start with "00 00 ff"
-
 #define SERIAL_DEFAULT_PORT_SPEED 9600
 
 /**
@@ -138,6 +136,7 @@ void dev_arygon_disconnect(dev_info* pdi)
 
 bool dev_arygon_transceive(const dev_spec ds, const byte_t* pbtTx, const uint32_t uiTxLen, byte_t* pbtRx, uint32_t* puiRxLen)
 {
+  byte_t abtTxBuf[BUFFER_LENGTH] = { DEV_ARYGON_PROTOCOL_TAMA, 0x00, 0x00, 0xff }; // Every packet must start with "00 00 ff"
   byte_t abtRxBuf[BUFFER_LENGTH];
   uint32_t uiRxBufLen = BUFFER_LENGTH;
   uint32_t uiPos;

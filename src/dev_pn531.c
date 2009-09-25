@@ -34,7 +34,6 @@ Thanks to d18c7db and Okko for example code
 
 #define BUFFER_LENGTH 256
 #define USB_TIMEOUT   30000
-static char buffer[BUFFER_LENGTH] = { 0x00, 0x00, 0xff }; // Every packet must start with "00 00 ff"
 
 typedef struct {
   usb_dev_handle* pudh;
@@ -123,9 +122,7 @@ dev_info* dev_pn531_connect(const nfc_device_desc_t* device_desc)
           uiDevIndex--;
           continue;
         }
-        #ifdef DEBUG
-          printf("Found PN531 device\n");
-        #endif
+        DBG("Found PN531 device");
 
         // Open the PN531 USB device
         dsp.pudh = usb_open(dev);
@@ -133,18 +130,14 @@ dev_info* dev_pn531_connect(const nfc_device_desc_t* device_desc)
         get_end_points(dev,&dsp);
         if(usb_set_configuration(dsp.pudh,1) < 0)
         {
-          #ifdef DEBUG
-            printf("Setting config failed\n");
-          #endif
+          DBG("Set config failed");
           usb_close(dsp.pudh);
           return INVALID_DEVICE_INFO;
         }
 
         if(usb_claim_interface(dsp.pudh,0) < 0)
         {
-          #ifdef DEBUG
-            printf("Can't claim interface\n");
-          #endif
+          DBG("Can't claim interface");
           usb_close(dsp.pudh);
           return INVALID_DEVICE_INFO;
         }
@@ -179,32 +172,33 @@ bool dev_pn531_transceive(const dev_spec ds, const byte_t* pbtTx, const uint32_t
 {
     uint32_t uiPos = 0;
     int ret = 0;
-    char buf[BUFFER_LENGTH];
+    char abtTx[BUFFER_LENGTH] = { 0x00, 0x00, 0xff }; // Every packet must start with "00 00 ff"
+    char abtRx[BUFFER_LENGTH];
     dev_spec_pn531* pdsp = (dev_spec_pn531*)ds;
 
     // Packet length = data length (len) + checksum (1) + end of stream marker (1)
-    buffer[3] = uiTxLen;
+    abtTx[3] = uiTxLen;
     // Packet length checksum
-    buffer[4] = BUFFER_LENGTH - buffer[3];
-    // Copy the PN53X command into the packet buffer
-    memmove(buffer+5,pbtTx,uiTxLen);
+    abtTx[4] = BUFFER_LENGTH - abtTx[3];
+    // Copy the PN53X command into the packet abtTx
+    memmove(abtTx+5,pbtTx,uiTxLen);
 
     // Calculate data payload checksum
-    buffer[uiTxLen+5] = 0;
+    abtTx[uiTxLen+5] = 0;
     for(uiPos=0; uiPos < uiTxLen; uiPos++) 
     {
-      buffer[uiTxLen+5] -= buffer[uiPos+5];
+      abtTx[uiTxLen+5] -= abtTx[uiPos+5];
     }
 
     // End of stream marker
-    buffer[uiTxLen+6] = 0;
+    abtTx[uiTxLen+6] = 0;
 
     #ifdef DEBUG
       printf("Tx: ");
-      print_hex((byte_t*)buffer,uiTxLen+7);
+      print_hex((byte_t*)abtTx,uiTxLen+7);
     #endif
 
-    ret = usb_bulk_write(pdsp->pudh, pdsp->uiEndPointOut, buffer, uiTxLen+7, USB_TIMEOUT);
+    ret = usb_bulk_write(pdsp->pudh, pdsp->uiEndPointOut, abtTx, uiTxLen+7, USB_TIMEOUT);
     if( ret < 0 )
     {
       #ifdef DEBUG
@@ -213,7 +207,7 @@ bool dev_pn531_transceive(const dev_spec ds, const byte_t* pbtTx, const uint32_t
       return false;
     }
 
-    ret = usb_bulk_read(pdsp->pudh, pdsp->uiEndPointIn, buf, BUFFER_LENGTH, USB_TIMEOUT);
+    ret = usb_bulk_read(pdsp->pudh, pdsp->uiEndPointIn, abtRx, BUFFER_LENGTH, USB_TIMEOUT);
     if( ret < 0 )
     {
       #ifdef DEBUG
@@ -224,12 +218,12 @@ bool dev_pn531_transceive(const dev_spec ds, const byte_t* pbtTx, const uint32_t
 
     #ifdef DEBUG
       printf("Rx: ");
-      print_hex((byte_t*)buf,ret);
+      print_hex((byte_t*)abtRx,ret);
     #endif
 
     if( ret == 6 )
     {
-      ret = usb_bulk_read(pdsp->pudh, pdsp->uiEndPointIn, buf, BUFFER_LENGTH, USB_TIMEOUT);
+      ret = usb_bulk_read(pdsp->pudh, pdsp->uiEndPointIn, abtRx, BUFFER_LENGTH, USB_TIMEOUT);
       if( ret < 0 )
       {
         #ifdef DEBUG
@@ -240,7 +234,7 @@ bool dev_pn531_transceive(const dev_spec ds, const byte_t* pbtTx, const uint32_t
 
       #ifdef DEBUG
         printf("Rx: ");
-        print_hex((byte_t*)buf,ret);
+        print_hex((byte_t*)abtRx,ret);
       #endif
     }
 
@@ -252,7 +246,7 @@ bool dev_pn531_transceive(const dev_spec ds, const byte_t* pbtTx, const uint32_t
 
     // Remove the preceding and appending bytes 00 00 FF xx Fx .. .. .. xx 00 (x = variable)
     *puiRxLen = ret - 7 - 2;
-    memcpy( pbtRx, buf + 7, *puiRxLen);
+    memcpy( pbtRx, abtRx + 7, *puiRxLen);
 
     return true;
 }
