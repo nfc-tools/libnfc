@@ -104,7 +104,7 @@ bool read_card()
       }
 
       // Try to authenticate for the current sector
-      if (!nfc_initiator_mifare_cmd(pdi,MC_AUTH_A,iBlock,&mp))
+      if (!nfc_initiator_mifare_cmd(pdi,mc,iBlock,&mp))
       {
         printf("!\nError: authentication failed for block %02x\n",iBlock);
         return false;
