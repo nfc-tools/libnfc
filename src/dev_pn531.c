@@ -31,6 +31,7 @@ Thanks to d18c7db and Okko for example code
 #include "defines.h"
 #include "dev_pn531.h"
 #include "bitutils.h"
+#include "messages.h"
 
 #define BUFFER_LENGTH 256
 #define USB_TIMEOUT   30000
