@@ -49,7 +49,7 @@ typedef void* serial_port;
 serial_port rs232_open(const char* pcPortName);
 void rs232_close(const serial_port sp);
 
-void rs232_set_speed(const serial_port sp, uint32_t uiPortSpeed);
+void rs232_set_speed(serial_port sp, const uint32_t uiPortSpeed);
 uint32_t rs232_get_speed(const serial_port sp);
 
 bool rs232_cts(const serial_port sp);

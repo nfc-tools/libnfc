@@ -769,12 +769,11 @@ bool nfc_target_init(const dev_info* pdi, byte_t* pbtRx, uint32_t* puiRxBits)
   byte_t abtRx[MAX_FRAME_LEN];
   uint32_t uiRxLen;
   uint8_t ui8Bits;
-  byte_t abtCmd[sizeof(pncmd_target_init)];
-  memcpy(abtCmd,pncmd_target_init,sizeof(pncmd_target_init));
-  
   // Save the current configuration settings
   bool bCrc = pdi->bCrc;
 	bool bPar = pdi->bPar;
+  byte_t abtCmd[sizeof(pncmd_target_init)];
+  memcpy(abtCmd,pncmd_target_init,sizeof(pncmd_target_init));
 
   // Clear the target init struct, reset to all zeros
   memset(abtCmd+2,0x00,37);

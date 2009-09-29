@@ -94,7 +94,7 @@ serial_port rs232_open(const char* pcPortName)
   return sp;
 }
 
-void rs232_set_speed(const serial_port sp, const uint32_t uiPortSpeed)
+void rs232_set_speed(serial_port sp, const uint32_t uiPortSpeed)
 {
   DBG("Serial port speed requested to be set to %d bauds.", uiPortSpeed);
   // Set port speed (Input and Output)
@@ -281,8 +281,10 @@ void rs232_close(const serial_port sp)
   free(sp);
 }
 
-void rs232_set_speed(const serial_port sp, const uint32_t uiPortSpeed)
+void rs232_set_speed(serial_port sp, const uint32_t uiPortSpeed)
 {
+  serial_port_windows* spw;
+
   DBG("Serial port speed requested to be set to %d bauds.", uiPortSpeed);
   // Set port speed (Input and Output)
   switch(uiPortSpeed) {
@@ -298,7 +300,7 @@ void rs232_set_speed(const serial_port sp, const uint32_t uiPortSpeed)
       ERR("Unable to set serial port speed to %d bauds. Speed value must be one of these constants: 9600 (default), 19200, 38400, 57600, 115200, 230400 or 460800.", uiPortSpeed);
   };
 
-  serial_port_windows* spw = (serial_port_windows*)sp;
+  spw = (serial_port_windows*)sp;
   spw->dcb.BaudRate = uiPortSpeed;
   if (!SetCommState(spw->hPort, &spw->dcb))
   {
