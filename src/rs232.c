@@ -311,7 +311,7 @@ void rs232_set_speed(serial_port sp, const uint32_t uiPortSpeed)
 uint32_t rs232_get_speed(const serial_port sp)
 {
   const serial_port_windows* spw = (serial_port_windows*)sp;
-  if (!GetCommState(spw->hPort, &spw->dcb))
+  if (!GetCommState(spw->hPort, (serial_port)&spw->dcb))
     return spw->dcb.BaudRate;
   
   return 0;
