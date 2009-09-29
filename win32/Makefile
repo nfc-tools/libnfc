@@ -17,7 +17,7 @@ LDFLAGS = -INCREMENTAL:NO -NOLOGO -LIBPATH:"libusb" -MANIFEST:NO -OPT:REF -OPT:I
 OBJS = dev_pn531.obj dev_pn533.obj dev_acr122.obj dev_arygon.obj bitutils.obj rs232.obj libnfc.obj
 HEADERS = dev_acr122.h bitutils.h defines.h libnfc.h
 LIBNFC = libnfc
-EXES = nfc-anticol.exe nfc-list.exe nfc-emulate.exe nfc-relay.exe nfc-mftool.exe
+EXES = nfc-anticol.exe nfc-list.exe nfc-emulate.exe nfc-relay.exe nfc-mftool.exe nfc-mfultool.exe nfc-initiator.exe nfc-target.exe
 
 all: $(LIBNFC) $(EXES)
 
