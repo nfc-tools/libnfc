@@ -29,7 +29,7 @@ libnfc: $(OBJS)
 
 % : %.c $(LIBNFC)
 	$(CC) $(CFLAGS) $< 
-	$(LD) /OUT:$@.exe -SUBSYSTEM:CONSOLE  $(LDFLAGS) $(OBJS) $@
+	$(LD) /OUT:nfc-$@.exe -SUBSYSTEM:CONSOLE  $(LDFLAGS) $(OBJS) $@
 
 clean: 
 	rm -f $(OBJS) $(LIBNFC) $(EXES)
