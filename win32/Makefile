@@ -28,7 +28,7 @@ libnfc:  $(OBJS)
 	$(LD) $(LDFLAGS) -OUT:$(LIBNFC).dll -DLL -DEF:"libnfc.def" -SUBSYSTEM:WINDOWS $(OBJS)
 
 nfc-%.exe : %.c $(LIBNFC)
-	$(CC) $(CFLAGS) $< /link /OUT:$@ -SUBSYSTEM:CONSOLE $(LDFLAGS) $(OBJS)
+	$(CC) $(CFLAGS) $< /link /OUT:$@ -SUBSYSTEM:CONSOLE $(LDFLAGS) $(LIBNFC).lib
 
 clean: 
 	del /Q $(OBJS) $(LIBNFC).dll $(LIBNFC).exp $(LIBNFC).lib *.obj $(EXES)
