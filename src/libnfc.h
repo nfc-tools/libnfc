@@ -110,7 +110,7 @@ bool nfc_initiator_select_tag(const dev_info* pdi, const init_modulation im, con
  * The NFC device will try to find the available target. The standards (ISO18092 and ECMA-340) describe the modulation that can be used for reader to passive communications.
  * @note tag_info_dep will be returned when the target was acquired successfully.
  */
-bool nfc_initiator_select_dep_target(const dev_info* pdi, const init_modulation im, const byte_t* pbtPidData, const uint32_t szPidDataLen, const byte_t* pbtNFCID3i, const uint32_t szNFCID3iDataLen, const byte_t *pbtGbData, const uint32_t szGbDataLen, tag_info* pti);
+bool nfc_initiator_select_dep_target(const dev_info* pdi, const init_modulation im, const byte_t* pbtPidData, const size_t szPidDataLen, const byte_t* pbtNFCID3i, const size_t szNFCID3iDataLen, const byte_t *pbtGbData, const size_t szGbDataLen, tag_info* pti);
 /**
  * @fn nfc_initiator_deselect_tag(const dev_info* pdi);
  * @brief Deselect a selected passive or emulated tag
@@ -207,7 +207,7 @@ bool nfc_target_receive_bytes(const dev_info* pdi, byte_t* pbtRx, size_t* pszRxL
 bool nfc_target_receive_dep_bytes(const dev_info* pdi, byte_t* pbtRx, size_t* pszRxLen);
 
 /**
- * @fn nfc_target_send_bits(const dev_info* pdi, const byte_t* pbtTx, const uint32_t szTxBits, const byte_t* pbtTxPar)
+ * @fn nfc_target_send_bits(const dev_info* pdi, const byte_t* pbtTx, const size_t szTxBits, const byte_t* pbtTxPar)
  * @brief Send raw bit-frames
  * @return Returns true if action was successfully performed; otherwise returns false.
  *
@@ -216,7 +216,7 @@ bool nfc_target_receive_dep_bytes(const dev_info* pdi, byte_t* pbtRx, size_t* ps
 bool nfc_target_send_bits(const dev_info* pdi, const byte_t* pbtTx, const size_t szTxBits, const byte_t* pbtTxPar);
 
 /**
- * @fn nfc_target_send_bytes(const dev_info* pdi, const byte_t* pbtTx, const uint32_t szTxLen)
+ * @fn nfc_target_send_bytes(const dev_info* pdi, const byte_t* pbtTx, const size_t szTxLen)
  * @brief Send bytes and APDU frames
  * @return Returns true if action was successfully performed; otherwise returns false.
  *

@@ -187,10 +187,10 @@ bool dev_acr122_transceive(const dev_spec ds, const byte_t* pbtTx, const size_t 
   // Prepare and transmit the send buffer
   memcpy(abtTxBuf+5,pbtTx,szTxLen);
   szRxBufLen = sizeof(abtRxBuf);
-  #ifdef DEBUG
-    printf(" TX: ");
-    print_hex(abtTxBuf,szTxLen+5);
-  #endif
+#ifdef DEBUG
+  printf(" TX: ");
+  print_hex(abtTxBuf,szTxLen+5);
+#endif
 
   if (pdsa->ioCard.dwProtocol == SCARD_PROTOCOL_UNDEFINED)
   {
@@ -213,10 +213,10 @@ bool dev_acr122_transceive(const dev_spec ds, const byte_t* pbtTx, const size_t 
     if (SCardTransmit(pdsa->hCard,&(pdsa->ioCard),abtRxCmd,szRxCmdLen,NULL,abtRxBuf,(void*)&szRxBufLen) != SCARD_S_SUCCESS) return false;
   }
 
-  #ifdef DEBUG
-    printf(" RX: ");
-    print_hex(abtRxBuf,szRxBufLen);
-  #endif
+#ifdef DEBUG
+  printf(" RX: ");
+  print_hex(abtRxBuf,szRxBufLen);
+#endif
 
   // When the answer should be ignored, just return a succesful result
   if (pbtRx == NULL || pszRxLen == NULL) return true;
@@ -224,7 +224,7 @@ bool dev_acr122_transceive(const dev_spec ds, const byte_t* pbtTx, const size_t 
   // Make sure we have an emulated answer that fits the return buffer
   if (szRxBufLen < 4 || (szRxBufLen-4) > *pszRxLen) return false;
   // Wipe out the 4 APDU emulation bytes: D5 4B .. .. .. 90 00
-  *pszRxLen = ((uint32_t)szRxBufLen)-4;
+  *pszRxLen = ((size_t)szRxBufLen)-4;
   memcpy(pbtRx,abtRxBuf+2,*pszRxLen);
 
   // Transmission went successful

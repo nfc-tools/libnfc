@@ -173,7 +173,7 @@ bool rs232_cts(const serial_port sp)
   return (status & TIOCM_CTS);
 }
 
-bool rs232_receive(const serial_port sp, byte_t* pbtRx, uint32_t* puiRxLen)
+bool rs232_receive(const serial_port sp, byte_t* pbtRx, size_t* pszRxLen)
 {
   int iResult;
   int byteCount;
@@ -187,13 +187,13 @@ bool rs232_receive(const serial_port sp, byte_t* pbtRx, uint32_t* puiRxLen)
   // Read error
   if (iResult < 0) {
     DBG("RX error.");
-    *puiRxLen = 0;
+    *pszRxLen = 0;
     return false;
   }
   // Read time-out
   if (iResult == 0) {
     DBG("RX time-out.");
-    *puiRxLen = 0;
+    *pszRxLen = 0;
     return false;
   }
 
@@ -203,20 +203,20 @@ bool rs232_receive(const serial_port sp, byte_t* pbtRx, uint32_t* puiRxLen)
   // Empty buffer
   if (byteCount == 0) {
     DBG("RX empty buffer.");
-    *puiRxLen = 0;
+    *pszRxLen = 0;
     return false;
   }
 
   // There is something available, read the data
-  *puiRxLen = read(((serial_port_unix*)sp)->fd,pbtRx,byteCount);
+  *pszRxLen = read(((serial_port_unix*)sp)->fd,pbtRx,byteCount);
 
-  return (*puiRxLen > 0);
+  return (*pszRxLen > 0);
 }
 
-bool rs232_send(const serial_port sp, const byte_t* pbtTx, const uint32_t uiTxLen)
+bool rs232_send(const serial_port sp, const byte_t* pbtTx, const size_t szTxLen)
 {
   int iResult;
-  iResult = write(((serial_port_unix*)sp)->fd,pbtTx,uiTxLen);
+  iResult = write(((serial_port_unix*)sp)->fd,pbtTx,szTxLen);
   return (iResult >= 0);
 }
 
@@ -328,16 +328,16 @@ bool rs232_cts(const serial_port sp)
   return (dwStatus & MS_CTS_ON);
 }
 
-bool rs232_receive(const serial_port sp, byte_t* pbtRx, uint32_t* puiRxLen)
+bool rs232_receive(const serial_port sp, byte_t* pbtRx, size_t* pszRxLen)
 {
-  ReadFile(((serial_port_windows*)sp)->hPort,pbtRx,*puiRxLen,(LPDWORD)puiRxLen,NULL);
-  return (*puiRxLen != 0);
+  ReadFile(((serial_port_windows*)sp)->hPort,pbtRx,*pszRxLen,(LPDWORD)pszRxLen,NULL);
+  return (*pszRxLen != 0);
 }
 
-bool rs232_send(const serial_port sp, const byte_t* pbtTx, const uint32_t uiTxLen)
+bool rs232_send(const serial_port sp, const byte_t* pbtTx, const size_t szTxLen)
 {
   DWORD dwTxLen = 0;
-  return WriteFile(((serial_port_windows*)sp)->hPort,pbtTx,uiTxLen,&dwTxLen,NULL);
+  return WriteFile(((serial_port_windows*)sp)->hPort,pbtTx,szTxLen,&dwTxLen,NULL);
   return (dwTxLen != 0);
 }
 
