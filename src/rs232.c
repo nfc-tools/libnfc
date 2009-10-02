@@ -117,7 +117,11 @@ void rs232_set_speed(serial_port sp, const uint32_t uiPortSpeed)
     break;
 #endif
     default:
+#ifdef B460800
       ERR("Unable to set serial port speed to %d bauds. Speed value must be one of these constants: 9600 (default), 19200, 38400, 57600, 115200, 230400 or 460800.", uiPortSpeed);
+#else
+      ERR("Unable to set serial port speed to %d bauds. Speed value must be one of these constants: 9600 (default), 19200, 38400, 57600, 115200 or 230400.", uiPortSpeed);
+#endif
   };
   const serial_port_unix* spu = (serial_port_unix*)sp;
   cfsetispeed(&spu->tiNew, stPortSpeed);

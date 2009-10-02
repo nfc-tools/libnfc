@@ -28,10 +28,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 static byte_t abtReaderRx[MAX_FRAME_LEN];
 static byte_t abtReaderRxPar[MAX_FRAME_LEN];
-static uint32_t uiReaderRxBits;
+static size_t szReaderRxBits;
 static byte_t abtTagRx[MAX_FRAME_LEN];
 static byte_t abtTagRxPar[MAX_FRAME_LEN];
-static uint32_t uiTagRxBits;
+static size_t szTagRxBits;
 static dev_info* pdiReader;
 static dev_info* pdiTag;
 
@@ -76,7 +76,7 @@ int main(int argc,char* argv[])
   printf("[+] Try to break out the auto-emulation, this requires a second reader!\n");
   printf("[+] To do this, please send any command after the anti-collision\n");
   printf("[+] For example, send a RATS command or use the \"nfc-anticol\" tool\n");
-  nfc_target_init(pdiTag,abtReaderRx,&uiReaderRxBits);
+  nfc_target_init(pdiTag,abtReaderRx,&szReaderRxBits);
   printf("[+] Configuring emulator settings\n");
   nfc_configure(pdiTag,DCO_HANDLE_CRC,false);
   nfc_configure(pdiTag,DCO_HANDLE_PARITY,false);
@@ -95,10 +95,10 @@ int main(int argc,char* argv[])
   while(true)
   {
     // Test if we received a frame from the reader
-    if (nfc_target_receive_bits(pdiTag,abtReaderRx,&uiReaderRxBits,abtReaderRxPar))
+    if (nfc_target_receive_bits(pdiTag,abtReaderRx,&szReaderRxBits,abtReaderRxPar))
     {
       // Drop down the field before sending a REQA command and start a new session
-      if (uiReaderRxBits == 7 && abtReaderRx[0] == 0x26)
+      if (szReaderRxBits == 7 && abtReaderRx[0] == 0x26)
       {
         // Drop down field for a very short time (original tag will reboot)
         nfc_configure(pdiReader,DCO_ACTIVATE_FIELD,false);
@@ -111,19 +111,19 @@ int main(int argc,char* argv[])
       if(!quiet_output)
       {
         printf("R: ");
-        print_hex_par(abtReaderRx,uiReaderRxBits,abtReaderRxPar);
+        print_hex_par(abtReaderRx,szReaderRxBits,abtReaderRxPar);
       }
       // Forward the frame to the original tag
-      if (nfc_initiator_transceive_bits(pdiReader,abtReaderRx,uiReaderRxBits,abtReaderRxPar,abtTagRx,&uiTagRxBits,abtTagRxPar))
+      if (nfc_initiator_transceive_bits(pdiReader,abtReaderRx,szReaderRxBits,abtReaderRxPar,abtTagRx,&szTagRxBits,abtTagRxPar))
       {
         // Redirect the answer back to the reader
-        nfc_target_send_bits(pdiTag,abtTagRx,uiTagRxBits,abtTagRxPar);
+        nfc_target_send_bits(pdiTag,abtTagRx,szTagRxBits,abtTagRxPar);
 
         // Print the tag frame to the screen
         if(!quiet_output)
         {
           printf("T: ");
-          print_hex_par(abtTagRx,uiTagRxBits,abtTagRxPar);
+          print_hex_par(abtTagRx,szTagRxBits,abtTagRxPar);
         }
       }
     }

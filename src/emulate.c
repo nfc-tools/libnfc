@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "messages.h"
 
 static byte_t abtRecv[MAX_FRAME_LEN];
-static uint32_t uiRecvBits;
+static size_t szRecvBits;
 static dev_info* pdi;
 
 // ISO14443A Anti-Collision response
@@ -49,7 +49,7 @@ void print_usage(void)
 int main(int argc, char *argv[])
 {
   byte_t* pbtTx = NULL;
-  uint32_t uiTxBits;
+  size_t szTxBits;
   bool quiet_output = false;
 
   int arg, i;
@@ -93,13 +93,13 @@ int main(int argc, char *argv[])
   printf("[+] Try to break out the auto-emulation, this requires a second reader!\n");
   printf("[+] To do this, please send any command after the anti-collision\n");
   printf("[+] For example, send a RATS command or use the \"nfc-anticol\" tool\n");
-  if (!nfc_target_init(pdi,abtRecv,&uiRecvBits))
+  if (!nfc_target_init(pdi,abtRecv,&szRecvBits))
   {
     printf("Error: Could not come out of auto-emulation, no command was received\n");
     return 1;
   }
   printf("[+] Received initiator command: ");
-  print_hex_bits(abtRecv,uiRecvBits);
+  print_hex_bits(abtRecv,szRecvBits);
   printf("[+] Configuring communication\n");
   nfc_configure(pdi,DCO_HANDLE_CRC,false);
   nfc_configure(pdi,DCO_HANDLE_PARITY,true);
@@ -108,48 +108,48 @@ int main(int argc, char *argv[])
   while(true)
   {
     // Test if we received a frame
-    if (nfc_target_receive_bits(pdi,abtRecv,&uiRecvBits,NULL))
+    if (nfc_target_receive_bits(pdi,abtRecv,&szRecvBits,NULL))
     {
       // Prepare the command to send back for the anti-collision request
-      switch(uiRecvBits)
+      switch(szRecvBits)
       {
         case 7: // Request or Wakeup
           pbtTx = abtAtqa;
-          uiTxBits = 16;
+          szTxBits = 16;
           // New anti-collsion session started
           if (!quiet_output) printf("\n"); 
         break;
 
         case 16: // Select All
           pbtTx = abtUidBcc;
-          uiTxBits = 40;
+          szTxBits = 40;
         break;
 
         case 72: // Select Tag
           pbtTx = abtSak;
-          uiTxBits = 24;
+          szTxBits = 24;
         break;
 
         default: // unknown length?
-          uiTxBits = 0;
+          szTxBits = 0;
         break;
       }
 
       if(!quiet_output)
       {
         printf("R: ");
-        print_hex_bits(abtRecv,uiRecvBits);
+        print_hex_bits(abtRecv,szRecvBits);
       }
 
       // Test if we know how to respond
-      if(uiTxBits)
+      if(szTxBits)
       {
         // Send and print the command to the screen
-        nfc_target_send_bits(pdi,pbtTx,uiTxBits,NULL);
+        nfc_target_send_bits(pdi,pbtTx,szTxBits,NULL);
         if(!quiet_output)
         {
           printf("T: ");
-          print_hex_bits(pbtTx,uiTxBits);
+          print_hex_bits(pbtTx,szTxBits);
         }
       }
     }

@@ -69,14 +69,14 @@ byte_t oddparity(const byte_t bt)
   return OddParity[bt];
 }
 
-void oddparity_bytes(const byte_t* pbtData, const uint32_t uiLen, byte_t* pbtPar)
+void oddparity_bytes(const byte_t* pbtData, const size_t szLen, byte_t* pbtPar)
 {
-  uint32_t uiByteNr;
+  size_t szByteNr;
 
   // Calculate the parity bits for the command
-  for (uiByteNr=0; uiByteNr<uiLen; uiByteNr++)
+  for (szByteNr=0; szByteNr<szLen; szByteNr++)
   {
-    pbtPar[uiByteNr] = OddParity[pbtData[uiByteNr]];
+    pbtPar[szByteNr] = OddParity[pbtData[szByteNr]];
   }
 }
 
@@ -85,11 +85,11 @@ byte_t mirror(byte_t bt)
   return ByteMirror[bt];
 }
 
-void mirror_bytes(byte_t *pbts, uint32_t uiLen)
+void mirror_bytes(byte_t *pbts, size_t szLen)
 {
-  uint32_t btNr;
+  size_t szByteNr;
 
-  for (btNr=0; btNr<uiLen; btNr++)
+  for (szByteNr=0; szByteNr<szLen; szByteNr++)
   {
     *pbts = ByteMirror[*pbts];
     pbts++;
@@ -120,7 +120,7 @@ uint64_t swap_endian64(const void* pui64)
   return (((ui64N&0xFF)<<56)+((ui64N&0xFF00)<<40)+((ui64N&0xFF0000)<<24)+((ui64N&0xFF000000)<<8)+((ui64N&0xFF00000000ull)>>8)+((ui64N&0xFF0000000000ull)>>24)+((ui64N&0xFF000000000000ull)>>40)+((ui64N&0xFF00000000000000ull)>>56));
 }
 
-void append_iso14443a_crc(byte_t* pbtData, uint32_t uiLen)
+void append_iso14443a_crc(byte_t* pbtData, size_t szLen)
 {
   byte_t bt;
   uint32_t wCrc = 0x6363;
@@ -130,57 +130,57 @@ void append_iso14443a_crc(byte_t* pbtData, uint32_t uiLen)
     bt = (bt^(byte_t)(wCrc & 0x00FF));
     bt = (bt^(bt<<4));
     wCrc = (wCrc >> 8)^((uint32_t)bt << 8)^((uint32_t)bt<<3)^((uint32_t)bt>>4);
-  } while (--uiLen);
+  } while (--szLen);
 
   *pbtData++ = (byte_t) (wCrc & 0xFF);
   *pbtData = (byte_t) ((wCrc >> 8) & 0xFF);
 }
 
-void print_hex(const byte_t* pbtData, const uint32_t uiBytes)
+void print_hex(const byte_t* pbtData, const size_t szBytes)
 {
-  uint32_t uiPos;
+  size_t szPos;
 
-  for (uiPos=0; uiPos < uiBytes; uiPos++)
+  for (szPos=0; szPos < szBytes; szPos++)
   {
-    printf("%02x  ",pbtData[uiPos]);
+    printf("%02x  ",pbtData[szPos]);
   }
   printf("\n");
 }
 
-void print_hex_bits(const byte_t* pbtData, const uint32_t uiBits)
+void print_hex_bits(const byte_t* pbtData, const size_t szBits)
 {
-  uint32_t uiPos;
-  uint32_t uiBytes = uiBits/8;
+  size_t szPos;
+  size_t szBytes = szBits/8;
 
-  for (uiPos=0; uiPos < uiBytes; uiPos++)
+  for (szPos=0; szPos < szBytes; szPos++)
   {
-    printf("%02x  ",pbtData[uiPos]);
+    printf("%02x  ",pbtData[szPos]);
   }
 
   // Print the rest bits, these cannot have no parity bit
-  if (uiBits%8 != 0) printf("%02x",pbtData[uiBytes]);
+  if (szBits%8 != 0) printf("%02x",pbtData[szBytes]);
 
   printf("\n");
 }
 
-void print_hex_par(const byte_t* pbtData, const uint32_t uiBits, const byte_t* pbtDataPar)
+void print_hex_par(const byte_t* pbtData, const size_t szBits, const byte_t* pbtDataPar)
 {
-  uint32_t uiPos;
-  uint32_t uiBytes = uiBits/8;
+  size_t szPos;
+  size_t szBytes = szBits/8;
 
-  for (uiPos=0; uiPos < uiBytes; uiPos++)
+  for (szPos=0; szPos < szBytes; szPos++)
   {
-    printf("%02x",pbtData[uiPos]);
-    if (OddParity[pbtData[uiPos]] != pbtDataPar[uiPos])
+    printf("%02x",pbtData[szPos]);
+    if (OddParity[pbtData[szPos]] != pbtDataPar[szPos])
     {
       printf("! ");
     } else {
       printf("  ");
     }
   }
-  
+
   // Print the rest bits, these cannot have no parity bit
-  if (uiBits%8 != 0) printf("%02x",pbtData[uiBytes]);
+  if (szBits%8 != 0) printf("%02x",pbtData[szBytes]);
 
   printf("\n");
 }

@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  * Define libnfc specific types: typedef, enum, struct, etc.
  */
-
+#include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -77,13 +77,13 @@ typedef struct {
  */
 typedef struct {
   /** Driver name */
-  char* driver;
+  char* pcDriver;
   /** Port (i.e. /dev/ttyUSB2) */
-  char* port;
+  char* pcPort;
   /** Port speed (i.e. 115200) */
-  uint32_t speed;
+  uint32_t uiSpeed;
   /** Device index for backward compatibility (used to choose one specific device in USB or PSCS devices list) */
-  uint32_t index;
+  uint32_t uiIndex;
 } nfc_device_desc_t;
 
 /**
@@ -94,9 +94,9 @@ struct dev_callbacks {
   /** Driver name */
   const char* acDriver;
   /** Connect callback */
-  dev_info* (*connect)(const nfc_device_desc_t* device_desc);
+  dev_info* (*connect)(const nfc_device_desc_t* pndd);
   /** Transceive callback */
-  bool (*transceive)(const dev_spec ds, const byte_t* pbtTx, const uint32_t uiTxLen, byte_t* pbtRx, uint32_t* puiRxLen);
+  bool (*transceive)(const dev_spec ds, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen);
   /** Disconnect callback */
   void (*disconnect)(dev_info* pdi);
 };
@@ -164,9 +164,9 @@ typedef struct {
 typedef struct {
   byte_t abtAtqa[2];
   byte_t btSak;
-  uint32_t uiUidLen;
+  size_t szUidLen;
   byte_t abtUid[10];
-  uint32_t uiAtsLen;
+  size_t szAtsLen;
   byte_t abtAts[36];
 }tag_info_iso14443a;
 
@@ -175,7 +175,7 @@ typedef struct {
  * @brief NFC FeLiCa tag information
  */
 typedef struct {
-  uint32_t uiLen;
+  size_t szLen;
   byte_t btResCode;
   byte_t abtId[8];
   byte_t abtPad[8];
@@ -194,7 +194,7 @@ typedef struct {
   byte_t btParam3;
   byte_t btParam4;
   byte_t btCid;
-  uint32_t uiInfLen;
+  size_t szInfLen;
   byte_t abtInf[64];
 }tag_info_iso14443b;
 

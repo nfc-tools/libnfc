@@ -32,10 +32,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #define SAK_FLAG_ATS_SUPPORTED 0x20
 
 static byte_t abtRx[MAX_FRAME_LEN];
-static uint32_t uiRxBits;
-static uint32_t uiRxLen;
+static size_t szRxBits;
+static size_t szRxLen;
 static byte_t abtUid[10];
-static uint32_t uiUidLen = 4;
+static size_t szUidLen = 4;
 static dev_info* pdi;
 
 bool quiet_output = false;
@@ -47,23 +47,23 @@ byte_t abtSelectTag [9] = { 0x93,0x70,0x00,0x00,0x00,0x00,0x00,0x00,0x00 };
 byte_t abtRats      [4] = { 0xe0,0x50,0xbc,0xa5 };
 byte_t abtHalt      [4] = { 0x50,0x00,0x57,0xcd };
 
-bool transmit_bits(const byte_t* pbtTx, const uint32_t uiTxBits)
+bool transmit_bits(const byte_t* pbtTx, const size_t szTxBits)
 {
   // Show transmitted command
   if(!quiet_output)
   {
     printf("R: "); 
-    print_hex_bits(pbtTx,uiTxBits);
+    print_hex_bits(pbtTx,szTxBits);
   }
 
   // Transmit the bit frame command, we don't use the arbitrary parity feature
-  if (!nfc_initiator_transceive_bits(pdi,pbtTx,uiTxBits,NULL,abtRx,&uiRxBits,NULL)) return false;
+  if (!nfc_initiator_transceive_bits(pdi,pbtTx,szTxBits,NULL,abtRx,&szRxBits,NULL)) return false;
 
   // Show received answer
   if(!quiet_output)
   {
     printf("T: "); 
-    print_hex_bits(abtRx,uiRxBits);
+    print_hex_bits(abtRx,szRxBits);
   }
 
   // Succesful transfer
@@ -71,23 +71,23 @@ bool transmit_bits(const byte_t* pbtTx, const uint32_t uiTxBits)
 }
 
 
-bool transmit_bytes(const byte_t* pbtTx, const uint32_t uiTxLen)
+bool transmit_bytes(const byte_t* pbtTx, const size_t szTxLen)
 {
   // Show transmitted command
   if(!quiet_output)
   {
     printf("R: "); 
-    print_hex(pbtTx,uiTxLen);
+    print_hex(pbtTx,szTxLen);
   }
 
   // Transmit the command bytes
-  if (!nfc_initiator_transceive_bytes(pdi,pbtTx,uiTxLen,abtRx,&uiRxLen)) return false;
+  if (!nfc_initiator_transceive_bytes(pdi,pbtTx,szTxLen,abtRx,&szRxLen)) return false;
 
   // Show received answer
   if(!quiet_output)
   {
     printf("T: "); 
-    print_hex(abtRx,uiRxLen);
+    print_hex(abtRx,szRxLen);
   }
 
   // Succesful transfer
@@ -140,7 +140,7 @@ int main(int argc,char* argv[])
 
   // Enable field so more power consuming cards can power themselves up
   nfc_configure(pdi,DCO_ACTIVATE_FIELD,true);
-  
+
   printf("\nConnected to NFC reader: %s\n\n",pdi->acName);
 
   // Send the 7 bits request command specified in ISO 14443A (0x26)
@@ -153,7 +153,7 @@ int main(int argc,char* argv[])
 
   // Anti-collision
   transmit_bytes(abtSelectAll,2);
-  
+
   // Save the UID
   memcpy(abtUid,abtRx,4);
   memcpy(abtSelectTag+2,abtRx,5);
@@ -163,7 +163,7 @@ int main(int argc,char* argv[])
   // Test if we are dealing with a 4 bytes uid
   if (abtUid[0]!= 0x88)
   {
-    uiUidLen = 4;
+    szUidLen = 4;
   } else {
     // We have to do the anti-collision for cascade level 2
     abtSelectAll[0] = 0x95;
@@ -171,23 +171,23 @@ int main(int argc,char* argv[])
 
     // Anti-collision
     transmit_bytes(abtSelectAll,2);
-    
+
     // Save the UID
     memcpy(abtUid+4,abtRx,4);
     memcpy(abtSelectTag+2,abtRx,5);
     append_iso14443a_crc(abtSelectTag,7);
     transmit_bytes(abtSelectTag,9);
-    uiUidLen = 7;
+    szUidLen = 7;
   }
-  
+
   // Request ATS, this only applies to tags that support ISO 14443A-4
   if (abtRx[0] & SAK_FLAG_ATS_SUPPORTED) transmit_bytes(abtRats,4);
 
   // Done, halt the tag now
   transmit_bytes(abtHalt,4);
-  
+
   printf("\nFound tag with UID: ");
-  if (uiUidLen == 4)
+  if (szUidLen == 4)
   {
     printf("%08x\n",swap_endian32(abtUid));
   } else {

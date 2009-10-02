@@ -61,7 +61,6 @@ bool write_card()
   bool bFailure = false;
 
   for (page = 0x4; page <= 0xF; page++) {
-    
       // Show if the readout went well
       if (bFailure)
       {
@@ -81,7 +80,7 @@ bool write_card()
         }
       }
       fflush(stdout);
-    
+
       // Make sure a earlier write did not fail
       if (!bFailure)
       {
@@ -96,7 +95,7 @@ bool write_card()
   }
   printf("%c|\n",(bFailure)?'x':'.');
   fflush(stdout);
-  
+
   return true;
 }
 
@@ -155,7 +154,7 @@ int main(int argc, const char* argv[])
 
   // Drop the field for a while
   nfc_configure(pdi,DCO_ACTIVATE_FIELD,false);
-  
+
   // Let the reader only try once to find a tag
   nfc_configure(pdi,DCO_INFINITE_SELECT,false);
   nfc_configure(pdi,DCO_HANDLE_CRC,true);

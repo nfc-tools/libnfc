@@ -4,20 +4,20 @@
 int main(int argc, const char *argv[])
 {
   byte_t abtRecv[MAX_FRAME_LEN];
-  uint32_t uiRecvBits;
+  size_t szRecvBits;
   byte_t send[] = "Hello Mars!";
   dev_info *pdi = nfc_connect(NULL);
 
-  if (!pdi || !nfc_target_init(pdi, abtRecv, &uiRecvBits)) {
+  if (!pdi || !nfc_target_init(pdi, abtRecv, &szRecvBits)) {
     printf("unable to connect or initialize\n");
     return 1;
   }
 
-  if (!nfc_target_receive_dep_bytes(pdi, abtRecv, &uiRecvBits)) {
+  if (!nfc_target_receive_dep_bytes(pdi, abtRecv, &szRecvBits)) {
     printf("unable to receive data\n");
     return 1;
   }
-  abtRecv[uiRecvBits] = 0;
+  abtRecv[szRecvBits] = 0;
   printf("Received: %s\n", abtRecv);
   printf("Sending : %s\n", send);
 

@@ -39,11 +39,12 @@ int main(int argc, const char* argv[])
 
   // If specific device is wanted, i.e. an ARYGON device on /dev/ttyUSB0
   /*
-  nfc_device_desc_t device_desc;
-  device_desc.driver = "ARYGON";
-  device_desc.port = "/dev/ttyUSB0";
+  nfc_device_desc_t ndd;
+  ndd.pcDriver = "ARYGON";
+  ndd.pcPort = "/dev/ttyUSB0";
+  ndd.uiSpeed = 115200;
 
-  pdi = nfc_connect(&device_desc);
+  pdi = nfc_connect(&ndd);
   */
 
   if (pdi == INVALID_DEVICE_INFO)
@@ -66,19 +67,19 @@ int main(int argc, const char* argv[])
   // Enable field so more power consuming cards can power themselves up
   nfc_configure(pdi,DCO_ACTIVATE_FIELD,true);
 
-  printf("\nConnected to NFC reader: %s\n\n",pdi->acName);
+  printf("Connected to NFC reader: %s\n\n",pdi->acName);
 
   // Poll for a ISO14443A (MIFARE) tag
   if (nfc_initiator_select_tag(pdi,IM_ISO14443A_106,NULL,0,&ti))
   {
     printf("The following (NFC) ISO14443A tag was found:\n\n");
     printf("    ATQA (SENS_RES): "); print_hex(ti.tia.abtAtqa,2);
-    printf("       UID (NFCID%c): ",(ti.tia.abtUid[0]==0x08?'3':'1')); print_hex(ti.tia.abtUid,ti.tia.uiUidLen);
+    printf("       UID (NFCID%c): ",(ti.tia.abtUid[0]==0x08?'3':'1')); print_hex(ti.tia.abtUid,ti.tia.szUidLen);
     printf("      SAK (SEL_RES): "); print_hex(&ti.tia.btSak,1);
-    if (ti.tia.uiAtsLen)
+    if (ti.tia.szAtsLen)
     {
       printf("          ATS (ATR): ");
-      print_hex(ti.tia.abtAts,ti.tia.uiAtsLen);
+      print_hex(ti.tia.abtAts,ti.tia.szAtsLen);
     }
   }
 
@@ -97,9 +98,9 @@ int main(int argc, const char* argv[])
     printf("  ATQB: "); print_hex(ti.tib.abtAtqb,12);
     printf("    ID: "); print_hex(ti.tib.abtId,4);
     printf("   CID: %02x\n",ti.tib.btCid);
-    if (ti.tib.uiInfLen>0)
+    if (ti.tib.szInfLen>0)
     {
-      printf("   INF: "); print_hex(ti.tib.abtInf,ti.tib.uiInfLen);
+      printf("   INF: "); print_hex(ti.tib.abtInf,ti.tib.szInfLen);
     }
     printf("PARAMS: %02x %02x %02x %02x\n",ti.tib.btParam1,ti.tib.btParam2,ti.tib.btParam3,ti.tib.btParam4);
   }

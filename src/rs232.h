@@ -54,8 +54,8 @@ uint32_t rs232_get_speed(const serial_port sp);
 
 bool rs232_cts(const serial_port sp);
 
-bool rs232_receive(const serial_port sp, byte_t* pbtRx, uint32_t* puiRxLen);
-bool rs232_send(const serial_port sp, const byte_t* pbtTx, const uint32_t uiTxLen);
+bool rs232_receive(const serial_port sp, byte_t* pbtRx, size_t* pszRxLen);
+bool rs232_send(const serial_port sp, const byte_t* pbtTx, const size_t szTxLen);
 
 #endif // _LIBNFC_RS232_H_
 

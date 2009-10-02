@@ -178,7 +178,7 @@ bool write_card()
 
       // Set the authentication information (uid)
       memcpy(mp.mpa.abtUid,ti.tia.abtUid,4);
-      
+
       // Determin if we should use the a or the b key
       if (bUseKeyA)
       {
@@ -196,7 +196,7 @@ bool write_card()
         return false;
       }
     }
-    
+
     if (is_trailer_block(uiBlock))
     {
       // Copy the keys over from our key dump and store the retrieved access bits
@@ -206,7 +206,7 @@ bool write_card()
 
       // Try to write the trailer
       nfc_initiator_mifare_cmd(pdi,MC_WRITE,uiBlock,&mp);
-    
+
     } else {
 
       // The first block 0x00 is read only, skip this
@@ -223,12 +223,12 @@ bool write_card()
   }
   printf("%c|\n",(bFailure)?'x':'.');
   fflush(stdout);
-  
+
   return true;
 }
 
 int main(int argc, const char* argv[])
-{			
+{
   bool b4K;
   bool bReadAction;
   byte_t* pbtUID;
@@ -301,7 +301,7 @@ int main(int argc, const char* argv[])
 
   // Drop the field for a while
   nfc_configure(pdi,DCO_ACTIVATE_FIELD,false);
-  
+
   // Let the reader only try once to find a tag
   nfc_configure(pdi,DCO_INFINITE_SELECT,false);
   nfc_configure(pdi,DCO_HANDLE_CRC,true);

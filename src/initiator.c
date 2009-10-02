@@ -7,7 +7,7 @@ int main(int argc, const char *argv[])
   dev_info *pdi;
   tag_info ti;
   byte_t abtRecv[MAX_FRAME_LEN];
-  uint32_t uiRecvBits;
+  size_t szRecvBits;
   byte_t send[] = "Hello World!";
 
   pdi = nfc_connect(NULL);
@@ -23,12 +23,12 @@ int main(int argc, const char *argv[])
   if (!nfc_initiator_transceive_dep_bytes(pdi,
 					  send,
 					  strlen(send), abtRecv,
-					  &uiRecvBits)) {
+					  &szRecvBits)) {
     printf("unable to send data\n");
     return 1;
   }
 
-  abtRecv[uiRecvBits] = 0;
+  abtRecv[szRecvBits] = 0;
   printf("Received: %s\n", abtRecv);
 
   nfc_initiator_deselect_tag(pdi);

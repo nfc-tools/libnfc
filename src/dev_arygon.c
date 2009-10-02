@@ -104,14 +104,14 @@ dev_info* dev_arygon_connect(const nfc_device_desc_t* pndd)
     // Test if we have found a device
     if (uiDevNr == MAX_DEVICES) return INVALID_DEVICE_INFO;
   } else {
-    DBG("Connecting to: %s at %d bauds.",pndd->port, pndd->speed);
-    strcpy(acConnect,pndd->port);
+    DBG("Connecting to: %s at %d bauds.",pndd->pcPort, pndd->uiSpeed);
+    strcpy(acConnect,pndd->pcPort);
     sp = rs232_open(acConnect);
     if (sp == INVALID_SERIAL_PORT) ERR("Invalid serial port: %s",acConnect);
     if (sp == CLAIMED_SERIAL_PORT) ERR("Serial port already claimed: %s",acConnect);
     if ((sp == CLAIMED_SERIAL_PORT) || (sp == INVALID_SERIAL_PORT)) return INVALID_DEVICE_INFO;
 
-    rs232_set_speed(sp, pndd->speed);
+    rs232_set_speed(sp, pndd->uiSpeed);
   }
 
   DBG("Successfully connected to: %s",acConnect);
@@ -134,35 +134,35 @@ void dev_arygon_disconnect(dev_info* pdi)
   free(pdi);
 }
 
-bool dev_arygon_transceive(const dev_spec ds, const byte_t* pbtTx, const uint32_t uiTxLen, byte_t* pbtRx, uint32_t* puiRxLen)
+bool dev_arygon_transceive(const dev_spec ds, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen)
 {
   byte_t abtTxBuf[BUFFER_LENGTH] = { DEV_ARYGON_PROTOCOL_TAMA, 0x00, 0x00, 0xff }; // Every packet must start with "00 00 ff"
   byte_t abtRxBuf[BUFFER_LENGTH];
-  uint32_t uiRxBufLen = BUFFER_LENGTH;
-  uint32_t uiPos;
+  size_t szRxBufLen = BUFFER_LENGTH;
+  size_t szPos;
 
   // Packet length = data length (len) + checksum (1) + end of stream marker (1)
-  abtTxBuf[4] = uiTxLen;
+  abtTxBuf[4] = szTxLen;
   // Packet length checksum
   abtTxBuf[5] = BUFFER_LENGTH - abtTxBuf[4];
   // Copy the PN53X command into the packet buffer
-  memmove(abtTxBuf+6,pbtTx,uiTxLen);
+  memmove(abtTxBuf+6,pbtTx,szTxLen);
 
   // Calculate data payload checksum
-  abtTxBuf[uiTxLen+6] = 0;
-  for(uiPos=0; uiPos < uiTxLen; uiPos++) 
+  abtTxBuf[szTxLen+6] = 0;
+  for(szPos=0; szPos < szTxLen; szPos++) 
   {
-    abtTxBuf[uiTxLen+6] -= abtTxBuf[uiPos+6];
+    abtTxBuf[szTxLen+6] -= abtTxBuf[szPos+6];
   }
 
   // End of stream marker
-  abtTxBuf[uiTxLen+7] = 0;
+  abtTxBuf[szTxLen+7] = 0;
 
 #ifdef DEBUG
   printf(" TX: ");
-  print_hex(abtTxBuf,uiTxLen+8);
+  print_hex(abtTxBuf,szTxLen+8);
 #endif
-  if (!rs232_send((serial_port)ds,abtTxBuf,uiTxLen+8)) {
+  if (!rs232_send((serial_port)ds,abtTxBuf,szTxLen+8)) {
     ERR("Unable to transmit data. (TX)");
     return false;
   }
@@ -182,25 +182,25 @@ bool dev_arygon_transceive(const dev_spec ds, const byte_t* pbtTx, const uint32_
    * For more information, see Issue 23 on development site : http://code.google.com/p/libnfc/issues/detail?id=23
    */
 
-  if (!rs232_receive((serial_port)ds,abtRxBuf,&uiRxBufLen)) {
+  if (!rs232_receive((serial_port)ds,abtRxBuf,&szRxBufLen)) {
     ERR("Unable to receive data. (RX)");
     return false;
   }
 
 #ifdef DEBUG
   printf(" RX: ");
-  print_hex(abtRxBuf,uiRxBufLen);
+  print_hex(abtRxBuf,szRxBufLen);
 #endif
 
   // When the answer should be ignored, just return a successful result
-  if(pbtRx == NULL || puiRxLen == NULL) return true;
+  if(pbtRx == NULL || pszRxLen == NULL) return true;
 
   // Only succeed when the result is at least 00 00 ff 00 ff 00 00 00 FF xx Fx Dx xx .. .. .. xx 00 (x = variable)
-  if(uiRxBufLen < 15) return false;
+  if(szRxBufLen < 15) return false;
 
   // Remove the preceding and appending bytes 00 00 ff 00 ff 00 00 00 FF xx Fx .. .. .. xx 00 (x = variable)
-  *puiRxLen = uiRxBufLen - 15;
-  memcpy(pbtRx, abtRxBuf+13, *puiRxLen);
+  *pszRxLen = szRxBufLen - 15;
+  memcpy(pbtRx, abtRxBuf+13, *pszRxLen);
 
   return true;
 }
