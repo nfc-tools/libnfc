@@ -31,6 +31,7 @@ available: http://www.teuniz.net/RS-232/index.html
 // Test if we are dealing with unix operating systems
 #ifndef _WIN32
 
+#include <termios.h>
 typedef struct termios term_info;
 typedef struct {
   int fd;           // Serial port file descriptor
@@ -124,8 +125,8 @@ void rs232_set_speed(serial_port sp, const uint32_t uiPortSpeed)
 #endif
   };
   const serial_port_unix* spu = (serial_port_unix*)sp;
-  cfsetispeed(&spu->tiNew, stPortSpeed);
-  cfsetospeed(&spu->tiNew, stPortSpeed);
+  cfsetispeed((struct termios*)&spu->tiNew, stPortSpeed);
+  cfsetospeed((struct termios*)&spu->tiNew, stPortSpeed);
   if( tcsetattr(spu->fd, TCSADRAIN, &spu->tiNew)  == -1)
   {
     ERR("Unable to apply new speed settings.");

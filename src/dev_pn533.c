@@ -168,8 +168,8 @@ bool dev_pn533_transceive(const dev_spec ds, const byte_t* pbtTx, const size_t s
 {
   size_t uiPos = 0;
   int ret = 0;
-  char abtTx[BUFFER_LENGTH] = { 0x00, 0x00, 0xff }; // Every packet must start with "00 00 ff"
-  char abtRx[BUFFER_LENGTH];
+  byte_t abtTx[BUFFER_LENGTH] = { 0x00, 0x00, 0xff }; // Every packet must start with "00 00 ff"
+  byte_t abtRx[BUFFER_LENGTH];
   dev_spec_pn533* pdsp = (dev_spec_pn533*)ds;
 
   // Packet length = data length (len) + checksum (1) + end of stream marker (1)
@@ -191,10 +191,10 @@ bool dev_pn533_transceive(const dev_spec ds, const byte_t* pbtTx, const size_t s
 
   #ifdef DEBUG
     printf(" TX: ");
-    print_hex((byte_t*)abtTx,szTxLen+7);
+    print_hex(abtTx,szTxLen+7);
   #endif
 
-  ret = usb_bulk_write(pdsp->pudh, pdsp->uiEndPointOut, abtTx, szTxLen+7, USB_TIMEOUT);
+  ret = usb_bulk_write(pdsp->pudh, pdsp->uiEndPointOut, (char*)abtTx, szTxLen+7, USB_TIMEOUT);
   if( ret < 0 )
   {
     #ifdef DEBUG
@@ -203,7 +203,7 @@ bool dev_pn533_transceive(const dev_spec ds, const byte_t* pbtTx, const size_t s
     return false;
   }
 
-  ret = usb_bulk_read(pdsp->pudh, pdsp->uiEndPointIn, abtRx, BUFFER_LENGTH, USB_TIMEOUT);
+  ret = usb_bulk_read(pdsp->pudh, pdsp->uiEndPointIn, (char*)abtRx, BUFFER_LENGTH, USB_TIMEOUT);
   if( ret < 0 )
   {
     #ifdef DEBUG
@@ -214,12 +214,12 @@ bool dev_pn533_transceive(const dev_spec ds, const byte_t* pbtTx, const size_t s
 
   #ifdef DEBUG
     printf(" RX: ");
-    print_hex((byte_t*)abtRx,ret);
+    print_hex(abtRx,ret);
   #endif
 
   if( ret == 6 )
   {
-    ret = usb_bulk_read(pdsp->pudh, pdsp->uiEndPointIn, abtRx, BUFFER_LENGTH, USB_TIMEOUT);
+    ret = usb_bulk_read(pdsp->pudh, pdsp->uiEndPointIn, (char*)abtRx, BUFFER_LENGTH, USB_TIMEOUT);
     if( ret < 0 )
     {
       #ifdef DEBUG
@@ -230,7 +230,7 @@ bool dev_pn533_transceive(const dev_spec ds, const byte_t* pbtTx, const size_t s
 
     #ifdef DEBUG
       printf(" RX: ");
-      print_hex((byte_t*)abtRx,ret);
+      print_hex(abtRx,ret);
     #endif
   }
 
@@ -244,7 +244,7 @@ bool dev_pn533_transceive(const dev_spec ds, const byte_t* pbtTx, const size_t s
   *pszRxLen = ret - 7 - 2;
 
   // Get register: nuke extra byte (awful hack)
-  if ((abtRx[5]==(char)0xd5) && (abtRx[6]==(char)0x07) && (*pszRxLen==2)) {
+  if ((abtRx[5]==0xd5) && (abtRx[6]==0x07) && (*pszRxLen==2)) {
       // printf("Got %02x %02x, keep %02x\n", abtRx[7], abtRx[8], abtRx[8]);
       *pszRxLen = (*pszRxLen) - 1;
       memcpy( pbtRx, abtRx + 8, *pszRxLen);

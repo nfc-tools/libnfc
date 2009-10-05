@@ -92,7 +92,7 @@ int main(int argc, const char* argv[])
   }
 
   // Poll for a ISO14443B tag
-  if (nfc_initiator_select_tag(pdi,IM_ISO14443B_106,"\x00",1,&ti))
+  if (nfc_initiator_select_tag(pdi,IM_ISO14443B_106,(byte_t*)"\x00",1,&ti))
   {
     printf("The following (NFC) ISO14443-B tag was found:\n\n");
     printf("  ATQB: "); print_hex(ti.tib.abtAtqb,12);

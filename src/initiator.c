@@ -22,7 +22,7 @@ int main(int argc, const char *argv[])
   printf("Sending : %s\n", send);
   if (!nfc_initiator_transceive_dep_bytes(pdi,
 					  send,
-					  strlen(send), abtRecv,
+					  strlen((char*)send), abtRecv,
 					  &szRecvBits)) {
     printf("unable to send data\n");
     return 1;

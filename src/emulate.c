@@ -69,7 +69,7 @@ int main(int argc, char *argv[])
       for(i= 0; i < 4; ++i)
       {
         memcpy(abtTmp,argv[arg]+i*2,2);
-        abtUidBcc[i]= (byte_t) strtol(abtTmp,NULL,16);
+        abtUidBcc[i]= (byte_t) strtol((char*)abtTmp,NULL,16);
         abtUidBcc[4] ^= abtUidBcc[i];
       }
     } else {
