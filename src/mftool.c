@@ -36,7 +36,19 @@ static mifare_param mp;
 static mifare_tag mtKeys;
 static mifare_tag mtDump;
 static bool bUseKeyA;
+static bool bUseKeyFile;
 static uint32_t uiBlocks;
+static byte_t keys[] = {
+  0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
+  0xd3,0xf7,0xd3,0xf7,0xd3,0xf7,
+  0xa0,0xa1,0xa2,0xa3,0xa4,0xa5,
+  0xb0,0xb1,0xb2,0xb3,0xb4,0xb5,
+  0x4d,0x3a,0x99,0xc3,0x51,0xdd,
+  0x1a,0x98,0x2c,0x7e,0x45,0x9a,
+  0xaa,0xbb,0xcc,0xdd,0xee,0xff,
+  0x00,0x00,0x00,0x00,0x00,0x00
+};
+static size_t num_keys = sizeof(keys) / 6;
 
 bool is_first_block(uint32_t uiBlock)
 {
@@ -56,10 +68,71 @@ uint32_t get_trailer_block(uint32_t uiFirstBlock)
   if (uiFirstBlock<128) return uiFirstBlock+3; else return uiFirstBlock+15;
 }
 
+bool authenticate(uint32_t uiBlock)
+{
+  mifare_cmd mc;
+  uint32_t uiTrailerBlock;
+  size_t key_index;
+  
+  // Key file authentication.
+  if (bUseKeyFile)
+  {
+    // Set the authentication information (uid)
+    memcpy(mp.mpa.abtUid,ti.tia.abtUid,4);
+
+    // Locate the trailer (with the keys) used for this sector
+    uiTrailerBlock = get_trailer_block(uiBlock);
+      
+    // Determin if we should use the a or the b key
+    if (bUseKeyA)
+    {
+      mc = MC_AUTH_A;
+      memcpy(mp.mpa.abtKey,mtKeys.amb[uiTrailerBlock].mbt.abtKeyA,6);
+    } else {
+      mc = MC_AUTH_B;
+      memcpy(mp.mpa.abtKey,mtKeys.amb[uiTrailerBlock].mbt.abtKeyB,6);
+    }
+
+    // Try to authenticate for the current sector
+    if (nfc_initiator_mifare_cmd(pdi,mc,uiBlock,&mp))
+        return true;
+  }
+  
+  // Auto authentication.
+  else
+  {
+    // Determin if we should use the a or the b key
+    mc = (bUseKeyA) ? MC_AUTH_A : MC_AUTH_B;
+      
+    // Set the authentication information (uid)
+    memcpy(mp.mpa.abtUid,ti.tia.abtUid,4);
+    
+    for (key_index = 0; key_index < num_keys; key_index++)
+    {
+      memcpy(mp.mpa.abtKey, keys + (key_index*6), 6);
+      if (nfc_initiator_mifare_cmd(pdi, mc, uiBlock, &mp))
+      {
+        /** 
+         * @note: what about the other key?
+         */
+        if (bUseKeyA)
+            memcpy(mtKeys.amb[uiBlock].mbt.abtKeyA,&mp.mpa.abtKey,6);
+        else
+            memcpy(mtKeys.amb[uiBlock].mbt.abtKeyB,&mp.mpa.abtKey,6);
+        
+        return true;
+      }
+    
+      nfc_initiator_select_tag(pdi, IM_ISO14443A_106, mp.mpa.abtUid, 4, NULL);
+    }
+  }
+  
+  return false;
+}
+
 bool read_card()
 {
   int32_t iBlock;
-  mifare_cmd mc;
   bool bFailure = false;
 
   printf("Reading out %d blocks |",uiBlocks+1);
@@ -89,22 +162,9 @@ bool read_card()
         }
       }
       fflush(stdout);
-
-      // Set the authentication information (uid)
-      memcpy(mp.mpa.abtUid,ti.tia.abtUid,4);
-
-      // Determin if we should use the a or the b key
-      if (bUseKeyA)
-      {
-        mc = MC_AUTH_A;
-        memcpy(mp.mpa.abtKey,mtKeys.amb[iBlock].mbt.abtKeyA,6);
-      } else {
-        mc = MC_AUTH_B;
-        memcpy(mp.mpa.abtKey,mtKeys.amb[iBlock].mbt.abtKeyB,6);
-      }
-
+      
       // Try to authenticate for the current sector
-      if (!nfc_initiator_mifare_cmd(pdi,mc,iBlock,&mp))
+      if (!authenticate(iBlock))
       {
         printf("!\nError: authentication failed for block %02x\n",iBlock);
         return false;
@@ -141,9 +201,7 @@ bool read_card()
 bool write_card()
 {
   uint32_t uiBlock;
-  uint32_t uiTrailerBlock;
   bool bFailure = false;
-  mifare_cmd mc;
 
   printf("Writing %d blocks |",uiBlocks+1);
 
@@ -173,24 +231,8 @@ bool write_card()
       }
       fflush(stdout);
 
-      // Locate the trailer (with the keys) used for this sector
-      uiTrailerBlock = get_trailer_block(uiBlock);
-
-      // Set the authentication information (uid)
-      memcpy(mp.mpa.abtUid,ti.tia.abtUid,4);
-
-      // Determin if we should use the a or the b key
-      if (bUseKeyA)
-      {
-        mc = MC_AUTH_A;
-        memcpy(mp.mpa.abtKey,mtKeys.amb[uiTrailerBlock].mbt.abtKeyA,6);
-      } else {
-        mc = MC_AUTH_B;
-        memcpy(mp.mpa.abtKey,mtKeys.amb[uiTrailerBlock].mbt.abtKeyB,6);
-      }
-
       // Try to authenticate for the current sector
-      if (!nfc_initiator_mifare_cmd(pdi,mc,uiBlock,&mp))
+      if (!authenticate(uiBlock))
       { 
         printf("!\nError: authentication failed for block %02x\n",uiBlock);
         return false;
@@ -232,18 +274,18 @@ int main(int argc, const char* argv[])
   bool b4K;
   bool bReadAction;
   byte_t* pbtUID;
-  FILE* pfKeys;
-  FILE* pfDump;
+  FILE* pfKeys = NULL;
+  FILE* pfDump = NULL;
 
-  if (argc < 5)
+  if (argc < 4)
   {
     printf("\n");
-    printf("mftool <r|w> <a|b> <keys.mfd> <dump.mfd>\n");
+    printf("mftool <r|w> <a|b> <dump.mfd> [<keys.mfd>]\n");
     printf("\n");
     printf("<r|w>       - Perform (read from) or (write to) card\n");
     printf("<a|b>       - Use A or B keys to for action\n");
-    printf("<keys.mfd>  - Mifare-dump that contain the keys\n");
     printf("<dump.mfd>  - Used to write (card to file) or (file to card)\n");
+    printf("<keys.mfd>  - Mifare-dump that contain the keys (optional)\n");
     printf("\n");
     return 1;
   }
@@ -252,36 +294,40 @@ int main(int argc, const char* argv[])
 
   bReadAction = (tolower(*(argv[1])) == 'r');
   bUseKeyA = (tolower(*(argv[2])) == 'a');
+  bUseKeyFile = (argc > 4);
 
-  pfKeys = fopen(argv[3],"rb");
-  if (pfKeys == NULL)
+  if (bUseKeyFile)
   {
-    printf("Could not open file: %s\n",argv[3]);
-    return 1;
-  }
-  if (fread(&mtKeys,1,sizeof(mtKeys),pfKeys) != sizeof(mtKeys))
-  {
-    printf("Could not read from keys file: %s\n",argv[3]);
+    pfKeys = fopen(argv[4],"rb");
+    if (pfKeys == NULL)
+    {
+      printf("Could not open file: %s\n",argv[3]);
+      return 1;
+    }
+    if (fread(&mtKeys,1,sizeof(mtKeys),pfKeys) != sizeof(mtKeys))
+    {
+      printf("Could not read from keys file: %s\n",argv[4]);
+      fclose(pfKeys);
+      return 1;
+    }
     fclose(pfKeys);
-    return 1;
   }
-  fclose(pfKeys);
 
   if (bReadAction)
   {
     memset(&mtDump,0x00,sizeof(mtDump));
   } else {
-    pfDump = fopen(argv[4],"rb");
+    pfDump = fopen(argv[3],"rb");
 
     if (pfDump == NULL)
     {
-      printf("Could not open dump file: %s\n",argv[4]);
+      printf("Could not open dump file: %s\n",argv[3]);
       return 1;
     }
 
     if (fread(&mtDump,1,sizeof(mtDump),pfDump) != sizeof(mtDump))
     {
-      printf("Could not read from dump file: %s\n",argv[4]);
+      printf("Could not read from dump file: %s\n",argv[3]);
       fclose(pfDump);
       return 1;
     }
@@ -328,14 +374,17 @@ int main(int argc, const char* argv[])
     return 1;
   }
 
-  // Get the info from the key dump
-  b4K = (mtKeys.amb[0].mbm.abtATQA[1] == 0x02);
-  pbtUID = mtKeys.amb[0].mbm.abtUID;
-
-  // Compare if key dump UID is the same as the current tag UID
-  if (memcmp(ti.tia.abtUid,pbtUID,4) != 0)
+  if (bUseKeyFile)
   {
-    printf("Expected MIFARE Classic %cK card with uid: %08x\n",b4K?'4':'1',swap_endian32(pbtUID));
+    // Get the info from the key dump
+    b4K = (mtKeys.amb[0].mbm.abtATQA[1] == 0x02);
+    pbtUID = mtKeys.amb[0].mbm.abtUID;
+
+    // Compare if key dump UID is the same as the current tag UID
+    if (memcmp(ti.tia.abtUid,pbtUID,4) != 0)
+    {
+      printf("Expected MIFARE Classic %cK card with uid: %08x\n",b4K?'4':'1',swap_endian32(pbtUID));
+    }
   }
 
   // Get the info from the current tag
@@ -349,17 +398,12 @@ int main(int argc, const char* argv[])
   {
     if (read_card())
     {
-      printf("Writing data to file: %s\n",argv[4]);
+      printf("Writing data to file: %s\n",argv[3]);
       fflush(stdout);
-      pfDump = fopen(argv[4],"wb");
-      if (pfKeys == NULL)
-      {
-        printf("Could not open file: %s\n",argv[4]);
-        return 1;
-      }
+      pfDump = fopen(argv[3],"wb");
       if (fwrite(&mtDump,1,sizeof(mtDump),pfDump) != sizeof(mtDump))
       {
-        printf("Could not write to file: %s\n",argv[4]);
+        printf("Could not write to file: %s\n",argv[3]);
         return 1;
       }
       fclose(pfDump);
@@ -376,3 +420,4 @@ int main(int argc, const char* argv[])
 
   return 0;
 }
+  

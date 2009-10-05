@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #ifndef _LIBNFC_DEFINES_H_
 #define _LIBNFC_DEFINES_H_
 
-// #define DEBUG   /* DEBUG flag can also be enabled using ./configure --enable-debug */
+//#define DEBUG   /* DEBUG flag can also be enabled using ./configure --enable-debug */
 
 typedef void*               dev_spec; // Device connection specification
 #define INVALID_DEVICE_INFO 0
