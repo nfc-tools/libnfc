@@ -8,7 +8,7 @@ VPATH=../src
 ###############################################
 CC = cl
 LD = link
-CFLAGS = -O2 -GL -I "$(Include);$(INCLUDE)" -I "libusb" -I "stdint" -D "WIN32" -MT -D "_CRT_SECURE_NO_WARNINGS" -D "HAVE_PCSC_LITE" -D "_WINDLL" -EHsc -W3 -nologo -TC -errorReport:prompt
+CFLAGS = -O2 -GL -I "$(Include);$(INCLUDE)" -I "libusb" -I "stdint" -D "WIN32" -MT -D "_CRT_SECURE_NO_WARNINGS" -D "HAVE_PCSC_LITE" -D "HAVE_LIBUSB" -D "_WINDLL" -EHsc -W3 -nologo -TC -errorReport:prompt
 LDFLAGS = -INCREMENTAL:NO -NOLOGO -LIBPATH:"libusb" -MANIFEST:NO -OPT:REF -OPT:ICF -LTCG libusb.lib libusb_x64.lib winscard.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib
 
 ###############################################
