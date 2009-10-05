@@ -1,4 +1,5 @@
-AC_INIT(libnfc, 1.2.1, info@libnfc.org)
+define([rev], esyscmd([sh -c "echo -n 'r' && svnversion -n"]))dnl
+AC_INIT(libnfc, 1.2.1-rev, info@libnfc.org)
 
 AC_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE
