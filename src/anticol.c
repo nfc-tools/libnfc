@@ -94,7 +94,7 @@ bool transmit_bytes(const byte_t* pbtTx, const size_t szTxLen)
   return true;
 }
 
-void print_usage(void)
+void print_usage(char* argv[])
 {
   printf("Usage: %s [OPTIONS]\n", argv[0]);
   printf("Options:\n");
@@ -109,14 +109,14 @@ int main(int argc,char* argv[])
   // Get commandline options
   for (arg=1;arg<argc;arg++) {
     if (0 == strcmp(argv[arg], "-h")) {
-      print_usage();
+      print_usage(argv);
       return 0;
     } else if (0 == strcmp(argv[arg], "-q")) {
       INFO("Quiet mode.");
       quiet_output = true;
     } else {
       ERR("%s is not supported option.", argv[arg]);
-      print_usage();
+      print_usage(argv);
       return -1;
     }
   }
