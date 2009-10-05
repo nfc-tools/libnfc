@@ -870,7 +870,7 @@ bool nfc_target_receive_dep_bytes(const dev_info* pdi, byte_t* pbtRx, size_t* ps
 bool nfc_target_receive_bytes(const dev_info* pdi, byte_t* pbtRx, size_t* pszRxLen)
 {
   byte_t abtRx[MAX_FRAME_LEN];
-  uint32_t szRxLen;
+  size_t szRxLen;
 
   // Try to gather a received frame from the reader
   if (!pn53x_transceive(pdi,pncmd_target_receive,2,abtRx,&szRxLen)) return false;
