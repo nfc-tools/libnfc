@@ -108,10 +108,10 @@ int main(int argc, const char* argv[])
   if (argc < 3)
   {
     printf("\n");
-    printf("mfultool <r|w> <dump.mfd>\n");
+    printf("%s r|w <dump.mfd>\n", argv[0]);
     printf("\n");
-    printf("<r|w>       - Perform (read from) or (write to) card\n");
-    printf("<dump.mfd>  - Used to write (card to file) or (file to card)\n");
+    printf("r|w         - Perform read from or write to card\n");
+    printf("<dump.mfd>  - MiFare Dump (MFD) used to write (card to MFD) or (MFD to card)\n");
     printf("\n");
     return 1;
   }

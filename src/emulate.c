@@ -38,7 +38,7 @@ byte_t abtSak       [9] = { 0x08,0xb6,0xdd };
 
 void print_usage(void)
 {
-  printf("Usage: nfc-emulate [OPTIONS] [UID]\n");
+  printf("Usage: %s [OPTIONS] [UID]\n", argv[0]);
   printf("Options:\n");
   printf("\t-h\tHelp. Print this message.\n");
   printf("\t-q\tQuiet mode. Suppress output of READER and EMULATOR data (improves timing).\n");

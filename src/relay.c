@@ -37,7 +37,7 @@ static dev_info* pdiTag;
 
 void print_usage(void)
 {
-  printf("Usage: nfc-anticol [OPTIONS]\n");
+  printf("Usage: %s [OPTIONS]\n", argv[0]);
   printf("Options:\n");
   printf("\t-h\tHelp. Print this message.\n");
   printf("\t-q\tQuiet mode. Suppress output of READER and EMULATOR data (improves timing).\n");

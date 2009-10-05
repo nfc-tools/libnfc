@@ -280,12 +280,12 @@ int main(int argc, const char* argv[])
   if (argc < 4)
   {
     printf("\n");
-    printf("mftool <r|w> <a|b> <dump.mfd> [<keys.mfd>]\n");
+    printf("%s r|w a|b <dump.mfd> [<keys.mfd>]\n", argv[0]);
     printf("\n");
-    printf("<r|w>       - Perform (read from) or (write to) card\n");
-    printf("<a|b>       - Use A or B keys to for action\n");
-    printf("<dump.mfd>  - Used to write (card to file) or (file to card)\n");
-    printf("<keys.mfd>  - Mifare-dump that contain the keys (optional)\n");
+    printf("r|w         - Perform read from (r) or write to (w) card\n");
+    printf("a|b         - Use A or B keys for action\n");
+    printf("<dump.mfd>  - MiFare Dump (MFD) used to write (card to MFD) or (MFD to card)\n");
+    printf("<keys.mfd>  - MiFare Dump (MFD) that contain the keys (optional)\n");
     printf("\n");
     return 1;
   }
