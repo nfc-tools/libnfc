@@ -1,15 +1,11 @@
-enable_pcsc_lite = @enable_pcsc_lite@
-
-bin_PROGRAMS = nfc-anticol nfc-list nfc-mftool nfc-mfultool nfc-relay nfc-emulate nfcip-target nfcip-initiator
+SUBDIRS = . examples
 
 # set the include path found by configure
 INCLUDES= $(all_includes)
 
 nfc_devices_headers = dev_arygon.h
-nfc_examples_headers = mifaretag.h mifareultag.h
 nfcinclude_HEADERS = libnfc.h bitutils.h defines.h types.h rs232.h devices.h messages.h
 nfcinclude_HEADERS += $(nfc_devices_headers)
-nfcinclude_HEADERS += $(nfc_examples_headers)
 nfcincludedir = $(includedir)/libnfc
 
 lib_LTLIBRARIES = libnfc.la
@@ -30,32 +26,4 @@ if LIBUSB_ENABLED
   libnfc_la_SOURCES += dev_pn531.c dev_pn533.c
   libnfc_la_LIBADD  += @LIBUSB_LIBS@
 endif
-
-nfc_anticol_SOURCES = anticol.c
-nfc_anticol_LDADD = libnfc.la
-
-nfc_list_SOURCES = list.c
-nfc_list_LDADD = libnfc.la
-
-nfc_mfultool_SOURCES = mfultool.c
-nfc_mfultool_LDADD = libnfc.la
-
-nfc_mftool_SOURCES = mftool.c
-nfc_mftool_LDADD = libnfc.la
-
-nfc_relay_SOURCES = relay.c
-nfc_relay_LDADD = libnfc.la
-
-nfc_emulate_SOURCES = emulate.c
-nfc_emulate_LDADD = libnfc.la
-
-nfcip_target_SOURCES = target.c
-nfcip_target_LDADD = libnfc.la
-
-nfcip_initiator_SOURCES = initiator.c
-nfcip_initiator_LDADD = libnfc.la
-
-dist_man_MANS = nfc-anticol.1 nfc-emulate.1 nfc-list.1 nfc-mftool.1 nfc-relay.1
-#dist_man_MANS = $(man_MANS)
-#EXTRA_DIST = $(man_MANS)
 

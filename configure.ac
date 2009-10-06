@@ -149,6 +149,7 @@ fi
 AC_CONFIG_FILES([
 		Makefile
 		src/Makefile
+		src/examples/Makefile
 		libnfc.pc
 		])
 
