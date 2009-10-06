@@ -1,4 +1,4 @@
-SET(LIBRARY-SOURCES libnfc rs232 bitutils dev_arygon)
+SET(LIBRARY-SOURCES libnfc rs232 bitutils dev_arygon dev_pn532_uart)
 
 # find PCSC library and headers
 IF(LIBNFC_PCSC)
@@ -30,7 +30,7 @@ ENDIF(LIBNFC_LANG_C99 AND NOT MSVC)
 
 IF(MSVC)
   # We should fix the code, not hide warning!
-  #ADD_DEFINITIONS("-D_CRT_SECURE_NO_WARNINGS")
+  ADD_DEFINITIONS("-D_CRT_SECURE_NO_WARNINGS")
   # Include the stdint headers, because MSVC does not have them
   INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/../win32/stdint)
 ENDIF(MSVC)
