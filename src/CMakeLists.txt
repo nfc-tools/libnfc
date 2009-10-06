@@ -1,5 +1,4 @@
 SET(LIBRARY-SOURCES libnfc rs232 bitutils dev_arygon)
-SET(EXAMPLES-SOURCES list mftool mfultool initiator target anticol emulate relay)
 
 # find PCSC library and headers
 IF(LIBNFC_PCSC)
@@ -65,13 +64,4 @@ IF(MSVC)
   #INSTALL(FILES ${stdint} DESTINATION ${INCLUDE_INSTALL_DIR}/libnfc COMPONENT headers)
 ENDIF(MSVC)
 
-# Examples
-FOREACH(source ${EXAMPLES-SOURCES})
-  ADD_EXECUTABLE(nfc-${source} ${source}.c)
-  TARGET_LINK_LIBRARIES(nfc-${source} nfc)
-  INSTALL(TARGETS nfc-${source} RUNTIME DESTINATION bin COMPONENT examples)
-ENDFOREACH(source)
-
-# Manuals for the examples
-FILE(GLOB manuals "${CMAKE_CURRENT_SOURCE_DIR}/*.1")
-INSTALL(FILES ${manuals} DESTINATION ${SHARE_INSTALL_PREFIX}/man/man1 COMPONENT manuals)
+ADD_SUBDIRECTORY(examples)

@@ -7,7 +7,7 @@ SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake_modules/")
 
 SET(LIBNFC_VERBOSE_OUTPUT OFF CACHE BOOL "Verbose output of communication with the NFC chip")
 SET(LIBNFC_LANG_C99 OFF CACHE BOOL "Use C99 language standard (GCC only)")
-SET(LIBNFC_PCSC ON CACHE BOOL "Enable PC/SC support (PN532)")
+SET(LIBNFC_PCSC ON CACHE BOOL "Enable PC/SC support (ACR122)")
 SET(LIBNFC_USB OFF CACHE BOOL "Enable direct USB communication support (PN531 and PN533)")
 SET(LIBNFC_DISABLE_SERIAL_AUTOPROBE OFF CACHE BOOL "Disable serial autoprobe")
 
