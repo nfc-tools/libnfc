@@ -1,0 +1,44 @@
+.TH NFC-MFTOOL 1 "Oct 06, 2009"
+.SH NAME
+nfc-mfultool \- Mifare Ultralight command line tool based on libnfc
+.SH SYNOPSIS
+.B nfc-mfultool
+.RI \fR\fBr\fR|\fBw\fR
+.IR DUMP
+
+.SH DESCRIPTION
+.B nfc-mfultool
+is a Mifare Ultralight tool that allow to read or write
+.IR DUMP
+file.
+
+The Mifare Ultralight tag is one of the most widely used RFID tags for ticketing application.
+It uses a binary Mifare Dump file (MFD) to store data for all sectors.
+
+.SH OPTIONS
+.BR r " | " w
+Perform read from (
+.B r
+) or write to (
+.B w
+) card.
+.TP
+.IR DUMP
+MiFare Dump (MFD) used to write (card to MFD) or (MFD to card)
+
+
+.SH BUGS
+Please report any bugs on the
+.B libnfc
+forum at
+.BR http://www.libnfc.org/community/ "."
+.SH LICENCE
+.B libnfc
+and
+.B libnfc-examples
+are covered by the GNU Lesser General Public License (LGPL), version 3.
+.SH AUTHORS
+Roel Verdult <roel@libnfc.org>
+.PP
+This manual page was written by Romuald Conty <romuald.conty@free.fr>.
+It is licensed under the terms of the GNU GPL (version 2 or later).

@@ -29,7 +29,7 @@ nfcip_target_LDADD = $(top_builddir)/src/libnfc.la
 nfcip_initiator_SOURCES = nfcip-initiator.c
 nfcip_initiator_LDADD = $(top_builddir)/src/libnfc.la
 
-dist_man_MANS = nfc-anticol.1 nfc-emulate.1 nfc-list.1 nfc-mftool.1 nfc-relay.1
+dist_man_MANS = nfc-anticol.1 nfc-emulate.1 nfc-list.1 nfc-mftool.1 nfc-mfultool.1 nfc-relay.1
 #dist_man_MANS = $(man_MANS)
 #EXTRA_DIST = $(man_MANS)
 
