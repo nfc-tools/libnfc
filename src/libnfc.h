@@ -32,7 +32,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "defines.h"
 #include "types.h"
-#include "bitutils.h"
 
 /**
  * @fn dev_info* nfc_connect(nfc_device_desc_t* pndd)
