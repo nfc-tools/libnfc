@@ -31,6 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
   #include "dev_pn533.h"
 #endif /* HAVE_LIBUSB */
 #include "dev_arygon.h"
+#include "dev_pn532_uart.h"
 
 const static struct dev_callbacks dev_callbacks_list[] = {
 //  Driver Name        Connect                  Transceive                    Disconnect
@@ -41,6 +42,7 @@ const static struct dev_callbacks dev_callbacks_list[] = {
   { "PN531USB",        dev_pn531_connect,       dev_pn531_transceive,         dev_pn531_disconnect        },
   { "PN533USB",        dev_pn533_connect,       dev_pn533_transceive,         dev_pn533_disconnect        },
 #endif /* HAVE_LIBUSB */
+  { "PN532_UART",      dev_pn532_uart_connect,  dev_pn532_uart_transceive,    dev_pn532_uart_disconnect   },
   { "ARYGON",          dev_arygon_connect,      dev_arygon_transceive,        dev_arygon_disconnect       }
 };
 
