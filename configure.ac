@@ -65,7 +65,7 @@ AC_MSG_RESULT($enable_pcsc_lite)
  
 if test x"$enable_pcsc_lite" = "xno"
 then
-        WITH_PCSC=0
+  WITH_PCSC=0
 fi
 AM_CONDITIONAL(PCSC_LITE_ENABLED, [test x"$enable_pcsc_lite" = xyes])
 
@@ -75,11 +75,30 @@ AC_ARG_ENABLE([libusb],AS_HELP_STRING([--disable-libusb],[Disable libusb depende
 AC_MSG_CHECKING(for libusb support)
 AC_MSG_RESULT($enable_libusb)
  
-if test x"$enable_libsub" = "xno"
+if test x"$enable_libusb" = "xno"
 then
-        WITH_LIBUSB=0
+  WITH_LIBUSB=0
 fi
 AM_CONDITIONAL(LIBUSB_ENABLED, [test x"$enable_libusb" = xyes])
+
+# Documentation (default: no)
+AC_ARG_ENABLE([doc],AS_HELP_STRING([--enable-doc],[Enable documentation generation.]),[enable_doc=$enableval],[enable_doc="no"])
+
+AC_MSG_CHECKING(for documentation request)
+AC_MSG_RESULT($enable_doc)
+
+if test x"$enable_doc" = "xyes"
+then
+  AC_PATH_PROG([DOXYGEN], [doxygen])
+  if test x$DOXYGEN = x
+  then
+    AC_MSG_ERROR([doxygen is mandatory.])
+  else
+    WITH_DOC = 1
+  fi
+fi
+AM_CONDITIONAL(DOC_ENABLED, [test x"$enable_doc" = xyes])
+
 
 # Dependencies
 PKG_CONFIG_REQUIRES=""
@@ -133,6 +152,9 @@ if test "x$enable_pcsc_lite" = "xyes"; then
 fi
 
 AC_SUBST(PKG_CONFIG_REQUIRES)
+
+## doxygen
+
 
 # Set C standard to C99
 # C99 standard support (default: yes)
