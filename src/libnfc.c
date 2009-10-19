@@ -483,6 +483,8 @@ bool nfc_initiator_select_dep_target(const dev_info* pdi, const init_modulation 
 
 bool nfc_initiator_select_tag(const dev_info* pdi, const init_modulation im, const byte_t* pbtInitData, const size_t szInitDataLen, tag_info* pti)
 {
+  byte_t abtInit[MAX_FRAME_LEN];
+  size_t szInitLen;
   byte_t abtRx[MAX_FRAME_LEN];
   size_t szRxLen;
   byte_t abtCmd[sizeof(pncmd_initiator_list_passive)];
@@ -494,8 +496,41 @@ bool nfc_initiator_select_tag(const dev_info* pdi, const init_modulation im, con
   abtCmd[2] = 1;  // MaxTg, we only want to select 1 tag at the time
   abtCmd[3] = im; // BrTy, the type of init modulation used for polling a passive tag
 
+  switch(im)
+  {
+    case IM_ISO14443A_106:
+      switch (szInitDataLen)
+      {
+        case 7:
+          abtInit[0] = 0x88;
+          memcpy(abtInit+1,pbtInitData,7);
+          szInitLen = 8;
+        break;
+
+        case 10:
+          abtInit[0] = 0x88;
+          memcpy(abtInit+1,pbtInitData,3);
+          abtInit[4] = 0x88;
+          memcpy(abtInit+4,pbtInitData+3,7);
+          szInitLen = 12;
+        break;
+
+        case 4:
+        default:
+          memcpy(abtInit,pbtInitData,szInitDataLen);
+          szInitLen = szInitDataLen;
+        break;
+      }
+    break;
+
+    default:
+      memcpy(abtInit,pbtInitData,szInitDataLen);
+      szInitLen = szInitDataLen;
+    break;
+  }
+
   // Set the optional initiator data (used for Felica, ISO14443B, Topaz Polling or for ISO14443A selecting a specific UID).
-  if (pbtInitData) memcpy(abtCmd+4,pbtInitData,szInitDataLen);
+  if (pbtInitData) memcpy(abtCmd+4,abtInit,szInitLen);
 
   // Try to find a tag, call the tranceive callback function of the current device
   szRxLen = MAX_FRAME_LEN;
