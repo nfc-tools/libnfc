@@ -3,3 +3,15 @@ SUBDIRS = src
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libnfc.pc
 
+EXTRA_DIST = Doxyfile
+CLEANFILES = Doxygen.log
+
+if DOC_ENABLED
+clean-local:
+	rm -rf doc
+
+html-am : Doxyfile
+	@DOXYGEN@ $(builddir)/Doxyfile
+
+.PHONY: html
+endif

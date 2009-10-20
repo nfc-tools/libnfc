@@ -93,8 +93,6 @@ then
   if test x$DOXYGEN = x
   then
     AC_MSG_ERROR([doxygen is mandatory.])
-  else
-    WITH_DOC = 1
   fi
 fi
 AM_CONDITIONAL(DOC_ENABLED, [test x"$enable_doc" = xyes])
@@ -153,9 +151,6 @@ fi
 
 AC_SUBST(PKG_CONFIG_REQUIRES)
 
-## doxygen
-
-
 # Set C standard to C99
 # C99 standard support (default: yes)
 AC_ARG_ENABLE([std-c99],AS_HELP_STRING([--disable-std-c99],[Disable C99 standard when compiling]),[enable_std_c99=$enableval],[enable_std_c99="yes"])
@@ -173,6 +168,7 @@ AC_CONFIG_FILES([
 		src/Makefile
 		src/examples/Makefile
 		libnfc.pc
+		Doxyfile
 		])
 
 AC_OUTPUT
