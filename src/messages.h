@@ -29,13 +29,13 @@
 // Useful macros
 #ifdef DEBUG
 //   #define DBG(x, args...) printf("DBG %s:%d: " x "\n", __FILE__, __LINE__,## args )
-  #define DBG(x, ...) printf("DBG %s:%d: " x "\n", __FILE__, __LINE__, ## __VA_ARGS__ )
+  #define DBG(x, ...) fprintf(stderr, "DBG %s:%d: " x "\n", __FILE__, __LINE__, ## __VA_ARGS__ )
 #else
   #define DBG(...) {}
 #endif
 
 #define INFO(x, ...) printf("INFO: " x "\n", ## __VA_ARGS__ )
 #define WARN(x, ...) printf("WARNING: " x "\n", ## __VA_ARGS__ )
-#define ERR(x, ...) printf("ERROR: " x "\n", ## __VA_ARGS__ )
+#define ERR(x, ...) fprintf(stderr, "ERROR: " x "\n", ## __VA_ARGS__ )
 
 #endif // _LIBNFC_MESSAGES_H_
