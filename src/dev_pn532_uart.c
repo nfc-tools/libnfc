@@ -91,6 +91,23 @@ dev_info* dev_pn532_uart_connect(const nfc_device_desc_t* pndd)
 
     rs232_set_speed(sp, pndd->uiSpeed);
   }
+  /** @info PN532C106 wakeup. */
+  /** @todo Put this command in pn53x init process */
+  byte_t abtRxBuf[BUFFER_LENGTH];
+  size_t szRxBufLen;
+  const byte_t pncmd_pn532c106_wakeup[] = { 0x55,0x55,0x00,0x00,0x00,0x00,0x00,0xFF,0x03,0xFD,0xD4,0x14,0x01,0x17,0x00 };
+
+  rs232_send(sp, pncmd_pn532c106_wakeup, sizeof(pncmd_pn532c106_wakeup));
+  delay_ms(10);
+
+  if (!rs232_receive(sp,abtRxBuf,&szRxBufLen)) {
+    ERR("Unable to receive data. (RX)");
+    return NULL;
+  }
+#ifdef DEBUG
+  printf(" RX: ");
+  print_hex(abtRxBuf,szRxBufLen);
+#endif
 
   DBG("Successfully connected to: %s",acConnect);
 
