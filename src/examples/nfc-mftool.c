@@ -42,7 +42,7 @@ static bool bUseKeyA;
 static bool bUseKeyFile;
 static uint32_t uiBlocks;
 static byte_t keys[] = {
-  0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
+  0xff,0xff,0xff,0xff,0xff,0xff,
   0xd3,0xf7,0xd3,0xf7,0xd3,0xf7,
   0xa0,0xa1,0xa2,0xa3,0xa4,0xa5,
   0xb0,0xb1,0xb2,0xb3,0xb4,0xb5,
@@ -293,7 +293,7 @@ int main(int argc, const char* argv[])
     return 1;
   }
 
-  printf("\nChecking arguments and settings\n");
+  // printf("Checking arguments and settings\n");
 
   bReadAction = (tolower(*(argv[1])) == 'r');
   bUseKeyA = (tolower(*(argv[2])) == 'a');
@@ -304,12 +304,12 @@ int main(int argc, const char* argv[])
     pfKeys = fopen(argv[4],"rb");
     if (pfKeys == NULL)
     {
-      printf("Could not open file: %s\n",argv[3]);
+      printf("Could not open keys file: %s\n",argv[3]);
       return 1;
     }
     if (fread(&mtKeys,1,sizeof(mtKeys),pfKeys) != sizeof(mtKeys))
     {
-      printf("Could not read from keys file: %s\n",argv[4]);
+      printf("Could not read keys file: %s\n",argv[4]);
       fclose(pfKeys);
       return 1;
     }
@@ -330,13 +330,13 @@ int main(int argc, const char* argv[])
 
     if (fread(&mtDump,1,sizeof(mtDump),pfDump) != sizeof(mtDump))
     {
-      printf("Could not read from dump file: %s\n",argv[3]);
+      printf("Could not read dump file: %s\n",argv[3]);
       fclose(pfDump);
       return 1;
     }
     fclose(pfDump);
   }
-  printf("Succesful opened MIFARE the required files\n");
+  // printf("Successfully opened required files\n");
 
   // Try to open the NFC reader
   pdi = nfc_connect(NULL);
@@ -386,14 +386,14 @@ int main(int argc, const char* argv[])
     // Compare if key dump UID is the same as the current tag UID
     if (memcmp(ti.tia.abtUid,pbtUID,4) != 0)
     {
-      printf("Expected MIFARE Classic %cK card with uid: %08x\n",b4K?'4':'1',swap_endian32(pbtUID));
+      printf("Expected MIFARE Classic %cK card with UID: %08x\n",b4K?'4':'1',swap_endian32(pbtUID));
     }
   }
 
   // Get the info from the current tag
   pbtUID = ti.tia.abtUid;
   b4K = (ti.tia.abtAtqa[1] == 0x02);
-  printf("Found MIFARE Classic %cK card with uid: %08x\n",b4K?'4':'1',swap_endian32(pbtUID));
+  printf("Found MIFARE Classic %cK card with UID: %08x\n",b4K?'4':'1',swap_endian32(pbtUID));
 
   uiBlocks = (b4K)?0xff:0x3f;
 
