@@ -272,154 +272,247 @@ bool write_card()
   return true;
 }
 
+void mifare_classic_extract_payload(const char* abDump, char* pbPayload)
+{
+  uint8_t uiSectorIndex;
+  uint8_t uiBlockIndex;
+  size_t szDumpOffset;
+  size_t szPayloadIndex = 0;
+
+  for(uiSectorIndex=1; uiSectorIndex<16; uiSectorIndex++) {
+    for(uiBlockIndex=0; uiBlockIndex<3; uiBlockIndex++) {
+      szDumpOffset = uiSectorIndex*16*4 + uiBlockIndex*16;
+//      for(uint8_t uiByteIndex=0; uiByteIndex<16; uiByteIndex++) printf("%02x ", abDump[szPayloadIndex+uiByteIndex]);
+      memcpy(pbPayload+szPayloadIndex, abDump+szDumpOffset, 16);
+      szPayloadIndex += 16;
+    }
+  }
+}
+
+typedef enum {
+  ACTION_READ,
+  ACTION_WRITE,
+  ACTION_EXPLAIN,
+  ACTION_EXTRACT
+} action_t;
+
+void print_usage(const char* pcProgramName)
+{
+  printf("\n");
+  printf("%s r|w a|b <dump.mfd> [<keys.mfd>]\n", pcProgramName);
+  printf("\n");
+  printf("r|w         - Perform read from (r) or write to (w) card\n");
+  printf("a|b         - Use A or B keys for action\n");
+  printf("<dump.mfd>  - MiFare Dump (MFD) used to write (card to MFD) or (MFD to card)\n");
+  printf("<keys.mfd>  - MiFare Dump (MFD) that contain the keys (optional)\n");
+  printf("\n");
+}
+
 int main(int argc, const char* argv[])
 {
   bool b4K;
-  bool bReadAction;
+  action_t atAction;
   byte_t* pbtUID;
   FILE* pfKeys = NULL;
   FILE* pfDump = NULL;
 
-  if (argc < 4)
-  {
-    printf("\n");
-    printf("%s r|w a|b <dump.mfd> [<keys.mfd>]\n", argv[0]);
-    printf("\n");
-    printf("r|w         - Perform read from (r) or write to (w) card\n");
-    printf("a|b         - Use A or B keys for action\n");
-    printf("<dump.mfd>  - MiFare Dump (MFD) used to write (card to MFD) or (MFD to card)\n");
-    printf("<keys.mfd>  - MiFare Dump (MFD) that contain the keys (optional)\n");
-    printf("\n");
-    return 1;
-  }
-
   // printf("Checking arguments and settings\n");
 
-  bReadAction = (tolower(*(argv[1])) == 'r');
-  bUseKeyA = (tolower(*(argv[2])) == 'a');
-  bUseKeyFile = (argc > 4);
-
-  if (bUseKeyFile)
+  if(argc < 2)
   {
-    pfKeys = fopen(argv[4],"rb");
-    if (pfKeys == NULL)
-    {
-      printf("Could not open keys file: %s\n",argv[3]);
-      return 1;
-    }
-    if (fread(&mtKeys,1,sizeof(mtKeys),pfKeys) != sizeof(mtKeys))
-    {
-      printf("Could not read keys file: %s\n",argv[4]);
-      fclose(pfKeys);
-      return 1;
-    }
-    fclose(pfKeys);
-  }
-
-  if (bReadAction)
-  {
-    memset(&mtDump,0x00,sizeof(mtDump));
-  } else {
-    pfDump = fopen(argv[3],"rb");
-
-    if (pfDump == NULL)
-    {
-      printf("Could not open dump file: %s\n",argv[3]);
-      return 1;
-    }
-
-    if (fread(&mtDump,1,sizeof(mtDump),pfDump) != sizeof(mtDump))
-    {
-      printf("Could not read dump file: %s\n",argv[3]);
-      fclose(pfDump);
-      return 1;
-    }
-    fclose(pfDump);
-  }
-  // printf("Successfully opened required files\n");
-
-  // Try to open the NFC reader
-  pdi = nfc_connect(NULL);
-  if (pdi == INVALID_DEVICE_INFO)
-  {
-    printf("Error connecting NFC reader\n");
+    print_usage(argv[0]);
     return 1;
   }
 
-  nfc_initiator_init(pdi);
-
-  // Drop the field for a while
-  nfc_configure(pdi,DCO_ACTIVATE_FIELD,false);
-
-  // Let the reader only try once to find a tag
-  nfc_configure(pdi,DCO_INFINITE_SELECT,false);
-  nfc_configure(pdi,DCO_HANDLE_CRC,true);
-  nfc_configure(pdi,DCO_HANDLE_PARITY,true);
-
-  // Enable field so more power consuming cards can power themselves up
-  nfc_configure(pdi,DCO_ACTIVATE_FIELD,true);
-
-  printf("Connected to NFC reader: %s\n",pdi->acName);
-
-  // Try to find a MIFARE Classic tag
-  if (!nfc_initiator_select_tag(pdi,IM_ISO14443A_106,NULL,0,&ti))
+  const char* command = argv[1];
+  if(strcmp(command, "r") == 0)
   {
-    printf("Error: no tag was found\n");
-    nfc_disconnect(pdi);
-    return 1;
+    atAction = ACTION_READ;
+    bUseKeyA = (tolower(*(argv[2])) == 'a');
+    bUseKeyFile = (argc > 4);
+  } else if(strcmp(command, "w") == 0) 
+  {
+    atAction = ACTION_WRITE;
+    bUseKeyA = (tolower(*(argv[2])) == 'a');
+    bUseKeyFile = (argc > 4);
+  } else if(strcmp(command, "e") == 0)
+  {
+    atAction = ACTION_EXPLAIN;
+  } else if(strcmp(command, "x") == 0)
+  {
+    atAction = ACTION_EXTRACT;
   }
 
-  // Test if we are dealing with a MIFARE compatible tag
-  if ((ti.tia.btSak & 0x08) == 0)
-  {
-    printf("Error: tag is not a MIFARE Classic card\n");
-    nfc_disconnect(pdi);
-    return 1;
-  }
-
-  if (bUseKeyFile)
-  {
-    // Get the info from the key dump
-    b4K = (mtKeys.amb[0].mbm.abtATQA[1] == 0x02);
-    pbtUID = mtKeys.amb[0].mbm.abtUID;
-
-    // Compare if key dump UID is the same as the current tag UID
-    if (memcmp(ti.tia.abtUid,pbtUID,4) != 0)
-    {
-      printf("Expected MIFARE Classic %cK card with UID: %08x\n",b4K?'4':'1',swap_endian32(pbtUID));
-    }
-  }
-
-  // Get the info from the current tag
-  pbtUID = ti.tia.abtUid;
-  b4K = (ti.tia.abtAtqa[1] == 0x02);
-  printf("Found MIFARE Classic %cK card with UID: %08x\n",b4K?'4':'1',swap_endian32(pbtUID));
-
-  uiBlocks = (b4K)?0xff:0x3f;
-
-  if (bReadAction)
-  {
-    if (read_card())
-    {
-      printf("Writing data to file: %s\n",argv[3]);
-      fflush(stdout);
-      pfDump = fopen(argv[3],"wb");
-      if (fwrite(&mtDump,1,sizeof(mtDump),pfDump) != sizeof(mtDump))
+  switch(atAction) {
+    case ACTION_READ:
+    case ACTION_WRITE:
+      if (argc < 4)
       {
-        printf("Could not write to file: %s\n",argv[3]);
+        print_usage(argv[0]);
+        return 1;
+      }
+
+      if (bUseKeyFile)
+      {
+        pfKeys = fopen(argv[4],"rb");
+        if (pfKeys == NULL)
+        {
+          printf("Could not open keys file: %s\n",argv[4]);
+          return 1;
+        }
+        if (fread(&mtKeys,1,sizeof(mtKeys),pfKeys) != sizeof(mtKeys))
+        {
+          printf("Could not read keys file: %s\n",argv[4]);
+          fclose(pfKeys);
+          return 1;
+        }
+        fclose(pfKeys);
+      }
+    
+      if(atAction == ACTION_READ) {
+        memset(&mtDump,0x00,sizeof(mtDump));
+      } else {
+        pfDump = fopen(argv[3],"rb");
+    
+        if (pfDump == NULL)
+        {
+          printf("Could not open dump file: %s\n",argv[3]);
+          return 1;
+        }
+    
+        if (fread(&mtDump,1,sizeof(mtDump),pfDump) != sizeof(mtDump))
+        {
+          printf("Could not read dump file: %s\n",argv[3]);
+          fclose(pfDump);
+          return 1;
+        }
+        fclose(pfDump);
+      }
+      // printf("Successfully opened required files\n");
+    
+      // Try to open the NFC reader
+      pdi = nfc_connect(NULL);
+      if (pdi == INVALID_DEVICE_INFO)
+      {
+        printf("Error connecting NFC reader\n");
+        return 1;
+      }
+    
+      nfc_initiator_init(pdi);
+    
+      // Drop the field for a while
+      nfc_configure(pdi,DCO_ACTIVATE_FIELD,false);
+    
+      // Let the reader only try once to find a tag
+      nfc_configure(pdi,DCO_INFINITE_SELECT,false);
+      nfc_configure(pdi,DCO_HANDLE_CRC,true);
+      nfc_configure(pdi,DCO_HANDLE_PARITY,true);
+    
+      // Enable field so more power consuming cards can power themselves up
+      nfc_configure(pdi,DCO_ACTIVATE_FIELD,true);
+    
+      printf("Connected to NFC reader: %s\n",pdi->acName);
+    
+      // Try to find a MIFARE Classic tag
+      if (!nfc_initiator_select_tag(pdi,IM_ISO14443A_106,NULL,0,&ti))
+      {
+        printf("Error: no tag was found\n");
+        nfc_disconnect(pdi);
+        return 1;
+      }
+    
+      // Test if we are dealing with a MIFARE compatible tag
+      if ((ti.tia.btSak & 0x08) == 0)
+      {
+        printf("Error: tag is not a MIFARE Classic card\n");
+        nfc_disconnect(pdi);
+        return 1;
+      }
+    
+      if (bUseKeyFile)
+      {
+        // Get the info from the key dump
+        b4K = (mtKeys.amb[0].mbm.abtATQA[1] == 0x02);
+        pbtUID = mtKeys.amb[0].mbm.abtUID;
+    
+        // Compare if key dump UID is the same as the current tag UID
+        if (memcmp(ti.tia.abtUid,pbtUID,4) != 0)
+        {
+          printf("Expected MIFARE Classic %cK card with UID: %08x\n",b4K?'4':'1',swap_endian32(pbtUID));
+        }
+      }
+    
+      // Get the info from the current tag
+      pbtUID = ti.tia.abtUid;
+      b4K = (ti.tia.abtAtqa[1] == 0x02);
+      printf("Found MIFARE Classic %cK card with UID: %08x\n",b4K?'4':'1',swap_endian32(pbtUID));
+    
+      uiBlocks = (b4K)?0xff:0x3f;
+    
+      if (atAction == ACTION_READ)
+      {
+        if (read_card())
+        {
+          printf("Writing data to file: %s\n",argv[3]);
+          fflush(stdout);
+          pfDump = fopen(argv[3],"wb");
+          if (fwrite(&mtDump,1,sizeof(mtDump),pfDump) != sizeof(mtDump))
+          {
+            printf("Could not write to file: %s\n",argv[3]);
+            return 1;
+          }
+          fclose(pfDump);
+          printf("Done, all bytes dumped to file!\n");
+        }
+      } else {
+        if (write_card())
+        {
+          printf("Done, all data is written to the card!\n");
+        }
+      }
+    
+      nfc_disconnect(pdi);
+      break;
+
+    case ACTION_EXTRACT: {
+      const char* pcDump = argv[2];
+      const char* pcPayload = argv[3];
+
+      FILE* pfDump = NULL;
+      FILE* pfPayload = NULL;
+      
+      char abDump[4096];
+      char abPayload[4096];
+
+      pfDump = fopen(pcDump,"rb");
+    
+      if (pfDump == NULL)
+      {
+        printf("Could not open dump file: %s\n",pcDump);
+        return 1;
+      }
+    
+      if (fread(abDump,1,sizeof(abDump),pfDump) != sizeof(abDump))
+      {
+        printf("Could not read dump file: %s\n",pcDump);
+        fclose(pfDump);
         return 1;
       }
       fclose(pfDump);
-      printf("Done, all bytes dumped to file!\n");
-    }
-  } else {
-    if (write_card())
-    {
-      printf("Done, all data is written to the card!\n");
-    }
-  }
 
-  nfc_disconnect(pdi);
+      mifare_classic_extract_payload(abDump, abPayload);
+
+      printf("Writing data to file: %s\n",pcPayload);
+      pfPayload = fopen(pcPayload,"wb");
+      if (fwrite(abPayload,1,sizeof(abPayload),pfPayload) != sizeof(abPayload))
+      {
+        printf("Could not write to file: %s\n",pcPayload);
+        return 1;
+      }
+      fclose(pfPayload);
+      printf("Done, all bytes have been extracted!\n");
+    }
+  };
 
   return 0;
 }
