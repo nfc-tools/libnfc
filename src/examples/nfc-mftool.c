@@ -298,14 +298,17 @@ typedef enum {
 
 void print_usage(const char* pcProgramName)
 {
-  printf("\n");
+  printf("Usage: ");
   printf("%s r|w a|b <dump.mfd> [<keys.mfd>]\n", pcProgramName);
-  printf("\n");
-  printf("r|w         - Perform read from (r) or write to (w) card\n");
-  printf("a|b         - Use A or B keys for action\n");
-  printf("<dump.mfd>  - MiFare Dump (MFD) used to write (card to MFD) or (MFD to card)\n");
-  printf("<keys.mfd>  - MiFare Dump (MFD) that contain the keys (optional)\n");
-  printf("\n");
+  printf("  r|w           - Perform read from (r) or write to (w) card\n");
+  printf("  a|b           - Use A or B keys for action\n");
+  printf("  <dump.mfd>    - MiFare Dump (MFD) used to write (card to MFD) or (MFD to card)\n");
+  printf("  <keys.mfd>    - MiFare Dump (MFD) that contain the keys (optional)\n");
+  printf("Or: ");
+  printf("%s x <dump.mfd> <payload.bin>\n", pcProgramName);
+  printf("  x             - Extract payload (data blocks) from MFD\n");
+  printf("  <dump.mfd>    - MiFare Dump (MFD) that contains wanted payload\n");
+  printf("  <payload.bin> - Binary file where payload will be extracted\n");
 }
 
 int main(int argc, const char* argv[])
