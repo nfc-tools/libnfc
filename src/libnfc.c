@@ -535,7 +535,7 @@ bool nfc_initiator_select_tag(const dev_info* pdi, const init_modulation im, con
   // Try to find a tag, call the tranceive callback function of the current device
   szRxLen = MAX_FRAME_LEN;
   // We can not use pn53x_transceive() because abtRx[0] gives no status info
-  if (!pdi->pdc->transceive(pdi->ds,abtCmd,4+szInitDataLen,abtRx,&szRxLen)) return false;
+  if (!pdi->pdc->transceive(pdi->ds,abtCmd,4+szInitLen,abtRx,&szRxLen)) return false;
 
   // Make sure one tag has been found, the PN53X returns 0x00 if none was available
   if (abtRx[0] != 1) return false;
