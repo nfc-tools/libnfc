@@ -3,6 +3,9 @@ bin_PROGRAMS = nfc-anticol nfc-list nfc-mftool nfc-mfultool nfc-relay nfc-emulat
 # set the include path found by configure
 INCLUDES= $(all_includes)
 
+nfcinclude_HEADERS = mifaretag.h mifareultag.h
+nfcincludedir = $(includedir)/libnfc
+
 AM_CFLAGS = -I$(top_srcdir)/src
 
 nfc_anticol_SOURCES = nfc-anticol.c
