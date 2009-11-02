@@ -38,9 +38,6 @@
 
 typedef uint8_t byte_t;
 
-// Compiler directive, set struct alignment to 1 byte_t for compatibility
-#pragma pack(1)
-
 typedef enum {
   CT_PN531                    = 0x10,
   CT_PN532                    = 0x20,
@@ -103,6 +100,9 @@ struct dev_callbacks {
   /** Disconnect callback */
   void (*disconnect)(dev_info* pdi);
 };
+
+// Compiler directive, set struct alignment to 1 byte_t for compatibility
+#pragma pack(1)
 
 /**
  * @enum dev_config_option
