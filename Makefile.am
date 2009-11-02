@@ -15,3 +15,4 @@ html-am : Doxyfile
 
 .PHONY: html
 endif
+DISTCLEANFILES = Makefile.in

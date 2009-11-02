@@ -28,7 +28,9 @@
 #include <string.h>
 
 #include "libnfc.h"
+
 #include "messages.h"
+#include "bitutils.h"
 
 static byte_t abtRecv[MAX_FRAME_LEN];
 static size_t szRecvBits;

@@ -31,6 +31,7 @@
 #include "libnfc.h"
 
 #include "messages.h"
+#include "bitutils.h"
 
 #define SAK_FLAG_ATS_SUPPORTED 0x20
 

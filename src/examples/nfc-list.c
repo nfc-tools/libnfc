@@ -28,7 +28,9 @@
 #include <string.h>
 
 #include "libnfc.h"
+
 #include "messages.h"
+#include "bitutils.h"
 
 static dev_info* pdi;
 static byte_t abtFelica[5] = { 0x00, 0xff, 0xff, 0x00, 0x00 };

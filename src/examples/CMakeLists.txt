@@ -1,4 +1,4 @@
-SET(EXAMPLES-SOURCES nfc-list nfc-mftool nfc-mfultool nfcip-initiator nfcip-target nfc-anticol nfc-emulate nfc-relay)
+SET(EXAMPLES-SOURCES nfc-list nfc-mfclassic nfc-mfultralight nfcip-initiator nfcip-target nfc-anticol nfc-emulate nfc-relay)
 
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/../)
 

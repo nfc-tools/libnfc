@@ -31,7 +31,9 @@
 #include <ctype.h>
 
 #include "libnfc.h"
+
 #include "mifareultag.h"
+#include "bitutils.h"
 
 static dev_info* pdi;
 static tag_info ti;

@@ -1,4 +1,4 @@
-bin_PROGRAMS = nfc-anticol nfc-list nfc-mftool nfc-mfultool nfc-relay nfc-emulate nfcip-target nfcip-initiator
+bin_PROGRAMS = nfc-anticol nfc-list nfc-mfclassic nfc-mfultralight nfc-relay nfc-emulate nfcip-target nfcip-initiator
 
 # set the include path found by configure
 INCLUDES= $(all_includes)
@@ -14,11 +14,11 @@ nfc_anticol_LDADD = $(top_builddir)/src/libnfc.la
 nfc_list_SOURCES = nfc-list.c
 nfc_list_LDADD = $(top_builddir)/src/libnfc.la
 
-nfc_mfultool_SOURCES = nfc-mfultool.c mifareultag.h
-nfc_mfultool_LDADD = $(top_builddir)/src/libnfc.la
+nfc_mfultralight_SOURCES = nfc-mfultralight.c mifareultag.h
+nfc_mfultralight_LDADD = $(top_builddir)/src/libnfc.la
 
-nfc_mftool_SOURCES = nfc-mftool.c mifaretag.h
-nfc_mftool_LDADD = $(top_builddir)/src/libnfc.la
+nfc_mfclassic_SOURCES = nfc-mfclassic.c mifaretag.h
+nfc_mfclassic_LDADD = $(top_builddir)/src/libnfc.la
 
 nfc_relay_SOURCES = nfc-relay.c
 nfc_relay_LDADD = $(top_builddir)/src/libnfc.la
@@ -32,7 +32,8 @@ nfcip_target_LDADD = $(top_builddir)/src/libnfc.la
 nfcip_initiator_SOURCES = nfcip-initiator.c
 nfcip_initiator_LDADD = $(top_builddir)/src/libnfc.la
 
-dist_man_MANS = nfc-anticol.1 nfc-emulate.1 nfc-list.1 nfc-mftool.1 nfc-mfultool.1 nfc-relay.1
+dist_man_MANS = nfc-anticol.1 nfc-emulate.1 nfc-list.1 nfc-mfclassic.1 nfc-mfultralight.1 nfc-relay.1
 #dist_man_MANS = $(man_MANS)
 #EXTRA_DIST = $(man_MANS)
 
+DISTCLEANFILES = Makefile.in

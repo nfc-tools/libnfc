@@ -27,7 +27,9 @@
 #include <string.h>
 
 #include "libnfc.h"
+
 #include "messages.h"
+#include "bitutils.h"
 
 static byte_t abtReaderRx[MAX_FRAME_LEN];
 static byte_t abtReaderRxPar[MAX_FRAME_LEN];
