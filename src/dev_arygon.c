@@ -31,12 +31,15 @@
   #define SERIAL_STRING "COM"
   #define delay_ms( X ) Sleep( X )
 #else
+  // unistd.h is needed for usleep() fct.
+  #include <unistd.h>
+  #define delay_ms( X ) usleep( X * 1000 )
+
   #ifdef __APPLE__
+    // MacOS
     #define SERIAL_STRING "/dev/tty.SLAB_USBtoUART"
   #else
-    // unistd.h is needed for usleep() fct.
-    #include <unistd.h>
-    #define delay_ms( X ) usleep( X * 1000 )
+    // *BSD, Linux, other POSIX systems
     #define SERIAL_STRING "/dev/ttyUSB"
   #endif
 #endif
