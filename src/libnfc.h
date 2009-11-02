@@ -32,6 +32,10 @@
 #include "defines.h"
 #include "types.h"
 
+#ifdef __cplusplus 
+    #define NFCAPI extern "C" {
+#endif // __cplusplus
+
 /**
  * @fn dev_info* nfc_connect(nfc_device_desc_t* pndd)
  * @brief Connect to a NFC device
@@ -230,6 +234,11 @@ bool nfc_target_send_bytes(const dev_info* pdi, const byte_t* pbtTx, const size_
  * To communicate data to the reader, this function could be used. The difference between this function and nfc_target_send_bytes is that here pbtTx contains *only* the data sent and not any additional commands, that is all handled internally by the PN53X.
  */
 bool nfc_target_send_dep_bytes(const dev_info* pdi, const byte_t* pbtTx, const size_t szTxLen);
+
+#ifdef __cplusplus 
+}
+#endif // __cplusplus
+
 
 #endif // _LIBNFC_H_
 
