@@ -32,6 +32,8 @@
 #include "bitutils.h"
 #include "messages.h"
 
+#include "../config.h"
+
 // Registers and symbols masks used to covers parts within a register
 #define REG_CIU_TX_MODE           0x6302
   #define SYMBOL_TX_CRC_ENABLE      0x80
@@ -995,4 +997,10 @@ bool nfc_target_send_dep_bytes(const dev_info* pdi, const byte_t* pbtTx, const s
   // Everyting seems ok, return true
   return true;
 }
+
+const char* nfc_version(void)
+{
+  return PACKAGE_VERSION;
+}
+
 

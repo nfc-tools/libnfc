@@ -235,6 +235,13 @@ bool nfc_target_send_bytes(const dev_info* pdi, const byte_t* pbtTx, const size_
  */
 bool nfc_target_send_dep_bytes(const dev_info* pdi, const byte_t* pbtTx, const size_t szTxLen);
 
+/**
+ * @fn const char* nfc_version(void)
+ * @brief Returns the library version
+ * @return Returns a string with the library version
+ */
+const char* nfc_version(void);
+
 #ifdef __cplusplus 
 }
 #endif // __cplusplus
