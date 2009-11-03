@@ -1,0 +1,9 @@
+
+# set the include path found by configure
+INCLUDES= $(all_includes)
+
+noinst_HEADERS = uart.h
+noinst_LTLIBRARIES = libnfcbuses.la
+libnfcbuses_la_SOURCES = uart.c
+
+DISTCLEANFILES = Makefile.in
