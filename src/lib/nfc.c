@@ -17,22 +17,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  * 
  * 
- * @file libnfc.c
+ * @file nfc.c
  * @brief
  */
 
-#include "libnfc.h"
+#include "nfc.h"
 
 #include <stdio.h>
 #include <stddef.h>
 #include <string.h>
 
-#include "devices.h"
+#include "drivers.h"
 
-#include "bitutils.h"
 #include "messages.h"
 
-#include "../config.h"
+#include "../../config.h"
 
 // Registers and symbols masks used to covers parts within a register
 #define REG_CIU_TX_MODE           0x6302
@@ -285,20 +284,20 @@ dev_info* nfc_connect(nfc_device_desc_t* pndd)
   size_t szFwLen = sizeof(abtFw);
 
   // Search through the device list for an available device
-  for (uiDev=0; uiDev<sizeof(dev_callbacks_list)/sizeof(dev_callbacks_list[0]); uiDev++)
+  for (uiDev=0; uiDev<sizeof(drivers_callbacks_list)/sizeof(drivers_callbacks_list[0]); uiDev++)
   {
     if (pndd == NULL) {
       // No device description specified: try to automatically claim a device
-      pdi = dev_callbacks_list[uiDev].connect(pndd);
+      pdi = drivers_callbacks_list[uiDev].connect(pndd);
     } else {
       // Specific device is requested: using device description pndd
-      if( 0 != strcmp(dev_callbacks_list[uiDev].acDriver, pndd->pcDriver ) )
+      if( 0 != strcmp(drivers_callbacks_list[uiDev].acDriver, pndd->pcDriver ) )
       {
-        DBG("Looking for %s, found %s... Skip it.", pndd->pcDriver, dev_callbacks_list[uiDev].acDriver);
+        DBG("Looking for %s, found %s... Skip it.", pndd->pcDriver, drivers_callbacks_list[uiDev].acDriver);
         continue;
       } else {
-        DBG("Looking for %s, found %s... Use it.", pndd->pcDriver, dev_callbacks_list[uiDev].acDriver);
-        pdi = dev_callbacks_list[uiDev].connect(pndd);
+        DBG("Looking for %s, found %s... Use it.", pndd->pcDriver, drivers_callbacks_list[uiDev].acDriver);
+        pdi = drivers_callbacks_list[uiDev].connect(pndd);
       }
     }
 
@@ -307,7 +306,7 @@ dev_info* nfc_connect(nfc_device_desc_t* pndd)
     {
       DBG("[%s] has been claimed.", pdi->acName);
       // Great we have claimed a device
-      pdi->pdc = &(dev_callbacks_list[uiDev]);
+      pdi->pdc = &(drivers_callbacks_list[uiDev]);
 
       // Try to retrieve PN53x chip revision
       // We can not use pn53x_transceive() because abtRx[0] gives no status info
@@ -339,7 +338,7 @@ dev_info* nfc_connect(nfc_device_desc_t* pndd)
 
       return pdi;
     } else {
-      DBG("No device found using driver: %s", dev_callbacks_list[uiDev].acDriver);
+      DBG("No device found using driver: %s", drivers_callbacks_list[uiDev].acDriver);
     }
   }
   // To bad, no reader is ready to be claimed

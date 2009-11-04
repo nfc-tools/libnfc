@@ -26,7 +26,7 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "libnfc.h"
+#include <nfc.h>
 
 #include "messages.h"
 #include "bitutils.h"

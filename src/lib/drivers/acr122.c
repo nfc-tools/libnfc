@@ -17,11 +17,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  * 
  * 
- * @file dev_acr122.c
+ * @file acr122.c
  * @brief
  */
 
-#include "dev_acr122.h"
+#include "acr122.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -35,7 +35,6 @@
 
 #include "defines.h"
 #include "messages.h"
-#include "bitutils.h"
 
 // WINDOWS: #define IOCTL_CCID_ESCAPE_SCARD_CTL_CODE SCARD_CTL_CODE(3500)
 #define IOCTL_CCID_ESCAPE_SCARD_CTL_CODE (((0x31) << 16) | ((3500) << 2))
@@ -58,7 +57,7 @@ typedef struct {
   SCARD_IO_REQUEST ioCard;
 } dev_spec_acr122;
 
-dev_info* dev_acr122_connect(const nfc_device_desc_t* pndd)
+dev_info* acr122_connect(const nfc_device_desc_t* pndd)
 {
   char* pacReaders[MAX_DEVICES];
   char acList[256+64*MAX_DEVICES];
@@ -131,7 +130,7 @@ dev_info* dev_acr122_connect(const nfc_device_desc_t* pndd)
     dsa.ioCard.cbPciLength = sizeof(SCARD_IO_REQUEST);
 
     // Retrieve the current firmware version
-    pcFirmware = dev_acr122_firmware((dev_info*)&dsa);
+    pcFirmware = acr122_firmware((dev_info*)&dsa);
     if (strstr(pcFirmware,FIRMWARE_TEXT) != NULL)
     {
       // We found a occurence, test if it has the right index
@@ -163,7 +162,7 @@ dev_info* dev_acr122_connect(const nfc_device_desc_t* pndd)
   return INVALID_DEVICE_INFO;
 }
 
-void dev_acr122_disconnect(dev_info* pdi)
+void acr122_disconnect(dev_info* pdi)
 {
   dev_spec_acr122* pdsa = (dev_spec_acr122*)pdi->ds;
   SCardDisconnect(pdsa->hCard,SCARD_LEAVE_CARD);
@@ -172,7 +171,7 @@ void dev_acr122_disconnect(dev_info* pdi)
   free(pdi);
 }
 
-bool dev_acr122_transceive(const dev_spec ds, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen)
+bool acr122_transceive(const dev_spec ds, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen)
 {
   byte_t abtRxCmd[5] = { 0xFF,0xC0,0x00,0x00 };
   size_t szRxCmdLen = sizeof(abtRxCmd);
@@ -234,7 +233,7 @@ bool dev_acr122_transceive(const dev_spec ds, const byte_t* pbtTx, const size_t 
   return true;
 }
 
-char* dev_acr122_firmware(const dev_spec ds)
+char* acr122_firmware(const dev_spec ds)
 {
   byte_t abtGetFw[5] = { 0xFF,0x00,0x48,0x00,0x00 };
   uint32_t uiResult;
@@ -260,7 +259,7 @@ char* dev_acr122_firmware(const dev_spec ds)
   return abtFw;
 }
 
-bool dev_acr122_led_red(const dev_spec ds, bool bOn)
+bool acr122_led_red(const dev_spec ds, bool bOn)
 {
   byte_t abtLed[9] = { 0xFF,0x00,0x40,0x05,0x04,0x00,0x00,0x00,0x00 };
   dev_spec_acr122* pdsa = (dev_spec_acr122*)ds;

@@ -17,14 +17,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  * 
  * 
- * @file dev_pn532_uart.c
+ * @file arygon.c
  * @brief
  */
 
-#include "dev_pn532_uart.h"
+#include "arygon.h"
 
-#include "rs232.h"
-#include "bitutils.h"
+#include "uart.h"
 #include "messages.h"
 
 #ifdef _WIN32
@@ -39,16 +38,41 @@
     // MacOS
     #define SERIAL_STRING "/dev/tty.SLAB_USBtoUART"
   #else
-    // *BSD, Linux and others POSIX systems
+    // *BSD, Linux, other POSIX systems
     #define SERIAL_STRING "/dev/ttyUSB"
   #endif
 #endif
 
 #define BUFFER_LENGTH 256
 
-#define SERIAL_DEFAULT_PORT_SPEED 115200
+/** @def DEV_ARYGON_PROTOCOL_ARYGON_ASCII
+ * @brief High level language in ASCII format. (Common µC commands and Mifare® commands) 
+ */
+#define DEV_ARYGON_PROTOCOL_ARYGON_ASCII        '0'
+/** @def DEV_ARYGON_MODE_HL_ASCII
+ * @brief High level language in Binary format With AddressingByte for party line. (Common µC commands and Mifare® commands) 
+ */
+#define DEV_ARYGON_PROTOCOL_ARYGON_BINARY_WAB   '1'
+/** @def DEV_ARYGON_PROTOCOL_TAMA
+ * @brief Philips protocol (TAMA language) in binary format.
+ */
+#define DEV_ARYGON_PROTOCOL_TAMA                '2'
+/** @def DEV_ARYGON_PROTOCOL_TAMA_WAB
+ * @brief Philips protocol (TAMA language) in binary With AddressingByte for party line.
+ */
+#define DEV_ARYGON_PROTOCOL_TAMA_WAB            '3'
 
-dev_info* dev_pn532_uart_connect(const nfc_device_desc_t* pndd)
+#define SERIAL_DEFAULT_PORT_SPEED 9600
+
+/**
+ * @note ARYGON-ADRA (PN531): ???,n,8,1
+ * @note ARYGON-ADRB (PN532): ???,n,8,1
+ * @note ARYGON-APDA (PN531): 9600,n,8,1
+ * @note ARYGON-APDB1UA33N (PN532): 115200,n,8,1
+ * @note ARYGON-APDB2UA33 (PN532 + ARYGON µC): 9600,n,8,1
+ */
+
+dev_info* arygon_connect(const nfc_device_desc_t* pndd)
 {
   uint32_t uiDevNr;
   serial_port sp;
@@ -70,10 +94,10 @@ dev_info* dev_pn532_uart_connect(const nfc_device_desc_t* pndd)
       sprintf(acConnect,"%s%d",SERIAL_STRING,uiDevNr);
 #endif /* __APPLE__ */
 
-      sp = rs232_open(acConnect);
+      sp = uart_open(acConnect);
       if ((sp != INVALID_SERIAL_PORT) && (sp != CLAIMED_SERIAL_PORT))
       {
-        rs232_set_speed(sp, SERIAL_DEFAULT_PORT_SPEED);
+        uart_set_speed(sp, SERIAL_DEFAULT_PORT_SPEED);
         break;
       }
 #ifdef DEBUG
@@ -87,36 +111,19 @@ dev_info* dev_pn532_uart_connect(const nfc_device_desc_t* pndd)
   } else {
     DBG("Connecting to: %s at %d bauds.",pndd->pcPort, pndd->uiSpeed);
     strcpy(acConnect,pndd->pcPort);
-    sp = rs232_open(acConnect);
+    sp = uart_open(acConnect);
     if (sp == INVALID_SERIAL_PORT) ERR("Invalid serial port: %s",acConnect);
     if (sp == CLAIMED_SERIAL_PORT) ERR("Serial port already claimed: %s",acConnect);
     if ((sp == CLAIMED_SERIAL_PORT) || (sp == INVALID_SERIAL_PORT)) return INVALID_DEVICE_INFO;
 
-    rs232_set_speed(sp, pndd->uiSpeed);
+    uart_set_speed(sp, pndd->uiSpeed);
   }
-  /** @info PN532C106 wakeup. */
-  /** @todo Put this command in pn53x init process */
-  byte_t abtRxBuf[BUFFER_LENGTH];
-  size_t szRxBufLen;
-  const byte_t pncmd_pn532c106_wakeup[] = { 0x55,0x55,0x00,0x00,0x00,0x00,0x00,0xFF,0x03,0xFD,0xD4,0x14,0x01,0x17,0x00 };
-
-  rs232_send(sp, pncmd_pn532c106_wakeup, sizeof(pncmd_pn532c106_wakeup));
-  delay_ms(10);
-
-  if (!rs232_receive(sp,abtRxBuf,&szRxBufLen)) {
-    ERR("Unable to receive data. (RX)");
-    return NULL;
-  }
-#ifdef DEBUG
-  printf(" RX: ");
-  print_hex(abtRxBuf,szRxBufLen);
-#endif
 
   DBG("Successfully connected to: %s",acConnect);
 
   // We have a connection
   pdi = malloc(sizeof(dev_info));
-  strcpy(pdi->acName,"PN532_UART");
+  strcpy(pdi->acName,"ARYGON");
   pdi->ct = CT_PN532;
   pdi->ds = (dev_spec)sp;
   pdi->bActive = true;
@@ -126,46 +133,46 @@ dev_info* dev_pn532_uart_connect(const nfc_device_desc_t* pndd)
   return pdi;
 }
 
-void dev_pn532_uart_disconnect(dev_info* pdi)
+void arygon_disconnect(dev_info* pdi)
 {
-  rs232_close((serial_port)pdi->ds);
+  uart_close((serial_port)pdi->ds);
   free(pdi);
 }
 
-bool dev_pn532_uart_transceive(const dev_spec ds, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen)
+bool arygon_transceive(const dev_spec ds, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen)
 {
-  byte_t abtTxBuf[BUFFER_LENGTH] = { 0x00, 0x00, 0xff }; // Every packet must start with "00 00 ff"
+  byte_t abtTxBuf[BUFFER_LENGTH] = { DEV_ARYGON_PROTOCOL_TAMA, 0x00, 0x00, 0xff }; // Every packet must start with "00 00 ff"
   byte_t abtRxBuf[BUFFER_LENGTH];
   size_t szRxBufLen = BUFFER_LENGTH;
   size_t szPos;
 
   // Packet length = data length (len) + checksum (1) + end of stream marker (1)
-  abtTxBuf[3] = szTxLen;
+  abtTxBuf[4] = szTxLen;
   // Packet length checksum
-  abtTxBuf[4] = BUFFER_LENGTH - abtTxBuf[3];
+  abtTxBuf[5] = BUFFER_LENGTH - abtTxBuf[4];
   // Copy the PN53X command into the packet buffer
-  memmove(abtTxBuf+5,pbtTx,szTxLen);
+  memmove(abtTxBuf+6,pbtTx,szTxLen);
 
   // Calculate data payload checksum
-  abtTxBuf[szTxLen+5] = 0;
+  abtTxBuf[szTxLen+6] = 0;
   for(szPos=0; szPos < szTxLen; szPos++) 
   {
-    abtTxBuf[szTxLen+5] -= abtTxBuf[szPos+5];
+    abtTxBuf[szTxLen+6] -= abtTxBuf[szPos+6];
   }
 
   // End of stream marker
-  abtTxBuf[szTxLen+6] = 0;
+  abtTxBuf[szTxLen+7] = 0;
 
 #ifdef DEBUG
   printf(" TX: ");
-  print_hex(abtTxBuf,szTxLen+7);
+  print_hex(abtTxBuf,szTxLen+8);
 #endif
-  if (!rs232_send((serial_port)ds,abtTxBuf,szTxLen+7)) {
+  if (!uart_send((serial_port)ds,abtTxBuf,szTxLen+8)) {
     ERR("Unable to transmit data. (TX)");
     return false;
   }
 
-  /** @note PN532 (at 115200 bauds) need 20ms between sending and receiving frame.
+  /** @note PN532 (at 115200 bauds) need 20ms between sending and receiving frame. No information regarding this in ARYGON datasheet... 
    * It seems to be a required delay to able to send from host to device, plus the device computation then device respond transmission 
    */
   delay_ms(20);
@@ -175,7 +182,12 @@ bool dev_pn532_uart_transceive(const dev_spec ds, const byte_t* pbtTx, const siz
    */
   delay_ms(30);
 
-  if (!rs232_receive((serial_port)ds,abtRxBuf,&szRxBufLen)) {
+  /** @note Unfortunately, adding delay is not enought for ARYGON readers which are equipped with an ARYGON µC + PN532 running at 9600 bauds.
+   * There are too many timing problem to solve them by adding more and more delay.
+   * For more information, see Issue 23 on development site : http://code.google.com/p/libnfc/issues/detail?id=23
+   */
+
+  if (!uart_receive((serial_port)ds,abtRxBuf,&szRxBufLen)) {
     ERR("Unable to receive data. (RX)");
     return false;
   }

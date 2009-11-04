@@ -23,7 +23,7 @@
 
 #include <stdio.h>
 #include <string.h>
-#include "libnfc.h"
+#include <nfc.h>
 
 int main(int argc, const char *argv[])
 {

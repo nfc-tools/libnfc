@@ -17,38 +17,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  * 
  * 
- * @file nfcip-target.c
+ * @file pn532_uart.h
  * @brief
  */
 
-#include <stdio.h>
-#include <nfc.h>
+#ifndef _LIBNFC_DEV_PN532_UART_H_
+#define _LIBNFC_DEV_PN532_UART_H_
 
-int main(int argc, const char *argv[])
-{
-  byte_t abtRecv[MAX_FRAME_LEN];
-  size_t szRecvBits;
-  byte_t send[] = "Hello Mars!";
-  dev_info *pdi = nfc_connect(NULL);
+#include "defines.h"
+#include "types.h"
 
-  if (!pdi || !nfc_target_init(pdi, abtRecv, &szRecvBits)) {
-    printf("unable to connect or initialize\n");
-    return 1;
-  }
+// Functions used by developer to handle connection to this device
+dev_info* pn532_uart_connect(const nfc_device_desc_t* pndd);
+void pn532_uart_disconnect(dev_info* pdi);
 
-  if (!nfc_target_receive_dep_bytes(pdi, abtRecv, &szRecvBits)) {
-    printf("unable to receive data\n");
-    return 1;
-  }
-  abtRecv[szRecvBits] = 0;
-  printf("Received: %s\n", abtRecv);
-  printf("Sending : %s\n", send);
+// Callback function used by libnfc to transmit commands to the PN53X chip
+bool pn532_uart_transceive(const dev_spec ds, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen);
 
-  if (!nfc_target_send_dep_bytes(pdi, send, 11)) {
-    printf("unable to send data\n");
-    return 1;
-  }
+#endif // _LIBNFC_DEV_PN532_UART_H_
 
-  nfc_disconnect(pdi);
-  return 0;
-}

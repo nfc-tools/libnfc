@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  * 
  * 
- * @file dev_pn531.c
+ * @file pn531.c
  * @brief
  */
 
@@ -32,8 +32,7 @@ Thanks to d18c7db and Okko for example code
 #include <string.h>
 
 #include "defines.h"
-#include "dev_pn531.h"
-#include "bitutils.h"
+#include "pn531.h"
 #include "messages.h"
 
 #define BUFFER_LENGTH 256
@@ -81,7 +80,7 @@ static void get_end_points(struct usb_device *dev, dev_spec_pn531* pdsp)
   }
 }
 
-dev_info* dev_pn531_connect(const nfc_device_desc_t* pndd)
+dev_info* pn531_connect(const nfc_device_desc_t* pndd)
 {
   int idvendor = 0x04CC;
   int idproduct = 0x0531;
@@ -163,7 +162,7 @@ dev_info* dev_pn531_connect(const nfc_device_desc_t* pndd)
   return pdi;
 }
 
-void dev_pn531_disconnect(dev_info* pdi)
+void pn531_disconnect(dev_info* pdi)
 {
   dev_spec_pn531* pdsp = (dev_spec_pn531*)pdi->ds;
   usb_release_interface(pdsp->pudh,0);
@@ -172,7 +171,7 @@ void dev_pn531_disconnect(dev_info* pdi)
   free(pdi);
 }
 
-bool dev_pn531_transceive(const dev_spec ds, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen)
+bool pn531_transceive(const dev_spec ds, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen)
 {
   size_t uiPos = 0;
   int ret = 0;

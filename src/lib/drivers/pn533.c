@@ -17,21 +17,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  * 
  * 
- * @file dev_pn533.c
+ * @file pn533.c
  * @brief
  */
 
 /*
 Thanks to d18c7db and Okko for example code
 */
-#include "dev_pn533.h"
+#include "pn533.h"
 
 #include <usb.h>
 #include <stdio.h>
 #include <string.h>
 
 #include "defines.h"
-#include "bitutils.h"
 #include "messages.h"
 
 #define BUFFER_LENGTH 256
@@ -79,7 +78,7 @@ static void get_end_points(struct usb_device *dev, dev_spec_pn533* pdsp)
   }
 }
 
-dev_info* dev_pn533_connect(const nfc_device_desc_t* pndd)
+dev_info* pn533_connect(const nfc_device_desc_t* pndd)
 {
   int idvendor = 0x04e6;
   int idproduct = 0x5591;
@@ -158,7 +157,7 @@ dev_info* dev_pn533_connect(const nfc_device_desc_t* pndd)
   return pdi;
 }
 
-void dev_pn533_disconnect(dev_info* pdi)
+void pn533_disconnect(dev_info* pdi)
 {
   dev_spec_pn533* pdsp = (dev_spec_pn533*)pdi->ds;
   usb_release_interface(pdsp->pudh,0);
@@ -167,7 +166,7 @@ void dev_pn533_disconnect(dev_info* pdi)
   free(pdi);
 }
 
-bool dev_pn533_transceive(const dev_spec ds, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen)
+bool pn533_transceive(const dev_spec ds, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen)
 {
   size_t uiPos = 0;
   int ret = 0;
