@@ -14,4 +14,14 @@ libnfc_la_LIBADD = \
 	$(top_builddir)/src/lib/buses/libnfcbuses.la \
 	$(top_builddir)/src/lib/drivers/libnfcdrivers.la
 
+if PCSC_LITE_ENABLED
+  libnfc_la_CFLAGS += @LIBPCSCLITE_CFLAGS@ -DHAVE_PCSC_LITE
+  libnfc_la_LIBADD += @LIBPCSCLITE_LIBS@
+endif
+
+if LIBUSB_ENABLED
+  libnfc_la_CFLAGS += @LIBUSB_CFLAGS@ -DHAVE_LIBUSB
+  libnfc_la_LIBADD  += @LIBUSB_LIBS@
+endif
+
 DISTCLEANFILES = Makefile.in

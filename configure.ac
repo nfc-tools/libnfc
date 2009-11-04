@@ -1,5 +1,9 @@
-define([rev], esyscmd([sh -c "echo -e 'r\c' && svnversion -n"]))dnl
-AC_INIT(libnfc, 1.2.1+rev, info@libnfc.org)
+# SVN revison
+define([svn_revision], esyscmd([sh -c "svnversion -n"]))
+SVN_REVISION=svn_revision
+
+# General init
+AC_INIT(libnfc, 1.2.1, info@libnfc.org)
 
 AC_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE
@@ -24,7 +28,7 @@ AC_PATH_PROG(PKG_CONFIG, pkg-config)
 # Checks for header files.
 AC_HEADER_STDC
 AC_HEADER_STDBOOL
-AC_CHECK_HEADERS([stdio.h stdlib.h stdint.h stddef.h stdbool.h usb.h])
+AC_CHECK_HEADERS([stdio.h stdlib.h stdint.h stddef.h stdbool.h])
 
 # Checks for types
 AC_TYPE_SIZE_T
