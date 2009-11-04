@@ -17,17 +17,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  * 
  * 
- * @file rs232.c
+ * @file uart.c
  * @brief
  */
 
 /*
-Based on rs232-code written by Teunis van Beelen available:
+Based on uart-code written by Teunis van Beelen available:
 http://www.teuniz.net/RS-232/index.html
 */
 
 
-#include "rs232.h"
+#include "uart.h"
 
 #include "messages.h"
 
@@ -48,10 +48,10 @@ struct timeval tv = {
   .tv_usec = 30000 // 30,000 micro seconds
 };
 
-// Work-around to claim rs232 interface using the c_iflag (software input processing) from the termios struct
+// Work-around to claim uart interface using the c_iflag (software input processing) from the termios struct
 #define CCLAIMED 0x80000000
 
-serial_port rs232_open(const char* pcPortName)
+serial_port uart_open(const char* pcPortName)
 {
   serial_port_unix* sp = malloc(sizeof(serial_port_unix));
 
@@ -60,20 +60,20 @@ serial_port rs232_open(const char* pcPortName)
   sp->fd = open(pcPortName, O_RDWR | O_NOCTTY | O_NDELAY | O_NONBLOCK);
   if(sp->fd == -1)
   {
-    rs232_close(sp);
+    uart_close(sp);
     return INVALID_SERIAL_PORT;
   }
 
   if(tcgetattr(sp->fd,&sp->tiOld) == -1)
   {
-    rs232_close(sp);
+    uart_close(sp);
     return INVALID_SERIAL_PORT;
   }
 
   // Make sure the port is not claimed already
   if (sp->tiOld.c_iflag & CCLAIMED)
   {
-    rs232_close(sp);
+    uart_close(sp);
     return CLAIMED_SERIAL_PORT;
   }
 
@@ -90,7 +90,7 @@ serial_port rs232_open(const char* pcPortName)
 
   if(tcsetattr(sp->fd,TCSANOW,&sp->tiNew) == -1)
   {
-    rs232_close(sp);
+    uart_close(sp);
     return INVALID_SERIAL_PORT;
   }
 
@@ -98,7 +98,7 @@ serial_port rs232_open(const char* pcPortName)
   return sp;
 }
 
-void rs232_set_speed(serial_port sp, const uint32_t uiPortSpeed)
+void uart_set_speed(serial_port sp, const uint32_t uiPortSpeed)
 {
   DBG("Serial port speed requested to be set to %d bauds.", uiPortSpeed);
   // Set port speed (Input and Output)
@@ -136,7 +136,7 @@ void rs232_set_speed(serial_port sp, const uint32_t uiPortSpeed)
   }
 }
 
-uint32_t rs232_get_speed(const serial_port sp)
+uint32_t uart_get_speed(const serial_port sp)
 {
   uint32_t uiPortSpeed = 0;
   const serial_port_unix* spu = (serial_port_unix*)sp;
@@ -163,21 +163,21 @@ uint32_t rs232_get_speed(const serial_port sp)
   return uiPortSpeed;
 }
 
-void rs232_close(const serial_port sp)
+void uart_close(const serial_port sp)
 {
   tcsetattr(((serial_port_unix*)sp)->fd,TCSANOW,&((serial_port_unix*)sp)->tiOld);
   close(((serial_port_unix*)sp)->fd);
   free(sp);
 }
 
-bool rs232_cts(const serial_port sp)
+bool uart_cts(const serial_port sp)
 {
   char status;
   if (ioctl(((serial_port_unix*)sp)->fd,TIOCMGET,&status) < 0) return false;
   return (status & TIOCM_CTS);
 }
 
-bool rs232_receive(const serial_port sp, byte_t* pbtRx, size_t* pszRxLen)
+bool uart_receive(const serial_port sp, byte_t* pbtRx, size_t* pszRxLen)
 {
   int iResult;
   int byteCount;
@@ -217,7 +217,7 @@ bool rs232_receive(const serial_port sp, byte_t* pbtRx, size_t* pszRxLen)
   return (*pszRxLen > 0);
 }
 
-bool rs232_send(const serial_port sp, const byte_t* pbtTx, const size_t szTxLen)
+bool uart_send(const serial_port sp, const byte_t* pbtTx, const size_t szTxLen)
 {
   int iResult;
   iResult = write(((serial_port_unix*)sp)->fd,pbtTx,szTxLen);
@@ -233,7 +233,7 @@ typedef struct {
   COMMTIMEOUTS ct;  // Serial port time-out configuration
 } serial_port_windows;
 
-serial_port rs232_open(const char* pcPortName)
+serial_port uart_open(const char* pcPortName)
 {
   char acPortName[255];
   serial_port_windows* sp = malloc(sizeof(serial_port_windows));
@@ -246,7 +246,7 @@ serial_port rs232_open(const char* pcPortName)
   sp->hPort = CreateFileA(acPortName,GENERIC_READ|GENERIC_WRITE,0,NULL,OPEN_EXISTING,0,NULL);
   if (sp->hPort == INVALID_HANDLE_VALUE)
   {
-    rs232_close(sp);
+    uart_close(sp);
     return INVALID_SERIAL_PORT;
   }
 
@@ -255,14 +255,14 @@ serial_port rs232_open(const char* pcPortName)
   sp->dcb.DCBlength = sizeof(DCB);
   if(!BuildCommDCBA("baud=9600 data=8 parity=N stop=1",&sp->dcb))
   {
-    rs232_close(sp);
+    uart_close(sp);
     return INVALID_SERIAL_PORT;
   }
 
   // Update the active serial port
   if(!SetCommState(sp->hPort,&sp->dcb))
   {
-    rs232_close(sp);
+    uart_close(sp);
     return INVALID_SERIAL_PORT;
   }
 
@@ -274,7 +274,7 @@ serial_port rs232_open(const char* pcPortName)
 
   if(!SetCommTimeouts(sp->hPort,&sp->ct))
   {
-    rs232_close(sp);
+    uart_close(sp);
     return INVALID_SERIAL_PORT;
   }
 
@@ -283,13 +283,13 @@ serial_port rs232_open(const char* pcPortName)
   return sp;
 }
 
-void rs232_close(const serial_port sp)
+void uart_close(const serial_port sp)
 {
   CloseHandle(((serial_port_windows*)sp)->hPort);
   free(sp);
 }
 
-void rs232_set_speed(serial_port sp, const uint32_t uiPortSpeed)
+void uart_set_speed(serial_port sp, const uint32_t uiPortSpeed)
 {
   serial_port_windows* spw;
 
@@ -316,7 +316,7 @@ void rs232_set_speed(serial_port sp, const uint32_t uiPortSpeed)
   }
 }
 
-uint32_t rs232_get_speed(const serial_port sp)
+uint32_t uart_get_speed(const serial_port sp)
 {
   const serial_port_windows* spw = (serial_port_windows*)sp;
   if (!GetCommState(spw->hPort, (serial_port)&spw->dcb))
@@ -325,20 +325,13 @@ uint32_t rs232_get_speed(const serial_port sp)
   return 0;
 }
 
-bool rs232_cts(const serial_port sp)
-{
-  DWORD dwStatus;
-  if (!GetCommModemStatus(((serial_port_windows*)sp)->hPort,&dwStatus)) return false;
-  return (dwStatus & MS_CTS_ON);
-}
-
-bool rs232_receive(const serial_port sp, byte_t* pbtRx, size_t* pszRxLen)
+bool uart_receive(const serial_port sp, byte_t* pbtRx, size_t* pszRxLen)
 {
   ReadFile(((serial_port_windows*)sp)->hPort,pbtRx,*pszRxLen,(LPDWORD)pszRxLen,NULL);
   return (*pszRxLen != 0);
 }
 
-bool rs232_send(const serial_port sp, const byte_t* pbtTx, const size_t szTxLen)
+bool uart_send(const serial_port sp, const byte_t* pbtTx, const size_t szTxLen)
 {
   DWORD dwTxLen = 0;
   return WriteFile(((serial_port_windows*)sp)->hPort,pbtTx,szTxLen,&dwTxLen,NULL);

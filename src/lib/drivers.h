@@ -27,26 +27,26 @@
 #include "defines.h"
 #include "types.h"
 #ifdef HAVE_PCSC_LITE
-  #include "dev_acr122.h"
+  #include <drivers/acr122.h>
 #endif /* HAVE_PCSC_LITE */
 #ifdef HAVE_LIBUSB
-  #include "dev_pn531.h"
-  #include "dev_pn533.h"
+  #include <drivers/pn531.h>
+  #include <drivers/pn533.h>
 #endif /* HAVE_LIBUSB */
-#include "dev_arygon.h"
-#include "dev_pn532_uart.h"
+#include <drivers/arygon.h>
+#include <drivers/pn532_uart.h>
 
-const static struct dev_callbacks dev_callbacks_list[] = {
+const static struct driver_callbacks drivers_callbacks_list[] = {
 //  Driver Name        Connect                  Transceive                    Disconnect
 #ifdef HAVE_PCSC_LITE
-  { "ACR122",          dev_acr122_connect,      dev_acr122_transceive,        dev_acr122_disconnect       },
+  { "ACR122",          acr122_connect,      acr122_transceive,        acr122_disconnect       },
 #endif /* HAVE_PCSC_LITE */
 #ifdef HAVE_LIBUSB
-  { "PN531USB",        dev_pn531_connect,       dev_pn531_transceive,         dev_pn531_disconnect        },
-  { "PN533USB",        dev_pn533_connect,       dev_pn533_transceive,         dev_pn533_disconnect        },
+  { "PN531USB",        pn531_connect,       pn531_transceive,         pn531_disconnect        },
+  { "PN533USB",        pn533_connect,       pn533_transceive,         pn533_disconnect        },
 #endif /* HAVE_LIBUSB */
-  { "PN532_UART",      dev_pn532_uart_connect,  dev_pn532_uart_transceive,    dev_pn532_uart_disconnect   },
-  { "ARYGON",          dev_arygon_connect,      dev_arygon_transceive,        dev_arygon_disconnect       }
+  { "PN532_UART",      pn532_uart_connect,  pn532_uart_transceive,    pn532_uart_disconnect   },
+  { "ARYGON",          arygon_connect,      arygon_transceive,        arygon_disconnect       }
 };
 
 #endif // _LIBNFC_DEVICES_H_

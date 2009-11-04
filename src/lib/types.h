@@ -44,7 +44,7 @@ typedef enum {
   CT_PN533                    = 0x30,
 } chip_type;
 
-struct dev_callbacks;                // Prototype the callback struct
+struct driver_callbacks;                // Prototype the callback struct
 
 /**
  * @struct dev_info
@@ -52,7 +52,7 @@ struct dev_callbacks;                // Prototype the callback struct
  */
 typedef struct {
 /** Callback functions for handling device specific wrapping */
-  const struct dev_callbacks* pdc;
+  const struct driver_callbacks* pdc;
 /** Device name string, including device wrapper firmware */
   char acName[DEVICE_NAME_LENGTH];
 /** PN53X chip type, this is useful for some "bug" work-arounds */
@@ -87,10 +87,10 @@ typedef struct {
 } nfc_device_desc_t;
 
 /**
- * @struct dev_callbacks
+ * @struct driver_callbacks
  * @brief NFC defice callbacks
  */
-struct dev_callbacks {
+struct driver_callbacks {
   /** Driver name */
   const char* acDriver;
   /** Connect callback */

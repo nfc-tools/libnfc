@@ -17,14 +17,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  * 
  * 
- * @file dev_arygon.c
+ * @file arygon.c
  * @brief
  */
 
-#include "dev_arygon.h"
+#include "arygon.h"
 
-#include "rs232.h"
-#include "bitutils.h"
+#include "uart.h"
 #include "messages.h"
 
 #ifdef _WIN32
@@ -73,7 +72,7 @@
  * @note ARYGON-APDB2UA33 (PN532 + ARYGON µC): 9600,n,8,1
  */
 
-dev_info* dev_arygon_connect(const nfc_device_desc_t* pndd)
+dev_info* arygon_connect(const nfc_device_desc_t* pndd)
 {
   uint32_t uiDevNr;
   serial_port sp;
@@ -95,10 +94,10 @@ dev_info* dev_arygon_connect(const nfc_device_desc_t* pndd)
       sprintf(acConnect,"%s%d",SERIAL_STRING,uiDevNr);
 #endif /* __APPLE__ */
 
-      sp = rs232_open(acConnect);
+      sp = uart_open(acConnect);
       if ((sp != INVALID_SERIAL_PORT) && (sp != CLAIMED_SERIAL_PORT))
       {
-        rs232_set_speed(sp, SERIAL_DEFAULT_PORT_SPEED);
+        uart_set_speed(sp, SERIAL_DEFAULT_PORT_SPEED);
         break;
       }
 #ifdef DEBUG
@@ -112,12 +111,12 @@ dev_info* dev_arygon_connect(const nfc_device_desc_t* pndd)
   } else {
     DBG("Connecting to: %s at %d bauds.",pndd->pcPort, pndd->uiSpeed);
     strcpy(acConnect,pndd->pcPort);
-    sp = rs232_open(acConnect);
+    sp = uart_open(acConnect);
     if (sp == INVALID_SERIAL_PORT) ERR("Invalid serial port: %s",acConnect);
     if (sp == CLAIMED_SERIAL_PORT) ERR("Serial port already claimed: %s",acConnect);
     if ((sp == CLAIMED_SERIAL_PORT) || (sp == INVALID_SERIAL_PORT)) return INVALID_DEVICE_INFO;
 
-    rs232_set_speed(sp, pndd->uiSpeed);
+    uart_set_speed(sp, pndd->uiSpeed);
   }
 
   DBG("Successfully connected to: %s",acConnect);
@@ -134,13 +133,13 @@ dev_info* dev_arygon_connect(const nfc_device_desc_t* pndd)
   return pdi;
 }
 
-void dev_arygon_disconnect(dev_info* pdi)
+void arygon_disconnect(dev_info* pdi)
 {
-  rs232_close((serial_port)pdi->ds);
+  uart_close((serial_port)pdi->ds);
   free(pdi);
 }
 
-bool dev_arygon_transceive(const dev_spec ds, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen)
+bool arygon_transceive(const dev_spec ds, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen)
 {
   byte_t abtTxBuf[BUFFER_LENGTH] = { DEV_ARYGON_PROTOCOL_TAMA, 0x00, 0x00, 0xff }; // Every packet must start with "00 00 ff"
   byte_t abtRxBuf[BUFFER_LENGTH];
@@ -168,7 +167,7 @@ bool dev_arygon_transceive(const dev_spec ds, const byte_t* pbtTx, const size_t 
   printf(" TX: ");
   print_hex(abtTxBuf,szTxLen+8);
 #endif
-  if (!rs232_send((serial_port)ds,abtTxBuf,szTxLen+8)) {
+  if (!uart_send((serial_port)ds,abtTxBuf,szTxLen+8)) {
     ERR("Unable to transmit data. (TX)");
     return false;
   }
@@ -188,7 +187,7 @@ bool dev_arygon_transceive(const dev_spec ds, const byte_t* pbtTx, const size_t 
    * For more information, see Issue 23 on development site : http://code.google.com/p/libnfc/issues/detail?id=23
    */
 
-  if (!rs232_receive((serial_port)ds,abtRxBuf,&szRxBufLen)) {
+  if (!uart_receive((serial_port)ds,abtRxBuf,&szRxBufLen)) {
     ERR("Unable to receive data. (RX)");
     return false;
   }

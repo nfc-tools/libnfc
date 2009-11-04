@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  * 
  * 
- * @file rs232.h
+ * @file uart.h
  * @brief
  */
 
@@ -49,16 +49,14 @@ typedef void* serial_port;
 #define INVALID_SERIAL_PORT (void*)(~1)
 #define CLAIMED_SERIAL_PORT (void*)(~2)
 
-serial_port rs232_open(const char* pcPortName);
-void rs232_close(const serial_port sp);
+serial_port uart_open(const char* pcPortName);
+void uart_close(const serial_port sp);
 
-void rs232_set_speed(serial_port sp, const uint32_t uiPortSpeed);
-uint32_t rs232_get_speed(const serial_port sp);
+void uart_set_speed(serial_port sp, const uint32_t uiPortSpeed);
+uint32_t uart_get_speed(const serial_port sp);
 
-bool rs232_cts(const serial_port sp);
-
-bool rs232_receive(const serial_port sp, byte_t* pbtRx, size_t* pszRxLen);
-bool rs232_send(const serial_port sp, const byte_t* pbtTx, const size_t szTxLen);
+bool uart_receive(const serial_port sp, byte_t* pbtRx, size_t* pszRxLen);
+bool uart_send(const serial_port sp, const byte_t* pbtTx, const size_t szTxLen);
 
 #endif // _LIBNFC_RS232_H_
 

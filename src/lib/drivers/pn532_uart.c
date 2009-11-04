@@ -17,14 +17,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  * 
  * 
- * @file dev_pn532_uart.c
+ * @file pn532_uart.c
  * @brief
  */
 
-#include "dev_pn532_uart.h"
+#include "pn532_uart.h"
 
-#include "rs232.h"
-#include "bitutils.h"
+#include "uart.h"
 #include "messages.h"
 
 #ifdef _WIN32
@@ -48,7 +47,7 @@
 
 #define SERIAL_DEFAULT_PORT_SPEED 115200
 
-dev_info* dev_pn532_uart_connect(const nfc_device_desc_t* pndd)
+dev_info* pn532_uart_connect(const nfc_device_desc_t* pndd)
 {
   uint32_t uiDevNr;
   serial_port sp;
@@ -70,10 +69,10 @@ dev_info* dev_pn532_uart_connect(const nfc_device_desc_t* pndd)
       sprintf(acConnect,"%s%d",SERIAL_STRING,uiDevNr);
 #endif /* __APPLE__ */
 
-      sp = rs232_open(acConnect);
+      sp = uart_open(acConnect);
       if ((sp != INVALID_SERIAL_PORT) && (sp != CLAIMED_SERIAL_PORT))
       {
-        rs232_set_speed(sp, SERIAL_DEFAULT_PORT_SPEED);
+        uart_set_speed(sp, SERIAL_DEFAULT_PORT_SPEED);
         break;
       }
 #ifdef DEBUG
@@ -87,12 +86,12 @@ dev_info* dev_pn532_uart_connect(const nfc_device_desc_t* pndd)
   } else {
     DBG("Connecting to: %s at %d bauds.",pndd->pcPort, pndd->uiSpeed);
     strcpy(acConnect,pndd->pcPort);
-    sp = rs232_open(acConnect);
+    sp = uart_open(acConnect);
     if (sp == INVALID_SERIAL_PORT) ERR("Invalid serial port: %s",acConnect);
     if (sp == CLAIMED_SERIAL_PORT) ERR("Serial port already claimed: %s",acConnect);
     if ((sp == CLAIMED_SERIAL_PORT) || (sp == INVALID_SERIAL_PORT)) return INVALID_DEVICE_INFO;
 
-    rs232_set_speed(sp, pndd->uiSpeed);
+    uart_set_speed(sp, pndd->uiSpeed);
   }
   /** @info PN532C106 wakeup. */
   /** @todo Put this command in pn53x init process */
@@ -100,10 +99,10 @@ dev_info* dev_pn532_uart_connect(const nfc_device_desc_t* pndd)
   size_t szRxBufLen;
   const byte_t pncmd_pn532c106_wakeup[] = { 0x55,0x55,0x00,0x00,0x00,0x00,0x00,0xFF,0x03,0xFD,0xD4,0x14,0x01,0x17,0x00 };
 
-  rs232_send(sp, pncmd_pn532c106_wakeup, sizeof(pncmd_pn532c106_wakeup));
+  uart_send(sp, pncmd_pn532c106_wakeup, sizeof(pncmd_pn532c106_wakeup));
   delay_ms(10);
 
-  if (!rs232_receive(sp,abtRxBuf,&szRxBufLen)) {
+  if (!uart_receive(sp,abtRxBuf,&szRxBufLen)) {
     ERR("Unable to receive data. (RX)");
     return NULL;
   }
@@ -126,13 +125,13 @@ dev_info* dev_pn532_uart_connect(const nfc_device_desc_t* pndd)
   return pdi;
 }
 
-void dev_pn532_uart_disconnect(dev_info* pdi)
+void pn532_uart_disconnect(dev_info* pdi)
 {
-  rs232_close((serial_port)pdi->ds);
+  uart_close((serial_port)pdi->ds);
   free(pdi);
 }
 
-bool dev_pn532_uart_transceive(const dev_spec ds, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen)
+bool pn532_uart_transceive(const dev_spec ds, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen)
 {
   byte_t abtTxBuf[BUFFER_LENGTH] = { 0x00, 0x00, 0xff }; // Every packet must start with "00 00 ff"
   byte_t abtRxBuf[BUFFER_LENGTH];
@@ -160,7 +159,7 @@ bool dev_pn532_uart_transceive(const dev_spec ds, const byte_t* pbtTx, const siz
   printf(" TX: ");
   print_hex(abtTxBuf,szTxLen+7);
 #endif
-  if (!rs232_send((serial_port)ds,abtTxBuf,szTxLen+7)) {
+  if (!uart_send((serial_port)ds,abtTxBuf,szTxLen+7)) {
     ERR("Unable to transmit data. (TX)");
     return false;
   }
@@ -175,7 +174,7 @@ bool dev_pn532_uart_transceive(const dev_spec ds, const byte_t* pbtTx, const siz
    */
   delay_ms(30);
 
-  if (!rs232_receive((serial_port)ds,abtRxBuf,&szRxBufLen)) {
+  if (!uart_receive((serial_port)ds,abtRxBuf,&szRxBufLen)) {
     ERR("Unable to receive data. (RX)");
     return false;
   }

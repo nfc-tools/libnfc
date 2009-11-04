@@ -165,8 +165,11 @@ fi
 
 AC_CONFIG_FILES([
 		Makefile
-		src/Makefile
+		src/lib/buses/Makefile
+		src/lib/drivers/Makefile
+		src/lib/Makefile
 		src/examples/Makefile
+		src/Makefile
 		libnfc.pc
 		Doxyfile
 		])

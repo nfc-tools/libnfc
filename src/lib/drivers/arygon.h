@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  * 
  * 
- * @file dev_arygon.h
+ * @file arygon.h
  * @brief
  */
 
@@ -28,11 +28,11 @@
 #include "types.h"
 
 // Functions used by developer to handle connection to this device
-dev_info* dev_arygon_connect(const nfc_device_desc_t* pndd);
-void dev_arygon_disconnect(dev_info* pdi);
+dev_info* arygon_connect(const nfc_device_desc_t* pndd);
+void arygon_disconnect(dev_info* pdi);
 
 // Callback function used by libnfc to transmit commands to the PN53X chip
-bool dev_arygon_transceive(const dev_spec ds, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen);
+bool arygon_transceive(const dev_spec ds, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen);
 
 #endif // _LIBNFC_DEV_ARYGON_H_
 
