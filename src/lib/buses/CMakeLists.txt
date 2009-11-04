@@ -1,2 +1,0 @@
-SET(LIBRARY-SOURCES uart)
-
