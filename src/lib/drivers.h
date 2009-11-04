@@ -27,14 +27,14 @@
 #include "defines.h"
 #include "types.h"
 #ifdef HAVE_PCSC_LITE
-  #include <drivers/acr122.h>
+  #include "drivers/acr122.h"
 #endif /* HAVE_PCSC_LITE */
 #ifdef HAVE_LIBUSB
-  #include <drivers/pn531.h>
-  #include <drivers/pn533.h>
+  #include "drivers/pn531.h"
+  #include "drivers/pn533.h"
 #endif /* HAVE_LIBUSB */
-#include <drivers/arygon.h>
-#include <drivers/pn532_uart.h>
+#include "drivers/arygon.h"
+#include "drivers/pn532_uart.h"
 
 const static struct driver_callbacks drivers_callbacks_list[] = {
 //  Driver Name        Connect                  Transceive                    Disconnect

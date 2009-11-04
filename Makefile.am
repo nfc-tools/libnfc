@@ -15,7 +15,7 @@ html-am : Doxyfile
 
 .PHONY: html
 endif
-DISTCLEANFILES = \ 
+DISTCLEANFILES = \
   Makefile.in \
   configure \
   depcomp \
