@@ -70,7 +70,13 @@ bool is_trailer_block(uint32_t uiBlock)
 uint32_t get_trailer_block(uint32_t uiFirstBlock)
 {
   // Test if we are in the small or big sectors
-  if (uiFirstBlock<128) return uiFirstBlock+3; else return uiFirstBlock+15;
+  uint32_t trailer_block = 0;
+  if (uiFirstBlock < 128) {
+    trailer_block = uiFirstBlock + (3 - (uiFirstBlock % 4));
+  } else {
+    trailer_block = uiFirstBlock + (15 - (uiFirstBlock % 16));
+  }
+  return trailer_block;
 }
 
 bool authenticate(uint32_t uiBlock)
@@ -252,7 +258,10 @@ bool write_card()
       memcpy(mp.mpd.abtData+10,mtDump.amb[uiBlock].mbt.abtKeyB,6);
 
       // Try to write the trailer
-      nfc_initiator_mifare_cmd(pdi,MC_WRITE,uiBlock,&mp);
+      if (nfc_initiator_mifare_cmd(pdi,MC_WRITE,uiBlock,&mp) == false) {
+        printf("failed to write trailer block %d \n", uiBlock);
+        bFailure = true;
+      }
 
     } else {
 
