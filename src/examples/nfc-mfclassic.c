@@ -35,7 +35,7 @@
 #include "mifaretag.h"
 #include "bitutils.h"
 
-static dev_info* pdi;
+static nfc_device_t* pnd;
 static tag_info ti;
 static mifare_param mp;
 static mifare_tag mtKeys;
@@ -99,7 +99,7 @@ bool authenticate(uint32_t uiBlock)
     }
 
     // Try to authenticate for the current sector
-    if (nfc_initiator_mifare_cmd(pdi,mc,uiBlock,&mp))
+    if (nfc_initiator_mifare_cmd(pnd,mc,uiBlock,&mp))
         return true;
   }
   
@@ -115,7 +115,7 @@ bool authenticate(uint32_t uiBlock)
     for (key_index = 0; key_index < num_keys; key_index++)
     {
       memcpy(mp.mpa.abtKey, keys + (key_index*6), 6);
-      if (nfc_initiator_mifare_cmd(pdi, mc, uiBlock, &mp))
+      if (nfc_initiator_mifare_cmd(pnd, mc, uiBlock, &mp))
       {
         /** 
          * @note: what about the other key?
@@ -128,7 +128,7 @@ bool authenticate(uint32_t uiBlock)
         return true;
       }
     
-      nfc_initiator_select_tag(pdi, IM_ISO14443A_106, mp.mpa.abtUid, 4, NULL);
+      nfc_initiator_select_tag(pnd, IM_ISO14443A_106, mp.mpa.abtUid, 4, NULL);
     }
   }
   
@@ -153,7 +153,7 @@ bool read_card()
       {
         printf("x");
         // When a failure occured we need to redo the anti-collision
-        if (!nfc_initiator_select_tag(pdi,IM_ISO14443A_106,NULL,0,&ti))
+        if (!nfc_initiator_select_tag(pnd,IM_ISO14443A_106,NULL,0,&ti))
         {
           printf("!\nError: tag was removed\n");
           return 1;
@@ -176,7 +176,7 @@ bool read_card()
       }
 
       // Try to read out the trailer
-      if (nfc_initiator_mifare_cmd(pdi,MC_READ,iBlock,&mp))
+      if (nfc_initiator_mifare_cmd(pnd,MC_READ,iBlock,&mp))
       {
         // Copy the keys over from our key dump and store the retrieved access bits
         memcpy(mtDump.amb[iBlock].mbt.abtKeyA,mtKeys.amb[iBlock].mbt.abtKeyA,6);
@@ -188,7 +188,7 @@ bool read_card()
       if (!bFailure)
       {
         // Try to read out the data block
-        if (nfc_initiator_mifare_cmd(pdi,MC_READ,iBlock,&mp))
+        if (nfc_initiator_mifare_cmd(pnd,MC_READ,iBlock,&mp))
         {
           memcpy(mtDump.amb[iBlock].mbd.abtData,mp.mpd.abtData,16);
         } else {
@@ -221,7 +221,7 @@ bool write_card()
       {
         printf("x");
         // When a failure occured we need to redo the anti-collision
-        if (!nfc_initiator_select_tag(pdi,IM_ISO14443A_106,NULL,0,&ti))
+        if (!nfc_initiator_select_tag(pnd,IM_ISO14443A_106,NULL,0,&ti))
         {
           printf("!\nError: tag was removed\n");
           return false;
@@ -252,7 +252,7 @@ bool write_card()
       memcpy(mp.mpd.abtData+10,mtDump.amb[uiBlock].mbt.abtKeyB,6);
 
       // Try to write the trailer
-      nfc_initiator_mifare_cmd(pdi,MC_WRITE,uiBlock,&mp);
+      nfc_initiator_mifare_cmd(pnd,MC_WRITE,uiBlock,&mp);
 
     } else {
 
@@ -264,7 +264,7 @@ bool write_card()
       {
         // Try to write the data block
         memcpy(mp.mpd.abtData,mtDump.amb[uiBlock].mbd.abtData,16);
-        if (!nfc_initiator_mifare_cmd(pdi,MC_WRITE,uiBlock,&mp)) bFailure = true;
+        if (!nfc_initiator_mifare_cmd(pnd,MC_WRITE,uiBlock,&mp)) bFailure = true;
       }
     }
   }
@@ -396,33 +396,33 @@ int main(int argc, const char* argv[])
       // printf("Successfully opened required files\n");
     
       // Try to open the NFC reader
-      pdi = nfc_connect(NULL);
-      if (pdi == INVALID_DEVICE_INFO)
+      pnd = nfc_connect(NULL);
+      if (pnd == INVALID_DEVICE_INFO)
       {
         printf("Error connecting NFC reader\n");
         return 1;
       }
     
-      nfc_initiator_init(pdi);
+      nfc_initiator_init(pnd);
     
       // Drop the field for a while
-      nfc_configure(pdi,DCO_ACTIVATE_FIELD,false);
+      nfc_configure(pnd,DCO_ACTIVATE_FIELD,false);
     
       // Let the reader only try once to find a tag
-      nfc_configure(pdi,DCO_INFINITE_SELECT,false);
-      nfc_configure(pdi,DCO_HANDLE_CRC,true);
-      nfc_configure(pdi,DCO_HANDLE_PARITY,true);
+      nfc_configure(pnd,DCO_INFINITE_SELECT,false);
+      nfc_configure(pnd,DCO_HANDLE_CRC,true);
+      nfc_configure(pnd,DCO_HANDLE_PARITY,true);
     
       // Enable field so more power consuming cards can power themselves up
-      nfc_configure(pdi,DCO_ACTIVATE_FIELD,true);
+      nfc_configure(pnd,DCO_ACTIVATE_FIELD,true);
     
-      printf("Connected to NFC reader: %s\n",pdi->acName);
+      printf("Connected to NFC reader: %s\n",pnd->acName);
     
       // Try to find a MIFARE Classic tag
-      if (!nfc_initiator_select_tag(pdi,IM_ISO14443A_106,NULL,0,&ti))
+      if (!nfc_initiator_select_tag(pnd,IM_ISO14443A_106,NULL,0,&ti))
       {
         printf("Error: no tag was found\n");
-        nfc_disconnect(pdi);
+        nfc_disconnect(pnd);
         return 1;
       }
     
@@ -430,7 +430,7 @@ int main(int argc, const char* argv[])
       if ((ti.tia.btSak & 0x08) == 0)
       {
         printf("Error: tag is not a MIFARE Classic card\n");
-        nfc_disconnect(pdi);
+        nfc_disconnect(pnd);
         return 1;
       }
     
@@ -476,7 +476,7 @@ int main(int argc, const char* argv[])
         }
       }
     
-      nfc_disconnect(pdi);
+      nfc_disconnect(pnd);
       break;
 
     case ACTION_EXTRACT: {

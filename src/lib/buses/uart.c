@@ -22,14 +22,13 @@
  */
 
 /*
-Based on uart-code written by Teunis van Beelen available:
+Based on RS232 code written by Teunis van Beelen available:
 http://www.teuniz.net/RS-232/index.html
 */
 
-
 #include "uart.h"
 
-#include "messages.h"
+#include "nfc-messages.h"
 
 // Test if we are dealing with unix operating systems
 #ifndef _WIN32
@@ -325,6 +324,13 @@ uint32_t uart_get_speed(const serial_port sp)
   return 0;
 }
 
+bool uart_cts(const serial_port sp)
+{
+  char status;
+  if (ioctl(((serial_port_unix*)sp)->fd,TIOCMGET,&status) < 0) return false;
+  return (status & TIOCM_CTS);
+}
+
 bool uart_receive(const serial_port sp, byte_t* pbtRx, size_t* pszRxLen)
 {
   ReadFile(((serial_port_windows*)sp)->hPort,pbtRx,*pszRxLen,(LPDWORD)pszRxLen,NULL);
@@ -338,4 +344,4 @@ bool uart_send(const serial_port sp, const byte_t* pbtTx, const size_t szTxLen)
   return (dwTxLen != 0);
 }
 
-#endif
+#endif /* _WIN32 */

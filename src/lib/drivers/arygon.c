@@ -24,7 +24,7 @@
 #include "arygon.h"
 
 #include "uart.h"
-#include "messages.h"
+#include "nfc-messages.h"
 
 #ifdef _WIN32
   #define SERIAL_STRING "COM"
@@ -72,12 +72,12 @@
  * @note ARYGON-APDB2UA33 (PN532 + ARYGON µC): 9600,n,8,1
  */
 
-dev_info* arygon_connect(const nfc_device_desc_t* pndd)
+nfc_device_t* arygon_connect(const nfc_device_desc_t* pndd)
 {
   uint32_t uiDevNr;
   serial_port sp;
   char acConnect[BUFFER_LENGTH];
-  dev_info* pdi = INVALID_DEVICE_INFO;
+  nfc_device_t* pnd = INVALID_DEVICE_INFO;
 
   if( pndd == NULL ) {
 #ifdef DISABLE_SERIAL_AUTOPROBE
@@ -122,21 +122,21 @@ dev_info* arygon_connect(const nfc_device_desc_t* pndd)
   DBG("Successfully connected to: %s",acConnect);
 
   // We have a connection
-  pdi = malloc(sizeof(dev_info));
-  strcpy(pdi->acName,"ARYGON");
-  pdi->ct = CT_PN532;
-  pdi->ds = (dev_spec)sp;
-  pdi->bActive = true;
-  pdi->bCrc = true;
-  pdi->bPar = true;
-  pdi->ui8TxBits = 0;
-  return pdi;
+  pnd = malloc(sizeof(nfc_device_t));
+  strcpy(pnd->acName,"ARYGON");
+  pnd->ct = CT_PN532;
+  pnd->ds = (dev_spec)sp;
+  pnd->bActive = true;
+  pnd->bCrc = true;
+  pnd->bPar = true;
+  pnd->ui8TxBits = 0;
+  return pnd;
 }
 
-void arygon_disconnect(dev_info* pdi)
+void arygon_disconnect(nfc_device_t* pnd)
 {
-  uart_close((serial_port)pdi->ds);
-  free(pdi);
+  uart_close((serial_port)pnd->ds);
+  free(pnd);
 }
 
 bool arygon_transceive(const dev_spec ds, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen)

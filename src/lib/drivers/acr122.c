@@ -33,8 +33,8 @@
   #include <wintypes.h>
 #endif
 
-#include "defines.h"
-#include "messages.h"
+#include "nfc-defines.h"
+#include "nfc-messages.h"
 
 // WINDOWS: #define IOCTL_CCID_ESCAPE_SCARD_CTL_CODE SCARD_CTL_CODE(3500)
 #define IOCTL_CCID_ESCAPE_SCARD_CTL_CODE (((0x31) << 16) | ((3500) << 2))
@@ -57,7 +57,7 @@ typedef struct {
   SCARD_IO_REQUEST ioCard;
 } dev_spec_acr122;
 
-dev_info* acr122_connect(const nfc_device_desc_t* pndd)
+nfc_device_t* acr122_connect(const nfc_device_desc_t* pndd)
 {
   char* pacReaders[MAX_DEVICES];
   char acList[256+64*MAX_DEVICES];
@@ -66,7 +66,7 @@ dev_info* acr122_connect(const nfc_device_desc_t* pndd)
   uint32_t uiReaderCount;
   uint32_t uiReader;
   uint32_t uiDevIndex;
-  dev_info* pdi;
+  nfc_device_t* pnd;
   dev_spec_acr122* pdsa;
   dev_spec_acr122 dsa;
   char* pcFirmware;
@@ -130,7 +130,7 @@ dev_info* acr122_connect(const nfc_device_desc_t* pndd)
     dsa.ioCard.cbPciLength = sizeof(SCARD_IO_REQUEST);
 
     // Retrieve the current firmware version
-    pcFirmware = acr122_firmware((dev_info*)&dsa);
+    pcFirmware = acr122_firmware((nfc_device_t*)&dsa);
     if (strstr(pcFirmware,FIRMWARE_TEXT) != NULL)
     {
       // We found a occurence, test if it has the right index
@@ -146,15 +146,15 @@ dev_info* acr122_connect(const nfc_device_desc_t* pndd)
       *pdsa = dsa;
 
       // Done, we found the reader we are looking for
-      pdi = malloc(sizeof(dev_info));
-      strcpy(pdi->acName,pcFirmware);
-      pdi->ct = CT_PN532;
-      pdi->ds = (dev_spec)pdsa;
-      pdi->bActive = true;
-      pdi->bCrc = true;
-      pdi->bPar = true;
-      pdi->ui8TxBits = 0;
-      return pdi;
+      pnd = malloc(sizeof(nfc_device_t));
+      strcpy(pnd->acName,pcFirmware);
+      pnd->ct = CT_PN532;
+      pnd->ds = (dev_spec)pdsa;
+      pnd->bActive = true;
+      pnd->bCrc = true;
+      pnd->bPar = true;
+      pnd->ui8TxBits = 0;
+      return pnd;
     }
   }
 
@@ -162,13 +162,13 @@ dev_info* acr122_connect(const nfc_device_desc_t* pndd)
   return INVALID_DEVICE_INFO;
 }
 
-void acr122_disconnect(dev_info* pdi)
+void acr122_disconnect(nfc_device_t* pnd)
 {
-  dev_spec_acr122* pdsa = (dev_spec_acr122*)pdi->ds;
+  dev_spec_acr122* pdsa = (dev_spec_acr122*)pnd->ds;
   SCardDisconnect(pdsa->hCard,SCARD_LEAVE_CARD);
   SCardReleaseContext(pdsa->hCtx);
   free(pdsa);
-  free(pdi);
+  free(pnd);
 }
 
 bool acr122_transceive(const dev_spec ds, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen)

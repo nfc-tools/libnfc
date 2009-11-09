@@ -17,23 +17,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  * 
  * 
- * @file pn531.c
+ * @file pn533.c
  * @brief
  */
 
 /*
 Thanks to d18c7db and Okko for example code
 */
-
-#include <stdio.h>
-#include <stddef.h>
+#include "pn533.h"
 
 #include <usb.h>
+#include <stdio.h>
 #include <string.h>
 
-#include "defines.h"
-#include "pn531.h"
-#include "messages.h"
+#include "nfc-defines.h"
+#include "nfc-messages.h"
 
 #define BUFFER_LENGTH 256
 #define USB_TIMEOUT   30000
@@ -42,10 +40,10 @@ typedef struct {
   usb_dev_handle* pudh;
   uint32_t uiEndPointIn;
   uint32_t uiEndPointOut;
-} dev_spec_pn531;
+} dev_spec_pn533;
 
 // Find transfer endpoints for bulk transfers
-static void get_end_points(struct usb_device *dev, dev_spec_pn531* pdsp)
+static void get_end_points(struct usb_device *dev, dev_spec_pn533* pdsp)
 {
   uint32_t uiIndex;
   uint32_t uiEndPoint;
@@ -80,17 +78,15 @@ static void get_end_points(struct usb_device *dev, dev_spec_pn531* pdsp)
   }
 }
 
-dev_info* pn531_connect(const nfc_device_desc_t* pndd)
+nfc_device_t* pn533_connect(const nfc_device_desc_t* pndd)
 {
-  int idvendor = 0x04CC;
-  int idproduct = 0x0531;
-  int idvendor_alt = 0x054c;
-  int idproduct_alt = 0x0193;
+  int idvendor = 0x04e6;
+  int idproduct = 0x5591;
   struct usb_bus *bus;
   struct usb_device *dev;
-  dev_info* pdi = INVALID_DEVICE_INFO;
-  dev_spec_pn531* pdsp;
-  dev_spec_pn531 dsp;
+  nfc_device_t* pnd = INVALID_DEVICE_INFO;
+  dev_spec_pn533* pdsp;
+  dev_spec_pn533 dsp;
   uint32_t uiDevIndex;
 
   dsp.uiEndPointIn = 0;
@@ -112,11 +108,10 @@ dev_info* pn531_connect(const nfc_device_desc_t* pndd)
   {
     for (dev = bus->devices; dev; dev = dev->next)
     {
-      if ((idvendor==dev->descriptor.idVendor && idproduct==dev->descriptor.idProduct) ||
-          (idvendor_alt==dev->descriptor.idVendor && idproduct_alt==dev->descriptor.idProduct))
+      if (idvendor==dev->descriptor.idVendor && idproduct==dev->descriptor.idProduct)
       {
         // Make sure there are 2 endpoints available
-        if (dev->config->interface->altsetting->bNumEndpoints < 2) return pdi;
+        if (dev->config->interface->altsetting->bNumEndpoints < 2) return pnd;
 
         // Test if we are looking for this device according to the current index
         if (uiDevIndex != 0)
@@ -125,15 +120,15 @@ dev_info* pn531_connect(const nfc_device_desc_t* pndd)
           uiDevIndex--;
           continue;
         }
-        DBG("Found PN531 device");
+        DBG("Found PN533 device");
 
-        // Open the PN531 USB device
+        // Open the PN533 USB device
         dsp.pudh = usb_open(dev);
 
         get_end_points(dev,&dsp);
         if(usb_set_configuration(dsp.pudh,1) < 0)
         {
-          DBG("Set config failed");
+          DBG("Setting config failed");
           usb_close(dsp.pudh);
           return INVALID_DEVICE_INFO;
         }
@@ -145,43 +140,43 @@ dev_info* pn531_connect(const nfc_device_desc_t* pndd)
           return INVALID_DEVICE_INFO;
         }
         // Allocate memory for the device info and specification, fill it and return the info
-        pdsp = malloc(sizeof(dev_spec_pn531));
+        pdsp = malloc(sizeof(dev_spec_pn533));
         *pdsp = dsp;
-        pdi = malloc(sizeof(dev_info));
-        strcpy(pdi->acName,"PN531USB");
-        pdi->ct = CT_PN531;
-        pdi->ds = (dev_spec)pdsp;
-        pdi->bActive = true;
-        pdi->bCrc = true;
-        pdi->bPar = true;
-        pdi->ui8TxBits = 0;
-        return pdi;
+        pnd = malloc(sizeof(nfc_device_t));
+        strcpy(pnd->acName,"PN533USB");
+        pnd->ct = CT_PN533;
+        pnd->ds = (dev_spec)pdsp;
+        pnd->bActive = true;
+        pnd->bCrc = true;
+        pnd->bPar = true;
+        pnd->ui8TxBits = 0;
+        return pnd;
       }
     }
   }
-  return pdi;
+  return pnd;
 }
 
-void pn531_disconnect(dev_info* pdi)
+void pn533_disconnect(nfc_device_t* pnd)
 {
-  dev_spec_pn531* pdsp = (dev_spec_pn531*)pdi->ds;
+  dev_spec_pn533* pdsp = (dev_spec_pn533*)pnd->ds;
   usb_release_interface(pdsp->pudh,0);
   usb_close(pdsp->pudh);
-  free(pdi->ds);
-  free(pdi);
+  free(pnd->ds);
+  free(pnd);
 }
 
-bool pn531_transceive(const dev_spec ds, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen)
+bool pn533_transceive(const dev_spec ds, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen)
 {
   size_t uiPos = 0;
   int ret = 0;
   byte_t abtTx[BUFFER_LENGTH] = { 0x00, 0x00, 0xff }; // Every packet must start with "00 00 ff"
   byte_t abtRx[BUFFER_LENGTH];
-  dev_spec_pn531* pdsp = (dev_spec_pn531*)ds;
+  dev_spec_pn533* pdsp = (dev_spec_pn533*)ds;
 
   // Packet length = data length (len) + checksum (1) + end of stream marker (1)
   abtTx[3] = szTxLen;
-  // Packet length checksum
+  // Packet length checksum 
   abtTx[4] = BUFFER_LENGTH - abtTx[3];
   // Copy the PN53X command into the packet abtTx
   memmove(abtTx+5,pbtTx,szTxLen);
@@ -197,7 +192,7 @@ bool pn531_transceive(const dev_spec ds, const byte_t* pbtTx, const size_t szTxL
   abtTx[szTxLen+6] = 0;
 
   #ifdef DEBUG
-    printf("Tx: ");
+    printf(" TX: ");
     print_hex(abtTx,szTxLen+7);
   #endif
 
@@ -220,7 +215,7 @@ bool pn531_transceive(const dev_spec ds, const byte_t* pbtTx, const size_t szTxL
   }
 
   #ifdef DEBUG
-    printf("Rx: ");
+    printf(" RX: ");
     print_hex(abtRx,ret);
   #endif
 
@@ -236,12 +231,12 @@ bool pn531_transceive(const dev_spec ds, const byte_t* pbtTx, const size_t szTxL
     }
 
     #ifdef DEBUG
-      printf("Rx: ");
+      printf(" RX: ");
       print_hex(abtRx,ret);
     #endif
   }
 
-  // When the answer should be ignored, just return a succesful result    
+  // When the answer should be ignored, just return a succesful result
   if(pbtRx == NULL || pszRxLen == NULL) return true;
 
   // Only succeed when the result is at least 00 00 FF xx Fx Dx xx .. .. .. xx 00 (x = variable)
@@ -249,6 +244,15 @@ bool pn531_transceive(const dev_spec ds, const byte_t* pbtTx, const size_t szTxL
 
   // Remove the preceding and appending bytes 00 00 FF xx Fx .. .. .. xx 00 (x = variable)
   *pszRxLen = ret - 7 - 2;
+
+  // Get register: nuke extra byte (awful hack)
+  if ((abtRx[5]==0xd5) && (abtRx[6]==0x07) && (*pszRxLen==2)) {
+      // printf("Got %02x %02x, keep %02x\n", abtRx[7], abtRx[8], abtRx[8]);
+      *pszRxLen = (*pszRxLen) - 1;
+      memcpy( pbtRx, abtRx + 8, *pszRxLen);
+      return true;
+  }
+
   memcpy( pbtRx, abtRx + 7, *pszRxLen);
 
   return true;

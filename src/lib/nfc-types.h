@@ -17,12 +17,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  * 
  * 
- * @file types.h
- * @brief
+ * @file nfc-types.h
+ * @brief Define NFC types
  */
 
-#ifndef _LIBNFC_TYPES_H_
-#define _LIBNFC_TYPES_H_
+#ifndef __NFC_TYPES_H__
+#define __NFC_TYPES_H__
 
 /**
  * @file types.h
@@ -34,8 +34,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "defines.h"
-
 typedef uint8_t byte_t;
 
 typedef enum {
@@ -46,8 +44,11 @@ typedef enum {
 
 struct driver_callbacks;                // Prototype the callback struct
 
+typedef void*               dev_spec; // Device connection specification
+
+#define DEVICE_NAME_LENGTH  256
 /**
- * @struct dev_info
+ * @struct nfc_device_t
  * @brief NFC device information
  */
 typedef struct {
@@ -67,7 +68,8 @@ typedef struct {
   bool bPar;
 /** The last tx bits setting, we need to reset this if it does not apply anymore */
   uint8_t ui8TxBits;
-} dev_info;
+} nfc_device_t;
+
 
 /**
  * @struct nfc_device_desc_t
@@ -76,11 +78,11 @@ typedef struct {
  * This struct is used to try to connect to a specified nfc device when nfc_connect(...)
  */
 typedef struct {
-  /** Driver name */
+  /** Driver name (ie. PN532)*/
   char* pcDriver;
-  /** Port (i.e. /dev/ttyUSB2) */
+  /** Port (ie. /dev/ttyUSB0) */
   char* pcPort;
-  /** Port speed (i.e. 115200) */
+  /** Port speed (ie. 115200) */
   uint32_t uiSpeed;
   /** Device index for backward compatibility (used to choose one specific device in USB or PSCS devices list) */
   uint32_t uiIndex;
@@ -88,17 +90,17 @@ typedef struct {
 
 /**
  * @struct driver_callbacks
- * @brief NFC defice callbacks
+ * @brief Generic structure to handle NFC device functions.
  */
 struct driver_callbacks {
   /** Driver name */
   const char* acDriver;
   /** Connect callback */
-  dev_info* (*connect)(const nfc_device_desc_t* pndd);
+  nfc_device_t* (*connect)(const nfc_device_desc_t* pndd);
   /** Transceive callback */
   bool (*transceive)(const dev_spec ds, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen);
   /** Disconnect callback */
-  void (*disconnect)(dev_info* pdi);
+  void (*disconnect)(nfc_device_t* pnd);
 };
 
 // Compiler directive, set struct alignment to 1 byte_t for compatibility

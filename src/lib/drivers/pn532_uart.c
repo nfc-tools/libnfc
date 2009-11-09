@@ -24,7 +24,7 @@
 #include "pn532_uart.h"
 
 #include "uart.h"
-#include "messages.h"
+#include "nfc-messages.h"
 
 #ifdef _WIN32
   #define SERIAL_STRING "COM"
@@ -47,12 +47,12 @@
 
 #define SERIAL_DEFAULT_PORT_SPEED 115200
 
-dev_info* pn532_uart_connect(const nfc_device_desc_t* pndd)
+nfc_device_t* pn532_uart_connect(const nfc_device_desc_t* pndd)
 {
   uint32_t uiDevNr;
   serial_port sp;
   char acConnect[BUFFER_LENGTH];
-  dev_info* pdi = INVALID_DEVICE_INFO;
+  nfc_device_t* pnd = INVALID_DEVICE_INFO;
 
   if( pndd == NULL ) {
 #ifdef DISABLE_SERIAL_AUTOPROBE
@@ -114,21 +114,21 @@ dev_info* pn532_uart_connect(const nfc_device_desc_t* pndd)
   DBG("Successfully connected to: %s",acConnect);
 
   // We have a connection
-  pdi = malloc(sizeof(dev_info));
-  strcpy(pdi->acName,"PN532_UART");
-  pdi->ct = CT_PN532;
-  pdi->ds = (dev_spec)sp;
-  pdi->bActive = true;
-  pdi->bCrc = true;
-  pdi->bPar = true;
-  pdi->ui8TxBits = 0;
-  return pdi;
+  pnd = malloc(sizeof(nfc_device_t));
+  strcpy(pnd->acName,"PN532_UART");
+  pnd->ct = CT_PN532;
+  pnd->ds = (dev_spec)sp;
+  pnd->bActive = true;
+  pnd->bCrc = true;
+  pnd->bPar = true;
+  pnd->ui8TxBits = 0;
+  return pnd;
 }
 
-void pn532_uart_disconnect(dev_info* pdi)
+void pn532_uart_disconnect(nfc_device_t* pnd)
 {
-  uart_close((serial_port)pdi->ds);
-  free(pdi);
+  uart_close((serial_port)pnd->ds);
+  free(pnd);
 }
 
 bool pn532_uart_transceive(const dev_spec ds, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen)

@@ -24,8 +24,8 @@
 #ifndef _LIBNFC_DEVICES_H_
 #define _LIBNFC_DEVICES_H_
 
-#include "defines.h"
-#include "types.h"
+#include "nfc-defines.h"
+#include "nfc-types.h"
 #ifdef HAVE_PCSC_LITE
   #include "drivers/acr122.h"
 #endif /* HAVE_PCSC_LITE */

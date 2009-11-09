@@ -21,3 +21,5 @@
  * @brief
  */
 
+#include "nfc-types.h"
+
