@@ -27,13 +27,17 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <string.h>
+
+#include "../drivers.h"
+
+// Bus
 #include <winscard.h>
 
 #ifdef __APPLE__
   #include <wintypes.h>
 #endif
 
-#include "nfc-defines.h"
+
 #include "nfc-messages.h"
 
 // WINDOWS: #define IOCTL_CCID_ESCAPE_SCARD_CTL_CODE SCARD_CTL_CODE(3500)
@@ -59,8 +63,8 @@ typedef struct {
 
 nfc_device_t* acr122_connect(const nfc_device_desc_t* pndd)
 {
-  char* pacReaders[MAX_DEVICES];
-  char acList[256+64*MAX_DEVICES];
+  char* pacReaders[DRIVERS_MAX_DEVICES];
+  char acList[256+64*DRIVERS_MAX_DEVICES];
   size_t szListLen = sizeof(acList);
   size_t szPos;
   uint32_t uiReaderCount;
@@ -88,7 +92,7 @@ nfc_device_t* acr122_connect(const nfc_device_desc_t* pndd)
   for (szPos=0; szPos<szListLen; szPos++)
   {
     // Make sure don't break out of our reader array
-    if (uiReaderCount == MAX_DEVICES) break;
+    if (uiReaderCount == DRIVERS_MAX_DEVICES) break;
 
     // Test if there is a next reader available
     if (acList[szPos] == 0x00)

@@ -28,7 +28,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "nfc-defines.h"
+
 #include "nfc-types.h"
 
 // Handle platform specific includes

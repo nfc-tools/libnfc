@@ -24,7 +24,7 @@
 #ifndef _LIBNFC_DEV_ARYGON_H_
 #define _LIBNFC_DEV_ARYGON_H_
 
-#include "nfc-defines.h"
+
 #include "nfc-types.h"
 
 // Functions used by developer to handle connection to this device

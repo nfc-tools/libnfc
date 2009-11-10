@@ -31,6 +31,8 @@
 #include "nfc-messages.h"
 #include "bitutils.h"
 
+#define MAX_FRAME_LEN 264
+
 static byte_t abtReaderRx[MAX_FRAME_LEN];
 static byte_t abtReaderRxPar[MAX_FRAME_LEN];
 static size_t szReaderRxBits;
@@ -70,7 +72,7 @@ int main(int argc,char* argv[])
 
   // Try to open the NFC emulator device
   pndTag = nfc_connect(NULL);
-  if (pndTag == INVALID_DEVICE_INFO)
+  if (pndTag == NULL)
   {
     printf("Error connecting NFC emulator device\n");
     return 1;
@@ -89,8 +91,8 @@ int main(int argc,char* argv[])
   printf("[+] Thank you, the emulated tag is initialized\n");
 
   // Try to open the NFC reader
-  pndReader = INVALID_DEVICE_INFO;
-  while (pndReader == INVALID_DEVICE_INFO) pndReader = nfc_connect(NULL);
+  pndReader = NULL;
+  while (pndReader == NULL) pndReader = nfc_connect(NULL);
   printf("[+] Configuring NFC reader settings\n");
   nfc_configure(pndReader,DCO_HANDLE_CRC,false);
   nfc_configure(pndReader,DCO_HANDLE_PARITY,false);

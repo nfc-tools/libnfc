@@ -32,6 +32,8 @@
 #include "nfc-messages.h"
 #include "bitutils.h"
 
+#define MAX_FRAME_LEN 264
+
 static byte_t abtRecv[MAX_FRAME_LEN];
 static size_t szRecvBits;
 static nfc_device_t* pnd;
@@ -87,7 +89,7 @@ int main(int argc, char *argv[])
   // Try to open the NFC reader
   pnd = nfc_connect(NULL);
 
-  if (pnd == INVALID_DEVICE_INFO)
+  if (pnd == NULL)
   {
     printf("Error connecting NFC reader\n");
     return 1;

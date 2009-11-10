@@ -24,6 +24,8 @@
 #include <stdio.h>
 #include <nfc.h>
 
+#define MAX_FRAME_LEN 264
+
 int main(int argc, const char *argv[])
 {
   byte_t abtRecv[MAX_FRAME_LEN];

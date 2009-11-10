@@ -17,22 +17,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  * 
  * 
- * @file pn531.c
- * @brief
+ * @file pn531_usb.c
+ * @brief Driver for PN531 chip using USB
  */
 
 /*
 Thanks to d18c7db and Okko for example code
 */
+#include "pn531_usb.h"
 
 #include <stdio.h>
 #include <stddef.h>
-
-#include <usb.h>
 #include <string.h>
 
-#include "nfc-defines.h"
-#include "pn531.h"
+#include "../drivers.h"
+
+// Bus
+#include <usb.h>
+
 #include "nfc-messages.h"
 
 #define BUFFER_LENGTH 256
@@ -42,10 +44,10 @@ typedef struct {
   usb_dev_handle* pudh;
   uint32_t uiEndPointIn;
   uint32_t uiEndPointOut;
-} dev_spec_pn531;
+} dev_spec_pn531_usb;
 
 // Find transfer endpoints for bulk transfers
-static void get_end_points(struct usb_device *dev, dev_spec_pn531* pdsp)
+static void get_end_points(struct usb_device *dev, dev_spec_pn531_usb* pdsp)
 {
   uint32_t uiIndex;
   uint32_t uiEndPoint;
@@ -80,7 +82,7 @@ static void get_end_points(struct usb_device *dev, dev_spec_pn531* pdsp)
   }
 }
 
-nfc_device_t* pn531_connect(const nfc_device_desc_t* pndd)
+nfc_device_t* pn531_usb_connect(const nfc_device_desc_t* pndd)
 {
   int idvendor = 0x04CC;
   int idproduct = 0x0531;
@@ -89,8 +91,8 @@ nfc_device_t* pn531_connect(const nfc_device_desc_t* pndd)
   struct usb_bus *bus;
   struct usb_device *dev;
   nfc_device_t* pnd = INVALID_DEVICE_INFO;
-  dev_spec_pn531* pdsp;
-  dev_spec_pn531 dsp;
+  dev_spec_pn531_usb* pdsp;
+  dev_spec_pn531_usb dsp;
   uint32_t uiDevIndex;
 
   dsp.uiEndPointIn = 0;
@@ -145,7 +147,7 @@ nfc_device_t* pn531_connect(const nfc_device_desc_t* pndd)
           return INVALID_DEVICE_INFO;
         }
         // Allocate memory for the device info and specification, fill it and return the info
-        pdsp = malloc(sizeof(dev_spec_pn531));
+        pdsp = malloc(sizeof(dev_spec_pn531_usb));
         *pdsp = dsp;
         pnd = malloc(sizeof(nfc_device_t));
         strcpy(pnd->acName,"PN531USB");
@@ -162,22 +164,22 @@ nfc_device_t* pn531_connect(const nfc_device_desc_t* pndd)
   return pnd;
 }
 
-void pn531_disconnect(nfc_device_t* pnd)
+void pn531_usb_disconnect(nfc_device_t* pnd)
 {
-  dev_spec_pn531* pdsp = (dev_spec_pn531*)pnd->ds;
+  dev_spec_pn531_usb* pdsp = (dev_spec_pn531_usb*)pnd->ds;
   usb_release_interface(pdsp->pudh,0);
   usb_close(pdsp->pudh);
   free(pnd->ds);
   free(pnd);
 }
 
-bool pn531_transceive(const dev_spec ds, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen)
+bool pn531_usb_transceive(const dev_spec ds, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen)
 {
   size_t uiPos = 0;
   int ret = 0;
   byte_t abtTx[BUFFER_LENGTH] = { 0x00, 0x00, 0xff }; // Every packet must start with "00 00 ff"
   byte_t abtRx[BUFFER_LENGTH];
-  dev_spec_pn531* pdsp = (dev_spec_pn531*)ds;
+  dev_spec_pn531_usb* pdsp = (dev_spec_pn531_usb*)ds;
 
   // Packet length = data length (len) + checksum (1) + end of stream marker (1)
   abtTx[3] = szTxLen;

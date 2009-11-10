@@ -405,7 +405,7 @@ int main(int argc, const char* argv[])
     
       // Try to open the NFC reader
       pnd = nfc_connect(NULL);
-      if (pnd == INVALID_DEVICE_INFO)
+      if (pnd == NULL)
       {
         printf("Error connecting NFC reader\n");
         return 1;

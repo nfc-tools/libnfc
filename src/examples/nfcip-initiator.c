@@ -25,6 +25,8 @@
 #include <string.h>
 #include <nfc.h>
 
+#define MAX_FRAME_LEN 264
+
 int main(int argc, const char *argv[])
 {
   nfc_device_t *pnd;

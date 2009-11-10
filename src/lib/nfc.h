@@ -29,7 +29,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "nfc-defines.h"
+
 #include "nfc-types.h"
 
 #ifdef __cplusplus 

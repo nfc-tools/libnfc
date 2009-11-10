@@ -52,7 +52,7 @@ int main(int argc, const char* argv[])
   pnd = nfc_connect(&ndd);
   */
 
-  if (pnd == INVALID_DEVICE_INFO)
+  if (pnd == NULL)
   {
     ERR("Unable to connect to NFC device.");
     return 1;

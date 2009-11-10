@@ -27,7 +27,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "nfc-defines.h"
+
 #include "nfc-types.h"
 
 // Functions used by developer to handle connection to this device

@@ -24,8 +24,6 @@
 #ifndef _LIBNFC_MIFARE_TAG_H_
 #define _LIBNFC_MIFARE_TAG_H_
 
-#include "nfc-defines.h"
-
 typedef struct {
   byte_t abtUID[4];
   byte_t btBCC;

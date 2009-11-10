@@ -35,6 +35,8 @@
 
 #define SAK_FLAG_ATS_SUPPORTED 0x20
 
+#define MAX_FRAME_LEN 264
+
 static byte_t abtRx[MAX_FRAME_LEN];
 static size_t szRxBits;
 static size_t szRxLen;

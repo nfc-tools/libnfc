@@ -17,24 +17,31 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  * 
  * 
- * @file devices.h
+ * @file drivers.h
  * @brief
  */
 
 #ifndef _LIBNFC_DEVICES_H_
 #define _LIBNFC_DEVICES_H_
 
-#include "nfc-defines.h"
+
 #include "nfc-types.h"
+
 #ifdef HAVE_PCSC_LITE
   #include "drivers/acr122.h"
 #endif /* HAVE_PCSC_LITE */
+
 #ifdef HAVE_LIBUSB
-  #include "drivers/pn531.h"
-  #include "drivers/pn533.h"
+  #include "drivers/pn531_usb.h"
+  #include "drivers/pn533_usb.h"
 #endif /* HAVE_LIBUSB */
+
 #include "drivers/arygon.h"
 #include "drivers/pn532_uart.h"
+
+#define DRIVERS_MAX_DEVICES         16
+#define INVALID_DEVICE_INFO 0
+#define MAX_FRAME_LEN       264
 
 const static struct driver_callbacks drivers_callbacks_list[] = {
 //  Driver Name        Connect                  Transceive                    Disconnect
@@ -42,8 +49,8 @@ const static struct driver_callbacks drivers_callbacks_list[] = {
   { "ACR122",          acr122_connect,      acr122_transceive,        acr122_disconnect       },
 #endif /* HAVE_PCSC_LITE */
 #ifdef HAVE_LIBUSB
-  { "PN531USB",        pn531_connect,       pn531_transceive,         pn531_disconnect        },
-  { "PN533USB",        pn533_connect,       pn533_transceive,         pn533_disconnect        },
+  { "PN531USB",        pn531_usb_connect,   pn531_usb_transceive,     pn531_usb_disconnect        },
+  { "PN533USB",        pn533_usb_connect,   pn533_usb_transceive,     pn533_usb_disconnect        },
 #endif /* HAVE_LIBUSB */
   { "PN532_UART",      pn532_uart_connect,  pn532_uart_transceive,    pn532_uart_disconnect   },
   { "ARYGON",          arygon_connect,      arygon_transceive,        arygon_disconnect       }

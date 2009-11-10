@@ -23,8 +23,12 @@
 
 #include "pn532_uart.h"
 
-#include "uart.h"
 #include "nfc-messages.h"
+
+#include "../drivers.h"
+
+// Bus
+#include "uart.h"
 
 #ifdef _WIN32
   #define SERIAL_STRING "COM"
@@ -61,7 +65,7 @@ nfc_device_t* pn532_uart_connect(const nfc_device_desc_t* pndd)
 #else
     DBG("Trying to find ARYGON device on serial port: %s# at %d bauds.",SERIAL_STRING, SERIAL_DEFAULT_PORT_SPEED);
     // I have no idea how MAC OS X deals with multiple devices, so a quick workaround
-    for (uiDevNr=0; uiDevNr<MAX_DEVICES; uiDevNr++)
+    for (uiDevNr=0; uiDevNr<DRIVERS_MAX_DEVICES; uiDevNr++)
     {
 #ifdef __APPLE__
       strcpy(acConnect,SERIAL_STRING);
@@ -82,7 +86,7 @@ nfc_device_t* pn532_uart_connect(const nfc_device_desc_t* pndd)
     }
 #endif
     // Test if we have found a device
-    if (uiDevNr == MAX_DEVICES) return INVALID_DEVICE_INFO;
+    if (uiDevNr == DRIVERS_MAX_DEVICES) return INVALID_DEVICE_INFO;
   } else {
     DBG("Connecting to: %s at %d bauds.",pndd->pcPort, pndd->uiSpeed);
     strcpy(acConnect,pndd->pcPort);
