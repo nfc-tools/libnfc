@@ -44,8 +44,8 @@ typedef struct {
 
 // Set time-out on 30 miliseconds
 struct timeval tv = { 
-  .tv_sec = 0,      // 0 second
-  .tv_usec = 30000 // 30,000 micro seconds
+  .tv_sec  =     0, // 0 second
+  .tv_usec = 30000  // 30000 micro seconds
 };
 
 // Work-around to claim uart interface using the c_iflag (software input processing) from the termios struct
@@ -179,49 +179,87 @@ bool uart_cts(const serial_port sp)
 
 bool uart_receive(const serial_port sp, byte_t* pbtRx, size_t* pszRxLen)
 {
-  int iResult;
+  int res;
   int byteCount;
   fd_set rfds;
 
-  // Reset file descriptor
-  FD_ZERO(&rfds);
-  FD_SET(((serial_port_unix*)sp)->fd,&rfds);
-  iResult = select(((serial_port_unix*)sp)->fd+1, &rfds, NULL, NULL, &tv);
+  // Reset the output count  
+  *pszRxLen = 0;
 
-  // Read error
-  if (iResult < 0) {
-    DBG("RX error.");
-    *pszRxLen = 0;
-    return false;
-  }
-  // Read time-out
-  if (iResult == 0) {
-    DBG("RX time-out.");
-    *pszRxLen = 0;
-    return false;
-  }
+  do {
+    // Reset file descriptor
+    FD_ZERO(&rfds);
+    FD_SET(((serial_port_unix*)sp)->fd,&rfds);
+    res = select(((serial_port_unix*)sp)->fd+1, &rfds, NULL, NULL, &tv);
 
-  // Number of bytes in the input buffer
-  ioctl(((serial_port_unix*)sp)->fd, FIONREAD, &byteCount);
+    // Read error
+    if (res < 0) {
+      DBG("RX error.");
+      return false;
+    }
 
-  // Empty buffer
-  if (byteCount == 0) {
-    DBG("RX empty buffer.");
-    *pszRxLen = 0;
-    return false;
-  }
+    // Read time-out
+    if (res == 0) {
+      if (*pszRxLen == 0) {
+        // Error, we received no data
+        DBG("RX time-out, buffer empty.");
+        return false;
+      } else {
+        // We received some data, but nothing more is available
+        return true;
+      }
+    }
 
-  // There is something available, read the data
-  *pszRxLen = read(((serial_port_unix*)sp)->fd,pbtRx,byteCount);
+    // Test if more bytes are coming
+    res = ioctl(((serial_port_unix*)sp)->fd, FIONREAD, &byteCount);
 
-  return (*pszRxLen > 0);
+    // There is something available, read the data
+    res = read(((serial_port_unix*)sp)->fd,pbtRx+(*pszRxLen),byteCount);
+
+    // Stop if the OS has some troubles reading the data
+    if (res <= 0) return false;
+
+    *pszRxLen += res;
+
+  } while (byteCount);
+
+  return true;
 }
 
 bool uart_send(const serial_port sp, const byte_t* pbtTx, const size_t szTxLen)
 {
-  int iResult;
-  iResult = write(((serial_port_unix*)sp)->fd,pbtTx,szTxLen);
-  return (iResult >= 0);
+  int32_t res;
+  size_t szPos = 0;
+  fd_set rfds;
+
+  while (szPos < szTxLen)
+  {
+    // Reset file descriptor
+    FD_ZERO(&rfds);
+    FD_SET(((serial_port_unix*)sp)->fd,&rfds);
+    res = select(((serial_port_unix*)sp)->fd+1, NULL, &rfds, NULL, &tv);
+
+    // Write error
+    if (res < 0) {
+      DBG("TX error.");
+      return false;
+    }
+
+    // Write time-out
+    if (res == 0) {
+      DBG("TX time-out.");
+      return false;
+    }
+
+    // Send away the bytes
+    res = write(((serial_port_unix*)sp)->fd,pbtTx+szPos,szTxLen-szPos);
+    
+    // Stop if the OS has some troubles sending the data
+    if (res <= 0) return false;
+
+    szPos += res;
+  }
+  return true;
 }
 
 #else
