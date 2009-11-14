@@ -43,7 +43,7 @@ typedef struct {
 } serial_port_unix;
 
 // Set time-out on 30 miliseconds
-struct timeval tv = { 
+const struct timeval timeout = { 
   .tv_sec  =     0, // 0 second
   .tv_usec = 30000  // 30000 micro seconds
 };
@@ -182,6 +182,7 @@ bool uart_receive(const serial_port sp, byte_t* pbtRx, size_t* pszRxLen)
   int res;
   int byteCount;
   fd_set rfds;
+  struct timeval tv;
 
   // Reset the output count  
   *pszRxLen = 0;
@@ -190,6 +191,7 @@ bool uart_receive(const serial_port sp, byte_t* pbtRx, size_t* pszRxLen)
     // Reset file descriptor
     FD_ZERO(&rfds);
     FD_SET(((serial_port_unix*)sp)->fd,&rfds);
+    tv = timeout;
     res = select(((serial_port_unix*)sp)->fd+1, &rfds, NULL, NULL, &tv);
 
     // Read error
@@ -210,8 +212,9 @@ bool uart_receive(const serial_port sp, byte_t* pbtRx, size_t* pszRxLen)
       }
     }
 
-    // Test if more bytes are coming
+    // Retrieve the count of the incoming bytes
     res = ioctl(((serial_port_unix*)sp)->fd, FIONREAD, &byteCount);
+    if (res < 0) return false;
 
     // There is something available, read the data
     res = read(((serial_port_unix*)sp)->fd,pbtRx+(*pszRxLen),byteCount);
@@ -231,12 +234,14 @@ bool uart_send(const serial_port sp, const byte_t* pbtTx, const size_t szTxLen)
   int32_t res;
   size_t szPos = 0;
   fd_set rfds;
+  struct timeval tv;
 
   while (szPos < szTxLen)
   {
     // Reset file descriptor
     FD_ZERO(&rfds);
     FD_SET(((serial_port_unix*)sp)->fd,&rfds);
+    tv = timeout;
     res = select(((serial_port_unix*)sp)->fd+1, NULL, &rfds, NULL, &tv);
 
     // Write error
