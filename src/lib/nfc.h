@@ -40,7 +40,7 @@
  * @fn nfc_device_t* nfc_connect(nfc_device_desc_t* pndd)
  * @brief Connect to a NFC device
  * @param pndd Device description if specific device is wanted, NULL otherwise
- * @return Returns pointer to a nfc_device_t struct if successfull; otherwise returns INVALID_DEVICE_INFO value.
+ * @return Returns pointer to a nfc_device_t struct if successfull; otherwise returns NULL value.
  *
  * If \a pndd is NULL, the first available NFC device is claimed by libnfc.
  * It will automatically search the system using all available drivers to determine a device is free.
@@ -62,18 +62,18 @@ nfc_device_t* nfc_connect(nfc_device_desc_t* pndd);
 void nfc_disconnect(nfc_device_t* pnd);
 
 /**
- * @fn nfc_configure(nfc_device_t* pnd, const dev_config_option dco, const bool bEnable)
+ * @fn nfc_configure(nfc_device_t* pnd, const nfc_device_option_t ndo, const bool bEnable)
  * @brief Configure advanced NFC device settings
  * @return Returns true if action was successfully performed; otherwise returns false.
  * @param pnd nfc_device_t struct pointer that represent currently used device
- * @param dco dev_config_option struct that contains options to set to device
+ * @param ndo nfc_device_option_t struct that contains options to set to device
  * @param bEnable boolean
  *
  * Configures parameters and registers that control for example timing, modulation, frame and error handling.
  * There are different categories for configuring the PN53X chip features (handle, activate, infinite and accept).
  * These are defined to organize future settings that will become available when they are needed.
  */
-bool nfc_configure(nfc_device_t* pnd, const dev_config_option dco, const bool bEnable);
+bool nfc_configure(nfc_device_t* pnd, const nfc_device_option_t ndo, const bool bEnable);
 
 /**
  * @fn nfc_initiator_init(const nfc_device_t* pnd)
@@ -144,7 +144,7 @@ bool nfc_initiator_transceive_bits(const nfc_device_t* pnd, const byte_t* pbtTx,
  * @return Returns true if action was successfully performed; otherwise returns false.
  *
  * The reader will transmit the supplied bytes in pbtTx to the target (tag). It waits for the response and stores the received bytes in the pbtRx byte array. The parity bits are handled by the PN53X chip. The CRC can be generated automatically or handled manually. Using this function, frames can be communicated very fast via the NFC reader to the tag. Tests show that on average this way of communicating is much faster than using the regular driver/middle-ware (often supplied by manufacturers).
- * @warning The configuration option DCO_HANDLE_PARITY must be set to true (the default value).
+ * @warning The configuration option NDO_HANDLE_PARITY must be set to true (the default value).
  */
 bool nfc_initiator_transceive_bytes(const nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen);
 
@@ -186,7 +186,7 @@ bool nfc_target_init(const nfc_device_t* pnd, byte_t* pbtRx, size_t* pszRxBits);
  * @brief Receive bit-frames
  * @return Returns true if action was successfully performed; otherwise returns false.
  *
- * This function makes it possible to receive (raw) bit-frames. It returns all the messages that are stored in the FIFO buffer of the PN53X chip. It does not require to send any frame and thereby could be used to snoop frames that are transmitted by a nearby reader. Check out the DCO_ACCEPT_MULTIPLE_FRAMES configuration option to avoid losing transmitted frames. 
+ * This function makes it possible to receive (raw) bit-frames. It returns all the messages that are stored in the FIFO buffer of the PN53X chip. It does not require to send any frame and thereby could be used to snoop frames that are transmitted by a nearby reader. Check out the NDO_ACCEPT_MULTIPLE_FRAMES configuration option to avoid losing transmitted frames. 
  */
 bool nfc_target_receive_bits(const nfc_device_t* pnd, byte_t* pbtRx, size_t* pszRxBits, byte_t* pbtRxPar);
 

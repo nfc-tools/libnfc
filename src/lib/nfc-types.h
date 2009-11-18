@@ -107,25 +107,25 @@ struct driver_callbacks {
 #pragma pack(1)
 
 /**
- * @enum dev_config_option
+ * @enum nfc_device_option_t
  * @brief NFC device option
  */
 typedef enum {
 /** Let the PN53X chip handle the CRC bytes. This means that the chip appends the CRC bytes to the frames that are transmitted. It will parse the last bytes from received frames as incoming CRC bytes. They will be verified against the used modulation and protocol. If an frame is expected with incorrect CRC bytes this option should be disabled. Example frames where this is useful are the ATQA and UID+BCC that are transmitted without CRC bytes during the anti-collision phase of the ISO14443-A protocol. */
-  DCO_HANDLE_CRC              = 0x00,
+  NDO_HANDLE_CRC              = 0x00,
 /** Parity bits in the network layer of ISO14443-A are by default generated and validated in the PN53X chip. This is a very convenient feature. On certain times though it is useful to get full control of the transmitted data. The proprietary MIFARE Classic protocol uses for example custom (encrypted) parity bits. For interoperability it is required to be completely compatible, including the arbitrary parity bits. When this option is disabled, the functions to communicating bits should be used. */
-  DCO_HANDLE_PARITY           = 0x01,
+  NDO_HANDLE_PARITY           = 0x01,
 /** This option can be used to enable or disable the electronic field of the NFC device. */
-  DCO_ACTIVATE_FIELD          = 0x10,
+  NDO_ACTIVATE_FIELD          = 0x10,
 /** The internal CRYPTO1 co-processor can be used to transmit messages encrypted. This option is automatically activated after a successful MIFARE Classic authentication. */
-  DCO_ACTIVATE_CRYPTO1        = 0x11,
+  NDO_ACTIVATE_CRYPTO1        = 0x11,
 /** The default configuration defines that the PN53X chip will try indefinitely to invite a tag in the field to respond. This could be desired when it is certain a tag will enter the field. On the other hand, when this is uncertain, it will block the application. This option could best be compared to the (NON)BLOCKING option used by (socket)network programming. */
-  DCO_INFINITE_SELECT         = 0x20,
+  NDO_INFINITE_SELECT         = 0x20,
 /** If this option is enabled, frames that carry less than 4 bits are allowed. According to the standards these frames should normally be handles as invalid frames. */
-  DCO_ACCEPT_INVALID_FRAMES   = 0x30,
+  NDO_ACCEPT_INVALID_FRAMES   = 0x30,
 /** If the NFC device should only listen to frames, it could be useful to let it gather multiple frames in a sequence. They will be stored in the internal FIFO of the PN53X chip. This could be retrieved by using the receive data functions. Note that if the chip runs out of bytes (FIFO = 64 bytes long), it will overwrite the first received frames, so quick retrieving of the received data is desirable. */
-  DCO_ACCEPT_MULTIPLE_FRAMES  = 0x31
-}dev_config_option;
+  NDO_ACCEPT_MULTIPLE_FRAMES  = 0x31
+} nfc_device_option_t;
 
 ////////////////////////////////////////////////////////////////////
 // nfc_reader_list_passive - using InListPassiveTarget 

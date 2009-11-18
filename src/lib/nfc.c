@@ -302,7 +302,7 @@ nfc_device_t* nfc_connect(nfc_device_desc_t* pndd)
     }
 
     // Test if the connection was successful
-    if (pnd != INVALID_DEVICE_INFO)
+    if (pnd != NULL)
     {
       DBG("[%s] has been claimed.", pnd->acName);
       // Great we have claimed a device
@@ -315,7 +315,7 @@ nfc_device_t* nfc_connect(nfc_device_desc_t* pndd)
         // Failed to get firmware revision??, whatever...let's disconnect and clean up and return err
         ERR("Failed to get firmware revision for: %s", pnd->acName);
         pnd->pdc->disconnect(pnd);
-        return INVALID_DEVICE_INFO;
+        return NULL;
       }
 
       // Add the firmware revision to the device name, PN531 gives 2 bytes info, but PN532 gives 4
@@ -327,14 +327,14 @@ nfc_device_t* nfc_connect(nfc_device_desc_t* pndd)
       }
 
       // Reset the ending transmission bits register, it is unknown what the last tranmission used there
-      if (!pn53x_set_reg(pnd,REG_CIU_BIT_FRAMING,SYMBOL_TX_LAST_BITS,0x00)) return INVALID_DEVICE_INFO;
+      if (!pn53x_set_reg(pnd,REG_CIU_BIT_FRAMING,SYMBOL_TX_LAST_BITS,0x00)) return NULL;
 
       // Make sure we reset the CRC and parity to chip handling.
-      if (!nfc_configure(pnd,DCO_HANDLE_CRC,true)) return INVALID_DEVICE_INFO;
-      if (!nfc_configure(pnd,DCO_HANDLE_PARITY,true)) return INVALID_DEVICE_INFO;
+      if (!nfc_configure(pnd,NDO_HANDLE_CRC,true)) return NULL;
+      if (!nfc_configure(pnd,NDO_HANDLE_PARITY,true)) return NULL;
 
       // Deactivate the CRYPTO1 chiper, it may could cause problems when still active
-      if (!nfc_configure(pnd,DCO_ACTIVATE_CRYPTO1,false)) return INVALID_DEVICE_INFO;
+      if (!nfc_configure(pnd,NDO_ACTIVATE_CRYPTO1,false)) return NULL;
 
       return pnd;
     } else {
@@ -342,7 +342,7 @@ nfc_device_t* nfc_connect(nfc_device_desc_t* pndd)
     }
   }
   // To bad, no reader is ready to be claimed
-  return INVALID_DEVICE_INFO;
+  return NULL;
 }
 
 void nfc_disconnect(nfc_device_t* pnd)
@@ -353,7 +353,7 @@ void nfc_disconnect(nfc_device_t* pnd)
   pnd->pdc->disconnect(pnd);
 }
 
-bool nfc_configure(nfc_device_t* pnd, const dev_config_option dco, const bool bEnable)
+bool nfc_configure(nfc_device_t* pnd, const nfc_device_option_t dco, const bool bEnable)
 {
   byte_t btValue;
   byte_t abtCmd[sizeof(pncmd_rf_configure)];
@@ -364,7 +364,7 @@ bool nfc_configure(nfc_device_t* pnd, const dev_config_option dco, const bool bE
 
   switch(dco)
   {
-    case DCO_HANDLE_CRC:
+    case NDO_HANDLE_CRC:
       // Enable or disable automatic receiving/sending of CRC bytes
       // TX and RX are both represented by the symbol 0x80
       btValue = (bEnable) ? 0x80 : 0x00;
@@ -373,26 +373,26 @@ bool nfc_configure(nfc_device_t* pnd, const dev_config_option dco, const bool bE
       pnd->bCrc = bEnable;
     break;
 
-    case DCO_HANDLE_PARITY:
+    case NDO_HANDLE_PARITY:
       // Handle parity bit by PN53X chip or parse it as data bit
       btValue = (bEnable) ? 0x00 : SYMBOL_PARITY_DISABLE;
       if (!pn53x_set_reg(pnd,REG_CIU_MANUAL_RCV,SYMBOL_PARITY_DISABLE,btValue)) return false;
       pnd->bPar = bEnable;
     break;
 
-    case DCO_ACTIVATE_FIELD:
+    case NDO_ACTIVATE_FIELD:
       abtCmd[2] = RFCI_FIELD;
       abtCmd[3] = (bEnable) ? 1 : 0;
       // We can not use pn53x_transceive() because abtRx[0] gives no status info
       if (!pnd->pdc->transceive(pnd->nds,abtCmd,4,NULL,NULL)) return false;
     break;
 
-    case DCO_ACTIVATE_CRYPTO1:
+    case NDO_ACTIVATE_CRYPTO1:
       btValue = (bEnable) ? SYMBOL_MF_CRYPTO1_ON : 0x00;
       if (!pn53x_set_reg(pnd,REG_CIU_STATUS2,SYMBOL_MF_CRYPTO1_ON,btValue)) return false;
     break;
 
-    case DCO_INFINITE_SELECT:
+    case NDO_INFINITE_SELECT:
       // Retry format: 0x00 means only 1 try, 0xff means infinite
       abtCmd[2] = RFCI_RETRY_SELECT;
       abtCmd[3] = (bEnable) ? 0xff : 0x00; // MxRtyATR, default: active = 0xff, passive = 0x02
@@ -402,12 +402,12 @@ bool nfc_configure(nfc_device_t* pnd, const dev_config_option dco, const bool bE
       if (!pnd->pdc->transceive(pnd->nds,abtCmd,6,NULL,NULL)) return false;
     break;
 
-    case DCO_ACCEPT_INVALID_FRAMES:
+    case NDO_ACCEPT_INVALID_FRAMES:
       btValue = (bEnable) ? SYMBOL_RX_NO_ERROR : 0x00;
       if (!pn53x_set_reg(pnd,REG_CIU_RX_MODE,SYMBOL_RX_NO_ERROR,btValue)) return false;
     break;
 
-    case DCO_ACCEPT_MULTIPLE_FRAMES:
+    case NDO_ACCEPT_MULTIPLE_FRAMES:
       btValue = (bEnable) ? SYMBOL_RX_MULTIPLE : 0x00;
       if (!pn53x_set_reg(pnd,REG_CIU_RX_MODE,SYMBOL_RX_MULTIPLE,btValue)) return false;
     return true;
@@ -830,8 +830,8 @@ bool nfc_target_init(const nfc_device_t* pnd, byte_t* pbtRx, size_t* pszRxBits)
   abtCmd[7] = 0x0b;
 
   // Make sure the CRC & parity are handled by the device, this is needed for target_init to work properly
-  if (!bCrc) nfc_configure((nfc_device_t*)pnd,DCO_HANDLE_CRC,true);
-  if (!bPar) nfc_configure((nfc_device_t*)pnd,DCO_HANDLE_PARITY,true);
+  if (!bCrc) nfc_configure((nfc_device_t*)pnd,NDO_HANDLE_CRC,true);
+  if (!bPar) nfc_configure((nfc_device_t*)pnd,NDO_HANDLE_PARITY,true);
 
   // Let the PN53X be activated by the RF level detector from power down mode
   if (!pn53x_set_reg(pnd,REG_CIU_TX_AUTO, SYMBOL_INITIAL_RF_ON,0x04)) return false;
@@ -850,8 +850,8 @@ bool nfc_target_init(const nfc_device_t* pnd, byte_t* pbtRx, size_t* pszRxBits)
   memcpy(pbtRx,abtRx+1,szRxLen-1);
 
   // Restore the CRC & parity setting to the original value (if needed)
-  if (!bCrc) nfc_configure((nfc_device_t*)pnd,DCO_HANDLE_CRC,false);
-  if (!bPar) nfc_configure((nfc_device_t*)pnd,DCO_HANDLE_PARITY,false);
+  if (!bCrc) nfc_configure((nfc_device_t*)pnd,NDO_HANDLE_CRC,false);
+  if (!bPar) nfc_configure((nfc_device_t*)pnd,NDO_HANDLE_PARITY,false);
 
   return true;
 }

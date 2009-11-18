@@ -90,7 +90,7 @@ nfc_device_t* pn531_usb_connect(const nfc_device_desc_t* pndd)
   int idproduct_alt = 0x0193;
   struct usb_bus *bus;
   struct usb_device *dev;
-  nfc_device_t* pnd = INVALID_DEVICE_INFO;
+  nfc_device_t* pnd = NULL;
   usb_spec_t* pus;
   usb_spec_t us;
   uint32_t uiDevIndex;
@@ -100,8 +100,8 @@ nfc_device_t* pn531_usb_connect(const nfc_device_desc_t* pndd)
   us.pudh = NULL;
 
   usb_init();
-  if (usb_find_busses() < 0) return INVALID_DEVICE_INFO;
-  if (usb_find_devices() < 0) return INVALID_DEVICE_INFO;
+  if (usb_find_busses() < 0) return NULL;
+  if (usb_find_devices() < 0) return NULL;
 
   // Initialize the device index we are seaching for
   if( pndd == NULL ) {
@@ -137,14 +137,14 @@ nfc_device_t* pn531_usb_connect(const nfc_device_desc_t* pndd)
         {
           DBG("Set config failed");
           usb_close(us.pudh);
-          return INVALID_DEVICE_INFO;
+          return NULL;
         }
 
         if(usb_claim_interface(us.pudh,0) < 0)
         {
           DBG("Can't claim interface");
           usb_close(us.pudh);
-          return INVALID_DEVICE_INFO;
+          return NULL;
         }
         // Allocate memory for the device info and specification, fill it and return the info
         pus = malloc(sizeof(usb_spec_t));

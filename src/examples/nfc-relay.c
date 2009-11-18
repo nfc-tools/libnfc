@@ -85,18 +85,18 @@ int main(int argc,char* argv[])
   printf("[+] For example, send a RATS command or use the \"nfc-anticol\" tool\n");
   nfc_target_init(pndTag,abtReaderRx,&szReaderRxBits);
   printf("[+] Configuring emulator settings\n");
-  nfc_configure(pndTag,DCO_HANDLE_CRC,false);
-  nfc_configure(pndTag,DCO_HANDLE_PARITY,false);
-  nfc_configure(pndTag,DCO_ACCEPT_INVALID_FRAMES,true);
+  nfc_configure(pndTag,NDO_HANDLE_CRC,false);
+  nfc_configure(pndTag,NDO_HANDLE_PARITY,false);
+  nfc_configure(pndTag,NDO_ACCEPT_INVALID_FRAMES,true);
   printf("[+] Thank you, the emulated tag is initialized\n");
 
   // Try to open the NFC reader
   pndReader = NULL;
   while (pndReader == NULL) pndReader = nfc_connect(NULL);
   printf("[+] Configuring NFC reader settings\n");
-  nfc_configure(pndReader,DCO_HANDLE_CRC,false);
-  nfc_configure(pndReader,DCO_HANDLE_PARITY,false);
-  nfc_configure(pndReader,DCO_ACCEPT_INVALID_FRAMES,true);
+  nfc_configure(pndReader,NDO_HANDLE_CRC,false);
+  nfc_configure(pndReader,NDO_HANDLE_PARITY,false);
+  nfc_configure(pndReader,NDO_ACCEPT_INVALID_FRAMES,true);
   printf("[+] Done, relaying frames now!\n\n");
 
   while(true)
@@ -108,10 +108,10 @@ int main(int argc,char* argv[])
       if (szReaderRxBits == 7 && abtReaderRx[0] == 0x26)
       {
         // Drop down field for a very short time (original tag will reboot)
-        nfc_configure(pndReader,DCO_ACTIVATE_FIELD,false);
+        nfc_configure(pndReader,NDO_ACTIVATE_FIELD,false);
         if(!quiet_output)
           printf("\n");
-        nfc_configure(pndReader,DCO_ACTIVATE_FIELD,true);
+        nfc_configure(pndReader,NDO_ACTIVATE_FIELD,true);
       }
 
       // Print the reader frame to the screen

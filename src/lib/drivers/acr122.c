@@ -79,10 +79,10 @@ nfc_device_t* acr122_connect(const nfc_device_desc_t* pndd)
   memset(acList,0x00,szListLen);
 
   // Test if context succeeded
-  if (SCardEstablishContext(SCARD_SCOPE_USER,NULL,NULL,&(as.hCtx)) != SCARD_S_SUCCESS) return INVALID_DEVICE_INFO;
+  if (SCardEstablishContext(SCARD_SCOPE_USER,NULL,NULL,&(as.hCtx)) != SCARD_S_SUCCESS) return NULL;
 
   // Retrieve the string array of all available pcsc readers
-  if (SCardListReaders(as.hCtx,NULL,acList,(void*)&szListLen) != SCARD_S_SUCCESS) return INVALID_DEVICE_INFO;
+  if (SCardListReaders(as.hCtx,NULL,acList,(void*)&szListLen) != SCARD_S_SUCCESS) return NULL;
 
   DBG("PCSC reports following device(s):");
   DBG("- %s",acList);
@@ -163,7 +163,7 @@ nfc_device_t* acr122_connect(const nfc_device_desc_t* pndd)
   }
 
   // Too bad, the reader could not be located;
-  return INVALID_DEVICE_INFO;
+  return NULL;
 }
 
 void acr122_disconnect(nfc_device_t* pnd)

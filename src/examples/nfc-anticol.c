@@ -138,14 +138,14 @@ int main(int argc,char* argv[])
   nfc_initiator_init(pnd);
 
   // Drop the field for a while
-  nfc_configure(pnd,DCO_ACTIVATE_FIELD,false);
+  nfc_configure(pnd,NDO_ACTIVATE_FIELD,false);
 
   // Configure the CRC and Parity settings
-  nfc_configure(pnd,DCO_HANDLE_CRC,false);
-  nfc_configure(pnd,DCO_HANDLE_PARITY,true);
+  nfc_configure(pnd,NDO_HANDLE_CRC,false);
+  nfc_configure(pnd,NDO_HANDLE_PARITY,true);
 
   // Enable field so more power consuming cards can power themselves up
-  nfc_configure(pnd,DCO_ACTIVATE_FIELD,true);
+  nfc_configure(pnd,NDO_ACTIVATE_FIELD,true);
 
   printf("\nConnected to NFC reader: %s\n\n",pnd->acName);
 

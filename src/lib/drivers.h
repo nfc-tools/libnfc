@@ -40,7 +40,6 @@
 #include "drivers/pn532_uart.h"
 
 #define DRIVERS_MAX_DEVICES         16
-#define INVALID_DEVICE_INFO 0
 #define MAX_FRAME_LEN       264
 
 const static struct driver_callbacks drivers_callbacks_list[] = {
