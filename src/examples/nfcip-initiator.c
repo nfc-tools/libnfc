@@ -30,14 +30,14 @@
 int main(int argc, const char *argv[])
 {
   nfc_device_t *pnd;
-  tag_info ti;
+  nfc_target_info_t ti;
   byte_t abtRecv[MAX_FRAME_LEN];
   size_t szRecvBits;
   byte_t send[] = "Hello World!";
 
   pnd = nfc_connect(NULL);
   if (!pnd || !nfc_initiator_init(pnd)
-      || !nfc_initiator_select_dep_target(pnd, IM_PASSIVE_DEP, NULL, 0,
+      || !nfc_initiator_select_dep_target(pnd, NM_PASSIVE_DEP, NULL, 0,
 					  NULL, 0, NULL, 0, &ti)) {
     printf
 	("unable to connect, initialize, or select the target\n");

@@ -18,7 +18,7 @@
  * 
  * 
  * @file nfc.c
- * @brief
+ * @brief NFC library implementation
  */
 
 #include "nfc.h"
@@ -112,7 +112,7 @@ bool pn53x_transceive(const nfc_device_t* pnd, const byte_t* pbtTx, const size_t
     pbtRx = abtRx;
     pszRxLen = &szRxLen;
   }
-  
+
   *pszRxLen = MAX_FRAME_LEN;
   // Call the tranceive callback function of the current device
   if (!pnd->pdc->transceive(pnd->nds,pbtTx,szTxLen,pbtRx,pszRxLen)) return false;
@@ -433,7 +433,7 @@ bool nfc_initiator_init(const nfc_device_t* pnd)
   return true;
 }
 
-bool nfc_initiator_select_dep_target(const nfc_device_t* pnd, const init_modulation im, const byte_t* pbtPidData, const size_t szPidDataLen, const byte_t* pbtNFCID3i, const size_t szNFCID3iDataLen, const byte_t *pbtGbData, const size_t szGbDataLen, tag_info* pti)
+bool nfc_initiator_select_dep_target(const nfc_device_t* pnd, const nfc_modulation_t nmInitModulation, const byte_t* pbtPidData, const size_t szPidDataLen, const byte_t* pbtNFCID3i, const size_t szNFCID3iDataLen, const byte_t *pbtGbData, const size_t szGbDataLen, nfc_target_info_t* pnti)
 {
   byte_t abtRx[MAX_FRAME_LEN];
   size_t szRxLen;
@@ -441,13 +441,13 @@ bool nfc_initiator_select_dep_target(const nfc_device_t* pnd, const init_modulat
   byte_t abtCmd[sizeof(pncmd_initiator_jump_for_dep)];
   memcpy(abtCmd,pncmd_initiator_jump_for_dep,sizeof(pncmd_initiator_jump_for_dep));
 
-  if(im == IM_ACTIVE_DEP) {
+  if(nmInitModulation == NM_ACTIVE_DEP) {
     abtCmd[2] = 0x01; /* active DEP */
   }
   abtCmd[3] = 0x00; /* baud rate = 106kbps */
 
   offset = 5;
-  if(pbtPidData && im != IM_ACTIVE_DEP) { /* can't have passive initiator data when using active mode */
+  if(pbtPidData && nmInitModulation != NM_ACTIVE_DEP) { /* can't have passive initiator data when using active mode */
     abtCmd[4] |= 0x01;
     memcpy(abtCmd+offset,pbtPidData,szPidDataLen);
     offset+= szPidDataLen;
@@ -472,17 +472,17 @@ bool nfc_initiator_select_dep_target(const nfc_device_t* pnd, const init_modulat
   if (abtRx[1] != 1) return false;
 
   // Is a target info struct available
-  if (pti)
+  if (pnti)
   {
-    memcpy(pti->tid.NFCID3i,abtRx+2,10);
-    pti->tid.btDID = abtRx[12];
-    pti->tid.btBSt = abtRx[13];
-    pti->tid.btBRt = abtRx[14];
+    memcpy(pnti->ndi.NFCID3i,abtRx+2,10);
+    pnti->ndi.btDID = abtRx[12];
+    pnti->ndi.btBSt = abtRx[13];
+    pnti->ndi.btBRt = abtRx[14];
   }
   return true;
 }
 
-bool nfc_initiator_select_tag(const nfc_device_t* pnd, const init_modulation im, const byte_t* pbtInitData, const size_t szInitDataLen, tag_info* pti)
+bool nfc_initiator_select_tag(const nfc_device_t* pnd, const nfc_modulation_t nmInitModulation, const byte_t* pbtInitData, const size_t szInitDataLen, nfc_target_info_t* pnti)
 {
   byte_t abtInit[MAX_FRAME_LEN];
   size_t szInitLen;
@@ -495,11 +495,11 @@ bool nfc_initiator_select_tag(const nfc_device_t* pnd, const init_modulation im,
   if (!pnd->bActive) return false;
 
   abtCmd[2] = 1;  // MaxTg, we only want to select 1 tag at the time
-  abtCmd[3] = im; // BrTy, the type of init modulation used for polling a passive tag
+  abtCmd[3] = nmInitModulation; // BrTy, the type of init modulation used for polling a passive tag
 
-  switch(im)
+  switch(nmInitModulation)
   {
-    case IM_ISO14443A_106:
+    case NM_ISO14443A_106:
       switch (szInitDataLen)
       {
         case 7:
@@ -542,73 +542,73 @@ bool nfc_initiator_select_tag(const nfc_device_t* pnd, const init_modulation im,
   if (abtRx[0] != 1) return false;
 
   // Is a tag info struct available
-  if (pti)
+  if (pnti)
   {
     // Fill the tag info struct with the values corresponding to this init modulation
-    switch(im)
+    switch(nmInitModulation)
     {
-      case IM_ISO14443A_106:
+      case NM_ISO14443A_106:
         // Somehow they switched the lower and upper ATQA bytes around for the PN531 chipset
         if (pnd->nc == NC_PN531)
         {
-          pti->tia.abtAtqa[0] = abtRx[3];
-          pti->tia.abtAtqa[1] = abtRx[2];
+          pnti->nai.abtAtqa[0] = abtRx[3];
+          pnti->nai.abtAtqa[1] = abtRx[2];
         } else {
-          memcpy(pti->tia.abtAtqa,abtRx+2,2);
+          memcpy(pnti->nai.abtAtqa,abtRx+2,2);
         }
-        pti->tia.btSak = abtRx[4];
+        pnti->nai.btSak = abtRx[4];
         // Copy the NFCID1
-        pti->tia.szUidLen = abtRx[5];
-        memcpy(pti->tia.abtUid,abtRx+6,pti->tia.szUidLen);
+        pnti->nai.szUidLen = abtRx[5];
+        memcpy(pnti->nai.abtUid,abtRx+6,pnti->nai.szUidLen);
         // Did we received an optional ATS (Smardcard ATR)
-        if (szRxLen > pti->tia.szUidLen+6)
+        if (szRxLen > pnti->nai.szUidLen+6)
         {
-          pti->tia.szAtsLen = abtRx[pti->tia.szUidLen+6];
-          memcpy(pti->tia.abtAts,abtRx+pti->tia.szUidLen+6,pti->tia.szAtsLen);
+          pnti->nai.szAtsLen = abtRx[pnti->nai.szUidLen+6];
+          memcpy(pnti->nai.abtAts,abtRx+pnti->nai.szUidLen+6,pnti->nai.szAtsLen);
         } else {
-          pti->tia.szAtsLen = 0;
+          pnti->nai.szAtsLen = 0;
         }
       break;
 
-      case IM_FELICA_212:
-      case IM_FELICA_424:
+      case NM_FELICA_212:
+      case NM_FELICA_424:
         // Store the mandatory info
-        pti->tif.szLen = abtRx[2];
-        pti->tif.btResCode = abtRx[3];
+        pnti->nfi.szLen = abtRx[2];
+        pnti->nfi.btResCode = abtRx[3];
         // Copy the NFCID2t
-        memcpy(pti->tif.abtId,abtRx+4,8);
+        memcpy(pnti->nfi.abtId,abtRx+4,8);
         // Copy the felica padding
-        memcpy(pti->tif.abtPad,abtRx+12,8);
+        memcpy(pnti->nfi.abtPad,abtRx+12,8);
         // Test if the System code (SYST_CODE) is available
         if (szRxLen > 20)
         {
-          memcpy(pti->tif.abtSysCode,abtRx+20,2);  
+          memcpy(pnti->nfi.abtSysCode,abtRx+20,2);  
         }
       break;
 
-      case IM_ISO14443B_106:
+      case NM_ISO14443B_106:
         // Store the mandatory info
-        memcpy(pti->tib.abtAtqb,abtRx+2,12);
+        memcpy(pnti->nbi.abtAtqb,abtRx+2,12);
         // Ignore the 0x1D byte, and just store the 4 byte id
-        memcpy(pti->tib.abtId,abtRx+15,4);
-        pti->tib.btParam1 = abtRx[19];
-        pti->tib.btParam2 = abtRx[20];
-        pti->tib.btParam3 = abtRx[21];
-        pti->tib.btParam4 = abtRx[22];
+        memcpy(pnti->nbi.abtId,abtRx+15,4);
+        pnti->nbi.btParam1 = abtRx[19];
+        pnti->nbi.btParam2 = abtRx[20];
+        pnti->nbi.btParam3 = abtRx[21];
+        pnti->nbi.btParam4 = abtRx[22];
         // Test if the Higher layer (INF) is available
         if (szRxLen > 22)
         {
-          pti->tib.szInfLen = abtRx[23];
-          memcpy(pti->tib.abtInf,abtRx+24,pti->tib.szInfLen);
+          pnti->nbi.szInfLen = abtRx[23];
+          memcpy(pnti->nbi.abtInf,abtRx+24,pnti->nbi.szInfLen);
         } else {
-          pti->tib.szInfLen = 0;
+          pnti->nbi.szInfLen = 0;
         }
       break;
 
-      case IM_JEWEL_106:
+      case NM_JEWEL_106:
         // Store the mandatory info
-        memcpy(pti->tij.btSensRes,abtRx+2,2);
-        memcpy(pti->tij.btId,abtRx+4,4);
+        memcpy(pnti->nji.btSensRes,abtRx+2,2);
+        memcpy(pnti->nji.btId,abtRx+4,4);
       break;
 
       default:

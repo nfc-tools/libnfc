@@ -86,7 +86,7 @@ bool nfc_configure(nfc_device_t* pnd, const nfc_device_option_t ndo, const bool 
 bool nfc_initiator_init(const nfc_device_t* pnd);
 
 /**
- * @fn nfc_initiator_select_tag(const nfc_device_t* pnd, const init_modulation im, const byte_t* pbtInitData, const size_t szInitDataLen, tag_info* pti)
+ * @fn nfc_initiator_select_tag(const nfc_device_t* pnd, const nfc_modulation_t nmInitModulation, const byte_t* pbtInitData, const size_t szInitDataLen, nfc_target_info_t* pti)
  * @brief Select a passive or emulated tag
  * @return Returns true if action was successfully performed; otherwise returns false.
  * @param pnd nfc_device_t struct pointer that represent currently used device
@@ -95,24 +95,24 @@ bool nfc_initiator_init(const nfc_device_t* pnd);
  * @param szInitDataLen Length of initiator data \a pbtInitData.
  *
  * The NFC device will try to find the available passive tags. Some NFC devices are capable to emulate passive tags. The standards (ISO18092 and ECMA-340) describe the modulation that can be used for reader to passive communications. The chip needs to know with what kind of tag it is dealing with, therefore the initial modulation and speed (106, 212 or 424 kbps) should be supplied.
- * @note For every initial modulation type there is a different collection of information returned (in tag_info pointer pti) They all fit in the data-type which is called tag_info. This is a union which contains the tag information that belongs to the according initial modulation type. 
+ * @note For every initial modulation type there is a different collection of information returned (in nfc_target_info_t pointer pti) They all fit in the data-type which is called nfc_target_info_t. This is a union which contains the tag information that belongs to the according initial modulation type. 
  */
-bool nfc_initiator_select_tag(const nfc_device_t* pnd, const init_modulation im, const byte_t* pbtInitData, const size_t szInitDataLen, tag_info* pti);
+bool nfc_initiator_select_tag(const nfc_device_t* pnd, const nfc_modulation_t nmInitModulation, const byte_t* pbtInitData, const size_t szInitDataLen, nfc_target_info_t* pti);
 
 /**
- * @fn nfc_initiator_select_dep_target(const nfc_device_t *pnd, const init_modulation im, const byte_t *pbtPidData, const size_t szPidDataLen, const byte_t *pbtNFCID3i, const size_t szNFCID3iDataLen, const byte_t *pbtGbData, const size_t szGbDataLen, tag_info * pti);
+ * @fn nfc_initiator_select_dep_target(const nfc_device_t *pnd, const nfc_modulation_t nmInitModulation, const byte_t *pbtPidData, const size_t szPidDataLen, const byte_t *pbtNFCID3i, const size_t szNFCID3iDataLen, const byte_t *pbtGbData, const size_t szGbDataLen, nfc_target_info_t * pti);
  * @brief Select a target and request active or passive mode for DEP (Data Exchange Protocol)
  * @return Returns true if action was successfully performed; otherwise returns false.
  * @param pnd nfc_device_t struct pointer that represent currently used device
- * @param im Desired modulation (IM_ACTIVE_DEP or IM_PASSIVE_DEP for active, respectively passive mode)
- * @param pbtPidData passive initiator data, 4 or 5 bytes long, (optional, only for IM_PASSIVE_DEP, can be NULL)
+ * @param im Desired modulation (NM_ACTIVE_DEP or NM_PASSIVE_DEP for active, respectively passive mode)
+ * @param pbtPidData passive initiator data, 4 or 5 bytes long, (optional, only for NM_PASSIVE_DEP, can be NULL)
  * @param pbtNFCID3i the NFCID3, 10 bytes long, of the initiator (optional, can be NULL)
  * @param pbtGbData generic data of the initiator, max 48 bytes long, (optional, can be NULL)
  *
  * The NFC device will try to find the available target. The standards (ISO18092 and ECMA-340) describe the modulation that can be used for reader to passive communications.
- * @note tag_info_dep will be returned when the target was acquired successfully.
+ * @note nfc_target_info_t_dep will be returned when the target was acquired successfully.
  */
-bool nfc_initiator_select_dep_target(const nfc_device_t* pnd, const init_modulation im, const byte_t* pbtPidData, const size_t szPidDataLen, const byte_t* pbtNFCID3i, const size_t szNFCID3iDataLen, const byte_t *pbtGbData, const size_t szGbDataLen, tag_info* pti);
+bool nfc_initiator_select_dep_target(const nfc_device_t* pnd, const nfc_modulation_t nmInitModulation, const byte_t* pbtPidData, const size_t szPidDataLen, const byte_t* pbtNFCID3i, const size_t szNFCID3iDataLen, const byte_t *pbtGbData, const size_t szGbDataLen, nfc_target_info_t* pti);
 /**
  * @fn nfc_initiator_deselect_tag(const nfc_device_t* pnd);
  * @brief Deselect a selected passive or emulated tag

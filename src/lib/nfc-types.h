@@ -131,28 +131,28 @@ typedef enum {
 // nfc_reader_list_passive - using InListPassiveTarget 
 
 /**
- * @enum init_modulation
+ * @enum nfc_modulation_t
  * @brief NFC modulation
  */
 typedef enum {
 /** ISO14443-A (NXP MIFARE) http://en.wikipedia.org/wiki/MIFARE */
-  IM_ISO14443A_106  = 0x00,
+  NM_ISO14443A_106  = 0x00,
 /** JIS X 6319-4 (Sony Felica) http://en.wikipedia.org/wiki/FeliCa */
-  IM_FELICA_212     = 0x01,
+  NM_FELICA_212     = 0x01,
 /** JIS X 6319-4 (Sony Felica) http://en.wikipedia.org/wiki/FeliCa */
-  IM_FELICA_424     = 0x02,
+  NM_FELICA_424     = 0x02,
 /** ISO14443-B http://en.wikipedia.org/wiki/ISO/IEC_14443 */
-  IM_ISO14443B_106  = 0x03,
+  NM_ISO14443B_106  = 0x03,
 /** Jewel Topaz (Innovision Research & Development) */
-  IM_JEWEL_106      = 0x04,
+  NM_JEWEL_106      = 0x04,
 /** Active DEP */
-  IM_ACTIVE_DEP = 0x05,
+  NM_ACTIVE_DEP = 0x05,
 /** Passive DEP */
-  IM_PASSIVE_DEP = 0x06,
-}init_modulation;
+  NM_PASSIVE_DEP = 0x06,
+} nfc_modulation_t;
 
 /**
- * @struct tag_info_dep
+ * @struct nfc_target_info_t_dep
  * @brief NFC tag information in Data Exchange Protocol
  */
 typedef struct {
@@ -160,10 +160,10 @@ typedef struct {
   byte_t btDID;
   byte_t btBSt;
   byte_t btBRt;
-}tag_info_dep;
+} nfc_dep_info_t;
 
 /**
- * @struct tag_info_iso14443a
+ * @struct nfc_target_info_t_iso14443a
  * @brief NFC ISO14443A tag (MIFARE) information
  */
 typedef struct {
@@ -173,10 +173,10 @@ typedef struct {
   byte_t abtUid[10];
   size_t szAtsLen;
   byte_t abtAts[36];
-}tag_info_iso14443a;
+} nfc_iso14443a_info_t;
 
 /**
- * @struct tag_info_felica
+ * @struct nfc_target_info_t_felica
  * @brief NFC FeLiCa tag information
  */
 typedef struct {
@@ -185,10 +185,10 @@ typedef struct {
   byte_t abtId[8];
   byte_t abtPad[8];
   byte_t abtSysCode[2];
-}tag_info_felica;
+} nfc_felica_info_t;
 
 /**
- * @struct tag_info_iso14443b
+ * @struct nfc_target_info_t_iso14443b
  * @brief NFC ISO14443B tag information
  */
 typedef struct {
@@ -201,28 +201,28 @@ typedef struct {
   byte_t btCid;
   size_t szInfLen;
   byte_t abtInf[64];
-}tag_info_iso14443b;
+} nfc_iso14443b_info_t;
 
 /**
- * @struct tag_info_jewel
+ * @struct nfc_target_info_t_jewel
  * @brief NFC Jewel tag information
  */
 typedef struct {
   byte_t btSensRes[2];
   byte_t btId[4];
-}tag_info_jewel;
+} nfc_jewel_info_t;
 
 /**
- * @union tag_info
+ * @union nfc_target_info_t
  * @brief Union between all kind of tags information structures.
  */
 typedef union {
-  tag_info_iso14443a tia;
-  tag_info_felica tif;
-  tag_info_iso14443b tib;
-  tag_info_jewel tij;
-  tag_info_dep tid;
-}tag_info;
+  nfc_iso14443a_info_t nai;
+  nfc_felica_info_t nfi;
+  nfc_iso14443b_info_t nbi;
+  nfc_jewel_info_t nji;
+  nfc_dep_info_t ndi;
+} nfc_target_info_t;
 
 ////////////////////////////////////////////////////////////////////
 // InDataExchange, MIFARE Classic card 

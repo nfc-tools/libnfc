@@ -36,7 +36,7 @@
 #include "bitutils.h"
 
 static nfc_device_t* pnd;
-static tag_info ti;
+static nfc_target_info_t nti;
 static mifare_param mp;
 static mifareul_tag mtDump;
 
@@ -71,7 +71,7 @@ bool write_card()
       {
         printf("x");
         // When a failure occured we need to redo the anti-collision
-        if (!nfc_initiator_select_tag(pnd,IM_ISO14443A_106,NULL,0,&ti))
+        if (!nfc_initiator_select_tag(pnd,NM_ISO14443A_106,NULL,0,&nti))
         {
           printf("!\nError: tag was removed\n");
           return false;
@@ -171,7 +171,7 @@ int main(int argc, const char* argv[])
   printf("Connected to NFC reader: %s\n",pnd->acName);
 
   // Try to find a MIFARE Ultralight tag
-  if (!nfc_initiator_select_tag(pnd,IM_ISO14443A_106,NULL,0,&ti))
+  if (!nfc_initiator_select_tag(pnd,NM_ISO14443A_106,NULL,0,&nti))
   {
     printf("Error: no tag was found\n");
     nfc_disconnect(pnd);
@@ -180,7 +180,7 @@ int main(int argc, const char* argv[])
 
   // Test if we are dealing with a MIFARE compatible tag
 
-  if (ti.tia.abtAtqa[1] != 0x44){
+  if (nti.nai.abtAtqa[1] != 0x44){
       printf("Error: tag is not a MIFARE Ultralight card\n");
     nfc_disconnect(pnd);
       return 1;
@@ -188,7 +188,7 @@ int main(int argc, const char* argv[])
 
 
   // Get the info from the current tag
-  pbtUID = ti.tia.abtUid;
+  pbtUID = nti.nai.abtUid;
   printf("Found MIFARE Ultralight card with uid: %08x\n", swap_endian32(pbtUID));
 
   if (bReadAction)
