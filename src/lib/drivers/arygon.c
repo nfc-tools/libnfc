@@ -127,8 +127,8 @@ nfc_device_t* arygon_connect(const nfc_device_desc_t* pndd)
   // We have a connection
   pnd = malloc(sizeof(nfc_device_t));
   strcpy(pnd->acName,"ARYGON");
-  pnd->ct = CT_PN532;
-  pnd->ds = (dev_spec)sp;
+  pnd->nc = NC_PN532;
+  pnd->nds = (nfc_device_spec_t)sp;
   pnd->bActive = true;
   pnd->bCrc = true;
   pnd->bPar = true;
@@ -138,11 +138,11 @@ nfc_device_t* arygon_connect(const nfc_device_desc_t* pndd)
 
 void arygon_disconnect(nfc_device_t* pnd)
 {
-  uart_close((serial_port)pnd->ds);
+  uart_close((serial_port)pnd->nds);
   free(pnd);
 }
 
-bool arygon_transceive(const dev_spec ds, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen)
+bool arygon_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen)
 {
   byte_t abtTxBuf[BUFFER_LENGTH] = { DEV_ARYGON_PROTOCOL_TAMA, 0x00, 0x00, 0xff }; // Every packet must start with "00 00 ff"
   byte_t abtRxBuf[BUFFER_LENGTH];
@@ -170,7 +170,7 @@ bool arygon_transceive(const dev_spec ds, const byte_t* pbtTx, const size_t szTx
   printf(" TX: ");
   print_hex(abtTxBuf,szTxLen+8);
 #endif
-  if (!uart_send((serial_port)ds,abtTxBuf,szTxLen+8)) {
+  if (!uart_send((serial_port)nds,abtTxBuf,szTxLen+8)) {
     ERR("Unable to transmit data. (TX)");
     return false;
   }
@@ -190,7 +190,7 @@ bool arygon_transceive(const dev_spec ds, const byte_t* pbtTx, const size_t szTx
    * For more information, see Issue 23 on development site : http://code.google.com/p/libnfc/issues/detail?id=23
    */
 
-  if (!uart_receive((serial_port)ds,abtRxBuf,&szRxBufLen)) {
+  if (!uart_receive((serial_port)nds,abtRxBuf,&szRxBufLen)) {
     ERR("Unable to receive data. (RX)");
     return false;
   }

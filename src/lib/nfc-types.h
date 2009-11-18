@@ -37,14 +37,14 @@
 typedef uint8_t byte_t;
 
 typedef enum {
-  CT_PN531                    = 0x10,
-  CT_PN532                    = 0x20,
-  CT_PN533                    = 0x30,
-} chip_type;
+  NC_PN531                    = 0x10,
+  NC_PN532                    = 0x20,
+  NC_PN533                    = 0x30,
+} nfc_chip_t;
 
 struct driver_callbacks;                // Prototype the callback struct
 
-typedef void*               dev_spec; // Device connection specification
+typedef void*               nfc_device_spec_t; // Device connection specification
 
 #define DEVICE_NAME_LENGTH  256
 /**
@@ -57,9 +57,9 @@ typedef struct {
 /** Device name string, including device wrapper firmware */
   char acName[DEVICE_NAME_LENGTH];
 /** PN53X chip type, this is useful for some "bug" work-arounds */
-  chip_type ct;
+  nfc_chip_t nc;
 /** Pointer to the device connection specification */
-  dev_spec ds;
+ nfc_device_spec_t nds;
 /** This represents if the PN53X device was initialized succesful */
   bool bActive;
 /** Is the crc automaticly added, checked and removed from the frames */
@@ -98,7 +98,7 @@ struct driver_callbacks {
   /** Connect callback */
   nfc_device_t* (*connect)(const nfc_device_desc_t* pndd);
   /** Transceive callback */
-  bool (*transceive)(const dev_spec ds, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen);
+  bool (*transceive)(const nfc_device_spec_t nds, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen);
   /** Disconnect callback */
   void (*disconnect)(nfc_device_t* pnd);
 };

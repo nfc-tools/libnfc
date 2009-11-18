@@ -120,8 +120,8 @@ nfc_device_t* pn532_uart_connect(const nfc_device_desc_t* pndd)
   // We have a connection
   pnd = malloc(sizeof(nfc_device_t));
   strcpy(pnd->acName,"PN532_UART");
-  pnd->ct = CT_PN532;
-  pnd->ds = (dev_spec)sp;
+  pnd->nc = NC_PN532;
+  pnd->nds = (nfc_device_spec_t)sp;
   pnd->bActive = true;
   pnd->bCrc = true;
   pnd->bPar = true;
@@ -131,11 +131,11 @@ nfc_device_t* pn532_uart_connect(const nfc_device_desc_t* pndd)
 
 void pn532_uart_disconnect(nfc_device_t* pnd)
 {
-  uart_close((serial_port)pnd->ds);
+  uart_close((serial_port)pnd->nds);
   free(pnd);
 }
 
-bool pn532_uart_transceive(const dev_spec ds, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen)
+bool pn532_uart_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen)
 {
   byte_t abtTxBuf[BUFFER_LENGTH] = { 0x00, 0x00, 0xff }; // Every packet must start with "00 00 ff"
   byte_t abtRxBuf[BUFFER_LENGTH];
@@ -163,7 +163,7 @@ bool pn532_uart_transceive(const dev_spec ds, const byte_t* pbtTx, const size_t 
   printf(" TX: ");
   print_hex(abtTxBuf,szTxLen+7);
 #endif
-  if (!uart_send((serial_port)ds,abtTxBuf,szTxLen+7)) {
+  if (!uart_send((serial_port)nds,abtTxBuf,szTxLen+7)) {
     ERR("Unable to transmit data. (TX)");
     return false;
   }
@@ -178,7 +178,7 @@ bool pn532_uart_transceive(const dev_spec ds, const byte_t* pbtTx, const size_t 
    */
   delay_ms(30);
 
-  if (!uart_receive((serial_port)ds,abtRxBuf,&szRxBufLen)) {
+  if (!uart_receive((serial_port)nds,abtRxBuf,&szRxBufLen)) {
     ERR("Unable to receive data. (RX)");
     return false;
   }

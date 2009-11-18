@@ -21,8 +21,6 @@ case "$host" in
    ;;
 esac
 
-AC_PROG_RANLIB
-
 AC_PATH_PROG(PKG_CONFIG, pkg-config)
 
 # Checks for header files.

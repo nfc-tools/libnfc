@@ -32,7 +32,7 @@ nfc_device_t* arygon_connect(const nfc_device_desc_t* pndd);
 void arygon_disconnect(nfc_device_t* pnd);
 
 // Callback function used by libnfc to transmit commands to the PN53X chip
-bool arygon_transceive(const dev_spec ds, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen);
+bool arygon_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen);
 
 #endif // _LIBNFC_DEV_ARYGON_H_
 

@@ -115,7 +115,7 @@ bool pn53x_transceive(const nfc_device_t* pnd, const byte_t* pbtTx, const size_t
   
   *pszRxLen = MAX_FRAME_LEN;
   // Call the tranceive callback function of the current device
-  if (!pnd->pdc->transceive(pnd->ds,pbtTx,szTxLen,pbtRx,pszRxLen)) return false;
+  if (!pnd->pdc->transceive(pnd->nds,pbtTx,szTxLen,pbtRx,pszRxLen)) return false;
 
   // Make sure there was no failure reported by the PN53X chip (0x00 == OK)
   if (pbtRx[0] != 0) return false;
@@ -134,7 +134,7 @@ byte_t pn53x_get_reg(const nfc_device_t* pnd, uint16_t ui16Reg)
   abtCmd[2] = ui16Reg >> 8;
   abtCmd[3] = ui16Reg & 0xff;
   // We can not use pn53x_transceive() because abtRx[0] gives no status info
-  pnd->pdc->transceive(pnd->ds,abtCmd,4,&ui8Value,&szValueLen);
+  pnd->pdc->transceive(pnd->nds,abtCmd,4,&ui8Value,&szValueLen);
   return ui8Value;
 }
 
@@ -147,7 +147,7 @@ bool pn53x_set_reg(const nfc_device_t* pnd, uint16_t ui16Reg, uint8_t ui8SybmolM
   abtCmd[3] = ui16Reg & 0xff;
   abtCmd[4] = ui8Value | (pn53x_get_reg(pnd,ui16Reg) & (~ui8SybmolMask));
   // We can not use pn53x_transceive() because abtRx[0] gives no status info
-  return pnd->pdc->transceive(pnd->ds,abtCmd,5,NULL,NULL);
+  return pnd->pdc->transceive(pnd->nds,abtCmd,5,NULL,NULL);
 }
 
 bool pn53x_set_parameters(const nfc_device_t* pnd, uint8_t ui8Value)
@@ -157,7 +157,7 @@ bool pn53x_set_parameters(const nfc_device_t* pnd, uint8_t ui8Value)
 
   abtCmd[2] = ui8Value;
   // We can not use pn53x_transceive() because abtRx[0] gives no status info
-  return pnd->pdc->transceive(pnd->ds,abtCmd,3,NULL,NULL);
+  return pnd->pdc->transceive(pnd->nds,abtCmd,3,NULL,NULL);
 }
 
 bool pn53x_set_tx_bits(const nfc_device_t* pnd, uint8_t ui8Bits)
@@ -310,7 +310,7 @@ nfc_device_t* nfc_connect(nfc_device_desc_t* pndd)
 
       // Try to retrieve PN53x chip revision
       // We can not use pn53x_transceive() because abtRx[0] gives no status info
-      if (!pnd->pdc->transceive(pnd->ds,pncmd_get_firmware_version,2,abtFw,&szFwLen))
+      if (!pnd->pdc->transceive(pnd->nds,pncmd_get_firmware_version,2,abtFw,&szFwLen))
       {
         // Failed to get firmware revision??, whatever...let's disconnect and clean up and return err
         ERR("Failed to get firmware revision for: %s", pnd->acName);
@@ -319,11 +319,11 @@ nfc_device_t* nfc_connect(nfc_device_desc_t* pndd)
       }
 
       // Add the firmware revision to the device name, PN531 gives 2 bytes info, but PN532 gives 4
-      switch(pnd->ct)
+      switch(pnd->nc)
       {
-        case CT_PN531: sprintf(pnd->acName,"%s - PN531 v%d.%d",pnd->acName,abtFw[0],abtFw[1]); break;
-        case CT_PN532: sprintf(pnd->acName,"%s - PN532 v%d.%d (0x%02x)",pnd->acName,abtFw[1],abtFw[2],abtFw[3]); break;
-        case CT_PN533: sprintf(pnd->acName,"%s - PN533 v%d.%d (0x%02x)",pnd->acName,abtFw[1],abtFw[2],abtFw[3]); break;
+        case NC_PN531: sprintf(pnd->acName,"%s - PN531 v%d.%d",pnd->acName,abtFw[0],abtFw[1]); break;
+        case NC_PN532: sprintf(pnd->acName,"%s - PN532 v%d.%d (0x%02x)",pnd->acName,abtFw[1],abtFw[2],abtFw[3]); break;
+        case NC_PN533: sprintf(pnd->acName,"%s - PN533 v%d.%d (0x%02x)",pnd->acName,abtFw[1],abtFw[2],abtFw[3]); break;
       }
 
       // Reset the ending transmission bits register, it is unknown what the last tranmission used there
@@ -384,7 +384,7 @@ bool nfc_configure(nfc_device_t* pnd, const dev_config_option dco, const bool bE
       abtCmd[2] = RFCI_FIELD;
       abtCmd[3] = (bEnable) ? 1 : 0;
       // We can not use pn53x_transceive() because abtRx[0] gives no status info
-      if (!pnd->pdc->transceive(pnd->ds,abtCmd,4,NULL,NULL)) return false;
+      if (!pnd->pdc->transceive(pnd->nds,abtCmd,4,NULL,NULL)) return false;
     break;
 
     case DCO_ACTIVATE_CRYPTO1:
@@ -399,7 +399,7 @@ bool nfc_configure(nfc_device_t* pnd, const dev_config_option dco, const bool bE
       abtCmd[4] = (bEnable) ? 0xff : 0x00; // MxRtyPSL, default: 0x01
       abtCmd[5] = (bEnable) ? 0xff : 0x00; // MxRtyPassiveActivation, default: 0xff
       // We can not use pn53x_transceive() because abtRx[0] gives no status info
-      if (!pnd->pdc->transceive(pnd->ds,abtCmd,6,NULL,NULL)) return false;
+      if (!pnd->pdc->transceive(pnd->nds,abtCmd,6,NULL,NULL)) return false;
     break;
 
     case DCO_ACCEPT_INVALID_FRAMES:
@@ -536,7 +536,7 @@ bool nfc_initiator_select_tag(const nfc_device_t* pnd, const init_modulation im,
   // Try to find a tag, call the tranceive callback function of the current device
   szRxLen = MAX_FRAME_LEN;
   // We can not use pn53x_transceive() because abtRx[0] gives no status info
-  if (!pnd->pdc->transceive(pnd->ds,abtCmd,4+szInitLen,abtRx,&szRxLen)) return false;
+  if (!pnd->pdc->transceive(pnd->nds,abtCmd,4+szInitLen,abtRx,&szRxLen)) return false;
 
   // Make sure one tag has been found, the PN53X returns 0x00 if none was available
   if (abtRx[0] != 1) return false;
@@ -549,7 +549,7 @@ bool nfc_initiator_select_tag(const nfc_device_t* pnd, const init_modulation im,
     {
       case IM_ISO14443A_106:
         // Somehow they switched the lower and upper ATQA bytes around for the PN531 chipset
-        if (pnd->ct == CT_PN531)
+        if (pnd->nc == NC_PN531)
         {
           pti->tia.abtAtqa[0] = abtRx[3];
           pti->tia.abtAtqa[1] = abtRx[2];
@@ -839,7 +839,7 @@ bool nfc_target_init(const nfc_device_t* pnd, byte_t* pbtRx, size_t* pszRxBits)
   // Request the initialization as a target, we can not use pn53x_transceive() because
   // abtRx[0] contains the emulation mode (baudrate, 14443-4?, DEP and framing type)
   szRxLen = MAX_FRAME_LEN;
-  if (!pnd->pdc->transceive(pnd->ds,abtCmd,39,abtRx,&szRxLen)) return false;
+  if (!pnd->pdc->transceive(pnd->nds,abtCmd,39,abtRx,&szRxLen)) return false;
 
   // Get the last bit-count that is stored in the received byte 
   ui8Bits = pn53x_get_reg(pnd,REG_CIU_CONTROL) & SYMBOL_RX_LAST_BITS;

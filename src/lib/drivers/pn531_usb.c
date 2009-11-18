@@ -44,10 +44,10 @@ typedef struct {
   usb_dev_handle* pudh;
   uint32_t uiEndPointIn;
   uint32_t uiEndPointOut;
-} dev_spec_pn531_usb;
+} usb_spec_t;
 
 // Find transfer endpoints for bulk transfers
-static void get_end_points(struct usb_device *dev, dev_spec_pn531_usb* pdsp)
+static void get_end_points(struct usb_device *dev, usb_spec_t* pus)
 {
   uint32_t uiIndex;
   uint32_t uiEndPoint;
@@ -68,7 +68,7 @@ static void get_end_points(struct usb_device *dev, dev_spec_pn531_usb* pdsp)
       #ifdef DEBUG
         printf("Bulk endpoint in  : 0x%02X\n", uiEndPoint);
       #endif
-      pdsp->uiEndPointIn = uiEndPoint;
+      pus->uiEndPointIn = uiEndPoint;
     }
 
     // Test if we dealing with a bulk OUT endpoint
@@ -77,7 +77,7 @@ static void get_end_points(struct usb_device *dev, dev_spec_pn531_usb* pdsp)
       #ifdef DEBUG
         printf("Bulk endpoint in  : 0x%02X\n", uiEndPoint);
       #endif
-      pdsp->uiEndPointOut = uiEndPoint;
+      pus->uiEndPointOut = uiEndPoint;
     }
   }
 }
@@ -91,13 +91,13 @@ nfc_device_t* pn531_usb_connect(const nfc_device_desc_t* pndd)
   struct usb_bus *bus;
   struct usb_device *dev;
   nfc_device_t* pnd = INVALID_DEVICE_INFO;
-  dev_spec_pn531_usb* pdsp;
-  dev_spec_pn531_usb dsp;
+  usb_spec_t* pus;
+  usb_spec_t us;
   uint32_t uiDevIndex;
 
-  dsp.uiEndPointIn = 0;
-  dsp.uiEndPointOut = 0;
-  dsp.pudh = NULL;
+  us.uiEndPointIn = 0;
+  us.uiEndPointOut = 0;
+  us.pudh = NULL;
 
   usb_init();
   if (usb_find_busses() < 0) return INVALID_DEVICE_INFO;
@@ -130,29 +130,29 @@ nfc_device_t* pn531_usb_connect(const nfc_device_desc_t* pndd)
         DBG("Found PN531 device");
 
         // Open the PN531 USB device
-        dsp.pudh = usb_open(dev);
+        us.pudh = usb_open(dev);
 
-        get_end_points(dev,&dsp);
-        if(usb_set_configuration(dsp.pudh,1) < 0)
+        get_end_points(dev,&us);
+        if(usb_set_configuration(us.pudh,1) < 0)
         {
           DBG("Set config failed");
-          usb_close(dsp.pudh);
+          usb_close(us.pudh);
           return INVALID_DEVICE_INFO;
         }
 
-        if(usb_claim_interface(dsp.pudh,0) < 0)
+        if(usb_claim_interface(us.pudh,0) < 0)
         {
           DBG("Can't claim interface");
-          usb_close(dsp.pudh);
+          usb_close(us.pudh);
           return INVALID_DEVICE_INFO;
         }
         // Allocate memory for the device info and specification, fill it and return the info
-        pdsp = malloc(sizeof(dev_spec_pn531_usb));
-        *pdsp = dsp;
+        pus = malloc(sizeof(usb_spec_t));
+        *pus = us;
         pnd = malloc(sizeof(nfc_device_t));
         strcpy(pnd->acName,"PN531USB");
-        pnd->ct = CT_PN531;
-        pnd->ds = (dev_spec)pdsp;
+        pnd->nc = NC_PN531;
+        pnd->nds = (nfc_device_spec_t)pus;
         pnd->bActive = true;
         pnd->bCrc = true;
         pnd->bPar = true;
@@ -166,20 +166,20 @@ nfc_device_t* pn531_usb_connect(const nfc_device_desc_t* pndd)
 
 void pn531_usb_disconnect(nfc_device_t* pnd)
 {
-  dev_spec_pn531_usb* pdsp = (dev_spec_pn531_usb*)pnd->ds;
-  usb_release_interface(pdsp->pudh,0);
-  usb_close(pdsp->pudh);
-  free(pnd->ds);
+  usb_spec_t* pus = (usb_spec_t*)pnd->nds;
+  usb_release_interface(pus->pudh,0);
+  usb_close(pus->pudh);
+  free(pnd->nds);
   free(pnd);
 }
 
-bool pn531_usb_transceive(const dev_spec ds, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen)
+bool pn531_usb_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen)
 {
   size_t uiPos = 0;
   int ret = 0;
   byte_t abtTx[BUFFER_LENGTH] = { 0x00, 0x00, 0xff }; // Every packet must start with "00 00 ff"
   byte_t abtRx[BUFFER_LENGTH];
-  dev_spec_pn531_usb* pdsp = (dev_spec_pn531_usb*)ds;
+  usb_spec_t* pus = (usb_spec_t*)nds;
 
   // Packet length = data length (len) + checksum (1) + end of stream marker (1)
   abtTx[3] = szTxLen;
@@ -203,7 +203,7 @@ bool pn531_usb_transceive(const dev_spec ds, const byte_t* pbtTx, const size_t s
     print_hex(abtTx,szTxLen+7);
   #endif
 
-  ret = usb_bulk_write(pdsp->pudh, pdsp->uiEndPointOut, (char*)abtTx, szTxLen+7, USB_TIMEOUT);
+  ret = usb_bulk_write(pus->pudh, pus->uiEndPointOut, (char*)abtTx, szTxLen+7, USB_TIMEOUT);
   if( ret < 0 )
   {
     #ifdef DEBUG
@@ -212,7 +212,7 @@ bool pn531_usb_transceive(const dev_spec ds, const byte_t* pbtTx, const size_t s
     return false;
   }
 
-  ret = usb_bulk_read(pdsp->pudh, pdsp->uiEndPointIn, (char*)abtRx, BUFFER_LENGTH, USB_TIMEOUT);
+  ret = usb_bulk_read(pus->pudh, pus->uiEndPointIn, (char*)abtRx, BUFFER_LENGTH, USB_TIMEOUT);
   if( ret < 0 )
   {
     #ifdef DEBUG
@@ -228,7 +228,7 @@ bool pn531_usb_transceive(const dev_spec ds, const byte_t* pbtTx, const size_t s
 
   if( ret == 6 )
   {
-    ret = usb_bulk_read(pdsp->pudh, pdsp->uiEndPointIn, (char*)abtRx, BUFFER_LENGTH, USB_TIMEOUT);
+    ret = usb_bulk_read(pus->pudh, pus->uiEndPointIn, (char*)abtRx, BUFFER_LENGTH, USB_TIMEOUT);
     if( ret < 0 )
     {
       #ifdef DEBUG
