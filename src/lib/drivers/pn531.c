@@ -131,18 +131,13 @@ dev_info* pn531_connect(const nfc_device_desc_t* pndd)
         dsp.pudh = usb_open(dev);
 
         get_end_points(dev,&dsp);
-        if(usb_set_configuration(dsp.pudh,1) < 0)
-        {
-          DBG("Set config failed");
-          usb_close(dsp.pudh);
-          return INVALID_DEVICE_INFO;
-        }
 
         if(usb_claim_interface(dsp.pudh,0) < 0)
         {
           DBG("Can't claim interface");
           usb_close(dsp.pudh);
-          return INVALID_DEVICE_INFO;
+          // don't return yet as there might be other readers on USB bus
+          continue;
         }
         // Allocate memory for the device info and specification, fill it and return the info
         pdsp = malloc(sizeof(dev_spec_pn531));
