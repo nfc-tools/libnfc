@@ -112,6 +112,7 @@ int main(int argc,char* argv[])
   pdiReader = INVALID_DEVICE_INFO;
   while (pdiReader == INVALID_DEVICE_INFO) pdiReader = nfc_connect(NULL);
   printf("[+] Configuring NFC reader settings\n");
+  nfc_initiator_init(pdiReader);
   nfc_configure(pdiReader,DCO_HANDLE_CRC,false);
   nfc_configure(pdiReader,DCO_HANDLE_PARITY,false);
   nfc_configure(pdiReader,DCO_ACCEPT_INVALID_FRAMES,true);
