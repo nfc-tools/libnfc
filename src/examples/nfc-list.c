@@ -39,6 +39,9 @@ int main(int argc, const char* argv[])
 {
   nfc_target_info_t nti;
 
+  const char* acLibnfcVersion = nfc_version();
+  printf("%s use libnfc %s\n", argv[0], acLibnfcVersion);
+
   // Try to open the NFC device
   pnd = nfc_connect(NULL);
 

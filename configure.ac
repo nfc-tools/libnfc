@@ -1,11 +1,13 @@
-# SVN revison
-define([svn_revision], esyscmd([sh -c "svnversion -n"]))
-SVN_REVISION=svn_revision
-
 # General init
 AC_INIT(libnfc, 1.2.1, info@libnfc.org)
 
 AC_CONFIG_HEADER(config.h)
+
+# SVN revison
+define([svn_revision], esyscmd([sh -c "svnversion -n"]))
+SVN_REVISION=svn_revision
+AC_DEFINE_UNQUOTED([SVN_REVISION], ["$SVN_REVISION"], [SVN revision])
+
 AM_INIT_AUTOMAKE
 
 AC_LANG_C
@@ -35,6 +37,7 @@ AC_TYPE_UINT16_T
 AC_TYPE_UINT32_T
 AC_TYPE_UINT64_T
 AC_TYPE_INT32_T
+
 
 # Debug support (default:no)
 AC_ARG_ENABLE([debug],AS_HELP_STRING([--enable-debug],[Enable debug output]),[enable_debug=$enableval],[enable_debug="no"])

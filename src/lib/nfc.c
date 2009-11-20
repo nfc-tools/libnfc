@@ -785,7 +785,11 @@ bool nfc_target_send_dep_bytes(const nfc_device_t* pnd, const byte_t* pbtTx, con
 
 const char* nfc_version(void)
 {
+#ifdef SVN_REVISION
+  return PACKAGE_VERSION" (r"SVN_REVISION")";
+#else
   return PACKAGE_VERSION;
+#endif // SVN_REVISION
 }
 
 
