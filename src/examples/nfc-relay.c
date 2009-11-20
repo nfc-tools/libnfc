@@ -81,7 +81,12 @@ int main(int argc,char* argv[])
   printf("[+] Try to break out the auto-emulation, this requires a second reader!\n");
   printf("[+] To do this, please send any command after the anti-collision\n");
   printf("[+] For example, send a RATS command or use the \"nfc-anticol\" tool\n");
-  nfc_target_init(pdiTag,abtReaderRx,&szReaderRxBits);
+  if (!nfc_target_init(pdiTag,abtReaderRx,&szReaderRxBits))
+  {
+    printf("[+] Initialization of NFC emulator failed\n");
+    nfc_disconnect(pdiTag);
+    return 1;
+  }
   printf("[+] Configuring emulator settings\n");
   nfc_configure(pdiTag,DCO_HANDLE_CRC,false);
   nfc_configure(pdiTag,DCO_HANDLE_PARITY,false);
