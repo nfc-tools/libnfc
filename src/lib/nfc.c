@@ -27,254 +27,40 @@
 #include <stddef.h>
 #include <string.h>
 
+#include "chips.h"
 #include "drivers.h"
 
 #include "nfc-messages.h"
 
 #include "../../config.h"
 
-// Registers and symbols masks used to covers parts within a register
-#define REG_CIU_TX_MODE           0x6302
-  #define SYMBOL_TX_CRC_ENABLE      0x80
-#define REG_CIU_RX_MODE           0x6303
-  #define SYMBOL_RX_CRC_ENABLE      0x80
-  #define SYMBOL_RX_NO_ERROR        0x08
-  #define SYMBOL_RX_MULTIPLE        0x04
-#define REG_CIU_TX_AUTO           0x6305
-  #define SYMBOL_FORCE_100_ASK      0x40
-  #define SYMBOL_AUTO_WAKE_UP       0x20
-  #define SYMBOL_INITIAL_RF_ON      0x04
-#define REG_CIU_MANUAL_RCV        0x630D
-  #define SYMBOL_PARITY_DISABLE     0x10
-#define REG_CIU_STATUS2           0x6338
-  #define SYMBOL_MF_CRYPTO1_ON      0x08
-#define REG_CIU_CONTROL           0x633C
-  #define SYMBOL_INITIATOR          0x10
-  #define SYMBOL_RX_LAST_BITS       0x07
-#define REG_CIU_BIT_FRAMING       0x633D
-  #define SYMBOL_TX_LAST_BITS       0x07
-
-// Internal parameters flags
-#define PARAM_NONE                  0x00
-#define PARAM_NAD_USED              0x01
-#define PARAM_DID_USED              0x02
-#define PARAM_AUTO_ATR_RES          0x04
-#define PARAM_AUTO_RATS             0x10
-#define PARAM_14443_4_PICC          0x20
-#define PARAM_NO_AMBLE              0x40
-
-// Radio Field Configure Items           // Configuration Data length
-#define RFCI_FIELD                  0x01 //  1 
-#define RFCI_TIMING                 0x02 //  3
-#define RFCI_RETRY_DATA             0x04 //  1
-#define RFCI_RETRY_SELECT           0x05 //  3
-#define RFCI_ANALOG_TYPE_A_106      0x0A // 11
-#define RFCI_ANALOG_TYPE_A_212_424  0x0B //  8
-#define RFCI_ANALOG_TYPE_B          0x0C //  3
-#define RFCI_ANALOG_TYPE_14443_4    0x0D //  9
-
 // PN53X configuration
-const byte_t pncmd_get_firmware_version       [  2] = { 0xD4,0x02 };
-const byte_t pncmd_get_general_status         [  2] = { 0xD4,0x04 };
-const byte_t pncmd_get_register               [  4] = { 0xD4,0x06 };
-const byte_t pncmd_set_register               [  5] = { 0xD4,0x08 };
-const byte_t pncmd_set_parameters             [  3] = { 0xD4,0x12 };
-const byte_t pncmd_rf_configure               [ 14] = { 0xD4,0x32 };
+extern const byte_t pncmd_get_firmware_version       [  2];
+extern const byte_t pncmd_get_general_status         [  2];
+extern const byte_t pncmd_get_register               [  4];
+extern const byte_t pncmd_set_register               [  5];
+extern const byte_t pncmd_set_parameters             [  3];
+extern const byte_t pncmd_rf_configure               [ 14];
 
 // Reader
-const byte_t pncmd_initiator_list_passive        [264] = { 0xD4,0x4A };
-const byte_t pncmd_initiator_jump_for_dep        [ 68] = { 0xD4,0x56 };
-const byte_t pncmd_initiator_select              [  3] = { 0xD4,0x54 };
-const byte_t pncmd_initiator_deselect            [  3] = { 0xD4,0x44,0x00 };
-const byte_t pncmd_initiator_release             [  3] = { 0xD4,0x52,0x00 };
-const byte_t pncmd_initiator_set_baud_rate       [  5] = { 0xD4,0x4E };
-const byte_t pncmd_initiator_exchange_data       [265] = { 0xD4,0x40 };
-const byte_t pncmd_initiator_exchange_raw_data   [266] = { 0xD4,0x42 };
-const byte_t pncmd_initiator_auto_poll           [  5] = { 0xD4,0x60 };
+extern const byte_t pncmd_initiator_list_passive        [264];
+extern const byte_t pncmd_initiator_jump_for_dep        [ 68];
+extern const byte_t pncmd_initiator_select              [  3];
+extern const byte_t pncmd_initiator_deselect            [  3];
+extern const byte_t pncmd_initiator_release             [  3];
+extern const byte_t pncmd_initiator_set_baud_rate       [  5];
+extern const byte_t pncmd_initiator_exchange_data       [265];
+extern const byte_t pncmd_initiator_exchange_raw_data   [266];
+extern const byte_t pncmd_initiator_auto_poll           [  5];
 
 // Target
-const byte_t pncmd_target_get_data            [  2] = { 0xD4,0x86 };
-const byte_t pncmd_target_set_data            [264] = { 0xD4,0x8E };
-const byte_t pncmd_target_init                [ 39] = { 0xD4,0x8C };
-const byte_t pncmd_target_virtual_card        [  4] = { 0xD4,0x14 };
-const byte_t pncmd_target_receive             [  2] = { 0xD4,0x88 };
-const byte_t pncmd_target_send                [264] = { 0xD4,0x90 };
-const byte_t pncmd_target_get_status          [  2] = { 0xD4,0x8A };
-
-bool pn53x_transceive(const nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen)
-{
-  byte_t abtRx[MAX_FRAME_LEN];
-  size_t szRxLen;
-
-  // Check if receiving buffers are available, if not, replace them
-  if (!pszRxLen || !pbtRx)
-  {
-    pbtRx = abtRx;
-    pszRxLen = &szRxLen;
-  }
-
-  *pszRxLen = MAX_FRAME_LEN;
-  // Call the tranceive callback function of the current device
-  if (!pnd->pdc->transceive(pnd->nds,pbtTx,szTxLen,pbtRx,pszRxLen)) return false;
-
-  // Make sure there was no failure reported by the PN53X chip (0x00 == OK)
-  if (pbtRx[0] != 0) return false;
-
-  // Succesful transmission
-  return true;
-}
-
-byte_t pn53x_get_reg(const nfc_device_t* pnd, uint16_t ui16Reg)
-{
-  uint8_t ui8Value;
-  size_t szValueLen = 1;
-  byte_t abtCmd[sizeof(pncmd_get_register)];
-  memcpy(abtCmd,pncmd_get_register,sizeof(pncmd_get_register));
-
-  abtCmd[2] = ui16Reg >> 8;
-  abtCmd[3] = ui16Reg & 0xff;
-  // We can not use pn53x_transceive() because abtRx[0] gives no status info
-  pnd->pdc->transceive(pnd->nds,abtCmd,4,&ui8Value,&szValueLen);
-  return ui8Value;
-}
-
-bool pn53x_set_reg(const nfc_device_t* pnd, uint16_t ui16Reg, uint8_t ui8SybmolMask, uint8_t ui8Value)
-{
-  byte_t abtCmd[sizeof(pncmd_set_register)];
-  memcpy(abtCmd,pncmd_set_register,sizeof(pncmd_set_register));
-
-  abtCmd[2] = ui16Reg >> 8;
-  abtCmd[3] = ui16Reg & 0xff;
-  abtCmd[4] = ui8Value | (pn53x_get_reg(pnd,ui16Reg) & (~ui8SybmolMask));
-  // We can not use pn53x_transceive() because abtRx[0] gives no status info
-  return pnd->pdc->transceive(pnd->nds,abtCmd,5,NULL,NULL);
-}
-
-bool pn53x_set_parameters(const nfc_device_t* pnd, uint8_t ui8Value)
-{
-  byte_t abtCmd[sizeof(pncmd_set_parameters)];
-  memcpy(abtCmd,pncmd_set_parameters,sizeof(pncmd_set_parameters));
-
-  abtCmd[2] = ui8Value;
-  // We can not use pn53x_transceive() because abtRx[0] gives no status info
-  return pnd->pdc->transceive(pnd->nds,abtCmd,3,NULL,NULL);
-}
-
-bool pn53x_set_tx_bits(const nfc_device_t* pnd, uint8_t ui8Bits)
-{
-  // Test if we need to update the transmission bits register setting
-  if (pnd->ui8TxBits != ui8Bits)
-  {
-    // Set the amount of transmission bits in the PN53X chip register
-    if (!pn53x_set_reg(pnd,REG_CIU_BIT_FRAMING,SYMBOL_TX_LAST_BITS,ui8Bits)) return false;
-
-    // Store the new setting
-    ((nfc_device_t*)pnd)->ui8TxBits = ui8Bits;
-  }
-  return true;
-}
-
-bool pn53x_wrap_frame(const byte_t* pbtTx, const size_t szTxBits, const byte_t* pbtTxPar, byte_t* pbtFrame, size_t* pszFrameBits)
-{
-  byte_t btFrame;
-  byte_t btData;
-  uint32_t uiBitPos;
-  uint32_t uiDataPos = 0;
-  size_t szBitsLeft = szTxBits;
-
-  // Make sure we should frame at least something
-  if (szBitsLeft == 0) return false;
-
-  // Handle a short response (1byte) as a special case
-  if (szBitsLeft < 9)
-  {
-    *pbtFrame = *pbtTx;
-    *pszFrameBits = szTxBits;
-    return true;
-  }
-
-  // We start by calculating the frame length in bits
-  *pszFrameBits = szTxBits + (szTxBits/8);
-
-  // Parse the data bytes and add the parity bits
-  // This is really a sensitive process, mirror the frame bytes and append parity bits
-  // buffer = mirror(frame-byte) + parity + mirror(frame-byte) + parity + ...
-    // split "buffer" up in segments of 8 bits again and mirror them
-  // air-bytes = mirror(buffer-byte) + mirror(buffer-byte) + mirror(buffer-byte) + ..
-  while(true)
-  {
-    // Reset the temporary frame byte;
-    btFrame = 0;
-
-    for (uiBitPos=0; uiBitPos<8; uiBitPos++)
-    {
-      // Copy as much data that fits in the frame byte
-      btData = mirror(pbtTx[uiDataPos]);
-      btFrame |= (btData >> uiBitPos);
-      // Save this frame byte
-      *pbtFrame = mirror(btFrame);
-      // Set the remaining bits of the date in the new frame byte and append the parity bit
-      btFrame = (btData << (8-uiBitPos));
-      btFrame |= ((pbtTxPar[uiDataPos] & 0x01) << (7-uiBitPos));
-      // Backup the frame bits we have so far
-      pbtFrame++;
-      *pbtFrame = mirror(btFrame);
-      // Increase the data (without parity bit) position
-      uiDataPos++;
-      // Test if we are done
-      if (szBitsLeft < 9) return true;
-      szBitsLeft -= 8;
-    }
-    // Every 8 data bytes we lose one frame byte to the parities
-    pbtFrame++;
-  }
-}
-
-bool pn53x_unwrap_frame(const byte_t* pbtFrame, const size_t szFrameBits, byte_t* pbtRx, size_t* pszRxBits, byte_t* pbtRxPar)
-{
-  byte_t btFrame;
-  byte_t btData;
-  uint8_t uiBitPos;
-  uint32_t uiDataPos = 0;
-  byte_t* pbtFramePos = (byte_t*) pbtFrame;
-  size_t szBitsLeft = szFrameBits;
-
-  // Make sure we should frame at least something
-  if (szBitsLeft == 0) return false;
-
-  // Handle a short response (1byte) as a special case
-  if (szBitsLeft < 9)
-  {
-    *pbtRx = *pbtFrame;
-    *pszRxBits = szFrameBits;
-    return true;
-  }
-
-  // Calculate the data length in bits
-  *pszRxBits = szFrameBits - (szFrameBits/9);
-
-  // Parse the frame bytes, remove the parity bits and store them in the parity array
-  // This process is the reverse of WrapFrame(), look there for more info
-  while(true)
-  {
-    for (uiBitPos=0; uiBitPos<8; uiBitPos++)
-    {
-      btFrame = mirror(pbtFramePos[uiDataPos]);
-      btData = (btFrame << uiBitPos);
-      btFrame = mirror(pbtFramePos[uiDataPos+1]);
-      btData |= (btFrame >> (8-uiBitPos));
-      pbtRx[uiDataPos] = mirror(btData);
-      if(pbtRxPar != NULL) pbtRxPar[uiDataPos] = ((btFrame >> (7-uiBitPos)) & 0x01);
-      // Increase the data (without parity bit) position
-      uiDataPos++;
-      // Test if we are done
-      if (szBitsLeft < 9) return true;
-      szBitsLeft -= 9;
-    }
-    // Every 8 data bytes we lose one frame byte to the parities
-    pbtFramePos++;
-  }
-}
+extern const byte_t pncmd_target_get_data            [  2];
+extern const byte_t pncmd_target_set_data            [264];
+extern const byte_t pncmd_target_init                [ 39];
+extern const byte_t pncmd_target_virtual_card        [  4];
+extern const byte_t pncmd_target_receive             [  2];
+extern const byte_t pncmd_target_send                [264];
+extern const byte_t pncmd_target_get_status          [  2];
 
 nfc_device_t* nfc_connect(nfc_device_desc_t* pndd)
 {

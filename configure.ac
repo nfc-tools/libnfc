@@ -167,6 +167,7 @@ fi
 
 AC_CONFIG_FILES([
 		Makefile
+		src/lib/chips/Makefile
 		src/lib/buses/Makefile
 		src/lib/drivers/Makefile
 		src/lib/Makefile

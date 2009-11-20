@@ -1,4 +1,4 @@
-SUBDIRS = buses drivers .
+SUBDIRS = chips buses drivers .
 
 # set the include path found by configure
 INCLUDES= $(all_includes)
@@ -11,6 +11,7 @@ libnfc_la_SOURCES = nfc.c bitutils.c
 libnfc_la_LDFLAGS = -no-undefined -version-info=0:0:0
 libnfc_la_CFLAGS = 
 libnfc_la_LIBADD = \
+	$(top_builddir)/src/lib/chips/libnfcchips.la \
 	$(top_builddir)/src/lib/buses/libnfcbuses.la \
 	$(top_builddir)/src/lib/drivers/libnfcdrivers.la
 

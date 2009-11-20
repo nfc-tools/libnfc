@@ -21,9 +21,8 @@
  * @brief
  */
 
-#ifndef _LIBNFC_DEVICES_H_
-#define _LIBNFC_DEVICES_H_
-
+#ifndef __NFC_DRIVERS_H__
+#define __NFC_DRIVERS_H__
 
 #include "nfc-types.h"
 
@@ -55,5 +54,5 @@ const static struct driver_callbacks drivers_callbacks_list[] = {
   { "ARYGON",          arygon_connect,      arygon_transceive,        arygon_disconnect       }
 };
 
-#endif // _LIBNFC_DEVICES_H_
+#endif // __NFC_DRIVERS_H__
 
