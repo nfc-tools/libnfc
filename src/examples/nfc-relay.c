@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <signal.h>
 
 #include <nfc.h>
 
@@ -39,6 +40,14 @@ static byte_t abtTagRxPar[MAX_FRAME_LEN];
 static size_t szTagRxBits;
 static dev_info* pdiReader;
 static dev_info* pdiTag;
+static bool quitting=false;
+
+void intr_hdlr(void)
+{
+  printf("\nQuitting...\n");
+  quitting=true;
+  return;
+}
 
 void print_usage(char* argv[])
 {
@@ -67,6 +76,12 @@ int main(int argc,char* argv[])
       return -1;
     }
   }
+
+#ifdef WIN32
+  signal(SIGINT, (void (__cdecl*)(int)) intr_hdlr);
+#else
+  signal(SIGINT, (void (*)()) intr_hdlr);
+#endif
 
   // Try to open the NFC emulator device
   pdiTag = nfc_connect(NULL);
@@ -102,7 +117,7 @@ int main(int argc,char* argv[])
   nfc_configure(pdiReader,DCO_ACCEPT_INVALID_FRAMES,true);
   printf("[+] Done, relaying frames now!\n\n");
 
-  while(true)
+  while(!quitting)
   {
     // Test if we received a frame from the reader
     if (nfc_target_receive_bits(pdiTag,abtReaderRx,&szReaderRxBits,abtReaderRxPar))
