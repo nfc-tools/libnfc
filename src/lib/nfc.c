@@ -349,6 +349,8 @@ void nfc_disconnect(dev_info* pdi)
 {
   // Release and deselect all active communications
   nfc_initiator_deselect_tag(pdi);
+  // Disable RF field to avoid heating
+  nfc_configure(pdi,DCO_ACTIVATE_FIELD,false);
   // Disconnect, clean up and release the device 
   pdi->pdc->disconnect(pdi);
 }
