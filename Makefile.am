@@ -3,7 +3,7 @@ SUBDIRS = src
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libnfc.pc
 
-EXTRA_DIST = Doxyfile
+EXTRA_DIST = Doxyfile pn53x.rules
 CLEANFILES = Doxygen.log
 
 if DOC_ENABLED
