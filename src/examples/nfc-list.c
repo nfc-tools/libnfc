@@ -121,5 +121,5 @@ int main(int argc, const char* argv[])
   }
 
   nfc_disconnect(pnd);
-  return 1;
+  return 0;
 }

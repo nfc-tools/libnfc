@@ -21,6 +21,8 @@
  * @brief
  */
 
+#include <stdio.h>
+
 #include "arygon.h"
 
 #include "nfc-messages.h"

@@ -21,11 +21,12 @@
  * @brief
  */
 
-#ifndef _LIBNFC_DEV_PN532_UART_H_
-#define _LIBNFC_DEV_PN532_UART_H_
-
+#ifndef __NFC_DRIVER_PN532_UART_H__
+#define __NFC_DRIVER_PN532_UART_H__
 
 #include "nfc-types.h"
+
+#define PN532_UART_DRIVER_NAME "PN532_UART"
 
 // Functions used by developer to handle connection to this device
 nfc_device_t* pn532_uart_connect(const nfc_device_desc_t* pndd);
@@ -34,5 +35,5 @@ void pn532_uart_disconnect(nfc_device_t* pnd);
 // Callback function used by libnfc to transmit commands to the PN53X chip
 bool pn532_uart_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen);
 
-#endif // _LIBNFC_DEV_PN532_UART_H_
+#endif // ! __NFC_DRIVER_PN532_UART_H__
 

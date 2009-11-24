@@ -24,18 +24,20 @@
 /*
 Thanks to d18c7db and Okko for example code
 */
-#include "pn531_usb.h"
 
+#include <sys/param.h>
 #include <stdio.h>
 #include <stddef.h>
 #include <string.h>
 
+#include "pn531_usb.h"
 #include "../drivers.h"
 
 // Bus
 #include <usb.h>
 
 #include "nfc-messages.h"
+#include "../bitutils.h"
 
 #define BUFFER_LENGTH 256
 #define USB_TIMEOUT   30000
@@ -107,7 +109,7 @@ nfc_device_t* pn531_usb_connect(const nfc_device_desc_t* pndd)
   if( pndd == NULL ) {
     uiDevIndex = 0;
   } else {
-    uiDevIndex = pndd->uiIndex;
+    uiDevIndex = pndd->uiBusIndex;
   }
 
   for (bus = usb_get_busses(); bus; bus = bus->next)

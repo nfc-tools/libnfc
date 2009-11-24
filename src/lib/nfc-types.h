@@ -78,14 +78,16 @@ typedef struct {
  * This struct is used to try to connect to a specified nfc device when nfc_connect(...)
  */
 typedef struct {
-  /** Driver name (ie. PN532)*/
+  /** Device name (e.g. "ACS ACR 38U-CCID 00 00") */
+  char acDevice[BUFSIZ];
+  /** Driver name (e.g. "PN532_UART")*/
   char* pcDriver;
-  /** Port (ie. /dev/ttyUSB0) */
+  /** Port (e.g. "/dev/ttyUSB0") */
   char* pcPort;
-  /** Port speed (ie. 115200) */
+  /** Port speed (e.g. "115200") */
   uint32_t uiSpeed;
   /** Device index for backward compatibility (used to choose one specific device in USB or PSCS devices list) */
-  uint32_t uiIndex;
+  uint32_t uiBusIndex;
 } nfc_device_desc_t;
 
 /**
@@ -95,6 +97,8 @@ typedef struct {
 struct driver_callbacks {
   /** Driver name */
   const char* acDriver;
+  /** List devices callback */
+  bool (*list_devices)(nfc_device_desc_t *pnddDevices[], size_t szDevices, size_t *pszDeviceFound);
   /** Connect callback */
   nfc_device_t* (*connect)(const nfc_device_desc_t* pndd);
   /** Transceive callback */
@@ -148,7 +152,7 @@ typedef enum {
 /** Active DEP */
   NM_ACTIVE_DEP = 0x05,
 /** Passive DEP */
-  NM_PASSIVE_DEP = 0x06,
+  NM_PASSIVE_DEP = 0x06
 } nfc_modulation_t;
 
 /**
@@ -235,7 +239,7 @@ typedef enum {
   MC_TRANSFER       = 0xB0,
   MC_DECREMENT      = 0xC0,
   MC_INCREMENT      = 0xC1,
-  MC_STORE          = 0xC2,
+  MC_STORE          = 0xC2
 }mifare_cmd;
 
 // MIFARE Classic command params

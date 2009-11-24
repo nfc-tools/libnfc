@@ -21,6 +21,8 @@
  * @brief PN531, PN532 and PN533 common functions
  */
 
+#include <stdio.h>
+
 #include "pn53x.h"
 
 #include "bitutils.h"

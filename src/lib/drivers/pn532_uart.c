@@ -21,6 +21,8 @@
  * @brief
  */
 
+#include <stdio.h>
+
 #include "pn532_uart.h"
 
 #include "nfc-messages.h"

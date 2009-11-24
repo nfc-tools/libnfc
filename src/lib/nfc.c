@@ -21,11 +21,12 @@
  * @brief NFC library implementation
  */
 
-#include "nfc.h"
 
 #include <stdio.h>
 #include <stddef.h>
 #include <string.h>
+
+#include "nfc.h"
 
 #include "chips.h"
 #include "drivers.h"

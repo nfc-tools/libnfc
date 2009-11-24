@@ -21,14 +21,19 @@
  * @brief
  */
 
-#ifndef _LIBNFC_DEV_ACR122_H_
-#define _LIBNFC_DEV_ACR122_H_
+#ifndef __NFC_DRIVER_ACR122_H__
+#define __NFC_DRIVER_ACR122_H__
 
 #include <stdint.h>
 #include <stdbool.h>
 
 
 #include "nfc-types.h"
+
+#define ACR122_DRIVER_NAME "ACR122"
+
+nfc_device_desc_t* acr122_pick_device(void);
+bool acr122_list_devices(nfc_device_desc_t *pnddDevices[], size_t szDevices, size_t *pszDeviceFound);
 
 // Functions used by developer to handle connection to this device
 nfc_device_t* acr122_connect(const nfc_device_desc_t* pndd);
@@ -41,5 +46,5 @@ bool acr122_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, const s
 char* acr122_firmware(const nfc_device_spec_t nds);
 bool acr122_led_red(const nfc_device_spec_t nds, bool bOn);
 
-#endif // _LIBNFC_DEV_ACR122_H_
+#endif // ! __NFC_DRIVER_ACR122_H__
 

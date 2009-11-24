@@ -24,11 +24,12 @@
 /*
 Thanks to d18c7db and Okko for example code
 */
-#include "pn533_usb.h"
 
+#include <sys/param.h>
 #include <stdio.h>
 #include <string.h>
 
+#include "pn533_usb.h"
 #include "../drivers.h"
 
 // Bus
@@ -104,7 +105,7 @@ nfc_device_t* pn533_usb_connect(const nfc_device_desc_t* pndd)
   if( pndd == NULL ) {
     uiDevIndex = 0;
   } else {
-    uiDevIndex = pndd->uiIndex;
+    uiDevIndex = pndd->uiBusIndex;
   }
 
   for (bus = usb_get_busses(); bus; bus = bus->next)
