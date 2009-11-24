@@ -166,6 +166,9 @@ AC_MSG_RESULT($enable_std_c99)
 if test x"$enable_std_c99" != "xno"
 then
 	CFLAGS="$CFLAGS -std=c99"
+
+	# Workarounds for libusb in c99
+	CFLAGS="$CFLAGS -Du_int8_t=uint8_t -Du_int16_t=uint16_t"
 fi
 
 AC_CONFIG_FILES([
