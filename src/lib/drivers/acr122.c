@@ -28,7 +28,7 @@
 
 #include "acr122.h"
 #include "../drivers.h"
-
+#include "../bitutils.h"
 
 // Bus
 #include <winscard.h>
@@ -55,11 +55,40 @@
 #define ACR122_COMMAND_LEN 266
 #define ACR122_RESPONSE_LEN 268
 
+
 typedef struct {
-  SCARDCONTEXT hCtx;
   SCARDHANDLE hCard;
   SCARD_IO_REQUEST ioCard;
 } acr122_spec_t;
+
+static SCARDCONTEXT _SCardContext;
+static int _iSCardContextRefCount = 0;
+
+SCARDCONTEXT*
+acr122_get_scardcontext(void)
+{
+  if ( _iSCardContextRefCount == 0 )
+  {
+    if (SCardEstablishContext(SCARD_SCOPE_USER,NULL,NULL,&_SCardContext) != SCARD_S_SUCCESS) return NULL;
+  }
+  _iSCardContextRefCount++;
+
+  return &_SCardContext;
+}
+
+void
+acr122_free_scardcontext(void)
+{
+  if (_iSCardContextRefCount)
+  {
+    _iSCardContextRefCount--;
+    if (!_iSCardContextRefCount)
+    {
+      SCardReleaseContext(_SCardContext);
+    }
+  }
+}
+
 
 nfc_device_desc_t *
 acr122_pick_device (void)
@@ -69,13 +98,13 @@ acr122_pick_device (void)
   if ((pndd = malloc (sizeof (*pndd)))) {
     size_t szN;
 
-    if (!acr122_list_devices (&pndd, 1, &szN)) {
-      ERR("acr122_list_devices failed");
+    if (!acr122_list_devices (pndd, 1, &szN)) {
+      ERR("%s", "acr122_list_devices failed");
       return NULL;
     }
 
     if (szN == 0) {
-      ERR("No device found");
+      ERR("%s", "No device found");
       return NULL;
     }
   }
@@ -84,7 +113,7 @@ acr122_pick_device (void)
 }
 
 /**
- * @fn bool acr122_list_devices(nfc_device_desc_t *pnddDevices[], size_t szDevices, size_t *pszDeviceFound)
+ * @fn bool acr122_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *pszDeviceFound)
  * @brief List connected devices
  *
  * Probe PCSC to find NFC capable hardware.
@@ -95,7 +124,7 @@ acr122_pick_device (void)
  * @return true if succeeded, false otherwise.
  */
 bool
-acr122_list_devices(nfc_device_desc_t *pnddDevices[], size_t szDevices, size_t *pszDeviceFound)
+acr122_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *pszDeviceFound)
 {
   size_t szPos = 0;
   char acDeviceNames[256+64*DRIVERS_MAX_DEVICES];
@@ -103,6 +132,7 @@ acr122_list_devices(nfc_device_desc_t *pnddDevices[], size_t szDevices, size_t *
   acr122_spec_t as;
   uint32_t uiBusIndex = 0;
   char *pcFirmware;
+  SCARDCONTEXT *pscc;
 
   // Clear the reader list
   memset(acDeviceNames, '\0', szDeviceNamesLen);
@@ -110,12 +140,13 @@ acr122_list_devices(nfc_device_desc_t *pnddDevices[], size_t szDevices, size_t *
   *pszDeviceFound = 0;
 
   // Test if context succeeded
-  if (SCardEstablishContext(SCARD_SCOPE_USER,NULL,NULL,&(as.hCtx)) != SCARD_S_SUCCESS) return false;
+  if (!(pscc = acr122_get_scardcontext ())) return false;
+  //if (SCardEstablishContext(SCARD_SCOPE_USER,NULL,NULL,&(pscc)) != SCARD_S_SUCCESS) return false;
 
   // Retrieve the string array of all available pcsc readers
-  if (SCardListReaders(as.hCtx,NULL,acDeviceNames,(void*)&szDeviceNamesLen) != SCARD_S_SUCCESS) return false;
+  if (SCardListReaders(*pscc,NULL,acDeviceNames,(void*)&szDeviceNamesLen) != SCARD_S_SUCCESS) return false;
 
-  DBG("PCSC reports following device(s):");
+  DBG("%s", "PCSC reports following device(s):");
 
   while ((acDeviceNames[szPos] != '\0') && ((*pszDeviceFound) < szDevices)) {
     uiBusIndex++;
@@ -123,7 +154,7 @@ acr122_list_devices(nfc_device_desc_t *pnddDevices[], size_t szDevices, size_t *
     DBG("- %s (pos=%d)", acDeviceNames + szPos, szPos);
 
     // Test if we were able to connect to the "emulator" card
-    if (SCardConnect(as.hCtx,acDeviceNames + szPos,SCARD_SHARE_EXCLUSIVE,SCARD_PROTOCOL_T0 | SCARD_PROTOCOL_T1,&(as.hCard),(void*)&(as.ioCard.dwProtocol)) == SCARD_S_SUCCESS)
+    if (SCardConnect(*pscc,acDeviceNames + szPos,SCARD_SHARE_EXCLUSIVE,SCARD_PROTOCOL_T0 | SCARD_PROTOCOL_T1,&(as.hCard),(void*)&(as.ioCard.dwProtocol)) == SCARD_S_SUCCESS)
     {
       // Configure I/O settings for card communication
       as.ioCard.cbPciLength = sizeof(SCARD_IO_REQUEST);
@@ -133,31 +164,31 @@ acr122_list_devices(nfc_device_desc_t *pnddDevices[], size_t szDevices, size_t *
       if (strstr(pcFirmware,FIRMWARE_TEXT) != NULL)
       {
         // Supported ACR122 device found
-        strncpy(pnddDevices[*pszDeviceFound]->acDevice, acDeviceNames + szPos, BUFSIZ - 1);
-        pnddDevices[*pszDeviceFound]->acDevice[BUFSIZ - 1] = '\0';
-        pnddDevices[*pszDeviceFound]->pcDriver = ACR122_DRIVER_NAME;
-        pnddDevices[*pszDeviceFound]->uiBusIndex = uiBusIndex;
+        strncpy(pnddDevices[*pszDeviceFound].acDevice, acDeviceNames + szPos, BUFSIZ - 1);
+        pnddDevices[*pszDeviceFound].acDevice[BUFSIZ - 1] = '\0';
+        pnddDevices[*pszDeviceFound].pcDriver = ACR122_DRIVER_NAME;
+        pnddDevices[*pszDeviceFound].uiBusIndex = uiBusIndex;
         (*pszDeviceFound)++;
       }
       else
       {
-        DBG("Firmware version mismatch");
+        DBG("%s", "Firmware version mismatch");
       }
       SCardDisconnect(as.hCard,SCARD_LEAVE_CARD);
-      SCardReleaseContext(as.hCtx);
     }
     else
     {
-      DBG("Can't contact emulator card");
+      DBG("%s", "Can't contact emulator card");
     }
 
     // Find next device name position
     while (acDeviceNames[szPos++] != '\0');
   }
+  acr122_free_scardcontext ();
+  //SCardReleaseContext(pscc);
 
   return true;
 }
-
 nfc_device_t* acr122_connect(const nfc_device_desc_t* pndd)
 {
   nfc_device_t* pnd = NULL;
@@ -165,32 +196,19 @@ nfc_device_t* acr122_connect(const nfc_device_desc_t* pndd)
   acr122_spec_t* pas;
   char* pcFirmware;
 
-  bool bPnddLocallyAllocated = false;
-
-  // If no description is provided, pick a device automagically.
-  if (pndd == NULL)
-  {
-    pndd = acr122_pick_device();
-    if (pndd == NULL) return NULL;
-
-    bPnddLocallyAllocated = true;
-  }
+  SCARDCONTEXT *pscc;
 
   // Test if context succeeded
-  if (SCardEstablishContext(SCARD_SCOPE_USER,NULL,NULL,&(as.hCtx)) != SCARD_S_SUCCESS)
-  {
-    if (bPnddLocallyAllocated == true) free (pndd);
-    return NULL;
-  }
+  if (!(pscc = acr122_get_scardcontext ())) return NULL;
+  //if (SCardEstablishContext(SCARD_SCOPE_USER,NULL,NULL,&(pscc)) != SCARD_S_SUCCESS) return NULL;
 
   // Test if we were able to connect to the "emulator" card
-  if (SCardConnect(as.hCtx,pndd->acDevice,SCARD_SHARE_EXCLUSIVE,SCARD_PROTOCOL_T0 | SCARD_PROTOCOL_T1,&(as.hCard),(void*)&(as.ioCard.dwProtocol)) != SCARD_S_SUCCESS)
+  if (SCardConnect(*pscc,pndd->acDevice,SCARD_SHARE_EXCLUSIVE,SCARD_PROTOCOL_T0 | SCARD_PROTOCOL_T1,&(as.hCard),(void*)&(as.ioCard.dwProtocol)) != SCARD_S_SUCCESS)
   {
     // Connect to ACR122 firmware version >2.0
-    if (SCardConnect(as.hCtx,pndd->acDevice,SCARD_SHARE_DIRECT,0,&(as.hCard),(void*)&(as.ioCard.dwProtocol)) != SCARD_S_SUCCESS)
+    if (SCardConnect(*pscc,pndd->acDevice,SCARD_SHARE_DIRECT,0,&(as.hCard),(void*)&(as.ioCard.dwProtocol)) != SCARD_S_SUCCESS)
     {
       // We can not connect to this device.
-      if (bPnddLocallyAllocated == true) free (pndd);
       return NULL;
     }
   }
@@ -215,18 +233,17 @@ nfc_device_t* acr122_connect(const nfc_device_desc_t* pndd)
     pnd->bCrc = true;
     pnd->bPar = true;
     pnd->ui8TxBits = 0;
+    return pnd;
   }
 
-  if (bPnddLocallyAllocated == true) free (pndd);
-
-  return pnd;
+  return NULL;
 }
 
 void acr122_disconnect(nfc_device_t* pnd)
 {
   acr122_spec_t* pas = (acr122_spec_t*)pnd->nds;
   SCardDisconnect(pas->hCard,SCARD_LEAVE_CARD);
-  SCardReleaseContext(pas->hCtx);
+  acr122_free_scardcontext ();
   free(pas);
   free(pnd);
 }

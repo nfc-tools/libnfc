@@ -32,18 +32,26 @@
 #include "nfc-messages.h"
 #include "bitutils.h"
 
+#define MAX_DEVICE_COUNT 16
+
 static nfc_device_t* pnd;
 static byte_t abtFelica[5] = { 0x00, 0xff, 0xff, 0x00, 0x00 };
 
 int main(int argc, const char* argv[])
 {
+  size_t szFound;
+  int i;
   nfc_target_info_t nti;
+  nfc_device_desc_t *pnddDevices;
 
+  // Display libnfc version
   const char* acLibnfcVersion = nfc_version();
   printf("%s use libnfc %s\n", argv[0], acLibnfcVersion);
 
-  // Try to open the NFC device
+  // Lazy way to open an NFC device
+  /*
   pnd = nfc_connect(NULL);
+  */
 
   // If specific device is wanted, i.e. an ARYGON device on /dev/ttyUSB0
   /*
@@ -54,10 +62,27 @@ int main(int argc, const char* argv[])
 
   pnd = nfc_connect(&ndd);
   */
+  if (!(pnddDevices = malloc (MAX_DEVICE_COUNT * sizeof (*pnddDevices))))
+  {
+    fprintf (stderr, "malloc() failed\n");
+    return EXIT_FAILURE;
+  }
+
+  nfc_list_devices (pnddDevices, MAX_DEVICE_COUNT, &szFound);
+
+  if (szFound == 0)
+  {
+    INFO("%s", "No device found.");
+  }
+
+  for (i = 0; i < szFound; i++)
+  {
+    pnd = nfc_connect(&(pnddDevices[i]));
+
 
   if (pnd == NULL)
   {
-    ERR("Unable to connect to NFC device.");
+    ERR("%s", "Unable to connect to NFC device.");
     return 1;
   }
   nfc_initiator_init(pnd);
@@ -121,5 +146,8 @@ int main(int argc, const char* argv[])
   }
 
   nfc_disconnect(pnd);
+  }
+
+  free (pnddDevices);
   return 0;
 }

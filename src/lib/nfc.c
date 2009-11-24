@@ -35,6 +35,8 @@
 
 #include "../../config.h"
 
+nfc_device_desc_t * nfc_pick_device (void);
+
 // PN53X configuration
 extern const byte_t pncmd_get_firmware_version       [  2];
 extern const byte_t pncmd_get_general_status         [  2];
@@ -63,28 +65,67 @@ extern const byte_t pncmd_target_receive             [  2];
 extern const byte_t pncmd_target_send                [264];
 extern const byte_t pncmd_target_get_status          [  2];
 
+nfc_device_desc_t *
+nfc_pick_device (void)
+{
+  uint32_t uiDriver;
+  nfc_device_desc_t *nddRes;
+
+  for (uiDriver=0; uiDriver<sizeof(drivers_callbacks_list)/sizeof(drivers_callbacks_list[0]); uiDriver++)
+  {
+    if (drivers_callbacks_list[uiDriver].pick_device != NULL)
+    {
+      nddRes = drivers_callbacks_list[uiDriver].pick_device ();
+      if (nddRes != NULL) return nddRes;
+    }
+  }
+
+  return NULL;
+}
+
+void
+nfc_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *pszDeviceFound)
+{
+  uint32_t uiDriver;
+
+  *pszDeviceFound = 0;
+
+  for (uiDriver=0; uiDriver<sizeof(drivers_callbacks_list)/sizeof(drivers_callbacks_list[0]); uiDriver++)
+  {
+    if (drivers_callbacks_list[uiDriver].list_devices != NULL)
+    {
+      size_t szN = 0;
+      if (drivers_callbacks_list[uiDriver].list_devices (pnddDevices + (*pszDeviceFound), szDevices - (*pszDeviceFound), &szN))
+      {
+        *pszDeviceFound += szN;
+      }
+    }
+  }
+}
+
 nfc_device_t* nfc_connect(nfc_device_desc_t* pndd)
 {
   nfc_device_t* pnd;
-  uint32_t uiDev;
+  uint32_t uiDriver;
   byte_t abtFw[4];
   size_t szFwLen = sizeof(abtFw);
 
   // Search through the device list for an available device
-  for (uiDev=0; uiDev<sizeof(drivers_callbacks_list)/sizeof(drivers_callbacks_list[0]); uiDev++)
+  for (uiDriver=0; uiDriver<sizeof(drivers_callbacks_list)/sizeof(drivers_callbacks_list[0]); uiDriver++)
   {
     if (pndd == NULL) {
       // No device description specified: try to automatically claim a device
-      pnd = drivers_callbacks_list[uiDev].connect(pndd);
+      pndd = drivers_callbacks_list[uiDriver].pick_device ();
+      pnd = drivers_callbacks_list[uiDriver].connect(pndd);
     } else {
       // Specific device is requested: using device description pndd
-      if( 0 != strcmp(drivers_callbacks_list[uiDev].acDriver, pndd->pcDriver ) )
+      if( 0 != strcmp(drivers_callbacks_list[uiDriver].acDriver, pndd->pcDriver ) )
       {
-        DBG("Looking for %s, found %s... Skip it.", pndd->pcDriver, drivers_callbacks_list[uiDev].acDriver);
+        DBG("Looking for %s, found %s... Skip it.", pndd->pcDriver, drivers_callbacks_list[uiDriver].acDriver);
         continue;
       } else {
-        DBG("Looking for %s, found %s... Use it.", pndd->pcDriver, drivers_callbacks_list[uiDev].acDriver);
-        pnd = drivers_callbacks_list[uiDev].connect(pndd);
+        DBG("Looking for %s, found %s... Use it.", pndd->pcDriver, drivers_callbacks_list[uiDriver].acDriver);
+        pnd = drivers_callbacks_list[uiDriver].connect(pndd);
       }
     }
 
@@ -93,7 +134,7 @@ nfc_device_t* nfc_connect(nfc_device_desc_t* pndd)
     {
       DBG("[%s] has been claimed.", pnd->acName);
       // Great we have claimed a device
-      pnd->pdc = &(drivers_callbacks_list[uiDev]);
+      pnd->pdc = &(drivers_callbacks_list[uiDriver]);
 
       // Try to retrieve PN53x chip revision
       // We can not use pn53x_transceive() because abtRx[0] gives no status info
@@ -125,7 +166,7 @@ nfc_device_t* nfc_connect(nfc_device_desc_t* pndd)
 
       return pnd;
     } else {
-      DBG("No device found using driver: %s", drivers_callbacks_list[uiDev].acDriver);
+      DBG("No device found using driver: %s", drivers_callbacks_list[uiDriver].acDriver);
     }
   }
   // To bad, no reader is ready to be claimed

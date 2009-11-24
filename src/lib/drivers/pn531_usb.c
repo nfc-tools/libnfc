@@ -28,13 +28,12 @@ Thanks to d18c7db and Okko for example code
 #include <sys/param.h>
 #include <stdio.h>
 #include <stddef.h>
+
+#include <usb.h>
 #include <string.h>
 
 #include "pn531_usb.h"
 #include "../drivers.h"
-
-// Bus
-#include <usb.h>
 
 #include "nfc-messages.h"
 #include "../bitutils.h"
@@ -129,7 +128,7 @@ nfc_device_t* pn531_usb_connect(const nfc_device_desc_t* pndd)
           uiDevIndex--;
           continue;
         }
-        DBG("Found PN531 device");
+        DBG("%s", "Found PN531 device");
 
         // Open the PN531 USB device
         us.pudh = usb_open(dev);
@@ -137,16 +136,17 @@ nfc_device_t* pn531_usb_connect(const nfc_device_desc_t* pndd)
         get_end_points(dev,&us);
         if(usb_set_configuration(us.pudh,1) < 0)
         {
-          DBG("Set config failed");
+          DBG("%s", "Set config failed");
           usb_close(us.pudh);
           return NULL;
         }
 
         if(usb_claim_interface(us.pudh,0) < 0)
         {
-          DBG("Can't claim interface");
+          DBG("%s", "Can't claim interface");
           usb_close(us.pudh);
-          return NULL;
+          // don't return yet as there might be other readers on USB bus
+          continue;
         }
         // Allocate memory for the device info and specification, fill it and return the info
         pus = malloc(sizeof(usb_spec_t));

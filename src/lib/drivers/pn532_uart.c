@@ -20,7 +20,7 @@
  * @file pn532_uart.c
  * @brief
  */
-
+#define _XOPEN_SOURCE 500
 #include <stdio.h>
 
 #include "pn532_uart.h"
@@ -28,6 +28,7 @@
 #include "nfc-messages.h"
 
 #include "../drivers.h"
+#include "../bitutils.h"
 
 // Bus
 #include "uart.h"
@@ -109,7 +110,7 @@ nfc_device_t* pn532_uart_connect(const nfc_device_desc_t* pndd)
   delay_ms(10);
 
   if (!uart_receive(sp,abtRxBuf,&szRxBufLen)) {
-    ERR("Unable to receive data. (RX)");
+    ERR("%s", "Unable to receive data. (RX)");
     return NULL;
   }
 #ifdef DEBUG
@@ -166,7 +167,7 @@ bool pn532_uart_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, con
   print_hex(abtTxBuf,szTxLen+7);
 #endif
   if (!uart_send((serial_port)nds,abtTxBuf,szTxLen+7)) {
-    ERR("Unable to transmit data. (TX)");
+    ERR("%s", "Unable to transmit data. (TX)");
     return false;
   }
 
@@ -181,7 +182,7 @@ bool pn532_uart_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, con
   delay_ms(30);
 
   if (!uart_receive((serial_port)nds,abtRxBuf,&szRxBufLen)) {
-    ERR("Unable to receive data. (RX)");
+    ERR("%s", "Unable to receive data. (RX)");
     return false;
   }
 

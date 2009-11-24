@@ -160,8 +160,14 @@ void print_hex_bits(const byte_t* pbtData, const size_t szBits)
     printf("%02x  ",pbtData[szPos]);
   }
 
-  // Print the rest bits, these cannot have no parity bit
-  if (szBits%8 != 0) printf("%02x",pbtData[szBytes]);
+  // Print the rest bits
+  if (szBits%8 != 0)
+  {
+    if (szBits%8 < 5)
+      printf("%01x (%i bits)",pbtData[szBytes], szBits%8);
+    else
+      printf("%02x (%i bits)",pbtData[szBytes], szBits%8);
+  }
 
   printf("\n");
 }
@@ -182,8 +188,14 @@ void print_hex_par(const byte_t* pbtData, const size_t szBits, const byte_t* pbt
     }
   }
 
-  // Print the rest bits, these cannot have no parity bit
-  if (szBits%8 != 0) printf("%02x",pbtData[szBytes]);
+  // Print the rest bits, these cannot have parity bit
+  if (szBits%8 != 0)
+  {
+    if (szBits%8 < 5)
+      printf("%01x (%i bits)",pbtData[szBytes], szBits%8);
+    else
+      printf("%02x (%i bits)",pbtData[szBytes], szBits%8);
+  }
 
   printf("\n");
 }

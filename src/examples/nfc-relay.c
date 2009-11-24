@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <signal.h>
 
 #include <nfc.h>
 
@@ -41,6 +42,14 @@ static byte_t abtTagRxPar[MAX_FRAME_LEN];
 static size_t szTagRxBits;
 static nfc_device_t* pndReader;
 static nfc_device_t* pndTag;
+static bool quitting=false;
+
+void intr_hdlr(void)
+{
+  printf("\nQuitting...\n");
+  quitting=true;
+  return;
+}
 
 void print_usage(char* argv[])
 {
@@ -70,6 +79,12 @@ int main(int argc,char* argv[])
     }
   }
 
+#ifdef WIN32
+  signal(SIGINT, (void (__cdecl*)(int)) intr_hdlr);
+#else
+  signal(SIGINT, (void (*)()) intr_hdlr);
+#endif
+
   // Try to open the NFC emulator device
   pndTag = nfc_connect(NULL);
   if (pndTag == NULL)
@@ -83,7 +98,12 @@ int main(int argc,char* argv[])
   printf("[+] Try to break out the auto-emulation, this requires a second reader!\n");
   printf("[+] To do this, please send any command after the anti-collision\n");
   printf("[+] For example, send a RATS command or use the \"nfc-anticol\" tool\n");
-  nfc_target_init(pndTag,abtReaderRx,&szReaderRxBits);
+  if (!nfc_target_init(pndTag,abtReaderRx,&szReaderRxBits))
+  {
+    printf("[+] Initialization of NFC emulator failed\n");
+    nfc_disconnect(pndTag);
+    return 1;
+  }
   printf("[+] Configuring emulator settings\n");
   nfc_configure(pndTag,NDO_HANDLE_CRC,false);
   nfc_configure(pndTag,NDO_HANDLE_PARITY,false);
@@ -94,12 +114,13 @@ int main(int argc,char* argv[])
   pndReader = NULL;
   while (pndReader == NULL) pndReader = nfc_connect(NULL);
   printf("[+] Configuring NFC reader settings\n");
+  nfc_initiator_init(pndReader);
   nfc_configure(pndReader,NDO_HANDLE_CRC,false);
   nfc_configure(pndReader,NDO_HANDLE_PARITY,false);
   nfc_configure(pndReader,NDO_ACCEPT_INVALID_FRAMES,true);
   printf("[+] Done, relaying frames now!\n\n");
 
-  while(true)
+  while(!quitting)
   {
     // Test if we received a frame from the reader
     if (nfc_target_receive_bits(pndTag,abtReaderRx,&szReaderRxBits,abtReaderRxPar))

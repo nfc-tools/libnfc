@@ -131,7 +131,7 @@ void uart_set_speed(serial_port sp, const uint32_t uiPortSpeed)
   cfsetospeed((struct termios*)&spu->tiNew, stPortSpeed);
   if( tcsetattr(spu->fd, TCSADRAIN, &spu->tiNew)  == -1)
   {
-    ERR("Unable to apply new speed settings.");
+    ERR("%s", "Unable to apply new speed settings.");
   }
 }
 
@@ -195,7 +195,7 @@ bool uart_receive(const serial_port sp, byte_t* pbtRx, size_t* pszRxLen)
 
     // Read error
     if (res < 0) {
-      DBG("RX error.");
+      DBG("%s", "RX error.");
       return false;
     }
 
@@ -203,7 +203,7 @@ bool uart_receive(const serial_port sp, byte_t* pbtRx, size_t* pszRxLen)
     if (res == 0) {
       if (*pszRxLen == 0) {
         // Error, we received no data
-        DBG("RX time-out, buffer empty.");
+        DBG("%s", "RX time-out, buffer empty.");
         return false;
       } else {
         // We received some data, but nothing more is available
@@ -245,13 +245,13 @@ bool uart_send(const serial_port sp, const byte_t* pbtTx, const size_t szTxLen)
 
     // Write error
     if (res < 0) {
-      DBG("TX error.");
+      DBG("%s", "TX error.");
       return false;
     }
 
     // Write time-out
     if (res == 0) {
-      DBG("TX time-out.");
+      DBG("%s", "TX time-out.");
       return false;
     }
 

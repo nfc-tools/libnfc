@@ -37,6 +37,15 @@
 #endif // __cplusplus
 
 /**
+ * @fn void nfc_list_devices(nfc_device_desc_t *pnddDevices[], size_t szDevices, size_t *pszDeviceFound)
+ * @brief Probe for discoverable supported devices (ie. only available for some drivers)
+ * @param pnddDevices Array of nfc_device_desc_t previously allocated by the caller.
+ * @param szDevices size of the pnddDevices array.
+ * @param pszDeviceFound number of devices found.
+ */
+void nfc_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *pszDeviceFound);
+
+/**
  * @fn nfc_device_t* nfc_connect(nfc_device_desc_t* pndd)
  * @brief Connect to a NFC device
  * @param pndd Device description if specific device is wanted, NULL otherwise

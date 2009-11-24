@@ -33,7 +33,7 @@
 #define ACR122_DRIVER_NAME "ACR122"
 
 nfc_device_desc_t* acr122_pick_device(void);
-bool acr122_list_devices(nfc_device_desc_t *pnddDevices[], size_t szDevices, size_t *pszDeviceFound);
+bool acr122_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *pszDeviceFound);
 
 // Functions used by developer to handle connection to this device
 nfc_device_t* acr122_connect(const nfc_device_desc_t* pndd);

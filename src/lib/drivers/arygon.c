@@ -20,7 +20,7 @@
  * @file arygon.c
  * @brief
  */
-
+#define _XOPEN_SOURCE 500
 #include <stdio.h>
 
 #include "arygon.h"
@@ -28,6 +28,7 @@
 #include "nfc-messages.h"
 
 #include "../drivers.h"
+#include "../bitutils.h"
 // Bus
 #include "uart.h"
 
@@ -173,7 +174,7 @@ bool arygon_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, const s
   print_hex(abtTxBuf,szTxLen+8);
 #endif
   if (!uart_send((serial_port)nds,abtTxBuf,szTxLen+8)) {
-    ERR("Unable to transmit data. (TX)");
+    ERR("%s", "Unable to transmit data. (TX)");
     return false;
   }
 
@@ -193,7 +194,7 @@ bool arygon_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, const s
    */
 
   if (!uart_receive((serial_port)nds,abtRxBuf,&szRxBufLen)) {
-    ERR("Unable to receive data. (RX)");
+    ERR("%s", "Unable to receive data. (RX)");
     return false;
   }
 

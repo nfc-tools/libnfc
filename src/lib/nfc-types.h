@@ -97,8 +97,10 @@ typedef struct {
 struct driver_callbacks {
   /** Driver name */
   const char* acDriver;
+  /** Pick devices callback */
+  nfc_device_desc_t *(*pick_device)(void);
   /** List devices callback */
-  bool (*list_devices)(nfc_device_desc_t *pnddDevices[], size_t szDevices, size_t *pszDeviceFound);
+  bool (*list_devices)(nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *pszDeviceFound);
   /** Connect callback */
   nfc_device_t* (*connect)(const nfc_device_desc_t* pndd);
   /** Transceive callback */
