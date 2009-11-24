@@ -141,7 +141,6 @@ acr122_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *p
 
   // Test if context succeeded
   if (!(pscc = acr122_get_scardcontext ())) return false;
-  //if (SCardEstablishContext(SCARD_SCOPE_USER,NULL,NULL,&(pscc)) != SCARD_S_SUCCESS) return false;
 
   // Retrieve the string array of all available pcsc readers
   if (SCardListReaders(*pscc,NULL,acDeviceNames,(void*)&szDeviceNamesLen) != SCARD_S_SUCCESS) return false;
@@ -154,8 +153,16 @@ acr122_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *p
     DBG("- %s (pos=%d)", acDeviceNames + szPos, szPos);
 
     // Test if we were able to connect to the "emulator" card
-    if (SCardConnect(*pscc,acDeviceNames + szPos,SCARD_SHARE_EXCLUSIVE,SCARD_PROTOCOL_T0 | SCARD_PROTOCOL_T1,&(as.hCard),(void*)&(as.ioCard.dwProtocol)) == SCARD_S_SUCCESS)
+    if (SCardConnect(*pscc,acDeviceNames + szPos,SCARD_SHARE_EXCLUSIVE,SCARD_PROTOCOL_T0 | SCARD_PROTOCOL_T1,&(as.hCard),(void*)&(as.ioCard.dwProtocol)) != SCARD_S_SUCCESS)
     {
+      // Connect to ACR122 firmware version >2.0
+      if (SCardConnect(*pscc,pndd->acDevice,SCARD_SHARE_DIRECT,0,&(as.hCard),(void*)&(as.ioCard.dwProtocol)) != SCARD_S_SUCCESS)
+      {
+        // We can not connect to this device.
+        continue;
+      }
+    }
+
       // Configure I/O settings for card communication
       as.ioCard.cbPciLength = sizeof(SCARD_IO_REQUEST);
 
@@ -175,17 +182,11 @@ acr122_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *p
         DBG("%s", "Firmware version mismatch");
       }
       SCardDisconnect(as.hCard,SCARD_LEAVE_CARD);
-    }
-    else
-    {
-      DBG("%s", "Can't contact emulator card");
-    }
 
     // Find next device name position
     while (acDeviceNames[szPos++] != '\0');
   }
   acr122_free_scardcontext ();
-  //SCardReleaseContext(pscc);
 
   return true;
 }
@@ -200,8 +201,6 @@ nfc_device_t* acr122_connect(const nfc_device_desc_t* pndd)
 
   // Test if context succeeded
   if (!(pscc = acr122_get_scardcontext ())) return NULL;
-  //if (SCardEstablishContext(SCARD_SCOPE_USER,NULL,NULL,&(pscc)) != SCARD_S_SUCCESS) return NULL;
-
   // Test if we were able to connect to the "emulator" card
   if (SCardConnect(*pscc,pndd->acDevice,SCARD_SHARE_EXCLUSIVE,SCARD_PROTOCOL_T0 | SCARD_PROTOCOL_T1,&(as.hCard),(void*)&(as.ioCard.dwProtocol)) != SCARD_S_SUCCESS)
   {
