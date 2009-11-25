@@ -55,6 +55,11 @@
 #define ACR122_COMMAND_LEN 266
 #define ACR122_RESPONSE_LEN 268
 
+const char *supported_devices[] = {
+  "ACS ACR122U PICC Interface",
+  "ACS ACR 38U-CCID",
+  NULL
+};
 
 typedef struct {
   SCARDHANDLE hCard;
@@ -152,23 +157,13 @@ acr122_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *p
 
     DBG("- %s (pos=%d)", acDeviceNames + szPos, szPos);
 
-    // Test if we were able to connect to the "emulator" card
-    if (SCardConnect(*pscc,acDeviceNames + szPos,SCARD_SHARE_EXCLUSIVE,SCARD_PROTOCOL_T0 | SCARD_PROTOCOL_T1,&(as.hCard),(void*)&(as.ioCard.dwProtocol)) != SCARD_S_SUCCESS)
-    {
-      // Connect to ACR122 firmware version >2.0
-      if (SCardConnect(*pscc,acDeviceNames + szPos,SCARD_SHARE_DIRECT,0,&(as.hCard),(void*)&(as.ioCard.dwProtocol)) != SCARD_S_SUCCESS)
-      {
-        // We can not connect to this device.
-        continue;
-      }
+    bool bSupported = false;
+    for (int i = 0; supported_devices[i]; i++) {
+      int l = strlen(supported_devices[i]);
+      bSupported = 0 == strncmp(supported_devices[i], acDeviceNames + szPos, l);
     }
 
-    // Configure I/O settings for card communication
-    as.ioCard.cbPciLength = sizeof(SCARD_IO_REQUEST);
-
-    // Retrieve the current firmware version
-    pcFirmware = acr122_firmware((nfc_device_t*)&as);
-    if (strstr(pcFirmware,FIRMWARE_TEXT) != NULL)
+    if (bSupported)
     {
       // Supported ACR122 device found
       strncpy(pnddDevices[*pszDeviceFound].acDevice, acDeviceNames + szPos, BUFSIZ - 1);
