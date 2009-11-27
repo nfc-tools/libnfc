@@ -1,3 +1,67 @@
+Nov dd, 2009 - 1.3.0
+------------
+Fixes:
+ - build: Add workarounds for libusb in c99;
+ - build: Attempt to fix rpath issue on linux platform (it is already deprecated in main distributions. i.e. http://wiki.debian.org/RpathIssue)
+ - build: wrong paths in pkg-config file.
+ - libnfc: Remove warnings when compiling;
+ - libnfc: Various code fixes and cleanup;
+ - bus uart: Added support for recv/send of larger data chunks (>default_os_buffer);
+ - bus uart: Fix some some buffer synchronization problems under POSIX system;
+ - bus uart: Add configure option: --disable-serial-autoprobe to disable autoprobing.
+ - libnfc: Fix nfc_target_init doesn't correctly reset the parity during initalization;
+ - libnfc: added support for WUPA and 7,10 byte UID in nfc_initiator_select_tag();
+ - libnfc: Fix tag re-selection with UID lenght > 4 bytes (like DESFire or Ultralight);
+ - nfc-mfclassic: Fix authenticated only with KEYA;
+
+Improvments:
+ - build: Build on recent FreeBSD (ie. upcoming FreeBSD 8.0; FreeBSD CURRENT);
+ - build: Add alternative build system (CMake).
+ - build: Add new files usefull for desktop GNU/Linux users: some rules for udev to allow non-root access to PN53x USB devices;
+ - build: Update msinttypes up to revision 26. (used when compiling under Windows);
+ - build: Add "make html" directive: it will build API documentation using Doxygen. (--enable-doc flag is required at configure time);
+ - libnfc: Add C++ compatibility;
+ - libnfc: Add driver agnostic nfc_pick_device(), nfc_list_devices();
+ - libnfc: It is now possible to specify a wanted device using new struct "nfc_device_desc_t".
+ - libnfc: Add device name to device descriptions (nfc_device_desc_t) to select a given PCSC device;
+ - libnfc: Finally removed all dirty globals, it 'should' be thread-safe now
+ - libnfc: Less confusing message for bitstreams display;
+ - libnfc: chips level introduction with pn53x.h/c;
+ - drivers: Add PN532 UART driver;
+ - driver acr122: add acr122_pick_device(), acr122_list_devices();
+ - drivers pn533_usb and pn531_usb: Lets search continuing to find other USB readers if any in PN531 and PN533 USB drivers;
+ - drivers pn533_usb and pn531_usb: Support for the generic vendorid/productid of the NXP chip;
+ - examples: Add MIFARE Ultratag tool. (Many thanks to xxv)
+ - examples: Add man page for nfc-mfultool;
+ - examples: MIFARE examples (mftool and mfultool) have now a better help message;
+ - examples: Add NFCIP (NDEP) as experimental feature (Thanks to Fkooman).
+ - examples: add quiet mode to improve timing of emulate, relay and anticol commands
+ - nfc-list: List all devices in nfc-list(1);
+ - nfc-list: Simply turns off the RF field upon exit;
+ - nfc-emulate: allow UID to be specified 
+ - nfc-relay: Initialize initiator device explicitly;
+ - nfc-relay: Capture ctrl-c for quitting cleanly the relay attack application;
+ - nfc-relay: exit properly if emulator initialization failed;
+ - nfc-mfclassic: Add default keys tries;
+
+Changes:
+ - API: Rename tag_info to nfc_target_info_t;
+ - API: Rename init_modulation to nfc_modulation_t;
+ - API: Rename dev_config_option to nfc_device_option_t;
+ - API: Use NULL instead of INVALID_DEVICE_INFO to know if device is valid;
+ - API: Rename chip_type to nfc_chip_t;
+ - API: Rename dev_spec to nfc_device_spec_t;
+ - API: Rename dev_info struct to nfc_device_t;
+ - Files: Remove defines.h public header;
+ - Files: Prefix messages.h and types.h headers by "nfc-";
+ - Files: Rename pn531.h/c to pn531_usb.h/c;
+ - Files: Rename pn533.h/c to pn533_usb.h/c;
+ - Files: Move examples into src/examples subdirectory;
+ - Examples: Rename nfc-mftool to nfc-mfclassic;
+ - Examples: Rename nfc-mfultool to nfc-mfultralight;
+ - API: Many variables name have been changed to match with coding convention;
+ - API: Changed length parmeters from uint32_t to size_t;
+
 Jul 24, 2009 - 1.2.1
  - Fix ACR122 on 64 bits architecture under GNU/Linux.
 
