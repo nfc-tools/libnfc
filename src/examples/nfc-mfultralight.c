@@ -39,24 +39,50 @@ static nfc_device_t* pnd;
 static nfc_target_info_t nti;
 static mifare_param mp;
 static mifareul_tag mtDump;
+static uint32_t uiBlocks = 0xF;
+
+void print_success_or_failure(bool bFailure, uint32_t* uiBlockCounter)
+{
+  printf("%c",(bFailure)?'x':'.');
+  if (uiBlockCounter)
+    *uiBlockCounter += (bFailure)?0:1;
+}
 
 bool read_card()
 {
-  int page;
-  bool bSuccess = true;
+  uint32_t page;
+  bool bFailure = false;
+  uint32_t uiReadBlocks = 0;
 
-  // these are pages of 4 bytes each; we can read 4 pages at once.
-  for (page = 0; page <= 0xF;  page += 4){
+  printf("Reading out %d blocks |",uiBlocks+1);
+
+  for (page = 0; page <= uiBlocks;  page += 4)
+  {
+      // Skip this the first time, bFailure it means nothing (yet)
+      if (page != 0)
+      {
+        print_success_or_failure(bFailure, &uiReadBlocks);
+        print_success_or_failure(bFailure, &uiReadBlocks);
+        print_success_or_failure(bFailure, &uiReadBlocks);
+        print_success_or_failure(bFailure, &uiReadBlocks);
+      }
+
       // Try to read out the data block
-        if (nfc_initiator_mifare_cmd(pnd,MC_READ,page,&mp))
-        {
-          memcpy(mtDump.amb[page / 4].mbd.abtData, mp.mpd.abtData, 16);
-        } else {
-          bSuccess = false;
-          break;
-        }
+      if (nfc_initiator_mifare_cmd(pdi,MC_READ,page,&mp))
+      {
+        memcpy(mtDump.amb[page / 4].mbd.abtData, mp.mpd.abtData, 16);
+      } else {
+        bFailure = true;
+        break;
+      }
   }
   return bSuccess;
+  print_success_or_failure(bFailure, &uiReadBlocks);
+  printf("|\n");
+  printf("Done, %d of %d blocks read.\n", uiReadBlocks, uiBlocks+1);
+  fflush(stdout);
+
+  return (!bFailure);
 }
 
 bool write_card()
@@ -77,12 +103,6 @@ bool write_card()
           return false;
         }
         bFailure = false;
-      } else {
-        // Skip this the first time, bFailure it means nothing (yet)
-        if (uiBlock != 0)
-        {
-          printf(".");
-        }
       }
       fflush(stdout);
 
@@ -98,7 +118,9 @@ bool write_card()
         if (!nfc_initiator_mifare_cmd(pnd, MC_WRITE, page, &mp)) bFailure = true;
       }
   }
-  printf("%c|\n",(bFailure)?'x':'.');
+  print_success_or_failure(bFailure, &uiWriteBlocks);
+  printf("|\n");
+  printf("Done, %d of %d blocks written.\n", uiWriteBlocks, uiBlocks+1);
   fflush(stdout);
 
   return true;
@@ -195,7 +217,7 @@ int main(int argc, const char* argv[])
   {
     if (read_card())
     {
-      printf("Writing data to file: %s\n",argv[2]);
+      printf("Writing data to file: %s ... ",argv[2]);
       fflush(stdout);
       pfDump = fopen(argv[2],"wb");
       if (pfDump == NULL)
@@ -209,13 +231,10 @@ int main(int argc, const char* argv[])
         return 1;
       }
       fclose(pfDump);
-      printf("Done, all bytes dumped to file!\n");
+      printf("Done.\n");
     }
   } else {
-    if (write_card())
-    {
-      printf("Done, all data is written to the card!\n");
-    }
+    write_card();
   }
 
   nfc_disconnect(pnd);
