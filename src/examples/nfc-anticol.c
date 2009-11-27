@@ -30,17 +30,19 @@
 
 #include <nfc.h>
 
-#include "messages.h"
+#include "nfc-messages.h"
 #include "bitutils.h"
 
 #define SAK_FLAG_ATS_SUPPORTED 0x20
+
+#define MAX_FRAME_LEN 264
 
 static byte_t abtRx[MAX_FRAME_LEN];
 static size_t szRxBits;
 static size_t szRxLen;
 static byte_t abtUid[10];
 static size_t szUidLen = 4;
-static dev_info* pdi;
+static nfc_device_t* pnd;
 
 bool quiet_output = false;
 
@@ -61,7 +63,7 @@ bool transmit_bits(const byte_t* pbtTx, const size_t szTxBits)
   }
 
   // Transmit the bit frame command, we don't use the arbitrary parity feature
-  if (!nfc_initiator_transceive_bits(pdi,pbtTx,szTxBits,NULL,abtRx,&szRxBits,NULL)) return false;
+  if (!nfc_initiator_transceive_bits(pnd,pbtTx,szTxBits,NULL,abtRx,&szRxBits,NULL)) return false;
 
   // Show received answer
   if(!quiet_output)
@@ -85,7 +87,7 @@ bool transmit_bytes(const byte_t* pbtTx, const size_t szTxLen)
   }
 
   // Transmit the command bytes
-  if (!nfc_initiator_transceive_bytes(pdi,pbtTx,szTxLen,abtRx,&szRxLen)) return false;
+  if (!nfc_initiator_transceive_bytes(pnd,pbtTx,szTxLen,abtRx,&szRxLen)) return false;
 
   // Show received answer
   if(!quiet_output)
@@ -126,32 +128,32 @@ int main(int argc,char* argv[])
   }
 
   // Try to open the NFC reader
-  pdi = nfc_connect(NULL);
+  pnd = nfc_connect(NULL);
 
-  if (!pdi)
+  if (!pnd)
   {
     printf("Error connecting NFC reader\n");
     return 1;
   }
-  nfc_initiator_init(pdi);
+  nfc_initiator_init(pnd);
 
   // Drop the field for a while
-  nfc_configure(pdi,DCO_ACTIVATE_FIELD,false);
+  nfc_configure(pnd,NDO_ACTIVATE_FIELD,false);
 
   // Configure the CRC and Parity settings
-  nfc_configure(pdi,DCO_HANDLE_CRC,false);
-  nfc_configure(pdi,DCO_HANDLE_PARITY,true);
+  nfc_configure(pnd,NDO_HANDLE_CRC,false);
+  nfc_configure(pnd,NDO_HANDLE_PARITY,true);
 
   // Enable field so more power consuming cards can power themselves up
-  nfc_configure(pdi,DCO_ACTIVATE_FIELD,true);
+  nfc_configure(pnd,NDO_ACTIVATE_FIELD,true);
 
-  printf("\nConnected to NFC reader: %s\n\n",pdi->acName);
+  printf("\nConnected to NFC reader: %s\n\n",pnd->acName);
 
   // Send the 7 bits request command specified in ISO 14443A (0x26)
   if (!transmit_bits(abtReqa,7))
   {
     printf("Error: No tag available\n");
-    nfc_disconnect(pdi);
+    nfc_disconnect(pnd);
     return 1;
   }
 
@@ -198,6 +200,6 @@ int main(int argc,char* argv[])
     printf("%014llx\n",swap_endian64(abtUid)&0x00ffffffffffffffull);
   }
 
-  nfc_disconnect(pdi);
+  nfc_disconnect(pnd);
   return 0;
 }

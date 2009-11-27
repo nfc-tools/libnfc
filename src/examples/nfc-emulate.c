@@ -29,12 +29,14 @@
 
 #include <nfc.h>
 
-#include "messages.h"
+#include "nfc-messages.h"
 #include "bitutils.h"
+
+#define MAX_FRAME_LEN 264
 
 static byte_t abtRecv[MAX_FRAME_LEN];
 static size_t szRecvBits;
-static dev_info* pdi;
+static nfc_device_t* pnd;
 
 // ISO14443A Anti-Collision response
 byte_t abtAtqa      [2] = { 0x04,0x00 };
@@ -85,20 +87,20 @@ int main(int argc, char *argv[])
   }
 
   // Try to open the NFC reader
-  pdi = nfc_connect(NULL);
+  pnd = nfc_connect(NULL);
 
-  if (pdi == INVALID_DEVICE_INFO)
+  if (pnd == NULL)
   {
     printf("Error connecting NFC reader\n");
     return 1;
   }
 
   printf("\n");
-  printf("[+] Connected to NFC reader: %s\n",pdi->acName);
+  printf("[+] Connected to NFC reader: %s\n",pnd->acName);
   printf("[+] Try to break out the auto-emulation, this requires a second reader!\n");
   printf("[+] To do this, please send any command after the anti-collision\n");
   printf("[+] For example, send a RATS command or use the \"nfc-anticol\" tool\n");
-  if (!nfc_target_init(pdi,abtRecv,&szRecvBits))
+  if (!nfc_target_init(pnd,abtRecv,&szRecvBits))
   {
     printf("Error: Could not come out of auto-emulation, no command was received\n");
     return 1;
@@ -106,14 +108,14 @@ int main(int argc, char *argv[])
   printf("[+] Received initiator command: ");
   print_hex_bits(abtRecv,szRecvBits);
   printf("[+] Configuring communication\n");
-  nfc_configure(pdi,DCO_HANDLE_CRC,false);
-  nfc_configure(pdi,DCO_HANDLE_PARITY,true);
+  nfc_configure(pnd,NDO_HANDLE_CRC,false);
+  nfc_configure(pnd,NDO_HANDLE_PARITY,true);
   printf("[+] Done, the emulated tag is initialized with UID: %02X%02X%02X%02X\n\n",abtUidBcc[0],abtUidBcc[1],abtUidBcc[2],abtUidBcc[3]);
 
   while(true)
   {
     // Test if we received a frame
-    if (nfc_target_receive_bits(pdi,abtRecv,&szRecvBits,NULL))
+    if (nfc_target_receive_bits(pnd,abtRecv,&szRecvBits,NULL))
     {
       // Prepare the command to send back for the anti-collision request
       switch(szRecvBits)
@@ -150,7 +152,7 @@ int main(int argc, char *argv[])
       if(szTxBits)
       {
         // Send and print the command to the screen
-        nfc_target_send_bits(pdi,pbtTx,szTxBits,NULL);
+        nfc_target_send_bits(pnd,pbtTx,szTxBits,NULL);
         if(!quiet_output)
         {
           printf("T: ");
@@ -160,6 +162,6 @@ int main(int argc, char *argv[])
     }
   }
 
-  nfc_disconnect(pdi);
+  nfc_disconnect(pnd);
 }
 

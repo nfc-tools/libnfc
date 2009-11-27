@@ -35,8 +35,8 @@
 #include "mifareultag.h"
 #include "bitutils.h"
 
-static dev_info* pdi;
-static tag_info ti;
+static nfc_device_t* pnd;
+static nfc_target_info_t nti;
 static mifare_param mp;
 static mifareul_tag mtDump;
 
@@ -48,7 +48,7 @@ bool read_card()
   // these are pages of 4 bytes each; we can read 4 pages at once.
   for (page = 0; page <= 0xF;  page += 4){
       // Try to read out the data block
-        if (nfc_initiator_mifare_cmd(pdi,MC_READ,page,&mp))
+        if (nfc_initiator_mifare_cmd(pnd,MC_READ,page,&mp))
         {
           memcpy(mtDump.amb[page / 4].mbd.abtData, mp.mpd.abtData, 16);
         } else {
@@ -71,7 +71,7 @@ bool write_card()
       {
         printf("x");
         // When a failure occured we need to redo the anti-collision
-        if (!nfc_initiator_select_tag(pdi,IM_ISO14443A_106,NULL,0,&ti))
+        if (!nfc_initiator_select_tag(pnd,NM_ISO14443A_106,NULL,0,&nti))
         {
           printf("!\nError: tag was removed\n");
           return false;
@@ -95,7 +95,7 @@ bool write_card()
         // writes one page at a time.
         uiBlock = page / 4;
         memcpy(mp.mpd.abtData, mtDump.amb[uiBlock].mbd.abtData + ((page % 4) * 4), 16);
-        if (!nfc_initiator_mifare_cmd(pdi, MC_WRITE, page, &mp)) bFailure = true;
+        if (!nfc_initiator_mifare_cmd(pnd, MC_WRITE, page, &mp)) bFailure = true;
       }
   }
   printf("%c|\n",(bFailure)?'x':'.');
@@ -148,47 +148,47 @@ int main(int argc, const char* argv[])
   printf("Succesful opened the dump file\n");
 
   // Try to open the NFC reader
-  pdi = nfc_connect(NULL);
-  if (pdi == INVALID_DEVICE_INFO)
+  pnd = nfc_connect(NULL);
+  if (pnd == NULL)
   {
     printf("Error connecting NFC reader\n");
     return 1;
   }
 
-  nfc_initiator_init(pdi);
+  nfc_initiator_init(pnd);
 
   // Drop the field for a while
-  nfc_configure(pdi,DCO_ACTIVATE_FIELD,false);
+  nfc_configure(pnd,NDO_ACTIVATE_FIELD,false);
 
   // Let the reader only try once to find a tag
-  nfc_configure(pdi,DCO_INFINITE_SELECT,false);
-  nfc_configure(pdi,DCO_HANDLE_CRC,true);
-  nfc_configure(pdi,DCO_HANDLE_PARITY,true);
+  nfc_configure(pnd,NDO_INFINITE_SELECT,false);
+  nfc_configure(pnd,NDO_HANDLE_CRC,true);
+  nfc_configure(pnd,NDO_HANDLE_PARITY,true);
 
   // Enable field so more power consuming cards can power themselves up
-  nfc_configure(pdi,DCO_ACTIVATE_FIELD,true);
+  nfc_configure(pnd,NDO_ACTIVATE_FIELD,true);
 
-  printf("Connected to NFC reader: %s\n",pdi->acName);
+  printf("Connected to NFC reader: %s\n",pnd->acName);
 
   // Try to find a MIFARE Ultralight tag
-  if (!nfc_initiator_select_tag(pdi,IM_ISO14443A_106,NULL,0,&ti))
+  if (!nfc_initiator_select_tag(pnd,NM_ISO14443A_106,NULL,0,&nti))
   {
     printf("Error: no tag was found\n");
-    nfc_disconnect(pdi);
+    nfc_disconnect(pnd);
     return 1;
   }
 
   // Test if we are dealing with a MIFARE compatible tag
 
-  if (ti.tia.abtAtqa[1] != 0x44){
+  if (nti.nai.abtAtqa[1] != 0x44){
       printf("Error: tag is not a MIFARE Ultralight card\n");
-    nfc_disconnect(pdi);
+    nfc_disconnect(pnd);
       return 1;
   }
 
 
   // Get the info from the current tag
-  pbtUID = ti.tia.abtUid;
+  pbtUID = nti.nai.abtUid;
   printf("Found MIFARE Ultralight card with uid: %08x\n", swap_endian32(pbtUID));
 
   if (bReadAction)
@@ -218,7 +218,7 @@ int main(int argc, const char* argv[])
     }
   }
 
-  nfc_disconnect(pdi);
+  nfc_disconnect(pnd);
 
   return 0;
 }

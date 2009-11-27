@@ -17,22 +17,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  * 
  * 
- * @file pn533.h
- * @brief
+ * @file chips.h
+ * @brief NFC chips header
  */
 
-#ifndef _LIBNFC_DEV_PN533_H_
-#define _LIBNFC_DEV_PN533_H_
+#ifndef __NFC_CHIPS_H__
+#define __NFC_CHIPS_H__
 
-#include "defines.h"
-#include "types.h"
+#include "nfc-types.h"
 
-// Functions used by developer to handle connection to this device
-dev_info* pn533_connect(const nfc_device_desc_t* pndd);
-void pn533_disconnect(dev_info* pdi);
+#include "chips/pn53x.h"
 
-// Callback function used by libnfc to transmit commands to the PN53X chip
-bool pn533_transceive(const dev_spec ds, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen);
-
-#endif // _LIBNFC_DEV_PN533_H_
+#endif // __NFC_CHIPS_H__
 

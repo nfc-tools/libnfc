@@ -24,19 +24,21 @@
 #include <stdio.h>
 #include <nfc.h>
 
+#define MAX_FRAME_LEN 264
+
 int main(int argc, const char *argv[])
 {
   byte_t abtRecv[MAX_FRAME_LEN];
   size_t szRecvBits;
   byte_t send[] = "Hello Mars!";
-  dev_info *pdi = nfc_connect(NULL);
+  nfc_device_t *pnd = nfc_connect(NULL);
 
-  if (!pdi || !nfc_target_init(pdi, abtRecv, &szRecvBits)) {
+  if (!pnd || !nfc_target_init(pnd, abtRecv, &szRecvBits)) {
     printf("unable to connect or initialize\n");
     return 1;
   }
 
-  if (!nfc_target_receive_dep_bytes(pdi, abtRecv, &szRecvBits)) {
+  if (!nfc_target_receive_dep_bytes(pnd, abtRecv, &szRecvBits)) {
     printf("unable to receive data\n");
     return 1;
   }
@@ -44,11 +46,11 @@ int main(int argc, const char *argv[])
   printf("Received: %s\n", abtRecv);
   printf("Sending : %s\n", send);
 
-  if (!nfc_target_send_dep_bytes(pdi, send, 11)) {
+  if (!nfc_target_send_dep_bytes(pnd, send, 11)) {
     printf("unable to send data\n");
     return 1;
   }
 
-  nfc_disconnect(pdi);
+  nfc_disconnect(pnd);
   return 0;
 }

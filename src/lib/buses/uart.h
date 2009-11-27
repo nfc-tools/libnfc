@@ -21,14 +21,15 @@
  * @brief
  */
 
-#ifndef _LIBNFC_RS232_H_
-#define _LIBNFC_RS232_H_
+#ifndef __NFC_BUS_UART_H__
+#define __NFC_BUS_UART_H__
 
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include "defines.h"
-#include "types.h"
+
+
+#include "nfc-types.h"
 
 // Handle platform specific includes
 #ifndef _WIN32
@@ -58,6 +59,6 @@ uint32_t uart_get_speed(const serial_port sp);
 bool uart_receive(const serial_port sp, byte_t* pbtRx, size_t* pszRxLen);
 bool uart_send(const serial_port sp, const byte_t* pbtTx, const size_t szTxLen);
 
-#endif // _LIBNFC_RS232_H_
+#endif // __NFC_BUS_UART_H__
 
 

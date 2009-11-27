@@ -22,14 +22,13 @@
  */
 
 /*
-Based on uart-code written by Teunis van Beelen available:
+Based on RS232 code written by Teunis van Beelen available:
 http://www.teuniz.net/RS-232/index.html
 */
 
-
 #include "uart.h"
 
-#include "messages.h"
+#include "nfc-messages.h"
 
 // Test if we are dealing with unix operating systems
 #ifndef _WIN32
@@ -132,7 +131,7 @@ void uart_set_speed(serial_port sp, const uint32_t uiPortSpeed)
   cfsetospeed((struct termios*)&spu->tiNew, stPortSpeed);
   if( tcsetattr(spu->fd, TCSADRAIN, &spu->tiNew)  == -1)
   {
-    ERR("Unable to apply new speed settings.");
+    ERR("%s", "Unable to apply new speed settings.");
   }
 }
 
@@ -196,7 +195,7 @@ bool uart_receive(const serial_port sp, byte_t* pbtRx, size_t* pszRxLen)
 
     // Read error
     if (res < 0) {
-      DBG("RX error.");
+      DBG("%s", "RX error.");
       return false;
     }
 
@@ -204,7 +203,7 @@ bool uart_receive(const serial_port sp, byte_t* pbtRx, size_t* pszRxLen)
     if (res == 0) {
       if (*pszRxLen == 0) {
         // Error, we received no data
-        DBG("RX time-out, buffer empty.");
+        DBG("%s", "RX time-out, buffer empty.");
         return false;
       } else {
         // We received some data, but nothing more is available
@@ -246,13 +245,13 @@ bool uart_send(const serial_port sp, const byte_t* pbtTx, const size_t szTxLen)
 
     // Write error
     if (res < 0) {
-      DBG("TX error.");
+      DBG("%s", "TX error.");
       return false;
     }
 
     // Write time-out
     if (res == 0) {
-      DBG("TX time-out.");
+      DBG("%s", "TX time-out.");
       return false;
     }
 
@@ -368,6 +367,13 @@ uint32_t uart_get_speed(const serial_port sp)
   return 0;
 }
 
+bool uart_cts(const serial_port sp)
+{
+  char status;
+  if (ioctl(((serial_port_unix*)sp)->fd,TIOCMGET,&status) < 0) return false;
+  return (status & TIOCM_CTS);
+}
+
 bool uart_receive(const serial_port sp, byte_t* pbtRx, size_t* pszRxLen)
 {
   ReadFile(((serial_port_windows*)sp)->hPort,pbtRx,*pszRxLen,(LPDWORD)pszRxLen,NULL);
@@ -381,4 +387,4 @@ bool uart_send(const serial_port sp, const byte_t* pbtTx, const size_t szTxLen)
   return (dwTxLen != 0);
 }
 
-#endif
+#endif /* _WIN32 */

@@ -24,8 +24,6 @@
 #ifndef _LIBNFC_MIFARE_UL_TAG_H_
 #define _LIBNFC_MIFARE_UL_TAG_H_
 
-#include "defines.h"
-
 typedef struct {
   byte_t sn0[3];
   byte_t btBCC0;

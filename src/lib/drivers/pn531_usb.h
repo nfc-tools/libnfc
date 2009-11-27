@@ -17,39 +17,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  * 
  * 
- * @file mifaretag.h
+ * @file pn531_usb.h
  * @brief
  */
 
-#ifndef _LIBNFC_MIFARE_TAG_H_
-#define _LIBNFC_MIFARE_TAG_H_
+#ifndef __NFC_DRIVER_PN531_USB_H__
+#define __NFC_DRIVER_PN531_USB_H__
 
-typedef struct {
-  byte_t abtUID[4];
-  byte_t btBCC;
-  byte_t btUnknown;
-  byte_t abtATQA[2];
-  byte_t abtUnknown[8];
-} mifare_block_manufacturer;
+#include <stdint.h>
+#include <stdbool.h>
 
-typedef struct {
-  byte_t abtData[16];
-} mifare_block_data;
+#include "nfc-types.h"
 
-typedef struct {
-  byte_t abtKeyA[6];
-  byte_t abtAccessBits[4];
-  byte_t abtKeyB[6];
-} mifare_block_trailer;
+#define PN531_USB_DRIVER_NAME "PN531_USB"
 
-typedef union {
-  mifare_block_manufacturer mbm;
-  mifare_block_data mbd;
-  mifare_block_trailer mbt;
-} mifare_block;
+// Functions used by developer to handle connection to this device
+nfc_device_t* pn531_usb_connect(const nfc_device_desc_t* pndd);
+void pn531_usb_disconnect(nfc_device_t* pnd);
 
-typedef struct {
-  mifare_block amb[256];
-} mifare_tag;
+// Callback function used by libnfc to transmit commands to the PN53X chip
+bool pn531_usb_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen);
 
-#endif // _LIBNFC_MIFARE_TAG_H_
+#endif // ! __NFC_DRIVER_PN531_USB_H__
+

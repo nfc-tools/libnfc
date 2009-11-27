@@ -20,11 +20,17 @@
  * @file arygon.c
  * @brief
  */
+#define _XOPEN_SOURCE 500
+#include <stdio.h>
 
 #include "arygon.h"
 
+#include "nfc-messages.h"
+
+#include "../drivers.h"
+#include "../bitutils.h"
+// Bus
 #include "uart.h"
-#include "messages.h"
 
 #ifdef _WIN32
   #define SERIAL_STRING "COM"
@@ -72,21 +78,21 @@
  * @note ARYGON-APDB2UA33 (PN532 + ARYGON µC): 9600,n,8,1
  */
 
-dev_info* arygon_connect(const nfc_device_desc_t* pndd)
+nfc_device_t* arygon_connect(const nfc_device_desc_t* pndd)
 {
   uint32_t uiDevNr;
   serial_port sp;
   char acConnect[BUFFER_LENGTH];
-  dev_info* pdi = INVALID_DEVICE_INFO;
+  nfc_device_t* pnd = NULL;
 
   if( pndd == NULL ) {
 #ifdef DISABLE_SERIAL_AUTOPROBE
     INFO("Sorry, serial auto-probing have been disabled at compile time.");
-    return INVALID_DEVICE_INFO;
+    return NULL;
 #else
     DBG("Trying to find ARYGON device on serial port: %s# at %d bauds.",SERIAL_STRING, SERIAL_DEFAULT_PORT_SPEED);
     // I have no idea how MAC OS X deals with multiple devices, so a quick workaround
-    for (uiDevNr=0; uiDevNr<MAX_DEVICES; uiDevNr++)
+    for (uiDevNr=0; uiDevNr<DRIVERS_MAX_DEVICES; uiDevNr++)
     {
 #ifdef __APPLE__
       strcpy(acConnect,SERIAL_STRING);
@@ -107,14 +113,14 @@ dev_info* arygon_connect(const nfc_device_desc_t* pndd)
     }
 #endif
     // Test if we have found a device
-    if (uiDevNr == MAX_DEVICES) return INVALID_DEVICE_INFO;
+    if (uiDevNr == DRIVERS_MAX_DEVICES) return NULL;
   } else {
     DBG("Connecting to: %s at %d bauds.",pndd->pcPort, pndd->uiSpeed);
     strcpy(acConnect,pndd->pcPort);
     sp = uart_open(acConnect);
     if (sp == INVALID_SERIAL_PORT) ERR("Invalid serial port: %s",acConnect);
     if (sp == CLAIMED_SERIAL_PORT) ERR("Serial port already claimed: %s",acConnect);
-    if ((sp == CLAIMED_SERIAL_PORT) || (sp == INVALID_SERIAL_PORT)) return INVALID_DEVICE_INFO;
+    if ((sp == CLAIMED_SERIAL_PORT) || (sp == INVALID_SERIAL_PORT)) return NULL;
 
     uart_set_speed(sp, pndd->uiSpeed);
   }
@@ -122,24 +128,24 @@ dev_info* arygon_connect(const nfc_device_desc_t* pndd)
   DBG("Successfully connected to: %s",acConnect);
 
   // We have a connection
-  pdi = malloc(sizeof(dev_info));
-  strcpy(pdi->acName,"ARYGON");
-  pdi->ct = CT_PN532;
-  pdi->ds = (dev_spec)sp;
-  pdi->bActive = true;
-  pdi->bCrc = true;
-  pdi->bPar = true;
-  pdi->ui8TxBits = 0;
-  return pdi;
+  pnd = malloc(sizeof(nfc_device_t));
+  strcpy(pnd->acName,"ARYGON");
+  pnd->nc = NC_PN532;
+  pnd->nds = (nfc_device_spec_t)sp;
+  pnd->bActive = true;
+  pnd->bCrc = true;
+  pnd->bPar = true;
+  pnd->ui8TxBits = 0;
+  return pnd;
 }
 
-void arygon_disconnect(dev_info* pdi)
+void arygon_disconnect(nfc_device_t* pnd)
 {
-  uart_close((serial_port)pdi->ds);
-  free(pdi);
+  uart_close((serial_port)pnd->nds);
+  free(pnd);
 }
 
-bool arygon_transceive(const dev_spec ds, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen)
+bool arygon_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen)
 {
   byte_t abtTxBuf[BUFFER_LENGTH] = { DEV_ARYGON_PROTOCOL_TAMA, 0x00, 0x00, 0xff }; // Every packet must start with "00 00 ff"
   byte_t abtRxBuf[BUFFER_LENGTH];
@@ -167,8 +173,8 @@ bool arygon_transceive(const dev_spec ds, const byte_t* pbtTx, const size_t szTx
   printf(" TX: ");
   print_hex(abtTxBuf,szTxLen+8);
 #endif
-  if (!uart_send((serial_port)ds,abtTxBuf,szTxLen+8)) {
-    ERR("Unable to transmit data. (TX)");
+  if (!uart_send((serial_port)nds,abtTxBuf,szTxLen+8)) {
+    ERR("%s", "Unable to transmit data. (TX)");
     return false;
   }
 
@@ -187,8 +193,8 @@ bool arygon_transceive(const dev_spec ds, const byte_t* pbtTx, const size_t szTx
    * For more information, see Issue 23 on development site : http://code.google.com/p/libnfc/issues/detail?id=23
    */
 
-  if (!uart_receive((serial_port)ds,abtRxBuf,&szRxBufLen)) {
-    ERR("Unable to receive data. (RX)");
+  if (!uart_receive((serial_port)nds,abtRxBuf,&szRxBufLen)) {
+    ERR("%s", "Unable to receive data. (RX)");
     return false;
   }
 

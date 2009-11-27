@@ -29,18 +29,29 @@
 
 #include <nfc.h>
 
-#include "messages.h"
+#include "nfc-messages.h"
 #include "bitutils.h"
 
-static dev_info* pdi;
+#define MAX_DEVICE_COUNT 16
+
+static nfc_device_t* pnd;
 static byte_t abtFelica[5] = { 0x00, 0xff, 0xff, 0x00, 0x00 };
 
 int main(int argc, const char* argv[])
 {
-  tag_info ti;
+  size_t szFound;
+  int i;
+  nfc_target_info_t nti;
+  nfc_device_desc_t *pnddDevices;
 
-  // Try to open the NFC device
-  pdi = nfc_connect(NULL);
+  // Display libnfc version
+  const char* acLibnfcVersion = nfc_version();
+  printf("%s use libnfc %s\n", argv[0], acLibnfcVersion);
+
+  // Lazy way to open an NFC device
+  /*
+  pnd = nfc_connect(NULL);
+  */
 
   // If specific device is wanted, i.e. an ARYGON device on /dev/ttyUSB0
   /*
@@ -49,74 +60,94 @@ int main(int argc, const char* argv[])
   ndd.pcPort = "/dev/ttyUSB0";
   ndd.uiSpeed = 115200;
 
-  pdi = nfc_connect(&ndd);
+  pnd = nfc_connect(&ndd);
   */
-
-  if (pdi == INVALID_DEVICE_INFO)
+  if (!(pnddDevices = malloc (MAX_DEVICE_COUNT * sizeof (*pnddDevices))))
   {
-    ERR("Unable to connect to NFC device.");
-    return 1;
+    fprintf (stderr, "malloc() failed\n");
+    return EXIT_FAILURE;
   }
-  nfc_initiator_init(pdi);
 
-  // Drop the field for a while
-  nfc_configure(pdi,DCO_ACTIVATE_FIELD,false);
+  nfc_list_devices (pnddDevices, MAX_DEVICE_COUNT, &szFound);
 
-  // Let the reader only try once to find a tag
-  nfc_configure(pdi,DCO_INFINITE_SELECT,false);
-
-  // Configure the CRC and Parity settings
-  nfc_configure(pdi,DCO_HANDLE_CRC,true);
-  nfc_configure(pdi,DCO_HANDLE_PARITY,true);
-
-  // Enable field so more power consuming cards can power themselves up
-  nfc_configure(pdi,DCO_ACTIVATE_FIELD,true);
-
-  printf("Connected to NFC reader: %s\n\n",pdi->acName);
-
-  // Poll for a ISO14443A (MIFARE) tag
-  if (nfc_initiator_select_tag(pdi,IM_ISO14443A_106,NULL,0,&ti))
+  if (szFound == 0)
   {
-    printf("The following (NFC) ISO14443A tag was found:\n\n");
-    printf("    ATQA (SENS_RES): "); print_hex(ti.tia.abtAtqa,2);
-    printf("       UID (NFCID%c): ",(ti.tia.abtUid[0]==0x08?'3':'1')); print_hex(ti.tia.abtUid,ti.tia.szUidLen);
-    printf("      SAK (SEL_RES): "); print_hex(&ti.tia.btSak,1);
-    if (ti.tia.szAtsLen)
+    INFO("%s", "No device found.");
+  }
+
+  for (i = 0; i < szFound; i++)
+  {
+    pnd = nfc_connect(&(pnddDevices[i]));
+
+
+    if (pnd == NULL)
     {
-      printf("          ATS (ATR): ");
-      print_hex(ti.tia.abtAts,ti.tia.szAtsLen);
+      ERR("%s", "Unable to connect to NFC device.");
+      return 1;
     }
-  }
+    nfc_initiator_init(pnd);
 
-  // Poll for a Felica tag
-  if (nfc_initiator_select_tag(pdi,IM_FELICA_212,abtFelica,5,&ti) || nfc_initiator_select_tag(pdi,IM_FELICA_424,abtFelica,5,&ti))
-  {
-    printf("The following (NFC) Felica tag was found:\n\n");
-    printf("%18s","ID (NFCID2): "); print_hex(ti.tif.abtId,8);
-    printf("%18s","Parameter (PAD): "); print_hex(ti.tif.abtPad,8);
-  }
+    // Drop the field for a while
+    nfc_configure(pnd,NDO_ACTIVATE_FIELD,false);
 
-  // Poll for a ISO14443B tag
-  if (nfc_initiator_select_tag(pdi,IM_ISO14443B_106,(byte_t*)"\x00",1,&ti))
-  {
-    printf("The following (NFC) ISO14443-B tag was found:\n\n");
-    printf("  ATQB: "); print_hex(ti.tib.abtAtqb,12);
-    printf("    ID: "); print_hex(ti.tib.abtId,4);
-    printf("   CID: %02x\n",ti.tib.btCid);
-    if (ti.tib.szInfLen>0)
+    // Let the reader only try once to find a tag
+    nfc_configure(pnd,NDO_INFINITE_SELECT,false);
+
+    // Configure the CRC and Parity settings
+    nfc_configure(pnd,NDO_HANDLE_CRC,true);
+    nfc_configure(pnd,NDO_HANDLE_PARITY,true);
+
+    // Enable field so more power consuming cards can power themselves up
+    nfc_configure(pnd,NDO_ACTIVATE_FIELD,true);
+
+    printf("Connected to NFC reader: %s\n\n",pnd->acName);
+
+    // Poll for a ISO14443A (MIFARE) tag
+    if (nfc_initiator_select_tag(pnd,NM_ISO14443A_106,NULL,0,&nti))
     {
-      printf("   INF: "); print_hex(ti.tib.abtInf,ti.tib.szInfLen);
+      printf("The following (NFC) ISO14443A tag was found:\n\n");
+      printf("    ATQA (SENS_RES): "); print_hex(nti.nai.abtAtqa,2);
+      printf("       UID (NFCID%c): ",(nti.nai.abtUid[0]==0x08?'3':'1')); print_hex(nti.nai.abtUid,nti.nai.szUidLen);
+      printf("      SAK (SEL_RES): "); print_hex(&nti.nai.btSak,1);
+      if (nti.nai.szAtsLen)
+      {
+        printf("          ATS (ATR): ");
+        print_hex(nti.nai.abtAts,nti.nai.szAtsLen);
+      }
     }
-    printf("PARAMS: %02x %02x %02x %02x\n",ti.tib.btParam1,ti.tib.btParam2,ti.tib.btParam3,ti.tib.btParam4);
-  }
 
-  // Poll for a Jewel tag
-  if (nfc_initiator_select_tag(pdi,IM_JEWEL_106,NULL,0,&ti))
-  {
-    // No test results yet
-    printf("jewel\n");
-  }
+    // Poll for a Felica tag
+    if (nfc_initiator_select_tag(pnd,NM_FELICA_212,abtFelica,5,&nti) || nfc_initiator_select_tag(pnd,NM_FELICA_424,abtFelica,5,&nti))
+    {
+      printf("The following (NFC) Felica tag was found:\n\n");
+      printf("%18s","ID (NFCID2): "); print_hex(nti.nfi.abtId,8);
+      printf("%18s","Parameter (PAD): "); print_hex(nti.nfi.abtPad,8);
+    }
 
-  nfc_disconnect(pdi);
-  return 1;
+    // Poll for a ISO14443B tag
+    if (nfc_initiator_select_tag(pnd,NM_ISO14443B_106,(byte_t*)"\x00",1,&nti))
+    {
+      printf("The following (NFC) ISO14443-B tag was found:\n\n");
+      printf("  ATQB: "); print_hex(nti.nbi.abtAtqb,12);
+      printf("    ID: "); print_hex(nti.nbi.abtId,4);
+      printf("   CID: %02x\n",nti.nbi.btCid);
+      if (nti.nbi.szInfLen>0)
+      {
+        printf("   INF: "); print_hex(nti.nbi.abtInf,nti.nbi.szInfLen);
+      }
+      printf("PARAMS: %02x %02x %02x %02x\n",nti.nbi.btParam1,nti.nbi.btParam2,nti.nbi.btParam3,nti.nbi.btParam4);
+    }
+
+    // Poll for a Jewel tag
+    if (nfc_initiator_select_tag(pnd,NM_JEWEL_106,NULL,0,&nti))
+    {
+      // No test results yet
+      printf("jewel\n");
+    }
+
+    nfc_disconnect(pnd);
+    }
+
+  free (pnddDevices);
+  return 0;
 }

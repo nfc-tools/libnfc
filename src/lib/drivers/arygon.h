@@ -21,18 +21,19 @@
  * @brief
  */
 
-#ifndef _LIBNFC_DEV_ARYGON_H_
-#define _LIBNFC_DEV_ARYGON_H_
+#ifndef __NFC_DRIVER_ARYGON_H__
+#define __NFC_DRIVER_ARYGON_H__
 
-#include "defines.h"
-#include "types.h"
+#include "nfc-types.h"
+
+#define ARYGON_DRIVER_NAME "ARYGON"
 
 // Functions used by developer to handle connection to this device
-dev_info* arygon_connect(const nfc_device_desc_t* pndd);
-void arygon_disconnect(dev_info* pdi);
+nfc_device_t* arygon_connect(const nfc_device_desc_t* pndd);
+void arygon_disconnect(nfc_device_t* pnd);
 
 // Callback function used by libnfc to transmit commands to the PN53X chip
-bool arygon_transceive(const dev_spec ds, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen);
+bool arygon_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen);
 
-#endif // _LIBNFC_DEV_ARYGON_H_
+#endif // ! __NFC_DRIVER_ARYGON_H__
 

@@ -17,12 +17,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  * 
  * 
- * @file types.h
- * @brief
+ * @file nfc-types.h
+ * @brief Define NFC types
  */
 
-#ifndef _LIBNFC_TYPES_H_
-#define _LIBNFC_TYPES_H_
+#ifndef __NFC_TYPES_H__
+#define __NFC_TYPES_H__
 
 /**
  * @file types.h
@@ -34,20 +34,21 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "defines.h"
-
 typedef uint8_t byte_t;
 
 typedef enum {
-  CT_PN531                    = 0x10,
-  CT_PN532                    = 0x20,
-  CT_PN533                    = 0x30,
-} chip_type;
+  NC_PN531                    = 0x10,
+  NC_PN532                    = 0x20,
+  NC_PN533                    = 0x30,
+} nfc_chip_t;
 
 struct driver_callbacks;                // Prototype the callback struct
 
+typedef void*               nfc_device_spec_t; // Device connection specification
+
+#define DEVICE_NAME_LENGTH  256
 /**
- * @struct dev_info
+ * @struct nfc_device_t
  * @brief NFC device information
  */
 typedef struct {
@@ -56,9 +57,9 @@ typedef struct {
 /** Device name string, including device wrapper firmware */
   char acName[DEVICE_NAME_LENGTH];
 /** PN53X chip type, this is useful for some "bug" work-arounds */
-  chip_type ct;
+  nfc_chip_t nc;
 /** Pointer to the device connection specification */
-  dev_spec ds;
+ nfc_device_spec_t nds;
 /** This represents if the PN53X device was initialized succesful */
   bool bActive;
 /** Is the crc automaticly added, checked and removed from the frames */
@@ -67,7 +68,8 @@ typedef struct {
   bool bPar;
 /** The last tx bits setting, we need to reset this if it does not apply anymore */
   uint8_t ui8TxBits;
-} dev_info;
+} nfc_device_t;
+
 
 /**
  * @struct nfc_device_desc_t
@@ -76,81 +78,87 @@ typedef struct {
  * This struct is used to try to connect to a specified nfc device when nfc_connect(...)
  */
 typedef struct {
-  /** Driver name */
+  /** Device name (e.g. "ACS ACR 38U-CCID 00 00") */
+  char acDevice[BUFSIZ];
+  /** Driver name (e.g. "PN532_UART")*/
   char* pcDriver;
-  /** Port (i.e. /dev/ttyUSB2) */
+  /** Port (e.g. "/dev/ttyUSB0") */
   char* pcPort;
-  /** Port speed (i.e. 115200) */
+  /** Port speed (e.g. "115200") */
   uint32_t uiSpeed;
   /** Device index for backward compatibility (used to choose one specific device in USB or PSCS devices list) */
-  uint32_t uiIndex;
+  uint32_t uiBusIndex;
 } nfc_device_desc_t;
 
 /**
  * @struct driver_callbacks
- * @brief NFC defice callbacks
+ * @brief Generic structure to handle NFC device functions.
  */
 struct driver_callbacks {
   /** Driver name */
   const char* acDriver;
+  /** Pick devices callback */
+  nfc_device_desc_t *(*pick_device)(void);
+  /** List devices callback */
+  bool (*list_devices)(nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *pszDeviceFound);
   /** Connect callback */
-  dev_info* (*connect)(const nfc_device_desc_t* pndd);
+  nfc_device_t* (*connect)(const nfc_device_desc_t* pndd);
   /** Transceive callback */
-  bool (*transceive)(const dev_spec ds, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen);
+  bool (*transceive)(const nfc_device_spec_t nds, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen);
   /** Disconnect callback */
-  void (*disconnect)(dev_info* pdi);
+  void (*disconnect)(nfc_device_t* pnd);
 };
 
 // Compiler directive, set struct alignment to 1 byte_t for compatibility
 #pragma pack(1)
 
 /**
- * @enum dev_config_option
+ * @enum nfc_device_option_t
  * @brief NFC device option
  */
 typedef enum {
 /** Let the PN53X chip handle the CRC bytes. This means that the chip appends the CRC bytes to the frames that are transmitted. It will parse the last bytes from received frames as incoming CRC bytes. They will be verified against the used modulation and protocol. If an frame is expected with incorrect CRC bytes this option should be disabled. Example frames where this is useful are the ATQA and UID+BCC that are transmitted without CRC bytes during the anti-collision phase of the ISO14443-A protocol. */
-  DCO_HANDLE_CRC              = 0x00,
+  NDO_HANDLE_CRC              = 0x00,
 /** Parity bits in the network layer of ISO14443-A are by default generated and validated in the PN53X chip. This is a very convenient feature. On certain times though it is useful to get full control of the transmitted data. The proprietary MIFARE Classic protocol uses for example custom (encrypted) parity bits. For interoperability it is required to be completely compatible, including the arbitrary parity bits. When this option is disabled, the functions to communicating bits should be used. */
-  DCO_HANDLE_PARITY           = 0x01,
+  NDO_HANDLE_PARITY           = 0x01,
 /** This option can be used to enable or disable the electronic field of the NFC device. */
-  DCO_ACTIVATE_FIELD          = 0x10,
+  NDO_ACTIVATE_FIELD          = 0x10,
 /** The internal CRYPTO1 co-processor can be used to transmit messages encrypted. This option is automatically activated after a successful MIFARE Classic authentication. */
-  DCO_ACTIVATE_CRYPTO1        = 0x11,
+  NDO_ACTIVATE_CRYPTO1        = 0x11,
 /** The default configuration defines that the PN53X chip will try indefinitely to invite a tag in the field to respond. This could be desired when it is certain a tag will enter the field. On the other hand, when this is uncertain, it will block the application. This option could best be compared to the (NON)BLOCKING option used by (socket)network programming. */
-  DCO_INFINITE_SELECT         = 0x20,
+  NDO_INFINITE_SELECT         = 0x20,
 /** If this option is enabled, frames that carry less than 4 bits are allowed. According to the standards these frames should normally be handles as invalid frames. */
-  DCO_ACCEPT_INVALID_FRAMES   = 0x30,
+  NDO_ACCEPT_INVALID_FRAMES   = 0x30,
 /** If the NFC device should only listen to frames, it could be useful to let it gather multiple frames in a sequence. They will be stored in the internal FIFO of the PN53X chip. This could be retrieved by using the receive data functions. Note that if the chip runs out of bytes (FIFO = 64 bytes long), it will overwrite the first received frames, so quick retrieving of the received data is desirable. */
-  DCO_ACCEPT_MULTIPLE_FRAMES  = 0x31
-}dev_config_option;
+  NDO_ACCEPT_MULTIPLE_FRAMES  = 0x31
+} nfc_device_option_t;
 
 ////////////////////////////////////////////////////////////////////
 // nfc_reader_list_passive - using InListPassiveTarget 
 
 /**
- * @enum init_modulation
+ * @enum nfc_modulation_t
  * @brief NFC modulation
  */
 typedef enum {
 /** ISO14443-A (NXP MIFARE) http://en.wikipedia.org/wiki/MIFARE */
-  IM_ISO14443A_106  = 0x00,
+  NM_ISO14443A_106  = 0x00,
 /** JIS X 6319-4 (Sony Felica) http://en.wikipedia.org/wiki/FeliCa */
-  IM_FELICA_212     = 0x01,
+  NM_FELICA_212     = 0x01,
 /** JIS X 6319-4 (Sony Felica) http://en.wikipedia.org/wiki/FeliCa */
-  IM_FELICA_424     = 0x02,
+  NM_FELICA_424     = 0x02,
 /** ISO14443-B http://en.wikipedia.org/wiki/ISO/IEC_14443 */
-  IM_ISO14443B_106  = 0x03,
+  NM_ISO14443B_106  = 0x03,
 /** Jewel Topaz (Innovision Research & Development) */
-  IM_JEWEL_106      = 0x04,
+  NM_JEWEL_106      = 0x04,
 /** Active DEP */
-  IM_ACTIVE_DEP = 0x05,
+  NM_ACTIVE_DEP = 0x05,
 /** Passive DEP */
-  IM_PASSIVE_DEP = 0x06,
-}init_modulation;
+  NM_PASSIVE_DEP = 0x06
+} nfc_modulation_t;
 
 /**
- * @struct tag_info_dep
+ * @struct nfc_target_info_t_dep
  * @brief NFC tag information in Data Exchange Protocol
  */
 typedef struct {
@@ -158,10 +166,10 @@ typedef struct {
   byte_t btDID;
   byte_t btBSt;
   byte_t btBRt;
-}tag_info_dep;
+} nfc_dep_info_t;
 
 /**
- * @struct tag_info_iso14443a
+ * @struct nfc_target_info_t_iso14443a
  * @brief NFC ISO14443A tag (MIFARE) information
  */
 typedef struct {
@@ -171,10 +179,10 @@ typedef struct {
   byte_t abtUid[10];
   size_t szAtsLen;
   byte_t abtAts[36];
-}tag_info_iso14443a;
+} nfc_iso14443a_info_t;
 
 /**
- * @struct tag_info_felica
+ * @struct nfc_target_info_t_felica
  * @brief NFC FeLiCa tag information
  */
 typedef struct {
@@ -183,10 +191,10 @@ typedef struct {
   byte_t abtId[8];
   byte_t abtPad[8];
   byte_t abtSysCode[2];
-}tag_info_felica;
+} nfc_felica_info_t;
 
 /**
- * @struct tag_info_iso14443b
+ * @struct nfc_target_info_t_iso14443b
  * @brief NFC ISO14443B tag information
  */
 typedef struct {
@@ -199,28 +207,28 @@ typedef struct {
   byte_t btCid;
   size_t szInfLen;
   byte_t abtInf[64];
-}tag_info_iso14443b;
+} nfc_iso14443b_info_t;
 
 /**
- * @struct tag_info_jewel
+ * @struct nfc_target_info_t_jewel
  * @brief NFC Jewel tag information
  */
 typedef struct {
   byte_t btSensRes[2];
   byte_t btId[4];
-}tag_info_jewel;
+} nfc_jewel_info_t;
 
 /**
- * @union tag_info
+ * @union nfc_target_info_t
  * @brief Union between all kind of tags information structures.
  */
 typedef union {
-  tag_info_iso14443a tia;
-  tag_info_felica tif;
-  tag_info_iso14443b tib;
-  tag_info_jewel tij;
-  tag_info_dep tid;
-}tag_info;
+  nfc_iso14443a_info_t nai;
+  nfc_felica_info_t nfi;
+  nfc_iso14443b_info_t nbi;
+  nfc_jewel_info_t nji;
+  nfc_dep_info_t ndi;
+} nfc_target_info_t;
 
 ////////////////////////////////////////////////////////////////////
 // InDataExchange, MIFARE Classic card 
@@ -233,7 +241,7 @@ typedef enum {
   MC_TRANSFER       = 0xB0,
   MC_DECREMENT      = 0xC0,
   MC_INCREMENT      = 0xC1,
-  MC_STORE          = 0xC2,
+  MC_STORE          = 0xC2
 }mifare_cmd;
 
 // MIFARE Classic command params

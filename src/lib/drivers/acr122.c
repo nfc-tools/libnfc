@@ -21,20 +21,24 @@
  * @brief
  */
 
-#include "acr122.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <stddef.h>
 #include <string.h>
+
+#include "acr122.h"
+#include "../drivers.h"
+#include "../bitutils.h"
+
+// Bus
 #include <winscard.h>
 
 #ifdef __APPLE__
   #include <wintypes.h>
 #endif
 
-#include "defines.h"
-#include "messages.h"
+
+#include "nfc-messages.h"
 
 // WINDOWS: #define IOCTL_CCID_ESCAPE_SCARD_CTL_CODE SCARD_CTL_CODE(3500)
 #define IOCTL_CCID_ESCAPE_SCARD_CTL_CODE (((0x31) << 16) | ((3500) << 2))
@@ -51,134 +55,201 @@
 #define ACR122_COMMAND_LEN 266
 #define ACR122_RESPONSE_LEN 268
 
+const char *supported_devices[] = {
+  "ACS ACR122U PICC Interface",
+  "ACS ACR 38U-CCID",
+  NULL
+};
+
 typedef struct {
-  SCARDCONTEXT hCtx;
   SCARDHANDLE hCard;
   SCARD_IO_REQUEST ioCard;
-} dev_spec_acr122;
+} acr122_spec_t;
 
-dev_info* acr122_connect(const nfc_device_desc_t* pndd)
+static SCARDCONTEXT _SCardContext;
+static int _iSCardContextRefCount = 0;
+
+SCARDCONTEXT*
+acr122_get_scardcontext(void)
 {
-  char* pacReaders[MAX_DEVICES];
-  char acList[256+64*MAX_DEVICES];
-  size_t szListLen = sizeof(acList);
-  size_t szPos;
-  uint32_t uiReaderCount;
-  uint32_t uiReader;
-  uint32_t uiDevIndex;
-  dev_info* pdi;
-  dev_spec_acr122* pdsa;
-  dev_spec_acr122 dsa;
-  char* pcFirmware;
+  if ( _iSCardContextRefCount == 0 )
+  {
+    if (SCardEstablishContext(SCARD_SCOPE_USER,NULL,NULL,&_SCardContext) != SCARD_S_SUCCESS) return NULL;
+  }
+  _iSCardContextRefCount++;
+
+  return &_SCardContext;
+}
+
+void
+acr122_free_scardcontext(void)
+{
+  if (_iSCardContextRefCount)
+  {
+    _iSCardContextRefCount--;
+    if (!_iSCardContextRefCount)
+    {
+      SCardReleaseContext(_SCardContext);
+    }
+  }
+}
+
+
+nfc_device_desc_t *
+acr122_pick_device (void)
+{
+  nfc_device_desc_t *pndd;
+
+  if ((pndd = malloc (sizeof (*pndd)))) {
+    size_t szN;
+
+    if (!acr122_list_devices (pndd, 1, &szN)) {
+      ERR("%s", "acr122_list_devices failed");
+      return NULL;
+    }
+
+    if (szN == 0) {
+      ERR("%s", "No device found");
+      return NULL;
+    }
+  }
+
+  return pndd;
+}
+
+/**
+ * @fn bool acr122_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *pszDeviceFound)
+ * @brief List connected devices
+ *
+ * Probe PCSC to find NFC capable hardware.
+ *
+ * @param pnddDevices Array of nfc_device_desc_t previously allocated by the caller.
+ * @param szDevices size of the pnddDevices array.
+ * @param pszDeviceFound number of devices found.
+ * @return true if succeeded, false otherwise.
+ */
+bool
+acr122_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *pszDeviceFound)
+{
+  size_t szPos = 0;
+  char acDeviceNames[256+64*DRIVERS_MAX_DEVICES];
+  size_t szDeviceNamesLen = sizeof(acDeviceNames);
+  acr122_spec_t as;
+  uint32_t uiBusIndex = 0;
+  char *pcFirmware;
+  SCARDCONTEXT *pscc;
 
   // Clear the reader list
-  memset(acList,0x00,szListLen);
+  memset(acDeviceNames, '\0', szDeviceNamesLen);
+
+  *pszDeviceFound = 0;
 
   // Test if context succeeded
-  if (SCardEstablishContext(SCARD_SCOPE_USER,NULL,NULL,&(dsa.hCtx)) != SCARD_S_SUCCESS) return INVALID_DEVICE_INFO;
+  if (!(pscc = acr122_get_scardcontext ())) return false;
 
   // Retrieve the string array of all available pcsc readers
-  if (SCardListReaders(dsa.hCtx,NULL,acList,(void*)&szListLen) != SCARD_S_SUCCESS) return INVALID_DEVICE_INFO;
+  if (SCardListReaders(*pscc,NULL,acDeviceNames,(void*)&szDeviceNamesLen) != SCARD_S_SUCCESS) return false;
 
-  DBG("PCSC reports following device(s):");
-  DBG("- %s",acList);
+  DBG("%s", "PCSC reports following device(s):");
 
-  pacReaders[0] = acList;
-  uiReaderCount = 1;
-  for (szPos=0; szPos<szListLen; szPos++)
-  {
-    // Make sure don't break out of our reader array
-    if (uiReaderCount == MAX_DEVICES) break;
+  while ((acDeviceNames[szPos] != '\0') && ((*pszDeviceFound) < szDevices)) {
+    uiBusIndex++;
 
-    // Test if there is a next reader available
-    if (acList[szPos] == 0x00)
-    {
-      // Test if we are at the end of the list
-      if (acList[szPos+1] == 0x00)
-      {
-        break;
-      }
-      // Store the position of the next reader and search for more readers
-      pacReaders[uiReaderCount] = acList+szPos+1;
-      uiReaderCount++;
+    DBG("- %s (pos=%d)", acDeviceNames + szPos, szPos);
 
-      DBG("- %s",acList+szPos+1);
+    bool bSupported = false;
+    for (int i = 0; supported_devices[i]; i++) {
+      int l = strlen(supported_devices[i]);
+      bSupported = 0 == strncmp(supported_devices[i], acDeviceNames + szPos, l);
     }
-  }
 
-  // Initialize the device index we are seaching for
-  if( pndd == NULL ) {
-    uiDevIndex = 0;
-  } else {
-    uiDevIndex = pndd->uiIndex;
-  }
-
-  // Iterate through all readers and try to find the ACR122 on requested index
-  for (uiReader=0; uiReader<uiReaderCount; uiReader++)
-  {
-    // Test if we were able to connect to the "emulator" card
-    if (SCardConnect(dsa.hCtx,pacReaders[uiReader],SCARD_SHARE_EXCLUSIVE,SCARD_PROTOCOL_T0 | SCARD_PROTOCOL_T1,&(dsa.hCard),(void*)&(dsa.ioCard.dwProtocol)) != SCARD_S_SUCCESS)
+    if (bSupported)
     {
-      // Connect to ACR122 firmware version >2.0
-      if (SCardConnect(dsa.hCtx,pacReaders[uiReader],SCARD_SHARE_DIRECT,0,&(dsa.hCard),(void*)&(dsa.ioCard.dwProtocol)) != SCARD_S_SUCCESS)
-      {
-        // We can not connect to this device, we will just ignore it
-        continue;
-      }
+      // Supported ACR122 device found
+      strncpy(pnddDevices[*pszDeviceFound].acDevice, acDeviceNames + szPos, BUFSIZ - 1);
+      pnddDevices[*pszDeviceFound].acDevice[BUFSIZ - 1] = '\0';
+      pnddDevices[*pszDeviceFound].pcDriver = ACR122_DRIVER_NAME;
+      pnddDevices[*pszDeviceFound].uiBusIndex = uiBusIndex;
+      (*pszDeviceFound)++;
     }
-    // Configure I/O settings for card communication
-    dsa.ioCard.cbPciLength = sizeof(SCARD_IO_REQUEST);
-
-    // Retrieve the current firmware version
-    pcFirmware = acr122_firmware((dev_info*)&dsa);
-    if (strstr(pcFirmware,FIRMWARE_TEXT) != NULL)
+    else
     {
-      // We found a occurence, test if it has the right index
-      if (uiDevIndex != 0)
-      {
-        // Let's look for the next reader
-        uiDevIndex--;
-        continue;
-      }
-
-      // Allocate memory and store the device specification
-      pdsa = malloc(sizeof(dev_spec_acr122));
-      *pdsa = dsa;
-
-      // Done, we found the reader we are looking for
-      pdi = malloc(sizeof(dev_info));
-      strcpy(pdi->acName,pcFirmware);
-      pdi->ct = CT_PN532;
-      pdi->ds = (dev_spec)pdsa;
-      pdi->bActive = true;
-      pdi->bCrc = true;
-      pdi->bPar = true;
-      pdi->ui8TxBits = 0;
-      return pdi;
+      DBG("%s", "Firmware version mismatch");
     }
-  }
+    SCardDisconnect(as.hCard,SCARD_LEAVE_CARD);
 
-  // Too bad, the reader could not be located;
-  return INVALID_DEVICE_INFO;
+    // Find next device name position
+    while (acDeviceNames[szPos++] != '\0');
+  }
+  acr122_free_scardcontext ();
+
+  return true;
 }
-
-void acr122_disconnect(dev_info* pdi)
+nfc_device_t* acr122_connect(const nfc_device_desc_t* pndd)
 {
-  dev_spec_acr122* pdsa = (dev_spec_acr122*)pdi->ds;
-  SCardDisconnect(pdsa->hCard,SCARD_LEAVE_CARD);
-  SCardReleaseContext(pdsa->hCtx);
-  free(pdsa);
-  free(pdi);
+  nfc_device_t* pnd = NULL;
+  acr122_spec_t as;
+  acr122_spec_t* pas;
+  char* pcFirmware;
+
+  SCARDCONTEXT *pscc;
+
+  // Test if context succeeded
+  if (!(pscc = acr122_get_scardcontext ())) return NULL;
+  // Test if we were able to connect to the "emulator" card
+  if (SCardConnect(*pscc,pndd->acDevice,SCARD_SHARE_EXCLUSIVE,SCARD_PROTOCOL_T0 | SCARD_PROTOCOL_T1,&(as.hCard),(void*)&(as.ioCard.dwProtocol)) != SCARD_S_SUCCESS)
+  {
+    // Connect to ACR122 firmware version >2.0
+    if (SCardConnect(*pscc,pndd->acDevice,SCARD_SHARE_DIRECT,0,&(as.hCard),(void*)&(as.ioCard.dwProtocol)) != SCARD_S_SUCCESS)
+    {
+      // We can not connect to this device.
+      return NULL;
+    }
+  }
+  // Configure I/O settings for card communication
+  as.ioCard.cbPciLength = sizeof(SCARD_IO_REQUEST);
+
+  // Retrieve the current firmware version
+  pcFirmware = acr122_firmware((nfc_device_t*)&as);
+  if (strstr(pcFirmware,FIRMWARE_TEXT) != NULL)
+  {
+    // Allocate memory and store the device specification
+    pas = malloc(sizeof(acr122_spec_t));
+    *pas = as;
+
+    // Done, we found the reader we are looking for
+    pnd = malloc(sizeof(nfc_device_t));
+    strncpy(pnd->acName,pcFirmware, DEVICE_NAME_LENGTH - 1);
+    pnd->acName[DEVICE_NAME_LENGTH - 1] = '\0';
+    pnd->nc = NC_PN532;
+    pnd->nds = (nfc_device_spec_t)pas;
+    pnd->bActive = true;
+    pnd->bCrc = true;
+    pnd->bPar = true;
+    pnd->ui8TxBits = 0;
+    return pnd;
+  }
+
+  return NULL;
 }
 
-bool acr122_transceive(const dev_spec ds, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen)
+void acr122_disconnect(nfc_device_t* pnd)
+{
+  acr122_spec_t* pas = (acr122_spec_t*)pnd->nds;
+  SCardDisconnect(pas->hCard,SCARD_LEAVE_CARD);
+  acr122_free_scardcontext ();
+  free(pas);
+  free(pnd);
+}
+
+bool acr122_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen)
 {
   byte_t abtRxCmd[5] = { 0xFF,0xC0,0x00,0x00 };
   size_t szRxCmdLen = sizeof(abtRxCmd);
   byte_t abtRxBuf[ACR122_RESPONSE_LEN];
   size_t szRxBufLen;
   byte_t abtTxBuf[ACR122_WRAP_LEN+ACR122_COMMAND_LEN] = { 0xFF, 0x00, 0x00, 0x00 };
-  dev_spec_acr122* pdsa = (dev_spec_acr122*)ds;
+  acr122_spec_t* pas = (acr122_spec_t*)nds;
 
   // Make sure the command does not overflow the send buffer
   if (szTxLen > ACR122_COMMAND_LEN) return false;
@@ -194,14 +265,14 @@ bool acr122_transceive(const dev_spec ds, const byte_t* pbtTx, const size_t szTx
   print_hex(abtTxBuf,szTxLen+5);
 #endif
 
-  if (pdsa->ioCard.dwProtocol == SCARD_PROTOCOL_UNDEFINED)
+  if (pas->ioCard.dwProtocol == SCARD_PROTOCOL_UNDEFINED)
   {
-    if (SCardControl(pdsa->hCard,IOCTL_CCID_ESCAPE_SCARD_CTL_CODE,abtTxBuf,szTxLen+5,abtRxBuf,szRxBufLen,(void*)&szRxBufLen) != SCARD_S_SUCCESS) return false;
+    if (SCardControl(pas->hCard,IOCTL_CCID_ESCAPE_SCARD_CTL_CODE,abtTxBuf,szTxLen+5,abtRxBuf,szRxBufLen,(void*)&szRxBufLen) != SCARD_S_SUCCESS) return false;
   } else {
-    if (SCardTransmit(pdsa->hCard,&(pdsa->ioCard),abtTxBuf,szTxLen+5,NULL,abtRxBuf,(void*)&szRxBufLen) != SCARD_S_SUCCESS) return false;
+    if (SCardTransmit(pas->hCard,&(pas->ioCard),abtTxBuf,szTxLen+5,NULL,abtRxBuf,(void*)&szRxBufLen) != SCARD_S_SUCCESS) return false;
   }
 
-  if (pdsa->ioCard.dwProtocol == SCARD_PROTOCOL_T0)
+  if (pas->ioCard.dwProtocol == SCARD_PROTOCOL_T0)
   {
     // Make sure we received the byte-count we expected
     if (szRxBufLen != 2) return false;
@@ -212,7 +283,7 @@ bool acr122_transceive(const dev_spec ds, const byte_t* pbtTx, const size_t szTx
     // Retrieve the response bytes
     abtRxCmd[4] = abtRxBuf[1];
     szRxBufLen = sizeof(abtRxBuf);
-    if (SCardTransmit(pdsa->hCard,&(pdsa->ioCard),abtRxCmd,szRxCmdLen,NULL,abtRxBuf,(void*)&szRxBufLen) != SCARD_S_SUCCESS) return false;
+    if (SCardTransmit(pas->hCard,&(pas->ioCard),abtRxCmd,szRxCmdLen,NULL,abtRxBuf,(void*)&szRxBufLen) != SCARD_S_SUCCESS) return false;
   }
 
 #ifdef DEBUG
@@ -233,20 +304,20 @@ bool acr122_transceive(const dev_spec ds, const byte_t* pbtTx, const size_t szTx
   return true;
 }
 
-char* acr122_firmware(const dev_spec ds)
+char* acr122_firmware(const nfc_device_spec_t nds)
 {
   byte_t abtGetFw[5] = { 0xFF,0x00,0x48,0x00,0x00 };
   uint32_t uiResult;
 
-  dev_spec_acr122* pdsa = (dev_spec_acr122*)ds;
+  acr122_spec_t* pas = (acr122_spec_t*)nds;
   static char abtFw[11];
   size_t szFwLen = sizeof(abtFw);
   memset(abtFw,0x00,szFwLen);
-  if (pdsa->ioCard.dwProtocol == SCARD_PROTOCOL_UNDEFINED)
+  if (pas->ioCard.dwProtocol == SCARD_PROTOCOL_UNDEFINED)
   {
-    uiResult = SCardControl(pdsa->hCard,IOCTL_CCID_ESCAPE_SCARD_CTL_CODE,abtGetFw,sizeof(abtGetFw),abtFw,szFwLen,(void*)&szFwLen);
+    uiResult = SCardControl(pas->hCard,IOCTL_CCID_ESCAPE_SCARD_CTL_CODE,abtGetFw,sizeof(abtGetFw),abtFw,szFwLen,(void*)&szFwLen);
   } else {
-    uiResult = SCardTransmit(pdsa->hCard,&(pdsa->ioCard),abtGetFw,sizeof(abtGetFw),NULL,(byte_t*)abtFw,(void*)&szFwLen);
+    uiResult = SCardTransmit(pas->hCard,&(pas->ioCard),abtGetFw,sizeof(abtGetFw),NULL,(byte_t*)abtFw,(void*)&szFwLen);
   }
 
   #ifdef DEBUG
@@ -259,17 +330,17 @@ char* acr122_firmware(const dev_spec ds)
   return abtFw;
 }
 
-bool acr122_led_red(const dev_spec ds, bool bOn)
+bool acr122_led_red(const nfc_device_spec_t nds, bool bOn)
 {
   byte_t abtLed[9] = { 0xFF,0x00,0x40,0x05,0x04,0x00,0x00,0x00,0x00 };
-  dev_spec_acr122* pdsa = (dev_spec_acr122*)ds;
+  acr122_spec_t* pas = (acr122_spec_t*)nds;
   byte_t abtBuf[2];
   size_t szBufLen = sizeof(abtBuf);
-  if (pdsa->ioCard.dwProtocol == SCARD_PROTOCOL_UNDEFINED)
+  if (pas->ioCard.dwProtocol == SCARD_PROTOCOL_UNDEFINED)
   {
-    return (SCardControl(pdsa->hCard,IOCTL_CCID_ESCAPE_SCARD_CTL_CODE,abtLed,sizeof(abtLed),abtBuf,szBufLen,(void*)&szBufLen) == SCARD_S_SUCCESS);
+    return (SCardControl(pas->hCard,IOCTL_CCID_ESCAPE_SCARD_CTL_CODE,abtLed,sizeof(abtLed),abtBuf,szBufLen,(void*)&szBufLen) == SCARD_S_SUCCESS);
   } else {
-    return (SCardTransmit(pdsa->hCard,&(pdsa->ioCard),abtLed,sizeof(abtLed),NULL,(byte_t*)abtBuf,(void*)&szBufLen) == SCARD_S_SUCCESS);
+    return (SCardTransmit(pas->hCard,&(pas->ioCard),abtLed,sizeof(abtLed),NULL,(byte_t*)abtBuf,(void*)&szBufLen) == SCARD_S_SUCCESS);
   }
 }
 

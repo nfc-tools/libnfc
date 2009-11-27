@@ -29,8 +29,10 @@
 
 #include <nfc.h>
 
-#include "messages.h"
+#include "nfc-messages.h"
 #include "bitutils.h"
+
+#define MAX_FRAME_LEN 264
 
 static byte_t abtReaderRx[MAX_FRAME_LEN];
 static byte_t abtReaderRxPar[MAX_FRAME_LEN];
@@ -38,8 +40,8 @@ static size_t szReaderRxBits;
 static byte_t abtTagRx[MAX_FRAME_LEN];
 static byte_t abtTagRxPar[MAX_FRAME_LEN];
 static size_t szTagRxBits;
-static dev_info* pdiReader;
-static dev_info* pdiTag;
+static nfc_device_t* pndReader;
+static nfc_device_t* pndTag;
 static bool quitting=false;
 
 void intr_hdlr(void)
@@ -84,8 +86,8 @@ int main(int argc,char* argv[])
 #endif
 
   // Try to open the NFC emulator device
-  pdiTag = nfc_connect(NULL);
-  if (pdiTag == INVALID_DEVICE_INFO)
+  pndTag = nfc_connect(NULL);
+  if (pndTag == NULL)
   {
     printf("Error connecting NFC emulator device\n");
     return 1;
@@ -96,41 +98,41 @@ int main(int argc,char* argv[])
   printf("[+] Try to break out the auto-emulation, this requires a second reader!\n");
   printf("[+] To do this, please send any command after the anti-collision\n");
   printf("[+] For example, send a RATS command or use the \"nfc-anticol\" tool\n");
-  if (!nfc_target_init(pdiTag,abtReaderRx,&szReaderRxBits))
+  if (!nfc_target_init(pndTag,abtReaderRx,&szReaderRxBits))
   {
     printf("[+] Initialization of NFC emulator failed\n");
-    nfc_disconnect(pdiTag);
+    nfc_disconnect(pndTag);
     return 1;
   }
   printf("[+] Configuring emulator settings\n");
-  nfc_configure(pdiTag,DCO_HANDLE_CRC,false);
-  nfc_configure(pdiTag,DCO_HANDLE_PARITY,false);
-  nfc_configure(pdiTag,DCO_ACCEPT_INVALID_FRAMES,true);
+  nfc_configure(pndTag,NDO_HANDLE_CRC,false);
+  nfc_configure(pndTag,NDO_HANDLE_PARITY,false);
+  nfc_configure(pndTag,NDO_ACCEPT_INVALID_FRAMES,true);
   printf("[+] Thank you, the emulated tag is initialized\n");
 
   // Try to open the NFC reader
-  pdiReader = INVALID_DEVICE_INFO;
-  while (pdiReader == INVALID_DEVICE_INFO) pdiReader = nfc_connect(NULL);
+  pndReader = NULL;
+  while (pndReader == NULL) pndReader = nfc_connect(NULL);
   printf("[+] Configuring NFC reader settings\n");
-  nfc_initiator_init(pdiReader);
-  nfc_configure(pdiReader,DCO_HANDLE_CRC,false);
-  nfc_configure(pdiReader,DCO_HANDLE_PARITY,false);
-  nfc_configure(pdiReader,DCO_ACCEPT_INVALID_FRAMES,true);
+  nfc_initiator_init(pndReader);
+  nfc_configure(pndReader,NDO_HANDLE_CRC,false);
+  nfc_configure(pndReader,NDO_HANDLE_PARITY,false);
+  nfc_configure(pndReader,NDO_ACCEPT_INVALID_FRAMES,true);
   printf("[+] Done, relaying frames now!\n\n");
 
   while(!quitting)
   {
     // Test if we received a frame from the reader
-    if (nfc_target_receive_bits(pdiTag,abtReaderRx,&szReaderRxBits,abtReaderRxPar))
+    if (nfc_target_receive_bits(pndTag,abtReaderRx,&szReaderRxBits,abtReaderRxPar))
     {
       // Drop down the field before sending a REQA command and start a new session
       if (szReaderRxBits == 7 && abtReaderRx[0] == 0x26)
       {
         // Drop down field for a very short time (original tag will reboot)
-        nfc_configure(pdiReader,DCO_ACTIVATE_FIELD,false);
+        nfc_configure(pndReader,NDO_ACTIVATE_FIELD,false);
         if(!quiet_output)
           printf("\n");
-        nfc_configure(pdiReader,DCO_ACTIVATE_FIELD,true);
+        nfc_configure(pndReader,NDO_ACTIVATE_FIELD,true);
       }
 
       // Print the reader frame to the screen
@@ -140,10 +142,10 @@ int main(int argc,char* argv[])
         print_hex_par(abtReaderRx,szReaderRxBits,abtReaderRxPar);
       }
       // Forward the frame to the original tag
-      if (nfc_initiator_transceive_bits(pdiReader,abtReaderRx,szReaderRxBits,abtReaderRxPar,abtTagRx,&szTagRxBits,abtTagRxPar))
+      if (nfc_initiator_transceive_bits(pndReader,abtReaderRx,szReaderRxBits,abtReaderRxPar,abtTagRx,&szTagRxBits,abtTagRxPar))
       {
         // Redirect the answer back to the reader
-        nfc_target_send_bits(pdiTag,abtTagRx,szTagRxBits,abtTagRxPar);
+        nfc_target_send_bits(pndTag,abtTagRx,szTagRxBits,abtTagRxPar);
 
         // Print the tag frame to the screen
         if(!quiet_output)
@@ -155,6 +157,6 @@ int main(int argc,char* argv[])
     }
   }
 
-  nfc_disconnect(pdiTag);
-  nfc_disconnect(pdiReader);
+  nfc_disconnect(pndTag);
+  nfc_disconnect(pndReader);
 }

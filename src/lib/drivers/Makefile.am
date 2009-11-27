@@ -15,9 +15,9 @@ if PCSC_LITE_ENABLED
 endif
 
 if LIBUSB_ENABLED
-  noinst_HEADERS += pn531.h pn533.h
+  noinst_HEADERS += pn531_usb.h pn533_usb.h
   libnfcdrivers_la_CFLAGS += @LIBUSB_CFLAGS@ -DHAVE_LIBUSB
-  libnfcdrivers_la_SOURCES += pn531.c pn533.c
+  libnfcdrivers_la_SOURCES += pn531_usb.c pn533_usb.c
   libnfcdrivers_la_LIBADD  += @LIBUSB_LIBS@
 endif
 

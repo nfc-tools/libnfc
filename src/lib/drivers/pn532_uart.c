@@ -20,11 +20,18 @@
  * @file pn532_uart.c
  * @brief
  */
+#define _XOPEN_SOURCE 500
+#include <stdio.h>
 
 #include "pn532_uart.h"
 
+#include "nfc-messages.h"
+
+#include "../drivers.h"
+#include "../bitutils.h"
+
+// Bus
 #include "uart.h"
-#include "messages.h"
 
 #ifdef _WIN32
   #define SERIAL_STRING "COM"
@@ -47,21 +54,21 @@
 
 #define SERIAL_DEFAULT_PORT_SPEED 115200
 
-dev_info* pn532_uart_connect(const nfc_device_desc_t* pndd)
+nfc_device_t* pn532_uart_connect(const nfc_device_desc_t* pndd)
 {
   uint32_t uiDevNr;
   serial_port sp;
   char acConnect[BUFFER_LENGTH];
-  dev_info* pdi = INVALID_DEVICE_INFO;
+  nfc_device_t* pnd = NULL;
 
   if( pndd == NULL ) {
 #ifdef DISABLE_SERIAL_AUTOPROBE
     INFO("Sorry, serial auto-probing have been disabled at compile time.");
-    return INVALID_DEVICE_INFO;
+    return NULL;
 #else
     DBG("Trying to find ARYGON device on serial port: %s# at %d bauds.",SERIAL_STRING, SERIAL_DEFAULT_PORT_SPEED);
     // I have no idea how MAC OS X deals with multiple devices, so a quick workaround
-    for (uiDevNr=0; uiDevNr<MAX_DEVICES; uiDevNr++)
+    for (uiDevNr=0; uiDevNr<DRIVERS_MAX_DEVICES; uiDevNr++)
     {
 #ifdef __APPLE__
       strcpy(acConnect,SERIAL_STRING);
@@ -82,14 +89,14 @@ dev_info* pn532_uart_connect(const nfc_device_desc_t* pndd)
     }
 #endif
     // Test if we have found a device
-    if (uiDevNr == MAX_DEVICES) return INVALID_DEVICE_INFO;
+    if (uiDevNr == DRIVERS_MAX_DEVICES) return NULL;
   } else {
     DBG("Connecting to: %s at %d bauds.",pndd->pcPort, pndd->uiSpeed);
     strcpy(acConnect,pndd->pcPort);
     sp = uart_open(acConnect);
     if (sp == INVALID_SERIAL_PORT) ERR("Invalid serial port: %s",acConnect);
     if (sp == CLAIMED_SERIAL_PORT) ERR("Serial port already claimed: %s",acConnect);
-    if ((sp == CLAIMED_SERIAL_PORT) || (sp == INVALID_SERIAL_PORT)) return INVALID_DEVICE_INFO;
+    if ((sp == CLAIMED_SERIAL_PORT) || (sp == INVALID_SERIAL_PORT)) return NULL;
 
     uart_set_speed(sp, pndd->uiSpeed);
   }
@@ -103,7 +110,7 @@ dev_info* pn532_uart_connect(const nfc_device_desc_t* pndd)
   delay_ms(10);
 
   if (!uart_receive(sp,abtRxBuf,&szRxBufLen)) {
-    ERR("Unable to receive data. (RX)");
+    ERR("%s", "Unable to receive data. (RX)");
     return NULL;
   }
 #ifdef DEBUG
@@ -114,24 +121,24 @@ dev_info* pn532_uart_connect(const nfc_device_desc_t* pndd)
   DBG("Successfully connected to: %s",acConnect);
 
   // We have a connection
-  pdi = malloc(sizeof(dev_info));
-  strcpy(pdi->acName,"PN532_UART");
-  pdi->ct = CT_PN532;
-  pdi->ds = (dev_spec)sp;
-  pdi->bActive = true;
-  pdi->bCrc = true;
-  pdi->bPar = true;
-  pdi->ui8TxBits = 0;
-  return pdi;
+  pnd = malloc(sizeof(nfc_device_t));
+  strcpy(pnd->acName,"PN532_UART");
+  pnd->nc = NC_PN532;
+  pnd->nds = (nfc_device_spec_t)sp;
+  pnd->bActive = true;
+  pnd->bCrc = true;
+  pnd->bPar = true;
+  pnd->ui8TxBits = 0;
+  return pnd;
 }
 
-void pn532_uart_disconnect(dev_info* pdi)
+void pn532_uart_disconnect(nfc_device_t* pnd)
 {
-  uart_close((serial_port)pdi->ds);
-  free(pdi);
+  uart_close((serial_port)pnd->nds);
+  free(pnd);
 }
 
-bool pn532_uart_transceive(const dev_spec ds, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen)
+bool pn532_uart_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen)
 {
   byte_t abtTxBuf[BUFFER_LENGTH] = { 0x00, 0x00, 0xff }; // Every packet must start with "00 00 ff"
   byte_t abtRxBuf[BUFFER_LENGTH];
@@ -159,8 +166,8 @@ bool pn532_uart_transceive(const dev_spec ds, const byte_t* pbtTx, const size_t 
   printf(" TX: ");
   print_hex(abtTxBuf,szTxLen+7);
 #endif
-  if (!uart_send((serial_port)ds,abtTxBuf,szTxLen+7)) {
-    ERR("Unable to transmit data. (TX)");
+  if (!uart_send((serial_port)nds,abtTxBuf,szTxLen+7)) {
+    ERR("%s", "Unable to transmit data. (TX)");
     return false;
   }
 
@@ -174,8 +181,8 @@ bool pn532_uart_transceive(const dev_spec ds, const byte_t* pbtTx, const size_t 
    */
   delay_ms(30);
 
-  if (!uart_receive((serial_port)ds,abtRxBuf,&szRxBufLen)) {
-    ERR("Unable to receive data. (RX)");
+  if (!uart_receive((serial_port)nds,abtRxBuf,&szRxBufLen)) {
+    ERR("%s", "Unable to receive data. (RX)");
     return false;
   }
 

@@ -25,17 +25,19 @@
 #include <string.h>
 #include <nfc.h>
 
+#define MAX_FRAME_LEN 264
+
 int main(int argc, const char *argv[])
 {
-  dev_info *pdi;
-  tag_info ti;
+  nfc_device_t *pnd;
+  nfc_target_info_t ti;
   byte_t abtRecv[MAX_FRAME_LEN];
   size_t szRecvBits;
   byte_t send[] = "Hello World!";
 
-  pdi = nfc_connect(NULL);
-  if (!pdi || !nfc_initiator_init(pdi)
-      || !nfc_initiator_select_dep_target(pdi, IM_PASSIVE_DEP, NULL, 0,
+  pnd = nfc_connect(NULL);
+  if (!pnd || !nfc_initiator_init(pnd)
+      || !nfc_initiator_select_dep_target(pnd, NM_PASSIVE_DEP, NULL, 0,
 					  NULL, 0, NULL, 0, &ti)) {
     printf
 	("unable to connect, initialize, or select the target\n");
@@ -43,7 +45,7 @@ int main(int argc, const char *argv[])
   }
 
   printf("Sending : %s\n", send);
-  if (!nfc_initiator_transceive_dep_bytes(pdi,
+  if (!nfc_initiator_transceive_dep_bytes(pnd,
 					  send,
 					  strlen((char*)send), abtRecv,
 					  &szRecvBits)) {
@@ -54,7 +56,7 @@ int main(int argc, const char *argv[])
   abtRecv[szRecvBits] = 0;
   printf("Received: %s\n", abtRecv);
 
-  nfc_initiator_deselect_tag(pdi);
-  nfc_disconnect(pdi);
+  nfc_initiator_deselect_tag(pnd);
+  nfc_disconnect(pnd);
   return 0;
 }
