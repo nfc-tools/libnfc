@@ -55,6 +55,13 @@ static byte_t keys[] = {
 };
 static size_t num_keys = sizeof(keys) / 6;
 
+void print_success_or_failure(bool bFailure, uint32_t* uiBlockCounter)
+{
+  printf("%c",(bFailure)?'x':'.');
+  if (uiBlockCounter)
+    *uiBlockCounter += (bFailure)?0:4;
+}
+
 bool is_first_block(uint32_t uiBlock)
 {
   // Test if we are in the small or big sectors
@@ -145,6 +152,7 @@ bool read_card()
 {
   int32_t iBlock;
   bool bFailure = false;
+  uint32_t uiReadBlocks = 0;
 
   printf("Reading out %d blocks |",uiBlocks+1);
 
@@ -154,10 +162,13 @@ bool read_card()
     // Authenticate everytime we reach a trailer block
     if (is_trailer_block(iBlock))
     {
+      // Skip this the first time, bFailure it means nothing (yet)
+      if (iBlock != uiBlocks)
+        print_success_or_failure(bFailure, &uiReadBlocks);
+
       // Show if the readout went well
       if (bFailure)
       {
-        printf("x");
         // When a failure occured we need to redo the anti-collision
         if (!nfc_initiator_select_tag(pnd,NM_ISO14443A_106,NULL,0,&nti))
         {
@@ -165,13 +176,8 @@ bool read_card()
           return 1;
         }
         bFailure = false;
-      } else {
-        // Skip this the first time, bFailure it means nothing (yet)
-        if (iBlock != uiBlocks)
-        {
-          printf(".");
-        }
       }
+
       fflush(stdout);
       
       // Try to authenticate for the current sector
@@ -203,7 +209,9 @@ bool read_card()
       }
     }
   }
-  printf("%c|\n",(bFailure)?'x':'.');
+  print_success_or_failure(bFailure, &uiReadBlocks);
+  printf("|\n");
+  printf("Done, %d of %d blocks read.\n", uiReadBlocks, uiBlocks+1);
   fflush(stdout);
 
   return true;
@@ -213,6 +221,7 @@ bool write_card()
 {
   uint32_t uiBlock;
   bool bFailure = false;
+  uint32_t uiWriteBlocks = 0;
 
   printf("Writing %d blocks |",uiBlocks+1);
 
@@ -222,10 +231,13 @@ bool write_card()
     // Authenticate everytime we reach the first sector of a new block
     if (is_first_block(uiBlock))
     {
+      // Skip this the first time, bFailure it means nothing (yet)
+      if (uiBlock != uiBlocks)
+        print_success_or_failure(bFailure, &uiWriteBlocks);
+
       // Show if the readout went well
       if (bFailure)
       {
-        printf("x");
         // When a failure occured we need to redo the anti-collision
         if (!nfc_initiator_select_tag(pnd,NM_ISO14443A_106,NULL,0,&nti))
         {
@@ -233,13 +245,8 @@ bool write_card()
           return false;
         }
         bFailure = false;
-      } else {
-        // Skip this the first time, bFailure it means nothing (yet)
-        if (uiBlock != 0)
-        {
-          printf(".");
-        }
       }
+
       fflush(stdout);
 
       // Try to authenticate for the current sector
@@ -276,7 +283,9 @@ bool write_card()
       }
     }
   }
-  printf("%c|\n",(bFailure)?'x':'.');
+  print_success_or_failure(bFailure, &uiWriteBlocks);
+  printf("|\n");
+  printf("Done, %d of %d blocks written.\n", uiWriteBlocks, uiBlocks+1);
   fflush(stdout);
 
   return true;
@@ -466,22 +475,19 @@ int main(int argc, const char* argv[])
       {
         if (read_card())
         {
-          printf("Writing data to file: %s\n",argv[3]);
+          printf("Writing data to file: %s ... ",argv[3]);
           fflush(stdout);
           pfDump = fopen(argv[3],"wb");
           if (fwrite(&mtDump,1,sizeof(mtDump),pfDump) != sizeof(mtDump))
           {
-            printf("Could not write to file: %s\n",argv[3]);
+            printf("\nCould not write to file: %s\n",argv[3]);
             return 1;
           }
+          printf("Done.\n");
           fclose(pfDump);
-          printf("Done, all bytes dumped to file!\n");
         }
       } else {
-        if (write_card())
-        {
-          printf("Done, all data is written to the card!\n");
-        }
+        write_card();
       }
     
       nfc_disconnect(pnd);
