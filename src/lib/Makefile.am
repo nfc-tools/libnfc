@@ -25,4 +25,3 @@ if LIBUSB_ENABLED
   libnfc_la_LIBADD  += @LIBUSB_LIBS@
 endif
 
-DISTCLEANFILES = Makefile.in

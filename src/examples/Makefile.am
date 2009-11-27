@@ -34,4 +34,3 @@ nfcip_initiator_LDADD = $(top_builddir)/src/lib/libnfc.la
 
 dist_man_MANS = nfc-anticol.1 nfc-emulate.1 nfc-list.1 nfc-mfclassic.1 nfc-mfultralight.1 nfc-relay.1
 
-DISTCLEANFILES = Makefile.in

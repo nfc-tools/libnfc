@@ -1,5 +1,5 @@
 # General init
-AC_INIT(libnfc, 1.2.1, info@libnfc.org)
+AC_INIT(libnfc, 1.3.0, info@libnfc.org)
 
 AC_CONFIG_HEADER(config.h)
 
