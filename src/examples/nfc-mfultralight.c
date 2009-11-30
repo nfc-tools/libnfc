@@ -68,7 +68,7 @@ bool read_card()
       }
 
       // Try to read out the data block
-      if (nfc_initiator_mifare_cmd(pdi,MC_READ,page,&mp))
+      if (nfc_initiator_mifare_cmd(pnd,MC_READ,page,&mp))
       {
         memcpy(mtDump.amb[page / 4].mbd.abtData, mp.mpd.abtData, 16);
       } else {
@@ -76,7 +76,7 @@ bool read_card()
         break;
       }
   }
-  return bSuccess;
+  //return bSuccess;
   print_success_or_failure(bFailure, &uiReadBlocks);
   printf("|\n");
   printf("Done, %d of %d blocks read.\n", uiReadBlocks, uiBlocks+1);
@@ -90,6 +90,7 @@ bool write_card()
   uint32_t uiBlock = 0;
   int page;
   bool bFailure = false;
+  uint32_t uiWriteBlocks = 0;
 
   for (page = 0x4; page <= 0xF; page++) {
       // Show if the readout went well
