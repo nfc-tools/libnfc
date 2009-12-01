@@ -94,12 +94,17 @@ nfc_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *pszD
   {
     if (drivers_callbacks_list[uiDriver].list_devices != NULL)
     {
+      DBG("Checking driver: %s",drivers_callbacks_list[uiDriver]);
       size_t szN = 0;
       if (drivers_callbacks_list[uiDriver].list_devices (pnddDevices + (*pszDeviceFound), szDevices - (*pszDeviceFound), &szN))
       {
         *pszDeviceFound += szN;
       }
     }
+    #ifdef DEBUG
+    else
+      DBG("Not checking driver: %s",drivers_callbacks_list[uiDriver]);
+    #endif
   }
 }
 
@@ -115,6 +120,7 @@ nfc_device_t* nfc_connect(nfc_device_desc_t* pndd)
   {
     if (pndd == NULL) {
       // No device description specified: try to automatically claim a device
+      DBG("%s","Autodetecting available devices...");
       pndd = drivers_callbacks_list[uiDriver].pick_device ();
       pnd = drivers_callbacks_list[uiDriver].connect(pndd);
     } else {

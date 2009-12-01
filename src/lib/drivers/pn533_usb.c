@@ -98,6 +98,7 @@ nfc_device_t* pn533_usb_connect(const nfc_device_desc_t* pndd)
   us.uiEndPointOut = 0;
   us.pudh = NULL;
 
+  DBG("%s", "Looking for PN533 device");
   usb_init();
   if (usb_find_busses() < 0) return NULL;
   if (usb_find_devices() < 0) return NULL;

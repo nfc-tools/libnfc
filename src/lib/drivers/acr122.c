@@ -144,7 +144,11 @@ acr122_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *p
   *pszDeviceFound = 0;
 
   // Test if context succeeded
-  if (!(pscc = acr122_get_scardcontext ())) return false;
+  if (!(pscc = acr122_get_scardcontext ()))
+  {
+    DBG("%s","PCSC-LITE daemon not found");
+    return false;
+  }
 
   // Retrieve the string array of all available pcsc readers
   if (SCardListReaders(*pscc,NULL,acDeviceNames,(void*)&szDeviceNamesLen) != SCARD_S_SUCCESS) return false;
