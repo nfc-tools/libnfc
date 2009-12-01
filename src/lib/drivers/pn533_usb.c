@@ -82,8 +82,11 @@ static void get_end_points(struct usb_device *dev, usb_spec_t* pus)
 
 nfc_device_t* pn533_usb_connect(const nfc_device_desc_t* pndd)
 {
-  int idvendor = 0x04e6;
-  int idproduct = 0x5591;
+  int idvendor = 0x04cc;
+  int idproduct = 0x2533;
+  int idvendor_alt = 0x04e6;
+  int idproduct_alt = 0x5591;
+  
   struct usb_bus *bus;
   struct usb_device *dev;
   nfc_device_t* pnd = NULL;
@@ -110,7 +113,8 @@ nfc_device_t* pn533_usb_connect(const nfc_device_desc_t* pndd)
   {
     for (dev = bus->devices; dev; dev = dev->next)
     {
-      if (idvendor==dev->descriptor.idVendor && idproduct==dev->descriptor.idProduct)
+      if ((idvendor==dev->descriptor.idVendor && idproduct==dev->descriptor.idProduct) ||
+          (idvendor_alt==dev->descriptor.idVendor && idproduct_alt==dev->descriptor.idProduct))
       {
         // Make sure there are 2 endpoints available
         if (dev->config->interface->altsetting->bNumEndpoints < 2) return pnd;
