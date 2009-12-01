@@ -136,7 +136,6 @@ acr122_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *p
   size_t szDeviceNamesLen = sizeof(acDeviceNames);
   acr122_spec_t as;
   uint32_t uiBusIndex = 0;
-  char *pcFirmware;
   SCARDCONTEXT *pscc;
 
   // Clear the reader list

@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
       print_usage(argv);
       return 0;
     } else if (0 == strcmp(argv[arg], "-q")) {
-      INFO("Quiet mode.");
+      INFO("%s", "Quiet mode.");
       quiet_output = true;
     } else if((arg == argc-1) && (strlen(argv[arg]) == 8)) { // See if UID was specified as HEX string
       byte_t abtTmp[3] = { 0x00,0x00,0x00 };
