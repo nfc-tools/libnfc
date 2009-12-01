@@ -119,8 +119,19 @@ nfc_device_t* pn531_usb_connect(const nfc_device_desc_t* pndd)
           (idvendor_alt==dev->descriptor.idVendor && idproduct_alt==dev->descriptor.idProduct))
       {
         // Make sure there are 2 endpoints available
-        if (dev->config->interface->altsetting->bNumEndpoints < 2) return pnd;
-
+        // with libusb-win32 we got some null pointers so be robust before looking at endpoints:
+        if (dev->config == NULL || dev->config->interface == NULL || dev->config->interface->altsetting == NULL)
+        {
+          // Nope, we maybe want the next one, let's try to find another
+          uiDevIndex--;
+          continue;
+        }
+        if (dev->config->interface->altsetting->bNumEndpoints < 2)
+        {
+          // Nope, we maybe want the next one, let's try to find another
+          uiDevIndex--;
+          continue;
+        }
         // Test if we are looking for this device according to the current index
         if (uiDevIndex != 0)
         {
@@ -138,15 +149,26 @@ nfc_device_t* pn531_usb_connect(const nfc_device_desc_t* pndd)
         {
           DBG("%s", "Set config failed");
           usb_close(us.pudh);
-          return NULL;
+          if (pndd == NULL) {
+            // don't return yet as there might be other readers on USB bus
+            continue;
+          } else {
+            // we failed to use the specified device
+            return NULL;
+          }
         }
 
         if(usb_claim_interface(us.pudh,0) < 0)
         {
           DBG("%s", "Can't claim interface");
           usb_close(us.pudh);
-          // don't return yet as there might be other readers on USB bus
-          continue;
+          if (pndd == NULL) {
+            // don't return yet as there might be other readers on USB bus
+            continue;
+          } else {
+            // we failed to use the specified device
+            return NULL;
+          }
         }
         // Allocate memory for the device info and specification, fill it and return the info
         pus = malloc(sizeof(usb_spec_t));
