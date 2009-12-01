@@ -26,7 +26,7 @@
 
 #include "pn53x.h"
 
-#include "bitutils.h"
+#include "../bitutils.h"
 
 // PN53X configuration
 const byte_t pncmd_get_firmware_version       [  2] = { 0xD4,0x02 };

@@ -25,12 +25,12 @@
 
 #include "arygon.h"
 
-#include "nfc-messages.h"
+#include <nfc/nfc-messages.h>
 
 #include "../drivers.h"
 #include "../bitutils.h"
 // Bus
-#include "uart.h"
+#include "../buses/uart.h"
 
 #ifdef _WIN32
   #define SERIAL_STRING "COM"

@@ -33,7 +33,7 @@ Thanks to d18c7db and Okko for example code
 #include "pn533_usb.h"
 #include "../drivers.h"
 
-#include "nfc-messages.h"
+#include <nfc/nfc-messages.h>
 
 #define BUFFER_LENGTH 256
 #define USB_TIMEOUT   30000

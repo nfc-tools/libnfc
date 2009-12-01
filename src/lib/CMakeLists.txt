@@ -34,7 +34,7 @@ SET(LIBRARY_SOURCES nfc bitutils ${DRIVERS_SOURCES} ${BUSES_SOURCES} ${CHIPS_SOU
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 ADD_LIBRARY(nfc SHARED ${LIBRARY_SOURCES})
 TARGET_LINK_LIBRARIES(nfc ${LIBUSB_LIBRARIES} ${PCSC_LIBRARIES})
-SET_TARGET_PROPERTIES(nfc PROPERTIES SOVERSION 0 VERSION 0.0.0)
+SET_TARGET_PROPERTIES(nfc PROPERTIES SOVERSION 0)
 
 IF(MSVC)
   # On Windows the shared (runtime) library should be either in the same 
@@ -46,16 +46,4 @@ IF(MSVC)
 ELSE(MSVC)
   INSTALL(TARGETS nfc LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries)
 ENDIF(MSVC)
-
-# Headers
-FILE(GLOB headers "${CMAKE_CURRENT_SOURCE_DIR}/*.h")
-INSTALL(FILES ${headers} DESTINATION ${INCLUDE_INSTALL_DIR}/libnfc COMPONENT headers)
-IF(MSVC)
-  # On Windows we also install the stdint headers, without it programs using it
-  # can't compile (like if we want to compile the included examples "out of 
-  # tree")
-  #FILE(GLOB stdint "${CMAKE_CURRENT_SOURCE_DIR}/msvc/*.h")
-  #INSTALL(FILES ${stdint} DESTINATION ${INCLUDE_INSTALL_DIR}/libnfc COMPONENT headers)
-ENDIF(MSVC)
-
 

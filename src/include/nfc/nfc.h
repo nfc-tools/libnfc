@@ -30,7 +30,7 @@
 #include <stdbool.h>
 
 
-#include "nfc-types.h"
+#include <nfc/nfc-types.h>
 
 #ifdef __cplusplus 
     #define NFCAPI extern "C" {

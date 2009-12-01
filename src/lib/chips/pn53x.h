@@ -24,7 +24,7 @@
 #ifndef __NFC_CHIPS_PN53X_H__
 #define __NFC_CHIPS_PN53X_H__
 
-#include "nfc-types.h"
+#include <nfc/nfc-types.h>
 
 #define MAX_FRAME_LEN       264
 

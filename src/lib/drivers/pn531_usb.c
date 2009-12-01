@@ -35,7 +35,7 @@ Thanks to d18c7db and Okko for example code
 #include "pn531_usb.h"
 #include "../drivers.h"
 
-#include "nfc-messages.h"
+#include <nfc/nfc-messages.h>
 #include "../bitutils.h"
 
 #define BUFFER_LENGTH 256

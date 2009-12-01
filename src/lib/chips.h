@@ -24,7 +24,7 @@
 #ifndef __NFC_CHIPS_H__
 #define __NFC_CHIPS_H__
 
-#include "nfc-types.h"
+#include <nfc/nfc-types.h>
 
 #include "chips/pn53x.h"
 

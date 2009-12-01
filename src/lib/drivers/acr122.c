@@ -38,7 +38,7 @@
 #endif
 
 
-#include "nfc-messages.h"
+#include <nfc/nfc-messages.h>
 
 // WINDOWS: #define IOCTL_CCID_ESCAPE_SCARD_CTL_CODE SCARD_CTL_CODE(3500)
 #define IOCTL_CCID_ESCAPE_SCARD_CTL_CODE (((0x31) << 16) | ((3500) << 2))

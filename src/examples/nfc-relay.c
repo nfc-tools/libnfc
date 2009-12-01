@@ -27,9 +27,9 @@
 #include <string.h>
 #include <signal.h>
 
-#include <nfc.h>
+#include <nfc/nfc.h>
 
-#include "nfc-messages.h"
+#include <nfc/nfc-messages.h>
 #include "bitutils.h"
 
 #define MAX_FRAME_LEN 264

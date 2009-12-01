@@ -24,7 +24,7 @@
 #ifndef __NFC_DRIVER_PN532_UART_H__
 #define __NFC_DRIVER_PN532_UART_H__
 
-#include "nfc-types.h"
+#include <nfc/nfc-types.h>
 
 #define PN532_UART_DRIVER_NAME "PN532_UART"
 

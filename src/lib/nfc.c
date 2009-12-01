@@ -26,12 +26,12 @@
 #include <stddef.h>
 #include <string.h>
 
-#include "nfc.h"
+#include <nfc/nfc.h>
 
 #include "chips.h"
 #include "drivers.h"
 
-#include "nfc-messages.h"
+#include <nfc/nfc-messages.h>
 
 #include "../../config.h"
 

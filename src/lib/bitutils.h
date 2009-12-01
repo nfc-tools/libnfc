@@ -26,7 +26,7 @@
 
 #include <stdint.h>
 
-#include "nfc-types.h"
+#include <nfc/nfc-types.h>
 
 byte_t oddparity(const byte_t bt);
 void oddparity_byte_ts(const byte_t* pbtData, const size_t szLen, byte_t* pbtPar);

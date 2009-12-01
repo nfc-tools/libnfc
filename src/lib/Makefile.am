@@ -1,10 +1,7 @@
 SUBDIRS = chips buses drivers .
 
 # set the include path found by configure
-INCLUDES= $(all_includes)
-
-nfcinclude_HEADERS = nfc.h nfc-types.h nfc-messages.h chips.h buses.h drivers.h bitutils.h
-nfcincludedir = $(includedir)/nfc
+INCLUDES= $(all_includes) $(LIBNFC_CFLAGS)
 
 lib_LTLIBRARIES = libnfc.la
 libnfc_la_SOURCES = nfc.c bitutils.c
@@ -25,3 +22,4 @@ if LIBUSB_ENABLED
   libnfc_la_LIBADD  += @LIBUSB_LIBS@
 endif
 
+EXTRA_DIST = chips.h buses.h drivers.h bitutils.h

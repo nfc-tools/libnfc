@@ -29,7 +29,7 @@
 #include <stdlib.h>
 
 
-#include "nfc-types.h"
+#include <nfc/nfc-types.h>
 
 // Handle platform specific includes
 #ifndef _WIN32

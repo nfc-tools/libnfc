@@ -28,7 +28,7 @@
 #include <stdbool.h>
 
 
-#include "nfc-types.h"
+#include <nfc/nfc-types.h>
 
 #define ACR122_DRIVER_NAME "ACR122"
 

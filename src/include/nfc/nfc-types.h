@@ -33,6 +33,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <stdio.h>
 
 typedef uint8_t byte_t;
 

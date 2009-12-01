@@ -24,7 +24,7 @@
 #ifndef __NFC_DRIVERS_H__
 #define __NFC_DRIVERS_H__
 
-#include "nfc-types.h"
+#include <nfc/nfc-types.h>
 
 #ifdef HAVE_PCSC_LITE
   #include "drivers/acr122.h"

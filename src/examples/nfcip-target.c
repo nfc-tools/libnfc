@@ -22,7 +22,7 @@
  */
 
 #include <stdio.h>
-#include <nfc.h>
+#include <nfc/nfc.h>
 
 #define MAX_FRAME_LEN 264
 

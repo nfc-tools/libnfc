@@ -38,6 +38,8 @@ AC_TYPE_UINT32_T
 AC_TYPE_UINT64_T
 AC_TYPE_INT32_T
 
+LIBNFC_CFLAGS='-I$(top_srcdir)/src/lib -I$(top_builddir)/src/include -I$(top_srcdir)/src/include'
+AC_SUBST(LIBNFC_CFLAGS)
 
 # Debug support (default:no)
 AC_ARG_ENABLE([debug],AS_HELP_STRING([--enable-debug],[Enable debug output]),[enable_debug=$enableval],[enable_debug="no"])
@@ -197,6 +199,8 @@ fi
 
 AC_CONFIG_FILES([
 		Makefile
+		src/include/Makefile
+		src/include/nfc/Makefile
 		src/lib/chips/Makefile
 		src/lib/buses/Makefile
 		src/lib/drivers/Makefile

@@ -1,6 +1,6 @@
 
 # set the include path found by configure
-INCLUDES= $(all_includes)
+INCLUDES= $(all_includes) $(LIBNFC_CFLAGS)
 
 noinst_HEADERS = uart.h
 noinst_LTLIBRARIES = libnfcbuses.la

@@ -30,7 +30,7 @@
 #include <string.h>
 #include <ctype.h>
 
-#include <nfc.h>
+#include <nfc/nfc.h>
 
 #include "mifareultag.h"
 #include "bitutils.h"

@@ -24,7 +24,7 @@
 #ifndef __NFC_DRIVER_ARYGON_H__
 #define __NFC_DRIVER_ARYGON_H__
 
-#include "nfc-types.h"
+#include <nfc/nfc-types.h>
 
 #define ARYGON_DRIVER_NAME "ARYGON"
 

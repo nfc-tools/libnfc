@@ -25,7 +25,7 @@
 
 #include "pn532_uart.h"
 
-#include "nfc-messages.h"
+#include <nfc/nfc-messages.h>
 
 #include "../drivers.h"
 #include "../bitutils.h"

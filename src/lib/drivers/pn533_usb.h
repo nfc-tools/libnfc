@@ -24,7 +24,7 @@
 #ifndef __NFC_DRIVER_PN533_USB_H__
 #define __NFC_DRIVER_PN533_USB_H__
 
-#include "nfc-types.h"
+#include <nfc/nfc-types.h>
 
 #define PN533_USB_DRIVER_NAME "PN533_USB"
 

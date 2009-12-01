@@ -28,7 +28,7 @@ http://www.teuniz.net/RS-232/index.html
 
 #include "uart.h"
 
-#include "nfc-messages.h"
+#include <nfc/nfc-messages.h>
 
 // Test if we are dealing with unix operating systems
 #ifndef _WIN32

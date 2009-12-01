@@ -1,5 +1,5 @@
 # set the include path found by configure
-INCLUDES= $(all_includes)
+INCLUDES= $(all_includes) $(LIBNFC_CFLAGS)
 
 noinst_HEADERS = arygon.h pn532_uart.h
 noinst_LTLIBRARIES = libnfcdrivers.la

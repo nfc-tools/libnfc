@@ -27,7 +27,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "nfc-types.h"
+#include <nfc/nfc-types.h>
 
 #define PN531_USB_DRIVER_NAME "PN531_USB"
 
