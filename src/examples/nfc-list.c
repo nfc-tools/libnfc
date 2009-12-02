@@ -49,7 +49,8 @@ int main(int argc, const char* argv[])
   printf("%s use libnfc %s\n", argv[0], acLibnfcVersion);
 
   // Lazy way to open an NFC device
-  /*
+  
+  /* 
   pnd = nfc_connect(NULL);
   */
 

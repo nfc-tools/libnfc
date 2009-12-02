@@ -95,6 +95,7 @@ nfc_device_t* pn531_usb_connect(const nfc_device_desc_t* pndd)
   usb_spec_t* pus;
   usb_spec_t us;
   uint32_t uiDevIndex;
+  int devs;
 
   us.uiEndPointIn = 0;
   us.uiEndPointOut = 0;
@@ -102,8 +103,17 @@ nfc_device_t* pn531_usb_connect(const nfc_device_desc_t* pndd)
 
   DBG("%s", "Looking for PN531 device");
   usb_init();
-  if (usb_find_busses() < 0) return NULL;
-  if (usb_find_devices() < 0) return NULL;
+  if (usb_find_busses() < 0)
+  {
+    DBG("%s","No USB bus found");
+    return NULL;
+  }
+  if ((devs= usb_find_devices()) < 0)
+  { 
+    DBG("%s","No USB devices found");
+    return NULL;
+  }
+  DBG("%i USB candidates found",devs);
 
   // Initialize the device index we are seaching for
   if( pndd == NULL ) {
