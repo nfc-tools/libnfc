@@ -161,7 +161,7 @@ acr122_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *p
     DBG("- %s (pos=%d)", acDeviceNames + szPos, szPos);
 
     bool bSupported = false;
-    for (int i = 0; supported_devices[i]; i++) {
+    for (int i = 0; supported_devices[i] && !bSupported; i++) {
       int l = strlen(supported_devices[i]);
       bSupported = 0 == strncmp(supported_devices[i], acDeviceNames + szPos, l);
     }
@@ -177,7 +177,7 @@ acr122_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *p
     }
     else
     {
-      DBG("%s", "Firmware version mismatch");
+      DBG("PCSC device [%s] is not NFC capable or not supported by libnfc.", acDeviceNames + szPos);
     }
     SCardDisconnect(as.hCard,SCARD_LEAVE_CARD);
 

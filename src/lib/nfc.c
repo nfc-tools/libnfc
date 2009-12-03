@@ -94,17 +94,17 @@ nfc_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *pszD
   {
     if (drivers_callbacks_list[uiDriver].list_devices != NULL)
     {
-      DBG("Checking driver: %s",drivers_callbacks_list[uiDriver].acDriver);
+      DBG("List avaible device using %s driver",drivers_callbacks_list[uiDriver].acDriver);
       size_t szN = 0;
       if (drivers_callbacks_list[uiDriver].list_devices (pnddDevices + (*pszDeviceFound), szDevices - (*pszDeviceFound), &szN))
       {
         *pszDeviceFound += szN;
       }
     }
-    #ifdef DEBUG
     else
-      DBG("Not checking driver: %s",drivers_callbacks_list[uiDriver].acDriver);
-    #endif
+    {
+      DBG("No listing function avaible for %s driver",drivers_callbacks_list[uiDriver].acDriver);
+    }
   }
 }
 
@@ -120,12 +120,14 @@ nfc_device_t* nfc_connect(nfc_device_desc_t* pndd)
   {
     if (pndd == NULL) {
       // No device description specified: try to automatically claim a device
-      DBG("Autodetecting available devices: %s", drivers_callbacks_list[uiDriver].acDriver);
-      if(drivers_callbacks_list[uiDriver].pick_device != NULL)
+      if(drivers_callbacks_list[uiDriver].pick_device != NULL) {
+        DBG("Autodetecting available devices using %s driver.", drivers_callbacks_list[uiDriver].acDriver);
         pndd = drivers_callbacks_list[uiDriver].pick_device ();
-      DBG("Auto-connecting %s device",drivers_callbacks_list[uiDriver].acDriver); 
-      if (pndd != NULL)
+      }
+      if (pndd != NULL) {
+        DBG("Auto-connecting to %s using %s driver", pndd->acDevice, drivers_callbacks_list[uiDriver].acDriver); 
         pnd = drivers_callbacks_list[uiDriver].connect(pndd);
+      }
       if(pnd == NULL)
       {
         DBG("%s Not found",drivers_callbacks_list[uiDriver].acDriver);
