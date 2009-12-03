@@ -29,6 +29,9 @@
 #define PN532_UART_DRIVER_NAME "PN532_UART"
 
 // Functions used by developer to handle connection to this device
+nfc_device_desc_t * pn532_uart_pick_device (void);
+bool pn532_uart_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *pszDeviceFound);
+
 nfc_device_t* pn532_uart_connect(const nfc_device_desc_t* pndd);
 void pn532_uart_disconnect(nfc_device_t* pnd);
 

@@ -146,7 +146,7 @@ acr122_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *p
   // Test if context succeeded
   if (!(pscc = acr122_get_scardcontext ()))
   {
-    DBG("%s","PCSC-LITE daemon not found");
+    DBG("%s","PCSC context not found");
     return false;
   }
 

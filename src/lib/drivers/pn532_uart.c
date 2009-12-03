@@ -22,6 +22,7 @@
  */
 #define _XOPEN_SOURCE 500
 #include <stdio.h>
+#include <string.h>
 
 #include "pn532_uart.h"
 
@@ -54,52 +55,99 @@
 
 #define SERIAL_DEFAULT_PORT_SPEED 115200
 
+nfc_device_desc_t *
+pn532_uart_pick_device (void)
+{
+  nfc_device_desc_t *pndd;
+
+  if ((pndd = malloc (sizeof (*pndd)))) {
+    size_t szN;
+
+    if (!pn532_uart_list_devices (pndd, 1, &szN)) {
+      ERR("%s", "pn532_uart_list_devices failed");
+      return NULL;
+    }
+
+    if (szN == 0) {
+      ERR("%s", "No device found");
+      return NULL;
+    }
+  }
+
+  return pndd;
+}
+
+bool
+pn532_uart_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *pszDeviceFound)
+{
+/* @note: Due to UART bus we can't know if its really a pn532 without
+ * sending some PN53x commands. But using this way to probe devices, we can
+ * have serious problem with other device on this bus */
+  *pszDeviceFound = 0;
+
+#ifdef DISABLE_SERIAL_AUTOPROBE
+  INFO("Sorry, serial auto-probing have been disabled at compile time.");
+  return false;
+#else /* DISABLE_SERIAL_AUTOPROBE */
+  char acConnect[BUFFER_LENGTH];
+  serial_port sp;
+
+
+  // I have no idea how MAC OS X deals with multiple devices, so a quick workaround
+  for (int iDevice=0; iDevice<DRIVERS_MAX_DEVICES; iDevice++)
+  {
+#ifdef __APPLE__
+    strcpy(acConnect,SERIAL_STRING);
+#else /* __APPLE__ */
+    sprintf(acConnect,"%s%d",SERIAL_STRING,iDevice);
+#endif /* __APPLE__ */
+    sp = uart_open(acConnect);
+    DBG("Trying to find PN532 device on serial port: %s at %d bauds.",acConnect, SERIAL_DEFAULT_PORT_SPEED);
+
+    if ((sp != INVALID_SERIAL_PORT) && (sp != CLAIMED_SERIAL_PORT))
+    {
+      // PN532_UART device found
+      uart_close(sp);
+      snprintf(pnddDevices[*pszDeviceFound].acDevice, BUFSIZ - 1, "%s (%s)", "PN532", acConnect);
+      pnddDevices[*pszDeviceFound].acDevice[BUFSIZ - 1] = '\0';
+      pnddDevices[*pszDeviceFound].pcDriver = PN532_UART_DRIVER_NAME;
+      //pnddDevices[*pszDeviceFound].pcPort = strndup(acConnect, BUFFER_LENGTH - 1);
+      pnddDevices[*pszDeviceFound].pcPort = strdup(acConnect);
+      pnddDevices[*pszDeviceFound].pcPort[BUFFER_LENGTH] = '\0';
+      pnddDevices[*pszDeviceFound].uiSpeed = SERIAL_DEFAULT_PORT_SPEED;
+      DBG("Device found: %s.", pnddDevices[*pszDeviceFound].acDevice);
+      (*pszDeviceFound)++;
+
+      // Test if we reach the maximum "wanted" devices
+      if((*pszDeviceFound) >= szDevices) break;
+    }
+#ifdef DEBUG
+    if (sp == INVALID_SERIAL_PORT) DBG("Invalid serial port: %s",acConnect);
+    if (sp == CLAIMED_SERIAL_PORT) DBG("Serial port already claimed: %s",acConnect);
+#endif /* DEBUG */
+  }
+#endif
+  return true;
+}
+
 nfc_device_t* pn532_uart_connect(const nfc_device_desc_t* pndd)
 {
-  uint32_t uiDevNr;
   serial_port sp;
-  char acConnect[BUFFER_LENGTH];
   nfc_device_t* pnd = NULL;
 
   if( pndd == NULL ) {
-#ifdef DISABLE_SERIAL_AUTOPROBE
-    INFO("Sorry, serial auto-probing have been disabled at compile time.");
-    return NULL;
-#else
-    DBG("Trying to find ARYGON device on serial port: %s# at %d bauds.",SERIAL_STRING, SERIAL_DEFAULT_PORT_SPEED);
-    // I have no idea how MAC OS X deals with multiple devices, so a quick workaround
-    for (uiDevNr=0; uiDevNr<DRIVERS_MAX_DEVICES; uiDevNr++)
-    {
-#ifdef __APPLE__
-      strcpy(acConnect,SERIAL_STRING);
-#else
-      sprintf(acConnect,"%s%d",SERIAL_STRING,uiDevNr);
-#endif /* __APPLE__ */
-
-      sp = uart_open(acConnect);
-      if ((sp != INVALID_SERIAL_PORT) && (sp != CLAIMED_SERIAL_PORT))
-      {
-        uart_set_speed(sp, SERIAL_DEFAULT_PORT_SPEED);
-        break;
-      }
-#ifdef DEBUG
-      if (sp == INVALID_SERIAL_PORT) DBG("Invalid serial port: %s",acConnect);
-      if (sp == CLAIMED_SERIAL_PORT) DBG("Serial port already claimed: %s",acConnect);
-#endif /* DEBUG */
-    }
-#endif
-    // Test if we have found a device
-    if (uiDevNr == DRIVERS_MAX_DEVICES) return NULL;
+    DBG("%s", "pn532_uart_connect() need an nfc_device_desc_t struct.");
   } else {
     DBG("Connecting to: %s at %d bauds.",pndd->pcPort, pndd->uiSpeed);
-    strcpy(acConnect,pndd->pcPort);
-    sp = uart_open(acConnect);
-    if (sp == INVALID_SERIAL_PORT) ERR("Invalid serial port: %s",acConnect);
-    if (sp == CLAIMED_SERIAL_PORT) ERR("Serial port already claimed: %s",acConnect);
+    sp = uart_open(pndd->pcPort);
+
+    if (sp == INVALID_SERIAL_PORT) ERR("Invalid serial port: %s",pndd->pcPort);
+    if (sp == CLAIMED_SERIAL_PORT) ERR("Serial port already claimed: %s",pndd->pcPort);
     if ((sp == CLAIMED_SERIAL_PORT) || (sp == INVALID_SERIAL_PORT)) return NULL;
 
     uart_set_speed(sp, pndd->uiSpeed);
   }
+
   /** @info PN532C106 wakeup. */
   /** @todo Put this command in pn53x init process */
   byte_t abtRxBuf[BUFFER_LENGTH];
@@ -118,11 +166,13 @@ nfc_device_t* pn532_uart_connect(const nfc_device_desc_t* pndd)
   print_hex(abtRxBuf,szRxBufLen);
 #endif
 
-  DBG("Successfully connected to: %s",acConnect);
+  DBG("Successfully connected to: %s",pndd->pcPort);
 
   // We have a connection
   pnd = malloc(sizeof(nfc_device_t));
-  strcpy(pnd->acName,"PN532_UART");
+  strncpy(pnd->acName, pndd->acDevice, DEVICE_NAME_LENGTH - 1);
+  pnd->acName[DEVICE_NAME_LENGTH] = '\0';
+
   pnd->nc = NC_PN532;
   pnd->nds = (nfc_device_spec_t)sp;
   pnd->bActive = true;

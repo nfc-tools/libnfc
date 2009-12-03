@@ -42,16 +42,16 @@
 #define MAX_FRAME_LEN       264
 
 const static struct driver_callbacks drivers_callbacks_list[] = {
-//  Driver Name             Pick Device    List Devices        Connect                  Transceive                    Disconnect
+//  Driver Name             Pick Device             List Devices              Connect              Transceive                Disconnect
 #ifdef HAVE_PCSC_LITE
-  { ACR122_DRIVER_NAME,     acr122_pick_device,  acr122_list_devices, acr122_connect,      acr122_transceive,        acr122_disconnect       },
+  { ACR122_DRIVER_NAME,     acr122_pick_device,     acr122_list_devices,      acr122_connect,      acr122_transceive,        acr122_disconnect       },
 #endif /* HAVE_PCSC_LITE */
 #ifdef HAVE_LIBUSB
-  { PN531_USB_DRIVER_NAME,  NULL, NULL,    pn531_usb_connect,   pn531_usb_transceive,     pn531_usb_disconnect        },
-  { PN533_USB_DRIVER_NAME,  NULL, NULL,    pn533_usb_connect,   pn533_usb_transceive,     pn533_usb_disconnect        },
+  { PN531_USB_DRIVER_NAME,  NULL,                   NULL,                     pn531_usb_connect,   pn531_usb_transceive,     pn531_usb_disconnect    },
+  { PN533_USB_DRIVER_NAME,  NULL,                   NULL,                     pn533_usb_connect,   pn533_usb_transceive,     pn533_usb_disconnect    },
 #endif /* HAVE_LIBUSB */
-  { PN532_UART_DRIVER_NAME, NULL, NULL,  pn532_uart_connect,  pn532_uart_transceive,    pn532_uart_disconnect   },
-  { ARYGON_DRIVER_NAME,     NULL, NULL,  arygon_connect,      arygon_transceive,        arygon_disconnect       }
+  { PN532_UART_DRIVER_NAME, pn532_uart_pick_device, pn532_uart_list_devices,  pn532_uart_connect,  pn532_uart_transceive,    pn532_uart_disconnect   },
+  { ARYGON_DRIVER_NAME,     NULL,                   NULL,                     arygon_connect,      arygon_transceive,        arygon_disconnect       }
 };
 
 #endif // __NFC_DRIVERS_H__
