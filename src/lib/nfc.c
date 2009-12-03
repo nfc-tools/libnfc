@@ -110,7 +110,7 @@ nfc_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *pszD
 
 nfc_device_t* nfc_connect(nfc_device_desc_t* pndd)
 {
-  nfc_device_t* pnd;
+  nfc_device_t* pnd = NULL;
   uint32_t uiDriver;
   byte_t abtFw[4];
   size_t szFwLen = sizeof(abtFw);
@@ -124,7 +124,8 @@ nfc_device_t* nfc_connect(nfc_device_desc_t* pndd)
       if(drivers_callbacks_list[uiDriver].pick_device != NULL)
         pndd = drivers_callbacks_list[uiDriver].pick_device ();
       DBG("Auto-connecting %s device",drivers_callbacks_list[uiDriver].acDriver); 
-      pnd = drivers_callbacks_list[uiDriver].connect(pndd);
+      if (pndd != NULL)
+        pnd = drivers_callbacks_list[uiDriver].connect(pndd);
       if(pnd == NULL)
       {
         DBG("%s Not found",drivers_callbacks_list[uiDriver].acDriver);
