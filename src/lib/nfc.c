@@ -124,10 +124,9 @@ nfc_device_t* nfc_connect(nfc_device_desc_t* pndd)
         DBG("Autodetecting available devices using %s driver.", drivers_callbacks_list[uiDriver].acDriver);
         pndd = drivers_callbacks_list[uiDriver].pick_device ();
       }
-      if (pndd != NULL) {
-        DBG("Auto-connecting to %s using %s driver", pndd->acDevice, drivers_callbacks_list[uiDriver].acDriver); 
-        pnd = drivers_callbacks_list[uiDriver].connect(pndd);
-      }
+      // auto-connect with NULL descriptor is allowed (NULL means "first available")      
+      DBG("Auto-connecting to %s using %s driver", pndd->acDevice, drivers_callbacks_list[uiDriver].acDriver); 
+      pnd = drivers_callbacks_list[uiDriver].connect(pndd);
       if(pnd == NULL)
       {
         DBG("%s Not found",drivers_callbacks_list[uiDriver].acDriver);
