@@ -66,18 +66,14 @@ static void get_end_points(struct usb_device *dev, usb_spec_t* pus)
     // Test if we dealing with a bulk IN endpoint
     if((uiEndPoint & USB_ENDPOINT_DIR_MASK) == USB_ENDPOINT_IN)
     {
-      #ifdef DEBUG
-        printf("Bulk endpoint in  : 0x%02X\n", uiEndPoint);
-      #endif
+      DBG("Bulk endpoint in  : 0x%02X\n", uiEndPoint);
       pus->uiEndPointIn = uiEndPoint;
     }
 
     // Test if we dealing with a bulk OUT endpoint
     if((uiEndPoint & USB_ENDPOINT_DIR_MASK) == USB_ENDPOINT_OUT)
     {
-      #ifdef DEBUG
-        printf("Bulk endpoint in  : 0x%02X\n", uiEndPoint);
-      #endif
+      DBG("Bulk endpoint in  : 0x%02X\n", uiEndPoint);
       pus->uiEndPointOut = uiEndPoint;
     }
   }
@@ -103,12 +99,12 @@ nfc_device_t* pn531_usb_connect(const nfc_device_desc_t* pndd)
 
   DBG("%s", "Looking for PN531 device");
   usb_init();
-  if (usb_find_busses() < 0)
+  if (usb_find_busses() <= 0)
   {
     DBG("%s","No USB bus found");
     return NULL;
   }
-  if ((devs= usb_find_devices()) < 0)
+  if ((devs= usb_find_devices()) <= 0)
   { 
     DBG("%s","No USB devices found");
     return NULL;
@@ -202,8 +198,14 @@ nfc_device_t* pn531_usb_connect(const nfc_device_desc_t* pndd)
 void pn531_usb_disconnect(nfc_device_t* pnd)
 {
   usb_spec_t* pus = (usb_spec_t*)pnd->nds;
-  usb_release_interface(pus->pudh,0);
-  usb_close(pus->pudh);
+  int ret;
+
+  DBG("%s","PN531 disconnecting");
+  usb_reset(pus->pudh);
+  if((ret= usb_release_interface(pus->pudh,0)) < 0)
+    DBG("usb_release failed %i",ret);
+  if(usb_close(pus->pudh) < 0)
+    DBG("usb_close failed %i",ret);
   free(pnd->nds);
   free(pnd);
 }
@@ -233,6 +235,7 @@ bool pn531_usb_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, cons
   // End of stream marker
   abtTx[szTxLen+6] = 0;
 
+  DBG("%s","USB bulk write");
   #ifdef DEBUG
     printf("Tx: ");
     print_hex(abtTx,szTxLen+7);
@@ -241,9 +244,7 @@ bool pn531_usb_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, cons
   ret = usb_bulk_write(pus->pudh, pus->uiEndPointOut, (char*)abtTx, szTxLen+7, USB_TIMEOUT);
   if( ret < 0 )
   {
-    #ifdef DEBUG
-      printf("usb_bulk_write failed with error %d\n", ret);
-    #endif
+    DBG("usb_bulk_write failed with error %d", ret);
     return false;
   }
 
@@ -256,6 +257,7 @@ bool pn531_usb_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, cons
     return false;
   }
 
+  DBG("%s","USB bulk read");
   #ifdef DEBUG
     printf("Rx: ");
     print_hex(abtRx,ret);
@@ -266,9 +268,7 @@ bool pn531_usb_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, cons
     ret = usb_bulk_read(pus->pudh, pus->uiEndPointIn, (char*)abtRx, BUFFER_LENGTH, USB_TIMEOUT);
     if( ret < 0 )
     {
-      #ifdef DEBUG
-        printf("usb_bulk_read failed with error %d\n", ret);
-      #endif
+      DBG("usb_bulk_read failed with error %d", ret);
       return false;
     }
 
@@ -282,7 +282,11 @@ bool pn531_usb_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, cons
   if(pbtRx == NULL || pszRxLen == NULL) return true;
 
   // Only succeed when the result is at least 00 00 FF xx Fx Dx xx .. .. .. xx 00 (x = variable)
-  if(ret < 9) return false;
+  if(ret < 9) 
+  {
+    DBG("%s","no data, returning false");
+    return false;
+  }
 
   // Remove the preceding and appending bytes 00 00 FF xx Fx .. .. .. xx 00 (x = variable)
   *pszRxLen = ret - 7 - 2;

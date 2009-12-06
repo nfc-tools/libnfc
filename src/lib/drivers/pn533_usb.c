@@ -190,8 +190,13 @@ nfc_device_t* pn533_usb_connect(const nfc_device_desc_t* pndd)
 void pn533_usb_disconnect(nfc_device_t* pnd)
 {
   usb_spec_t* pus = (usb_spec_t*)pnd->nds;
-  usb_release_interface(pus->pudh,0);
-  usb_close(pus->pudh);
+  int ret;
+
+  usb_reset(pus->pudh);
+  if((ret= usb_release_interface(pus->pudh,0)) < 0)
+    DBG("usb_release failed %i",ret);
+  if((ret= usb_close(pus->pudh)) < 0)
+    DBG("usb_close failed %i",ret);
   free(pnd->nds);
   free(pnd);
 }
