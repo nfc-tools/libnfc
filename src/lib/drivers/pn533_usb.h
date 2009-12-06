@@ -24,16 +24,10 @@
 #ifndef __NFC_DRIVER_PN533_USB_H__
 #define __NFC_DRIVER_PN533_USB_H__
 
-#include <nfc/nfc-types.h>
-
 #define PN533_USB_DRIVER_NAME "PN533_USB"
 
 // Functions used by developer to handle connection to this device
 nfc_device_t* pn533_usb_connect(const nfc_device_desc_t* pndd);
-void pn533_usb_disconnect(nfc_device_t* pnd);
-
-// Callback function used by libnfc to transmit commands to the PN53X chip
-bool pn533_usb_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen);
 
 #endif // ! __NFC_DRIVER_PN533_USB_H__
 

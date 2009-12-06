@@ -17,26 +17,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  * 
  * 
- * @file pn531_usb.c
- * @brief Driver for PN531 chip using USB
+ * @file pn53x_usb.h
+ * @brief
  */
 
-/*
-Thanks to d18c7db and Okko for example code
-*/
+#include <sys/param.h>
+#include <stdio.h>
+#include <stddef.h>
 
-#include "../drivers.h"
+#include <usb.h>
 
-nfc_device_t* pn531_usb_connect(const nfc_device_desc_t* pndd)
-{
-  int idvendor = 0x04CC;
-  int idproduct = 0x0531;
-  int idvendor_alt = 0x054c;
-  int idproduct_alt = 0x0193;
-  nfc_device_t* pnd = NULL;
+typedef struct {
+  usb_dev_handle* pudh;
+  uint32_t uiEndPointIn;
+  uint32_t uiEndPointOut;
+} usb_spec_t;
 
-  if((pnd = pn53x_usb_connect(pndd, idvendor, idproduct, "PN531USB", NC_PN531)) == NULL)
-    pnd = pn53x_usb_connect(pndd, idvendor_alt, idproduct_alt, "PN531USB", NC_PN531);
-
-  return pnd;
-}
+nfc_device_t* pn53x_usb_connect(const nfc_device_desc_t* pndd, int idvendor, int idproduct, char * target_name, int target_chip);
+void get_end_points(struct usb_device *dev, usb_spec_t* pus);
+void pn53x_usb_disconnect(nfc_device_t* pnd);
+bool pn53x_usb_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen);
