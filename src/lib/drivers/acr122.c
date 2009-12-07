@@ -104,12 +104,12 @@ acr122_pick_device (void)
     size_t szN;
 
     if (!acr122_list_devices (pndd, 1, &szN)) {
-      ERR("%s", "acr122_list_devices failed");
+      DBG("%s", "acr122_list_devices failed");
       return NULL;
     }
 
     if (szN == 0) {
-      ERR("%s", "No device found");
+      DBG("%s", "No device found");
       return NULL;
     }
   }
