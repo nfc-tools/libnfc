@@ -28,6 +28,8 @@
 
 // Functions used by developer to handle connection to this device
 nfc_device_t* pn531_usb_connect(const nfc_device_desc_t* pndd);
+bool pn531_usb_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *pszDeviceFound);
+nfc_device_desc_t * pn531_usb_pick_device (void);
 
 #endif // ! __NFC_DRIVER_PN531_USB_H__
 

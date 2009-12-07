@@ -21,6 +21,13 @@
  * @brief
  */
 
+#ifdef HAVE_LIBUSB
+  #ifdef DEBUG
+    #include <sys/param.h>
+    #include <usb.h>
+  #endif
+#endif
+
 #include <stdio.h>
 #include <stddef.h>
 #include <stdlib.h>
@@ -28,6 +35,7 @@
 #include <string.h>
 
 #include <nfc/nfc.h>
+
 
 #include <nfc/nfc-messages.h>
 #include "bitutils.h"
@@ -48,11 +56,17 @@ int main(int argc, const char* argv[])
   const char* acLibnfcVersion = nfc_version();
   printf("%s use libnfc %s\n", argv[0], acLibnfcVersion);
 
+  #ifdef HAVE_LIBUSB
+    #ifdef DEBUG
+      usb_set_debug(4);
+    #endif
+  #endif
+
   // Lazy way to open an NFC device
   
-  /* 
-  pnd = nfc_connect(NULL);
-  */
+  //pnd = nfc_connect(NULL);
+  //nfc_disconnect(pnd);
+  //return 1;
 
   // If specific device is wanted, i.e. an ARYGON device on /dev/ttyUSB0
   /*
@@ -101,7 +115,7 @@ int main(int argc, const char* argv[])
     // Enable field so more power consuming cards can power themselves up
     nfc_configure(pnd,NDO_ACTIVATE_FIELD,true);
 
-    printf("Connected to NFC reader: %s\n\n",pnd->acName);
+    printf("\nConnected to NFC reader: %s\n\n",pnd->acName);
 
     // Poll for a ISO14443A (MIFARE) tag
     if (nfc_initiator_select_tag(pnd,NM_ISO14443A_106,NULL,0,&nti))

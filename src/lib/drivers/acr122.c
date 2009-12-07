@@ -186,8 +186,11 @@ acr122_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *p
   }
   acr122_free_scardcontext ();
 
-  return true;
+  if(*pszDeviceFound)
+    return true;
+  return false;
 }
+
 nfc_device_t* acr122_connect(const nfc_device_desc_t* pndd)
 {
   nfc_device_t* pnd = NULL;
@@ -197,6 +200,8 @@ nfc_device_t* acr122_connect(const nfc_device_desc_t* pndd)
 
   SCARDCONTEXT *pscc;
 
+  // We no longer support connecting with a NULL
+  if(pndd == NULL) return NULL;
   // Test if context succeeded
   if (!(pscc = acr122_get_scardcontext ())) return NULL;
   // Test if we were able to connect to the "emulator" card

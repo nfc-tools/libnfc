@@ -26,17 +26,51 @@ Thanks to d18c7db and Okko for example code
 */
 
 #include "../drivers.h"
+#include <nfc/nfc-messages.h>
 
-nfc_device_t* pn533_usb_connect(const nfc_device_desc_t* pndd)
+nfc_device_desc_t * pn533_usb_pick_device (void)
+{
+  nfc_device_desc_t *pndd;
+
+  if ((pndd = malloc (sizeof (*pndd)))) {
+    size_t szN;
+
+    if (!pn533_usb_list_devices (pndd, 1, &szN)) {
+      DBG("%s", "pn533_usb_list_devices failed");
+      return NULL;
+    }
+
+    if (szN == 0) {
+      ERR("%s", "No device found");
+      return NULL;
+    }
+  }
+
+  return pndd;
+}
+
+bool pn533_usb_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *pszDeviceFound)
 {
   int idvendor = 0x04cc;
   int idproduct = 0x2533;
   int idvendor_alt = 0x04e6;
   int idproduct_alt = 0x5591;
-  nfc_device_t* pnd = NULL;
 
-  if((pnd = pn53x_usb_connect(pndd, idvendor, idproduct, "PN533USB", NC_PN533)) == NULL)
-    pnd = pn53x_usb_connect(pndd, idvendor_alt, idproduct_alt, "PN533USB", NC_PN533);
+  size_t firstpass = 0;
+  
+  pn53x_usb_list_devices(&pnddDevices[0], szDevices, pszDeviceFound, idvendor, idproduct, PN533_USB_DRIVER_NAME);
+  if(*pszDeviceFound == szDevices)
+    return true;
+  firstpass= *pszDeviceFound;
+  pn53x_usb_list_devices(&pnddDevices[firstpass], szDevices, pszDeviceFound, idvendor_alt, idproduct_alt, PN533_USB_DRIVER_NAME);
+  (*pszDeviceFound) += firstpass;
 
-  return pnd;
+  if(*pszDeviceFound) 
+    return true;
+  return false;
+}
+
+nfc_device_t* pn533_usb_connect(const nfc_device_desc_t* pndd)
+{
+  return(pn53x_usb_connect(pndd, PN533_USB_DRIVER_NAME, NC_PN533));
 }
