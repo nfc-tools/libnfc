@@ -118,19 +118,20 @@ nfc_device_t* nfc_connect(nfc_device_desc_t* pndd)
   // Search through the device list for an available device
   for (uiDriver=0; uiDriver<sizeof(drivers_callbacks_list)/sizeof(drivers_callbacks_list[0]); uiDriver++)
   {
-    if (pndd == NULL) {
+    if(pndd == NULL) {
       // No device description specified: try to automatically claim a device
       if(drivers_callbacks_list[uiDriver].pick_device != NULL) {
         DBG("Autodetecting available devices using %s driver.", drivers_callbacks_list[uiDriver].acDriver);
         pndd = drivers_callbacks_list[uiDriver].pick_device ();
-      }
-      // auto-connect with NULL descriptor is allowed (NULL means "first available")      
-      DBG("Auto-connecting to %s using %s driver", pndd->acDevice, drivers_callbacks_list[uiDriver].acDriver); 
-      pnd = drivers_callbacks_list[uiDriver].connect(pndd);
-      if(pnd == NULL)
-      {
-        DBG("%s Not found",drivers_callbacks_list[uiDriver].acDriver);
-        pndd = NULL;
+
+        if(pndd != NULL) {
+          DBG("Auto-connecting to %s using %s driver", pndd->acDevice, drivers_callbacks_list[uiDriver].acDriver); 
+          pnd = drivers_callbacks_list[uiDriver].connect(pndd);
+          if(pnd == NULL) {
+            DBG("No device available using %s driver",drivers_callbacks_list[uiDriver].acDriver);
+            pndd = NULL;
+          }
+        }
       }
     } else {
       // Specific device is requested: using device description pndd
