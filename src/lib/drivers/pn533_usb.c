@@ -41,7 +41,7 @@ nfc_device_desc_t * pn533_usb_pick_device (void)
     }
 
     if (szN == 0) {
-      ERR("%s", "No device found");
+      DBG("%s", "No device found");
       return NULL;
     }
   }
@@ -60,11 +60,15 @@ bool pn533_usb_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, s
   
   pn53x_usb_list_devices(&pnddDevices[0], szDevices, pszDeviceFound, idvendor, idproduct, PN533_USB_DRIVER_NAME);
   if(*pszDeviceFound == szDevices)
+  {
+    DBG("Found %d devices",*pszDeviceFound);
     return true;
+  }
   firstpass= *pszDeviceFound;
-  pn53x_usb_list_devices(&pnddDevices[firstpass], szDevices, pszDeviceFound, idvendor_alt, idproduct_alt, PN533_USB_DRIVER_NAME);
+  pn53x_usb_list_devices(&pnddDevices[firstpass], szDevices - firstpass, pszDeviceFound, idvendor_alt, idproduct_alt, PN533_USB_DRIVER_NAME);
   (*pszDeviceFound) += firstpass;
 
+  DBG("Found %d devices",*pszDeviceFound);
   if(*pszDeviceFound) 
     return true;
   return false;

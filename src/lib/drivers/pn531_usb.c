@@ -60,9 +60,12 @@ bool pn531_usb_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, s
   
   pn53x_usb_list_devices(&pnddDevices[0], szDevices, pszDeviceFound, idvendor, idproduct, PN531_USB_DRIVER_NAME);
   if(*pszDeviceFound == szDevices)
+  {
+    DBG("Found %d devices",*pszDeviceFound);
     return true;
+  }
   firstpass= *pszDeviceFound;
-  pn53x_usb_list_devices(&pnddDevices[firstpass], szDevices, pszDeviceFound, idvendor_alt, idproduct_alt, PN531_USB_DRIVER_NAME);
+  pn53x_usb_list_devices(&pnddDevices[firstpass], szDevices - firstpass, pszDeviceFound, idvendor_alt, idproduct_alt, PN531_USB_DRIVER_NAME);
   (*pszDeviceFound) += firstpass;
 
   DBG("Found %d devices",*pszDeviceFound);
