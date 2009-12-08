@@ -51,27 +51,10 @@ nfc_device_desc_t * pn533_usb_pick_device (void)
 
 bool pn533_usb_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *pszDeviceFound)
 {
-  int idvendor = 0x04cc;
-  int idproduct = 0x2533;
-  int idvendor_alt = 0x04e6;
-  int idproduct_alt = 0x5591;
+  // array of {vendor,product} pairs for USB devices
+  usb_candidate_t candidates[]= {{0x04CC,0x2533},{0x04E6,0x5591}};
 
-  size_t firstpass = 0;
-  
-  pn53x_usb_list_devices(&pnddDevices[0], szDevices, pszDeviceFound, idvendor, idproduct, PN533_USB_DRIVER_NAME);
-  if(*pszDeviceFound == szDevices)
-  {
-    DBG("Found %d devices",*pszDeviceFound);
-    return true;
-  }
-  firstpass= *pszDeviceFound;
-  pn53x_usb_list_devices(&pnddDevices[firstpass], szDevices - firstpass, pszDeviceFound, idvendor_alt, idproduct_alt, PN533_USB_DRIVER_NAME);
-  (*pszDeviceFound) += firstpass;
-
-  DBG("Found %d devices",*pszDeviceFound);
-  if(*pszDeviceFound) 
-    return true;
-  return false;
+  return pn53x_usb_list_devices(&pnddDevices[0], szDevices, pszDeviceFound, &candidates[0], sizeof(candidates) / sizeof(usb_candidate_t),PN533_USB_DRIVER_NAME);
 }
 
 nfc_device_t* pn533_usb_connect(const nfc_device_desc_t* pndd)

@@ -33,8 +33,13 @@ typedef struct {
   uint32_t uiEndPointOut;
 } usb_spec_t;
 
+typedef struct {
+  u_int16_t idVendor;
+  u_int16_t idProduct;
+} usb_candidate_t;
+
 nfc_device_t* pn53x_usb_connect(const nfc_device_desc_t* pndd, char * target_name, int target_chip);
 void get_end_points(struct usb_device *dev, usb_spec_t* pus);
 void pn53x_usb_disconnect(nfc_device_t* pnd);
 bool pn53x_usb_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen);
-bool pn53x_usb_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *pszDeviceFound,int idvendor, int idproduct, char * target_name);
+bool pn53x_usb_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *pszDeviceFound,usb_candidate_t candidates[], int num_candidates, char * target_name);

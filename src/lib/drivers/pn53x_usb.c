@@ -70,15 +70,14 @@ void get_end_points(struct usb_device *dev, usb_spec_t* pus)
   }
 }
 
-bool pn53x_usb_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *pszDeviceFound,int idvendor, int idproduct, char * target_name)
+bool pn53x_usb_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *pszDeviceFound,usb_candidate_t candidates[], int num_candidates, char * target_name)
 {
-  int ret;
+  int ret, i;
   
   struct usb_bus *bus;
   struct usb_device *dev;
   uint32_t uiBusIndex = 0;
 
-  DBG("Looking for %s device (%04x:%04x)",target_name,idvendor,idproduct);
   usb_init();
 
   if ((ret= usb_find_busses() < 0)) return NULL;
@@ -92,30 +91,36 @@ bool pn53x_usb_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, s
   {
     for (dev = bus->devices; dev; dev = dev->next, uiBusIndex++)
     {
-      DBG("Checking device %04x:%04x",dev->descriptor.idVendor,dev->descriptor.idProduct);
-      if (idvendor==dev->descriptor.idVendor && idproduct==dev->descriptor.idProduct)
+      for(i = 0; i < num_candidates; ++i)
       {
-        // Make sure there are 2 endpoints available
-        // with libusb-win32 we got some null pointers so be robust before looking at endpoints:
-        if (dev->config == NULL || dev->config->interface == NULL || dev->config->interface->altsetting == NULL)
+        DBG("Checking device %04x:%04x (%04x:%04x)",dev->descriptor.idVendor,dev->descriptor.idProduct,candidates[i].idVendor,candidates[i].idProduct);
+        if (candidates[i].idVendor==dev->descriptor.idVendor && candidates[i].idProduct==dev->descriptor.idProduct)
         {
-          // Nope, we maybe want the next one, let's try to find another
-          continue;
+          // Make sure there are 2 endpoints available
+          // with libusb-win32 we got some null pointers so be robust before looking at endpoints:
+          if (dev->config == NULL || dev->config->interface == NULL || dev->config->interface->altsetting == NULL)
+          {
+            // Nope, we maybe want the next one, let's try to find another
+            continue;
+          }
+          if (dev->config->interface->altsetting->bNumEndpoints < 2)
+          {
+            // Nope, we maybe want the next one, let's try to find another
+            continue;
+          }
+          strcpy(pnddDevices[*pszDeviceFound].acDevice, target_name);
+          pnddDevices[*pszDeviceFound].pcDriver = target_name;
+          pnddDevices[*pszDeviceFound].uiBusIndex = uiBusIndex;
+          (*pszDeviceFound)++;
+          DBG("%s","Match!");
+          // Test if we reach the maximum "wanted" devices
+          if((*pszDeviceFound) == szDevices) 
+          {
+            DBG("Found %d devices",*pszDeviceFound);
+            return true;
+          }
         }
-        if (dev->config->interface->altsetting->bNumEndpoints < 2)
-        {
-          // Nope, we maybe want the next one, let's try to find another
-          continue;
-        }
-        strcpy(pnddDevices[*pszDeviceFound].acDevice, target_name);
-        pnddDevices[*pszDeviceFound].pcDriver = target_name;
-        pnddDevices[*pszDeviceFound].uiBusIndex = uiBusIndex;
-        (*pszDeviceFound)++;
-        DBG("%s","Match!");
-        // Test if we reach the maximum "wanted" devices
-        if((*pszDeviceFound) == szDevices) break;
       }
-    if((*pszDeviceFound) == szDevices) break;
     }
   }
   DBG("Found %d devices",*pszDeviceFound);
@@ -126,8 +131,6 @@ bool pn53x_usb_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, s
 
 nfc_device_t* pn53x_usb_connect(const nfc_device_desc_t* pndd, char * target_name, int target_chip)
 {
-  int ret;
-  
   nfc_device_t* pnd = NULL;
   usb_spec_t* pus;
   usb_spec_t us;
@@ -193,6 +196,7 @@ nfc_device_t* pn53x_usb_connect(const nfc_device_desc_t* pndd, char * target_nam
     }
   }
   // We ran out of devices before the index required
+  DBG("%s","Device index not found!");
   return NULL;
 }
 
