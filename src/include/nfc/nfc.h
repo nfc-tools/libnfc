@@ -33,7 +33,7 @@
 #include <nfc/nfc-types.h>
 
 #ifdef __cplusplus 
-    #define NFCAPI extern "C" {
+    extern "C" {
 #endif // __cplusplus
 
 /**
