@@ -36,11 +36,9 @@
 
 #ifdef _WIN32
   #define SERIAL_STRING "COM"
-  #define delay_ms( X ) Sleep( X )
 #else
   // unistd.h is needed for usleep() fct.
   #include <unistd.h>
-  #define delay_ms( X ) usleep( X * 1000 )
 
   #ifdef __APPLE__
     // MacOS
@@ -64,12 +62,12 @@ pn532_uart_pick_device (void)
     size_t szN;
 
     if (!pn532_uart_list_devices (pndd, 1, &szN)) {
-      ERR("%s", "pn532_uart_list_devices failed");
+      DBG("%s", "pn532_uart_list_devices failed");
       return NULL;
     }
 
     if (szN == 0) {
-      ERR("%s", "No device found");
+      DBG("%s", "No device found");
       return NULL;
     }
   }
@@ -156,7 +154,6 @@ nfc_device_t* pn532_uart_connect(const nfc_device_desc_t* pndd)
   const byte_t pncmd_pn532c106_wakeup[] = { 0x55,0x55,0x00,0x00,0x00,0x00,0x00,0xFF,0x03,0xFD,0xD4,0x14,0x01,0x17,0x00 };
 
   uart_send(sp, pncmd_pn532c106_wakeup, sizeof(pncmd_pn532c106_wakeup));
-  delay_ms(10);
 
   if (!uart_receive(sp,abtRxBuf,&szRxBufLen)) {
     ERR("%s", "Unable to receive data. (RX)");
@@ -221,16 +218,6 @@ bool pn532_uart_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, con
     ERR("%s", "Unable to transmit data. (TX)");
     return false;
   }
-
-  /** @note PN532 (at 115200 bauds) need 20ms between sending and receiving frame.
-   * It seems to be a required delay to able to send from host to device, plus the device computation then device respond transmission 
-   */
-  delay_ms(20);
-
-  /** @note PN532 (at 115200 bauds) need 30ms more to be stable (report correctly present tag, at each try: 20ms seems to be enought for one shot...)
-   * PN532 seems to work correctly with 50ms at 115200 bauds.
-   */
-  delay_ms(30);
 
   if (!uart_receive((serial_port)nds,abtRxBuf,&szRxBufLen)) {
     ERR("%s", "Unable to receive data. (RX)");
