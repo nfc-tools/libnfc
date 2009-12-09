@@ -76,7 +76,9 @@ bool pn53x_usb_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, s
   
   struct usb_bus *bus;
   struct usb_device *dev;
+  usb_dev_handle *udev;
   uint32_t uiBusIndex = 0;
+  char string[256];
 
   usb_init();
 
@@ -108,7 +110,22 @@ bool pn53x_usb_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, s
             // Nope, we maybe want the next one, let's try to find another
             continue;
           }
-          strcpy(pnddDevices[*pszDeviceFound].acDevice, target_name);
+          if (dev->descriptor.iManufacturer || dev->descriptor.iProduct)
+          {
+            udev = usb_open(dev);
+            if(udev)
+            {
+              usb_get_string_simple(udev, dev->descriptor.iManufacturer, string, sizeof(string));
+              if(strlen(string) > 0)
+                strcpy(string + strlen(string)," / ");
+              usb_get_string_simple(udev, dev->descriptor.iProduct, string + strlen(string), sizeof(string) - strlen(string));
+            }
+            usb_close(udev);
+          }
+          if(strlen(string) == 0)
+            strcpy(pnddDevices[*pszDeviceFound].acDevice, target_name);
+          else
+            strcpy(pnddDevices[*pszDeviceFound].acDevice, string);
           pnddDevices[*pszDeviceFound].pcDriver = target_name;
           pnddDevices[*pszDeviceFound].uiBusIndex = uiBusIndex;
           (*pszDeviceFound)++;

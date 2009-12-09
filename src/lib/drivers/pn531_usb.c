@@ -32,20 +32,22 @@ nfc_device_desc_t * pn531_usb_pick_device (void)
 {
   nfc_device_desc_t *pndd;
 
-  if ((pndd = malloc (sizeof (*pndd)))) {
+  if ((pndd = malloc (sizeof (*pndd))))
+  {
     size_t szN;
 
-    if (!pn531_usb_list_devices (pndd, 1, &szN)) {
+    if (!pn531_usb_list_devices (pndd, 1, &szN))
+    {
       DBG("%s", "pn531_usb_list_devices failed");
       return NULL;
     }
 
-    if (szN == 0) {
+    if (szN == 0)
+    {
       DBG("%s", "No device found");
       return NULL;
     }
   }
-
   return pndd;
 }
 
@@ -59,5 +61,5 @@ bool pn531_usb_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, s
 
 nfc_device_t* pn531_usb_connect(const nfc_device_desc_t* pndd)
 {
-  return(pn53x_usb_connect(pndd, PN531_USB_DRIVER_NAME, NC_PN531));
+  return pn53x_usb_connect(pndd, pndd->acDevice, NC_PN531);
 }
