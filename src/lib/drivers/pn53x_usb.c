@@ -80,6 +80,7 @@ bool pn53x_usb_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, s
   uint32_t uiBusIndex = 0;
   char string[256];
 
+  string[0]= '\0';
   usb_init();
 
   if ((ret= usb_find_busses() < 0)) return NULL;
