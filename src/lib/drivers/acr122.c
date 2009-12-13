@@ -200,6 +200,7 @@ nfc_device_t* acr122_connect(const nfc_device_desc_t* pndd)
 
   SCARDCONTEXT *pscc;
 
+  DBG("Connecting to %s",pndd->acDevice);
   // We no longer support connecting with a NULL
   if(pndd == NULL) return NULL;
   // Test if context succeeded
@@ -211,6 +212,7 @@ nfc_device_t* acr122_connect(const nfc_device_desc_t* pndd)
     if (SCardConnect(*pscc,pndd->acDevice,SCARD_SHARE_DIRECT,0,&(as.hCard),(void*)&(as.ioCard.dwProtocol)) != SCARD_S_SUCCESS)
     {
       // We can not connect to this device.
+      DBG("%s","PCSC connect failed");
       return NULL;
     }
   }
@@ -227,8 +229,9 @@ nfc_device_t* acr122_connect(const nfc_device_desc_t* pndd)
 
     // Done, we found the reader we are looking for
     pnd = malloc(sizeof(nfc_device_t));
-    strncpy(pnd->acName,pcFirmware, DEVICE_NAME_LENGTH - 1);
-    pnd->acName[DEVICE_NAME_LENGTH - 1] = '\0';
+    strcpy(pnd->acName,pndd->acDevice);
+    strcpy(pnd->acName + strlen(pnd->acName)," / ");
+    strcpy(pnd->acName + strlen(pnd->acName),pcFirmware);
     pnd->nc = NC_PN532;
     pnd->nds = (nfc_device_spec_t)pas;
     pnd->bActive = true;

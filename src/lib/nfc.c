@@ -157,7 +157,7 @@ nfc_device_t* nfc_connect(nfc_device_desc_t* pndd)
       if (!pnd->pdc->transceive(pnd->nds,pncmd_get_firmware_version,2,abtFw,&szFwLen))
       {
         // Failed to get firmware revision??, whatever...let's disconnect and clean up and return err
-        ERR("Failed to get firmware revision for: %s", pnd->acName);
+        DBG("Failed to get firmware revision for: %s", pnd->acName);
         pnd->pdc->disconnect(pnd);
         return NULL;
       }
