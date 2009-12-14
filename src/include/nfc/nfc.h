@@ -251,6 +251,14 @@ bool nfc_target_send_dep_bytes(const nfc_device_t* pnd, const byte_t* pbtTx, con
  */
 const char* nfc_version(void);
 
+/**
+ * @fn const char*nfc_device_name(nfc_device_t* pnd) 
+ * @brief Returns the device name
+ * @return Returns a string with the device name
+ */
+
+const char* nfc_device_name(nfc_device_t* pnd);
+
 #ifdef __cplusplus 
 }
 #endif // __cplusplus

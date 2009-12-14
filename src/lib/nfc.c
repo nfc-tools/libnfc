@@ -852,4 +852,11 @@ const char* nfc_version(void)
 #endif // SVN_REVISION
 }
 
+// functions to provide external hooks to python (or other languages) - that cannot 
+// handle structures in return values when used as a DLL
 
+// function to return device name of device that has already been configured/claimed
+const char* nfc_device_name(nfc_device_t* pnd)
+{
+  return pnd->acName;
+}
