@@ -131,6 +131,8 @@ nfc_device_t* nfc_connect(nfc_device_desc_t* pndd)
             DBG("No device available using %s driver",drivers_callbacks_list[uiDriver].acDriver);
             pndd = NULL;
           }
+
+          free(pndd);
         }
       }
     } else {
