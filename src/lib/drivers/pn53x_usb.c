@@ -147,7 +147,7 @@ bool pn53x_usb_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, s
   return false;
 }
 
-nfc_device_t* pn53x_usb_connect(const nfc_device_desc_t* pndd, char * target_name, int target_chip)
+nfc_device_t* pn53x_usb_connect(const nfc_device_desc_t* pndd,const char * target_name, int target_chip)
 {
   nfc_device_t* pnd = NULL;
   usb_spec_t* pus;
