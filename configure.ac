@@ -1,6 +1,8 @@
 # General init
 AC_INIT(libnfc, 1.3.0, info@libnfc.org)
 
+AC_CONFIG_MACRO_DIR([m4])
+
 AC_CONFIG_HEADER(config.h)
 
 # SVN revison
