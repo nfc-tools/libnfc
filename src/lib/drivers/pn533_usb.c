@@ -25,6 +25,8 @@
 Thanks to d18c7db and Okko for example code
 */
 
+#include <stdlib.h>
+
 #include "../drivers.h"
 #include <nfc/nfc-messages.h>
 
