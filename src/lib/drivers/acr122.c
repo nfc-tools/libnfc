@@ -56,7 +56,7 @@
 #define ACR122_RESPONSE_LEN 268
 
 const char *supported_devices[] = {
-  "ACS ACR122U PICC Interface",
+  "ACS ACR122U",
   "ACS ACR 38U-CCID",
   NULL
 };
