@@ -56,9 +56,9 @@ EXTRACT_STATIC         = YES
 EXTRACT_LOCAL_CLASSES  = YES
 EXTRACT_LOCAL_METHODS  = NO
 EXTRACT_ANON_NSPACES   = NO
-HIDE_UNDOC_MEMBERS     = NO
-HIDE_UNDOC_CLASSES     = NO
-HIDE_FRIEND_COMPOUNDS  = NO
+HIDE_UNDOC_MEMBERS     = YES
+HIDE_UNDOC_CLASSES     = YES
+HIDE_FRIEND_COMPOUNDS  = YES
 HIDE_IN_BODY_DOCS      = NO
 INTERNAL_DOCS          = NO
 CASE_SENSE_NAMES       = YES
@@ -76,7 +76,7 @@ GENERATE_DEPRECATEDLIST= YES
 ENABLED_SECTIONS       = 
 MAX_INITIALIZER_LINES  = 30
 SHOW_USED_FILES        = YES
-SHOW_DIRECTORIES       = NO
+SHOW_DIRECTORIES       = YES
 SHOW_FILES             = YES
 SHOW_NAMESPACES        = YES
 FILE_VERSION_FILTER    = 
@@ -114,7 +114,7 @@ FILTER_SOURCE_FILES    = NO
 #---------------------------------------------------------------------------
 # configuration options related to source browsing
 #---------------------------------------------------------------------------
-SOURCE_BROWSER         = NO
+SOURCE_BROWSER         = YES
 INLINE_SOURCES         = NO
 STRIP_CODE_COMMENTS    = YES
 REFERENCED_BY_RELATION = NO

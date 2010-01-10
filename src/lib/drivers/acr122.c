@@ -118,7 +118,6 @@ acr122_pick_device (void)
 }
 
 /**
- * @fn bool acr122_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *pszDeviceFound)
  * @brief List connected devices
  *
  * Probe PCSC to find NFC capable hardware.

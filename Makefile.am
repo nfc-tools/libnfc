@@ -12,8 +12,8 @@ if DOC_ENABLED
 clean-local:
 	rm -rf doc
 
-html-am : Doxyfile
+doc : Doxyfile
 	@DOXYGEN@ $(builddir)/Doxyfile
 
-.PHONY: html
+.PHONY: doc
 endif
