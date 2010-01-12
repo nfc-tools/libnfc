@@ -1,4 +1,4 @@
-/**
+/*-
  * Public platform independent Near Field Communication (NFC) library
  * 
  * Copyright (C) 2009, Roel Verdult
@@ -15,14 +15,20 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
- * 
- * 
+ */
+
+/**
  * @file drivers.h
- * @brief
+ * @brief Supported drivers header
  */
 
 #ifndef __NFC_DRIVERS_H__
 #define __NFC_DRIVERS_H__
+
+#ifdef HAVE_CONFIG_H
+  #include "config.h"
+#endif /* HAVE_CONFIG_H */
+
 
 #include <nfc/nfc-types.h>
 

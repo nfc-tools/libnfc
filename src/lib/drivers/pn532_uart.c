@@ -1,4 +1,4 @@
-/**
+/*-
  * Public platform independent Near Field Communication (NFC) library
  * 
  * Copyright (C) 2009, Roel Verdult
@@ -15,12 +15,15 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
- * 
- * 
- * @file pn532_uart.c
- * @brief
  */
-#define _XOPEN_SOURCE 600
+
+/**
+ * @file pn532_uart.c
+ * @brief PN532 driver using UART bus (UART, RS232, etc.)
+ */
+#include "../drivers.h"
+#include "../bitutils.h"
+
 #include <stdio.h>
 #include <string.h>
 
@@ -28,8 +31,6 @@
 
 #include <nfc/nfc-messages.h>
 
-#include "../drivers.h"
-#include "../bitutils.h"
 
 // Bus
 #include "uart.h"

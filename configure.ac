@@ -33,6 +33,7 @@ AC_PATH_PROG(PKG_CONFIG, pkg-config)
 AC_HEADER_STDC
 AC_HEADER_STDBOOL
 AC_CHECK_HEADERS([stdio.h stdlib.h stdint.h stddef.h stdbool.h])
+AC_CHECK_FUNCS(strdup, [AC_DEFINE([_XOPEN_SOURCE], [600], [Enable POSIX extensions if present])])
 
 # Checks for types
 AC_TYPE_SIZE_T
@@ -186,20 +187,11 @@ fi
 
 AC_SUBST(PKG_CONFIG_REQUIRES)
 
-# Set C standard to C99
-# C99 standard support (default: yes)
-AC_ARG_ENABLE([std-c99],AS_HELP_STRING([--disable-std-c99],[Disable C99 standard when compiling]),[enable_std_c99=$enableval],[enable_std_c99="yes"])
- 
-AC_MSG_CHECKING(for C99 support)
-AC_MSG_RESULT($enable_std_c99)
- 
-if test x"$enable_std_c99" != "xno"
-then
-	CFLAGS="$CFLAGS -std=c99"
+# Defines and C flags
+CFLAGS="$CFLAGS -std=c99"
 
-	# Workarounds for libusb in c99
-	CFLAGS="$CFLAGS -Du_int8_t=uint8_t -Du_int16_t=uint16_t"
-fi
+# Workarounds for libusb in c99
+CFLAGS="$CFLAGS -Du_int8_t=uint8_t -Du_int16_t=uint16_t"
 
 AC_CONFIG_FILES([
 		Makefile

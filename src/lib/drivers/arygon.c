@@ -1,4 +1,4 @@
-/**
+/*-
  * Public platform independent Near Field Communication (NFC) library
  * 
  * Copyright (C) 2009, Roel Verdult
@@ -15,20 +15,24 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
- * 
- * 
- * @file arygon.c
- * @brief
  */
-#define _XOPEN_SOURCE 500
+
+/**
+ * @file arygon.c
+ * @brief ARYGON readers driver
+ * 
+ * This driver can handle ARYGON readers that use UART as bus.
+ * UART connection can be direct (host<->arygon_uc) or could be provided by internal USB to serial interface (e.g. host<->ftdi_chip<->arygon_uc)
+ */
+#include "../drivers.h"
+#include "../bitutils.h"
+
 #include <stdio.h>
 
 #include "arygon.h"
 
 #include <nfc/nfc-messages.h>
 
-#include "../drivers.h"
-#include "../bitutils.h"
 // Bus
 #include "../buses/uart.h"
 
