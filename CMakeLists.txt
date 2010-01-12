@@ -14,6 +14,11 @@ CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/config.h.cmake ${CMAKE_CURRENT_SOURCE
 # make it easy to locate CMake modules for finding libraries
 SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake_modules/")
 
+# Doxygen
+SET(builddir "${CMAKE_BINARY_DIR}")
+SET(top_srcdir "${CMAKE_SOURCE_DIR}")
+INCLUDE(UseDoxygen)
+
 SET(LIBNFC_DEBUG_OUTPUT OFF CACHE BOOL "Debug output of communication with the NFC chip")
 SET(LIBNFC_PCSC ON CACHE BOOL "Enable PC/SC support (ACR122)")
 SET(LIBNFC_USB ON CACHE BOOL "Enable direct USB communication support (PN531 and PN533)")
