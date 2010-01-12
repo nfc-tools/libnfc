@@ -160,15 +160,15 @@ void print_hex_bits(const byte_t* pbtData, const size_t szBits)
     printf("%02x  ",pbtData[szPos]);
   }
 
+  uint8_t uRemainder = szBits % 8;
   // Print the rest bits
-  if (szBits%8 != 0)
+  if (uRemainder != 0)
   {
-    if (szBits%8 < 5)
-      printf("%01x (%i bits)",pbtData[szBytes], szBits%8);
+    if (uRemainder < 5)
+      printf("%01x (%d bits)",pbtData[szBytes], uRemainder);
     else
-      printf("%02x (%i bits)",pbtData[szBytes], szBits%8);
+      printf("%02x (%d bits)",pbtData[szBytes], uRemainder);
   }
-
   printf("\n");
 }
 
@@ -188,15 +188,15 @@ void print_hex_par(const byte_t* pbtData, const size_t szBits, const byte_t* pbt
     }
   }
 
+  uint8_t uRemainder = szBits % 8;
   // Print the rest bits, these cannot have parity bit
-  if (szBits%8 != 0)
+  if (uRemainder != 0)
   {
-    if (szBits%8 < 5)
-      printf("%01x (%i bits)",pbtData[szBytes], szBits%8);
+    if (uRemainder < 5)
+      printf("%01x (%d bits)",pbtData[szBytes], uRemainder);
     else
-      printf("%02x (%i bits)",pbtData[szBytes], szBits%8);
+      printf("%02x (%d bits)",pbtData[szBytes], uRemainder);
   }
-
   printf("\n");
 }
 

@@ -1,4 +1,4 @@
-/**
+/*-
  * Public platform independent Near Field Communication (NFC) library
  * 
  * Copyright (C) 2009, Roel Verdult
@@ -15,10 +15,11 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
- * 
- * 
- * @file nfc-mftool.c
- * @brief
+ */
+
+/**
+ * @file nfc-mfclassic.c
+ * @brief MIFARE Classic manipulation example
  */
 
 #include <stdio.h>
@@ -311,8 +312,8 @@ void mifare_classic_extract_payload(const char* abDump, char* pbPayload)
 typedef enum {
   ACTION_READ,
   ACTION_WRITE,
-  ACTION_EXPLAIN,
-  ACTION_EXTRACT
+  ACTION_EXTRACT,
+  ACTION_USAGE
 } action_t;
 
 void print_usage(const char* pcProgramName)
@@ -333,17 +334,15 @@ void print_usage(const char* pcProgramName)
 int main(int argc, const char* argv[])
 {
   bool b4K;
-  action_t atAction;
+  action_t atAction = ACTION_USAGE;
   byte_t* pbtUID;
   FILE* pfKeys = NULL;
   FILE* pfDump = NULL;
 
-  // printf("Checking arguments and settings\n");
-
   if(argc < 2)
   {
     print_usage(argv[0]);
-    return 1;
+    exit(EXIT_FAILURE);
   }
 
   const char* command = argv[1];
@@ -357,21 +356,22 @@ int main(int argc, const char* argv[])
     atAction = ACTION_WRITE;
     bUseKeyA = (tolower(*(argv[2])) == 'a');
     bUseKeyFile = (argc > 4);
-  } else if(strcmp(command, "e") == 0)
-  {
-    atAction = ACTION_EXPLAIN;
   } else if(strcmp(command, "x") == 0)
   {
     atAction = ACTION_EXTRACT;
   }
 
   switch(atAction) {
+    case ACTION_USAGE:
+      print_usage(argv[0]);
+      exit(EXIT_FAILURE);
+      break;
     case ACTION_READ:
     case ACTION_WRITE:
       if (argc < 4)
       {
         print_usage(argv[0]);
-        return 1;
+        exit(EXIT_FAILURE);
       }
 
       if (bUseKeyFile)
@@ -380,13 +380,13 @@ int main(int argc, const char* argv[])
         if (pfKeys == NULL)
         {
           printf("Could not open keys file: %s\n",argv[4]);
-          return 1;
+          exit(EXIT_FAILURE);
         }
         if (fread(&mtKeys,1,sizeof(mtKeys),pfKeys) != sizeof(mtKeys))
         {
           printf("Could not read keys file: %s\n",argv[4]);
           fclose(pfKeys);
-          return 1;
+          exit(EXIT_FAILURE);
         }
         fclose(pfKeys);
       }
@@ -399,14 +399,14 @@ int main(int argc, const char* argv[])
         if (pfDump == NULL)
         {
           printf("Could not open dump file: %s\n",argv[3]);
-          return 1;
+          exit(EXIT_FAILURE);
         }
     
         if (fread(&mtDump,1,sizeof(mtDump),pfDump) != sizeof(mtDump))
         {
           printf("Could not read dump file: %s\n",argv[3]);
           fclose(pfDump);
-          return 1;
+          exit(EXIT_FAILURE);
         }
         fclose(pfDump);
       }
@@ -417,7 +417,7 @@ int main(int argc, const char* argv[])
       if (pnd == NULL)
       {
         printf("Error connecting NFC reader\n");
-        return 1;
+        exit(EXIT_FAILURE);
       }
     
       nfc_initiator_init(pnd);
@@ -440,7 +440,7 @@ int main(int argc, const char* argv[])
       {
         printf("Error: no tag was found\n");
         nfc_disconnect(pnd);
-        return 1;
+        exit(EXIT_FAILURE);
       }
     
       // Test if we are dealing with a MIFARE compatible tag
@@ -448,7 +448,7 @@ int main(int argc, const char* argv[])
       {
         printf("Error: tag is not a MIFARE Classic card\n");
         nfc_disconnect(pnd);
-        return 1;
+        exit(EXIT_FAILURE);
       }
     
       if (bUseKeyFile)
@@ -481,7 +481,7 @@ int main(int argc, const char* argv[])
           if (fwrite(&mtDump,1,sizeof(mtDump),pfDump) != sizeof(mtDump))
           {
             printf("\nCould not write to file: %s\n",argv[3]);
-            return 1;
+            exit(EXIT_FAILURE);
           }
           printf("Done.\n");
           fclose(pfDump);
@@ -508,14 +508,14 @@ int main(int argc, const char* argv[])
       if (pfDump == NULL)
       {
         printf("Could not open dump file: %s\n",pcDump);
-        return 1;
+        exit(EXIT_FAILURE);
       }
     
       if (fread(abDump,1,sizeof(abDump),pfDump) != sizeof(abDump))
       {
         printf("Could not read dump file: %s\n",pcDump);
         fclose(pfDump);
-        return 1;
+        exit(EXIT_FAILURE);
       }
       fclose(pfDump);
 
@@ -526,13 +526,13 @@ int main(int argc, const char* argv[])
       if (fwrite(abPayload,1,sizeof(abPayload),pfPayload) != sizeof(abPayload))
       {
         printf("Could not write to file: %s\n",pcPayload);
-        return 1;
+        exit(EXIT_FAILURE);
       }
       fclose(pfPayload);
       printf("Done, all bytes have been extracted!\n");
     }
   };
 
-  return 0;
+  exit(EXIT_SUCCESS);
 }
   

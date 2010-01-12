@@ -169,7 +169,7 @@ nfc_device_t* pn532_uart_connect(const nfc_device_desc_t* pndd)
   // We have a connection
   pnd = malloc(sizeof(nfc_device_t));
   strncpy(pnd->acName, pndd->acDevice, DEVICE_NAME_LENGTH - 1);
-  pnd->acName[DEVICE_NAME_LENGTH] = '\0';
+  pnd->acName[DEVICE_NAME_LENGTH - 1] = '\0';
 
   pnd->nc = NC_PN532;
   pnd->nds = (nfc_device_spec_t)sp;

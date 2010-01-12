@@ -133,7 +133,6 @@ acr122_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *p
   size_t szPos = 0;
   char acDeviceNames[256+64*DRIVERS_MAX_DEVICES];
   size_t szDeviceNamesLen = sizeof(acDeviceNames);
-  acr122_spec_t as;
   uint32_t uiBusIndex = 0;
   SCARDCONTEXT *pscc;
 
@@ -178,7 +177,6 @@ acr122_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *p
     {
       DBG("PCSC device [%s] is not NFC capable or not supported by libnfc.", acDeviceNames + szPos);
     }
-    SCardDisconnect(as.hCard,SCARD_LEAVE_CARD);
 
     // Find next device name position
     while (acDeviceNames[szPos++] != '\0');
