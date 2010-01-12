@@ -97,15 +97,14 @@ INPUT                  = @top_srcdir@/src
 INPUT_ENCODING         = UTF-8
 FILE_PATTERNS          = *.c \
                          *.h \
-                         *.C \
-                         *.H 
+                         *.dox
 RECURSIVE              = YES
 EXCLUDE                = 
 EXCLUDE_SYMLINKS       = NO
 EXCLUDE_PATTERNS       = */.svn/*
 EXCLUDE_SYMBOLS        = 
-EXAMPLE_PATH           = 
-EXAMPLE_PATTERNS       = *
+EXAMPLE_PATH           = @top_srcdir@/ @top_srcdir@/src/examples/doc
+EXAMPLE_PATTERNS       = ChangeLog *.c
 EXAMPLE_RECURSIVE      = NO
 IMAGE_PATH             = 
 INPUT_FILTER           = 
