@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
- * 
+ *
  * 
  * @file nfc-list.c
  * @brief
@@ -31,12 +31,9 @@
 #include <stdio.h>
 #include <stddef.h>
 #include <stdlib.h>
-
 #include <string.h>
 
 #include <nfc/nfc.h>
-
-
 #include <nfc/nfc-messages.h>
 #include "bitutils.h"
 
@@ -62,21 +59,21 @@ int main(int argc, const char* argv[])
     #endif
   #endif
 
-  // Lazy way to open an NFC device
-  
-  //pnd = nfc_connect(NULL);
-  //nfc_disconnect(pnd);
-  //return 1;
+  /* Lazy way to open an NFC device */
+#if 0
+  pnd = nfc_connect(NULL);
+#endif
 
-  // If specific device is wanted, i.e. an ARYGON device on /dev/ttyUSB0
-  /*
+  /* If specific device is wanted, i.e. an ARYGON device on /dev/ttyUSB0 */
+#if 0
   nfc_device_desc_t ndd;
   ndd.pcDriver = "ARYGON";
   ndd.pcPort = "/dev/ttyUSB0";
   ndd.uiSpeed = 115200;
 
   pnd = nfc_connect(&ndd);
-  */
+#endif
+
   if (!(pnddDevices = malloc (MAX_DEVICE_COUNT * sizeof (*pnddDevices))))
   {
     fprintf (stderr, "malloc() failed\n");
