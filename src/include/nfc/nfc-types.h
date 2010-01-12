@@ -80,7 +80,7 @@ typedef struct {
  */
 typedef struct {
   /** Device name (e.g. "ACS ACR 38U-CCID 00 00") */
-  char acDevice[BUFSIZ];
+  char acDevice[DEVICE_NAME_LENGTH];
   /** Driver name (e.g. "PN532_UART")*/
   char* pcDriver;
   /** Port (e.g. "/dev/ttyUSB0") */

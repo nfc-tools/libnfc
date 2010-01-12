@@ -167,8 +167,8 @@ acr122_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *p
     if (bSupported)
     {
       // Supported ACR122 device found
-      strncpy(pnddDevices[*pszDeviceFound].acDevice, acDeviceNames + szPos, BUFSIZ - 1);
-      pnddDevices[*pszDeviceFound].acDevice[BUFSIZ - 1] = '\0';
+      strncpy(pnddDevices[*pszDeviceFound].acDevice, acDeviceNames + szPos, DEVICE_NAME_LENGTH - 1);
+      pnddDevices[*pszDeviceFound].acDevice[DEVICE_NAME_LENGTH - 1] = '\0';
       pnddDevices[*pszDeviceFound].pcDriver = ACR122_DRIVER_NAME;
       pnddDevices[*pszDeviceFound].uiBusIndex = uiBusIndex;
       (*pszDeviceFound)++;
