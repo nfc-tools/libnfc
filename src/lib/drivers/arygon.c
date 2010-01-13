@@ -76,7 +76,7 @@
 
 /**
  * @note ARYGON-ADRA (PN531): ???,n,8,1
- * @note ARYGON-ADRB (PN532): ???,n,8,1
+ * @note ARYGON-ADRB (PN532): 9600,n,8,1
  * @note ARYGON-APDA (PN531): 9600,n,8,1
  * @note ARYGON-APDB1UA33N (PN532): 115200,n,8,1
  * @note ARYGON-APDB2UA33 (PN532 + ARYGON µC): 9600,n,8,1

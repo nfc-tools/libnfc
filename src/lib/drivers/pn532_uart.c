@@ -43,7 +43,8 @@
 
   #ifdef __APPLE__
     // MacOS
-    #define SERIAL_STRING "/dev/tty.SLAB_USBtoUART"
+    // TODO: find UART connection string for PN53X device on Mac OS X
+    #define SERIAL_STRING ""
   #else
     // *BSD, Linux and others POSIX systems
     #define SERIAL_STRING "/dev/ttyUSB"
