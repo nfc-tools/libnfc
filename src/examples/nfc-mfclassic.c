@@ -338,6 +338,7 @@ int main(int argc, const char* argv[])
   byte_t* pbtUID;
   FILE* pfKeys = NULL;
   FILE* pfDump = NULL;
+  const char* command = argv[1];
 
   if(argc < 2)
   {
@@ -345,7 +346,6 @@ int main(int argc, const char* argv[])
     exit(EXIT_FAILURE);
   }
 
-  const char* command = argv[1];
   if(strcmp(command, "r") == 0)
   {
     atAction = ACTION_READ;

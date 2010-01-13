@@ -37,6 +37,8 @@
 
 #ifdef _WIN32
   #define SERIAL_STRING "COM"
+  #define snprintf _snprintf
+  #define strdup _strdup
 #else
   // unistd.h is needed for usleep() fct.
   #include <unistd.h>
@@ -80,6 +82,10 @@ pn532_uart_pick_device (void)
 bool
 pn532_uart_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *pszDeviceFound)
 {
+  serial_port sp;
+  char acConnect[BUFFER_LENGTH];
+  int iDevice;
+
 /* @note: Due to UART bus we can't know if its really a pn532 without
  * sending some PN53x commands. But using this way to probe devices, we can
  * have serious problem with other device on this bus */
@@ -89,12 +95,9 @@ pn532_uart_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_
   INFO("Sorry, serial auto-probing have been disabled at compile time.");
   return false;
 #else /* DISABLE_SERIAL_AUTOPROBE */
-  char acConnect[BUFFER_LENGTH];
-  serial_port sp;
-
 
   // I have no idea how MAC OS X deals with multiple devices, so a quick workaround
-  for (int iDevice=0; iDevice<DRIVERS_MAX_DEVICES; iDevice++)
+  for (iDevice=0; iDevice<DRIVERS_MAX_DEVICES; iDevice++)
   {
 #ifdef __APPLE__
     strcpy(acConnect,SERIAL_STRING);
@@ -132,6 +135,12 @@ pn532_uart_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_
 
 nfc_device_t* pn532_uart_connect(const nfc_device_desc_t* pndd)
 {
+  /** @info PN532C106 wakeup. */
+  /** @todo Put this command in pn53x init process */
+  byte_t abtRxBuf[BUFFER_LENGTH];
+  size_t szRxBufLen;
+  const byte_t pncmd_pn532c106_wakeup[] = { 0x55,0x55,0x00,0x00,0x00,0x00,0x00,0xFF,0x03,0xFD,0xD4,0x14,0x01,0x17,0x00 };
+
   serial_port sp;
   nfc_device_t* pnd = NULL;
 
@@ -148,12 +157,6 @@ nfc_device_t* pn532_uart_connect(const nfc_device_desc_t* pndd)
 
     uart_set_speed(sp, pndd->uiSpeed);
   }
-
-  /** @info PN532C106 wakeup. */
-  /** @todo Put this command in pn53x init process */
-  byte_t abtRxBuf[BUFFER_LENGTH];
-  size_t szRxBufLen;
-  const byte_t pncmd_pn532c106_wakeup[] = { 0x55,0x55,0x00,0x00,0x00,0x00,0x00,0xFF,0x03,0xFD,0xD4,0x14,0x01,0x17,0x00 };
 
   uart_send(sp, pncmd_pn532c106_wakeup, sizeof(pncmd_pn532c106_wakeup));
 

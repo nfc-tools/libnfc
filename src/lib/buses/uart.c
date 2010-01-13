@@ -369,9 +369,10 @@ uint32_t uart_get_speed(const serial_port sp)
 
 bool uart_cts(const serial_port sp)
 {
-  char status;
-  if (ioctl(((serial_port_unix*)sp)->fd,TIOCMGET,&status) < 0) return false;
-  return (status & TIOCM_CTS);
+  DWORD ModemStat;
+  const serial_port_windows* spw = (serial_port_windows*)sp;
+  if (!GetCommModemStatus(spw->hPort,&ModemStat)) return false;
+  return (ModemStat & MS_CTS_ON);
 }
 
 bool uart_receive(const serial_port sp, byte_t* pbtRx, size_t* pszRxLen)

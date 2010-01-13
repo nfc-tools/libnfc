@@ -24,6 +24,7 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <stddef.h>
 #include <string.h>
 
@@ -34,7 +35,9 @@
 
 #include <nfc/nfc-messages.h>
 
-#include "../../config.h"
+#ifndef _WIN32
+  #include "../../config.h"
+#endif // _WIN32
 
 nfc_device_desc_t * nfc_pick_device (void);
 
@@ -94,6 +97,7 @@ void
 nfc_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *pszDeviceFound)
 {
   uint32_t uiDriver;
+  size_t szN;
 
   *pszDeviceFound = 0;
 
@@ -102,7 +106,7 @@ nfc_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *pszD
     if (drivers_callbacks_list[uiDriver].list_devices != NULL)
     {
       DBG("List avaible device using %s driver",drivers_callbacks_list[uiDriver].acDriver);
-      size_t szN = 0;
+      szN = 0;
       if (drivers_callbacks_list[uiDriver].list_devices (pnddDevices + (*pszDeviceFound), szDevices - (*pszDeviceFound), &szN))
       {
         *pszDeviceFound += szN;

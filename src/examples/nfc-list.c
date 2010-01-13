@@ -45,7 +45,7 @@ static byte_t abtFelica[5] = { 0x00, 0xff, 0xff, 0x00, 0x00 };
 int main(int argc, const char* argv[])
 {
   size_t szFound;
-  int i;
+  size_t i;
   nfc_target_info_t nti;
   nfc_device_desc_t *pnddDevices;
 

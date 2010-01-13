@@ -56,8 +56,9 @@
 #define ACR122_RESPONSE_LEN 268
 
 const char *supported_devices[] = {
-  "ACS ACR122U",
+  "ACS ACR122",
   "ACS ACR 38U-CCID",
+  "    CCID USB",
   NULL
 };
 
@@ -135,6 +136,8 @@ acr122_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *p
   size_t szDeviceNamesLen = sizeof(acDeviceNames);
   uint32_t uiBusIndex = 0;
   SCARDCONTEXT *pscc;
+  bool bSupported;
+  int i;
 
   // Clear the reader list
   memset(acDeviceNames, '\0', szDeviceNamesLen);
@@ -158,8 +161,8 @@ acr122_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *p
 
     DBG("- %s (pos=%d)", acDeviceNames + szPos, szPos);
 
-    bool bSupported = false;
-    for (int i = 0; supported_devices[i] && !bSupported; i++) {
+    bSupported = false;
+    for (i = 0; supported_devices[i] && !bSupported; i++) {
       int l = strlen(supported_devices[i]);
       bSupported = 0 == strncmp(supported_devices[i], acDeviceNames + szPos, l);
     }
