@@ -1,27 +1,18 @@
 EXPORTS
-  ; dev_acr122.h
-  dev_acr122_connect
-  dev_acr122_disconnect
-  dev_acr122_transceive
-  dev_acr122_firmware
-  dev_acr122_led_red
+  ; acr122.h
+  acr122_connect
+  acr122_disconnect
+  acr122_transceive
+  acr122_firmware
+  acr122_led_red
   
-  ; dev_pn531.h
-  dev_pn531_connect
-  dev_pn531_disconnect
-  dev_pn531_transceive
-
-  ; dev_pn533.h
-  dev_pn533_connect
-  dev_pn533_disconnect
-  dev_pn533_transceive
-
-  ; dev_arygon.h
-  dev_arygon_connect
-  dev_arygon_disconnect
-  dev_arygon_transceive
+  ; arygon.h
+  arygon_connect
+  arygon_disconnect
+  arygon_transceive
 
   ; libnfc.h
+  nfc_list_devices
   nfc_connect
   nfc_disconnect
   nfc_configure
@@ -40,6 +31,8 @@ EXPORTS
   nfc_target_send_bits
   nfc_target_send_bytes
   nfc_target_send_dep_bytes
+  nfc_version
+  nfc_device_name
  
   ; bitutils.h
   oddparity
