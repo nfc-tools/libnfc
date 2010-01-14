@@ -37,6 +37,11 @@ if [ ! -f $LIBNFC_WINDOWS_ARCHIVE ]; then
 	# Export windows files
 	svn export win32 $LIBNFC_WINDOWS_DIR/win32
 
+	# Copy important files
+	cp AUTHORS $LIBNFC_WINDOWS_DIR/
+	cp LICENSE $LIBNFC_WINDOWS_DIR/
+	cp README $LIBNFC_WINDOWS_DIR/
+
 	# Build archive
 	zip -r $LIBNFC_WINDOWS_ARCHIVE $LIBNFC_WINDOWS_DIR
 	rm -rf $LIBNFC_WINDOWS_DIR
