@@ -1,7 +1,8 @@
-Nov dd, 2009 - 1.3.0
-------------
+Jan 14, 2010 - 1.3.0
+--------------------
+
 Fixes:
- - build: Add workarounds for libusb in c99;
+ - build: Add workarounds for libusb when compiling using C99;
  - build: Attempt to fix rpath issue on linux platform (it is already deprecated in main distributions. i.e. http://wiki.debian.org/RpathIssue);
  - build: wrong paths in pkg-config file;
  - libnfc: Remove warnings when compiling;
@@ -19,7 +20,7 @@ Improvments:
  - build: Add alternative build system (CMake);
  - build: Add new files usefull for desktop GNU/Linux users: some rules for udev to allow non-root access to PN53x USB devices;
  - build: Update msinttypes up to revision 26. (used when compiling under Windows);
- - build: Add "make html" directive: it will build API documentation using Doxygen. (--enable-doc flag is required at configure time);
+ - build: Add "make doc" directive: it will build API documentation using Doxygen. (--enable-doc flag is required at configure time);
  - libnfc: Add C++ compatibility;
  - libnfc: Add driver agnostic nfc_pick_device(), nfc_list_devices();
  - libnfc: It is now possible to specify a wanted device using new struct "nfc_device_desc_t";
@@ -28,13 +29,13 @@ Improvments:
  - libnfc: Less confusing message for bitstreams display;
  - libnfc: chips level introduction with pn53x.h/c;
  - drivers: Add PN532 UART driver;
- - driver acr122: add acr122_pick_device(), acr122_list_devices();
  - drivers pn533_usb and pn531_usb: Lets search continuing to find other USB readers if any in PN531 and PN533 USB drivers;
  - drivers pn533_usb and pn531_usb: Support for the generic vendorid/productid of the NXP chip;
- - examples: Add MIFARE Ultratag tool. (Many thanks to xxv);
+ - drivers pn533_usb and pn531_usb: Consolidate duplicated code;
+ - examples: Add MIFARE Ultratag tool;
  - examples: Add man page for nfc-mfultool;
  - examples: MIFARE examples (mftool and mfultool) have now a better help message;
- - examples: Add NFCIP (NDEP) as experimental feature (Thanks to Fkooman);
+ - examples: Add NFCIP (NDEP) as experimental feature;
  - examples: add quiet mode to improve timing of emulate, relay and anticol commands;
  - nfc-list: List all devices in nfc-list(1);
  - nfc-list: Simply turns off the RF field upon exit;
@@ -52,29 +53,46 @@ Changes:
  - API: Rename chip_type to nfc_chip_t;
  - API: Rename dev_spec to nfc_device_spec_t;
  - API: Rename dev_info struct to nfc_device_t;
+ - API: Variables have been renamed to match coding conventions;
+ - API: Changed length parmeters from uint32_t to size_t;
  - Files: Remove defines.h public header;
  - Files: Prefix messages.h and types.h headers by "nfc-";
- - Files: Rename pn531.h/c to pn531_usb.h/c;
- - Files: Rename pn533.h/c to pn533_usb.h/c;
+ - Files: Revamp libnfc source tree;
  - Files: Move examples into src/examples subdirectory;
  - Examples: Rename nfc-mftool to nfc-mfclassic;
  - Examples: Rename nfc-mfultool to nfc-mfultralight;
- - API: Many variables name have been changed to match with coding convention;
- - API: Changed length parmeters from uint32_t to size_t;
+
+
 
 Jul 24, 2009 - 1.2.1
+--------------------
+
  - Fix ACR122 on 64 bits architecture under GNU/Linux.
 
+
+
 Jul 22, 2009 - 1.2.0
+--------------------
+
  - License changed from GPLv3 to LGPLv3
  - ARYGON ADRA-USB/ADRB-USB reader support
  - PN533 support
  - C99 standard (all custom defined types have been renamed)
  - Autotoolized for GNU/Linux, *BSD and MacOSX
- - nfc tools (anticol, emulate, list, mftool, relay) are now prefixed by "nfc-"
+ - nfc examples (anticol, emulate, list, mftool, relay) are now prefixed by "nfc-"
+
+
 
 Mar 27, 2009 - 1.1.0
+--------------------
+
  - Next generation, support for ACR122v2 and PN531 USB devices
 
+
+
 Feb 12, 2009 - 1.0.0
+--------------------
+
  - Initial release
+
+
