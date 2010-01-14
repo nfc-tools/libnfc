@@ -11,38 +11,31 @@ LIBNFC_AUTOTOOLS_ARCHIVE=libnfc-$LIBNFC_VERSION.tar.gz
 
 if [ ! -f $LIBNFC_AUTOTOOLS_ARCHIVE ]; then
 	# First, we can test archive using "distcheck"
-	./autogen.sh && make distcheck && make distclean
+	autoreconf -vis && ./configure && make distcheck
+
+	# Clean up
+        make distclean
 
 	# We are ready to make a good autotools release.
-	./autogen.sh && make dist
+	autoreconf -vis && ./configure && make dist
 else
 	echo "Autotooled archive (GNU/Linux, BSD, etc.) is already done: skipped."
 fi
 
 # Windows part
-LIBNFC_WINDOWS_DIR=libnfc-$LIBNFC_VERSION-vs2005
+LIBNFC_WINDOWS_DIR=libnfc-$LIBNFC_VERSION-winsdk
 LIBNFC_WINDOWS_ARCHIVE=$LIBNFC_WINDOWS_DIR.zip
 
 if [ ! -f $LIBNFC_WINDOWS_ARCHIVE ]; then
 	if [ -d $LIBNFC_WINDOWS_DIR ]; then
 		rm -rf $LIBNFC_WINDOWS_DIR
 	fi
+	mkdir -p $LIBNFC_WINDOWS_DIR
 
-	mkdir -p $LIBNFC_WINDOWS_DIR/src
-
-	# Copy sources
-	cp src/*.c $LIBNFC_WINDOWS_DIR/src/
-	cp src/*.h $LIBNFC_WINDOWS_DIR/src/
-
-	# Copy important files
-	cp LICENSE $LIBNFC_WINDOWS_DIR/
-	cp README $LIBNFC_WINDOWS_DIR/
-
-	# Copy Visual C++ project files
-	cp -r win32 $LIBNFC_WINDOWS_DIR/vc-project
-
-	# Remove svn stuff
-	find $LIBNFC_WINDOWS_DIR -name ".svn" -type d | xargs rm -rf 
+	# Export sources
+	svn export src $LIBNFC_WINDOWS_DIR/src
+	# Export windows files
+	svn export win32 $LIBNFC_WINDOWS_DIR/win32
 
 	# Build archive
 	zip -r $LIBNFC_WINDOWS_ARCHIVE $LIBNFC_WINDOWS_DIR
