@@ -35,9 +35,9 @@
 
 #include <nfc/nfc-messages.h>
 
-#ifndef _WIN32
-  #include "../../config.h"
-#endif // _WIN32
+#ifndef HAVE_CONFIG_H
+  #include "config.h"
+#endif // HAVE_CONFIG_H
 
 nfc_device_desc_t * nfc_pick_device (void);
 
