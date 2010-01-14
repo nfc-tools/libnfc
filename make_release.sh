@@ -30,6 +30,7 @@ if [ ! -f $LIBNFC_WINDOWS_ARCHIVE ]; then
 	if [ -d $LIBNFC_WINDOWS_DIR ]; then
 		rm -rf $LIBNFC_WINDOWS_DIR
 	fi
+
 	mkdir -p $LIBNFC_WINDOWS_DIR
 
 	# Export sources
@@ -41,6 +42,12 @@ if [ ! -f $LIBNFC_WINDOWS_ARCHIVE ]; then
 	cp AUTHORS $LIBNFC_WINDOWS_DIR/
 	cp LICENSE $LIBNFC_WINDOWS_DIR/
 	cp README $LIBNFC_WINDOWS_DIR/
+
+	# Remove Autotools Makefile.am
+	find $LIBNFC_WINDOWS_DIR/ -name Makefile.am | xargs rm -f
+
+	# Remove CMakeLists.txt
+	find $LIBNFC_WINDOWS_DIR/ -name CMakeLists.txt | xargs rm -f
 
 	# Build archive
 	zip -r $LIBNFC_WINDOWS_ARCHIVE $LIBNFC_WINDOWS_DIR
