@@ -1,4 +1,4 @@
-/**
+/*-
  * Public platform independent Near Field Communication (NFC) library
  * 
  * Copyright (C) 2009, Roel Verdult
@@ -15,11 +15,16 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
- * 
- * 
+ */
+
+/**
  * @file pn53x_usb.c
  * @brief Driver common routines for PN53x chips using USB
  */
+
+#ifdef HAVE_CONFIG_H
+  #include "config.h"
+#endif // HAVE_CONFIG_H
 
 /*
 Thanks to d18c7db and Okko for example code

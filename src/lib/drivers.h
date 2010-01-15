@@ -25,11 +25,6 @@
 #ifndef __NFC_DRIVERS_H__
 #define __NFC_DRIVERS_H__
 
-#ifdef HAVE_CONFIG_H
-  #include "config.h"
-#endif /* HAVE_CONFIG_H */
-
-
 #include <nfc/nfc-types.h>
 
 #ifdef HAVE_PCSC_LITE

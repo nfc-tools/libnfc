@@ -21,6 +21,11 @@
  * @file pn532_uart.c
  * @brief PN532 driver using UART bus (UART, RS232, etc.)
  */
+
+#ifdef HAVE_CONFIG_H
+  #include "config.h"
+#endif // HAVE_CONFIG_H
+
 #include "../drivers.h"
 #include "../bitutils.h"
 

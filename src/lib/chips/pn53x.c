@@ -1,4 +1,4 @@
-/**
+/*-
  * Public platform independent Near Field Communication (NFC) library
  * 
  * Copyright (C) 2009, Roel Verdult
@@ -15,11 +15,16 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
- * 
- * 
+ */
+
+/**
  * @file pn53x.h
  * @brief PN531, PN532 and PN533 common functions
  */
+
+#ifdef HAVE_CONFIG_H
+  #include "config.h"
+#endif // HAVE_CONFIG_H
 
 #include <string.h>
 #include <stdio.h>

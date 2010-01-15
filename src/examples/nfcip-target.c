@@ -1,4 +1,4 @@
-/**
+/*-
  * Public platform independent Near Field Communication (NFC) library
  * 
  * Copyright (C) 2009, Roel Verdult
@@ -15,11 +15,17 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
- * 
- * 
+ *
+ */
+
+/**
  * @file nfcip-target.c
  * @brief
  */
+
+#ifdef HAVE_CONFIG_H
+  #include "config.h"
+#endif // HAVE_CONFIG_H
 
 #include <stdio.h>
 #include <nfc/nfc.h>

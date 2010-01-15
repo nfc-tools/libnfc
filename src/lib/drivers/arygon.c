@@ -24,6 +24,11 @@
  * This driver can handle ARYGON readers that use UART as bus.
  * UART connection can be direct (host<->arygon_uc) or could be provided by internal USB to serial interface (e.g. host<->ftdi_chip<->arygon_uc)
  */
+
+#ifdef HAVE_CONFIG_H
+  #include "config.h"
+#endif // HAVE_CONFIG_H
+
 #include "../drivers.h"
 #include "../bitutils.h"
 

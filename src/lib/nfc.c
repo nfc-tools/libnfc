@@ -15,13 +15,16 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
- *
  */
  
 /** 
  * @file nfc.c
  * @brief NFC library implementation
  */
+
+#ifdef HAVE_CONFIG_H
+  #include "config.h"
+#endif // HAVE_CONFIG_H
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -34,10 +37,6 @@
 #include "drivers.h"
 
 #include <nfc/nfc-messages.h>
-
-#ifdef HAVE_CONFIG_H
-  #include "config.h"
-#endif // HAVE_CONFIG_H
 
 nfc_device_desc_t * nfc_pick_device (void);
 

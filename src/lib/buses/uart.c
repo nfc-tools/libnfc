@@ -1,4 +1,4 @@
-/**
+/*-
  * Public platform independent Near Field Communication (NFC) library
  * 
  * Copyright (C) 2009, Roel Verdult
@@ -15,8 +15,10 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
- * 
- * 
+ *
+ */
+
+/**
  * @file uart.c
  * @brief
  */
@@ -25,6 +27,10 @@
 Based on RS232 code written by Teunis van Beelen available:
 http://www.teuniz.net/RS-232/index.html
 */
+
+#ifdef HAVE_CONFIG_H
+  #include "config.h"
+#endif // HAVE_CONFIG_H
 
 #include "uart.h"
 
