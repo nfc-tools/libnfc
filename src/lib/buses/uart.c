@@ -170,8 +170,10 @@ uint32_t uart_get_speed(const serial_port sp)
 
 void uart_close(const serial_port sp)
 {
-  tcsetattr(((serial_port_unix*)sp)->fd,TCSANOW,&((serial_port_unix*)sp)->tiOld);
-  close(((serial_port_unix*)sp)->fd);
+  if (((serial_port_unix*)sp)->fd >= 0) {
+    tcsetattr(((serial_port_unix*)sp)->fd,TCSANOW,&((serial_port_unix*)sp)->tiOld);
+    close(((serial_port_unix*)sp)->fd);
+  }
   free(sp);
 }
 
@@ -333,7 +335,9 @@ serial_port uart_open(const char* pcPortName)
 
 void uart_close(const serial_port sp)
 {
-  CloseHandle(((serial_port_windows*)sp)->hPort);
+  if (((serial_port_windows*)sp)->hPort != INVALID_HANDLE_VALUE) {
+    CloseHandle(((serial_port_windows*)sp)->hPort);
+  }
   free(sp);
 }
 
