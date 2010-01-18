@@ -25,5 +25,5 @@ Description: Near Field Communication library (development files)
 Package: libnfc-examples
 Architecture: any
 Depends: libnfc0
-Description: Near Field Communication tools
+Description: Near Field Communication examples
  Some examples are provided with libnfc to show basics functions (nfc-list, nfc-anticol, etc.).
