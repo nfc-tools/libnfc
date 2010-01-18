@@ -20,7 +20,7 @@ if [ ! -f $LIBNFC_AUTOTOOLS_ARCHIVE ]; then
 	autoreconf -vis && ./configure && make dist
 
 	# Clean up
-        make distclean
+	make distclean
 else
 	echo "Autotooled archive (GNU/Linux, BSD, etc.) is already done: skipped."
 fi
@@ -30,9 +30,9 @@ LIBNFC_DOC_DIR=libnfc-doc-$LIBNFC_VERSION
 LIBNFC_DOC_ARCHIVE=$LIBNFC_DOC_DIR.zip
 
 if [ ! -f $LIBNFC_DOC_ARCHIVE ]; then
-        if [ -d $LIBNFC_DOC_DIR ]; then
-                rm -rf $LIBNFC_DOC_DIR
-        fi
+	if [ -d $LIBNFC_DOC_DIR ]; then
+		rm -rf $LIBNFC_DOC_DIR
+	fi
 
 	# Build documentation
 	autoreconf -vis && ./configure --enable-doc && make doc
@@ -42,7 +42,8 @@ if [ ! -f $LIBNFC_DOC_ARCHIVE ]; then
 	zip -r $LIBNFC_DOC_ARCHIVE $LIBNFC_DOC_DIR
 
 	# Clean up
-        make distclean
+	rm -rf $LIBNFC_DOC_DIR
+	make distclean
 else
 	echo "Documentation archive is already done: skipped."
 fi
