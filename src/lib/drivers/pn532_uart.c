@@ -96,10 +96,10 @@ pn532_uart_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_
  * have serious problem with other device on this bus */
   *pszDeviceFound = 0;
 
-#ifdef DISABLE_SERIAL_AUTOPROBE
+#ifndef SERIAL_AUTOPROBE_ENABLED
   INFO("Sorry, serial auto-probing have been disabled at compile time.");
   return false;
-#else /* DISABLE_SERIAL_AUTOPROBE */
+#else /* SERIAL_AUTOPROBE_ENABLED */
 
   // I have no idea how MAC OS X deals with multiple devices, so a quick workaround
   for (iDevice=0; iDevice<DRIVERS_MAX_DEVICES; iDevice++)
@@ -134,7 +134,7 @@ pn532_uart_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_
     if (sp == CLAIMED_SERIAL_PORT) DBG("Serial port already claimed: %s",acConnect);
 #endif /* DEBUG */
   }
-#endif
+#endif /* SERIAL_AUTOPROBE_ENABLED */
   return true;
 }
 

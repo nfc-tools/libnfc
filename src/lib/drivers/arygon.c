@@ -95,10 +95,10 @@ nfc_device_t* arygon_connect(const nfc_device_desc_t* pndd)
   nfc_device_t* pnd = NULL;
 
   if( pndd == NULL ) {
-#ifdef DISABLE_SERIAL_AUTOPROBE
+#ifndef SERIAL_AUTOPROBE_ENABLED
     INFO("Sorry, serial auto-probing have been disabled at compile time.");
     return NULL;
-#else
+#else /* SERIAL_AUTOPROBE_ENABLED */
     DBG("Trying to find ARYGON device on serial port: %s# at %d bauds.",SERIAL_STRING, SERIAL_DEFAULT_PORT_SPEED);
     // I have no idea how MAC OS X deals with multiple devices, so a quick workaround
     for (uiDevNr=0; uiDevNr<DRIVERS_MAX_DEVICES; uiDevNr++)
@@ -120,7 +120,8 @@ nfc_device_t* arygon_connect(const nfc_device_desc_t* pndd)
       if (sp == CLAIMED_SERIAL_PORT) DBG("Serial port already claimed: %s",acConnect);
 #endif /* DEBUG */
     }
-#endif
+#endif /* SERIAL_AUTOPROBE_ENABLED */
+
     // Test if we have found a device
     if (uiDevNr == DRIVERS_MAX_DEVICES) return NULL;
   } else {

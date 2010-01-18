@@ -58,15 +58,15 @@ then
 fi
 AC_SUBST([DEBUG_CFLAGS])
 
-# Serial autoprobing support (default:yes)
-AC_ARG_ENABLE([serial-autoprobe],AS_HELP_STRING([--disable-serial-autoprobe],[Disable serial autoprobing]),[enable_serial_autoprobe=$enableval],[enable_serial_autoprobe="yes"])
+# Serial autoprobing support (default:no)
+AC_ARG_ENABLE([serial-autoprobe],AS_HELP_STRING([--enable-serial-autoprobe],[Allow serial ports to be probed (can seriously disturb connected serial devices)]),[enable_serial_autoprobe=$enableval],[enable_serial_autoprobe="no"])
  
 AC_MSG_CHECKING(for serial autoprobe flag)
 AC_MSG_RESULT($enable_serial_autoprobe)
 
-if test x"$enable_serial_autoprobe" = "xno"
+if test x"$enable_serial_autoprobe" = "xyes"
 then
-  CFLAGS="$CFLAGS -DDISABLE_SERIAL_AUTOPROBE"
+  CFLAGS="$CFLAGS -DSERIAL_AUTOPROBE_ENABLED"
 fi
 
 # PCSC-lite support (default: yes)
