@@ -64,7 +64,7 @@ serial_port uart_open(const char* pcPortName)
 
   if (sp == 0) return INVALID_SERIAL_PORT;
 
-  sp->fd = open(pcPortName, O_RDWR | O_NOCTTY | O_NDELAY | O_NONBLOCK);
+  sp->fd = open(pcPortName, O_RDWR | O_NOCTTY | O_NONBLOCK);
   if(sp->fd == -1)
   {
     uart_close(sp);
