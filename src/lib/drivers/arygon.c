@@ -96,7 +96,7 @@ nfc_device_t* arygon_connect(const nfc_device_desc_t* pndd)
 
   if( pndd == NULL ) {
 #ifndef SERIAL_AUTOPROBE_ENABLED
-    INFO("Sorry, serial auto-probing have been disabled at compile time.");
+    INFO("%s", "Sorry, serial auto-probing have been disabled at compile time.");
     return NULL;
 #else /* SERIAL_AUTOPROBE_ENABLED */
     DBG("Trying to find ARYGON device on serial port: %s# at %d bauds.",SERIAL_STRING, SERIAL_DEFAULT_PORT_SPEED);
