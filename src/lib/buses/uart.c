@@ -34,6 +34,8 @@ http://www.teuniz.net/RS-232/index.html
 
 #include "uart.h"
 
+#include <sys/select.h>
+
 #include <nfc/nfc-messages.h>
 
 // Test if we are dealing with unix operating systems
