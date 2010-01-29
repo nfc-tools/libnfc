@@ -192,6 +192,7 @@ AC_CONFIG_FILES([
 		src/lib/Makefile
 		src/examples/Makefile
 		src/Makefile
+		cmake_modules/Makefile
 		libnfc.pc
 		Doxyfile
 		])

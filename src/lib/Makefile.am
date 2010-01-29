@@ -22,4 +22,4 @@ if LIBUSB_ENABLED
   libnfc_la_LIBADD  += @LIBUSB_LIBS@
 endif
 
-EXTRA_DIST = chips.h buses.h drivers.h bitutils.h
+EXTRA_DIST = CMakeLists.txt chips.h buses.h drivers.h bitutils.h
