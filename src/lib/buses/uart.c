@@ -109,6 +109,9 @@ void uart_set_speed(serial_port sp, const uint32_t uiPortSpeed)
 {
   DBG("Serial port speed requested to be set to %d bauds.", uiPortSpeed);
   // Set port speed (Input and Output)
+
+  // Portability note: on some systems, B9600 != 9600 so we have to do
+  // uint32_t <=> speed_t associations by hand.
   speed_t stPortSpeed = B9600;
   switch(uiPortSpeed) {
     case 9600: stPortSpeed = B9600;
@@ -117,22 +120,24 @@ void uart_set_speed(serial_port sp, const uint32_t uiPortSpeed)
     break;
     case 38400: stPortSpeed = B38400;
     break;
+#ifdef B57600
     case 57600: stPortSpeed = B57600;
     break;
+#endif
+#ifdef B115200
     case 115200: stPortSpeed = B115200;
     break;
+#endif
+#ifdef B230400
     case 230400: stPortSpeed = B230400;
     break;
+#endif
 #ifdef B460800
     case 460800: stPortSpeed = B460800;
     break;
 #endif
     default:
-#ifdef B460800
-      ERR("Unable to set serial port speed to %d bauds. Speed value must be one of these constants: 9600 (default), 19200, 38400, 57600, 115200, 230400 or 460800.", uiPortSpeed);
-#else
-      ERR("Unable to set serial port speed to %d bauds. Speed value must be one of these constants: 9600 (default), 19200, 38400, 57600, 115200 or 230400.", uiPortSpeed);
-#endif
+      ERR("Unable to set serial port speed to %d bauds. Speed value must be one of those defined in termios(3).", uiPortSpeed);
   };
   const serial_port_unix* spu = (serial_port_unix*)sp;
   cfsetispeed((struct termios*)&spu->tiNew, stPortSpeed);
@@ -155,12 +160,18 @@ uint32_t uart_get_speed(const serial_port sp)
     break;
     case B38400: uiPortSpeed = 38400;
     break;
+#ifdef B57600
     case B57600: uiPortSpeed = 57600;
     break;
+#endif
+#ifdef B115200
     case B115200: uiPortSpeed = 115200;
     break;
+#endif
+#ifdef B230400
     case B230400: uiPortSpeed = 230400;
     break;
+#endif
 #ifdef B460800
     case B460800: uiPortSpeed = 460800;
     break;
