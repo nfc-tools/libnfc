@@ -21,10 +21,6 @@
  * @brief
  */
 
-#include <sys/param.h>
-#include <stdio.h>
-#include <stddef.h>
-
 #include <usb.h>
 
 typedef struct {

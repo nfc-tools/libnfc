@@ -30,7 +30,6 @@
 Thanks to d18c7db and Okko for example code
 */
 
-#include <sys/param.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <usb.h>
