@@ -117,7 +117,7 @@ if test "x$enable_libusb" = "xyes"; then
 
   # Search using pkg-config
   if test x"$PKG_CONFIG" != "x"; then
-    PKG_CHECK_MODULES(LIBUSB, libusb, [WITH_USB=1], [WITH_USB=0])
+    PKG_CHECK_MODULES([LIBUSB], [libusb], [WITH_USB=1], [WITH_USB=0])
     if test x"$PKG_CONFIG_REQUIRES" != x""; then
       PKG_CONFIG_REQUIRES="$PKG_CONFIG_REQUIRES,"
     fi
@@ -160,7 +160,7 @@ if test "x$enable_pcsc_lite" = "xyes"; then
       LIBPCSCLITE_CFLAGS="-I/System/Library/Frameworks/PCSC.framework/Headers"
     ;;
     *)
-      PKG_CHECK_MODULES(LIBPCSCLITE, libpcsclite, [WITH_PCSC=1], [WITH_PCSC=0])
+      PKG_CHECK_MODULES([LIBPCSCLITE], [libpcsclite], [WITH_PCSC=1], [WITH_PCSC=0])
       if test x"$WITH_PCSC" = "x0" ; then
         AC_MSG_ERROR([libpcsclite is mandatory.])
       fi
