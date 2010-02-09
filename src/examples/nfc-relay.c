@@ -1,7 +1,7 @@
 /*-
  * Public platform independent Near Field Communication (NFC) library
  * 
- * Copyright (C) 2009, Roel Verdult
+ * Copyright (C) 2009, 2010, Roel Verdult, Romuald Conty
  * 
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -19,12 +19,12 @@
 
 /**
  * @file nfc-relay.c
- * @brief
+ * @brief Relay example using two devices.
  */
 
 #ifdef HAVE_CONFIG_H
   #include "config.h"
-#endif // HAVE_CONFIG_H
+#endif /* HAVE_CONFIG_H */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -38,6 +38,7 @@
 #include "bitutils.h"
 
 #define MAX_FRAME_LEN 264
+#define MAX_DEVICE_COUNT 2
 
 static byte_t abtReaderRx[MAX_FRAME_LEN];
 static byte_t abtReaderRxPar[MAX_FRAME_LEN];
@@ -68,21 +69,27 @@ int main(int argc,char* argv[])
 {
   int arg;
   bool quiet_output = false;
+  size_t szFound;
+  nfc_device_desc_t *pnddDevices;
 
   // Get commandline options
   for (arg=1;arg<argc;arg++) {
     if (0 == strcmp(argv[arg], "-h")) {
       print_usage(argv);
-      return 0;
+      return EXIT_SUCCESS;
     } else if (0 == strcmp(argv[arg], "-q")) {
       INFO("%s", "Quiet mode.");
       quiet_output = true;
     } else {
       ERR("%s is not supported option.", argv[arg]);
       print_usage(argv);
-      return -1;
+      return EXIT_FAILURE;
     }
   }
+
+  // Display libnfc version
+  const char* acLibnfcVersion = nfc_version();
+  printf("%s use libnfc %s\n", argv[0], acLibnfcVersion);
 
 #ifdef WIN32
   signal(SIGINT, (void (__cdecl*)(int)) intr_hdlr);
@@ -90,40 +97,56 @@ int main(int argc,char* argv[])
   signal(SIGINT, (void (*)()) intr_hdlr);
 #endif
 
+  // Allocate memory to put the result of available devices listing
+  if (!(pnddDevices = malloc (MAX_DEVICE_COUNT * sizeof (*pnddDevices)))) {
+    fprintf (stderr, "malloc() failed\n");
+    return EXIT_FAILURE;
+  }
+
+  // List available devices
+  nfc_list_devices (pnddDevices, MAX_DEVICE_COUNT, &szFound);
+
+  if (szFound < 2) {
+    ERR("%zd device found but two connected devices are needed to relay NFC.", szFound);
+    return EXIT_FAILURE;
+  } 
+
   // Try to open the NFC emulator device
-  pndTag = nfc_connect(NULL);
+  pndTag = nfc_connect(&(pnddDevices[0]));
   if (pndTag == NULL)
   {
     printf("Error connecting NFC emulator device\n");
-    return 1;
+    return EXIT_FAILURE;
   }
-
-  printf("\n");
-  printf("[+] Connected to the NFC emulator device\n");
+  
+  printf("Hint: tag <---> emulator (relay) <---> reader (relay) <---> original reader\n\n");
+  
+  printf("Connected to the NFC emulator device: %s\n", pndTag->acName);
   printf("[+] Try to break out the auto-emulation, this requires a second reader!\n");
   printf("[+] To do this, please send any command after the anti-collision\n");
   printf("[+] For example, send a RATS command or use the \"nfc-anticol\" tool\n");
   if (!nfc_target_init(pndTag,abtReaderRx,&szReaderRxBits))
   {
-    printf("[+] Initialization of NFC emulator failed\n");
+    ERR("%s", "Initialization of NFC emulator failed");
     nfc_disconnect(pndTag);
-    return 1;
+    return EXIT_FAILURE;
   }
-  printf("[+] Configuring emulator settings\n");
+  printf("%s", "Configuring emulator settings...");
   nfc_configure(pndTag,NDO_HANDLE_CRC,false);
   nfc_configure(pndTag,NDO_HANDLE_PARITY,false);
   nfc_configure(pndTag,NDO_ACCEPT_INVALID_FRAMES,true);
-  printf("[+] Thank you, the emulated tag is initialized\n");
+  printf("%s", "Done, emulated tag is initialized");
 
   // Try to open the NFC reader
-  pndReader = NULL;
-  while (pndReader == NULL) pndReader = nfc_connect(NULL);
-  printf("[+] Configuring NFC reader settings\n");
+  pndReader = nfc_connect(&(pnddDevices[1]));
+  
+  printf("Connected to the NFC reader device: %s", pndReader->acName);
+  printf("%s", "Configuring NFC reader settings...");
   nfc_initiator_init(pndReader);
   nfc_configure(pndReader,NDO_HANDLE_CRC,false);
   nfc_configure(pndReader,NDO_HANDLE_PARITY,false);
   nfc_configure(pndReader,NDO_ACCEPT_INVALID_FRAMES,true);
-  printf("[+] Done, relaying frames now!\n\n");
+  printf("%s", "Done, relaying frames now!");
 
   while(!quitting)
   {
@@ -164,4 +187,5 @@ int main(int argc,char* argv[])
 
   nfc_disconnect(pndTag);
   nfc_disconnect(pndReader);
+  exit(EXIT_SUCCESS);
 }
