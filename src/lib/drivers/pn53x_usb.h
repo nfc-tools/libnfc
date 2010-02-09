@@ -30,8 +30,8 @@ typedef struct {
 } usb_spec_t;
 
 typedef struct {
-  u_int16_t idVendor;
-  u_int16_t idProduct;
+  uint16_t idVendor;
+  uint16_t idProduct;
 } usb_candidate_t;
 
 nfc_device_t* pn53x_usb_connect(const nfc_device_desc_t* pndd,const char * target_name, int target_chip);
