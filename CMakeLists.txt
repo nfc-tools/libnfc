@@ -56,9 +56,14 @@ IF(LIBNFC_DEBUG_OUTPUT)
   ADD_DEFINITIONS(-DDEBUG -g3)
 ENDIF(LIBNFC_DEBUG_OUTPUT)
 
+# CMake have config.h generation, so we must define this
 ADD_DEFINITIONS("-DHAVE_CONFIG_H")
 
+# Make sure we will not miss some warnings ;)
 ADD_DEFINITIONS(-Wall -pedantic -std=c99)
+
+# Workarounds for libusb in C99
+ADD_DEFINITIONS(-Du_int8_t=uint8_t -Du_int16_t=uint16_t)
 
 IF(NOT MSVC)
   # Set some pkg-config variables
