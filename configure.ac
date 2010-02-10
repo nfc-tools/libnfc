@@ -118,10 +118,12 @@ if test "x$enable_libusb" = "xyes"; then
   # Search using pkg-config
   if test x"$PKG_CONFIG" != "x"; then
     PKG_CHECK_MODULES([LIBUSB], [libusb], [WITH_USB=1], [WITH_USB=0])
+    if test x"$WITH_USB" = "x1"; then
     if test x"$PKG_CONFIG_REQUIRES" != x""; then
       PKG_CONFIG_REQUIRES="$PKG_CONFIG_REQUIRES,"
     fi
     PKG_CONFIG_REQUIRES="$PKG_CONFIG_REQUIRES libusb"
+    fi
   fi
 
   # Search using libusb-config
