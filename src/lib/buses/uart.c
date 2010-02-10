@@ -1,7 +1,7 @@
 /*-
  * Public platform independent Near Field Communication (NFC) library
  * 
- * Copyright (C) 2009, Roel Verdult
+ * Copyright (C) 2009, 2010, Roel Verdult, Romuald Conty
  * 
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -20,7 +20,9 @@
 
 /**
  * @file uart.c
- * @brief
+ * @brief UART driver
+ * 
+ * This file contains 2 implementations of UART driver: first for POSIX systems, second for Windows system.
  */
 
 /*
@@ -34,13 +36,12 @@ http://www.teuniz.net/RS-232/index.html
 
 #include "uart.h"
 
-#include <sys/select.h>
-
 #include <nfc/nfc-messages.h>
 
 // Test if we are dealing with unix operating systems
 #ifndef _WIN32
 
+#include <sys/select.h>
 #include <termios.h>
 typedef struct termios term_info;
 typedef struct {
