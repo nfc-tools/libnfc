@@ -87,19 +87,19 @@ pn532_uart_pick_device (void)
 bool
 pn532_uart_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *pszDeviceFound)
 {
+  serial_port sp;
+  char acConnect[BUFFER_LENGTH];
+  int iDevice;
+
+  *pszDeviceFound = 0;
+
 /* @note: Due to UART bus we can't know if its really a pn532 without
  * sending some PN53x commands. But using this way to probe devices, we can
  * have serious problem with other device on this bus */
-  *pszDeviceFound = 0;
-
 #ifndef SERIAL_AUTOPROBE_ENABLED
   INFO("%s", "Sorry, serial auto-probing have been disabled at compile time.");
   return false;
 #else /* SERIAL_AUTOPROBE_ENABLED */
-
-  serial_port sp;
-  char acConnect[BUFFER_LENGTH];
-  int iDevice;
 
   // I have no idea how MAC OS X deals with multiple devices, so a quick workaround
   for (iDevice=0; iDevice<DRIVERS_MAX_DEVICES; iDevice++)

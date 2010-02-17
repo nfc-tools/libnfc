@@ -159,12 +159,12 @@ nfc_device_t* pn53x_usb_connect(const nfc_device_desc_t* pndd,const char * targe
   usb_spec_t us;
   struct usb_bus *bus;
   struct usb_device *dev;
+  uint32_t uiBusIndex;
 
   us.uiEndPointIn = 0;
   us.uiEndPointOut = 0;
   us.pudh = NULL;
 
-  uint32_t uiBusIndex;
 
   // must specify device to connect to
   if(pndd == NULL) return NULL;
