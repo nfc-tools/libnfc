@@ -353,12 +353,12 @@ int main(int argc, const char* argv[])
   if(strcmp(command, "r") == 0)
   {
     atAction = ACTION_READ;
-    bUseKeyA = (tolower(*(argv[2])) == 'a');
+    bUseKeyA = tolower((int)((unsigned char)*(argv[2]))) == 'a';
     bUseKeyFile = (argc > 4);
   } else if(strcmp(command, "w") == 0) 
   {
     atAction = ACTION_WRITE;
-    bUseKeyA = (tolower(*(argv[2])) == 'a');
+    bUseKeyA = tolower((int)((unsigned char)*(argv[2]))) == 'a';
     bUseKeyFile = (argc > 4);
   } else if(strcmp(command, "x") == 0)
   {

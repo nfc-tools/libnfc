@@ -151,7 +151,7 @@ int main(int argc, const char* argv[])
 
   printf("\nChecking arguments and settings\n");
 
-  bReadAction = (tolower(*(argv[1])) == 'r');
+  bReadAction = tolower((int)((unsigned char)*(argv[1])) == 'r');
 
   if (bReadAction)
   {
