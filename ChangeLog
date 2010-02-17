@@ -1,3 +1,34 @@
+Feb 17, 2010 - 1.3.3
+--------------------
+
+Fixes:
+ - libnfc: Attempt to fix build on Windows using CMake;
+ - libnfc: Fix build on NetBSD;
+ - libnfc: Fix build on MacOS X;
+ - nfc-relay: fix usage of two device using the same driver.
+
+
+
+Feb 01, 2010 - 1.3.2
+--------------------
+
+Fixes:
+ - libnfc: Fix compilation issue under FreeBSD (should now compile on FreeBSD 6, 7 and 8).
+
+Note: Experimental CMake files are provided with this release, issues reports are welcome.
+
+
+
+Jan 20, 2010 - 1.3.1
+--------------------
+
+Fixes:
+ - libnfc: Fix compilation issue under Windows;
+ - uart bus: Fix possible invalid file descriptor in uart_close();
+ - uart bus: Serial autoprobing is now DISABLED to avoid UART disturbing. (Feature can be enabled using –enable-serial-autoprobe option while configure).
+
+
+
 Jan 14, 2010 - 1.3.0
 --------------------
 
