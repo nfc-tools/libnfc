@@ -33,7 +33,7 @@ AC_PATH_PROG(PKG_CONFIG, pkg-config, [AC_MSG_ERROR([pkg-config not found.])])
 AC_HEADER_STDC
 AC_HEADER_STDBOOL
 AC_CHECK_HEADERS([stdio.h stdlib.h stdint.h stddef.h stdbool.h])
-AC_CHECK_FUNCS(strdup, [AC_DEFINE([_XOPEN_SOURCE], [600], [Enable POSIX extensions if present])])
+AC_CHECK_FUNCS([strdup, usleep], [AC_DEFINE([_XOPEN_SOURCE], [600], [Enable POSIX extensions if present])])
 
 AC_DEFINE(_NETBSD_SOURCE, 1, [Define on NetBSD to activate all library features])
 AC_DEFINE(_DARWIN_C_SOURCE, 1, [Define on Darwin to activate all library features])
