@@ -71,6 +71,7 @@ int main(int argc,char* argv[])
   bool quiet_output = false;
   size_t szFound;
   nfc_device_desc_t *pnddDevices;
+  const char* acLibnfcVersion = nfc_version();
 
   // Get commandline options
   for (arg=1;arg<argc;arg++) {
@@ -88,7 +89,6 @@ int main(int argc,char* argv[])
   }
 
   // Display libnfc version
-  const char* acLibnfcVersion = nfc_version();
   printf("%s use libnfc %s\n", argv[0], acLibnfcVersion);
 
 #ifdef WIN32

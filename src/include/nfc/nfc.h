@@ -30,6 +30,15 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#if defined (_WIN32) 
+  #if defined(nfc_EXPORTS)
+    #define  NFC_EXPORT __declspec(dllexport)
+  #else
+    #define  NFC_EXPORT __declspec(dllimport)
+  #endif /* nfc_EXPORTS */
+#else /* defined (_WIN32) */
+ #define NFC_EXPORT
+#endif
 
 #include <nfc/nfc-types.h>
 
@@ -38,35 +47,35 @@
 #endif // __cplusplus
 
 /* NFC Device/Hardware manipulation */
-void nfc_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *pszDeviceFound);
-nfc_device_t* nfc_connect(nfc_device_desc_t* pndd);
-void nfc_disconnect(nfc_device_t* pnd);
-bool nfc_configure(nfc_device_t* pnd, const nfc_device_option_t ndo, const bool bEnable);
+NFC_EXPORT void nfc_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *pszDeviceFound);
+NFC_EXPORT nfc_device_t* nfc_connect(nfc_device_desc_t* pndd);
+NFC_EXPORT void nfc_disconnect(nfc_device_t* pnd);
+NFC_EXPORT bool nfc_configure(nfc_device_t* pnd, const nfc_device_option_t ndo, const bool bEnable);
 
 /* NFC initiator: act as "reader" */
-bool nfc_initiator_init(const nfc_device_t* pnd);
-bool nfc_initiator_select_tag(const nfc_device_t* pnd, const nfc_modulation_t nmInitModulation, const byte_t* pbtInitData, const size_t szInitDataLen, nfc_target_info_t* pti);
-bool nfc_initiator_select_dep_target(const nfc_device_t* pnd, const nfc_modulation_t nmInitModulation, const byte_t* pbtPidData, const size_t szPidDataLen, const byte_t* pbtNFCID3i, const size_t szNFCID3iDataLen, const byte_t *pbtGbData, const size_t szGbDataLen, nfc_target_info_t* pti);
-bool nfc_initiator_deselect_tag(const nfc_device_t* pnd);
-bool nfc_initiator_transceive_bits(const nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxBits, const byte_t* pbtTxPar, byte_t* pbtRx, size_t* pszRxBits, byte_t* pbtRxPar);
-bool nfc_initiator_transceive_bytes(const nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen);
-bool nfc_initiator_transceive_dep_bytes(const nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen);
-bool nfc_initiator_mifare_cmd(const nfc_device_t* pnd, const mifare_cmd mc, const uint8_t ui8Block, mifare_param* pmp);
+NFC_EXPORT bool nfc_initiator_init(const nfc_device_t* pnd);
+NFC_EXPORT bool nfc_initiator_select_tag(const nfc_device_t* pnd, const nfc_modulation_t nmInitModulation, const byte_t* pbtInitData, const size_t szInitDataLen, nfc_target_info_t* pti);
+NFC_EXPORT bool nfc_initiator_select_dep_target(const nfc_device_t* pnd, const nfc_modulation_t nmInitModulation, const byte_t* pbtPidData, const size_t szPidDataLen, const byte_t* pbtNFCID3i, const size_t szNFCID3iDataLen, const byte_t *pbtGbData, const size_t szGbDataLen, nfc_target_info_t* pti);
+NFC_EXPORT bool nfc_initiator_deselect_tag(const nfc_device_t* pnd);
+NFC_EXPORT bool nfc_initiator_transceive_bits(const nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxBits, const byte_t* pbtTxPar, byte_t* pbtRx, size_t* pszRxBits, byte_t* pbtRxPar);
+NFC_EXPORT bool nfc_initiator_transceive_bytes(const nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen);
+NFC_EXPORT bool nfc_initiator_transceive_dep_bytes(const nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen);
+NFC_EXPORT bool nfc_initiator_mifare_cmd(const nfc_device_t* pnd, const mifare_cmd mc, const uint8_t ui8Block, mifare_param* pmp);
 
 /* NFC target: act as tag (i.e. MIFARE Classic) or NFC target device. */
-bool nfc_target_init(const nfc_device_t* pnd, byte_t* pbtRx, size_t* pszRxBits);
-bool nfc_target_receive_bits(const nfc_device_t* pnd, byte_t* pbtRx, size_t* pszRxBits, byte_t* pbtRxPar);
-bool nfc_target_receive_bytes(const nfc_device_t* pnd, byte_t* pbtRx, size_t* pszRxLen);
-bool nfc_target_receive_dep_bytes(const nfc_device_t* pnd, byte_t* pbtRx, size_t* pszRxLen);
-bool nfc_target_send_bits(const nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxBits, const byte_t* pbtTxPar);
-bool nfc_target_send_bytes(const nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxLen);
-bool nfc_target_send_dep_bytes(const nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxLen);
+NFC_EXPORT bool nfc_target_init(const nfc_device_t* pnd, byte_t* pbtRx, size_t* pszRxBits);
+NFC_EXPORT bool nfc_target_receive_bits(const nfc_device_t* pnd, byte_t* pbtRx, size_t* pszRxBits, byte_t* pbtRxPar);
+NFC_EXPORT bool nfc_target_receive_bytes(const nfc_device_t* pnd, byte_t* pbtRx, size_t* pszRxLen);
+NFC_EXPORT bool nfc_target_receive_dep_bytes(const nfc_device_t* pnd, byte_t* pbtRx, size_t* pszRxLen);
+NFC_EXPORT bool nfc_target_send_bits(const nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxBits, const byte_t* pbtTxPar);
+NFC_EXPORT bool nfc_target_send_bytes(const nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxLen);
+NFC_EXPORT bool nfc_target_send_dep_bytes(const nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxLen);
 
 /* Special data accessors */
-const char* nfc_device_name(nfc_device_t* pnd);
+NFC_EXPORT const char* nfc_device_name(nfc_device_t* pnd);
 
 /* Misc. functions */
-const char* nfc_version(void);
+NFC_EXPORT const char* nfc_version(void);
 
 #ifdef __cplusplus 
 }

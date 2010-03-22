@@ -28,22 +28,35 @@
 
 #include <nfc/nfc-types.h>
 
+/*
+ * FIXME: There is no place for this here
+ */
+#if defined (_WIN32) 
+  #if defined(nfc_EXPORTS)
+    #define  NFC_EXPORT __declspec(dllexport)
+  #else
+    #define  NFC_EXPORT __declspec(dllimport)
+  #endif /* nfc_EXPORTS */
+#else /* defined (_WIN32) */
+ #define NFC_EXPORT
+#endif
+
 byte_t oddparity(const byte_t bt);
 void oddparity_byte_ts(const byte_t* pbtData, const size_t szLen, byte_t* pbtPar);
 
-byte_t mirror(byte_t bt);
-uint32_t mirror32(uint32_t ui32Bits);
-uint64_t mirror64(uint64_t ui64Bits);
-void mirror_byte_ts(byte_t *pbts, size_t szLen);
+NFC_EXPORT byte_t mirror(byte_t bt);
+NFC_EXPORT uint32_t mirror32(uint32_t ui32Bits);
+NFC_EXPORT uint64_t mirror64(uint64_t ui64Bits);
+NFC_EXPORT void mirror_byte_ts(byte_t *pbts, size_t szLen);
 
-uint32_t swap_endian32(const void* pui32);
-uint64_t swap_endian64(const void* pui64);
+NFC_EXPORT uint32_t swap_endian32(const void* pui32);
+NFC_EXPORT uint64_t swap_endian64(const void* pui64);
 
-void append_iso14443a_crc(byte_t* pbtData, size_t szLen);
+NFC_EXPORT void append_iso14443a_crc(byte_t* pbtData, size_t szLen);
 
-void print_hex(const byte_t* pbtData, const size_t szLen);
-void print_hex_bits(const byte_t* pbtData, const size_t szBits);
-void print_hex_par(const byte_t* pbtData, const size_t szBits, const byte_t* pbtDataPar);
+NFC_EXPORT void print_hex(const byte_t* pbtData, const size_t szLen);
+NFC_EXPORT void print_hex_bits(const byte_t* pbtData, const size_t szBits);
+NFC_EXPORT void print_hex_par(const byte_t* pbtData, const size_t szBits, const byte_t* pbtDataPar);
 
 #endif // _LIBNFC_BITUTILS_H_
 
