@@ -2,7 +2,7 @@ PROJECT(libnfc C)
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 SET(VERSION_MAJOR "1")
 SET(VERSION_MINOR "3")
-SET(VERSION_PATCH "2")
+SET(VERSION_PATCH "3")
 
 SET(VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}")
 
@@ -59,8 +59,10 @@ ENDIF(LIBNFC_DEBUG_OUTPUT)
 # CMake have config.h generation, so we must define this
 ADD_DEFINITIONS("-DHAVE_CONFIG_H")
 
-# Make sure we will not miss some warnings ;)
-ADD_DEFINITIONS(-Wall -pedantic -std=c99)
+IF(CMAKE_COMPILER_IS_GNU_CC)
+  # Make sure we will not miss some warnings ;)
+  ADD_DEFINITIONS(-Wall -pedantic -std=c99)
+ENDIF(CMAKE_COMPILER_IS_GNU_CC)
 
 # Workarounds for libusb in C99
 ADD_DEFINITIONS(-Du_int8_t=uint8_t -Du_int16_t=uint16_t)
