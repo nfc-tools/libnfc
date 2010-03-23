@@ -12,6 +12,8 @@ FOREACH(source ${EXAMPLES-SOURCES})
   INSTALL(TARGETS ${source} RUNTIME DESTINATION bin COMPONENT examples)
 ENDFOREACH(source)
 
-# Manuals for the examples
-FILE(GLOB manuals "${CMAKE_CURRENT_SOURCE_DIR}/*.1")
-INSTALL(FILES ${manuals} DESTINATION ${SHARE_INSTALL_PREFIX}/man/man1 COMPONENT manuals)
+IF(NOT MSVC)
+  # Manuals for the examples
+  FILE(GLOB manuals "${CMAKE_CURRENT_SOURCE_DIR}/*.1")
+  INSTALL(FILES ${manuals} DESTINATION ${SHARE_INSTALL_PREFIX}/man/man1 COMPONENT manuals)
+ENDIF(NOT MSVC)
