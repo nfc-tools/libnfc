@@ -92,7 +92,7 @@ pn532_uart_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_
  * have serious problem with other device on this bus */
 #ifndef SERIAL_AUTOPROBE_ENABLED
   *pszDeviceFound = 0;
-  WARN("%s", "Sorry, serial auto-probing have been disabled at compile time.");
+  DBG("%s", "Serial auto-probing have been disabled at compile time. Skipping autoprobe.");
   return false;
 #else /* SERIAL_AUTOPROBE_ENABLED */
   *pszDeviceFound = 0;
