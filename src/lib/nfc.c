@@ -210,7 +210,7 @@ nfc_device_t* nfc_connect(nfc_device_desc_t* pndd)
       DBG("No device found using driver: %s", drivers_callbacks_list[uiDriver].acDriver);
     }
   }
-  // To bad, no reader is ready to be claimed
+  // Too bad, no reader is ready to be claimed
   return NULL;
 }
 
@@ -241,7 +241,7 @@ void nfc_disconnect(nfc_device_t* pnd)
  * There are different categories for configuring the PN53X chip features (handle, activate, infinite and accept).
  * These are defined to organize future settings that will become available when they are needed.
  */
-bool nfc_configure(nfc_device_t* pnd, const nfc_device_option_t dco, const bool bEnable)
+bool nfc_configure(nfc_device_t* pnd, const nfc_device_option_t ndo, const bool bEnable)
 {
   byte_t btValue;
   byte_t abtCmd[sizeof(pncmd_rf_configure)];
@@ -250,7 +250,7 @@ bool nfc_configure(nfc_device_t* pnd, const nfc_device_option_t dco, const bool 
   // Make sure we are dealing with a active device
   if (!pnd->bActive) return false;
 
-  switch(dco)
+  switch(ndo)
   {
     case NDO_HANDLE_CRC:
       // Enable or disable automatic receiving/sending of CRC bytes
