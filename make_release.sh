@@ -67,7 +67,6 @@ if [ ! -f $LIBNFC_WINDOWS_ARCHIVE ]; then
 	# Copy important files
 	cp AUTHORS $LIBNFC_WINDOWS_DIR/AUTHORS.txt
 	cp LICENSE $LIBNFC_WINDOWS_DIR/LICENSE.txt
-	cp README-Windows.txt $LIBNFC_WINDOWS_DIR/
 
 	# Remove Autotools Makefile.am
 	find $LIBNFC_WINDOWS_DIR/ -name Makefile.am | xargs rm -f
