@@ -159,7 +159,7 @@ typedef enum {
 } nfc_modulation_t;
 
 /**
- * @struct nfc_target_info_t_dep
+ * @struct nfc_dep_info_t
  * @brief NFC tag information in Data Exchange Protocol
  */
 typedef struct {
@@ -170,7 +170,7 @@ typedef struct {
 } nfc_dep_info_t;
 
 /**
- * @struct nfc_target_info_t_iso14443a
+ * @struct nfc_iso14443a_info_t
  * @brief NFC ISO14443A tag (MIFARE) information
  */
 typedef struct {
@@ -183,7 +183,7 @@ typedef struct {
 } nfc_iso14443a_info_t;
 
 /**
- * @struct nfc_target_info_t_felica
+ * @struct nfc_felica_info_t
  * @brief NFC FeLiCa tag information
  */
 typedef struct {
@@ -195,7 +195,7 @@ typedef struct {
 } nfc_felica_info_t;
 
 /**
- * @struct nfc_target_info_t_iso14443b
+ * @struct nfc_iso14443b_info_t
  * @brief NFC ISO14443B tag information
  */
 typedef struct {
@@ -211,7 +211,7 @@ typedef struct {
 } nfc_iso14443b_info_t;
 
 /**
- * @struct nfc_target_info_t_jewel
+ * @struct nfc_jewel_info_t
  * @brief NFC Jewel tag information
  */
 typedef struct {
