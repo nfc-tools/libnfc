@@ -432,7 +432,7 @@ bool nfc_initiator_select_tag(const nfc_device_t* pnd, const nfc_modulation_t nm
           abtInit[0] = 0x88;
           memcpy(abtInit+1,pbtInitData,3);
           abtInit[4] = 0x88;
-          memcpy(abtInit+4,pbtInitData+3,7);
+          memcpy(abtInit+5,pbtInitData+3,7);
           szInitLen = 12;
         break;
 
