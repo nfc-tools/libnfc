@@ -488,6 +488,17 @@ bool nfc_initiator_select_tag(const nfc_device_t* pnd, const nfc_modulation_t nm
         } else {
           pnti->nai.szAtsLen = 0;
         }
+
+	// Strip CT (Cascade Tag) to retrieve and store the _real_ UID
+	// (e.g. 0x8801020304050607 is in fact 0x01020304050607)
+	if ((pnti->nai.szUidLen == 8) && (pnti->nai.abtUid[0] == 0x88)) {
+	    pnti->nai.szUidLen = 7;
+	    memmove (pnti->nai.abtUid, pnti->nai.abtUid + 1, 7)
+	} else if ((pnti->nai.szUidLen == 12) && (pnti->nai.abtUid[0] == 0x88) && (pnti->nai.abtUid[4] == 0x88)) {
+	    pnti->nai.szUidLen = 10;
+	    memmove (pnti->nai.abtUid, pnti->nai.abtUid + 1, 3);
+	    memmove (pnti->nai.abtUid + 3, pnti->nai.abtUid + 5, 7);
+	}
       break;
 
       case NM_FELICA_212:
