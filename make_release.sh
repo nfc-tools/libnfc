@@ -10,17 +10,16 @@ LIBNFC_VERSION=$(grep AC_INIT configure.ac | sed 's/^.*(\(.*\))/\1/g' | awk -F',
 LIBNFC_AUTOTOOLS_ARCHIVE=libnfc-$LIBNFC_VERSION.tar.gz
 
 if [ ! -f $LIBNFC_AUTOTOOLS_ARCHIVE ]; then
-	# First, we can test archive using "distcheck"
-	autoreconf -vis && ./configure && make distcheck
+	echo "Autotooled archive generation..."
+	# First, clean what we can
+	autoreconf -is && ./configure && make distclean
 
-	# Clean up
-        make distclean
+	# Second, generate dist archive (and test it)
+	autoreconf -is && ./configure  && make distcheck
 
-	# We are ready to make a good autotools release.
-	autoreconf -vis && ./configure && make dist
-
-	# Clean up
+	# Finally, clean up
 	make distclean
+	echo "Autotooled archive generate."
 else
 	echo "Autotooled archive (GNU/Linux, BSD, etc.) is already done: skipped."
 fi
@@ -30,12 +29,13 @@ LIBNFC_DOC_DIR=libnfc-doc-$LIBNFC_VERSION
 LIBNFC_DOC_ARCHIVE=$LIBNFC_DOC_DIR.zip
 
 if [ ! -f $LIBNFC_DOC_ARCHIVE ]; then
+	echo "Documentation archive generation..."
 	if [ -d $LIBNFC_DOC_DIR ]; then
 		rm -rf $LIBNFC_DOC_DIR
 	fi
 
 	# Build documentation
-	autoreconf -vis && ./configure --enable-doc && make doc
+	autoreconf -is && ./configure --enable-doc && make doc || false
 
 	# Create archive
 	cp -r doc/html $LIBNFC_DOC_DIR
@@ -44,6 +44,7 @@ if [ ! -f $LIBNFC_DOC_ARCHIVE ]; then
 	# Clean up
 	rm -rf $LIBNFC_DOC_DIR
 	make distclean
+	echo "Documentation archive generated."
 else
 	echo "Documentation archive is already done: skipped."
 fi
@@ -53,6 +54,7 @@ LIBNFC_WINDOWS_DIR=libnfc-$LIBNFC_VERSION-winsdk
 LIBNFC_WINDOWS_ARCHIVE=$LIBNFC_WINDOWS_DIR.zip
 
 if [ ! -f $LIBNFC_WINDOWS_ARCHIVE ]; then
+	echo "Windows archive generation..."
 	if [ -d $LIBNFC_WINDOWS_DIR ]; then
 		rm -rf $LIBNFC_WINDOWS_DIR
 	fi
@@ -77,6 +79,7 @@ if [ ! -f $LIBNFC_WINDOWS_ARCHIVE ]; then
 	# Build archive
 	zip -r $LIBNFC_WINDOWS_ARCHIVE $LIBNFC_WINDOWS_DIR
 	rm -rf $LIBNFC_WINDOWS_DIR
+	echo "Windows archive generated."
 else
 	echo "Windows archive is already done: skipped."
 fi
