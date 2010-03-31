@@ -75,6 +75,7 @@ NFC_EXPORT bool nfc_target_send_dep_bytes(const nfc_device_t* pnd, const byte_t*
 NFC_EXPORT const char* nfc_device_name(nfc_device_t* pnd);
 
 /* Misc. functions */
+NFC_EXPORT void iso14443a_crc(byte_t* pbtData, size_t szLen, byte_t* pbtCrc);
 NFC_EXPORT const char* nfc_version(void);
 
 #ifdef __cplusplus 

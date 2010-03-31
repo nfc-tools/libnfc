@@ -128,7 +128,7 @@ uint64_t swap_endian64(const void* pui64)
   return (((ui64N&0xFF)<<56)+((ui64N&0xFF00)<<40)+((ui64N&0xFF0000)<<24)+((ui64N&0xFF000000)<<8)+((ui64N&0xFF00000000ull)>>8)+((ui64N&0xFF0000000000ull)>>24)+((ui64N&0xFF000000000000ull)>>40)+((ui64N&0xFF00000000000000ull)>>56));
 }
 
-void append_iso14443a_crc(byte_t* pbtData, size_t szLen)
+void iso14443a_crc(byte_t* pbtData, size_t szLen, byte_t* pbtCrc)
 {
   byte_t bt;
   uint32_t wCrc = 0x6363;
@@ -140,8 +140,13 @@ void append_iso14443a_crc(byte_t* pbtData, size_t szLen)
     wCrc = (wCrc >> 8)^((uint32_t)bt << 8)^((uint32_t)bt<<3)^((uint32_t)bt>>4);
   } while (--szLen);
 
-  *pbtData++ = (byte_t) (wCrc & 0xFF);
-  *pbtData = (byte_t) ((wCrc >> 8) & 0xFF);
+  *pbtCrc++ = (byte_t) (wCrc & 0xFF);
+  *pbtCrc = (byte_t) ((wCrc >> 8) & 0xFF);
+}
+
+void append_iso14443a_crc(byte_t* pbtData, size_t szLen)
+{
+  iso14443a_crc(pbtData, szLen, pbtData + szLen);
 }
 
 void print_hex(const byte_t* pbtData, const size_t szBytes)
