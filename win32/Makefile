@@ -1,7 +1,7 @@
 ###############################################
 # General settings
 ###############################################
-VERSION = 1.3.0
+VERSION = 1.3.4
 SOURCE = ../src
 NFC_LIB = $(SOURCE)/lib
 NFC_INCLUDE = $(SOURCE)/include
