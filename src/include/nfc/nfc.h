@@ -30,15 +30,22 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#if defined (_WIN32) 
-  #if defined(nfc_EXPORTS)
-    #define  NFC_EXPORT __declspec(dllexport)
-  #else
-    #define  NFC_EXPORT __declspec(dllimport)
-  #endif /* nfc_EXPORTS */
-#else /* defined (_WIN32) */
- #define NFC_EXPORT
-#endif
+#ifdef _WIN32
+  /* Windows platform */
+  #ifndef _WINDLL
+    /* CMake compilation */
+    #ifdef nfc_EXPORTS
+      #define  NFC_EXPORT __declspec(dllexport)
+    #else /* nfc_EXPORTS */
+      #define  NFC_EXPORT __declspec(dllimport)
+    #endif /* nfc_EXPORTS */
+  #else /* _WINDLL */
+    /* Manual makefile */
+    #define NFC_EXPORT
+  #endif /* _WINDLL */
+#else /* _WIN32 */
+  #define NFC_EXPORT
+#endif /* _WIN32 */
 
 #include <nfc/nfc-types.h>
 
