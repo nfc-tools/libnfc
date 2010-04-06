@@ -1,3 +1,23 @@
+Apr 6, 2010 - 1.3.4
+--------------------
+
+Fixes:
+ - Fix CT (Cascade Tag) byte when using 10 bytes long UID.
+ - Strip CT (Cascade Tag) from UIDs in nfc_initiator_select_tag().
+ - Fix CMake build (mainly on Windows related stuff)
+ - Minors fixes in documentation.
+ - Suppress almost all compilation warnings.
+
+Changes:
+ - API: Provide ISO14443A CRC function.
+ - Remove annoying info message when probing uart devices while serial autoprobing is disabled.
+ - Rename README-Windows.txt (compilation using CMake) into CMake-Windows.txt
+ - Add README for Windows compilation using win32/Makefile.
+
+Note: Windows users could now take main tarball using CMake to build or Windows specific archive using MinGW GNU/Make.
+
+
+
 Feb 17, 2010 - 1.3.3
 --------------------
 
@@ -5,7 +25,7 @@ Fixes:
  - libnfc: Attempt to fix build on Windows using CMake;
  - libnfc: Fix build on NetBSD;
  - libnfc: Fix build on MacOS X;
- - nfc-relay: fix usage of two device using the same driver.
+ - nfc-relay: fix usage of two devices that use the same driver.
 
 
 
@@ -125,5 +145,6 @@ Feb 12, 2009 - 1.0.0
 --------------------
 
  - Initial release
+
 
 
