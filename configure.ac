@@ -46,7 +46,7 @@ AC_TYPE_UINT32_T
 AC_TYPE_UINT64_T
 AC_TYPE_INT32_T
 
-LIBNFC_CFLAGS='-I$(top_srcdir)/src/lib -I$(top_builddir)/src/include -I$(top_srcdir)/src/include'
+LIBNFC_CFLAGS='-I$(top_srcdir)/libnfc -I$(top_builddir)/include -I$(top_srcdir)/include'
 AC_SUBST(LIBNFC_CFLAGS)
 
 # Debug support (default:no)
@@ -189,14 +189,13 @@ CFLAGS="$CFLAGS -Du_int8_t=uint8_t -Du_int16_t=uint16_t"
 
 AC_CONFIG_FILES([
 		Makefile
-		src/include/Makefile
-		src/include/nfc/Makefile
-		src/lib/chips/Makefile
-		src/lib/buses/Makefile
-		src/lib/drivers/Makefile
-		src/lib/Makefile
-		src/examples/Makefile
-		src/Makefile
+		include/Makefile
+		include/nfc/Makefile
+		libnfc/chips/Makefile
+		libnfc/buses/Makefile
+		libnfc/drivers/Makefile
+		libnfc/Makefile
+		examples/Makefile
 		cmake_modules/Makefile
 		libnfc.pc
 		Doxyfile

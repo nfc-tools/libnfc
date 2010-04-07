@@ -4,7 +4,7 @@ INCLUDES= $(all_includes) $(LIBNFC_CFLAGS)
 noinst_HEADERS = arygon.h pn532_uart.h
 noinst_LTLIBRARIES = libnfcdrivers.la
 libnfcdrivers_la_SOURCES = arygon.c pn532_uart.c
-libnfcdrivers_la_CFLAGS = -I$(top_srcdir)/src/lib -I$(top_srcdir)/src/lib/buses
+libnfcdrivers_la_CFLAGS = -I$(top_srcdir)/libnfc -I$(top_srcdir)/libnfc/buses
 libnfcdrivers_la_LIBADD = 
 
 if PCSC_LITE_ENABLED

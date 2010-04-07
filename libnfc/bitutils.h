@@ -26,27 +26,20 @@
 
 #include <stdint.h>
 
+#include <nfc/nfc-types.h>
+
 /*
  * FIXME: There is no place for this here
  */
-#ifdef _WIN32
-  /* Windows platform */
-  #ifndef _WINDLL
-    /* CMake compilation */
-    #ifdef nfc_EXPORTS
-      #define  NFC_EXPORT __declspec(dllexport)
-    #else /* nfc_EXPORTS */
-      #define  NFC_EXPORT __declspec(dllimport)
-    #endif /* nfc_EXPORTS */
-  #else /* _WINDLL */
-    /* Manual makefile */
-    #define NFC_EXPORT
-  #endif /* _WINDLL */
-#else /* _WIN32 */
-  #define NFC_EXPORT
-#endif /* _WIN32 */
-
-#include <nfc/nfc-types.h>
+#if defined (_WIN32) 
+  #if defined(nfc_EXPORTS)
+    #define  NFC_EXPORT __declspec(dllexport)
+  #else
+    #define  NFC_EXPORT __declspec(dllimport)
+  #endif /* nfc_EXPORTS */
+#else /* defined (_WIN32) */
+ #define NFC_EXPORT
+#endif
 
 byte_t oddparity(const byte_t bt);
 void oddparity_byte_ts(const byte_t* pbtData, const size_t szLen, byte_t* pbtPar);

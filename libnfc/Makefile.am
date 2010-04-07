@@ -8,9 +8,9 @@ libnfc_la_SOURCES = nfc.c bitutils.c
 libnfc_la_LDFLAGS = -no-undefined -version-info=0:0:0
 libnfc_la_CFLAGS = 
 libnfc_la_LIBADD = \
-	$(top_builddir)/src/lib/chips/libnfcchips.la \
-	$(top_builddir)/src/lib/buses/libnfcbuses.la \
-	$(top_builddir)/src/lib/drivers/libnfcdrivers.la
+	$(top_builddir)/libnfc/chips/libnfcchips.la \
+	$(top_builddir)/libnfc/buses/libnfcbuses.la \
+	$(top_builddir)/libnfc/drivers/libnfcdrivers.la
 
 if PCSC_LITE_ENABLED
   libnfc_la_CFLAGS += @LIBPCSCLITE_CFLAGS@ -DHAVE_PCSC_LITE

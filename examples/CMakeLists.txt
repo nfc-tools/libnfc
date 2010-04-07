@@ -1,6 +1,7 @@
 SET(EXAMPLES-SOURCES nfc-list nfc-mfclassic nfc-mfultralight nfcip-initiator nfcip-target nfc-anticol nfc-emulate nfc-relay)
 
-INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/../lib)
+# XXX: Examples should not use private API!
+INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/../libnfc)
 
 INCLUDE_DIRECTORIES(${LIBUSB_INCLUDE_DIRS} ${PCSC_INCLUDE_DIRS})
 LINK_DIRECTORIES(${LIBUSB_LIBRARY_DIRS} ${PCSC_LIBRARY_DIRS})
