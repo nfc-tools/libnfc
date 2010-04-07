@@ -27,6 +27,7 @@
   #include "config.h"
 #endif // HAVE_CONFIG_H
 
+#include <err.h>
 #include <stdio.h>
 #include <nfc/nfc.h>
 
@@ -38,6 +39,10 @@ int main(int argc, const char *argv[])
   size_t szRecvBits;
   byte_t send[] = "Hello Mars!";
   nfc_device_t *pnd = nfc_connect(NULL);
+
+  if (argc > 1) {
+    errx (1, "usage: %s", argv[0]);
+  }
 
   if (!pnd || !nfc_target_init(pnd, abtRecv, &szRecvBits)) {
     printf("unable to connect or initialize\n");

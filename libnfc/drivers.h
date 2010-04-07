@@ -43,7 +43,7 @@
 #define DRIVERS_MAX_DEVICES         16
 #define MAX_FRAME_LEN       264
 
-const static struct driver_callbacks drivers_callbacks_list[] = {
+static const struct driver_callbacks drivers_callbacks_list[] = {
 //  Driver Name             Pick Device             List Devices              Connect              Transceive                Disconnect
 #ifdef HAVE_PCSC_LITE
   { ACR122_DRIVER_NAME,     acr122_pick_device,     acr122_list_devices,      acr122_connect,      acr122_transceive,        acr122_disconnect       },

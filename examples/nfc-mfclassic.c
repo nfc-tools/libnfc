@@ -47,7 +47,7 @@ static mifare_tag mtKeys;
 static mifare_tag mtDump;
 static bool bUseKeyA;
 static bool bUseKeyFile;
-static uint32_t uiBlocks;
+static uint8_t uiBlocks;
 static byte_t keys[] = {
   0xff,0xff,0xff,0xff,0xff,0xff,
   0xd3,0xf7,0xd3,0xf7,0xd3,0xf7,

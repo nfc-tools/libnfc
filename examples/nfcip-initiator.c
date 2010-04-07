@@ -26,6 +26,7 @@
   #include "config.h"
 #endif // HAVE_CONFIG_H
 
+#include <err.h>
 #include <stdio.h>
 #include <string.h>
 #include <nfc/nfc.h>
@@ -39,6 +40,10 @@ int main(int argc, const char *argv[])
   byte_t abtRecv[MAX_FRAME_LEN];
   size_t szRecvBits;
   byte_t send[] = "Hello World!";
+
+  if (argc > 1) {
+    errx (1, "usage: %s", argv[0]);
+  }
 
   pnd = nfc_connect(NULL);
   if (!pnd || !nfc_initiator_init(pnd)

@@ -348,6 +348,7 @@ char* acr122_firmware(const nfc_device_spec_t nds)
 
 bool acr122_led_red(const nfc_device_spec_t nds, bool bOn)
 {
+  (void)bOn;
   byte_t abtLed[9] = { 0xFF,0x00,0x40,0x05,0x04,0x00,0x00,0x00,0x00 };
   acr122_spec_t* pas = (acr122_spec_t*)nds;
   byte_t abtBuf[2];

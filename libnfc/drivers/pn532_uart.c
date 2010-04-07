@@ -91,6 +91,8 @@ pn532_uart_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_
  * sending some PN53x commands. But using this way to probe devices, we can
  * have serious problem with other device on this bus */
 #ifndef SERIAL_AUTOPROBE_ENABLED
+  (void)pnddDevices;
+  (void)szDevices;
   *pszDeviceFound = 0;
   DBG("%s", "Serial auto-probing have been disabled at compile time. Skipping autoprobe.");
   return false;

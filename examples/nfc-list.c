@@ -33,6 +33,7 @@
   #endif
 #endif
 
+#include <err.h>
 #include <stdio.h>
 #include <stddef.h>
 #include <stdlib.h>
@@ -53,6 +54,10 @@ int main(int argc, const char* argv[])
   size_t i;
   nfc_target_info_t nti;
   nfc_device_desc_t *pnddDevices;
+
+  if (argc > 1) {
+    errx (1, "usage: %s", argv[0]);
+  }
 
   // Display libnfc version
   const char* acLibnfcVersion = nfc_version();
