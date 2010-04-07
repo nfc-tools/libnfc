@@ -62,7 +62,7 @@ if [ ! -f $LIBNFC_WINDOWS_ARCHIVE ]; then
 	mkdir -p $LIBNFC_WINDOWS_DIR
 
 	# Export sources
-	svn export src $LIBNFC_WINDOWS_DIR/src
+	svn export libnfc $LIBNFC_WINDOWS_DIR/src
 	# Export windows files
 	svn export win32 $LIBNFC_WINDOWS_DIR/win32
 
