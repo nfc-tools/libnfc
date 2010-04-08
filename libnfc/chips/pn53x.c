@@ -79,6 +79,7 @@ bool pn53x_transceive(const nfc_device_t* pnd, const byte_t* pbtTx, const size_t
   if (!pnd->pdc->transceive(pnd->nds,pbtTx,szTxLen,pbtRx,pszRxLen)) return false;
 
   // Make sure there was no failure reported by the PN53X chip (0x00 == OK)
+  // FIXME (0x00 == OK) is not always true...
   if (pbtRx[0] != 0) return false;
 
   // Succesful transmission
