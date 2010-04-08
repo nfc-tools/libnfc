@@ -339,7 +339,7 @@ bool nfc_initiator_init(const nfc_device_t* pnd)
  * @param pbtGbData generic data of the initiator, max 48 bytes long, (optional, can be NULL)
  *
  * The NFC device will try to find the available target. The standards (ISO18092 and ECMA-340) describe the modulation that can be used for reader to passive communications.
- * @note nfc_target_info_t_dep will be returned when the target was acquired successfully.
+ * @note nfc_dep_info_t will be returned when the target was acquired successfully.
  */
 bool nfc_initiator_select_dep_target(const nfc_device_t* pnd, const nfc_modulation_t nmInitModulation, const byte_t* pbtPidData, const size_t szPidDataLen, const byte_t* pbtNFCID3i, const size_t szNFCID3iDataLen, const byte_t *pbtGbData, const size_t szGbDataLen, nfc_target_info_t* pnti)
 {
@@ -481,10 +481,9 @@ bool nfc_initiator_select_tag(const nfc_device_t* pnd, const nfc_modulation_t nm
         pnti->nai.szUidLen = abtRx[5];
         memcpy(pnti->nai.abtUid,abtRx+6,pnti->nai.szUidLen);
         // Did we received an optional ATS (Smardcard ATR)
-        if (szRxLen > pnti->nai.szUidLen+6)
-        {
+        if (szRxLen > pnti->nai.szUidLen+6) {
           pnti->nai.szAtsLen = abtRx[pnti->nai.szUidLen+6];
-          memcpy(pnti->nai.abtAts,abtRx+pnti->nai.szUidLen+6,pnti->nai.szAtsLen);
+          memcpy(pnti->nai.abtAts,abtRx+pnti->nai.szUidLen+7,pnti->nai.szAtsLen);
         } else {
           pnti->nai.szAtsLen = 0;
         }
