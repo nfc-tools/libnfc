@@ -1,4 +1,4 @@
-bin_PROGRAMS = nfc-anticol nfc-list nfc-mfclassic nfc-mfultralight nfc-relay nfc-emulate nfcip-target nfcip-initiator
+bin_PROGRAMS = nfc-anticol nfc-list nfc-mfclassic nfc-mfultralight nfc-relay nfc-emulate nfcip-target nfcip-initiator nfc-poll
 
 # set the include path found by configure
 INCLUDES= $(all_includes) $(LIBNFC_CFLAGS)
@@ -7,6 +7,9 @@ nfcinclude_HEADERS = mifaretag.h mifareultag.h
 nfcincludedir = $(includedir)/nfc
 
 AM_CFLAGS = -I$(top_srcdir)/libnfc
+
+nfc_poll_SOURCES = nfc-poll.c
+nfc_poll_LDADD = $(top_builddir)/libnfc/libnfc.la
 
 nfc_anticol_SOURCES = nfc-anticol.c
 nfc_anticol_LDADD = $(top_builddir)/libnfc/libnfc.la
