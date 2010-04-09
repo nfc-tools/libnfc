@@ -238,3 +238,39 @@ bool pn53x_unwrap_frame(const byte_t* pbtFrame, const size_t szFrameBits, byte_t
   }
 }
 
+bool 
+pn53x_decode_target_data(const byte_t* pbtRawData, size_t szDataLen, nfc_chip_t nc, nfc_target_type_t ntt, nfc_target_info_t* pnti)
+{
+  switch(ntt) {
+    case NTT_MIFARE:
+    case NTT_GENERIC_PASSIVE_106:
+      // We skip target number (Tg)
+      pbtRawData++;
+      // Somehow they switched the lower and upper ATQA bytes around for the PN531 chipset
+      if (nc == NC_PN531) {
+	pnti->nai.abtAtqa[1] = *(pbtRawData++);
+	pnti->nai.abtAtqa[0] = *(pbtRawData++);
+      } else {
+	pnti->nai.abtAtqa[0] = *(pbtRawData++);
+	pnti->nai.abtAtqa[1] = *(pbtRawData++);
+      }
+      pnti->nai.btSak = *(pbtRawData++);
+      // Copy the NFCID1
+      pnti->nai.szUidLen = *(pbtRawData++);
+      memcpy(pnti->nai.abtUid, pbtRawData, pnti->nai.szUidLen);
+      pbtRawData += pnti->nai.szUidLen;
+      
+      // Did we received an optional ATS (Smardcard ATR)
+      if (szDataLen > (pnti->nai.szUidLen + 5)) {
+	pnti->nai.szAtsLen = *(pbtRawData++);
+	memcpy(pnti->nai.abtAts, pbtRawData, pnti->nai.szAtsLen);
+      } else {
+	pnti->nai.szAtsLen = 0;
+      }
+      break;
+    default:
+      return false;
+      break;
+  }
+  return true;
+}
