@@ -36,7 +36,6 @@
 
 #include <nfc/nfc-messages.h>
 
-
 // Bus
 #include "uart.h"
 
@@ -87,9 +86,9 @@ pn532_uart_pick_device (void)
 bool
 pn532_uart_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *pszDeviceFound)
 {
-/* @note: Due to UART bus we can't know if its really a pn532 without
- * sending some PN53x commands. But using this way to probe devices, we can
- * have serious problem with other device on this bus */
+  /** @note: Due to UART bus we can't know if its really a pn532 without
+  * sending some PN53x commands. But using this way to probe devices, we can
+  * have serious problem with other device on this bus */
 #ifndef SERIAL_AUTOPROBE_ENABLED
   (void)pnddDevices;
   (void)szDevices;
@@ -116,7 +115,8 @@ pn532_uart_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_
 
     if ((sp != INVALID_SERIAL_PORT) && (sp != CLAIMED_SERIAL_PORT))
     {
-      // PN532_UART device found
+      // Serial port claimed: a PN532_UART may be found...
+      // FIXME try to send a command to PN53x to know if you really have a PN53x connected here
       uart_close(sp);
       snprintf(pnddDevices[*pszDeviceFound].acDevice, DEVICE_NAME_LENGTH - 1, "%s (%s)", "PN532", acConnect);
       pnddDevices[*pszDeviceFound].acDevice[DEVICE_NAME_LENGTH - 1] = '\0';
