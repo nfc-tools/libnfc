@@ -26,6 +26,7 @@
   #include "config.h"
 #endif // HAVE_CONFIG_H
 
+#include <err.h>
 #include <stdio.h>
 #include <stddef.h>
 #include <stdlib.h>
@@ -45,11 +46,15 @@ int main(int argc, const char* argv[])
 {
   size_t szFound;
   size_t i;
-  nfc_target_info_t nti;
   nfc_device_desc_t *pnddDevices;
 
   // Display libnfc version
   const char* acLibnfcVersion = nfc_version();
+
+  if (argc > 1) {
+    errx (1, "usage: %s", argv[0]);
+  }
+
   printf("%s use libnfc %s\n", argv[0], acLibnfcVersion);
 
   if (!(pnddDevices = malloc (MAX_DEVICE_COUNT * sizeof (*pnddDevices))))
@@ -106,10 +111,10 @@ int main(int argc, const char* argv[])
     nfc_target_t antTargets[2];
     size_t szTargetFound;
 
-    printf("PN53x will poll during %d ms\n", btPollNr * szTargetTypes * btPeriod * 150);
+    printf("PN53x will poll during %ld ms\n", btPollNr * szTargetTypes * btPeriod * 150);
     bool res = nfc_initiator_poll_targets(pnd, &nttMifare, 1, btPollNr, btPeriod, antTargets, &szTargetFound);
     if( res ) {
-      printf("%d target(s) have been found.\n", szTargetFound);
+      printf("%ld target(s) have been found.\n", szTargetFound);
       for(uint8_t n=0; n<szTargetFound; n++) {
 	printf("T%d: targetType=%02x, ", n+1, antTargets[n].ntt);
 	printf("targetData:\n"); print_nfc_iso14443a_info(antTargets[n].nti.nai);
