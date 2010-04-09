@@ -65,5 +65,7 @@ NFC_EXPORT void print_hex(const byte_t* pbtData, const size_t szLen);
 NFC_EXPORT void print_hex_bits(const byte_t* pbtData, const size_t szBits);
 NFC_EXPORT void print_hex_par(const byte_t* pbtData, const size_t szBits, const byte_t* pbtDataPar);
 
+NFC_EXPORT void print_nfc_iso14443a_info(const nfc_iso14443a_info_t nai);
+
 #endif // _LIBNFC_BITUTILS_H_
 
