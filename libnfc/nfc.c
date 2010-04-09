@@ -68,6 +68,10 @@ extern const byte_t pncmd_target_receive             [  2];
 extern const byte_t pncmd_target_send                [264];
 extern const byte_t pncmd_target_get_status          [  2];
 
+/**
+ * @brief Probe for the first discoverable supported devices (ie. only available for some drivers)
+ * @return \a nfc_device_desc_t struct pointer
+ */
 nfc_device_desc_t *
 nfc_pick_device (void)
 {
@@ -218,7 +222,7 @@ nfc_device_t* nfc_connect(nfc_device_desc_t* pndd)
  * @brief Disconnect from a NFC device
  * @param pnd nfc_device_t struct pointer that represent currently used device
  *
- * Initiator is disconnected and the device, including allocated nfc_device_t struct, is released.
+ * Initiator is disconnected and the device, including allocated \a nfc_device_t struct, is released.
  */
 void nfc_disconnect(nfc_device_t* pnd)
 {
@@ -313,7 +317,9 @@ bool nfc_configure(nfc_device_t* pnd, const nfc_device_option_t ndo, const bool 
  * @return Returns true if action was successfully performed; otherwise returns false.
  * @param pnd nfc_device_t struct pointer that represent currently used device
  *
- * The NFC device is configured to function as RFID reader. After initialization it can be used to communicate to passive RFID tags and active NFC devices. The reader will act as initiator to communicate peer 2 peer (NFCIP) to other active NFC devices.
+ * The NFC device is configured to function as RFID reader.
+ * After initialization it can be used to communicate to passive RFID tags and active NFC devices.
+ * The reader will act as initiator to communicate peer 2 peer (NFCIP) to other active NFC devices.
  */
 bool nfc_initiator_init(const nfc_device_t* pnd)
 {
@@ -332,7 +338,7 @@ bool nfc_initiator_init(const nfc_device_t* pnd)
 /**
  * @brief Select a target and request active or passive mode for DEP (Data Exchange Protocol)
  * @return Returns true if action was successfully performed; otherwise returns false.
- * @param pnd is a \a nfc_device_t struct pointer that represent currently used device
+ * @param pnd nfc_device_t struct pointer that represent currently used device
  * @param nmInitModulation Desired modulation (NM_ACTIVE_DEP or NM_PASSIVE_DEP for active, respectively passive mode)
  * @param pbtPidData passive initiator data, 4 or 5 bytes long, (optional, only for NM_PASSIVE_DEP, can be NULL)
  * @param pbtNFCID3i the NFCID3, 10 bytes long, of the initiator (optional, can be NULL)
@@ -341,7 +347,7 @@ bool nfc_initiator_init(const nfc_device_t* pnd)
  * @param pnti is a \a nfc_target_info_t struct pointer where target information will be put.
  *
  * The NFC device will try to find the available target. The standards (ISO18092 and ECMA-340) describe the modulation that can be used for reader to passive communications.
- * @note \a nfc_dep_info_t will be returned when the target was acquired successfully.
+ * @note nfc_dep_info_t will be returned when the target was acquired successfully.
  */
 bool nfc_initiator_select_dep_target(const nfc_device_t* pnd, const nfc_modulation_t nmInitModulation, const byte_t* pbtPidData, const size_t szPidDataLen, const byte_t* pbtNFCID3i, const size_t szNFCID3iDataLen, const byte_t *pbtGbData, const size_t szGbDataLen, nfc_target_info_t* pnti)
 {
@@ -562,6 +568,65 @@ bool nfc_initiator_select_tag(const nfc_device_t* pnd, const nfc_modulation_t nm
 bool nfc_initiator_deselect_tag(const nfc_device_t* pnd)
 {
   return (pn53x_transceive(pnd,pncmd_initiator_deselect,3,NULL,NULL));
+}
+
+/**
+ * @brief Polling for NFC targets
+ * @param pnd nfc_device_t struct pointer that represent currently used device
+ * @param pnttTargetTypes array of desired target types
+ * @param szTargetTypes pnttTargetTypes count
+ * @param btPollNr specifies the number of polling
+ * @note one polling is a polling for each desired target type
+ * @param btPeriod indicates the polling period in units of 150 ms
+ * @param pntTargets pointer on array of 2 nfc_target_t (over)writables struct
+ * @param pszTargetFound found targets count
+ */
+bool
+nfc_initiator_poll_targets(const nfc_device_t* pnd, 
+			   const nfc_target_type_t* pnttTargetTypes, const size_t szTargetTypes, 
+			   const byte_t btPollNr, const byte_t btPeriod, 
+			   nfc_target_t* pntTargets, size_t* pszTargetFound)
+{
+//   byte_t abtInAutoPoll[] = { 0xd4, 0x60, 0x0f, 0x01, 0x00 };
+  size_t szTxInAutoPoll = 4 + szTargetTypes;
+  byte_t *pbtTxInAutoPoll = malloc( szTxInAutoPoll );
+  pbtTxInAutoPoll[0] = 0xd4;
+  pbtTxInAutoPoll[1] = 0x60;
+  pbtTxInAutoPoll[2] = btPollNr;
+  pbtTxInAutoPoll[3] = btPeriod;
+  for(size_t n=0; n<szTargetTypes; n++) {
+    pbtTxInAutoPoll[4+n] = pnttTargetTypes[n];
+  }
+
+  size_t szRxLen = 256;
+  byte_t abtRx[256];
+  bool res = pnd->pdc->transceive(pnd->nds, pbtTxInAutoPoll, szTxInAutoPoll, abtRx, &szRxLen);
+
+  if((szRxLen == 0)||(res == false)) {
+    return false;
+  } else {
+    *pszTargetFound = abtRx[0];
+    if( *pszTargetFound ) {
+      byte_t* pbt = abtRx + 1;
+      /* 1st target */
+      // Target type
+      pntTargets[0].ntt = *(pbt++);
+      // AutoPollTargetData length
+      uint8_t ln = *(pbt++);
+      pn53x_decode_target_data(pbt, ln, pnd->nc, pntTargets[0].ntt, &(pntTargets[0].nti));
+      pbt += ln;
+
+      if(abtRx[0] > 1) {
+	/* 2nd target */
+	// Target type
+	pntTargets[1].ntt = *(pbt++);
+	// AutoPollTargetData length
+	ln = *(pbt++);
+	pn53x_decode_target_data(pbt, ln, pnd->nc, pntTargets[1].ntt, &(pntTargets[1].nti));
+      }
+    }
+  }
+  return true;
 }
 
 /**
