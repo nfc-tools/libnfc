@@ -20,7 +20,8 @@ nfc_anticol_SOURCES = nfc-anticol.c
 nfc_anticol_LDADD = $(top_builddir)/libnfc/libnfc.la
 
 nfc_list_SOURCES = nfc-list.c
-nfc_list_LDADD = $(top_builddir)/libnfc/libnfc.la
+nfc_list_LDADD = $(top_builddir)/libnfc/libnfc.la \
+		 $(top_builddir)/examples/libnfcutils.a
 
 nfc_mfultralight_SOURCES = nfc-mfultralight.c mifareultag.h
 nfc_mfultralight_LDADD = $(top_builddir)/libnfc/libnfc.la

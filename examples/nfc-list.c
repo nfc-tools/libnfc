@@ -41,6 +41,7 @@
 
 #include <nfc/nfc.h>
 #include <nfc/nfc-messages.h>
+#include "nfc-utils.h"
 #include "bitutils.h"
 
 #define MAX_DEVICE_COUNT 16
@@ -128,14 +129,7 @@ int main(int argc, const char* argv[])
     if (nfc_initiator_select_tag(pnd,NM_ISO14443A_106,NULL,0,&nti))
     {
       printf("The following (NFC) ISO14443A tag was found:\n\n");
-      printf("    ATQA (SENS_RES): "); print_hex(nti.nai.abtAtqa,2);
-      printf("       UID (NFCID%c): ",(nti.nai.abtUid[0]==0x08?'3':'1')); print_hex(nti.nai.abtUid,nti.nai.szUidLen);
-      printf("      SAK (SEL_RES): "); print_hex(&nti.nai.btSak,1);
-      if (nti.nai.szAtsLen)
-      {
-        printf("          ATS (ATR): ");
-        print_hex(nti.nai.abtAts,nti.nai.szAtsLen);
-      }
+      print_nfc_iso14443a_info (nti.nai);
     }
 
     // Poll for a Felica tag
