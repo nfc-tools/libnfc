@@ -8,8 +8,13 @@ nfcincludedir = $(includedir)/nfc
 
 AM_CFLAGS = -I$(top_srcdir)/libnfc
 
+noinst_LIBRARIES = libnfcutils.a
+
+libnfcutils_a_SOURCES = nfc-utils.c
+
 nfc_poll_SOURCES = nfc-poll.c
-nfc_poll_LDADD = $(top_builddir)/libnfc/libnfc.la
+nfc_poll_LDADD = $(top_builddir)/libnfc/libnfc.la \
+		 $(top_builddir)/examples/libnfcutils.a
 
 nfc_anticol_SOURCES = nfc-anticol.c
 nfc_anticol_LDADD = $(top_builddir)/libnfc/libnfc.la
