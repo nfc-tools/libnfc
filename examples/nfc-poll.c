@@ -113,6 +113,7 @@ int main(int argc, const char* argv[])
 
     if(pnd->nc == NC_PN531) {
       // PN531 doesn't support hardware polling (InAutoPoll)
+      WARN("%s", "PN531 doesn't support hardware polling.");
       continue;
     }
     printf("PN53x will poll during %ld ms\n", btPollNr * szTargetTypes * btPeriod * 150);
