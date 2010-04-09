@@ -111,6 +111,10 @@ int main(int argc, const char* argv[])
     nfc_target_t antTargets[2];
     size_t szTargetFound;
 
+    if(pnd->nc == NC_PN531) {
+      // PN531 doesn't support hardware polling (InAutoPoll)
+      continue;
+    }
     printf("PN53x will poll during %ld ms\n", btPollNr * szTargetTypes * btPeriod * 150);
     bool res = nfc_initiator_poll_targets(pnd, &nttMifare, 1, btPollNr, btPeriod, antTargets, &szTargetFound);
     if( res ) {

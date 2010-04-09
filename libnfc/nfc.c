@@ -587,6 +587,10 @@ nfc_initiator_poll_targets(const nfc_device_t* pnd,
 			   const byte_t btPollNr, const byte_t btPeriod, 
 			   nfc_target_t* pntTargets, size_t* pszTargetFound)
 {
+  if(pnd->nc == NC_PN531) {
+    // errno = ENOSUPP
+    return false;
+  }
 //   byte_t abtInAutoPoll[] = { 0xd4, 0x60, 0x0f, 0x01, 0x00 };
   size_t szTxInAutoPoll = 4 + szTargetTypes;
   byte_t *pbtTxInAutoPoll = malloc( szTxInAutoPoll );
