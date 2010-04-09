@@ -332,14 +332,16 @@ bool nfc_initiator_init(const nfc_device_t* pnd)
 /**
  * @brief Select a target and request active or passive mode for DEP (Data Exchange Protocol)
  * @return Returns true if action was successfully performed; otherwise returns false.
- * @param pnd nfc_device_t struct pointer that represent currently used device
- * @param im Desired modulation (NM_ACTIVE_DEP or NM_PASSIVE_DEP for active, respectively passive mode)
+ * @param pnd is a \a nfc_device_t struct pointer that represent currently used device
+ * @param nmInitModulation Desired modulation (NM_ACTIVE_DEP or NM_PASSIVE_DEP for active, respectively passive mode)
  * @param pbtPidData passive initiator data, 4 or 5 bytes long, (optional, only for NM_PASSIVE_DEP, can be NULL)
  * @param pbtNFCID3i the NFCID3, 10 bytes long, of the initiator (optional, can be NULL)
  * @param pbtGbData generic data of the initiator, max 48 bytes long, (optional, can be NULL)
+ * @param szGbDataLen size of \a pbtGbData
+ * @param pnti is a \a nfc_target_info_t struct pointer where target information will be put.
  *
  * The NFC device will try to find the available target. The standards (ISO18092 and ECMA-340) describe the modulation that can be used for reader to passive communications.
- * @note nfc_dep_info_t will be returned when the target was acquired successfully.
+ * @note \a nfc_dep_info_t will be returned when the target was acquired successfully.
  */
 bool nfc_initiator_select_dep_target(const nfc_device_t* pnd, const nfc_modulation_t nmInitModulation, const byte_t* pbtPidData, const size_t szPidDataLen, const byte_t* pbtNFCID3i, const size_t szNFCID3iDataLen, const byte_t *pbtGbData, const size_t szGbDataLen, nfc_target_info_t* pnti)
 {
