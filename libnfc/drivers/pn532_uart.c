@@ -61,6 +61,8 @@
 
 #define SERIAL_DEFAULT_PORT_SPEED 115200
 
+bool pn532_uart_wakeup(const nfc_device_spec_t nds);
+
 nfc_device_desc_t *
 pn532_uart_pick_device (void)
 {
@@ -117,6 +119,8 @@ pn532_uart_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_
     {
       // Serial port claimed: a PN532_UART may be found...
       // FIXME try to send a command to PN53x to know if you really have a PN53x connected here
+      if(!pn532_uart_wakeup((nfc_device_spec_t)sp)) continue;
+
       uart_close(sp);
       snprintf(pnddDevices[*pszDeviceFound].acDevice, DEVICE_NAME_LENGTH - 1, "%s (%s)", "PN532", acConnect);
       pnddDevices[*pszDeviceFound].acDevice[DEVICE_NAME_LENGTH - 1] = '\0';
@@ -142,12 +146,6 @@ pn532_uart_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_
 
 nfc_device_t* pn532_uart_connect(const nfc_device_desc_t* pndd)
 {
-  /** @info PN532C106 wakeup. */
-  /** @todo Put this command in pn53x init process */
-  byte_t abtRxBuf[BUFFER_LENGTH];
-  size_t szRxBufLen;
-  const byte_t pncmd_pn532c106_wakeup[] = { 0x55,0x55,0x00,0x00,0x00,0x00,0x00,0xFF,0x03,0xFD,0xD4,0x14,0x01,0x17,0x00 };
-
   serial_port sp;
   nfc_device_t* pnd = NULL;
 
@@ -164,17 +162,7 @@ nfc_device_t* pn532_uart_connect(const nfc_device_desc_t* pndd)
 
     uart_set_speed(sp, pndd->uiSpeed);
   }
-
-  uart_send(sp, pncmd_pn532c106_wakeup, sizeof(pncmd_pn532c106_wakeup));
-
-  if (!uart_receive(sp,abtRxBuf,&szRxBufLen)) {
-    ERR("%s", "Unable to receive data. (RX)");
-    return NULL;
-  }
-#ifdef DEBUG
-  printf(" RX: ");
-  print_hex(abtRxBuf,szRxBufLen);
-#endif
+  if(!pn532_uart_wakeup((nfc_device_spec_t)sp)) return NULL;
 
   DBG("Successfully connected to: %s",pndd->pcPort);
 
@@ -251,5 +239,34 @@ bool pn532_uart_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, con
   *pszRxLen = szRxBufLen - 15;
   memcpy(pbtRx, abtRxBuf+13, *pszRxLen);
 
+  return true;
+}
+
+bool
+pn532_uart_wakeup(const nfc_device_spec_t nds)
+{
+  byte_t abtRx[BUFFER_LENGTH];
+  size_t szRxLen;
+
+  /** PN532C106 wakeup. */
+  /** High Speed Unit (HSU) wake up consist to send 0x55 and wait a "long" delay for PN532 being wakeup. */
+  /** To be sure that PN532 is alive, we have put a "Diagnose" command to execute a "Communication Line Test" */
+  const byte_t pncmd_pn532c106_wakeup[] = { 0x55,0x55,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0xD4,0x00,0x00,'l','i','b','n','f','c'};
+
+  uart_send((serial_port)nds, pncmd_pn532c106_wakeup, sizeof(pncmd_pn532c106_wakeup));
+
+  if (!uart_receive((serial_port)nds,abtRx,&szRxLen)) {
+    ERR("%s", "Unable to receive data. (RX)");
+    return false;
+  }
+  #ifdef DEBUG
+  printf(" RX: ");
+  print_hex(abtRx,szRxLen);
+  #endif
+
+  const byte_t attempted_result[] = { 0xD5,0x01,'l','i','b','n','f','c'};
+  if(0 != memcmp(abtRx,attempted_result,sizeof(attempted_result))) {
+    return false;
+  }
   return true;
 }
