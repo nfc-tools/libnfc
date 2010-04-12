@@ -29,6 +29,9 @@
 #define ARYGON_DRIVER_NAME "ARYGON"
 
 // Functions used by developer to handle connection to this device
+nfc_device_desc_t * arygon_pick_device (void);
+bool arygon_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *pszDeviceFound);
+
 nfc_device_t* arygon_connect(const nfc_device_desc_t* pndd);
 void arygon_disconnect(nfc_device_t* pnd);
 

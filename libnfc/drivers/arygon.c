@@ -33,27 +33,28 @@
 #include "../bitutils.h"
 
 #include <stdio.h>
+#include <string.h>
 
 #include "arygon.h"
 
 #include <nfc/nfc-messages.h>
 
 // Bus
-#include "../buses/uart.h"
+#include "uart.h"
 
 #ifdef _WIN32
   #define SERIAL_STRING "COM"
-  #define delay_ms( X ) Sleep( X )
+  #define snprintf _snprintf
+  #define strdup _strdup
 #else
   // unistd.h is needed for usleep() fct.
   #include <unistd.h>
-  #define delay_ms( X ) usleep( X * 1000 )
 
   #ifdef __APPLE__
     // MacOS
     #define SERIAL_STRING "/dev/tty.SLAB_USBtoUART"
   #else
-    // *BSD, Linux, other POSIX systems
+    // *BSD, Linux and others POSIX systems
     #define SERIAL_STRING "/dev/ttyUSB"
   #endif
 #endif
@@ -86,60 +87,111 @@
  * @note ARYGON-APDB1UA33N (PN532): 115200,n,8,1
  * @note ARYGON-APDB2UA33 (PN532 + ARYGON µC): 9600,n,8,1
  */
+nfc_device_desc_t *
+arygon_pick_device (void)
+{
+  nfc_device_desc_t *pndd;
+
+  if ((pndd = malloc (sizeof (*pndd)))) {
+    size_t szN;
+
+    if (!arygon_list_devices (pndd, 1, &szN)) {
+      DBG("%s", "arygon_list_devices failed");
+      return NULL;
+    }
+
+    if (szN == 0) {
+      DBG("%s", "No device found");
+      return NULL;
+    }
+  }
+
+  return pndd;
+}
+
+bool
+arygon_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *pszDeviceFound)
+{
+  /** @note: Due to UART bus we can't know if its really a pn532 without
+  * sending some PN53x commands. But using this way to probe devices, we can
+  * have serious problem with other device on this bus */
+#ifndef SERIAL_AUTOPROBE_ENABLED
+  (void)pnddDevices;
+  (void)szDevices;
+  *pszDeviceFound = 0;
+  DBG("%s", "Serial auto-probing have been disabled at compile time. Skipping autoprobe.");
+  return false;
+#else /* SERIAL_AUTOPROBE_ENABLED */
+  *pszDeviceFound = 0;
+
+  serial_port sp;
+  char acConnect[BUFFER_LENGTH];
+  int iDevice;
+
+  // I have no idea how MAC OS X deals with multiple devices, so a quick workaround
+  for (iDevice=0; iDevice<DRIVERS_MAX_DEVICES; iDevice++)
+  {
+#ifdef __APPLE__
+    strcpy(acConnect,SERIAL_STRING);
+#else /* __APPLE__ */
+    sprintf(acConnect,"%s%d",SERIAL_STRING,iDevice);
+#endif /* __APPLE__ */
+    sp = uart_open(acConnect);
+    DBG("Trying to find ARYGON device on serial port: %s at %d bauds.",acConnect, SERIAL_DEFAULT_PORT_SPEED);
+
+    if ((sp != INVALID_SERIAL_PORT) && (sp != CLAIMED_SERIAL_PORT))
+    {
+      // Serial port claimed: an ARYGON may be found...
+      // FIXME try to send a command to PN53x to know if you really have a PN53x connected here
+      uart_close(sp);
+      snprintf(pnddDevices[*pszDeviceFound].acDevice, DEVICE_NAME_LENGTH - 1, "%s (%s)", "ARYGON", acConnect);
+      pnddDevices[*pszDeviceFound].acDevice[DEVICE_NAME_LENGTH - 1] = '\0';
+      pnddDevices[*pszDeviceFound].pcDriver = ARYGON_DRIVER_NAME;
+      //pnddDevices[*pszDeviceFound].pcPort = strndup(acConnect, BUFFER_LENGTH - 1);
+      pnddDevices[*pszDeviceFound].pcPort = strdup(acConnect);
+      pnddDevices[*pszDeviceFound].pcPort[BUFFER_LENGTH] = '\0';
+      pnddDevices[*pszDeviceFound].uiSpeed = SERIAL_DEFAULT_PORT_SPEED;
+      DBG("Device found: %s.", pnddDevices[*pszDeviceFound].acDevice);
+      (*pszDeviceFound)++;
+
+      // Test if we reach the maximum "wanted" devices
+      if((*pszDeviceFound) >= szDevices) break;
+    }
+#ifdef DEBUG
+    if (sp == INVALID_SERIAL_PORT) DBG("Invalid serial port: %s",acConnect);
+    if (sp == CLAIMED_SERIAL_PORT) DBG("Serial port already claimed: %s",acConnect);
+#endif /* DEBUG */
+  }
+#endif /* SERIAL_AUTOPROBE_ENABLED */
+  return true;
+}
 
 nfc_device_t* arygon_connect(const nfc_device_desc_t* pndd)
 {
-  uint32_t uiDevNr;
   serial_port sp;
-  char acConnect[BUFFER_LENGTH];
   nfc_device_t* pnd = NULL;
 
   if( pndd == NULL ) {
-#ifndef SERIAL_AUTOPROBE_ENABLED
-    INFO("%s", "Sorry, serial auto-probing have been disabled at compile time.");
+    DBG("%s", "arygon_connect() need an nfc_device_desc_t struct.");
     return NULL;
-#else /* SERIAL_AUTOPROBE_ENABLED */
-    DBG("Trying to find ARYGON device on serial port: %s# at %d bauds.",SERIAL_STRING, SERIAL_DEFAULT_PORT_SPEED);
-    // I have no idea how MAC OS X deals with multiple devices, so a quick workaround
-    for (uiDevNr=0; uiDevNr<DRIVERS_MAX_DEVICES; uiDevNr++)
-    {
-#ifdef __APPLE__
-      strcpy(acConnect,SERIAL_STRING);
-#else
-      sprintf(acConnect,"%s%d",SERIAL_STRING,uiDevNr);
-#endif /* __APPLE__ */
-
-      sp = uart_open(acConnect);
-      if ((sp != INVALID_SERIAL_PORT) && (sp != CLAIMED_SERIAL_PORT))
-      {
-        uart_set_speed(sp, SERIAL_DEFAULT_PORT_SPEED);
-        break;
-      }
-#ifdef DEBUG
-      if (sp == INVALID_SERIAL_PORT) DBG("Invalid serial port: %s",acConnect);
-      if (sp == CLAIMED_SERIAL_PORT) DBG("Serial port already claimed: %s",acConnect);
-#endif /* DEBUG */
-    }
-#endif /* SERIAL_AUTOPROBE_ENABLED */
-
-    // Test if we have found a device
-    if (uiDevNr == DRIVERS_MAX_DEVICES) return NULL;
   } else {
     DBG("Connecting to: %s at %d bauds.",pndd->pcPort, pndd->uiSpeed);
-    strcpy(acConnect,pndd->pcPort);
-    sp = uart_open(acConnect);
-    if (sp == INVALID_SERIAL_PORT) ERR("Invalid serial port: %s",acConnect);
-    if (sp == CLAIMED_SERIAL_PORT) ERR("Serial port already claimed: %s",acConnect);
+    sp = uart_open(pndd->pcPort);
+
+    if (sp == INVALID_SERIAL_PORT) ERR("Invalid serial port: %s",pndd->pcPort);
+    if (sp == CLAIMED_SERIAL_PORT) ERR("Serial port already claimed: %s",pndd->pcPort);
     if ((sp == CLAIMED_SERIAL_PORT) || (sp == INVALID_SERIAL_PORT)) return NULL;
 
     uart_set_speed(sp, pndd->uiSpeed);
   }
 
-  DBG("Successfully connected to: %s",acConnect);
+DBG("Successfully connected to: %s",pndd->pcPort);
 
   // We have a connection
   pnd = malloc(sizeof(nfc_device_t));
-  strcpy(pnd->acName,"ARYGON");
+  strncpy(pnd->acName, pndd->acDevice, DEVICE_NAME_LENGTH - 1);
+  pnd->acName[DEVICE_NAME_LENGTH - 1] = '\0';
+
   pnd->nc = NC_PN532;
   pnd->nds = (nfc_device_spec_t)sp;
   pnd->bActive = true;
@@ -187,21 +239,6 @@ bool arygon_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, const s
     ERR("%s", "Unable to transmit data. (TX)");
     return false;
   }
-
-  /** @note PN532 (at 115200 bauds) need 20ms between sending and receiving frame. No information regarding this in ARYGON datasheet... 
-   * It seems to be a required delay to able to send from host to device, plus the device computation then device respond transmission 
-   */
-  delay_ms(20);
-
-  /** @note PN532 (at 115200 bauds) need 30ms more to be stable (report correctly present tag, at each try: 20ms seems to be enought for one shot...)
-   * PN532 seems to work correctly with 50ms at 115200 bauds.
-   */
-  delay_ms(30);
-
-  /** @note Unfortunately, adding delay is not enought for ARYGON readers which are equipped with an ARYGON µC + PN532 running at 9600 bauds.
-   * There are too many timing problem to solve them by adding more and more delay.
-   * For more information, see Issue 23 on development site : http://code.google.com/p/libnfc/issues/detail?id=23
-   */
 
   if (!uart_receive((serial_port)nds,abtRxBuf,&szRxBufLen)) {
     ERR("%s", "Unable to receive data. (RX)");
