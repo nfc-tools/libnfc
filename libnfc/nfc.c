@@ -113,6 +113,7 @@ nfc_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *pszD
       if (drivers_callbacks_list[uiDriver].list_devices (pnddDevices + (*pszDeviceFound), szDevices - (*pszDeviceFound), &szN))
       {
         *pszDeviceFound += szN;
+        DBG("%d device(s) found using %s driver", szN, drivers_callbacks_list[uiDriver].acDriver);
       }
     }
     else
