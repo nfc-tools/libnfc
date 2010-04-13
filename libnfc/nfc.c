@@ -608,6 +608,7 @@ nfc_initiator_poll_targets(const nfc_device_t* pnd,
   bool res = pnd->pdc->transceive(pnd->nds, pbtTxInAutoPoll, szTxInAutoPoll, abtRx, &szRxLen);
 
   if((szRxLen == 0)||(res == false)) {
+    DBG("pnd->pdc->tranceive() failed: szRxLen=%d, res=%d", szRxLen, res);
     return false;
   } else {
     *pszTargetFound = abtRx[0];
