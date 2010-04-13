@@ -46,10 +46,12 @@
   #define SERIAL_STRING "COM"
   #define snprintf _snprintf
   #define strdup _strdup
+  #define delay_ms( X ) Sleep( X )
 #else
   // unistd.h is needed for usleep() fct.
   #include <unistd.h>
-
+  #define delay_ms( X ) usleep( X * 1000 )
+  
   #ifdef __APPLE__
     // MacOS
     #define SERIAL_STRING "/dev/tty.SLAB_USBtoUART"
@@ -185,7 +187,7 @@ nfc_device_t* arygon_connect(const nfc_device_desc_t* pndd)
     uart_set_speed(sp, pndd->uiSpeed);
   }
 
-DBG("Successfully connected to: %s",pndd->pcPort);
+  DBG("Successfully connected to: %s",pndd->pcPort);
 
   // We have a connection
   pnd = malloc(sizeof(nfc_device_t));
@@ -250,15 +252,48 @@ bool arygon_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, const s
   print_hex(abtRxBuf,szRxBufLen);
 #endif
 
+  const byte_t pn53x_ack_frame[] = { 0x00,0x00,0xff,0x00,0xff,0x00 };
+  const byte_t pn53x_nack_frame[] = { 0x00,0x00,0xff,0xff,0x00,0x00 };
+  if(szRxBufLen >= sizeof(pn53x_ack_frame)) {
+
+    // Check if PN53x reply ACK
+    if(0!=memcmp(pn53x_ack_frame, abtRxBuf, sizeof(pn53x_ack_frame))) {
+      DBG("%s", "PN53x doesn't respond ACK frame.");
+      if (0==memcmp(pn53x_nack_frame, abtRxBuf, sizeof(pn53x_nack_frame))) {
+        ERR("%s", "PN53x reply NACK frame.");
+        // FIXME Handle NACK frame i.e. resend frame, PN53x doesn't received it correctly
+      }
+      return false;
+    }
+
+    szRxBufLen -= sizeof(pn53x_ack_frame);
+    if(szRxBufLen) {
+      memmove(abtRxBuf, abtRxBuf+sizeof(pn53x_ack_frame), szRxBufLen);
+    }
+  }
+
+  if(szRxBufLen == 0) {
+    // There was no more data than ACK frame, we need to wait next frame
+    DBG("%s", "There was no more data than ACK frame, we need to wait next frame");
+    while (!uart_receive((serial_port)nds,abtRxBuf,&szRxBufLen)) {
+      delay_ms(10);
+    }
+  }
+
+  #ifdef DEBUG
+  printf(" RX: ");
+  print_hex(abtRxBuf,szRxBufLen);
+  #endif
+
   // When the answer should be ignored, just return a successful result
   if(pbtRx == NULL || pszRxLen == NULL) return true;
 
-  // Only succeed when the result is at least 00 00 ff 00 ff 00 00 00 FF xx Fx Dx xx .. .. .. xx 00 (x = variable)
-  if(szRxBufLen < 15) return false;
+  // Only succeed when the result is at least 00 00 FF xx Fx Dx xx .. .. .. xx 00 (x = variable)
+  if(szRxBufLen < 9) return false;
 
   // Remove the preceding and appending bytes 00 00 ff 00 ff 00 00 00 FF xx Fx .. .. .. xx 00 (x = variable)
-  *pszRxLen = szRxBufLen - 15;
-  memcpy(pbtRx, abtRxBuf+13, *pszRxLen);
+  *pszRxLen = szRxBufLen - 9;
+  memcpy(pbtRx, abtRxBuf+7, *pszRxLen);
 
   return true;
 }
