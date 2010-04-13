@@ -103,8 +103,8 @@ int main(int argc, const char* argv[])
     
 // bool (*transceive)(const nfc_device_spec_t nds, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen);
 
-    const byte_t btPollNr = 0x0a;
-    const byte_t btPeriod = 0x01;
+    const byte_t btPollNr = 20;
+    const byte_t btPeriod = 2;
     const nfc_target_type_t nttMifare = NTT_MIFARE;
     const size_t szTargetTypes = 1;
 
