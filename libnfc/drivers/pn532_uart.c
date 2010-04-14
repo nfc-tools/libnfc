@@ -43,10 +43,12 @@
   #define SERIAL_STRING "COM"
   #define snprintf _snprintf
   #define strdup _strdup
+  #define delay_ms( X ) Sleep( X )
 #else
   // unistd.h is needed for usleep() fct.
   #include <unistd.h>
-
+  #define delay_ms( X ) usleep( X * 1000 )
+  
   #ifdef __APPLE__
     // MacOS
     // TODO: find UART connection string for PN53X device on Mac OS X
@@ -229,15 +231,49 @@ bool pn532_uart_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, con
   print_hex(abtRxBuf,szRxBufLen);
 #endif
 
+
+  const byte_t pn53x_ack_frame[] = { 0x00,0x00,0xff,0x00,0xff,0x00 };
+  const byte_t pn53x_nack_frame[] = { 0x00,0x00,0xff,0xff,0x00,0x00 };
+  if(szRxBufLen >= sizeof(pn53x_ack_frame)) {
+
+    // Check if PN53x reply ACK
+    if(0!=memcmp(pn53x_ack_frame, abtRxBuf, sizeof(pn53x_ack_frame))) {
+      DBG("%s", "PN53x doesn't respond ACK frame.");
+      if (0==memcmp(pn53x_nack_frame, abtRxBuf, sizeof(pn53x_nack_frame))) {
+        ERR("%s", "PN53x reply NACK frame.");
+        // FIXME Handle NACK frame i.e. resend frame, PN53x doesn't received it correctly
+      }
+      return false;
+    }
+
+    szRxBufLen -= sizeof(pn53x_ack_frame);
+    if(szRxBufLen) {
+      memmove(abtRxBuf, abtRxBuf+sizeof(pn53x_ack_frame), szRxBufLen);
+    }
+  }
+
+  if(szRxBufLen == 0) {
+    // There was no more data than ACK frame, we need to wait next frame
+    DBG("%s", "There was no more data than ACK frame, we need to wait next frame");
+    while (!uart_receive((serial_port)nds,abtRxBuf,&szRxBufLen)) {
+      delay_ms(10);
+    }
+  }
+
+  #ifdef DEBUG
+  printf(" RX: ");
+  print_hex(abtRxBuf,szRxBufLen);
+  #endif
+
   // When the answer should be ignored, just return a successful result
   if(pbtRx == NULL || pszRxLen == NULL) return true;
 
-  // Only succeed when the result is at least 00 00 ff 00 ff 00 00 00 FF xx Fx Dx xx .. .. .. xx 00 (x = variable)
-  if(szRxBufLen < 15) return false;
+  // Only succeed when the result is at least 00 00 FF xx Fx Dx xx .. .. .. xx 00 (x = variable)
+  if(szRxBufLen < 9) return false;
 
   // Remove the preceding and appending bytes 00 00 ff 00 ff 00 00 00 FF xx Fx .. .. .. xx 00 (x = variable)
-  *pszRxLen = szRxBufLen - 15;
-  memcpy(pbtRx, abtRxBuf+13, *pszRxLen);
+  *pszRxLen = szRxBufLen - 9;
+  memcpy(pbtRx, abtRxBuf+7, *pszRxLen);
 
   return true;
 }
@@ -251,7 +287,8 @@ pn532_uart_wakeup(const nfc_device_spec_t nds)
   /** PN532C106 wakeup. */
   /** High Speed Unit (HSU) wake up consist to send 0x55 and wait a "long" delay for PN532 being wakeup. */
   /** To be sure that PN532 is alive, we have put a "Diagnose" command to execute a "Communication Line Test" */
-  const byte_t pncmd_pn532c106_wakeup[] = { 0x55,0x55,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0xff,0x09,0xf7,0xd4,0x00,0x00,'l','i','b','n','f','c',0xbe,0x00 };
+  const byte_t pncmd_pn532c106_wakeup[] = { 0x55,0x55,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0xff,0x09,0xf7,0xd4,0x00,0x00,'l','i','b','n','f','c',0xbe,0x00 };
+//   const byte_t pncmd_pn532c106_wakeup[] = { 0x00,0x00,0xff,0x09,0xf7,0xd4,0x00,0x00,'l','i','b','n','f','c',0xbe,0x00 };
 
 #ifdef DEBUG
   printf(" TX: ");
@@ -259,18 +296,16 @@ pn532_uart_wakeup(const nfc_device_spec_t nds)
 #endif
   uart_send((serial_port)nds, pncmd_pn532c106_wakeup, sizeof(pncmd_pn532c106_wakeup));
 
-  if (!uart_receive((serial_port)nds,abtRx,&szRxLen)) {
-    ERR("%s", "Unable to receive data. (RX)");
-    return false;
+  while (!uart_receive((serial_port)nds,abtRx,&szRxLen)) {
   }
-  #ifdef DEBUG
+#ifdef DEBUG
   printf(" RX: ");
   print_hex(abtRx,szRxLen);
-  #endif
+#endif
 
   const byte_t attempted_result[] = { 0x00,0x00,0xff,0x00,0xff,0x00,0x00,0x00,0xff,0x09,0xf7,0xD5,0x01,0x00,'l','i','b','n','f','c',0xbc,0x00};
   if(0 != memcmp(abtRx,attempted_result,sizeof(attempted_result))) {
-    DBG("Comminucation test failed, result doesn't match to attempted one.");
+    DBG("%s", "Communication test failed, result doesn't match to attempted one.");
     return false;
   }
   return true;
