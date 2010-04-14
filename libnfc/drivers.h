@@ -53,7 +53,6 @@ static const struct driver_callbacks drivers_callbacks_list[] = {
   { PN533_USB_DRIVER_NAME,  pn533_usb_pick_device, pn533_usb_list_devices,    pn533_usb_connect,   pn53x_usb_transceive,     pn53x_usb_disconnect        },
 #endif /* HAVE_LIBUSB */
   { PN532_UART_DRIVER_NAME, pn532_uart_pick_device, pn532_uart_list_devices,  pn532_uart_connect,  pn532_uart_transceive,    pn532_uart_disconnect   },
-  { ARYGON_DRIVER_NAME,     arygon_pick_device,     arygon_list_devices,      arygon_connect,      arygon_transceive,        arygon_disconnect       }
 };
 
 #endif // __NFC_DRIVERS_H__

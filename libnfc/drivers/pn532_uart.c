@@ -251,8 +251,12 @@ pn532_uart_wakeup(const nfc_device_spec_t nds)
   /** PN532C106 wakeup. */
   /** High Speed Unit (HSU) wake up consist to send 0x55 and wait a "long" delay for PN532 being wakeup. */
   /** To be sure that PN532 is alive, we have put a "Diagnose" command to execute a "Communication Line Test" */
-  const byte_t pncmd_pn532c106_wakeup[] = { 0x55,0x55,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0xD4,0x00,0x00,'l','i','b','n','f','c'};
+  const byte_t pncmd_pn532c106_wakeup[] = { 0x55,0x55,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0xff,0x09,0xf7,0xd4,0x00,0x00,'l','i','b','n','f','c',0xbe,0x00 };
 
+#ifdef DEBUG
+  printf(" TX: ");
+  print_hex(pncmd_pn532c106_wakeup,sizeof(pncmd_pn532c106_wakeup));
+#endif
   uart_send((serial_port)nds, pncmd_pn532c106_wakeup, sizeof(pncmd_pn532c106_wakeup));
 
   if (!uart_receive((serial_port)nds,abtRx,&szRxLen)) {
@@ -264,8 +268,9 @@ pn532_uart_wakeup(const nfc_device_spec_t nds)
   print_hex(abtRx,szRxLen);
   #endif
 
-  const byte_t attempted_result[] = { 0xD5,0x01,'l','i','b','n','f','c'};
+  const byte_t attempted_result[] = { 0x00,0x00,0xff,0x00,0xff,0x00,0x00,0x00,0xff,0x09,0xf7,0xD5,0x01,0x00,'l','i','b','n','f','c',0xbc,0x00};
   if(0 != memcmp(abtRx,attempted_result,sizeof(attempted_result))) {
+    DBG("Comminucation test failed, result doesn't match to attempted one.");
     return false;
   }
   return true;
