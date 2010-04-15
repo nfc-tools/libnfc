@@ -116,10 +116,10 @@ int main(int argc, const char* argv[])
       WARN("%s", "PN531 doesn't support hardware polling.");
       continue;
     }
-    printf("PN53x will poll during %ld ms\n", btPollNr * szTargetTypes * btPeriod * 150);
+    printf("PN53x will poll during %ld ms\n", (unsigned long) btPollNr * szTargetTypes * btPeriod * 150);
     bool res = nfc_initiator_poll_targets(pnd, &nttMifare, 1, btPollNr, btPeriod, antTargets, &szTargetFound);
     if( res ) {
-      printf("%ld target(s) have been found.\n", szTargetFound);
+      printf("%ld target(s) have been found.\n", (unsigned long) szTargetFound);
       for(uint8_t n=0; n<szTargetFound; n++) {
 	printf("T%d: targetType=%02x, ", n+1, antTargets[n].ntt);
 	printf("targetData:\n"); print_nfc_iso14443a_info(antTargets[n].nti.nai);
