@@ -8,6 +8,7 @@ nfcincludedir = $(includedir)/nfc
 
 AM_CFLAGS = -I$(top_srcdir)/libnfc
 
+noinst_HEADERS = nfc-utils.h
 noinst_LIBRARIES = libnfcutils.a
 
 libnfcutils_a_SOURCES = nfc-utils.c
