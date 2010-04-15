@@ -61,6 +61,9 @@ then
 fi
 AC_SUBST([DEBUG_CFLAGS])
 
+# Handle --with-drivers option
+LIBNFC_ARG_WITH_DRIVERS
+
 # Serial autoprobing support (default:no)
 AC_ARG_ENABLE([serial-autoprobe],AS_HELP_STRING([--enable-serial-autoprobe],[Allow serial ports to be probed (can seriously disturb connected serial devices)]),[enable_serial_autoprobe=$enableval],[enable_serial_autoprobe="no"])
  
@@ -71,30 +74,6 @@ if test x"$enable_serial_autoprobe" = "xyes"
 then
   CFLAGS="$CFLAGS -DSERIAL_AUTOPROBE_ENABLED"
 fi
-
-# PCSC-lite support (default: yes)
-AC_ARG_ENABLE([pcsc-lite],AS_HELP_STRING([--disable-pcsc-lite],[Disable PCSC-lite dependency (removes ACR122 support)]),[enable_pcsc_lite=$enableval],[enable_pcsc_lite="yes"])
- 
-AC_MSG_CHECKING(for pcsc-lite support)
-AC_MSG_RESULT($enable_pcsc_lite)
- 
-if test x"$enable_pcsc_lite" = "xno"
-then
-  WITH_PCSC=0
-fi
-AM_CONDITIONAL(PCSC_LITE_ENABLED, [test x"$enable_pcsc_lite" = xyes])
-
-# libusb support (default: yes)
-AC_ARG_ENABLE([libusb],AS_HELP_STRING([--disable-libusb],[Disable libusb dependency (removes PN531USB and PN533USB support)]),[enable_libusb=$enableval],[enable_libusb="yes"])
- 
-AC_MSG_CHECKING(for libusb support)
-AC_MSG_RESULT($enable_libusb)
- 
-if test x"$enable_libusb" = "xno"
-then
-  WITH_LIBUSB=0
-fi
-AM_CONDITIONAL(LIBUSB_ENABLED, [test x"$enable_libusb" = xyes])
 
 # Documentation (default: no)
 AC_ARG_ENABLE([doc],AS_HELP_STRING([--enable-doc],[Enable documentation generation.]),[enable_doc=$enableval],[enable_doc="no"])
@@ -114,72 +93,14 @@ AM_CONDITIONAL(DOC_ENABLED, [test x"$enable_doc" = xyes])
 
 # Dependencies
 PKG_CONFIG_REQUIRES=""
-## libusb
-if test "x$enable_libusb" = "xyes"; then
-  WITH_USB=0
 
-  # Search using pkg-config
-  if test x"$PKG_CONFIG" != "x"; then
-    PKG_CHECK_MODULES([LIBUSB], [libusb], [WITH_USB=1], [WITH_USB=0])
-    if test x"$WITH_USB" = "x1"; then
-      if test x"$PKG_CONFIG_REQUIRES" != x""; then
-        PKG_CONFIG_REQUIRES="$PKG_CONFIG_REQUIRES,"
-      fi
-      PKG_CONFIG_REQUIRES="$PKG_CONFIG_REQUIRES libusb"
-    fi
-  fi
-
-  # Search using libusb-config
-  if test x"$WITH_USB" = "x0"; then
-    AC_PATH_PROG(LIBUSB_CONFIG,libusb-config)
-    if test x"$LIBUSB_CONFIG" != "x" ; then
-      LIBUSB_CFLAGS=`$LIBUSB_CONFIG --cflags`
-      LIBUSB_LIBS=`$LIBUSB_CONFIG --libs`
-      WITH_USB=1
-    fi
-  fi
-
-  # Search the library and headers directly (last chance)
-  if test x"$WITH_USB" = "x0"; then
-    AC_CHECK_HEADER(usb.h, [], [AC_MSG_ERROR([The libusb headers are missing])])
-    AC_CHECK_LIB(usb, libusb_init, [], [AC_MSG_ERROR([The libusb library is missing])])
-
-    LIBUSB_LIBS="-lusb"
-    WITH_USB=1
-  fi
-
-  if test x"$WITH_USB" = "x0"; then
-    AC_MSG_ERROR([libusb is mandatory.])
-  fi
-
-  AC_SUBST(LIBUSB_LIBS)
-  AC_SUBST(LIBUSB_CFLAGS)
-fi
-
-## libpcsclite
-if test "x$enable_pcsc_lite" = "xyes"; then
-  case "$host" in
-    *darwin*)
-      AC_MSG_WARN(Using darwin PCSC Framework)
-      LIBPCSCLITE_LIBS="-Wl,-framework,PCSC"
-      LIBPCSCLITE_CFLAGS="-I/System/Library/Frameworks/PCSC.framework/Headers"
-    ;;
-    *)
-      PKG_CHECK_MODULES([LIBPCSCLITE], [libpcsclite], [WITH_PCSC=1], [WITH_PCSC=0])
-      if test x"$WITH_PCSC" = "x0" ; then
-        AC_MSG_ERROR([libpcsclite is mandatory.])
-      fi
-      if test x"$PKG_CONFIG_REQUIRES" != x""; then
-        PKG_CONFIG_REQUIRES="$PKG_CONFIG_REQUIRES,"
-      fi
-      PKG_CONFIG_REQUIRES="$PKG_CONFIG_REQUIRES libpcsclite"
-    ;;
-  esac
-  AC_SUBST(LIBPCSCLITE_LIBS)
-  AC_SUBST(LIBPCSCLITE_CFLAGS)
-fi
+LIBNFC_CHECK_LIBUSB
+LIBNFC_CHECK_PCSC
 
 AC_SUBST(PKG_CONFIG_REQUIRES)
+
+AM_CONDITIONAL(LIBUSB_ENABLED, [test "$HAVE_LIBUSB" = "1"])
+AM_CONDITIONAL(PCSC_ENABLED, [test "$HAVE_PCSC" = "1"])
 
 # Defines and C flags
 CFLAGS="$CFLAGS -std=c99"

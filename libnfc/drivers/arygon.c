@@ -25,6 +25,8 @@
  * UART connection can be direct (host<->arygon_uc) or could be provided by internal USB to serial interface (e.g. host<->ftdi_chip<->arygon_uc)
  */
 
+#ifdef DRIVER_ARYGON_ENABLED
+
 #ifdef HAVE_CONFIG_H
   #include "config.h"
 #endif // HAVE_CONFIG_H
@@ -297,3 +299,6 @@ bool arygon_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, const s
 
   return true;
 }
+
+#endif // DRIVER_ARYGON_ENABLED
+

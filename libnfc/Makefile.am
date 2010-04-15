@@ -1,25 +1,26 @@
 SUBDIRS = chips buses drivers .
 
 # set the include path found by configure
-INCLUDES= $(all_includes) $(LIBNFC_CFLAGS)
+INCLUDES = $(all_includes) $(LIBNFC_CFLAGS)
 
+noinst_HEADERS =  chips.h buses.h drivers.h bitutils.h
 lib_LTLIBRARIES = libnfc.la
 libnfc_la_SOURCES = nfc.c bitutils.c
 libnfc_la_LDFLAGS = -no-undefined -version-info=0:0:0
-libnfc_la_CFLAGS = 
+libnfc_la_CFLAGS = @DRIVERS_CFLAGS@
 libnfc_la_LIBADD = \
 	$(top_builddir)/libnfc/chips/libnfcchips.la \
 	$(top_builddir)/libnfc/buses/libnfcbuses.la \
 	$(top_builddir)/libnfc/drivers/libnfcdrivers.la
 
-if PCSC_LITE_ENABLED
-  libnfc_la_CFLAGS += @LIBPCSCLITE_CFLAGS@ -DHAVE_PCSC_LITE
-  libnfc_la_LIBADD += @LIBPCSCLITE_LIBS@
+if PCSC_ENABLED
+  libnfc_la_CFLAGS += @libpcsclite_CFLAGS@ -DHAVE_PCSC
+  libnfc_la_LIBADD += @libpcsclite_LIBS@
 endif
 
 if LIBUSB_ENABLED
-  libnfc_la_CFLAGS += @LIBUSB_CFLAGS@ -DHAVE_LIBUSB
-  libnfc_la_LIBADD  += @LIBUSB_LIBS@
+  libnfc_la_CFLAGS += @libusb_CFLAGS@ -DHAVE_LIBUSB
+  libnfc_la_LIBADD  += @libusb_LIBS@
 endif
 
-EXTRA_DIST = CMakeLists.txt chips.h buses.h drivers.h bitutils.h
+EXTRA_DIST = CMakeLists.txt

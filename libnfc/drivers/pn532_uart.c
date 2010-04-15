@@ -22,6 +22,8 @@
  * @brief PN532 driver using UART bus (UART, RS232, etc.)
  */
 
+#ifdef DRIVER_PN532_UART_ENABLED
+
 #ifdef HAVE_CONFIG_H
   #include "config.h"
 #endif // HAVE_CONFIG_H
@@ -310,3 +312,6 @@ pn532_uart_wakeup(const nfc_device_spec_t nds)
   }
   return true;
 }
+
+#endif // DRIVER_PN532_UART_ENABLED
+

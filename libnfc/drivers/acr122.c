@@ -22,6 +22,8 @@
  * @brief
  */
 
+#ifdef DRIVER_ACR122_ENABLED
+
 #ifdef HAVE_CONFIG_H
   #include "config.h"
 #endif // HAVE_CONFIG_H
@@ -360,4 +362,6 @@ bool acr122_led_red(const nfc_device_spec_t nds, bool bOn)
     return (SCardTransmit(pas->hCard,&(pas->ioCard),abtLed,sizeof(abtLed),NULL,(byte_t*)abtBuf,(void*)&szBufLen) == SCARD_S_SUCCESS);
   }
 }
+
+#endif // DRIVER_ACR122_ENABLED
 
