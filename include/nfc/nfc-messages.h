@@ -24,6 +24,8 @@
 #ifndef _LIBNFC_MESSAGES_H_
 #define _LIBNFC_MESSAGES_H_
 
+#include <err.h>
+
 // #define DEBUG   /* DEBUG flag can also be enabled using ./configure --enable-debug */
 
 // Useful macros
@@ -34,8 +36,8 @@
   #define DBG(...) {}
 #endif
 
-#define INFO(x, ...) printf("INFO: " x "\n", ## __VA_ARGS__ )
-#define WARN(x, ...) printf("WARNING: " x "\n", ## __VA_ARGS__ )
-#define ERR(x, ...) fprintf(stderr, "ERROR: " x "\n", ## __VA_ARGS__ )
+#define INFO(...) warnx ("INFO: " __VA_ARGS__ )
+#define WARN(...) warnx ("WARNING: " __VA_ARGS__ )
+#define ERR(...)  warnx ("ERROR: " __VA_ARGS__ )
 
 #endif // _LIBNFC_MESSAGES_H_
