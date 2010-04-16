@@ -350,11 +350,11 @@ char* acr122_firmware(const nfc_device_spec_t nds)
 
 bool acr122_led_red(const nfc_device_spec_t nds, bool bOn)
 {
-  (void)bOn;
   byte_t abtLed[9] = { 0xFF,0x00,0x40,0x05,0x04,0x00,0x00,0x00,0x00 };
   acr122_spec_t* pas = (acr122_spec_t*)nds;
   byte_t abtBuf[2];
   size_t szBufLen = sizeof(abtBuf);
+  (void)bOn;
   if (pas->ioCard.dwProtocol == SCARD_PROTOCOL_UNDEFINED)
   {
     return (SCardControl(pas->hCard,IOCTL_CCID_ESCAPE_SCARD_CTL_CODE,abtLed,sizeof(abtLed),abtBuf,szBufLen,(void*)&szBufLen) == SCARD_S_SUCCESS);

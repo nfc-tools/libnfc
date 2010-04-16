@@ -218,6 +218,9 @@ bool arygon_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, const s
   size_t szRxBufLen = BUFFER_LENGTH;
   size_t szPos;
 
+  const byte_t pn53x_ack_frame[] = { 0x00,0x00,0xff,0x00,0xff,0x00 };
+  const byte_t pn53x_nack_frame[] = { 0x00,0x00,0xff,0xff,0x00,0x00 };
+
   // Packet length = data length (len) + checksum (1) + end of stream marker (1)
   abtTxBuf[4] = szTxLen;
   // Packet length checksum
@@ -254,8 +257,6 @@ bool arygon_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, const s
   print_hex(abtRxBuf,szRxBufLen);
 #endif
 
-  const byte_t pn53x_ack_frame[] = { 0x00,0x00,0xff,0x00,0xff,0x00 };
-  const byte_t pn53x_nack_frame[] = { 0x00,0x00,0xff,0xff,0x00,0x00 };
   if(szRxBufLen >= sizeof(pn53x_ack_frame)) {
 
     // Check if PN53x reply ACK
