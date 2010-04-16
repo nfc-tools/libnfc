@@ -59,7 +59,6 @@ if test x"$enable_debug" = "xyes"
 then
   CFLAGS="$CFLAGS -g -Wall -DDEBUG -pedantic -O0 -ggdb"
 fi
-AC_SUBST([DEBUG_CFLAGS])
 
 # Handle --with-drivers option
 LIBNFC_ARG_WITH_DRIVERS
