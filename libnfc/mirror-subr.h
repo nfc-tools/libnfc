@@ -17,30 +17,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  * 
  * 
- * @file messages.h
+ * @file mirror-subr.h
  * @brief
  */
 
-#ifndef _LIBNFC_MESSAGES_H_
-#define _LIBNFC_MESSAGES_H_
+#ifndef _LIBNFC_MIRROR_SUBR_H_
+#define _LIBNFC_MIRROR_SUBR_H_
 
-#include <err.h>
+#include <stdint.h>
 
-// #define DEBUG   /* DEBUG flag can also be enabled using ./configure --enable-debug */
+#include <nfc/nfc-types.h>
 
-// Useful macros
-#ifdef DEBUG
-//   #define DBG(x, args...) printf("DBG %s:%d: " x "\n", __FILE__, __LINE__,## args )
-  #define DBG(...) do { \
-    warnx ("DBG %s:%d", __FILE__, __LINE__); \
-    warnx ("    " __VA_ARGS__ ); \
-  } while (0)
-#else
-  #define DBG(...) {}
-#endif
+byte_t oddparity(const byte_t bt);
+void oddparity_byte_ts(const byte_t* pbtData, const size_t szLen, byte_t* pbtPar);
 
-#define INFO(...) warnx ("INFO: " __VA_ARGS__ )
-#define WARN(...) warnx ("WARNING: " __VA_ARGS__ )
-#define ERR(...)  warnx ("ERROR: " __VA_ARGS__ )
+byte_t mirror(byte_t bt);
+uint32_t mirror32(uint32_t ui32Bits);
+uint64_t mirror64(uint64_t ui64Bits);
+void mirror_byte_ts(byte_t *pbts, size_t szLen);
 
-#endif // _LIBNFC_MESSAGES_H_
+#endif // _LIBNFC_MIRROR_SUBR_H_

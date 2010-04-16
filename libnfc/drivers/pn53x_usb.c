@@ -38,7 +38,6 @@ Thanks to d18c7db and Okko for example code
 #include <string.h>
 
 #include "../drivers.h"
-#include "../bitutils.h"
 
 #include <nfc/nfc-messages.h>
 
@@ -267,10 +266,9 @@ bool pn53x_usb_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, cons
   abtTx[szTxLen+6] = 0;
 
   DBG("%s","pn53x_usb_transceive");
-  #ifdef DEBUG
-    printf(" TX: ");
-    print_hex(abtTx,szTxLen+7);
-  #endif
+#ifdef DEBUG
+  PRINT_HEX("TX", abtTx,szTxLen+7);
+#endif
 
   ret = usb_bulk_write(pus->pudh, pus->uiEndPointOut, (char*)abtTx, szTxLen+7, USB_TIMEOUT);
   if( ret < 0 )
@@ -286,10 +284,9 @@ bool pn53x_usb_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, cons
     return false;
   }
 
-  #ifdef DEBUG
-    printf(" RX: ");
-    print_hex(abtRx,ret);
-  #endif
+#ifdef DEBUG
+  PRINT_HEX("RX", abtRx,ret);
+#endif
 
   if( ret == 6 )
   {
@@ -300,10 +297,9 @@ bool pn53x_usb_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, cons
       return false;
     }
 
-    #ifdef DEBUG
-      printf(" RX: ");
-      print_hex(abtRx,ret);
-    #endif
+#ifdef DEBUG
+    PRINT_HEX("RX", abtRx,ret);
+#endif
   }
 
   // When the answer should be ignored, just return a succesful result

@@ -18,7 +18,8 @@ nfc_poll_LDADD = $(top_builddir)/libnfc/libnfc.la \
 		 $(top_builddir)/examples/libnfcutils.a
 
 nfc_anticol_SOURCES = nfc-anticol.c
-nfc_anticol_LDADD = $(top_builddir)/libnfc/libnfc.la
+nfc_anticol_LDADD = $(top_builddir)/libnfc/libnfc.la \
+		    $(top_builddir)/examples/libnfcutils.a
 
 nfc_list_SOURCES = nfc-list.c
 nfc_list_LDADD = $(top_builddir)/libnfc/libnfc.la \
@@ -31,10 +32,12 @@ nfc_mfclassic_SOURCES = nfc-mfclassic.c mifaretag.h
 nfc_mfclassic_LDADD = $(top_builddir)/libnfc/libnfc.la
 
 nfc_relay_SOURCES = nfc-relay.c
-nfc_relay_LDADD = $(top_builddir)/libnfc/libnfc.la
+nfc_relay_LDADD = $(top_builddir)/libnfc/libnfc.la \
+		  $(top_builddir)/examples/libnfcutils.a
 
 nfc_emulate_SOURCES = nfc-emulate.c
-nfc_emulate_LDADD = $(top_builddir)/libnfc/libnfc.la
+nfc_emulate_LDADD = $(top_builddir)/libnfc/libnfc.la \
+		    $(top_builddir)/examples/libnfcutils.a
 
 nfcip_target_SOURCES = nfcip-target.c
 nfcip_target_LDADD = $(top_builddir)/libnfc/libnfc.la

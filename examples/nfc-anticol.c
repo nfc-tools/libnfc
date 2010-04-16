@@ -33,10 +33,12 @@
 #include <stdbool.h>
 #include <string.h>
 
+#include <sys/endian.h>
+
 #include <nfc/nfc.h>
 
 #include <nfc/nfc-messages.h>
-#include "bitutils.h"
+#include "nfc-utils.h"
 
 #define SAK_FLAG_ATS_SUPPORTED 0x20
 
@@ -200,9 +202,9 @@ int main(int argc,char* argv[])
   printf("\nFound tag with UID: ");
   if (szUidLen == 4)
   {
-    printf("%08x\n",swap_endian32(abtUid));
+    printf("%08x\n", bswap32( *((uint32_t *)&abtUid)));
   } else {
-    printf("%014llx\n",swap_endian64(abtUid)&0x00ffffffffffffffull);
+    printf("%014llx\n",bswap64(*((uint64_t *) &abtUid))&0x00ffffffffffffffull);
   }
 
   nfc_disconnect(pnd);

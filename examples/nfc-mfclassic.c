@@ -35,10 +35,12 @@
 #include <string.h>
 #include <ctype.h>
 
+#include <sys/endian.h>
+
 #include <nfc/nfc.h>
 
 #include "mifaretag.h"
-#include "bitutils.h"
+#include "nfc-utils.h"
 
 static nfc_device_t* pnd;
 static nfc_target_info_t nti;
@@ -464,14 +466,14 @@ int main(int argc, const char* argv[])
         // Compare if key dump UID is the same as the current tag UID
         if (memcmp(nti.nai.abtUid,pbtUID,4) != 0)
         {
-          printf("Expected MIFARE Classic %cK card with UID: %08x\n",b4K?'4':'1',swap_endian32(pbtUID));
+          printf("Expected MIFARE Classic %cK card with UID: %08x\n",b4K?'4':'1',bswap32(*((uint32_t *)&pbtUID)));
         }
       }
     
       // Get the info from the current tag
       pbtUID = nti.nai.abtUid;
       b4K = (nti.nai.abtAtqa[1] == 0x02);
-      printf("Found MIFARE Classic %cK card with UID: %08x\n",b4K?'4':'1',swap_endian32(pbtUID));
+      printf("Found MIFARE Classic %cK card with UID: %08x\n",b4K?'4':'1',bswap32(*((uint32_t *)&pbtUID)));
     
       uiBlocks = (b4K)?0xff:0x3f;
     
