@@ -596,12 +596,13 @@ nfc_initiator_poll_targets(const nfc_device_t* pnd,
   }
 //   byte_t abtInAutoPoll[] = { 0xd4, 0x60, 0x0f, 0x01, 0x00 };
   size_t szTxInAutoPoll = 4 + szTargetTypes;
+  size_t n;
   byte_t *pbtTxInAutoPoll = malloc( szTxInAutoPoll );
   pbtTxInAutoPoll[0] = 0xd4;
   pbtTxInAutoPoll[1] = 0x60;
   pbtTxInAutoPoll[2] = btPollNr;
   pbtTxInAutoPoll[3] = btPeriod;
-  for(size_t n=0; n<szTargetTypes; n++) {
+  for(n=0; n<szTargetTypes; n++) {
     pbtTxInAutoPoll[4+n] = pnttTargetTypes[n];
   }
 
