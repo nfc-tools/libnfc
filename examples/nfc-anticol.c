@@ -33,8 +33,6 @@
 #include <stdbool.h>
 #include <string.h>
 
-#include <sys/endian.h>
-
 #include <nfc/nfc.h>
 
 #include <nfc/nfc-messages.h>
@@ -200,12 +198,10 @@ int main(int argc,char* argv[])
   transmit_bytes(abtHalt,4);
 
   printf("\nFound tag with UID: ");
-  if (szUidLen == 4)
-  {
-    printf("%08x\n", bswap32( *((uint32_t *)&abtUid)));
-  } else {
-    printf("%014llx\n",bswap64(*((uint64_t *) &abtUid))&0x00ffffffffffffffull);
+  if (szUidLen == 7) {
+    printf("%02x%02x%02x", abtUid[6], abtUid[5], abtUid[4]);
   }
+  printf("%02x%02x%02x%02x\n", abtUid[3], abtUid[2], abtUid[1], abtUid[0]);
 
   nfc_disconnect(pnd);
   return 0;

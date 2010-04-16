@@ -590,14 +590,17 @@ nfc_initiator_poll_targets(const nfc_device_t* pnd,
 			   const byte_t btPollNr, const byte_t btPeriod, 
 			   nfc_target_t* pntTargets, size_t* pszTargetFound)
 {
+  size_t szTxInAutoPoll, n, szRxLen;
+  byte_t abtRx[256];
+  bool res;
+  byte_t *pbtTxInAutoPoll;
   if(pnd->nc == NC_PN531) {
     // errno = ENOSUPP
     return false;
   }
 //   byte_t abtInAutoPoll[] = { 0xd4, 0x60, 0x0f, 0x01, 0x00 };
-  size_t szTxInAutoPoll = 4 + szTargetTypes;
-  size_t n;
-  byte_t *pbtTxInAutoPoll = malloc( szTxInAutoPoll );
+  szTxInAutoPoll = 4 + szTargetTypes;
+  pbtTxInAutoPoll = malloc( szTxInAutoPoll );
   pbtTxInAutoPoll[0] = 0xd4;
   pbtTxInAutoPoll[1] = 0x60;
   pbtTxInAutoPoll[2] = btPollNr;
@@ -606,9 +609,8 @@ nfc_initiator_poll_targets(const nfc_device_t* pnd,
     pbtTxInAutoPoll[4+n] = pnttTargetTypes[n];
   }
 
-  size_t szRxLen = 256;
-  byte_t abtRx[256];
-  bool res = pnd->pdc->transceive(pnd->nds, pbtTxInAutoPoll, szTxInAutoPoll, abtRx, &szRxLen);
+  szRxLen = 256;
+  res = pnd->pdc->transceive(pnd->nds, pbtTxInAutoPoll, szTxInAutoPoll, abtRx, &szRxLen);
 
   if((szRxLen == 0)||(res == false)) {
     DBG("pnd->pdc->tranceive() failed: szRxLen=%d, res=%d", szRxLen, res);
@@ -616,12 +618,13 @@ nfc_initiator_poll_targets(const nfc_device_t* pnd,
   } else {
     *pszTargetFound = abtRx[0];
     if( *pszTargetFound ) {
+      uint8_t ln;
       byte_t* pbt = abtRx + 1;
       /* 1st target */
       // Target type
       pntTargets[0].ntt = *(pbt++);
       // AutoPollTargetData length
-      uint8_t ln = *(pbt++);
+      ln = *(pbt++);
       pn53x_decode_target_data(pbt, ln, pnd->nc, pntTargets[0].ntt, &(pntTargets[0].nti));
       pbt += ln;
 
