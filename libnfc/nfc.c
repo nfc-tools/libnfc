@@ -342,7 +342,9 @@ bool nfc_initiator_init(const nfc_device_t* pnd)
  * @param pnd nfc_device_t struct pointer that represent currently used device
  * @param nmInitModulation Desired modulation (NM_ACTIVE_DEP or NM_PASSIVE_DEP for active, respectively passive mode)
  * @param pbtPidData passive initiator data, 4 or 5 bytes long, (optional, only for NM_PASSIVE_DEP, can be NULL)
+ * @param szPidDataLen size of \a pbtPidData
  * @param pbtNFCID3i the NFCID3, 10 bytes long, of the initiator (optional, can be NULL)
+ * @param szNFCID3iDataLen size of \a pbtNFCID3i
  * @param pbtGbData generic data of the initiator, max 48 bytes long, (optional, can be NULL)
  * @param szGbDataLen size of \a pbtGbData
  * @param pnti is a \a nfc_target_info_t struct pointer where target information will be put.
