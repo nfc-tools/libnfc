@@ -141,14 +141,14 @@ bool pn53x_usb_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, s
           // Test if we reach the maximum "wanted" devices
           if((*pszDeviceFound) == szDevices) 
           {
-            DBG("Found %d devices",*pszDeviceFound);
+            DBG("Found %ld devices", (unsigned long) *pszDeviceFound);
             return true;
           }
         }
       }
     }
   }
-  DBG("Found %d devices",*pszDeviceFound);
+  DBG("Found %ld devices", (unsigned long) *pszDeviceFound);
   if(*pszDeviceFound)
     return true;
   return false;

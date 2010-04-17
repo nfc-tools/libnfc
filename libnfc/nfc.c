@@ -113,7 +113,7 @@ nfc_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *pszD
       if (drivers_callbacks_list[uiDriver].list_devices (pnddDevices + (*pszDeviceFound), szDevices - (*pszDeviceFound), &szN))
       {
         *pszDeviceFound += szN;
-        DBG("%d device(s) found using %s driver", szN, drivers_callbacks_list[uiDriver].acDriver);
+        DBG("%ld device(s) found using %s driver", (unsigned long) szN, drivers_callbacks_list[uiDriver].acDriver);
       }
     }
     else
@@ -613,7 +613,7 @@ nfc_initiator_poll_targets(const nfc_device_t* pnd,
   res = pnd->pdc->transceive(pnd->nds, pbtTxInAutoPoll, szTxInAutoPoll, abtRx, &szRxLen);
 
   if((szRxLen == 0)||(res == false)) {
-    DBG("pnd->pdc->tranceive() failed: szRxLen=%d, res=%d", szRxLen, res);
+    DBG("pnd->pdc->tranceive() failed: szRxLen=%ld, res=%d", (unsigned long) szRxLen, res);
     return false;
   } else {
     *pszTargetFound = abtRx[0];

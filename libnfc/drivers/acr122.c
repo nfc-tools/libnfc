@@ -166,7 +166,7 @@ acr122_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *p
   while ((acDeviceNames[szPos] != '\0') && ((*pszDeviceFound) < szDevices)) {
     uiBusIndex++;
 
-    DBG("- %s (pos=%d)", acDeviceNames + szPos, szPos);
+    DBG("- %s (pos=%ld)", acDeviceNames + szPos, (unsigned long) szPos);
 
     bSupported = false;
     for (i = 0; supported_devices[i] && !bSupported; i++) {
