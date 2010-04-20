@@ -153,7 +153,7 @@ static bool authenticate(uint32_t uiBlock)
   return false;
 }
 
-bool read_card()
+static bool read_card(void)
 {
   int32_t iBlock;
   bool bFailure = false;
@@ -222,7 +222,7 @@ bool read_card()
   return true;
 }
 
-bool write_card()
+static bool write_card(void)
 {
   uint32_t uiBlock;
   bool bFailure = false;
