@@ -58,7 +58,7 @@ byte_t abtSelectTag [9] = { 0x93,0x70,0x00,0x00,0x00,0x00,0x00,0x00,0x00 };
 byte_t abtRats      [4] = { 0xe0,0x50,0xbc,0xa5 };
 byte_t abtHalt      [4] = { 0x50,0x00,0x57,0xcd };
 
-bool transmit_bits(const byte_t* pbtTx, const size_t szTxBits)
+static bool transmit_bits(const byte_t* pbtTx, const size_t szTxBits)
 {
   // Show transmitted command
   if(!quiet_output)
@@ -82,7 +82,7 @@ bool transmit_bits(const byte_t* pbtTx, const size_t szTxBits)
 }
 
 
-bool transmit_bytes(const byte_t* pbtTx, const size_t szTxLen)
+static bool transmit_bytes(const byte_t* pbtTx, const size_t szTxLen)
 {
   // Show transmitted command
   if(!quiet_output)
@@ -105,7 +105,7 @@ bool transmit_bytes(const byte_t* pbtTx, const size_t szTxLen)
   return true;
 }
 
-void print_usage(char* argv[])
+static void print_usage(char* argv[])
 {
   printf("Usage: %s [OPTIONS]\n", argv[0]);
   printf("Options:\n");
