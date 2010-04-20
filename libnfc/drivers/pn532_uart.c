@@ -233,7 +233,6 @@ bool pn532_uart_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, con
   print_hex(abtRxBuf,szRxBufLen);
 #endif
 
-
   const byte_t pn53x_ack_frame[] = { 0x00,0x00,0xff,0x00,0xff,0x00 };
   const byte_t pn53x_nack_frame[] = { 0x00,0x00,0xff,0xff,0x00,0x00 };
   if(szRxBufLen >= sizeof(pn53x_ack_frame)) {
@@ -298,7 +297,8 @@ pn532_uart_wakeup(const nfc_device_spec_t nds)
 #endif
   uart_send((serial_port)nds, pncmd_pn532c106_wakeup, sizeof(pncmd_pn532c106_wakeup));
 
-  while (!uart_receive((serial_port)nds,abtRx,&szRxLen)) {
+  if(!uart_receive((serial_port)nds,abtRx,&szRxLen)) {
+    return false;
   }
 #ifdef DEBUG
   printf(" RX: ");
