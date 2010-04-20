@@ -49,9 +49,11 @@
 #include <nfc/nfc-types.h>
 
 byte_t oddparity(const byte_t bt);
+void oddparity_bytes(const byte_t* pbtData, const size_t szLen, byte_t* pbtPar);
 void oddparity_byte_ts(const byte_t* pbtData, const size_t szLen, byte_t* pbtPar);
 
 NFC_EXPORT byte_t mirror(byte_t bt);
+NFC_EXPORT void mirror_bytes(byte_t *pbts, size_t szLen);
 NFC_EXPORT uint32_t mirror32(uint32_t ui32Bits);
 NFC_EXPORT uint64_t mirror64(uint64_t ui64Bits);
 NFC_EXPORT void mirror_byte_ts(byte_t *pbts, size_t szLen);

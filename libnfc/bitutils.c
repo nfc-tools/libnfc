@@ -29,6 +29,7 @@
 #include <stdio.h>
 
 #include "bitutils.h"
+#include "nfc/nfc.h"
 
 static const byte_t OddParity[256] = {
   1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1,
