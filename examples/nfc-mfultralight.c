@@ -46,14 +46,14 @@ static mifare_param mp;
 static mifareul_tag mtDump;
 static uint32_t uiBlocks = 0xF;
 
-void print_success_or_failure(bool bFailure, uint32_t* uiBlockCounter)
+static void print_success_or_failure(bool bFailure, uint32_t* uiBlockCounter)
 {
   printf("%c",(bFailure)?'x':'.');
   if (uiBlockCounter)
     *uiBlockCounter += (bFailure)?0:1;
 }
 
-bool read_card()
+static bool read_card(void)
 {
   uint32_t page;
   bool bFailure = false;
@@ -90,7 +90,7 @@ bool read_card()
   return (!bFailure);
 }
 
-bool write_card()
+static bool write_card(void)
 {
   uint32_t uiBlock = 0;
   int page;
