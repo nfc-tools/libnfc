@@ -6,14 +6,15 @@ rm -f aclocal.m4 ltmain.sh
 touch README
 
 LIBTOOLIZE=libtoolize
+ACLOCAL_ARGS="-I m4"
 case `uname -s` in
 Darwin)
   LIBTOOLIZE=glibtoolize
-  ACLOCAL_ARGS="-I /opt/local/share/aclocal/"
+  ACLOCAL_ARGS="$ACLOCAL_ARGS -I /opt/local/share/aclocal/"
   #  SKIP_PCSC="1"
   ;;
 FreeBSD)
-  ACLOCAL_ARGS="-I /usr/local/share/aclocal/"
+  ACLOCAL_ARGS="$ACLOCAL_ARGS -I /usr/local/share/aclocal/"
   ;;
 esac
 
