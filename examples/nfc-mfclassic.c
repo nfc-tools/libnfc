@@ -60,26 +60,26 @@ static byte_t keys[] = {
 };
 static size_t num_keys = sizeof(keys) / 6;
 
-void print_success_or_failure(bool bFailure, uint32_t* uiBlockCounter)
+static void print_success_or_failure(bool bFailure, uint32_t* uiBlockCounter)
 {
   printf("%c",(bFailure)?'x':'.');
   if (uiBlockCounter)
     *uiBlockCounter += (bFailure)?0:4;
 }
 
-bool is_first_block(uint32_t uiBlock)
+static bool is_first_block(uint32_t uiBlock)
 {
   // Test if we are in the small or big sectors
   if (uiBlock < 128) return ((uiBlock)%4 == 0); else return ((uiBlock)%16 == 0);
 }
 
-bool is_trailer_block(uint32_t uiBlock)
+static bool is_trailer_block(uint32_t uiBlock)
 {
   // Test if we are in the small or big sectors
   if (uiBlock < 128) return ((uiBlock+1)%4 == 0); else return ((uiBlock+1)%16 == 0);
 }
 
-uint32_t get_trailer_block(uint32_t uiFirstBlock)
+static uint32_t get_trailer_block(uint32_t uiFirstBlock)
 {
   // Test if we are in the small or big sectors
   uint32_t trailer_block = 0;
@@ -91,7 +91,7 @@ uint32_t get_trailer_block(uint32_t uiFirstBlock)
   return trailer_block;
 }
 
-bool authenticate(uint32_t uiBlock)
+static bool authenticate(uint32_t uiBlock)
 {
   mifare_cmd mc;
   uint32_t uiTrailerBlock;
@@ -296,7 +296,7 @@ bool write_card()
   return true;
 }
 
-void mifare_classic_extract_payload(const char* abDump, char* pbPayload)
+static void mifare_classic_extract_payload(const char* abDump, char* pbPayload)
 {
   uint8_t uiSectorIndex;
   uint8_t uiBlockIndex;
@@ -320,7 +320,7 @@ typedef enum {
   ACTION_USAGE
 } action_t;
 
-void print_usage(const char* pcProgramName)
+static void print_usage(const char* pcProgramName)
 {
   printf("Usage: ");
   printf("%s r|w a|b <dump.mfd> [<keys.mfd>]\n", pcProgramName);
