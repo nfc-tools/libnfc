@@ -106,19 +106,21 @@ pn532_uart_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_
   *pszDeviceFound = 0;
 
   serial_port sp;
-  char acConnect[BUFFER_LENGTH];
+  char acPort[BUFFER_LENGTH];
   int iDevice;
 
   // I have no idea how MAC OS X deals with multiple devices, so a quick workaround
   for (iDevice=0; iDevice<DRIVERS_MAX_DEVICES; iDevice++)
   {
 #ifdef __APPLE__
-    strcpy(acConnect,SERIAL_STRING);
+    strncpy(acPort,SERIAL_STRING, BUFFER_LENGTH - 1);
+    acPort[BUFFER_LENGTH - 1] = '\0';
 #else /* __APPLE__ */
-    sprintf(acConnect,"%s%d",SERIAL_STRING,iDevice);
+    snprintf(acPort,BUFFER_LENGTH - 1,"%s%d",SERIAL_STRING,iDevice);
+    acPort[BUFFER_LENGTH - 1] = '\0';
 #endif /* __APPLE__ */
-    sp = uart_open(acConnect);
-    DBG("Trying to find PN532 device on serial port: %s at %d bauds.",acConnect, SERIAL_DEFAULT_PORT_SPEED);
+    sp = uart_open(acPort);
+    DBG("Trying to find PN532 device on serial port: %s at %d bauds.",acPort, SERIAL_DEFAULT_PORT_SPEED);
 
     if ((sp != INVALID_SERIAL_PORT) && (sp != CLAIMED_SERIAL_PORT))
     {
@@ -130,10 +132,10 @@ pn532_uart_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_
       if(!pn532_uart_check_communication((nfc_device_spec_t)sp)) continue;
       uart_close(sp);
 
-      snprintf(pnddDevices[*pszDeviceFound].acDevice, DEVICE_NAME_LENGTH - 1, "%s (%s)", "PN532", acConnect);
+      snprintf(pnddDevices[*pszDeviceFound].acDevice, DEVICE_NAME_LENGTH - 1, "%s (%s)", "PN532", acPort);
       pnddDevices[*pszDeviceFound].acDevice[DEVICE_NAME_LENGTH - 1] = '\0';
       pnddDevices[*pszDeviceFound].pcDriver = PN532_UART_DRIVER_NAME;
-      pnddDevices[*pszDeviceFound].pcPort = strndup(acConnect, BUFFER_LENGTH - 1);
+      pnddDevices[*pszDeviceFound].pcPort = strdup(acPort);
       pnddDevices[*pszDeviceFound].pcPort[BUFFER_LENGTH] = '\0';
       pnddDevices[*pszDeviceFound].uiSpeed = SERIAL_DEFAULT_PORT_SPEED;
       DBG("Device found: %s.", pnddDevices[*pszDeviceFound].acDevice);
@@ -143,8 +145,8 @@ pn532_uart_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_
       if((*pszDeviceFound) >= szDevices) break;
     }
 #ifdef DEBUG
-    if (sp == INVALID_SERIAL_PORT) DBG("Invalid serial port: %s",acConnect);
-    if (sp == CLAIMED_SERIAL_PORT) DBG("Serial port already claimed: %s",acConnect);
+    if (sp == INVALID_SERIAL_PORT) DBG("Invalid serial port: %s",acPort);
+    if (sp == CLAIMED_SERIAL_PORT) DBG("Serial port already claimed: %s",acPort);
 #endif /* DEBUG */
   }
 #endif /* SERIAL_AUTOPROBE_ENABLED */
