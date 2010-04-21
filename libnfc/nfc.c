@@ -192,13 +192,14 @@ nfc_device_t* nfc_connect(nfc_device_desc_t* pndd)
         return NULL;
       }
 
-      // Add the firmware revision to the device name, PN531 gives 2 bytes info, but PN532 gives 4
-      switch(pnd->nc)
-      {
-        case NC_PN531: snprintf(pnd->acName,DEVICE_NAME_LENGTH - 1,"%s - PN531 v%d.%d",pnd->acName,abtFw[0],abtFw[1]); break;
-        case NC_PN532: snprintf(pnd->acName,DEVICE_NAME_LENGTH - 1,"%s - PN532 v%d.%d (0x%02x)",pnd->acName,abtFw[1],abtFw[2],abtFw[3]); break;
-        case NC_PN533: snprintf(pnd->acName,DEVICE_NAME_LENGTH - 1,"%s - PN533 v%d.%d (0x%02x)",pnd->acName,abtFw[1],abtFw[2],abtFw[3]); break;
+      // Add the firmware revision to the device name, PN531 gives 2 bytes info, but PN532 and PN533 gives 4
+      char* pcName = strdup(pnd->acName);
+      switch(pnd->nc) {
+        case NC_PN531: snprintf(pnd->acName,DEVICE_NAME_LENGTH - 1,"%s - PN531 v%d.%d",pcName,abtFw[0],abtFw[1]); break;
+        case NC_PN532: snprintf(pnd->acName,DEVICE_NAME_LENGTH - 1,"%s - PN532 v%d.%d (0x%02x)",pcName,abtFw[1],abtFw[2],abtFw[3]); break;
+        case NC_PN533: snprintf(pnd->acName,DEVICE_NAME_LENGTH - 1,"%s - PN533 v%d.%d (0x%02x)",pcName,abtFw[1],abtFw[2],abtFw[3]); break;
       }
+      free(pcName);
 
       // Reset the ending transmission bits register, it is unknown what the last tranmission used there
       if (!pn53x_set_reg(pnd,REG_CIU_BIT_FRAMING,SYMBOL_TX_LAST_BITS,0x00)) return NULL;
