@@ -133,8 +133,7 @@ pn532_uart_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_
       snprintf(pnddDevices[*pszDeviceFound].acDevice, DEVICE_NAME_LENGTH - 1, "%s (%s)", "PN532", acConnect);
       pnddDevices[*pszDeviceFound].acDevice[DEVICE_NAME_LENGTH - 1] = '\0';
       pnddDevices[*pszDeviceFound].pcDriver = PN532_UART_DRIVER_NAME;
-      //pnddDevices[*pszDeviceFound].pcPort = strndup(acConnect, BUFFER_LENGTH - 1);
-      pnddDevices[*pszDeviceFound].pcPort = strdup(acConnect);
+      pnddDevices[*pszDeviceFound].pcPort = strndup(acConnect, BUFFER_LENGTH - 1);
       pnddDevices[*pszDeviceFound].pcPort[BUFFER_LENGTH] = '\0';
       pnddDevices[*pszDeviceFound].uiSpeed = SERIAL_DEFAULT_PORT_SPEED;
       DBG("Device found: %s.", pnddDevices[*pszDeviceFound].acDevice);
