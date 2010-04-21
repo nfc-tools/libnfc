@@ -65,7 +65,8 @@
 
 #define SERIAL_DEFAULT_PORT_SPEED 115200
 
-bool pn532_uart_wakeup(const nfc_device_spec_t nds);
+void pn532_uart_wakeup(const nfc_device_spec_t nds);
+bool pn532_uart_check_communication(const nfc_device_spec_t nds);
 
 nfc_device_desc_t *
 pn532_uart_pick_device (void)
@@ -121,11 +122,14 @@ pn532_uart_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_
 
     if ((sp != INVALID_SERIAL_PORT) && (sp != CLAIMED_SERIAL_PORT))
     {
-      // Serial port claimed: a PN532_UART may be found...
-      // FIXME try to send a command to PN53x to know if you really have a PN53x connected here
-      if(!pn532_uart_wakeup((nfc_device_spec_t)sp)) continue;
-
+      // Serial port claimed but we need to check if a PN532_UART is connected.
+      uart_set_speed(sp, SERIAL_DEFAULT_PORT_SPEED);
+      // PN532 could be powered down, we need to wake it up before line testing.
+      pn532_uart_wakeup((nfc_device_spec_t)sp);
+      // Check communication using "Diagnose" command, with "Comunication test" (0x00)
+      if(!pn532_uart_check_communication((nfc_device_spec_t)sp)) continue;
       uart_close(sp);
+
       snprintf(pnddDevices[*pszDeviceFound].acDevice, DEVICE_NAME_LENGTH - 1, "%s (%s)", "PN532", acConnect);
       pnddDevices[*pszDeviceFound].acDevice[DEVICE_NAME_LENGTH - 1] = '\0';
       pnddDevices[*pszDeviceFound].pcDriver = PN532_UART_DRIVER_NAME;
@@ -166,7 +170,10 @@ nfc_device_t* pn532_uart_connect(const nfc_device_desc_t* pndd)
 
     uart_set_speed(sp, pndd->uiSpeed);
   }
-  if(!pn532_uart_wakeup((nfc_device_spec_t)sp)) return NULL;
+  // PN532 could be powered down, we need to wake it up before line testing.
+  pn532_uart_wakeup((nfc_device_spec_t)sp);
+  // Check communication using "Diagnose" command, with "Comunication test" (0x00)
+  if(!pn532_uart_check_communication((nfc_device_spec_t)sp)) return NULL;
 
   DBG("Successfully connected to: %s",pndd->pcPort);
 
@@ -279,23 +286,34 @@ bool pn532_uart_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, con
   return true;
 }
 
-bool
+void
 pn532_uart_wakeup(const nfc_device_spec_t nds)
+{
+  /** PN532C106 wakeup. */
+  /** High Speed Unit (HSU) wake up consist to send 0x55 and wait a "long" delay for PN532 being wakeup. */
+  const byte_t pncmd_pn532c106_wakeup_preamble[] = { 0x55,0x55,0x00,0x00,0x00 };
+
+#ifdef DEBUG
+  printf(" TX: ");
+  print_hex(pncmd_pn532c106_wakeup_preamble,sizeof(pncmd_pn532c106_wakeup_preamble));
+#endif
+  uart_send((serial_port)nds, pncmd_pn532c106_wakeup_preamble, sizeof(pncmd_pn532c106_wakeup_preamble));
+}
+
+bool
+pn532_uart_check_communication(const nfc_device_spec_t nds)
 {
   byte_t abtRx[BUFFER_LENGTH];
   size_t szRxLen;
 
-  /** PN532C106 wakeup. */
-  /** High Speed Unit (HSU) wake up consist to send 0x55 and wait a "long" delay for PN532 being wakeup. */
   /** To be sure that PN532 is alive, we have put a "Diagnose" command to execute a "Communication Line Test" */
-  const byte_t pncmd_pn532c106_wakeup[] = { 0x55,0x55,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0xff,0x09,0xf7,0xd4,0x00,0x00,'l','i','b','n','f','c',0xbe,0x00 };
-//   const byte_t pncmd_pn532c106_wakeup[] = { 0x00,0x00,0xff,0x09,0xf7,0xd4,0x00,0x00,'l','i','b','n','f','c',0xbe,0x00 };
+  const byte_t pncmd_communication_test[] = { 0x00,0x00,0xff,0x09,0xf7,0xd4,0x00,0x00,'l','i','b','n','f','c',0xbe,0x00 };
 
 #ifdef DEBUG
   printf(" TX: ");
-  print_hex(pncmd_pn532c106_wakeup,sizeof(pncmd_pn532c106_wakeup));
+  print_hex(pncmd_communication_test,sizeof(pncmd_communication_test));
 #endif
-  uart_send((serial_port)nds, pncmd_pn532c106_wakeup, sizeof(pncmd_pn532c106_wakeup));
+  uart_send((serial_port)nds, pncmd_communication_test, sizeof(pncmd_communication_test));
 
   if(!uart_receive((serial_port)nds,abtRx,&szRxLen)) {
     return false;
