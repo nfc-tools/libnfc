@@ -84,6 +84,8 @@
 
 #define SERIAL_DEFAULT_PORT_SPEED 9600
 
+bool arygon_check_communication(const nfc_device_spec_t nds);
+
 /**
  * @note ARYGON-ADRA (PN531): ???,n,8,1
  * @note ARYGON-ADRB (PN532): 9600,n,8,1
@@ -129,31 +131,33 @@ arygon_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *p
   *pszDeviceFound = 0;
 
   serial_port sp;
-  char acConnect[BUFFER_LENGTH];
+  char acPort[BUFFER_LENGTH];
   int iDevice;
 
   // I have no idea how MAC OS X deals with multiple devices, so a quick workaround
   for (iDevice=0; iDevice<DRIVERS_MAX_DEVICES; iDevice++)
   {
 #ifdef __APPLE__
-    strcpy(acConnect,SERIAL_STRING);
+    strncpy(acPort, SERIAL_STRING, BUFFER_LENGTH - 1);
+    acPort[BUFFER_LENGTH - 1] = '\0';
 #else /* __APPLE__ */
-    sprintf(acConnect,"%s%d",SERIAL_STRING,iDevice);
+    snprintf(acPort, BUFFER_LENGTH - 1, "%s%d", SERIAL_STRING, iDevice);
+    acPort[BUFFER_LENGTH - 1] = '\0';
 #endif /* __APPLE__ */
-    sp = uart_open(acConnect);
-    DBG("Trying to find ARYGON device on serial port: %s at %d bauds.",acConnect, SERIAL_DEFAULT_PORT_SPEED);
+    sp = uart_open(acPort);
+    DBG("Trying to find ARYGON device on serial port: %s at %d bauds.",acPort, SERIAL_DEFAULT_PORT_SPEED);
 
     if ((sp != INVALID_SERIAL_PORT) && (sp != CLAIMED_SERIAL_PORT))
     {
-      // Serial port claimed: an ARYGON may be found...
-      // FIXME try to send a command to PN53x to know if you really have a PN53x connected here
+      uart_set_speed(sp, SERIAL_DEFAULT_PORT_SPEED);
+      if(!arygon_check_communication((nfc_device_spec_t)sp)) continue;
       uart_close(sp);
-      snprintf(pnddDevices[*pszDeviceFound].acDevice, DEVICE_NAME_LENGTH - 1, "%s (%s)", "ARYGON", acConnect);
+
+      // ARYGON reader is found
+      snprintf(pnddDevices[*pszDeviceFound].acDevice, DEVICE_NAME_LENGTH - 1, "%s (%s)", "ARYGON", acPort);
       pnddDevices[*pszDeviceFound].acDevice[DEVICE_NAME_LENGTH - 1] = '\0';
       pnddDevices[*pszDeviceFound].pcDriver = ARYGON_DRIVER_NAME;
-      //pnddDevices[*pszDeviceFound].pcPort = strndup(acConnect, BUFFER_LENGTH - 1);
-      pnddDevices[*pszDeviceFound].pcPort = strdup(acConnect);
-      pnddDevices[*pszDeviceFound].pcPort[BUFFER_LENGTH] = '\0';
+      pnddDevices[*pszDeviceFound].pcPort = strdup(acPort);
       pnddDevices[*pszDeviceFound].uiSpeed = SERIAL_DEFAULT_PORT_SPEED;
       DBG("Device found: %s.", pnddDevices[*pszDeviceFound].acDevice);
       (*pszDeviceFound)++;
@@ -162,8 +166,8 @@ arygon_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *p
       if((*pszDeviceFound) >= szDevices) break;
     }
 #ifdef DEBUG
-    if (sp == INVALID_SERIAL_PORT) DBG("Invalid serial port: %s",acConnect);
-    if (sp == CLAIMED_SERIAL_PORT) DBG("Serial port already claimed: %s",acConnect);
+    if (sp == INVALID_SERIAL_PORT) DBG("Invalid serial port: %s",acPort);
+    if (sp == CLAIMED_SERIAL_PORT) DBG("Serial port already claimed: %s",acPort);
 #endif /* DEBUG */
   }
 #endif /* SERIAL_AUTOPROBE_ENABLED */
@@ -298,6 +302,38 @@ bool arygon_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, const s
   *pszRxLen = szRxBufLen - 9;
   memcpy(pbtRx, abtRxBuf+7, *pszRxLen);
 
+  return true;
+}
+
+//TODO Use tranceive function instead of raw uart send/receive for communication check.
+bool
+arygon_check_communication(const nfc_device_spec_t nds)
+{
+  byte_t abtRx[BUFFER_LENGTH];
+  size_t szRxLen;
+
+  /** To be sure that PN532 is alive, we have put a "Diagnose" command to execute a "Communication Line Test" */
+  const byte_t pncmd_communication_test[] = { DEV_ARYGON_PROTOCOL_TAMA, 0x00,0x00,0xff,0x09,0xf7,0xd4,0x00,0x00,'l','i','b','n','f','c',0xbe,0x00 };
+
+#ifdef DEBUG
+  printf(" TX: ");
+  print_hex(pncmd_communication_test,sizeof(pncmd_communication_test));
+#endif
+  uart_send((serial_port)nds, pncmd_communication_test, sizeof(pncmd_communication_test));
+
+  if(!uart_receive((serial_port)nds,abtRx,&szRxLen)) {
+    return false;
+  }
+#ifdef DEBUG
+  printf(" RX: ");
+  print_hex(abtRx,szRxLen);
+#endif
+
+  const byte_t attempted_result[] = { 0x00,0x00,0xff,0x00,0xff,0x00,0x00,0x00,0xff,0x09,0xf7,0xD5,0x01,0x00,'l','i','b','n','f','c',0xbc,0x00};
+  if(0 != memcmp(abtRx,attempted_result,sizeof(attempted_result))) {
+    DBG("%s", "Communication test failed, result doesn't match to attempted one.");
+    return false;
+  }
   return true;
 }
 
