@@ -9,17 +9,21 @@ LIBNFC_VERSION=$(grep AC_INIT configure.ac | sed 's/^.*(\(.*\))/\1/g' | awk -F',
 # Easiest part: GNU/linux, BSD and other POSIX systems.
 LIBNFC_AUTOTOOLS_ARCHIVE=libnfc-$LIBNFC_VERSION.tar.gz
 
+echo "> Cleaning sources..."
+# First, clean what we can
+autoreconf -is && ./configure && make distclean
+svn propget svn:ignore . | xargs rm -rf
+echo "< Sources cleaned."
+
 if [ ! -f $LIBNFC_AUTOTOOLS_ARCHIVE ]; then
 	echo "Autotooled archive generation..."
-	# First, clean what we can
-	autoreconf -is && ./configure && make distclean
 
 	# Second, generate dist archive (and test it)
-	autoreconf -is && ./configure  && make distcheck
+	autoreconf -is && ./configure && make distcheck
 
 	# Finally, clean up
 	make distclean
-	echo "Autotooled archive generate."
+	echo "Autotooled archive generated."
 else
 	echo "Autotooled archive (GNU/Linux, BSD, etc.) is already done: skipped."
 fi
