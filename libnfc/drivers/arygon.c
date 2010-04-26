@@ -32,7 +32,6 @@
 #endif // HAVE_CONFIG_H
 
 #include "../drivers.h"
-#include "../bitutils.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -243,8 +242,7 @@ bool arygon_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, const s
   abtTxBuf[szTxLen+7] = 0;
 
 #ifdef DEBUG
-  printf(" TX: ");
-  print_hex(abtTxBuf,szTxLen+8);
+  PRINT_HEX("TX", abtTxBuf,szTxLen+8);
 #endif
   if (!uart_send((serial_port)nds,abtTxBuf,szTxLen+8)) {
     ERR("%s", "Unable to transmit data. (TX)");
@@ -257,8 +255,7 @@ bool arygon_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, const s
   }
 
 #ifdef DEBUG
-  printf(" RX: ");
-  print_hex(abtRxBuf,szRxBufLen);
+  PRINT_HEX("RX", abtRxBuf,szRxBufLen);
 #endif
 
   if(szRxBufLen >= sizeof(pn53x_ack_frame)) {
@@ -287,10 +284,9 @@ bool arygon_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, const s
     }
   }
 
-  #ifdef DEBUG
-  printf(" RX: ");
-  print_hex(abtRxBuf,szRxBufLen);
-  #endif
+#ifdef DEBUG
+  PRINT_HEX("RX", abtRxBuf,szRxBufLen);
+#endif
 
   // When the answer should be ignored, just return a successful result
   if(pbtRx == NULL || pszRxLen == NULL) return true;

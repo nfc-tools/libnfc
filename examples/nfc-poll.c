@@ -35,7 +35,6 @@
 #include <nfc/nfc.h>
 #include <nfc/nfc-types.h>
 #include <nfc/nfc-messages.h>
-#include "bitutils.h"
 #include "nfc-utils.h"
 
 #define MAX_DEVICE_COUNT 16

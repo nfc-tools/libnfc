@@ -1,4 +1,4 @@
-/**
+/*-
  * Public platform independent Near Field Communication (NFC) library
  * 
  * Copyright (C) 2009, Roel Verdult
@@ -15,32 +15,38 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
- * 
- * 
- * @file messages.h
+ */
+
+ /**
+ * @file iso14443-subr.c
  * @brief
  */
 
-#ifndef _LIBNFC_MESSAGES_H_
-#define _LIBNFC_MESSAGES_H_
+#ifdef HAVE_CONFIG_H
+  #include "config.h"
+#endif // HAVE_CONFIG_H
 
-#include <err.h>
+#include <stdio.h>
 
-// #define DEBUG   /* DEBUG flag can also be enabled using ./configure --enable-debug */
+#include <nfc/nfc.h>
 
-// Useful macros
-#ifdef DEBUG
-//   #define DBG(x, args...) printf("DBG %s:%d: " x "\n", __FILE__, __LINE__,## args )
-  #define DBG(...) do { \
-    warnx ("DBG %s:%d", __FILE__, __LINE__); \
-    warnx ("    " __VA_ARGS__ ); \
-  } while (0)
-#else
-  #define DBG(...) {}
-#endif
+void iso14443a_crc(byte_t* pbtData, size_t szLen, byte_t* pbtCrc)
+{
+  byte_t bt;
+  uint32_t wCrc = 0x6363;
 
-#define INFO(...) warnx ("INFO: " __VA_ARGS__ )
-#define WARN(...) warnx ("WARNING: " __VA_ARGS__ )
-#define ERR(...)  warnx ("ERROR: " __VA_ARGS__ )
+  do {
+    bt = *pbtData++;
+    bt = (bt^(byte_t)(wCrc & 0x00FF));
+    bt = (bt^(bt<<4));
+    wCrc = (wCrc >> 8)^((uint32_t)bt << 8)^((uint32_t)bt<<3)^((uint32_t)bt>>4);
+  } while (--szLen);
 
-#endif // _LIBNFC_MESSAGES_H_
+  *pbtCrc++ = (byte_t) (wCrc & 0xFF);
+  *pbtCrc = (byte_t) ((wCrc >> 8) & 0xFF);
+}
+
+void append_iso14443a_crc(byte_t* pbtData, size_t szLen)
+{
+  iso14443a_crc(pbtData, szLen, pbtData + szLen);
+}

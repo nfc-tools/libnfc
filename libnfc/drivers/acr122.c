@@ -35,7 +35,6 @@
 
 #include "acr122.h"
 #include "../drivers.h"
-#include "../bitutils.h"
 
 // Bus
 #include <winscard.h>
@@ -279,8 +278,7 @@ bool acr122_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, const s
   memcpy(abtTxBuf+5,pbtTx,szTxLen);
   szRxBufLen = sizeof(abtRxBuf);
 #ifdef DEBUG
-  printf(" TX: ");
-  print_hex(abtTxBuf,szTxLen+5);
+  PRINT_HEX("TX", abtTxBuf,szTxLen+5);
 #endif
 
   if (pas->ioCard.dwProtocol == SCARD_PROTOCOL_UNDEFINED)
@@ -305,8 +303,7 @@ bool acr122_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, const s
   }
 
 #ifdef DEBUG
-  printf(" RX: ");
-  print_hex(abtRxBuf,szRxBufLen);
+  PRINT_HEX("RX", abtRxBuf,szRxBufLen);
 #endif
 
   // When the answer should be ignored, just return a succesful result

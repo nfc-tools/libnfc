@@ -29,7 +29,6 @@
 #endif // HAVE_CONFIG_H
 
 #include "../drivers.h"
-#include "../bitutils.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -223,8 +222,7 @@ bool pn532_uart_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, con
   abtTxBuf[szTxLen+6] = 0;
 
 #ifdef DEBUG
-  printf(" TX: ");
-  print_hex(abtTxBuf,szTxLen+7);
+  PRINT_HEX("TX", abtTxBuf,szTxLen+7);
 #endif
   if (!uart_send((serial_port)nds,abtTxBuf,szTxLen+7)) {
     ERR("%s", "Unable to transmit data. (TX)");
@@ -237,8 +235,7 @@ bool pn532_uart_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, con
   }
 
 #ifdef DEBUG
-  printf(" RX: ");
-  print_hex(abtRxBuf,szRxBufLen);
+  PRINT_HEX("RX", abtRxBuf,szRxBufLen);
 #endif
 
   const byte_t pn53x_ack_frame[] = { 0x00,0x00,0xff,0x00,0xff,0x00 };
@@ -269,10 +266,9 @@ bool pn532_uart_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, con
     }
   }
 
-  #ifdef DEBUG
-  printf(" RX: ");
-  print_hex(abtRxBuf,szRxBufLen);
-  #endif
+#ifdef DEBUG
+  PRINT_HEX("RX", abtRxBuf,szRxBufLen);
+#endif
 
   // When the answer should be ignored, just return a successful result
   if(pbtRx == NULL || pszRxLen == NULL) return true;
@@ -311,8 +307,7 @@ pn532_uart_check_communication(const nfc_device_spec_t nds)
   const byte_t pncmd_communication_test[] = { 0x00,0x00,0xff,0x09,0xf7,0xd4,0x00,0x00,'l','i','b','n','f','c',0xbe,0x00 };
 
 #ifdef DEBUG
-  printf(" TX: ");
-  print_hex(pncmd_communication_test,sizeof(pncmd_communication_test));
+  PRINT_HEX("TX", pncmd_communication_test,sizeof(pncmd_communication_test));
 #endif
   uart_send((serial_port)nds, pncmd_communication_test, sizeof(pncmd_communication_test));
 
@@ -320,8 +315,7 @@ pn532_uart_check_communication(const nfc_device_spec_t nds)
     return false;
   }
 #ifdef DEBUG
-  printf(" RX: ");
-  print_hex(abtRx,szRxLen);
+  PRINT_HEX("RX", abtRx,szRxLen);
 #endif
 
   const byte_t attempted_result[] = { 0x00,0x00,0xff,0x00,0xff,0x00,0x00,0x00,0xff,0x09,0xf7,0xD5,0x01,0x00,'l','i','b','n','f','c',0xbc,0x00};

@@ -73,5 +73,21 @@ static const struct driver_callbacks drivers_callbacks_list[] = {
 #endif /* DRIVER_PN532_UART_ENABLED */
 };
 
+#ifdef DEBUG
+  /*
+   * FIXME: Helper macro for dumping drivers messages.
+   * Here is not the best place for such a macro, however, I
+   * can't see any convenient place ATM.
+   */
+#  define PRINT_HEX(pcTag, pbtData, szBytes) do { \
+    size_t __szPos; \
+    printf(" %s: ", pcTag); \
+    for (__szPos=0; __szPos < szBytes; __szPos++) { \
+      printf("%02x  ",pbtData[__szPos]); \
+    } \
+    printf("\n"); \
+  } while (0);
+#endif
+
 #endif // __NFC_DRIVERS_H__
 

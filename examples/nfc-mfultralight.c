@@ -38,7 +38,7 @@
 #include <nfc/nfc.h>
 
 #include "mifareultag.h"
-#include "bitutils.h"
+#include "nfc-utils.h"
 
 static nfc_device_t* pnd;
 static nfc_target_info_t nti;
@@ -215,9 +215,9 @@ int main(int argc, const char* argv[])
   }
 
 
-  // Get the info from the current tag
+  // Get the info from the current tag (UID is stored little-endian)
   pbtUID = nti.nai.abtUid;
-  printf("Found MIFARE Ultralight card with uid: %08x\n", swap_endian32(pbtUID));
+  printf("Found MIFARE Ultralight card with uid: %02x%02x%02x%02x\n", pbtUID[3], pbtUID[2], pbtUID[1], pbtUID[0]);
 
   if (bReadAction)
   {
