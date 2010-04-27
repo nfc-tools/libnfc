@@ -6,21 +6,21 @@ INCLUDES= $(all_includes) $(LIBNFC_CFLAGS)
 AM_CFLAGS = -I$(top_srcdir)/libnfc
 
 noinst_HEADERS = mifaretag.h mifareultag.h nfc-utils.h
-noinst_LIBRARIES = libnfcutils.a
+noinst_LTLIBRARIES = libnfcutils.la
 
-libnfcutils_a_SOURCES = nfc-utils.c
+libnfcutils_la_SOURCES = nfc-utils.c
 
 nfc_poll_SOURCES = nfc-poll.c
 nfc_poll_LDADD = $(top_builddir)/libnfc/libnfc.la \
-		 $(top_builddir)/examples/libnfcutils.a
+		 libnfcutils.la
 
 nfc_anticol_SOURCES = nfc-anticol.c
 nfc_anticol_LDADD = $(top_builddir)/libnfc/libnfc.la \
-		    $(top_builddir)/examples/libnfcutils.a
+		    libnfcutils.la
 
 nfc_list_SOURCES = nfc-list.c
 nfc_list_LDADD = $(top_builddir)/libnfc/libnfc.la \
-		 $(top_builddir)/examples/libnfcutils.a
+		 libnfcutils.la
 
 nfc_mfultralight_SOURCES = nfc-mfultralight.c mifareultag.h
 nfc_mfultralight_LDADD = $(top_builddir)/libnfc/libnfc.la
@@ -30,11 +30,11 @@ nfc_mfclassic_LDADD = $(top_builddir)/libnfc/libnfc.la
 
 nfc_relay_SOURCES = nfc-relay.c
 nfc_relay_LDADD = $(top_builddir)/libnfc/libnfc.la \
-		  $(top_builddir)/examples/libnfcutils.a
+		  libnfcutils.la
 
 nfc_emulate_SOURCES = nfc-emulate.c
 nfc_emulate_LDADD = $(top_builddir)/libnfc/libnfc.la \
-		    $(top_builddir)/examples/libnfcutils.a
+		    libnfcutils.la
 
 nfcip_target_SOURCES = nfcip-target.c
 nfcip_target_LDADD = $(top_builddir)/libnfc/libnfc.la
