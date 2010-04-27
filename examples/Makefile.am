@@ -3,12 +3,9 @@ bin_PROGRAMS = nfc-anticol nfc-list nfc-mfclassic nfc-mfultralight nfc-relay nfc
 # set the include path found by configure
 INCLUDES= $(all_includes) $(LIBNFC_CFLAGS)
 
-nfcinclude_HEADERS = mifaretag.h mifareultag.h
-nfcincludedir = $(includedir)/nfc
-
 AM_CFLAGS = -I$(top_srcdir)/libnfc
 
-noinst_HEADERS = nfc-utils.h
+noinst_HEADERS = mifaretag.h mifareultag.h nfc-utils.h
 noinst_LIBRARIES = libnfcutils.a
 
 libnfcutils_a_SOURCES = nfc-utils.c
