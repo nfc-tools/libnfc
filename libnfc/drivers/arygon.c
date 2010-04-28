@@ -312,8 +312,7 @@ arygon_check_communication(const nfc_device_spec_t nds)
   const byte_t pncmd_communication_test[] = { DEV_ARYGON_PROTOCOL_TAMA, 0x00,0x00,0xff,0x09,0xf7,0xd4,0x00,0x00,'l','i','b','n','f','c',0xbe,0x00 };
 
 #ifdef DEBUG
-  printf(" TX: ");
-  print_hex(pncmd_communication_test,sizeof(pncmd_communication_test));
+  PRINT_HEX("TX", pncmd_communication_test,sizeof(pncmd_communication_test));
 #endif
   uart_send((serial_port)nds, pncmd_communication_test, sizeof(pncmd_communication_test));
 
@@ -321,8 +320,7 @@ arygon_check_communication(const nfc_device_spec_t nds)
     return false;
   }
 #ifdef DEBUG
-  printf(" RX: ");
-  print_hex(abtRx,szRxLen);
+  PRINT_HEX("RX", abtRx,szRxLen);
 #endif
 
   const byte_t attempted_result[] = { 0x00,0x00,0xff,0x00,0xff,0x00,0x00,0x00,0xff,0x09,0xf7,0xD5,0x01,0x00,'l','i','b','n','f','c',0xbc,0x00};

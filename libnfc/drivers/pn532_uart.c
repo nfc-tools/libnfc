@@ -291,8 +291,7 @@ pn532_uart_wakeup(const nfc_device_spec_t nds)
   const byte_t pncmd_pn532c106_wakeup_preamble[] = { 0x55,0x55,0x00,0x00,0x00 };
 
 #ifdef DEBUG
-  printf(" TX: ");
-  print_hex(pncmd_pn532c106_wakeup_preamble,sizeof(pncmd_pn532c106_wakeup_preamble));
+  PRINT_HEX("TX", pncmd_pn532c106_wakeup_preamble,sizeof(pncmd_pn532c106_wakeup_preamble));
 #endif
   uart_send((serial_port)nds, pncmd_pn532c106_wakeup_preamble, sizeof(pncmd_pn532c106_wakeup_preamble));
 }
