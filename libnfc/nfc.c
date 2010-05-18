@@ -480,25 +480,7 @@ bool nfc_initiator_select_tag(const nfc_device_t* pnd, const nfc_modulation_t nm
     switch(nmInitModulation)
     {
       case NM_ISO14443A_106:
-        // Somehow they switched the lower and upper ATQA bytes around for the PN531 chipset
-        if (pnd->nc == NC_PN531)
-        {
-          pnti->nai.abtAtqa[0] = abtRx[3];
-          pnti->nai.abtAtqa[1] = abtRx[2];
-        } else {
-          memcpy(pnti->nai.abtAtqa,abtRx+2,2);
-        }
-        pnti->nai.btSak = abtRx[4];
-        // Copy the NFCID1
-        pnti->nai.szUidLen = abtRx[5];
-        memcpy(pnti->nai.abtUid,abtRx+6,pnti->nai.szUidLen);
-        // Did we received an optional ATS (Smardcard ATR)
-        if (szRxLen > pnti->nai.szUidLen+6) {
-          pnti->nai.szAtsLen = abtRx[pnti->nai.szUidLen+6];
-          memcpy(pnti->nai.abtAts,abtRx+pnti->nai.szUidLen+7,pnti->nai.szAtsLen);
-        } else {
-          pnti->nai.szAtsLen = 0;
-        }
+	if(!pn53x_decode_target_data(&abtRx[1], szRxLen-1, pnd->nc, NTT_GENERIC_PASSIVE_106, pnti)) return false;
 
 	// Strip CT (Cascade Tag) to retrieve and store the _real_ UID
 	// (e.g. 0x8801020304050607 is in fact 0x01020304050607)
