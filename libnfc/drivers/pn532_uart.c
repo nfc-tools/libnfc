@@ -203,6 +203,8 @@ bool pn532_uart_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, con
   byte_t abtRxBuf[BUFFER_LENGTH];
   size_t szRxBufLen = BUFFER_LENGTH;
   size_t szPos;
+  const byte_t pn53x_ack_frame[] = { 0x00,0x00,0xff,0x00,0xff,0x00 };
+  const byte_t pn53x_nack_frame[] = { 0x00,0x00,0xff,0xff,0x00,0x00 };
 
   // Packet length = data length (len) + checksum (1) + end of stream marker (1)
   abtTxBuf[3] = szTxLen;
@@ -238,8 +240,6 @@ bool pn532_uart_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, con
   PRINT_HEX("RX", abtRxBuf,szRxBufLen);
 #endif
 
-  const byte_t pn53x_ack_frame[] = { 0x00,0x00,0xff,0x00,0xff,0x00 };
-  const byte_t pn53x_nack_frame[] = { 0x00,0x00,0xff,0xff,0x00,0x00 };
   if(szRxBufLen >= sizeof(pn53x_ack_frame)) {
 
     // Check if PN53x reply ACK
@@ -301,6 +301,7 @@ pn532_uart_check_communication(const nfc_device_spec_t nds)
 {
   byte_t abtRx[BUFFER_LENGTH];
   size_t szRxLen;
+  const byte_t attempted_result[] = { 0x00,0x00,0xff,0x00,0xff,0x00,0x00,0x00,0xff,0x09,0xf7,0xD5,0x01,0x00,'l','i','b','n','f','c',0xbc,0x00};
 
   /** To be sure that PN532 is alive, we have put a "Diagnose" command to execute a "Communication Line Test" */
   const byte_t pncmd_communication_test[] = { 0x00,0x00,0xff,0x09,0xf7,0xd4,0x00,0x00,'l','i','b','n','f','c',0xbe,0x00 };
@@ -317,7 +318,6 @@ pn532_uart_check_communication(const nfc_device_spec_t nds)
   PRINT_HEX("RX", abtRx,szRxLen);
 #endif
 
-  const byte_t attempted_result[] = { 0x00,0x00,0xff,0x00,0xff,0x00,0x00,0x00,0xff,0x09,0xf7,0xD5,0x01,0x00,'l','i','b','n','f','c',0xbc,0x00};
   if(0 != memcmp(abtRx,attempted_result,sizeof(attempted_result))) {
     DBG("%s", "Communication test failed, result doesn't match to attempted one.");
     return false;
