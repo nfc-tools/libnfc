@@ -1,0 +1,28 @@
+LIBRARY NFC
+VERSION 1.3
+
+EXPORTS
+	nfc_list_devices
+	nfc_connect
+	nfc_disconnect
+	nfc_configure
+	nfc_initiator_init
+	nfc_initiator_select_tag
+	nfc_initiator_select_dep_target
+	nfc_initiator_deselect_tag
+	nfc_initiator_poll_targets
+	nfc_initiator_transceive_bits
+	nfc_initiator_transceive_bytes
+	nfc_initiator_transceive_dep_bytes
+	nfc_initiator_mifare_cmd
+	nfc_target_init
+	nfc_target_receive_bits
+	nfc_target_receive_bytes
+	nfc_target_receive_dep_bytes
+	nfc_target_send_bits
+	nfc_target_send_bytes
+	nfc_target_send_dep_bytes
+	nfc_device_name
+	iso14443a_crc
+	append_iso14443a_crc
+	nfc_version

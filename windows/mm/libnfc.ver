@@ -1,0 +1,13 @@
+;++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+; ProductName = libnfc
+; DESCRIPTION = Public platform independent Near Field Communication (NFC) library
+; Installed   = WINDOWS_ALL
+; Guid.UpgradeCode = {5880D072-659D-4038-894D-C85BF514B95A}
+; MsiName     = libnfc-1.3.4
+;++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+;############################################################################
+VERSION : 1.3.4.0
+DATE    : 4 May 2010
+CHANGES : Example Packaging
+
