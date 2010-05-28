@@ -89,9 +89,9 @@ bool pn53x_usb_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, s
   string[0]= '\0';
   usb_init();
 
-  if ((ret= usb_find_busses() < 0)) return NULL;
+  if ((ret= usb_find_busses() < 0)) return false;
   DBG("%d busses",ret);
-  if ((ret= usb_find_devices() < 0)) return NULL;
+  if ((ret= usb_find_devices() < 0)) return false;
   DBG("%d devices",ret);
 
   *pszDeviceFound= 0;
