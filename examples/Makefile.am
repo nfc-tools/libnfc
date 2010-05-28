@@ -1,4 +1,4 @@
-bin_PROGRAMS = nfc-anticol nfc-list nfc-mfclassic nfc-mfultralight nfc-relay nfc-emulate nfcip-target nfcip-initiator nfc-poll
+bin_PROGRAMS = nfc-anticol nfc-list nfc-mfclassic nfc-mfultralight nfc-relay nfc-emulate nfcip-target nfcip-initiator nfc-poll pn53x-diagnose
 
 # set the include path found by configure
 INCLUDES= $(all_includes) $(LIBNFC_CFLAGS)
@@ -41,6 +41,10 @@ nfcip_target_LDADD = $(top_builddir)/libnfc/libnfc.la
 
 nfcip_initiator_SOURCES = nfcip-initiator.c
 nfcip_initiator_LDADD = $(top_builddir)/libnfc/libnfc.la
+
+pn53x_diagnose_SOURCES = pn53x-diagnose.c
+pn53x_diagnose_LDADD = $(top_builddir)/libnfc/libnfc.la \
+		    libnfcutils.la
 
 dist_man_MANS = nfc-anticol.1 nfc-emulate.1 nfc-list.1 nfc-mfclassic.1 nfc-mfultralight.1 nfc-relay.1
 
