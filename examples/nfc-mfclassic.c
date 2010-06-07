@@ -178,7 +178,7 @@ static bool read_card(void)
         if (!nfc_initiator_select_tag(pnd,NM_ISO14443A_106,NULL,0,&nti))
         {
           printf("!\nError: tag was removed\n");
-          return 1;
+          return false;
         }
         bFailure = false;
       }
@@ -237,7 +237,7 @@ static bool write_card(void)
     if (is_first_block(uiBlock))
     {
       // Skip this the first time, bFailure it means nothing (yet)
-      if (uiBlock != uiBlocks)
+      if (uiBlock != 0)
         print_success_or_failure(bFailure, &uiWriteBlocks);
 
       // Show if the readout went well
