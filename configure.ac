@@ -1,5 +1,5 @@
 # General init
-AC_INIT(libnfc, 1.3.4, info@libnfc.org)
+AC_INIT(libnfc, 1.3.9, info@libnfc.org)
 
 AC_CONFIG_MACRO_DIR([m4])
 
