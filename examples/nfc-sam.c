@@ -89,7 +89,7 @@ int main(int argc, const char* argv[])
   int mode = input-'0'+1;
   printf("\n");
   if (mode <= 1 || mode >= 5)
-    return 1;
+    return EXIT_FAILURE;
     
   abtSAMConfig[2] = mode;
   
@@ -107,7 +107,7 @@ int main(int argc, const char* argv[])
         
     case WIRED_CARD_MODE:
     {        
-      // Read the SAM's ATS (ATR).
+      // Read the SAM's info.
       if (nfc_initiator_select_tag(pnd,NM_ISO14443A_106,NULL,0,&nti))
       {
         printf("The following (NFC) ISO14443A tag was found:\n\n");
