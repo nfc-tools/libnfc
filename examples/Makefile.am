@@ -1,4 +1,4 @@
-bin_PROGRAMS = nfc-anticol nfc-list nfc-mfclassic nfc-mfultralight nfc-relay nfc-emulate nfcip-target nfcip-initiator nfc-poll pn53x-diagnose
+bin_PROGRAMS = nfc-anticol nfc-list nfc-mfclassic nfc-mfultralight nfc-relay nfc-emulate nfcip-target nfcip-initiator nfc-poll pn53x-diagnose nfc-sam
 
 # set the include path found by configure
 INCLUDES= $(all_includes) $(LIBNFC_CFLAGS)
@@ -46,6 +46,10 @@ pn53x_diagnose_SOURCES = pn53x-diagnose.c
 pn53x_diagnose_LDADD = $(top_builddir)/libnfc/libnfc.la \
 		    libnfcutils.la
 
-dist_man_MANS = nfc-anticol.1 nfc-emulate.1 nfc-list.1 nfc-mfclassic.1 nfc-mfultralight.1 nfc-relay.1
+nfc_sam_SOURCES = nfc-sam.c
+nfc_sam_LDADD = $(top_builddir)/libnfc/libnfc.la \
+		 libnfcutils.la
+
+dist_man_MANS = nfc-anticol.1 nfc-emulate.1 nfc-list.1 nfc-mfclassic.1 nfc-mfultralight.1 nfc-relay.1 nfc-sam.1
 
 EXTRA_DIST = CMakeLists.txt
