@@ -5,7 +5,7 @@ INCLUDES= $(all_includes) $(LIBNFC_CFLAGS)
 
 AM_CFLAGS = -I$(top_srcdir)/libnfc
 
-noinst_HEADERS = mifaretag.h mifareultag.h nfc-utils.h
+noinst_HEADERS = mifare.h nfc-utils.h
 noinst_LTLIBRARIES = libnfcutils.la
 
 libnfcutils_la_SOURCES = nfc-utils.c
@@ -22,10 +22,10 @@ nfc_list_SOURCES = nfc-list.c
 nfc_list_LDADD = $(top_builddir)/libnfc/libnfc.la \
 		 libnfcutils.la
 
-nfc_mfultralight_SOURCES = nfc-mfultralight.c mifareultag.h
+nfc_mfultralight_SOURCES = nfc-mfultralight.c mifare.c mifare.h
 nfc_mfultralight_LDADD = $(top_builddir)/libnfc/libnfc.la
 
-nfc_mfclassic_SOURCES = nfc-mfclassic.c mifaretag.h
+nfc_mfclassic_SOURCES = nfc-mfclassic.c mifare.c mifare.h
 nfc_mfclassic_LDADD = $(top_builddir)/libnfc/libnfc.la
 
 nfc_relay_SOURCES = nfc-relay.c

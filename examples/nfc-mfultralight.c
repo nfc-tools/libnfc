@@ -37,7 +37,7 @@
 
 #include <nfc/nfc.h>
 
-#include "mifareultag.h"
+#include "mifare.h"
 #include "nfc-utils.h"
 
 static nfc_device_t* pnd;

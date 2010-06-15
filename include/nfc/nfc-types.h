@@ -279,40 +279,6 @@ typedef struct {
   nfc_target_type_t ntt;
 } nfc_target_t;
 
-////////////////////////////////////////////////////////////////////
-// InDataExchange, MIFARE Classic card 
-
-typedef enum {
-  MC_AUTH_A         = 0x60,
-  MC_AUTH_B         = 0x61,
-  MC_READ           = 0x30,
-  MC_WRITE          = 0xA0,
-  MC_TRANSFER       = 0xB0,
-  MC_DECREMENT      = 0xC0,
-  MC_INCREMENT      = 0xC1,
-  MC_STORE          = 0xC2
-}mifare_cmd;
-
-// MIFARE Classic command params
-typedef struct {
-  byte_t abtKey[6];
-  byte_t abtUid[4];
-}mifare_param_auth;
-
-typedef struct {
-  byte_t abtData[16];
-}mifare_param_data;
-
-typedef struct {
-  byte_t abtValue[4];
-}mifare_param_value;
-
-typedef union {
-  mifare_param_auth mpa;
-  mifare_param_data mpd;
-  mifare_param_value mpv;
-}mifare_param;
-
 // Reset struct alignment to default
 #pragma pack()
 

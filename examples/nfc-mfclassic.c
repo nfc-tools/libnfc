@@ -37,14 +37,14 @@
 
 #include <nfc/nfc.h>
 
-#include "mifaretag.h"
+#include "mifare.h"
 #include "nfc-utils.h"
 
 static nfc_device_t *pnd;
 static nfc_target_info_t nti;
 static mifare_param mp;
-static mifare_tag mtKeys;
-static mifare_tag mtDump;
+static mifare_classic_tag mtKeys;
+static mifare_classic_tag mtDump;
 static bool bUseKeyA;
 static bool bUseKeyFile;
 static uint8_t uiBlocks;
