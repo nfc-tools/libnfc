@@ -30,6 +30,10 @@
 #include <stdlib.h>
 #include <time.h>
 
+// Needed by sleep() under Unix
+#include <unistd.h>
+// FIXME What about sleep() in Windows ?
+
 #include <nfc/nfc.h>
 #include <nfc/nfc-messages.h>
 #include "nfc-utils.h"
