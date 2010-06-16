@@ -41,9 +41,6 @@
 #define WIRED_CARD_MODE 3
 #define DUAL_CARD_MODE 4
 
-#define TCL 1
-#define MIFARE 2
-
 bool sam_connection(nfc_device_t* pnd, int mode)
 {
   byte_t pncmd_sam_config[] = { 0xD4,0x14,0x00,0x00 };
