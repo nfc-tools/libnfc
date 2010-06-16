@@ -4,6 +4,7 @@
 
 #include <stdlib.h>
 #include <nfc/nfc.h>
+#include <nfc/nfc-messages.h>
 
 int main(int argc, const char* argv[])
 {
@@ -18,7 +19,7 @@ int main(int argc, const char* argv[])
   pnd = nfc_connect(NULL);
 
   if (pnd == NULL) {
-      printf("Unable to connect to NFC device.");
+      ERR("%s", "Unable to connect to NFC device.");
       return EXIT_FAILURE;
   }
 
