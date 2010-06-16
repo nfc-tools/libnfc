@@ -102,8 +102,10 @@ int main(int argc, const char* argv[])
   char input = getchar();
   int mode = input-'0'+1;
   printf("\n");
-  if (mode < VIRTUAL_CARD_MODE || mode > DUAL_CARD_MODE)
-    return EXIT_FAILURE;
+  if (mode < VIRTUAL_CARD_MODE || mode > DUAL_CARD_MODE) {
+      ERR("%s", "Invalid selection.");
+      return EXIT_FAILURE;
+  }
   
   // Connect with the SAM
   sam_connection(pnd, mode);
@@ -122,10 +124,12 @@ int main(int argc, const char* argv[])
       nfc_target_info_t nti;
       
       // Read the SAM's info
-      if (!nfc_initiator_select_tag(pnd,NM_ISO14443A_106,NULL,0,&nti))
+      if (!nfc_initiator_select_tag(pnd,NM_ISO14443A_106,NULL,0,&nti)) {
+        ERR("%s", "Reading of SAM info failed.");
         return EXIT_FAILURE;
+      }
       
-      printf("The following (NFC) ISO14443A tag was found:\n\n");
+      printf("The following ISO14443A tag (SAM) was found:\n\n");
       print_nfc_iso14443a_info (nti.nai);
     }
     break;
