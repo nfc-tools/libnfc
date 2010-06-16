@@ -114,6 +114,7 @@ int main(int argc, const char* argv[])
   {
     case VIRTUAL_CARD_MODE:
     {
+      // FIXME: after the loop the reader doesn't respond to host commands...
       printf("Now the SAM is readable for 1 minute from an external reader.\n");
       wait_one_minute();
     }
@@ -139,6 +140,7 @@ int main(int argc, const char* argv[])
       byte_t abtRx[MAX_FRAME_LEN];
       size_t szRxLen;
       
+      // FIXME: it does not work as expected...
       if (!nfc_target_init(pnd,abtRx,&szRxLen))
         return EXIT_FAILURE;
       
