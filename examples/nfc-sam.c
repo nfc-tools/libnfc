@@ -28,6 +28,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 #include <nfc/nfc.h>
 #include <nfc/nfc-messages.h>
@@ -35,20 +36,49 @@
 
 #define MAX_FRAME_LEN 264
 
+#define NORMAL_MODE 1
 #define VIRTUAL_CARD_MODE 2
 #define WIRED_CARD_MODE 3
 #define DUAL_CARD_MODE 4
 
-int main(int argc, const char* argv[])
+#define TCL 1
+#define MIFARE 2
+
+bool sam_connection(nfc_device_t* pnd, int mode)
 {
-  nfc_device_t* pnd;
+  byte_t pncmd_sam_config[] = { 0xD4,0x14,0x00,0x00 };
   
   byte_t abtRx[MAX_FRAME_LEN];
   size_t szRxLen;
   
-  byte_t abtSAMConfig[] = { 0xD4,0x14,0x00,0x00 };
+  // Only the VIRTUAL_CARD_MODE requires 4 bytes.
+  int size = sizeof(pncmd_sam_config)-((mode == VIRTUAL_CARD_MODE) ? 0 : 1);
+  pncmd_sam_config[2] = mode;
   
-  nfc_target_info_t nti;
+  return pnd->pdc->transceive(pnd->nds,pncmd_sam_config,size,abtRx,&szRxLen);
+}
+
+void wait_one_minute()
+{
+  int secs = 0;
+  
+  printf("|");
+  fflush(stdout);
+  
+  while (secs < 60)
+  {
+    sleep(1);
+    secs += 1;
+    printf(".");
+    fflush(stdout);
+  }
+  
+  printf("|\n");
+}
+
+int main(int argc, const char* argv[])
+{
+  nfc_device_t* pnd;
 
   // Display libnfc version
   const char* acLibnfcVersion = nfc_version();
@@ -58,70 +88,67 @@ int main(int argc, const char* argv[])
   pnd = nfc_connect(NULL);
 
   if (pnd == NULL) {
-      printf("Unable to connect to NFC device.");
+      ERR("%s", "Unable to connect to NFC device.");
       return EXIT_FAILURE;
   }
 
-  // Set connected NFC device to initiator mode
-  nfc_initiator_init(pnd);
-
-  // Drop the field for a while
-  nfc_configure(pnd,NDO_ACTIVATE_FIELD,false);
-
-  // Configure the CRC and Parity settings
-  nfc_configure(pnd,NDO_HANDLE_CRC,false);
-  nfc_configure(pnd,NDO_HANDLE_PARITY,true);
-
-  // Enable field so more power consuming cards can power themselves up
-  nfc_configure(pnd,NDO_ACTIVATE_FIELD,true);
-
   printf("Connected to NFC reader: %s\n",pnd->acName);
   
-  // Print the example's menu.
+  // Print the example's menu
   printf("\nSelect the comunication mode:\n");
   printf("[1] Virtual card mode.\n");
   printf("[2] Wired card mode.\n");
   printf("[3] Dual card mode.\n");
   printf(">> ");
   
-  // Take user's choice.
+  // Take user's choice
   char input = getchar();
   int mode = input-'0'+1;
   printf("\n");
-  if (mode <= 1 || mode >= 5)
+  if (mode < VIRTUAL_CARD_MODE || mode > DUAL_CARD_MODE)
     return EXIT_FAILURE;
-    
-  abtSAMConfig[2] = mode;
   
-  // Connect with the SAM.
-  pnd->pdc->transceive(pnd->nds,abtSAMConfig,sizeof(abtSAMConfig),abtRx,&szRxLen);
+  // Connect with the SAM
+  sam_connection(pnd, mode);
   
   switch (mode)
   {
     case VIRTUAL_CARD_MODE:
     {
-      printf("Now the SAM is readable from an external reader.\n");
-      // TODO.
+      printf("Now the SAM is readable for 1 minute from an external reader.\n");
+      wait_one_minute();
     }
     break;
         
     case WIRED_CARD_MODE:
-    {        
-      // Read the SAM's info.
-      if (nfc_initiator_select_tag(pnd,NM_ISO14443A_106,NULL,0,&nti))
-      {
-        printf("The following (NFC) ISO14443A tag was found:\n\n");
-        print_nfc_iso14443a_info (nti.nai);
-      }
+    {
+      nfc_target_info_t nti;
+      
+      // Read the SAM's info
+      if (!nfc_initiator_select_tag(pnd,NM_ISO14443A_106,NULL,0,&nti))
+        return EXIT_FAILURE;
+      
+      printf("The following (NFC) ISO14443A tag was found:\n\n");
+      print_nfc_iso14443a_info (nti.nai);
     }
     break;
     
     case DUAL_CARD_MODE:
     {
-      // TODO.
+      byte_t abtRx[MAX_FRAME_LEN];
+      size_t szRxLen;
+      
+      if (!nfc_target_init(pnd,abtRx,&szRxLen))
+        return EXIT_FAILURE;
+      
+      printf("Now both the NFC reader and SAM are readable for 1 minute from an external reader.\n");
+      wait_one_minute();
     }
     break;
   }
+  
+  // Disconnect from the SAM.
+  sam_connection(pnd, NORMAL_MODE);
 
   // Disconnect from NFC device
   nfc_disconnect(pnd);
