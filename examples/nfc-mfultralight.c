@@ -62,7 +62,7 @@ read_card (void)
   bool bFailure = false;
   uint32_t uiReadedPages = 0;
 
-  printf ("Reading out %d blocks |", uiBlocks + 1);
+  printf ("Reading %d pages |", uiBlocks + 1);
 
   for (page = 0; page <= uiBlocks; page += 4) {
     // Try to read out the data block
@@ -79,7 +79,7 @@ read_card (void)
     print_success_or_failure (bFailure, &uiReadedPages);
   }
   printf ("|\n");
-  printf ("Done, %d of %d blocks read.\n", uiReadedPages, uiBlocks + 1);
+  printf ("Done, %d of %d pages readed.\n", uiReadedPages, uiBlocks + 1);
   fflush (stdout);
 
   return (!bFailure);
@@ -93,7 +93,7 @@ write_card (void)
   bool bFailure = false;
   uint32_t uiWritenPages = 0;
 
-  printf ("Writing out %d blocks |", uiBlocks + 1);
+  printf ("Writing %d pages |", uiBlocks + 1);
 
   /* We are writting only data pages, so we need to skip 4 pages. */
   printf ("ssss");
@@ -103,7 +103,7 @@ write_card (void)
 //         printf("x");
       // When a failure occured we need to redo the anti-collision
       if (!nfc_initiator_select_tag (pnd, NM_ISO14443A_106, NULL, 0, &nti)) {
-        ERR ("!\nError: tag was removed\n");
+        ERR ("tag was removed");
         return false;
       }
       bFailure = false;
@@ -120,8 +120,7 @@ write_card (void)
     print_success_or_failure (bFailure, &uiWritenPages);
   }
   printf ("|\n");
-  printf ("Done, %d of %d blocks written (4 first pages are skipped).\n", uiWritenPages, uiBlocks + 1);
-  fflush (stdout);
+  printf ("Done, %d of %d pages written (4 first pages are skipped).\n", uiWritenPages, uiBlocks + 1);
 
   return true;
 }
