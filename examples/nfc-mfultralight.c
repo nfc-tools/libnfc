@@ -19,7 +19,7 @@
 
 /**
  * @file nfc-mfultool.c
- * @brief
+ * @brief MIFARE Ultralight dump tool
  */
 
 #ifdef HAVE_CONFIG_H
@@ -36,6 +36,7 @@
 #include <ctype.h>
 
 #include <nfc/nfc.h>
+#include <nfc/nfc-messages.h>
 
 #include "mifare.h"
 #include "nfc-utils.h"
@@ -46,32 +47,23 @@ static mifare_param mp;
 static mifareul_tag mtDump;
 static uint32_t uiBlocks = 0xF;
 
-static void print_success_or_failure(bool bFailure, uint32_t* uiBlockCounter)
+static void print_success_or_failure(bool bFailure, uint32_t* uiCounter)
 {
   printf("%c",(bFailure)?'x':'.');
-  if (uiBlockCounter)
-    *uiBlockCounter += (bFailure)?0:1;
+  if (uiCounter)
+    *uiCounter += (bFailure)?0:1;
 }
 
 static bool read_card(void)
 {
   uint32_t page;
   bool bFailure = false;
-  uint32_t uiReadBlocks = 0;
+  uint32_t uiReadedPages = 0;
 
   printf("Reading out %d blocks |",uiBlocks+1);
 
   for (page = 0; page <= uiBlocks;  page += 4)
   {
-      // Skip this the first time, bFailure it means nothing (yet)
-      if (page != 0)
-      {
-        print_success_or_failure(bFailure, &uiReadBlocks);
-        print_success_or_failure(bFailure, &uiReadBlocks);
-        print_success_or_failure(bFailure, &uiReadBlocks);
-        print_success_or_failure(bFailure, &uiReadBlocks);
-      }
-
       // Try to read out the data block
       if (nfc_initiator_mifare_cmd(pnd,MC_READ,page,&mp))
       {
@@ -80,11 +72,14 @@ static bool read_card(void)
         bFailure = true;
         break;
       }
+      
+      print_success_or_failure(bFailure, &uiReadedPages);
+      print_success_or_failure(bFailure, &uiReadedPages);
+      print_success_or_failure(bFailure, &uiReadedPages);
+      print_success_or_failure(bFailure, &uiReadedPages);
   }
-  //return bSuccess;
-  print_success_or_failure(bFailure, &uiReadBlocks);
   printf("|\n");
-  printf("Done, %d of %d blocks read.\n", uiReadBlocks, uiBlocks+1);
+  printf("Done, %d of %d blocks read.\n", uiReadedPages, uiBlocks+1);
   fflush(stdout);
 
   return (!bFailure);
@@ -95,26 +90,25 @@ static bool write_card(void)
   uint32_t uiBlock = 0;
   int page;
   bool bFailure = false;
-  uint32_t uiWriteBlocks = 0;
+  uint32_t uiWritenPages = 0;
 
-  for (page = 0x4; page <= 0xF; page++) {
+  printf("Writing out %d blocks |",uiBlocks+1);
+  
+  /* We are writting only data pages, so we need to skip 4 pages. */
+  printf("ssss");
+  for (page = 0x4; page <= 0xF; page ++) {
       // Show if the readout went well
       if (bFailure)
       {
-        printf("x");
+//         printf("x");
         // When a failure occured we need to redo the anti-collision
         if (!nfc_initiator_select_tag(pnd,NM_ISO14443A_106,NULL,0,&nti))
         {
-          printf("!\nError: tag was removed\n");
+          ERR("!\nError: tag was removed\n");
           return false;
         }
         bFailure = false;
-      }
-      fflush(stdout);
-
-      // Make sure a earlier write did not fail
-      if (!bFailure)
-      {
+      } else {
         // For the Mifare Ultralight, this write command can be used
         // in compatibility mode, which only actually writes the first 
         // page (4 bytes). The Ultralight-specific Write command only
@@ -123,10 +117,10 @@ static bool write_card(void)
         memcpy(mp.mpd.abtData, mtDump.amb[uiBlock].mbd.abtData + ((page % 4) * 4), 16);
         if (!nfc_initiator_mifare_cmd(pnd, MC_WRITE, page, &mp)) bFailure = true;
       }
+    print_success_or_failure(bFailure, &uiWritenPages);
   }
-  print_success_or_failure(bFailure, &uiWriteBlocks);
   printf("|\n");
-  printf("Done, %d of %d blocks written.\n", uiWriteBlocks, uiBlocks+1);
+  printf("Done, %d of %d blocks written (4 first pages are skipped).\n", uiWritenPages, uiBlocks+1);
   fflush(stdout);
 
   return true;
@@ -149,7 +143,7 @@ int main(int argc, const char* argv[])
     return 1;
   }
 
-  printf("\nChecking arguments and settings\n");
+  DBG("\nChecking arguments and settings\n");
 
   bReadAction = tolower((int)((unsigned char)*(argv[1])) == 'r');
 
@@ -161,25 +155,25 @@ int main(int argc, const char* argv[])
 
     if (pfDump == NULL)
     {
-      printf("Could not open dump file: %s\n",argv[2]);
+      ERR("Could not open dump file: %s\n",argv[2]);
       return 1;
     }
 
     if (fread(&mtDump,1,sizeof(mtDump),pfDump) != sizeof(mtDump))
     {
-      printf("Could not read from dump file: %s\n",argv[2]);
+      ERR("Could not read from dump file: %s\n",argv[2]);
       fclose(pfDump);
       return 1;
     }
     fclose(pfDump);
   }
-  printf("Succesful opened the dump file\n");
+  DBG("Successfully opened the dump file\n");
 
   // Try to open the NFC reader
   pnd = nfc_connect(NULL);
   if (pnd == NULL)
   {
-    printf("Error connecting NFC reader\n");
+    ERR("Error connecting NFC reader\n");
     return 1;
   }
 
@@ -201,7 +195,7 @@ int main(int argc, const char* argv[])
   // Try to find a MIFARE Ultralight tag
   if (!nfc_initiator_select_tag(pnd,NM_ISO14443A_106,NULL,0,&nti))
   {
-    printf("Error: no tag was found\n");
+    ERR("no tag was found\n");
     nfc_disconnect(pnd);
     return 1;
   }
@@ -209,15 +203,15 @@ int main(int argc, const char* argv[])
   // Test if we are dealing with a MIFARE compatible tag
 
   if (nti.nai.abtAtqa[1] != 0x44){
-      printf("Error: tag is not a MIFARE Ultralight card\n");
+      ERR("tag is not a MIFARE Ultralight card\n");
     nfc_disconnect(pnd);
-      return 1;
+      return EXIT_FAILURE;
   }
 
 
   // Get the info from the current tag (UID is stored little-endian)
   pbtUID = nti.nai.abtUid;
-  printf("Found MIFARE Ultralight card with uid: %02x%02x%02x%02x\n", pbtUID[3], pbtUID[2], pbtUID[1], pbtUID[0]);
+  printf("Found MIFARE Ultralight card with UID: %02x%02x%02x%02x\n", pbtUID[3], pbtUID[2], pbtUID[1], pbtUID[0]);
 
   if (bReadAction)
   {
@@ -229,12 +223,12 @@ int main(int argc, const char* argv[])
       if (pfDump == NULL)
       {
         printf("Could not open file: %s\n",argv[2]);
-        return 1;
+        return EXIT_FAILURE;
       }
       if (fwrite(&mtDump,1,sizeof(mtDump),pfDump) != sizeof(mtDump))
       {
         printf("Could not write to file: %s\n",argv[2]);
-        return 1;
+        return EXIT_FAILURE;
       }
       fclose(pfDump);
       printf("Done.\n");
@@ -245,5 +239,5 @@ int main(int argc, const char* argv[])
 
   nfc_disconnect(pnd);
 
-  return 0;
+  return EXIT_SUCCESS;
 }
