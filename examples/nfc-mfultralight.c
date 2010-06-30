@@ -100,23 +100,23 @@ write_card (void)
   for (page = 0x4; page <= 0xF; page++) {
     // Show if the readout went well
     if (bFailure) {
-//         printf("x");
       // When a failure occured we need to redo the anti-collision
       if (!nfc_initiator_select_tag (pnd, NM_ISO14443A_106, NULL, 0, &nti)) {
         ERR ("tag was removed");
         return false;
       }
       bFailure = false;
-    } else {
-      // For the Mifare Ultralight, this write command can be used
-      // in compatibility mode, which only actually writes the first 
-      // page (4 bytes). The Ultralight-specific Write command only
-      // writes one page at a time.
-      uiBlock = page / 4;
-      memcpy (mp.mpd.abtData, mtDump.amb[uiBlock].mbd.abtData + ((page % 4) * 4), 16);
-      if (!nfc_initiator_mifare_cmd (pnd, MC_WRITE, page, &mp))
-        bFailure = true;
     }
+
+    // For the Mifare Ultralight, this write command can be used
+    // in compatibility mode, which only actually writes the first 
+    // page (4 bytes). The Ultralight-specific Write command only
+    // writes one page at a time.
+    uiBlock = page / 4;
+    memcpy (mp.mpd.abtData, mtDump.amb[uiBlock].mbd.abtData + ((page % 4) * 4), 16);
+    if (!nfc_initiator_mifare_cmd (pnd, MC_WRITE, page, &mp))
+        bFailure = true;
+
     print_success_or_failure (bFailure, &uiWritenPages);
   }
   printf ("|\n");
