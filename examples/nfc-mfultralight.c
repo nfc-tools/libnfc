@@ -1,7 +1,7 @@
 /*-
  * Public platform independent Near Field Communication (NFC) library
  * 
- * Copyright (C) 2009, Roel Verdult
+ * Copyright (C) 2009, Roel Verdult, 2010, Romuald Conty
  * 
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -89,15 +89,28 @@ static bool
 write_card (void)
 {
   uint32_t uiBlock = 0;
-  int page;
+  int page = 0x4;
   bool bFailure = false;
   uint32_t uiWritenPages = 0;
 
-  printf ("Writing %d pages |", uiBlocks + 1);
+  char buffer[BUFSIZ];
+  printf ("Write OTP bytes ? [yN] ");
+  fgets (buffer, BUFSIZ, stdin);
+  bool write_otp = ((buffer[0] == 'y') || (buffer[0] == 'Y'));
 
-  /* We are writting only data pages, so we need to skip 4 pages. */
-  printf ("ssss");
-  for (page = 0x4; page <= 0xF; page++) {
+  /* We need to skip 3 first pages. */
+  printf ("Writing %d pages |", uiBlocks + 1);
+  printf ("sss");
+
+  if(write_otp) {
+    page = 0x3;
+  } else {
+    /* If user don't want to write OTP, we skip 1 page more. */
+    printf("s");
+    page = 0x4;
+  }
+
+  for (page; page <= 0xF; page++) {
     // Show if the readout went well
     if (bFailure) {
       // When a failure occured we need to redo the anti-collision
@@ -120,7 +133,7 @@ write_card (void)
     print_success_or_failure (bFailure, &uiWritenPages);
   }
   printf ("|\n");
-  printf ("Done, %d of %d pages written (4 first pages are skipped).\n", uiWritenPages, uiBlocks + 1);
+  printf ("Done, %d of %d pages written (%d first pages are skipped).\n", uiWritenPages, uiBlocks + 1, write_otp?3:4);
 
   return true;
 }
