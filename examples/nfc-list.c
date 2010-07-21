@@ -126,14 +126,14 @@ int main(int argc, const char* argv[])
     printf("\nConnected to NFC reader: %s\n\n",pnd->acName);
 
     // Poll for a ISO14443A (MIFARE) tag
-    if (nfc_initiator_select_tag(pnd,NM_ISO14443A_106,NULL,0,&nti))
+    if (nfc_initiator_select_passive_target(pnd,NM_ISO14443A_106,NULL,0,&nti))
     {
       printf("The following (NFC) ISO14443A tag was found:\n\n");
       print_nfc_iso14443a_info (nti.nai);
     }
 
     // Poll for a Felica tag
-    if (nfc_initiator_select_tag(pnd,NM_FELICA_212,abtFelica,5,&nti) || nfc_initiator_select_tag(pnd,NM_FELICA_424,abtFelica,5,&nti))
+    if (nfc_initiator_select_passive_target(pnd,NM_FELICA_212,abtFelica,5,&nti) || nfc_initiator_select_passive_target(pnd,NM_FELICA_424,abtFelica,5,&nti))
     {
       printf("The following (NFC) Felica tag was found:\n\n");
       printf("%18s","ID (NFCID2): "); print_hex(nti.nfi.abtId,8);
@@ -141,7 +141,7 @@ int main(int argc, const char* argv[])
     }
 
     // Poll for a ISO14443B tag
-    if (nfc_initiator_select_tag(pnd,NM_ISO14443B_106,(byte_t*)"\x00",1,&nti))
+    if (nfc_initiator_select_passive_target(pnd,NM_ISO14443B_106,(byte_t*)"\x00",1,&nti))
     {
       printf("The following (NFC) ISO14443-B tag was found:\n\n");
       printf("  ATQB: "); print_hex(nti.nbi.abtAtqb,12);
@@ -155,7 +155,7 @@ int main(int argc, const char* argv[])
     }
 
     // Poll for a Jewel tag
-    if (nfc_initiator_select_tag(pnd,NM_JEWEL_106,NULL,0,&nti))
+    if (nfc_initiator_select_passive_target(pnd,NM_JEWEL_106,NULL,0,&nti))
     {
       // No test results yet
       printf("jewel\n");

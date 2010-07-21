@@ -66,7 +66,7 @@ int main(int argc, const char *argv[])
   abtRecv[szRecvBits] = 0;
   printf("Received: %s\n", abtRecv);
 
-  nfc_initiator_deselect_tag(pnd);
+  nfc_initiator_deselect_target(pnd);
   nfc_disconnect(pnd);
   return 0;
 }

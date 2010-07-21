@@ -145,7 +145,7 @@ int main(int argc, const char* argv[])
       nfc_configure(pnd,NDO_ACTIVATE_FIELD,true);
       
       // Read the SAM's info
-      if (!nfc_initiator_select_tag(pnd,NM_ISO14443A_106,NULL,0,&nti)) {
+      if (!nfc_initiator_select_passive_target(pnd,NM_ISO14443A_106,NULL,0,&nti)) {
         ERR("%s", "Reading of SAM info failed.");
         return EXIT_FAILURE;
       }

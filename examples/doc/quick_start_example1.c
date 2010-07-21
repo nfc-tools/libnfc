@@ -42,7 +42,7 @@ int main(int argc, const char* argv[])
   printf("Connected to NFC reader: %s\n",pnd->acName);
 
   // Poll for a ISO14443A (MIFARE) tag
-  if (nfc_initiator_select_tag(pnd,NM_ISO14443A_106,NULL,0,&nti)) {
+  if (nfc_initiator_select_passive_target(pnd,NM_ISO14443A_106,NULL,0,&nti)) {
       printf("The following (NFC) ISO14443A tag was found:\n");
       printf("    ATQA (SENS_RES): "); print_hex(nti.nai.abtAtqa,2);
       printf("       UID (NFCID%c): ",(nti.nai.abtUid[0]==0x08?'3':'1')); print_hex(nti.nai.abtUid,nti.nai.szUidLen);

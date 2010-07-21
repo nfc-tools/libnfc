@@ -152,7 +152,7 @@ authenticate (uint32_t uiBlock)
         return true;
       }
 
-      nfc_initiator_select_tag (pnd, NM_ISO14443A_106, mp.mpa.abtUid, 4, NULL);
+      nfc_initiator_select_passive_target (pnd, NM_ISO14443A_106, mp.mpa.abtUid, 4, NULL);
     }
   }
 
@@ -179,7 +179,7 @@ read_card (void)
       // Show if the readout went well
       if (bFailure) {
         // When a failure occured we need to redo the anti-collision
-        if (!nfc_initiator_select_tag (pnd, NM_ISO14443A_106, NULL, 0, &nti)) {
+        if (!nfc_initiator_select_passive_target (pnd, NM_ISO14443A_106, NULL, 0, &nti)) {
           printf ("!\nError: tag was removed\n");
           return false;
         }
@@ -240,7 +240,7 @@ write_card (void)
       // Show if the readout went well
       if (bFailure) {
         // When a failure occured we need to redo the anti-collision
-        if (!nfc_initiator_select_tag (pnd, NM_ISO14443A_106, NULL, 0, &nti)) {
+        if (!nfc_initiator_select_passive_target (pnd, NM_ISO14443A_106, NULL, 0, &nti)) {
           printf ("!\nError: tag was removed\n");
           return false;
         }
@@ -426,7 +426,7 @@ main (int argc, const char *argv[])
     printf ("Connected to NFC reader: %s\n", pnd->acName);
 
     // Try to find a MIFARE Classic tag
-    if (!nfc_initiator_select_tag (pnd, NM_ISO14443A_106, NULL, 0, &nti)) {
+    if (!nfc_initiator_select_passive_target (pnd, NM_ISO14443A_106, NULL, 0, &nti)) {
       printf ("Error: no tag was found\n");
       nfc_disconnect (pnd);
       exit (EXIT_FAILURE);

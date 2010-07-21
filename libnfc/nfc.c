@@ -229,7 +229,7 @@ nfc_device_t* nfc_connect(nfc_device_desc_t* pndd)
 void nfc_disconnect(nfc_device_t* pnd)
 {
   // Release and deselect all active communications
-  nfc_initiator_deselect_tag(pnd);
+  nfc_initiator_deselect_target(pnd);
   // Disable RF field to avoid heating
   nfc_configure(pnd,NDO_ACTIVATE_FIELD,false);
   // Disconnect, clean up and release the device 
@@ -403,7 +403,7 @@ bool nfc_initiator_select_dep_target(const nfc_device_t* pnd, const nfc_modulati
 }
 
 /**
- * @fn nfc_initiator_select_tag(const nfc_device_t* pnd, const nfc_modulation_t nmInitModulation, const byte_t* pbtInitData, const size_t szInitDataLen, nfc_target_info_t* pti)
+ * @fn nfc_initiator_select_passive_target(const nfc_device_t* pnd, const nfc_modulation_t nmInitModulation, const byte_t* pbtInitData, const size_t szInitDataLen, nfc_target_info_t* pti)
  * @brief Select a passive or emulated tag
  * @return Returns true if action was successfully performed; otherwise returns false.
  * @param pnd nfc_device_t struct pointer that represent currently used device
@@ -414,7 +414,7 @@ bool nfc_initiator_select_dep_target(const nfc_device_t* pnd, const nfc_modulati
  * The NFC device will try to find the available passive tags. Some NFC devices are capable to emulate passive tags. The standards (ISO18092 and ECMA-340) describe the modulation that can be used for reader to passive communications. The chip needs to know with what kind of tag it is dealing with, therefore the initial modulation and speed (106, 212 or 424 kbps) should be supplied.
  * @note For every initial modulation type there is a different collection of information returned (in nfc_target_info_t pointer pti) They all fit in the data-type which is called nfc_target_info_t. This is a union which contains the tag information that belongs to the according initial modulation type.
  */
-bool nfc_initiator_select_tag(const nfc_device_t* pnd, const nfc_modulation_t nmInitModulation, const byte_t* pbtInitData, const size_t szInitDataLen, nfc_target_info_t* pnti)
+bool nfc_initiator_select_passive_target(const nfc_device_t* pnd, const nfc_modulation_t nmInitModulation, const byte_t* pbtInitData, const size_t szInitDataLen, nfc_target_info_t* pnti)
 {
   byte_t abtInit[MAX_FRAME_LEN];
   size_t szInitLen;
@@ -544,14 +544,14 @@ bool nfc_initiator_select_tag(const nfc_device_t* pnd, const nfc_modulation_t nm
 }
 
 /**
- * @fn nfc_initiator_deselect_tag(const nfc_device_t* pnd);
+ * @fn nfc_initiator_deselect_target(const nfc_device_t* pnd);
  * @brief Deselect a selected passive or emulated tag
  * @return Returns true if action was successfully performed; otherwise returns false.
  * @param pnd nfc_device_t struct pointer that represent currently used device
  *
- * After selecting and communicating with a passive tag, this function could be used to deactivate and release the tag. This is very useful when there are multiple tags available in the field. It is possible to use the nfc_initiator_select_tag() function to select the first available tag, test it for the available features and support, deselect it and skip to the next tag until the correct tag is found.
+ * After selecting and communicating with a passive tag, this function could be used to deactivate and release the tag. This is very useful when there are multiple tags available in the field. It is possible to use the nfc_initiator_select_passive_target() function to select the first available tag, test it for the available features and support, deselect it and skip to the next tag until the correct tag is found.
  */
-bool nfc_initiator_deselect_tag(const nfc_device_t* pnd)
+bool nfc_initiator_deselect_target(const nfc_device_t* pnd)
 {
   return (pn53x_transceive(pnd,pncmd_initiator_deselect,3,NULL,NULL));
 }
