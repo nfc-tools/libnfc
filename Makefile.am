@@ -20,6 +20,8 @@ doc : Doxyfile
 .PHONY: doc
 endif
 
-INDENT_CMD = indent -br -brs -ce --line-length120 -nut -i2
+if HAS_INDENT
+INDENT_ARGS = -br -brs -ce --line-length120 -nut -i2
 indent:
-	find $(top_srcdir)/libnfc $(top_srcdir)/include $(top_srcdir)/examples -name "*.[hc]" -exec $(INDENT_CMD) '{}' \;
+	find $(top_srcdir)/libnfc $(top_srcdir)/include $(top_srcdir)/examples -name "*.[hc]" -exec $(INDENT) $(INDENT_ARGS) '{}' ';'
+endif
