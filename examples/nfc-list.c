@@ -53,11 +53,11 @@ int main(int argc, const char* argv[])
   size_t szFound;
   size_t i;
   nfc_target_info_t nti;
-  nfc_device_desc_t *pnddDevices;
+  nfc_device_desc_t *pnddDevices = nfc_parse_device_desc(argc, argv, &szFound);
   const char* acLibnfcVersion;
 
-  if (argc > 1) {
-    errx (1, "usage: %s", argv[0]);
+  if (argc > 1 && szFound == 0) {
+    errx (1, "usage: %s [--device driver:port:speed]", argv[0]);
   }
 
   // Display libnfc version
@@ -85,13 +85,16 @@ int main(int argc, const char* argv[])
   pnd = nfc_connect(&ndd);
 #endif
 
-  if (!(pnddDevices = malloc (MAX_DEVICE_COUNT * sizeof (*pnddDevices))))
+  if (szFound == 0)
   {
-    fprintf (stderr, "malloc() failed\n");
-    return EXIT_FAILURE;
-  }
+    if (!(pnddDevices = malloc (MAX_DEVICE_COUNT * sizeof (*pnddDevices))))
+    {
+      fprintf (stderr, "malloc() failed\n");
+      return EXIT_FAILURE;
+    }
 
-  nfc_list_devices (pnddDevices, MAX_DEVICE_COUNT, &szFound);
+    nfc_list_devices (pnddDevices, MAX_DEVICE_COUNT, &szFound);
+  }
 
   if (szFound == 0)
   {

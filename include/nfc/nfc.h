@@ -85,6 +85,7 @@ NFC_EXPORT const char* nfc_device_name(nfc_device_t* pnd);
 NFC_EXPORT void iso14443a_crc(byte_t* pbtData, size_t szLen, byte_t* pbtCrc);
 NFC_EXPORT void append_iso14443a_crc(byte_t* pbtData, size_t szLen);
 NFC_EXPORT const char* nfc_version(void);
+NFC_EXPORT nfc_device_desc_t* nfc_parse_device_desc(int argc, const char *argv[], size_t* szFound);
 
 #ifdef __cplusplus 
 }
