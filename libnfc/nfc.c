@@ -1,7 +1,7 @@
 /*-
  * Public platform independent Near Field Communication (NFC) library
  * 
- * Copyright (C) 2009, Roel Verdult
+ * Copyright (C) 2009, 2010, Roel Verdult, Romuald Conty
  * 
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -423,16 +423,9 @@ bool nfc_initiator_select_passive_target(const nfc_device_t* pnd,
 {
   byte_t abtInit[MAX_FRAME_LEN];
   size_t szInitLen;
-  byte_t abtRx[MAX_FRAME_LEN];
-  size_t szRxLen;
-  byte_t abtCmd[sizeof(pncmd_initiator_list_passive)];
-  memcpy(abtCmd,pncmd_initiator_list_passive,sizeof(pncmd_initiator_list_passive));
 
   // Make sure we are dealing with a active device
   if (!pnd->bActive) return false;
-
-  abtCmd[2] = 1;  // MaxTg, we only want to select 1 tag at the time
-  abtCmd[3] = nmInitModulation; // BrTy, the type of init modulation used for polling a passive tag
 
   switch(nmInitModulation)
   {
@@ -467,16 +460,13 @@ bool nfc_initiator_select_passive_target(const nfc_device_t* pnd,
     break;
   }
 
-  // Set the optional initiator data (used for Felica, ISO14443B, Topaz Polling or for ISO14443A selecting a specific UID).
-  if (pbtInitData) memcpy(abtCmd+4,abtInit,szInitLen);
-
-  // Try to find a tag, call the tranceive callback function of the current device
-  szRxLen = MAX_FRAME_LEN;
-  // We can not use pn53x_transceive() because abtRx[0] gives no status info
-  if (!pnd->pdc->transceive(pnd->nds,abtCmd,4+szInitLen,abtRx,&szRxLen)) return false;
-
+  size_t szTargetFound, szTargetsData;
+  byte_t abtTargetsData[MAX_FRAME_LEN];
+  
+  if(!pn53x_InListPassiveTarget(pnd, nmInitModulation, 1, pbtInitData, szInitDataLen, &szTargetFound, abtTargetsData, &szTargetsData)) return false;
+  
   // Make sure one tag has been found, the PN53X returns 0x00 if none was available
-  if (abtRx[0] != 1) return false;
+  if (abtTargetsData[0] == 0) return false;
 
   // Is a tag info struct available
   if (pnti)
@@ -485,50 +475,50 @@ bool nfc_initiator_select_passive_target(const nfc_device_t* pnd,
     switch(nmInitModulation)
     {
       case NM_ISO14443A_106:
-	if(!pn53x_decode_target_data(&abtRx[1], szRxLen-1, pnd->nc, NTT_GENERIC_PASSIVE_106, pnti)) return false;
+      if(!pn53x_decode_target_data(abtTargetsData+1, szTargetsData-1, pnd->nc, NTT_GENERIC_PASSIVE_106, pnti)) return false;
 
-	// Strip CT (Cascade Tag) to retrieve and store the _real_ UID
-	// (e.g. 0x8801020304050607 is in fact 0x01020304050607)
-	if ((pnti->nai.szUidLen == 8) && (pnti->nai.abtUid[0] == 0x88)) {
-	    pnti->nai.szUidLen = 7;
-	    memmove (pnti->nai.abtUid, pnti->nai.abtUid + 1, 7);
-	} else if ((pnti->nai.szUidLen == 12) && (pnti->nai.abtUid[0] == 0x88) && (pnti->nai.abtUid[4] == 0x88)) {
-	    pnti->nai.szUidLen = 10;
-	    memmove (pnti->nai.abtUid, pnti->nai.abtUid + 1, 3);
-	    memmove (pnti->nai.abtUid + 3, pnti->nai.abtUid + 5, 7);
-	}
+      // Strip CT (Cascade Tag) to retrieve and store the _real_ UID
+      // (e.g. 0x8801020304050607 is in fact 0x01020304050607)
+      if ((pnti->nai.szUidLen == 8) && (pnti->nai.abtUid[0] == 0x88)) {
+        pnti->nai.szUidLen = 7;
+        memmove (pnti->nai.abtUid, pnti->nai.abtUid + 1, 7);
+      } else if ((pnti->nai.szUidLen == 12) && (pnti->nai.abtUid[0] == 0x88) && (pnti->nai.abtUid[4] == 0x88)) {
+        pnti->nai.szUidLen = 10;
+        memmove (pnti->nai.abtUid, pnti->nai.abtUid + 1, 3);
+        memmove (pnti->nai.abtUid + 3, pnti->nai.abtUid + 5, 7);
+      }
       break;
 
       case NM_FELICA_212:
       case NM_FELICA_424:
         // Store the mandatory info
-        pnti->nfi.szLen = abtRx[2];
-        pnti->nfi.btResCode = abtRx[3];
+        pnti->nfi.szLen = abtTargetsData[2];
+        pnti->nfi.btResCode = abtTargetsData[3];
         // Copy the NFCID2t
-        memcpy(pnti->nfi.abtId,abtRx+4,8);
+        memcpy(pnti->nfi.abtId,abtTargetsData+4,8);
         // Copy the felica padding
-        memcpy(pnti->nfi.abtPad,abtRx+12,8);
+        memcpy(pnti->nfi.abtPad,abtTargetsData+12,8);
         // Test if the System code (SYST_CODE) is available
-        if (szRxLen > 20)
+        if (szTargetsData > 20)
         {
-          memcpy(pnti->nfi.abtSysCode,abtRx+20,2);  
+          memcpy(pnti->nfi.abtSysCode,abtTargetsData+20,2);
         }
       break;
 
       case NM_ISO14443B_106:
         // Store the mandatory info
-        memcpy(pnti->nbi.abtAtqb,abtRx+2,12);
+        memcpy(pnti->nbi.abtAtqb,abtTargetsData+2,12);
         // Ignore the 0x1D byte, and just store the 4 byte id
-        memcpy(pnti->nbi.abtId,abtRx+15,4);
-        pnti->nbi.btParam1 = abtRx[19];
-        pnti->nbi.btParam2 = abtRx[20];
-        pnti->nbi.btParam3 = abtRx[21];
-        pnti->nbi.btParam4 = abtRx[22];
+        memcpy(pnti->nbi.abtId,abtTargetsData+15,4);
+        pnti->nbi.btParam1 = abtTargetsData[19];
+        pnti->nbi.btParam2 = abtTargetsData[20];
+        pnti->nbi.btParam3 = abtTargetsData[21];
+        pnti->nbi.btParam4 = abtTargetsData[22];
         // Test if the Higher layer (INF) is available
-        if (szRxLen > 22)
+        if (szTargetsData > 22)
         {
-          pnti->nbi.szInfLen = abtRx[23];
-          memcpy(pnti->nbi.abtInf,abtRx+24,pnti->nbi.szInfLen);
+          pnti->nbi.szInfLen = abtTargetsData[23];
+          memcpy(pnti->nbi.abtInf,abtTargetsData+24,pnti->nbi.szInfLen);
         } else {
           pnti->nbi.szInfLen = 0;
         }
@@ -536,8 +526,8 @@ bool nfc_initiator_select_passive_target(const nfc_device_t* pnd,
 
       case NM_JEWEL_106:
         // Store the mandatory info
-        memcpy(pnti->nji.btSensRes,abtRx+2,2);
-        memcpy(pnti->nji.btId,abtRx+4,4);
+        memcpy(pnti->nji.btSensRes,abtTargetsData+2,2);
+        memcpy(pnti->nji.btId,abtTargetsData+4,4);
       break;
 
       default:

@@ -77,6 +77,6 @@ bool pn53x_set_tx_bits(const nfc_device_t* pnd, uint8_t ui8Bits);
 bool pn53x_wrap_frame(const byte_t* pbtTx, const size_t szTxBits, const byte_t* pbtTxPar, byte_t* pbtFrame, size_t* pszFrameBits);
 bool pn53x_unwrap_frame(const byte_t* pbtFrame, const size_t szFrameBits, byte_t* pbtRx, size_t* pszRxBits, byte_t* pbtRxPar);
 bool pn53x_decode_target_data(const byte_t* pbtRawData, size_t szDataLen, nfc_chip_t nc, nfc_target_type_t ntt, nfc_target_info_t* pnti);
-
+bool pn53x_InListPassiveTarget(const nfc_device_t* pnd, const nfc_modulation_t nmInitModulation, const byte_t szMaxTargets, const byte_t* pbtInitiatorData, const size_t szInitiatorDataLen, size_t* pszTargets, byte_t* pbtTargetsData, size_t* pszTargetsData);
 #endif // __NFC_CHIPS_PN53X_H__
 
