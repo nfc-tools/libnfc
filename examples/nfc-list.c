@@ -53,7 +53,7 @@ int main(int argc, const char* argv[])
   size_t szFound;
   size_t i;
   nfc_target_info_t nti;
-  nfc_device_desc_t *pnddDevices = nfc_parse_device_desc(argc, argv, &szFound);
+  nfc_device_desc_t *pnddDevices = parse_device_desc(argc, argv, &szFound);
   const char* acLibnfcVersion;
 
   if (argc > 1 && szFound == 0) {
