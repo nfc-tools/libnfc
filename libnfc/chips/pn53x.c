@@ -248,11 +248,11 @@ pn53x_decode_target_data(const byte_t* pbtRawData, size_t szDataLen, nfc_chip_t 
       pbtRawData++;
       // Somehow they switched the lower and upper ATQA bytes around for the PN531 chipset
       if (nc == NC_PN531) {
-	pnti->nai.abtAtqa[1] = *(pbtRawData++);
-	pnti->nai.abtAtqa[0] = *(pbtRawData++);
+        pnti->nai.abtAtqa[1] = *(pbtRawData++);
+        pnti->nai.abtAtqa[0] = *(pbtRawData++);
       } else {
-	pnti->nai.abtAtqa[0] = *(pbtRawData++);
-	pnti->nai.abtAtqa[1] = *(pbtRawData++);
+        pnti->nai.abtAtqa[0] = *(pbtRawData++);
+        pnti->nai.abtAtqa[1] = *(pbtRawData++);
       }
       pnti->nai.btSak = *(pbtRawData++);
       // Copy the NFCID1
@@ -262,10 +262,10 @@ pn53x_decode_target_data(const byte_t* pbtRawData, size_t szDataLen, nfc_chip_t 
       
       // Did we received an optional ATS (Smardcard ATR)
       if (szDataLen > (pnti->nai.szUidLen + 5)) {
-	pnti->nai.szAtsLen = ((*(pbtRawData++)) - 1); // In pbtRawData, ATS Length byte is counted in ATS Frame.
-	memcpy(pnti->nai.abtAts, pbtRawData, pnti->nai.szAtsLen);
+        pnti->nai.szAtsLen = ((*(pbtRawData++)) - 1); // In pbtRawData, ATS Length byte is counted in ATS Frame.
+        memcpy(pnti->nai.abtAts, pbtRawData, pnti->nai.szAtsLen);
       } else {
-	pnti->nai.szAtsLen = 0;
+        pnti->nai.szAtsLen = 0;
       }
       break;
     default:
@@ -275,7 +275,8 @@ pn53x_decode_target_data(const byte_t* pbtRawData, size_t szDataLen, nfc_chip_t 
   return true;
 }
 
-bool pn53x_InListPassiveTarget(const nfc_device_t* pnd,
+bool
+pn53x_InListPassiveTarget(const nfc_device_t* pnd,
                                const nfc_modulation_t nmInitModulation, const byte_t szMaxTargets,
                                const byte_t* pbtInitiatorData, const size_t szInitiatorDataLen,
                                size_t* pszTargets, byte_t* pbtTargetsData, size_t* pszTargetsData)
