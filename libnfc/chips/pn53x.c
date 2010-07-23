@@ -300,3 +300,13 @@ pn53x_InListPassiveTarget(const nfc_device_t* pnd,
     return false;
   }
 }
+
+bool
+pn53x_InDeselect(const nfc_device_t* pnd, const uint8_t ui8Target)
+{
+  byte_t abtCmd[sizeof(pncmd_initiator_deselect)];
+  memcpy(abtCmd,pncmd_initiator_deselect,sizeof(pncmd_initiator_deselect));
+  abtCmd[2] = ui8Target;
+  
+  return(pn53x_transceive(pnd,abtCmd,sizeof(abtCmd),NULL,NULL));
+}

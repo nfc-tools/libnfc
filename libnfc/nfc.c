@@ -53,7 +53,7 @@ extern const byte_t pncmd_rf_configure               [ 14];
 // extern const byte_t pncmd_initiator_list_passive        [264];
 extern const byte_t pncmd_initiator_jump_for_dep        [ 68];
 // extern const byte_t pncmd_initiator_select              [  3];
-extern const byte_t pncmd_initiator_deselect            [  3];
+// extern const byte_t pncmd_initiator_deselect            [  3];
 // extern const byte_t pncmd_initiator_release             [  3];
 // extern const byte_t pncmd_initiator_set_baud_rate       [  5];
 extern const byte_t pncmd_initiator_exchange_data       [265];
@@ -550,7 +550,7 @@ nfc_initiator_select_passive_target(const nfc_device_t* pnd,
  */
 bool nfc_initiator_deselect_target(const nfc_device_t* pnd)
 {
-  return (pn53x_transceive(pnd,pncmd_initiator_deselect,3,NULL,NULL));
+  return (pn53x_InDeselect(pnd, 0)); // 0 mean deselect all selected targets
 }
 
 /**

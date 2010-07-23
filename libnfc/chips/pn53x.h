@@ -1,7 +1,7 @@
 /*-
  * Public platform independent Near Field Communication (NFC) library
  * 
- * Copyright (C) 2009, Roel Verdult
+ * Copyright (C) 2009, 2010, Roel Verdult, Romuald Conty
  * 
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -79,6 +79,7 @@ bool pn53x_unwrap_frame(const byte_t* pbtFrame, const size_t szFrameBits, byte_t
 bool pn53x_decode_target_data(const byte_t* pbtRawData, size_t szDataLen, nfc_chip_t nc, nfc_target_type_t ntt, nfc_target_info_t* pnti);
 
 bool pn53x_InListPassiveTarget(const nfc_device_t* pnd, const nfc_modulation_t nmInitModulation, const byte_t szMaxTargets, const byte_t* pbtInitiatorData, const size_t szInitiatorDataLen, byte_t* pbtTargetsData, size_t* pszTargetsData);
+bool pn53x_InDeselect(const nfc_device_t* pnd, const uint8_t ui8Target);
 
 #endif // __NFC_CHIPS_PN53X_H__
 
