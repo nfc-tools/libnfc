@@ -417,10 +417,11 @@ bool nfc_initiator_select_dep_target(const nfc_device_t* pnd, const nfc_modulati
  * The NFC device will try to find the available passive tags. Some NFC devices are capable to emulate passive tags. The standards (ISO18092 and ECMA-340) describe the modulation that can be used for reader to passive communications. The chip needs to know with what kind of tag it is dealing with, therefore the initial modulation and speed (106, 212 or 424 kbps) should be supplied.
  * @note For every initial modulation type there is a different collection of information returned (in nfc_target_info_t pointer pti) They all fit in the data-type which is called nfc_target_info_t. This is a union which contains the tag information that belongs to the according initial modulation type.
  */
-bool nfc_initiator_select_passive_target(const nfc_device_t* pnd,
-                                         const nfc_modulation_t nmInitModulation,
-                                         const byte_t* pbtInitData, const size_t szInitDataLen,
-                                         nfc_target_info_t* pnti)
+bool
+nfc_initiator_select_passive_target(const nfc_device_t* pnd,
+                                    const nfc_modulation_t nmInitModulation,
+                                    const byte_t* pbtInitData, const size_t szInitDataLen,
+                                    nfc_target_info_t* pnti)
 {
   byte_t abtInit[MAX_FRAME_LEN];
   size_t szInitLen;
@@ -564,10 +565,10 @@ bool nfc_initiator_deselect_target(const nfc_device_t* pnd)
  * @param pszTargetFound found targets count
  */
 bool
-nfc_initiator_poll_targets(const nfc_device_t* pnd, 
-			   const nfc_target_type_t* pnttTargetTypes, const size_t szTargetTypes, 
-			   const byte_t btPollNr, const byte_t btPeriod, 
-			   nfc_target_t* pntTargets, size_t* pszTargetFound)
+nfc_initiator_poll_targets(const nfc_device_t* pnd,
+                           const nfc_target_type_t* pnttTargetTypes, const size_t szTargetTypes,
+                           const byte_t btPollNr, const byte_t btPeriod,
+                           nfc_target_t* pntTargets, size_t* pszTargetFound)
 {
   size_t szTxInAutoPoll, n, szRxLen;
   byte_t abtRx[256];
