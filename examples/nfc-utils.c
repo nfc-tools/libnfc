@@ -126,7 +126,7 @@ nfc_device_desc_t* parse_device_desc(int argc, const char *argv[], size_t* szFou
         strcpy(pndd->pcPort, strtok(NULL, ":"));
 
         // Speed.
-        sscanf(strtok(NULL, ":"), "%d", &pndd->uiSpeed);
+        sscanf(strtok(NULL, ":"), "%u", &pndd->uiSpeed);
 
         *szFound = 1;
       }
