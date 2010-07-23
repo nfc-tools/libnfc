@@ -461,10 +461,10 @@ bool nfc_initiator_select_passive_target(const nfc_device_t* pnd,
     break;
   }
 
-  size_t szTargetFound, szTargetsData;
+  size_t szTargetsData;
   byte_t abtTargetsData[MAX_FRAME_LEN];
   
-  if(!pn53x_InListPassiveTarget(pnd, nmInitModulation, 1, pbtInitData, szInitDataLen, &szTargetFound, abtTargetsData, &szTargetsData)) return false;
+  if(!pn53x_InListPassiveTarget(pnd, nmInitModulation, 1, pbtInitData, szInitDataLen, abtTargetsData, &szTargetsData)) return false;
   
   // Make sure one tag has been found, the PN53X returns 0x00 if none was available
   if (abtTargetsData[0] == 0) return false;

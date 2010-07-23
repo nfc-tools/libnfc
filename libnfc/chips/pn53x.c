@@ -279,7 +279,7 @@ bool
 pn53x_InListPassiveTarget(const nfc_device_t* pnd,
                                const nfc_modulation_t nmInitModulation, const byte_t szMaxTargets,
                                const byte_t* pbtInitiatorData, const size_t szInitiatorDataLen,
-                               size_t* pszTargets, byte_t* pbtTargetsData, size_t* pszTargetsData)
+                               byte_t* pbtTargetsData, size_t* pszTargetsData)
 {
   byte_t abtCmd[sizeof(pncmd_initiator_list_passive)];
   memcpy(abtCmd,pncmd_initiator_list_passive,sizeof(pncmd_initiator_list_passive));
@@ -294,7 +294,7 @@ pn53x_InListPassiveTarget(const nfc_device_t* pnd,
   size_t szRxLen = MAX_FRAME_LEN;
   // We can not use pn53x_transceive() because abtRx[0] gives no status info
   if(pnd->pdc->transceive(pnd->nds,abtCmd,4+szInitiatorDataLen,pbtTargetsData,&szRxLen)) {
-    *pszTargetsData = szRxLen;
+    *pszTargetsData = pbtTargetsData[0];
     return true;
   } else {
     return false;
