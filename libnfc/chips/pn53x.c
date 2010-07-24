@@ -294,7 +294,7 @@ pn53x_InListPassiveTarget(const nfc_device_t* pnd,
   size_t szRxLen = MAX_FRAME_LEN;
   // We can not use pn53x_transceive() because abtRx[0] gives no status info
   if(pnd->pdc->transceive(pnd->nds,abtCmd,4+szInitiatorDataLen,pbtTargetsData,&szRxLen)) {
-    *pszTargetsData = pbtTargetsData[0];
+    *pszTargetsData = szRxLen;
     return true;
   } else {
     return false;
