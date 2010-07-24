@@ -82,7 +82,7 @@ static const struct driver_callbacks drivers_callbacks_list[] = {
 #  define PRINT_HEX(pcTag, pbtData, szBytes) do { \
     size_t __szPos; \
     printf(" %s: ", pcTag); \
-    for (__szPos=0; __szPos < szBytes; __szPos++) { \
+    for (__szPos=0; __szPos < (size_t)(szBytes); __szPos++) { \
       printf("%02x  ",pbtData[__szPos]); \
     } \
     printf("\n"); \

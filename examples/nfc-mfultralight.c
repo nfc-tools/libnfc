@@ -110,7 +110,7 @@ write_card (void)
     page = 0x4;
   }
 
-  for (page; page <= 0xF; page++) {
+  for (; page <= 0xF; page++) {
     // Show if the readout went well
     if (bFailure) {
       // When a failure occured we need to redo the anti-collision
