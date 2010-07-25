@@ -251,7 +251,7 @@ bool pn53x_usb_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, cons
   // Packet length = data length (len) + checksum (1) + end of stream marker (1)
   abtTx[3] = szTxLen;
   // Packet length checksum 
-  abtTx[4] = BUFFER_LENGTH - abtTx[3];
+  abtTx[4] = 0x0100 - abtTx[3];
   // Copy the PN53X command into the packet abtTx
   memmove(abtTx+5,pbtTx,szTxLen);
 
