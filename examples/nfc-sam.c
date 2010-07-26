@@ -56,7 +56,12 @@ bool sam_connection(nfc_device_t* pnd, int mode)
   int size = sizeof(pncmd_sam_config)-((mode == VIRTUAL_CARD_MODE) ? 0 : 1);
   pncmd_sam_config[2] = mode;
   
-  return pnd->pdc->transceive(pnd->nds,pncmd_sam_config,size,abtRx,&szRxLen);
+  if (!pnd->pdc->transceive(pnd->nds,pncmd_sam_config,size,abtRx,&szRxLen)) {
+    ERR("%s %d", "Unable to execute SAMConfiguration command with mode byte:", mode);
+    return false;
+  }
+
+  return true;
 }
 
 void wait_one_minute()
@@ -91,8 +96,8 @@ int main(int argc, const char* argv[])
   pnd = nfc_connect(NULL);
 
   if (pnd == NULL) {
-      ERR("%s", "Unable to connect to NFC device.");
-      return EXIT_FAILURE;
+    ERR("%s", "Unable to connect to NFC device.");
+    return EXIT_FAILURE;
   }
 
   printf("Connected to NFC reader: %s\n",pnd->acName);
@@ -109,8 +114,8 @@ int main(int argc, const char* argv[])
   int mode = input-'0'+1;
   printf("\n");
   if (mode < VIRTUAL_CARD_MODE || mode > DUAL_CARD_MODE) {
-      ERR("%s", "Invalid selection.");
-      return EXIT_FAILURE;
+    ERR("%s", "Invalid selection.");
+    return EXIT_FAILURE;
   }
   
   // Connect with the SAM
@@ -162,17 +167,18 @@ int main(int argc, const char* argv[])
       byte_t abtRx[MAX_FRAME_LEN];
       size_t szRxLen;
       
-      // FIXME: it does not work as expected...
+      // FIXME: it does not work as expected...Probably the issue is in "nfc_target_init"
+      // which doesn't provide a way to set custom data for SENS_RES, NFCID1, SEL_RES, etc.
       if (!nfc_target_init(pnd,abtRx,&szRxLen))
         return EXIT_FAILURE;
-      
+
       printf("Now both the NFC reader and SAM are readable for 1 minute from an external reader.\n");
       wait_one_minute();
     }
     break;
   }
   
-  // Disconnect from the SAM.
+  // Disconnect from the SAM
   sam_connection(pnd, NORMAL_MODE);
 
   // Disconnect from NFC device
