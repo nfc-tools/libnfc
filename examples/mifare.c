@@ -19,7 +19,7 @@ extern const byte_t pncmd_initiator_exchange_data       [265];
  * After a successful authentication it will be possible to execute other commands (e.g. Read/Write). 
  * The MIFARE Classic Specification (http://www.nxp.com/acrobat/other/identification/M001053_MF1ICS50_rev5_3.pdf) explains more about this process.
  */
-bool nfc_initiator_mifare_cmd(const nfc_device_t* pnd, const mifare_cmd mc, const uint8_t ui8Block, mifare_param* pmp)
+bool nfc_initiator_mifare_cmd(nfc_device_t* pnd, const mifare_cmd mc, const uint8_t ui8Block, mifare_param* pmp)
 {
   byte_t abtRx[MAX_FRAME_LEN];
   size_t szRxLen;

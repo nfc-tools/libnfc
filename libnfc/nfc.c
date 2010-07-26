@@ -354,7 +354,7 @@ bool nfc_initiator_init(const nfc_device_t* pnd)
  * The NFC device will try to find the available target. The standards (ISO18092 and ECMA-340) describe the modulation that can be used for reader to passive communications.
  * @note nfc_dep_info_t will be returned when the target was acquired successfully.
  */
-bool nfc_initiator_select_dep_target(const nfc_device_t* pnd, const nfc_modulation_t nmInitModulation, const byte_t* pbtPidData, const size_t szPidDataLen, const byte_t* pbtNFCID3i, const size_t szNFCID3iDataLen, const byte_t *pbtGbData, const size_t szGbDataLen, nfc_target_info_t* pnti)
+bool nfc_initiator_select_dep_target(nfc_device_t* pnd, const nfc_modulation_t nmInitModulation, const byte_t* pbtPidData, const size_t szPidDataLen, const byte_t* pbtNFCID3i, const size_t szNFCID3iDataLen, const byte_t *pbtGbData, const size_t szGbDataLen, nfc_target_info_t* pnti)
 {
   byte_t abtRx[MAX_FRAME_LEN];
   size_t szRxLen;
@@ -548,7 +548,7 @@ nfc_initiator_select_passive_target(const nfc_device_t* pnd,
  *
  * After selecting and communicating with a passive tag, this function could be used to deactivate and release the tag. This is very useful when there are multiple tags available in the field. It is possible to use the nfc_initiator_select_passive_target() function to select the first available tag, test it for the available features and support, deselect it and skip to the next tag until the correct tag is found.
  */
-bool nfc_initiator_deselect_target(const nfc_device_t* pnd)
+bool nfc_initiator_deselect_target(nfc_device_t* pnd)
 {
   return (pn53x_InDeselect(pnd, 0)); // 0 mean deselect all selected targets
 }
@@ -634,7 +634,7 @@ nfc_initiator_poll_targets(const nfc_device_t* pnd,
  *
  * The NFC reader will transmit low-level messages where only the modulation is handled by the PN53X chip. Construction of the frame (data, CRC and parity) is completely done by libnfc. This can be very useful for testing purposes. Some protocols (e.g. MIFARE Classic) require to violate the ISO14443-A standard by sending incorrect parity and CRC bytes. Using this feature you are able to simulate these frames.
  */
-bool nfc_initiator_transceive_bits(const nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxBits, const byte_t* pbtTxPar, byte_t* pbtRx, size_t* pszRxBits, byte_t* pbtRxPar)
+bool nfc_initiator_transceive_bits(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxBits, const byte_t* pbtTxPar, byte_t* pbtRx, size_t* pszRxBits, byte_t* pbtRxPar)
 {
   byte_t abtRx[MAX_FRAME_LEN];
   size_t szRxLen;
@@ -698,7 +698,7 @@ bool nfc_initiator_transceive_bits(const nfc_device_t* pnd, const byte_t* pbtTx,
  *
  * The reader will transmit the supplied (data) bytes in pbtTx to the target (tag). It waits for the response and stores the received bytes in the pbtRx byte array. The difference between this function and nfc_initiator_transceive_bytes is that here pbtTx and pbtRx contain *only* the data sent and received and not any additional commands, that is all handled internally by the PN53X.
  */
-bool nfc_initiator_transceive_dep_bytes(const nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen)
+bool nfc_initiator_transceive_dep_bytes(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen)
 {
   byte_t abtRx[MAX_FRAME_LEN];
   size_t szRxLen;
@@ -736,7 +736,7 @@ bool nfc_initiator_transceive_dep_bytes(const nfc_device_t* pnd, const byte_t* p
  * The reader will transmit the supplied bytes in pbtTx to the target (tag). It waits for the response and stores the received bytes in the pbtRx byte array. The parity bits are handled by the PN53X chip. The CRC can be generated automatically or handled manually. Using this function, frames can be communicated very fast via the NFC reader to the tag. Tests show that on average this way of communicating is much faster than using the regular driver/middle-ware (often supplied by manufacturers).
  * @warning The configuration option NDO_HANDLE_PARITY must be set to true (the default value).
  */
-bool nfc_initiator_transceive_bytes(const nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen)
+bool nfc_initiator_transceive_bytes(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen)
 {
   byte_t abtRx[MAX_FRAME_LEN];
   size_t szRxLen;
@@ -833,7 +833,7 @@ bool nfc_target_init(const nfc_device_t* pnd, byte_t* pbtRx, size_t* pszRxBits)
  *
  * This function makes it possible to receive (raw) bit-frames. It returns all the messages that are stored in the FIFO buffer of the PN53X chip. It does not require to send any frame and thereby could be used to snoop frames that are transmitted by a nearby reader. Check out the NDO_ACCEPT_MULTIPLE_FRAMES configuration option to avoid losing transmitted frames.
  */
-bool nfc_target_receive_bits(const nfc_device_t* pnd, byte_t* pbtRx, size_t* pszRxBits, byte_t* pbtRxPar)
+bool nfc_target_receive_bits(nfc_device_t* pnd, byte_t* pbtRx, size_t* pszRxBits, byte_t* pbtRxPar)
 {
   byte_t abtRx[MAX_FRAME_LEN];
   size_t szRxLen;
@@ -871,7 +871,7 @@ bool nfc_target_receive_bits(const nfc_device_t* pnd, byte_t* pbtRx, size_t* psz
  *
  * The main receive function that returns the received data from a nearby reader. The difference between this function and nfc_target_receive_bytes is that here pbtRx contains *only* the data received and not any additional commands, that is all handled internally by the PN53X.
  */
-bool nfc_target_receive_dep_bytes(const nfc_device_t* pnd, byte_t* pbtRx, size_t* pszRxLen)
+bool nfc_target_receive_dep_bytes(nfc_device_t* pnd, byte_t* pbtRx, size_t* pszRxLen)
 {
   byte_t abtRx[MAX_FRAME_LEN];
   size_t szRxLen;
@@ -895,7 +895,7 @@ bool nfc_target_receive_dep_bytes(const nfc_device_t* pnd, byte_t* pbtRx, size_t
  *
  * The main receive function that returns the received frames from a nearby reader.
  */
-bool nfc_target_receive_bytes(const nfc_device_t* pnd, byte_t* pbtRx, size_t* pszRxLen)
+bool nfc_target_receive_bytes(nfc_device_t* pnd, byte_t* pbtRx, size_t* pszRxLen)
 {
   byte_t abtRx[MAX_FRAME_LEN];
   size_t szRxLen;
@@ -919,7 +919,7 @@ bool nfc_target_receive_bytes(const nfc_device_t* pnd, byte_t* pbtRx, size_t* ps
  *
  * This function can be used to transmit (raw) bit-frames to the reader.
  */
-bool nfc_target_send_bits(const nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxBits, const byte_t* pbtTxPar)
+bool nfc_target_send_bits(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxBits, const byte_t* pbtTxPar)
 {
   size_t szFrameBits = 0;
   size_t szFrameBytes = 0;
@@ -962,7 +962,7 @@ bool nfc_target_send_bits(const nfc_device_t* pnd, const byte_t* pbtTx, const si
  *
  * To communicate byte frames and APDU responses to the reader, this function could be used.
  */
-bool nfc_target_send_bytes(const nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxLen)
+bool nfc_target_send_bytes(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxLen)
 {
   byte_t abtCmd[sizeof(pncmd_target_send)];
   memcpy(abtCmd,pncmd_target_send,sizeof(pncmd_target_send));
@@ -986,7 +986,7 @@ bool nfc_target_send_bytes(const nfc_device_t* pnd, const byte_t* pbtTx, const s
  *
  * To communicate data to the reader, this function could be used. The difference between this function and nfc_target_send_bytes is that here pbtTx contains *only* the data sent and not any additional commands, that is all handled internally by the PN53X.
  */
-bool nfc_target_send_dep_bytes(const nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxLen)
+bool nfc_target_send_dep_bytes(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxLen)
 {
   byte_t abtCmd[sizeof(pncmd_target_set_data)];
   memcpy(abtCmd,pncmd_target_set_data,sizeof(pncmd_target_set_data));
