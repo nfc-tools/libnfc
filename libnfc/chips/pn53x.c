@@ -81,7 +81,7 @@ bool pn53x_transceive(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxL
   if (!pnd->pdc->transceive(pnd->nds,pbtTx,szTxLen,pbtRx,pszRxLen)) return false;
   printf ("Leaving transceive (bsin = %lu, bsout = %lu)\n", szTxLen, *pszRxLen);
 
-  pnd->iErrorCode = pbtRx[0] & 0x2f;
+  pnd->iErrorCode = pbtRx[0] & 0x3f;
 
   // Make sure there was no failure reported by the PN53X chip (0x00 == OK)
   if (pnd->iErrorCode != 0) {
