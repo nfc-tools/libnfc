@@ -300,6 +300,7 @@ pn532_uart_wakeup(const nfc_device_spec_t nds)
 #ifdef DEBUG
     PRINT_HEX("RX", abtRx,szRxLen);
 #endif
+  }
 }
 
 bool
