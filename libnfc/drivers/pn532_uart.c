@@ -286,14 +286,20 @@ bool pn532_uart_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, con
 void
 pn532_uart_wakeup(const nfc_device_spec_t nds)
 {
+  byte_t abtRx[BUFFER_LENGTH];
+  size_t szRxLen;
   /** PN532C106 wakeup. */
   /** High Speed Unit (HSU) wake up consist to send 0x55 and wait a "long" delay for PN532 being wakeup. */
-  const byte_t pncmd_pn532c106_wakeup_preamble[] = { 0x55,0x55,0x00,0x00,0x00 };
-
+  /** After the preamble we request the PN532C106 chip to switch to "normal" mode (SAM is not used) */
+  const byte_t pncmd_pn532c106_wakeup_preamble[] = { 0x55,0x55,0x00,0x00,0x00,0x00,0x00,0xff,0x03,0xfd,0xd4,0x14,0x01,0x17,0x00,0x00,0xff,0x03,0xfd,0xd4,0x14,0x01,0x17,0x00 };
 #ifdef DEBUG
   PRINT_HEX("TX", pncmd_pn532c106_wakeup_preamble,sizeof(pncmd_pn532c106_wakeup_preamble));
 #endif
   uart_send((serial_port)nds, pncmd_pn532c106_wakeup_preamble, sizeof(pncmd_pn532c106_wakeup_preamble));
+  if(uart_receive((serial_port)nds,abtRx,&szRxLen)) {
+#ifdef DEBUG
+    PRINT_HEX("RX", abtRx,szRxLen);
+#endif
 }
 
 bool
