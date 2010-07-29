@@ -275,6 +275,20 @@ pn53x_decode_target_data(const byte_t* pbtRawData, size_t szDataLen, nfc_chip_t 
   return true;
 }
 
+/**
+ * @brief C wrapper to InListPassiveTarget command
+ * @return true if command is successfully sent
+ *
+ * @param pnd nfc_device_t struct pointer that represent currently used device
+ * @param nmInitModulation Desired modulation
+ * @param pbtInitiatorData Optional initiator data used for Felica, ISO14443B, Topaz Polling or for ISO14443A selecting a specific UID
+ * @param szInitiatorDataLen Length of initiator data \a pbtInitiatorData
+ * @param pbtTargetsData pointer on a pre-allocated byte array to receive TargetData[n] as described in pn53x user manual
+ * @param pszTargetsData size_t pointer where size of \a pbtTargetsData will be written
+ *
+ * @note Selected targets count can be found in \a pbtTargetsData[0] if available (i.e. \a pszTargetsData content is more than 0)
+ * @note To decode theses TargetData[n], there is @fn pn53x_decode_target_data
+ */
 bool
 pn53x_InListPassiveTarget(const nfc_device_t* pnd,
                           const nfc_modulation_t nmInitModulation, const byte_t szMaxTargets,
