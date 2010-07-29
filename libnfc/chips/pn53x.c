@@ -77,9 +77,7 @@ bool pn53x_transceive(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxL
 
   *pszRxLen = MAX_FRAME_LEN;
   // Call the tranceive callback function of the current device
-  printf ("Entering transceive (bsin = %lu, bsout = %lu)\n", szTxLen, *pszRxLen);
   if (!pnd->pdc->transceive(pnd->nds,pbtTx,szTxLen,pbtRx,pszRxLen)) return false;
-  printf ("Leaving transceive (bsin = %lu, bsout = %lu)\n", szTxLen, *pszRxLen);
 
   pnd->iErrorCode = pbtRx[0] & 0x3f;
 
