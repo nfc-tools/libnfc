@@ -94,12 +94,23 @@ typedef struct {
 } nfc_device_desc_t;
 
 /**
+ * @struct chip_callbacks
+ * @brief Functions for chip specific functions.
+ */
+struct chip_callbacks {
+    /** Error lookup */
+    const char* (*strerror) (const nfc_device_t *pnd);
+};
+
+/**
  * @struct driver_callbacks
  * @brief Generic structure to handle NFC device functions.
  */
 struct driver_callbacks {
   /** Driver name */
   const char* acDriver;
+  /** Chip specific callback functions */
+  const struct chip_callbacks *pcc;
   /** Pick devices callback */
   nfc_device_desc_t *(*pick_device)(void);
   /** List devices callback */

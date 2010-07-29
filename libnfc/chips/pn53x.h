@@ -81,5 +81,11 @@ bool pn53x_decode_target_data(const byte_t* pbtRawData, size_t szDataLen, nfc_ch
 bool pn53x_InListPassiveTarget(const nfc_device_t* pnd, const nfc_modulation_t nmInitModulation, const byte_t szMaxTargets, const byte_t* pbtInitiatorData, const size_t szInitiatorDataLen, byte_t* pbtTargetsData, size_t* pszTargetsData);
 bool pn53x_InDeselect(nfc_device_t* pnd, const uint8_t ui8Target);
 
+const char *pn53x_strerror (const nfc_device_t *pnd);
+
+static const struct chip_callbacks pn53x_callbacks_list = {
+    pn53x_strerror
+};
+
 #endif // __NFC_CHIPS_PN53X_H__
 

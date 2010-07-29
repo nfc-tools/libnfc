@@ -60,9 +60,6 @@ const byte_t pncmd_target_receive             [  2] = { 0xD4,0x88 };
 const byte_t pncmd_target_send                [264] = { 0xD4,0x90 };
 const byte_t pncmd_target_get_status          [  2] = { 0xD4,0x8A };
 
-const char *
-pn53x_err2string (int iError, char const **ppcDescription);
-
 bool pn53x_transceive(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen)
 {
   byte_t abtRx[MAX_FRAME_LEN];
@@ -80,16 +77,6 @@ bool pn53x_transceive(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxL
   if (!pnd->pdc->transceive(pnd->nds,pbtTx,szTxLen,pbtRx,pszRxLen)) return false;
 
   pnd->iErrorCode = pbtRx[0] & 0x3f;
-
-  // Make sure there was no failure reported by the PN53X chip (0x00 == OK)
-  if (pnd->iErrorCode != 0) {
-    const char *s, *l;
-
-    s = pn53x_err2string (pnd->iErrorCode, &l);
-    if (s) {
-      printf (" s = %s\n l = %s\n", s, l);
-    }
-  }
 
   // Succesful transmission
   return (0 == pnd->iErrorCode);
@@ -322,61 +309,49 @@ pn53x_InDeselect(nfc_device_t* pnd, const uint8_t ui8Target)
 }
 
 struct sErrorMessage {
-  int iError;
+  int iErrorCode;
   const char *pcErrorMsg;
-  const char *pcErrorDescription;
 } sErrorMessages[] = {
-  { 0x00, "success",                "The request was successful." },
-  { 0x01, "timout",                 "Time Out, the target has not answered." },
-  { 0x02, "crc error",              "A CRC error has been detected by the CIU." },
-  { 0x03, "parity error",           "A Parity error has been detected by the CIU." },
-  { 0x04, "wrong bit count",        "During an anti-collision/select operation (ISO/IEC14443-3 Type A and ISO/"
-                                    "IEC18092 106 kbps passive mode), an erroneous Bit Count has been detected." },
-  { 0x05, "framing error",          "Framing error during Mifare operation." },
-  { 0x06, "bit-collision",          "An abnormal bit-collision has been detected during bit wise anti-collision"
-                                    " at 106 kbps." },
-  { 0x07, "buffer too small",       "Communication buffer size insufficient." },
-  { 0x09, "buffer overflow",        "RF Buffer overflow has been detected by the CIU (bit BufferOvfl of the register"
-                                    " CIU_Error)." },
-  { 0x0a, "timout",                 "In active communication mode, the RF field has not been switched on in time by"
-                                    " the counterpart (as defined in NFCIP-1 standard)." },
-  { 0x0b, "protocol error",         "RF Protocol error." },
-  { 0x0d, "temerature",             "The internal temperature sensor has detected overheating, and therefore has"
-                                    " automatically switched off the antenna drivers." },
-  { 0x0e, "overflow",               "Internal buffer overflow." },
-  { 0x10, "invalid parameter",      "Invalid parameter."},
+  { 0x00, "Success" },
+  { 0x01, "Timeout" },
+  { 0x02, "CRC Error" },
+  { 0x03, "Parity Error" },
+  { 0x04, "Erroneous Bit Count" },
+  { 0x05, "Framing Error" },
+  { 0x06, "Bit-collision" },
+  { 0x07, "Buffer Too Small" },
+  { 0x09, "Buffer Overflow" },
+  { 0x0a, "Timeout" },
+  { 0x0b, "Protocol Error" },
+  { 0x0d, "Overheating" },
+  { 0x0e, "Internal Buffer overflow." },
+  { 0x10, "Invalid Parameter" },
   /* DEP Errors */
-  { 0x12, "unknown command",        "The PN532 configured in target mode does not support the command received from"
-                                    " the initiator." },
-  { 0x13, "invalid parameter",      "The data format does not match to the specification." },
+  { 0x12, "Unknown DEP Command" },
+  { 0x13, "Invalid Parameter" },
   /* MIFARE */
-  { 0x14, "authentication",         "Authentication error." },
-  { 0x23, "check byte",             "ISO/IEC14443-3: UID Check byte is wrong." },
-  { 0x25, "invalid state",          "The system is in a state which does not allow the operation." },
-  { 0x26, "operation not allowed",  "Operation not allowed in this configuration (host controller interface)." },
-  { 0x27, "command not acceptable", "This command is not acceptable due to the current context of the PN532"
-                                    " (Initiator vs. Target, unknown target number, Target not in the good state,"
-                                    " ...)" },
-  { 0x29, "target released",        "The PN532 configured as target has been released by its initiator." },
-  { 0x2a, "card id mismatch",       "PN532 and ISO/IEC14443-3B only: the ID of the card does not match, meaning "
-                                    "that the expected card has been exchanged with another one." },
-  { 0x2B, "card discarded",         "PN532 and ISO/IEC14443-3B only: the card previously activated has disappeared." },
-  { 0x2C, "NFCID3 mismatch",        "Mismatch between the NFCID3 initiator and the NFCID3 target in DEP 212/424 kbps"
-                                    " passive." },
-  { 0x2D, "over current",           "An over-current event has been detected." },
-  { 0x2E, "NAD missing",            "NAD missing in DEP frame." },
+  { 0x14, "Authentication Error" },
+  /*  */
+  { 0x23, "Wrong ISO/IEC14443-3 Check Byte" },
+  { 0x25, "Invalid State" },
+  { 0x26, "Operation Not Allowed" },
+  { 0x27, "Command Not Acceptable" },
+  { 0x29, "Target Released" },
+  { 0x2a, "Card ID Mismatch" },
+  { 0x2B, "Card Discarded" },
+  { 0x2C, "NFCID3 Mismatch" },
+  { 0x2D, "Over Current" },
+  { 0x2E, "NAD Missing in DEP Frame" }
 };
 
 const char *
-pn53x_err2string (int iError, char const **ppcDescription)
+pn53x_strerror (const nfc_device_t *pnd)
 {
-  const char *pcRes = NULL;
+  const char *pcRes = "Unknown error";
 
   for (size_t i=0; i < (sizeof (sErrorMessages) / sizeof (struct sErrorMessage)); i++) {
-    if (sErrorMessages[i].iError == iError) {
+    if (sErrorMessages[i].iErrorCode == pnd->iErrorCode) {
       pcRes = sErrorMessages[i].pcErrorMsg;
-      if (ppcDescription)
-        *ppcDescription = sErrorMessages[i].pcErrorDescription;
       break;
     }
   }
