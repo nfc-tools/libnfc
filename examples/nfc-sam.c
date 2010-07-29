@@ -30,15 +30,24 @@
 #include <stdlib.h>
 #include <time.h>
 
+#ifndef _WIN32
 // Needed by sleep() under Unix
 #include <unistd.h>
-// FIXME What about sleep() in Windows ?
+#define sleep sleep
+#define SUSP_TIME 1 // secs.
+#else
+// Needed by Sleep() under Windows
+#include <winbase.h>
+#define sleep Sleep
+#define SUSP_TIME 1000 // msecs.
+#endif
 
 #include <nfc/nfc.h>
 #include <nfc/nfc-messages.h>
 #include "nfc-utils.h"
 
 #define MAX_FRAME_LEN 264
+#define TIMEOUT 60 // secs.
 
 #define NORMAL_MODE 1
 #define VIRTUAL_CARD_MODE 2
@@ -48,15 +57,30 @@
 bool sam_connection(nfc_device_t* pnd, int mode)
 {
   byte_t pncmd_sam_config[] = { 0xD4,0x14,0x00,0x00 };
+  size_t szCmd = 0;
   
   byte_t abtRx[MAX_FRAME_LEN];
   size_t szRxLen;
-  
-  // Only the VIRTUAL_CARD_MODE requires 4 bytes.
-  int size = sizeof(pncmd_sam_config)-((mode == VIRTUAL_CARD_MODE) ? 0 : 1);
+
   pncmd_sam_config[2] = mode;
   
-  if (!pnd->pdc->transceive(pnd->nds,pncmd_sam_config,size,abtRx,&szRxLen)) {
+  switch (mode)
+  {
+    case VIRTUAL_CARD_MODE:
+    {
+      // Only the VIRTUAL_CARD_MODE requires 4 bytes.
+      szCmd = sizeof(pncmd_sam_config);
+    }
+    break;
+
+    default:
+    {
+      szCmd = sizeof(pncmd_sam_config)-1;
+    }
+    break;
+  }
+  
+  if (!pnd->pdc->transceive(pnd->nds,pncmd_sam_config,szCmd,abtRx,&szRxLen)) {
     ERR("%s %d", "Unable to execute SAMConfiguration command with mode byte:", mode);
     return false;
   }
@@ -71,10 +95,10 @@ void wait_one_minute()
   printf("|");
   fflush(stdout);
   
-  while (secs < 60)
+  while (secs < TIMEOUT)
   {
-    sleep(1);
-    secs += 1;
+    sleep(SUSP_TIME);
+    secs++;
     printf(".");
     fflush(stdout);
   }

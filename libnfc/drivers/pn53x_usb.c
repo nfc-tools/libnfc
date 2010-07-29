@@ -232,9 +232,9 @@ void pn53x_usb_disconnect(nfc_device_t* pnd)
   if((ret = usb_release_interface(pus->pudh,0)) < 0)
     DBG("usb_release failed %i",ret);
   DBG("%s","resetting USB");
-  usb_reset(pus->pudh);
   if((ret = usb_close(pus->pudh)) < 0)
     DBG("usb_close failed %i",ret);
+  usb_reset(pus->pudh);
   free(pnd->nds);
   free(pnd);
   DBG("%s","done!");
