@@ -229,12 +229,17 @@ void pn53x_usb_disconnect(nfc_device_t* pnd)
   usb_spec_t* pus = (usb_spec_t*)pnd->nds;
   int ret;
 
-  if((ret = usb_release_interface(pus->pudh,0)) < 0)
+  if((ret = usb_release_interface(pus->pudh,0)) < 0) {
     DBG("usb_release failed %i",ret);
-  DBG("%s","resetting USB");
-  if((ret = usb_close(pus->pudh)) < 0)
+  }
+
+  if((ret = usb_close(pus->pudh)) < 0) {
     DBG("usb_close failed %i",ret);
+  }
+  
+  DBG("%s","resetting USB");
   usb_reset(pus->pudh);
+
   free(pnd->nds);
   free(pnd);
   DBG("%s","done!");
@@ -317,7 +322,7 @@ bool pn53x_usb_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, cons
 
   // Get register: nuke extra byte (awful hack)
   if ((abtRx[5]==0xd5) && (abtRx[6]==0x07) && (*pszRxLen==2)) {
-      // printf("Got %02x %02x, keep %02x\n", abtRx[7], abtRx[8], abtRx[8]);
+      // DBG("awful hack: abtRx[7]=%02x, abtRx[8]=%02x, we only keep abtRx[8]=%02x", abtRx[7], abtRx[8], abtRx[8]);
       *pszRxLen = (*pszRxLen) - 1;
       memcpy( pbtRx, abtRx + 8, *pszRxLen);
       return true;
