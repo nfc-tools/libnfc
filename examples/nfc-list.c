@@ -1,7 +1,7 @@
 /*-
  * Public platform independent Near Field Communication (NFC) library
  * 
- * Copyright (C) 2009, Roel Verdult
+ * Copyright (C) 2009, 2O1O, Roel Verdult, Romuald Conty
  * 
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -44,25 +44,28 @@
 #include "nfc-utils.h"
 
 #define MAX_DEVICE_COUNT 16
+#define MAX_TARGET_COUNT 16
 
 static nfc_device_t* pnd;
 static byte_t abtFelica[5] = { 0x00, 0xff, 0xff, 0x00, 0x00 };
 
 int main(int argc, const char* argv[])
 {
-  size_t szFound;
+  const char* acLibnfcVersion;
+  size_t szDeviceFound;
+  size_t szTargetFound;
   size_t i;
   nfc_target_info_t nti;
-  nfc_device_desc_t *pnddDevices = parse_device_desc(argc, argv, &szFound);
-  const char* acLibnfcVersion;
-
-  if (argc > 1 && szFound == 0) {
-    errx (1, "usage: %s [--device driver:port:speed]", argv[0]);
-  }
-
+  
   // Display libnfc version
   acLibnfcVersion = nfc_version();
   printf("%s use libnfc %s\n", argv[0], acLibnfcVersion);
+
+  nfc_device_desc_t *pnddDevices = parse_device_desc(argc, argv, &szDeviceFound);
+
+  if (argc > 1 && szDeviceFound == 0) {
+    errx (1, "usage: %s [--device driver:port:speed]", argv[0]);
+  }
 
   #ifdef HAVE_LIBUSB
     #ifdef DEBUG
@@ -85,7 +88,7 @@ int main(int argc, const char* argv[])
   pnd = nfc_connect(&ndd);
 #endif
 
-  if (szFound == 0)
+  if (szDeviceFound == 0)
   {
     if (!(pnddDevices = malloc (MAX_DEVICE_COUNT * sizeof (*pnddDevices))))
     {
@@ -93,15 +96,15 @@ int main(int argc, const char* argv[])
       return EXIT_FAILURE;
     }
 
-    nfc_list_devices (pnddDevices, MAX_DEVICE_COUNT, &szFound);
+    nfc_list_devices (pnddDevices, MAX_DEVICE_COUNT, &szDeviceFound);
   }
 
-  if (szFound == 0)
+  if (szDeviceFound == 0)
   {
     INFO("%s", "No device found.");
   }
 
-  for (i = 0; i < szFound; i++)
+  for (i = 0; i < szDeviceFound; i++)
   {
     pnd = nfc_connect(&(pnddDevices[i]));
 
@@ -126,15 +129,18 @@ int main(int argc, const char* argv[])
     // Enable field so more power consuming cards can power themselves up
     nfc_configure(pnd,NDO_ACTIVATE_FIELD,true);
 
-    printf("\nConnected to NFC reader: %s\n\n",pnd->acName);
+    printf("Connected to NFC reader: %s\n",pnd->acName);
 
-    // Poll for a ISO14443A (MIFARE) tag
-    if (nfc_initiator_select_passive_target(pnd,NM_ISO14443A_106,NULL,0,&nti))
-    {
-      printf("The following (NFC) ISO14443A tag was found:\n\n");
-      print_nfc_iso14443a_info (nti.nai);
+    nfc_target_info_t anti[MAX_TARGET_COUNT];
+    if (nfc_initiator_list_passive_targets(pnd, NM_ISO14443A_106, anti, MAX_TARGET_COUNT, &szTargetFound )) {
+      printf("%zu ISO14443A passive targets was found:\n", szTargetFound);
+      for(size_t n=0; n<szTargetFound; n++) {
+        print_nfc_iso14443a_info (anti[n].nai);
+        printf("\n");
+      }
     }
-
+    printf("-------------------\n");
+    
     // Poll for a Felica tag
     if (nfc_initiator_select_passive_target(pnd,NM_FELICA_212,abtFelica,5,&nti) || nfc_initiator_select_passive_target(pnd,NM_FELICA_424,abtFelica,5,&nti))
     {

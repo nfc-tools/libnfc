@@ -182,7 +182,7 @@ nfc_device_t* arygon_connect(const nfc_device_desc_t* pndd)
     DBG("%s", "arygon_connect() need an nfc_device_desc_t struct.");
     return NULL;
   } else {
-    DBG("Connecting to: %s at %d bauds.",pndd->pcPort, pndd->uiSpeed);
+    DBG("Attempt to connect to: %s at %d bauds.",pndd->pcPort, pndd->uiSpeed);
     sp = uart_open(pndd->pcPort);
 
     if (sp == INVALID_SERIAL_PORT) ERR("Invalid serial port: %s",pndd->pcPort);

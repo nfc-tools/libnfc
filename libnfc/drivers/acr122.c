@@ -19,7 +19,7 @@
 
 /**
  * @file acr122.c
- * @brief
+ * @brief Driver for ACR122 devices (e.g. Tikitag, Touchatag, ACS ACR122)
  */
 
 #ifdef DRIVER_ACR122_ENABLED
@@ -160,12 +160,12 @@ acr122_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *p
   // Retrieve the string array of all available pcsc readers
   if (SCardListReaders(*pscc,NULL,acDeviceNames,(void*)&szDeviceNamesLen) != SCARD_S_SUCCESS) return false;
 
-  DBG("%s", "PCSC reports following device(s):");
+  // DBG("%s", "PCSC reports following device(s):");
 
   while ((acDeviceNames[szPos] != '\0') && ((*pszDeviceFound) < szDevices)) {
     uiBusIndex++;
 
-    DBG("- %s (pos=%ld)", acDeviceNames + szPos, (unsigned long) szPos);
+    // DBG("- %s (pos=%ld)", acDeviceNames + szPos, (unsigned long) szPos);
 
     bSupported = false;
     for (i = 0; supported_devices[i] && !bSupported; i++) {
@@ -206,7 +206,7 @@ nfc_device_t* acr122_connect(const nfc_device_desc_t* pndd)
 
   SCARDCONTEXT *pscc;
 
-  DBG("Connecting to %s",pndd->acDevice);
+  DBG("Attempt to connect to %s",pndd->acDevice);
   // We no longer support connecting with a NULL
   if(pndd == NULL) return NULL;
   // Test if context succeeded
