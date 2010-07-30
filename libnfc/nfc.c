@@ -109,7 +109,6 @@ nfc_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *pszD
   {
     if (drivers_callbacks_list[uiDriver].list_devices != NULL)
     {
-      DBG("List avaible device using %s driver",drivers_callbacks_list[uiDriver].acDriver);
       szN = 0;
       if (drivers_callbacks_list[uiDriver].list_devices (pnddDevices + (*pszDeviceFound), szDevices - (*pszDeviceFound), &szN))
       {
@@ -168,10 +167,8 @@ nfc_device_t* nfc_connect(nfc_device_desc_t* pndd)
       // Specific device is requested: using device description pndd
       if( 0 != strcmp(drivers_callbacks_list[uiDriver].acDriver, pndd->pcDriver ) )
       {
-        DBG("Looking for %s, found %s... Skip it.", pndd->pcDriver, drivers_callbacks_list[uiDriver].acDriver);
         continue;
       } else {
-        DBG("Looking for %s, found %s... Use it.", pndd->pcDriver, drivers_callbacks_list[uiDriver].acDriver);
         pnd = drivers_callbacks_list[uiDriver].connect(pndd);
       }
     }
@@ -609,12 +606,12 @@ nfc_initiator_poll_targets(const nfc_device_t* pnd,
       pbt += ln;
 
       if(abtRx[0] > 1) {
-	/* 2nd target */
-	// Target type
-	pntTargets[1].ntt = *(pbt++);
-	// AutoPollTargetData length
-	ln = *(pbt++);
-	pn53x_decode_target_data(pbt, ln, pnd->nc, pntTargets[1].ntt, &(pntTargets[1].nti));
+        /* 2nd target */
+        // Target type
+        pntTargets[1].ntt = *(pbt++);
+        // AutoPollTargetData length
+        ln = *(pbt++);
+        pn53x_decode_target_data(pbt, ln, pnd->nc, pntTargets[1].ntt, &(pntTargets[1].nti));
       }
     }
   }
@@ -733,7 +730,13 @@ bool nfc_initiator_transceive_dep_bytes(const nfc_device_t* pnd, const byte_t* p
  * @brief Transceive byte and APDU frames
  * @return Returns true if action was successfully performed; otherwise returns false.
  *
- * The reader will transmit the supplied bytes in pbtTx to the target (tag). It waits for the response and stores the received bytes in the pbtRx byte array. The parity bits are handled by the PN53X chip. The CRC can be generated automatically or handled manually. Using this function, frames can be communicated very fast via the NFC reader to the tag. Tests show that on average this way of communicating is much faster than using the regular driver/middle-ware (often supplied by manufacturers).
+ * The reader will transmit the supplied bytes in pbtTx to the target (tag).
+ * It waits for the response and stores the received bytes in the pbtRx byte array.
+ * The parity bits are handled by the PN53X chip. The CRC can be generated automatically or handled manually.
+ * Using this function, frames can be communicated very fast via the NFC reader to the tag.
+ *
+ * Tests show that on average this way of communicating is much faster than using the regular driver/middle-ware (often supplied by manufacturers).
+ *
  * @warning The configuration option NDO_HANDLE_PARITY must be set to true (the default value).
  */
 bool nfc_initiator_transceive_bytes(const nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen)

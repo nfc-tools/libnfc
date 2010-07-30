@@ -63,14 +63,12 @@ void get_end_points(struct usb_device *dev, usb_spec_t* pus)
     // Test if we dealing with a bulk IN endpoint
     if((uiEndPoint & USB_ENDPOINT_DIR_MASK) == USB_ENDPOINT_IN)
     {
-      DBG("Bulk endpoint in  : 0x%02X", uiEndPoint);
       pus->uiEndPointIn = uiEndPoint;
     }
 
     // Test if we dealing with a bulk OUT endpoint
     if((uiEndPoint & USB_ENDPOINT_DIR_MASK) == USB_ENDPOINT_OUT)
     {
-      DBG("Bulk endpoint in  : 0x%02X", uiEndPoint);
       pus->uiEndPointOut = uiEndPoint;
     }
   }
@@ -89,12 +87,12 @@ bool pn53x_usb_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, s
   string[0]= '\0';
   usb_init();
 
+  // usb_find_busses will find all of the busses on the system. Returns the number of changes since previous call to this function (total of new busses and busses removed).
   if ((ret= usb_find_busses() < 0)) return false;
-  DBG("%d busses",ret);
+  // usb_find_devices will find all of the devices on each bus. This should be called after usb_find_busses. Returns the number of changes since the previous call to this function (total of new device and devices removed).
   if ((ret= usb_find_devices() < 0)) return false;
-  DBG("%d devices",ret);
 
-  *pszDeviceFound= 0;
+  *pszDeviceFound = 0;
 
   for (bus = usb_get_busses(); bus; bus = bus->next)
   {
@@ -102,7 +100,7 @@ bool pn53x_usb_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, s
     {
       for(i = 0; i < num_candidates; ++i)
       {
-        DBG("Checking device %04x:%04x (%04x:%04x)",dev->descriptor.idVendor,dev->descriptor.idProduct,candidates[i].idVendor,candidates[i].idProduct);
+        // DBG("Checking device %04x:%04x (%04x:%04x)",dev->descriptor.idVendor,dev->descriptor.idProduct,candidates[i].idVendor,candidates[i].idProduct);
         if (candidates[i].idVendor==dev->descriptor.idVendor && candidates[i].idProduct==dev->descriptor.idProduct)
         {
           // Make sure there are 2 endpoints available
@@ -136,18 +134,15 @@ bool pn53x_usb_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, s
           pnddDevices[*pszDeviceFound].pcDriver = target_name;
           pnddDevices[*pszDeviceFound].uiBusIndex = uiBusIndex;
           (*pszDeviceFound)++;
-          DBG("%s","Match!");
           // Test if we reach the maximum "wanted" devices
           if((*pszDeviceFound) == szDevices) 
           {
-            DBG("Found %ld devices", (unsigned long) *pszDeviceFound);
             return true;
           }
         }
       }
     }
   }
-  DBG("Found %ld devices", (unsigned long) *pszDeviceFound);
   if(*pszDeviceFound)
     return true;
   return false;
@@ -166,25 +161,21 @@ nfc_device_t* pn53x_usb_connect(const nfc_device_desc_t* pndd,const char * targe
   us.uiEndPointOut = 0;
   us.pudh = NULL;
 
-
   // must specify device to connect to
   if(pndd == NULL) return NULL;
 
-  DBG("Connecting %s device",target_name);
+  DBG("Attempt to connect to %s device", target_name);
   usb_init();
 
   uiBusIndex= pndd->uiBusIndex;
 
-  DBG("Skipping to device no. %d",uiBusIndex);
   for (bus = usb_get_busses(); bus; bus = bus->next)
   {
     for (dev = bus->devices; dev; dev = dev->next, uiBusIndex--)
     {
-      DBG("Checking device %04x:%04x",dev->descriptor.idVendor,dev->descriptor.idProduct);
+      // DBG("Checking device %04x:%04x",dev->descriptor.idVendor,dev->descriptor.idProduct);
       if(uiBusIndex == 0)
       {
-        DBG("Found device index %d", pndd->uiBusIndex);
-
         // Open the USB device
         us.pudh = usb_open(dev);
 
@@ -242,7 +233,6 @@ void pn53x_usb_disconnect(nfc_device_t* pnd)
 
   free(pnd->nds);
   free(pnd);
-  DBG("%s","done!");
 }
 
 bool pn53x_usb_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen)
@@ -270,7 +260,6 @@ bool pn53x_usb_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, cons
   // End of stream marker
   abtTx[szTxLen+6] = 0;
 
-  DBG("%s","pn53x_usb_transceive");
 #ifdef DEBUG
   PRINT_HEX("TX", abtTx,szTxLen+7);
 #endif
