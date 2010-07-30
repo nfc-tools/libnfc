@@ -537,6 +537,81 @@ nfc_initiator_select_passive_target(const nfc_device_t* pnd,
   return true;
 }
 
+bool nfc_initiator_list_passive_targets(nfc_device_t* pnd, const nfc_modulation_t nmInitModulation, nfc_target_info_t anti[], const size_t szTargets, size_t *pszTargetFound )
+{
+  // Let the reader only try once to find a target
+  nfc_configure (pnd, NDO_INFINITE_SELECT, false);
+
+  nfc_target_info_t nti;
+
+  bool bCollisionDetected = false;
+  size_t szTargetFound = 0;
+
+
+  while (nfc_initiator_select_passive_target (pnd, nmInitModulation, NULL, 0, &nti)) {
+    nfc_initiator_deselect_target(pnd);
+
+    if(nmInitModulation == NM_ISO14443A_106) {
+      if((nti.nai.abtAtqa[0] == 0x00) && (nti.nai.abtAtqa[1] == 0x00)) {
+        bCollisionDetected = true;
+      }
+    }
+        
+    if(szTargets > szTargetFound) {
+      memcpy( &(anti[szTargetFound]), &nti, sizeof(nfc_target_info_t) );
+    }
+    szTargetFound++;
+  }
+  *pszTargetFound = szTargetFound;
+
+  DBG("%zu targets was found%s.", *pszTargetFound, bCollisionDetected?" (with SENS_RES collision)":"");
+
+/*
+  // TODO This chunk of code attempt to retrieve SENS_RES (ATQA) for ISO14443A which collide previously.
+  // XXX Unfortunately at this stage, I'm not able to REQA each tag correctly to retrieve this SENS_REQ.
+
+
+  // Drop the field for a while
+  nfc_configure(pnd,NDO_ACTIVATE_FIELD,false);
+  // Let the reader only try once to find a tag
+  nfc_configure(pnd,NDO_INFINITE_SELECT,false);
+
+  // Configure the CRC and Parity settings
+  nfc_configure(pnd,NDO_HANDLE_CRC,true);
+  nfc_configure(pnd,NDO_HANDLE_PARITY,true);
+
+  // Enable field so more power consuming cards can power themselves up
+  nfc_configure(pnd,NDO_ACTIVATE_FIELD,true);
+
+  if(bCollisionDetected && (nmInitModulation == NM_ISO14443A_106)) {
+    // nfc_initiator_select_passive_target(pnd, NM_ISO14443A_106, anti[0].nai.abtUid, anti[0].nai.szUidLen, NULL);
+
+    for( size_t n = 0; n < szTargetFound; n++ ) {
+      size_t szTargetsData;
+      byte_t abtTargetsData[MAX_FRAME_LEN];
+      if(!pn53x_InListPassiveTarget(pnd, NM_ISO14443A_106, 2, NULL, 0, abtTargetsData, &szTargetsData)) return false;
+      DBG("pn53x_InListPassiveTarget(): %d selected target(s)", abtTargetsData[0]);
+      if(szTargetsData && (abtTargetsData[0] > 0)) {
+        byte_t* pbtTargetData = abtTargetsData+1;
+        size_t szTargetData = 5 + *(pbtTargetData + 4); // Tg, SENS_RES (2), SEL_RES, NFCIDLength, NFCID1 (NFCIDLength)
+
+        if( (*(pbtTargetData + 3) & 0x40) && ((~(*(pbtTargetData + 3))) & 0x04) ) { // Check if SAK looks like 0bxx1xx0xx, which means compliant with ISO/IEC 14443-4 (= ATS available) (See ISO14443-3 document)
+          szTargetData += 1 + *(pbtTargetData + szTargetData); // Add ATS length
+        }
+        if(!pn53x_decode_target_data(pbtTargetData, szTargetData, pnd->nc, NTT_GENERIC_PASSIVE_106, &nti)) return false;
+  #ifdef DEBUG
+        for(size_t n=0;n<sizeof(nti.nai);n++) printf("%02x  ", *(((byte_t*)(&nti.nai)) + n));
+        printf("\n");
+  #endif // DEBUG
+        pn53x_InDeselect(pnd, 1);
+      }
+    }
+  }
+*/
+
+  return true;
+}
+
 /**
  * @fn nfc_initiator_deselect_target(const nfc_device_t* pnd);
  * @brief Deselect a selected passive or emulated tag
