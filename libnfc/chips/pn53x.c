@@ -298,6 +298,7 @@ pn53x_InListPassiveTarget(const nfc_device_t* pnd,
   byte_t abtCmd[sizeof(pncmd_initiator_list_passive)];
   memcpy(abtCmd,pncmd_initiator_list_passive,sizeof(pncmd_initiator_list_passive));
 
+  // FIXME PN531 doesn't support all available modulations
   abtCmd[2] = szMaxTargets;  // MaxTg
   abtCmd[3] = nmInitModulation; // BrTy, the type of init modulation used for polling a passive tag
 
