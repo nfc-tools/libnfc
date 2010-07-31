@@ -30,8 +30,6 @@
 Thanks to d18c7db and Okko for example code
 */
 
-#if defined (DRIVER_PN531_USB_ENABLED) || defined (DRIVER_PN533_USB_ENABLED)
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <usb.h>
@@ -282,6 +280,12 @@ bool pn53x_usb_transceive(nfc_device_t* pnd, const byte_t* pbtTx, const size_t s
 #ifdef DEBUG
   PRINT_HEX("RX", abtRx,ret);
 #endif
+  
+  uint8_t ack_frame[] = { 0x00, 0x00, 0xff, 0x00, 0xff, 0x00 };
+  if ((ret != 6) || (memcmp (abtRx, ack_frame, 6))) {
+      DBG ("%s", "===> No ACK!!!!!!");
+    return false;
+  }
 
   if (!pn53x_transceive_callback (pnd, abtRx, ret))
     return false;
@@ -296,6 +300,8 @@ bool pn53x_usb_transceive(nfc_device_t* pnd, const byte_t* pbtTx, const size_t s
 #ifdef DEBUG
     PRINT_HEX("RX", abtRx,ret);
 #endif
+
+  usb_bulk_write(pus->pudh, pus->uiEndPointOut, (char *)ack_frame, 6, USB_TIMEOUT);
 
   // When the answer should be ignored, just return a succesful result
   if(pbtRx == NULL || pszRxLen == NULL) return true;
@@ -322,5 +328,3 @@ bool pn53x_usb_transceive(nfc_device_t* pnd, const byte_t* pbtTx, const size_t s
 
   return true;
 }
-
-#endif // DRIVER_PN531_USB_ENABLED || DRIVER_PN533_USB_ENABLED

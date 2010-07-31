@@ -22,8 +22,6 @@
  * @brief PN532 driver using UART bus (UART, RS232, etc.)
  */
 
-#ifdef DRIVER_PN532_UART_ENABLED
-
 #ifdef HAVE_CONFIG_H
   #include "config.h"
 #endif // HAVE_CONFIG_H
@@ -55,8 +53,15 @@
     // MacOS
     // TODO: find UART connection string for PN53X device on Mac OS X
     #define SERIAL_STRING ""
+  #elif defined(__FreeBSD__)
+    // XXX: Not tested
+    #define SERIAL_STRING "/dev/cuau"
   #else
-    // *BSD, Linux and others POSIX systems
+    // Linux and maybe some operating systems
+    // FIXME: We'd rather have an #elif defined(__linux__) or something like
+    //        that and an #else that triggers an error at compile time instead
+    //        of "falling-back" on a value that is likely to not be suitable
+    //        for most operating systems.
     #define SERIAL_STRING "/dev/ttyUSB"
   #endif
 #endif
@@ -314,6 +319,4 @@ pn532_uart_check_communication(const nfc_device_spec_t nds)
   }
   return true;
 }
-
-#endif // DRIVER_PN532_UART_ENABLED
 
