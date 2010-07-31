@@ -26,8 +26,6 @@
 Thanks to d18c7db and Okko for example code
 */
 
-#ifdef DRIVER_PN531_USB_ENABLED
-
 #ifdef HAVE_CONFIG_H
   #include "config.h"
 #endif // HAVE_CONFIG_H
@@ -72,6 +70,4 @@ nfc_device_t* pn531_usb_connect(const nfc_device_desc_t* pndd)
 {
   return pn53x_usb_connect(pndd, pndd->acDevice, NC_PN531);
 }
-
-#endif // DRIVER_PN531_USB_ENABLED
 

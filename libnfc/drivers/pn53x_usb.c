@@ -281,6 +281,12 @@ bool pn53x_usb_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, cons
 #ifdef DEBUG
   PRINT_HEX("RX", abtRx,ret);
 #endif
+  
+  uint8_t ack_frame[] = { 0x00, 0x00, 0xff, 0x00, 0xff, 0x00 };
+  if ((ret != 6) || (memcmp (abtRx, ack_frame, 6))) {
+      DBG ("%s", "===> No ACK!!!!!!");
+    return false;
+  }
 
   if( ret == 6 )
   {
@@ -295,6 +301,8 @@ bool pn53x_usb_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, cons
     PRINT_HEX("RX", abtRx,ret);
 #endif
   }
+
+  usb_bulk_write(pus->pudh, pus->uiEndPointOut, (char *)ack_frame, 6, USB_TIMEOUT);
 
   // When the answer should be ignored, just return a succesful result
   if(pbtRx == NULL || pszRxLen == NULL) return true;
