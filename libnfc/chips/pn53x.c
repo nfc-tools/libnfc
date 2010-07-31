@@ -76,9 +76,29 @@ bool pn53x_transceive(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxL
   // Call the tranceive callback function of the current device
   if (!pnd->pdc->transceive(pnd->nds,pbtTx,szTxLen,pbtRx,pszRxLen)) return false;
 
-  pnd->iErrorCode = pbtRx[0] & 0x3f;
+  switch (pbtTx[1]) {
+      case 0x16:
+      case 0x40:
+      case 0x42:
+      case 0x44:
+      case 0x46:
+      case 0x4e:
+      case 0x50:
+      case 0x52:
+      case 0x54:
+      case 0x56:
+      case 0x86:
+      case 0x88:
+      case 0x8e:
+      case 0x90:
+      case 0x93:
+      case 0x94:
+	  pnd->iErrorCode = pbtRx[0] & 0x3f;
+	  break;
+      default:
+	  pnd->iErrorCode = 0;
+  }
 
-  // Succesful transmission
   return (0 == pnd->iErrorCode);
 }
 
