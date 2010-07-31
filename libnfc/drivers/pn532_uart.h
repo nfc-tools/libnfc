@@ -36,7 +36,7 @@ nfc_device_t* pn532_uart_connect(const nfc_device_desc_t* pndd);
 void pn532_uart_disconnect(nfc_device_t* pnd);
 
 // Callback function used by libnfc to transmit commands to the PN53X chip
-bool pn532_uart_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen);
+bool pn532_uart_transceive(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen);
 
 #endif // ! __NFC_DRIVER_PN532_UART_H__
 

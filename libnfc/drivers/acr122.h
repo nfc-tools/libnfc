@@ -40,7 +40,7 @@ nfc_device_t* acr122_connect(const nfc_device_desc_t* pndd);
 void acr122_disconnect(nfc_device_t* pnd);
 
 // Callback function used by libnfc to transmit commands to the PN53X chip
-bool acr122_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen);
+bool acr122_transceive(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen);
 
 // Various additional features this device supports
 char* acr122_firmware(const nfc_device_spec_t nds);

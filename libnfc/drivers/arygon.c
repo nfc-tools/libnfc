@@ -214,7 +214,7 @@ void arygon_disconnect(nfc_device_t* pnd)
   free(pnd);
 }
 
-bool arygon_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen)
+bool arygon_transceive(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen)
 {
   byte_t abtTxBuf[BUFFER_LENGTH] = { DEV_ARYGON_PROTOCOL_TAMA, 0x00, 0x00, 0xff }; // Every packet must start with "00 00 ff"
   byte_t abtRxBuf[BUFFER_LENGTH];
@@ -244,12 +244,12 @@ bool arygon_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, const s
 #ifdef DEBUG
   PRINT_HEX("TX", abtTxBuf,szTxLen+8);
 #endif
-  if (!uart_send((serial_port)nds,abtTxBuf,szTxLen+8)) {
+  if (!uart_send((serial_port)pnd->nds,abtTxBuf,szTxLen+8)) {
     ERR("%s", "Unable to transmit data. (TX)");
     return false;
   }
 
-  if (!uart_receive((serial_port)nds,abtRxBuf,&szRxBufLen)) {
+  if (!uart_receive((serial_port)pnd->nds,abtRxBuf,&szRxBufLen)) {
     ERR("%s", "Unable to receive data. (RX)");
     return false;
   }
@@ -279,7 +279,7 @@ bool arygon_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, const s
   if(szRxBufLen == 0) {
     // There was no more data than ACK frame, we need to wait next frame
     DBG("%s", "There was no more data than ACK frame, we need to wait next frame");
-    while (!uart_receive((serial_port)nds,abtRxBuf,&szRxBufLen)) {
+    while (!uart_receive((serial_port)pnd->nds,abtRxBuf,&szRxBufLen)) {
       delay_ms(10);
     }
   }

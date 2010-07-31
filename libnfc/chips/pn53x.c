@@ -26,8 +26,12 @@
   #include "config.h"
 #endif // HAVE_CONFIG_H
 
-#include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// FIXME: WTF are doing debug macros in this file?
+#include <nfc/nfc-messages.h>
 
 #include "pn53x.h"
 #include "../mirror-subr.h"
@@ -60,6 +64,30 @@ const byte_t pncmd_target_receive             [  2] = { 0xD4,0x88 };
 const byte_t pncmd_target_send                [264] = { 0xD4,0x90 };
 const byte_t pncmd_target_get_status          [  2] = { 0xD4,0x8A };
 
+static const byte_t pn53x_ack_frame[]  = { 0x00,0x00,0xff,0x00,0xff,0x00 };
+static const byte_t pn53x_nack_frame[] = { 0x00,0x00,0xff,0xff,0x00,0x00 };
+
+bool pn53x_transceive_callback(nfc_device_t* pnd, const byte_t *pbtRxFrame, const size_t szRxFrameLen)
+{
+  (void) pnd; // I guess we will want to set some error here at some point
+
+  if (szRxFrameLen == sizeof (pn53x_ack_frame)) {
+    if (0 == memcmp (pbtRxFrame, pn53x_ack_frame, sizeof (pn53x_ack_frame))) {
+      DBG("%s", "PN53x ACKed");
+      return true;
+    } else if (0 == memcmp (pbtRxFrame, pn53x_nack_frame, sizeof (pn53x_nack_frame))) {
+      DBG("%s", "PN53x NACKed");
+      return false;
+    }
+  }
+  ERR("%s", "Unexpected PN53x reply!");
+#if defined(DEBUG)
+  // coredump so that we can have a backtrace about how this code was reached.
+  abort();
+#endif
+  return false;
+}
+
 bool pn53x_transceive(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen)
 {
   byte_t abtRx[MAX_FRAME_LEN];
@@ -74,7 +102,7 @@ bool pn53x_transceive(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxL
 
   *pszRxLen = MAX_FRAME_LEN;
   // Call the tranceive callback function of the current device
-  if (!pnd->pdc->transceive(pnd->nds,pbtTx,szTxLen,pbtRx,pszRxLen)) return false;
+  if (!pnd->pdc->transceive(pnd,pbtTx,szTxLen,pbtRx,pszRxLen)) return false;
 
   switch (pbtTx[1]) {
       case 0x16:	// PowerDown
@@ -102,7 +130,7 @@ bool pn53x_transceive(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxL
   return (0 == pnd->iErrorCode);
 }
 
-byte_t pn53x_get_reg(const nfc_device_t* pnd, uint16_t ui16Reg)
+byte_t pn53x_get_reg(nfc_device_t* pnd, uint16_t ui16Reg)
 {
   uint8_t ui8Value;
   size_t szValueLen = 1;
@@ -111,12 +139,11 @@ byte_t pn53x_get_reg(const nfc_device_t* pnd, uint16_t ui16Reg)
 
   abtCmd[2] = ui16Reg >> 8;
   abtCmd[3] = ui16Reg & 0xff;
-  // We can not use pn53x_transceive() because abtRx[0] gives no status info
-  pnd->pdc->transceive(pnd->nds,abtCmd,4,&ui8Value,&szValueLen);
+  pn53x_transceive(pnd,abtCmd,4,&ui8Value,&szValueLen);
   return ui8Value;
 }
 
-bool pn53x_set_reg(const nfc_device_t* pnd, uint16_t ui16Reg, uint8_t ui8SybmolMask, uint8_t ui8Value)
+bool pn53x_set_reg(nfc_device_t* pnd, uint16_t ui16Reg, uint8_t ui8SybmolMask, uint8_t ui8Value)
 {
   byte_t abtCmd[sizeof(pncmd_set_register)];
   memcpy(abtCmd,pncmd_set_register,sizeof(pncmd_set_register));
@@ -124,21 +151,19 @@ bool pn53x_set_reg(const nfc_device_t* pnd, uint16_t ui16Reg, uint8_t ui8SybmolM
   abtCmd[2] = ui16Reg >> 8;
   abtCmd[3] = ui16Reg & 0xff;
   abtCmd[4] = ui8Value | (pn53x_get_reg(pnd,ui16Reg) & (~ui8SybmolMask));
-  // We can not use pn53x_transceive() because abtRx[0] gives no status info
-  return pnd->pdc->transceive(pnd->nds,abtCmd,5,NULL,NULL);
+  return pn53x_transceive(pnd,abtCmd,5,NULL,NULL);
 }
 
-bool pn53x_set_parameters(const nfc_device_t* pnd, uint8_t ui8Value)
+bool pn53x_set_parameters(nfc_device_t* pnd, uint8_t ui8Value)
 {
   byte_t abtCmd[sizeof(pncmd_set_parameters)];
   memcpy(abtCmd,pncmd_set_parameters,sizeof(pncmd_set_parameters));
 
   abtCmd[2] = ui8Value;
-  // We can not use pn53x_transceive() because abtRx[0] gives no status info
-  return pnd->pdc->transceive(pnd->nds,abtCmd,3,NULL,NULL);
+  return pn53x_transceive(pnd,abtCmd,3,NULL,NULL);
 }
 
-bool pn53x_set_tx_bits(const nfc_device_t* pnd, uint8_t ui8Bits)
+bool pn53x_set_tx_bits(nfc_device_t* pnd, uint8_t ui8Bits)
 {
   // Test if we need to update the transmission bits register setting
   if (pnd->ui8TxBits != ui8Bits)
@@ -307,7 +332,7 @@ pn53x_decode_target_data(const byte_t* pbtRawData, size_t szDataLen, nfc_chip_t 
  * @note To decode theses TargetData[n], there is @fn pn53x_decode_target_data
  */
 bool
-pn53x_InListPassiveTarget(const nfc_device_t* pnd,
+pn53x_InListPassiveTarget(nfc_device_t* pnd,
                           const nfc_modulation_t nmInitModulation, const byte_t szMaxTargets,
                           const byte_t* pbtInitiatorData, const size_t szInitiatorDataLen,
                           byte_t* pbtTargetsData, size_t* pszTargetsData)
@@ -324,8 +349,7 @@ pn53x_InListPassiveTarget(const nfc_device_t* pnd,
 
   // Try to find a tag, call the tranceive callback function of the current device
   size_t szRxLen = MAX_FRAME_LEN;
-  // We can not use pn53x_transceive() because abtRx[0] gives no status info
-  if(pnd->pdc->transceive(pnd->nds,abtCmd,4+szInitiatorDataLen,pbtTargetsData,&szRxLen)) {
+  if(pn53x_transceive(pnd,abtCmd,4+szInitiatorDataLen,pbtTargetsData,&szRxLen)) {
     *pszTargetsData = szRxLen;
     return true;
   } else {

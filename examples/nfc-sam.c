@@ -45,6 +45,7 @@
 #include <nfc/nfc.h>
 #include <nfc/nfc-messages.h>
 #include "nfc-utils.h"
+#include "chips/pn53x.h"
 
 #define MAX_FRAME_LEN 264
 #define TIMEOUT 60 // secs.
@@ -80,7 +81,7 @@ bool sam_connection(nfc_device_t* pnd, int mode)
     break;
   }
   
-  if (!pnd->pdc->transceive(pnd->nds,pncmd_sam_config,szCmd,abtRx,&szRxLen)) {
+  if (!pn53x_transceive(pnd,pncmd_sam_config,szCmd,abtRx,&szRxLen)) {
     ERR("%s %d", "Unable to execute SAMConfiguration command with mode byte:", mode);
     return false;
   }

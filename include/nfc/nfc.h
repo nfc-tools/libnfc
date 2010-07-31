@@ -60,8 +60,8 @@ NFC_EXPORT void nfc_disconnect(nfc_device_t* pnd);
 NFC_EXPORT bool nfc_configure(nfc_device_t* pnd, const nfc_device_option_t ndo, const bool bEnable);
 
 /* NFC initiator: act as "reader" */
-NFC_EXPORT bool nfc_initiator_init(const nfc_device_t* pnd);
-NFC_EXPORT bool nfc_initiator_select_passive_target(const nfc_device_t* pnd, const nfc_modulation_t nmInitModulation, const byte_t* pbtInitData, const size_t szInitDataLen, nfc_target_info_t* pti);
+NFC_EXPORT bool nfc_initiator_init(nfc_device_t* pnd);
+NFC_EXPORT bool nfc_initiator_select_passive_target(nfc_device_t* pnd, const nfc_modulation_t nmInitModulation, const byte_t* pbtInitData, const size_t szInitDataLen, nfc_target_info_t* pti);
 NFC_EXPORT bool nfc_initiator_list_passive_targets(nfc_device_t* pnd, const nfc_modulation_t nmInitModulation, nfc_target_info_t anti[], const size_t szTargets, size_t *pszTargetFound );
 NFC_EXPORT bool nfc_initiator_poll_targets(nfc_device_t* pnd, const nfc_target_type_t* pnttTargetTypes, const size_t szTargetTypes, const byte_t btPollNr, const byte_t btPeriod, nfc_target_t* pntTargets, size_t* pszTargetFound);
 NFC_EXPORT bool nfc_initiator_select_dep_target(nfc_device_t* pnd, const nfc_modulation_t nmInitModulation, const byte_t* pbtPidData, const size_t szPidDataLen, const byte_t* pbtNFCID3i, const size_t szNFCID3iDataLen, const byte_t *pbtGbData, const size_t szGbDataLen, nfc_target_info_t* pti);

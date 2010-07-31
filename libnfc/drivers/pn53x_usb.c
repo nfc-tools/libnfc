@@ -38,6 +38,7 @@ Thanks to d18c7db and Okko for example code
 #include <string.h>
 
 #include "../drivers.h"
+#include "../chips/pn53x.h"
 
 #include <nfc/nfc-messages.h>
 
@@ -235,13 +236,13 @@ void pn53x_usb_disconnect(nfc_device_t* pnd)
   free(pnd);
 }
 
-bool pn53x_usb_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen)
+bool pn53x_usb_transceive(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen)
 {
   size_t uiPos = 0;
   int ret = 0;
   byte_t abtTx[BUFFER_LENGTH] = { 0x00, 0x00, 0xff }; // Every packet must start with "00 00 ff"
   byte_t abtRx[BUFFER_LENGTH];
-  usb_spec_t* pus = (usb_spec_t*)nds;
+  usb_spec_t* pus = (usb_spec_t*)pnd->nds;
 
   // Packet length = data length (len) + checksum (1) + end of stream marker (1)
   abtTx[3] = szTxLen;
@@ -282,8 +283,9 @@ bool pn53x_usb_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, cons
   PRINT_HEX("RX", abtRx,ret);
 #endif
 
-  if( ret == 6 )
-  {
+  if (!pn53x_transceive_callback (pnd, abtRx, ret))
+    return false;
+
     ret = usb_bulk_read(pus->pudh, pus->uiEndPointIn, (char*)abtRx, BUFFER_LENGTH, USB_TIMEOUT);
     if( ret < 0 )
     {
@@ -294,7 +296,6 @@ bool pn53x_usb_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, cons
 #ifdef DEBUG
     PRINT_HEX("RX", abtRx,ret);
 #endif
-  }
 
   // When the answer should be ignored, just return a succesful result
   if(pbtRx == NULL || pszRxLen == NULL) return true;

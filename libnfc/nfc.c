@@ -318,7 +318,7 @@ bool nfc_configure(nfc_device_t* pnd, const nfc_device_option_t ndo, const bool 
  * After initialization it can be used to communicate to passive RFID tags and active NFC devices.
  * The reader will act as initiator to communicate peer 2 peer (NFCIP) to other active NFC devices.
  */
-bool nfc_initiator_init(const nfc_device_t* pnd)
+bool nfc_initiator_init(nfc_device_t* pnd)
 {
   // Make sure we are dealing with a active device
   if (!pnd->bActive) return false;
@@ -412,7 +412,7 @@ bool nfc_initiator_select_dep_target(nfc_device_t* pnd, const nfc_modulation_t n
  * @note For every initial modulation type there is a different collection of information returned (in nfc_target_info_t pointer pti) They all fit in the data-type which is called nfc_target_info_t. This is a union which contains the tag information that belongs to the according initial modulation type.
  */
 bool
-nfc_initiator_select_passive_target(const nfc_device_t* pnd,
+nfc_initiator_select_passive_target(nfc_device_t* pnd,
                                     const nfc_modulation_t nmInitModulation,
                                     const byte_t* pbtInitData, const size_t szInitDataLen,
                                     nfc_target_info_t* pnti)
