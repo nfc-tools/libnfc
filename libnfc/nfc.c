@@ -181,8 +181,7 @@ nfc_device_t* nfc_connect(nfc_device_desc_t* pndd)
       pnd->pdc = &(drivers_callbacks_list[uiDriver]);
 
       // Try to retrieve PN53x chip revision
-      // We can not use pn53x_transceive() because abtRx[0] gives no status info
-      if (!pnd->pdc->transceive(pnd->nds,pncmd_get_firmware_version,2,abtFw,&szFwLen))
+      if (!pn53x_transceive(pnd,pncmd_get_firmware_version,2,abtFw,&szFwLen))
       {
         // Failed to get firmware revision??, whatever...let's disconnect and clean up and return err
         DBG("Failed to get firmware revision for: %s", pnd->acName);
@@ -275,8 +274,7 @@ bool nfc_configure(nfc_device_t* pnd, const nfc_device_option_t ndo, const bool 
     case NDO_ACTIVATE_FIELD:
       abtCmd[2] = RFCI_FIELD;
       abtCmd[3] = (bEnable) ? 1 : 0;
-      // We can not use pn53x_transceive() because abtRx[0] gives no status info
-      if (!pnd->pdc->transceive(pnd->nds,abtCmd,4,NULL,NULL)) return false;
+      if (!pn53x_transceive(pnd,abtCmd,4,NULL,NULL)) return false;
     break;
 
     case NDO_ACTIVATE_CRYPTO1:
@@ -290,8 +288,7 @@ bool nfc_configure(nfc_device_t* pnd, const nfc_device_option_t ndo, const bool 
       abtCmd[3] = (bEnable) ? 0xff : 0x00; // MxRtyATR, default: active = 0xff, passive = 0x02
       abtCmd[4] = (bEnable) ? 0xff : 0x00; // MxRtyPSL, default: 0x01
       abtCmd[5] = (bEnable) ? 0xff : 0x00; // MxRtyPassiveActivation, default: 0xff
-      // We can not use pn53x_transceive() because abtRx[0] gives no status info
-      if (!pnd->pdc->transceive(pnd->nds,abtCmd,6,NULL,NULL)) return false;
+      if (!pn53x_transceive(pnd,abtCmd,6,NULL,NULL)) return false;
     break;
 
     case NDO_ACCEPT_INVALID_FRAMES:
@@ -637,7 +634,7 @@ bool nfc_initiator_deselect_target(nfc_device_t* pnd)
  * @param pszTargetFound found targets count
  */
 bool
-nfc_initiator_poll_targets(const nfc_device_t* pnd,
+nfc_initiator_poll_targets(nfc_device_t* pnd,
                            const nfc_target_type_t* pnttTargetTypes, const size_t szTargetTypes,
                            const byte_t btPollNr, const byte_t btPeriod,
                            nfc_target_t* pntTargets, size_t* pszTargetFound)
@@ -662,7 +659,7 @@ nfc_initiator_poll_targets(const nfc_device_t* pnd,
   }
 
   szRxLen = 256;
-  res = pnd->pdc->transceive(pnd->nds, pbtTxInAutoPoll, szTxInAutoPoll, abtRx, &szRxLen);
+  res = pn53x_transceive(pnd, pbtTxInAutoPoll, szTxInAutoPoll, abtRx, &szRxLen);
 
   if((szRxLen == 0)||(res == false)) {
     DBG("pnd->pdc->tranceive() failed: szRxLen=%ld, res=%d", (unsigned long) szRxLen, res);
@@ -852,7 +849,7 @@ bool nfc_initiator_transceive_bytes(nfc_device_t* pnd, const byte_t* pbtTx, cons
  *
  * @warning Be aware that this function will wait (hang) until a command is received that is not part of the anti-collision. The RATS command for example would wake up the emulator. After this is received, the send and receive functions can be used.
  */
-bool nfc_target_init(const nfc_device_t* pnd, byte_t* pbtRx, size_t* pszRxBits)
+bool nfc_target_init(nfc_device_t* pnd, byte_t* pbtRx, size_t* pszRxBits)
 {
   byte_t abtRx[MAX_FRAME_LEN];
   size_t szRxLen;
@@ -885,10 +882,9 @@ bool nfc_target_init(const nfc_device_t* pnd, byte_t* pbtRx, size_t* pszRxBits)
   // Let the PN53X be activated by the RF level detector from power down mode
   if (!pn53x_set_reg(pnd,REG_CIU_TX_AUTO, SYMBOL_INITIAL_RF_ON,0x04)) return false;
 
-  // Request the initialization as a target, we can not use pn53x_transceive() because
-  // abtRx[0] contains the emulation mode (baudrate, 14443-4?, DEP and framing type)
+  // Request the initialization as a target
   szRxLen = MAX_FRAME_LEN;
-  if (!pnd->pdc->transceive(pnd->nds,abtCmd,39,abtRx,&szRxLen)) return false;
+  if (!pn53x_transceive(pnd,abtCmd,39,abtRx,&szRxLen)) return false;
 
   // Get the last bit-count that is stored in the received byte 
   ui8Bits = pn53x_get_reg(pnd,REG_CIU_CONTROL) & SYMBOL_RX_LAST_BITS;
