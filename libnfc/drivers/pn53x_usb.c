@@ -30,8 +30,6 @@
 Thanks to d18c7db and Okko for example code
 */
 
-#if defined (DRIVER_PN531_USB_ENABLED) || defined (DRIVER_PN533_USB_ENABLED)
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <usb.h>
@@ -329,5 +327,3 @@ bool pn53x_usb_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, cons
 
   return true;
 }
-
-#endif // DRIVER_PN531_USB_ENABLED || DRIVER_PN533_USB_ENABLED
