@@ -110,7 +110,8 @@ int main(int argc, const char* argv[])
 {
   nfc_device_t* pnd;
 
-  (void)(argc, argv);
+  (void)argc;
+  (void)argv;
 
   // Display libnfc version
   const char* acLibnfcVersion = nfc_version();
