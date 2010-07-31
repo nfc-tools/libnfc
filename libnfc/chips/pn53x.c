@@ -77,22 +77,22 @@ bool pn53x_transceive(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxL
   if (!pnd->pdc->transceive(pnd->nds,pbtTx,szTxLen,pbtRx,pszRxLen)) return false;
 
   switch (pbtTx[1]) {
-      case 0x16:
-      case 0x40:
-      case 0x42:
-      case 0x44:
-      case 0x46:
-      case 0x4e:
-      case 0x50:
-      case 0x52:
-      case 0x54:
-      case 0x56:
-      case 0x86:
-      case 0x88:
-      case 0x8e:
-      case 0x90:
-      case 0x93:
-      case 0x94:
+      case 0x16:	// PowerDown
+      case 0x40:	// InDataExchange
+      case 0x42:	// InCommunicateThru
+      case 0x44:	// InDeselect
+      case 0x46:	// InJumpForPSL
+      case 0x4e:	// InPSL
+      case 0x50:	// InATR
+      case 0x52:	// InRelease
+      case 0x54:	// InSelect
+      case 0x56:	// InJumpForDEP
+      case 0x86:	// TgGetData
+      case 0x88:	// TgGetInitiatorCommand
+      case 0x8e:	// TgSetData
+      case 0x90:	// TgResponseToInitiator
+      case 0x92:	// TgSetGeneralBytes
+      case 0x94:	// TgSetMetaData
 	  pnd->iErrorCode = pbtRx[0] & 0x3f;
 	  break;
       default:
