@@ -94,6 +94,7 @@ main (int argc, const char *argv[])
     printf ("Connected to NFC reader: %s\n", pnd->acName);
 
 // NOTE we can't use pn53x_transceive() because rx[0] is not status byte (0x00 != status OK)
+// XXX: as of r491, this is no longer the case.  Unfortunately I can't be sure that these comments can be removed.
 // bool pn53x_transceive(const nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen);
 //    bool res = pn53x_transceive(pnd, abtTx, szTxLen, abtRx, &szRxLen);
 
