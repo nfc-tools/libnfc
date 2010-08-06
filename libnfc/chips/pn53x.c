@@ -325,3 +325,13 @@ pn53x_InDeselect(const nfc_device_t* pnd, const uint8_t ui8Target)
   
   return(pn53x_transceive(pnd,abtCmd,sizeof(abtCmd),NULL,NULL));
 }
+
+bool
+pn53x_InRelease(nfc_device_t* pnd, const uint8_t ui8Target)
+{
+  byte_t abtCmd[sizeof(pncmd_initiator_release)];
+  memcpy(abtCmd,pncmd_initiator_release,sizeof(pncmd_initiator_release));
+  abtCmd[2] = ui8Target;
+  
+  return(pn53x_transceive(pnd,abtCmd,sizeof(abtCmd),NULL,NULL));
+}
