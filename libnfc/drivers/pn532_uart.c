@@ -27,7 +27,6 @@
 #endif // HAVE_CONFIG_H
 
 #include "../drivers.h"
-#include "../chips/pn53x.h"
 
 #include <stdio.h>
 #include <string.h>
