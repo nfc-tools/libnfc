@@ -38,33 +38,6 @@
 // Bus
 #include "uart.h"
 
-#ifdef _WIN32
-  #define SERIAL_STRING "COM"
-  #define snprintf _snprintf
-  #define strdup _strdup
-  #define delay_ms( X ) Sleep( X )
-#else
-  // unistd.h is needed for usleep() fct.
-  #include <unistd.h>
-  #define delay_ms( X ) usleep( X * 1000 )
-  
-  #ifdef __APPLE__
-    // MacOS
-    // TODO: find UART connection string for PN53X device on Mac OS X
-    #define SERIAL_STRING ""
-  #elif defined(__FreeBSD__)
-    // XXX: Not tested
-    #define SERIAL_STRING "/dev/cuau"
-  #else
-    // Linux and maybe some operating systems
-    // FIXME: We'd rather have an #elif defined(__linux__) or something like
-    //        that and an #else that triggers an error at compile time instead
-    //        of "falling-back" on a value that is likely to not be suitable
-    //        for most operating systems.
-    #define SERIAL_STRING "/dev/ttyUSB"
-  #endif
-#endif
-
 #define BUFFER_LENGTH 256
 
 #define SERIAL_DEFAULT_PORT_SPEED 115200
