@@ -26,5 +26,3 @@ EXPORTS
 	iso14443a_crc
 	append_iso14443a_crc
 	nfc_version
-; FIXME: Lines bellow SUCKS!
-	pncmd_initiator_exchange_data
