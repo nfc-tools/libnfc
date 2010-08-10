@@ -2,9 +2,9 @@
 
 #include <string.h>
 
-#include "chips/pn53x.h"
+#include <nfc/nfc.h>
 
-extern const byte_t pncmd_initiator_exchange_data       [265];
+#include "chips/pn53x.h"
 
 /**
  * @brief Execute a MIFARE Classic Command
@@ -24,15 +24,13 @@ bool nfc_initiator_mifare_cmd(const nfc_device_t* pnd, const mifare_cmd mc, cons
   byte_t abtRx[MAX_FRAME_LEN];
   size_t szRxLen;
   size_t szParamLen;
-  byte_t abtCmd[sizeof(pncmd_initiator_exchange_data)];
-  memcpy(abtCmd,pncmd_initiator_exchange_data,sizeof(pncmd_initiator_exchange_data));
+  byte_t abtCmd[265];
 
   // Make sure we are dealing with a active device
   if (!pnd->bActive) return false;
 
-  abtCmd[2] = 0x01;     // Use first target/card
-  abtCmd[3] = mc;       // The MIFARE Classic command
-  abtCmd[4] = ui8Block; // The block address (1K=0x00..0x39, 4K=0x00..0xff)
+  abtCmd[0] = mc;       // The MIFARE Classic command
+  abtCmd[1] = ui8Block; // The block address (1K=0x00..0x39, 4K=0x00..0xff)
 
   switch (mc)
   {
@@ -67,10 +65,10 @@ bool nfc_initiator_mifare_cmd(const nfc_device_t* pnd, const mifare_cmd mc, cons
   }
 
   // When available, copy the parameter bytes
-  if (szParamLen) memcpy(abtCmd+5,(byte_t*)pmp,szParamLen);
+  if (szParamLen) memcpy(abtCmd+2,(byte_t*)pmp,szParamLen);
 
   // Fire the mifare command
-  if (!pn53x_transceive(pnd,abtCmd,5+szParamLen,abtRx,&szRxLen)) return false;
+  if (!nfc_initiator_transceive_dep_bytes(pnd,abtCmd,2+szParamLen,abtRx,&szRxLen)) return false;
 
   // When we have executed a read command, copy the received bytes into the param
   if (mc == MC_READ && szRxLen == 17) memcpy(pmp->mpd.abtData,abtRx+1,16);
