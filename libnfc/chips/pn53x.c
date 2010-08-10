@@ -418,8 +418,9 @@ const char *
 pn53x_strerror (const nfc_device_t *pnd)
 {
   const char *pcRes = "Unknown error";
+  size_t i;
 
-  for (size_t i=0; i < (sizeof (sErrorMessages) / sizeof (struct sErrorMessage)); i++) {
+  for (i=0; i < (sizeof (sErrorMessages) / sizeof (struct sErrorMessage)); i++) {
     if (sErrorMessages[i].iErrorCode == pnd->iErrorCode) {
       pcRes = sErrorMessages[i].pcErrorMsg;
       break;

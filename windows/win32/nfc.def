@@ -26,3 +26,6 @@ EXPORTS
 	iso14443a_crc
 	append_iso14443a_crc
 	nfc_version
+	nfc_perror
+	nfc_strerror
+	nfc_strerror_r
