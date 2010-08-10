@@ -4,8 +4,6 @@
 
 #include <nfc/nfc.h>
 
-#include "chips/pn53x.h"
-
 /**
  * @brief Execute a MIFARE Classic Command
  * @return Returns true if action was successfully performed; otherwise returns false.
@@ -21,7 +19,7 @@
  */
 bool nfc_initiator_mifare_cmd(const nfc_device_t* pnd, const mifare_cmd mc, const uint8_t ui8Block, mifare_param* pmp)
 {
-  byte_t abtRx[MAX_FRAME_LEN];
+  byte_t abtRx[265];
   size_t szRxLen;
   size_t szParamLen;
   byte_t abtCmd[265];
