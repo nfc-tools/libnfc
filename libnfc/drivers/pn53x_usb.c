@@ -241,6 +241,7 @@ bool pn53x_usb_transceive(nfc_device_t* pnd, const byte_t* pbtTx, const size_t s
   byte_t abtTx[BUFFER_LENGTH] = { 0x00, 0x00, 0xff }; // Every packet must start with "00 00 ff"
   byte_t abtRx[BUFFER_LENGTH];
   usb_spec_t* pus = (usb_spec_t*)pnd->nds;
+  uint8_t ack_frame[] = { 0x00, 0x00, 0xff, 0x00, 0xff, 0x00 };
 
   // Packet length = data length (len) + checksum (1) + end of stream marker (1)
   abtTx[3] = szTxLen;
@@ -281,7 +282,6 @@ bool pn53x_usb_transceive(nfc_device_t* pnd, const byte_t* pbtTx, const size_t s
   PRINT_HEX("RX", abtRx,ret);
 #endif
   
-  uint8_t ack_frame[] = { 0x00, 0x00, 0xff, 0x00, 0xff, 0x00 };
   if ((ret != 6) || (memcmp (abtRx, ack_frame, 6))) {
       DBG ("%s", "===> No ACK!!!!!!");
     return false;

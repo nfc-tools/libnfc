@@ -43,8 +43,34 @@
   #include <sys/stat.h>
   #include <limits.h>
   #include <sys/time.h>
+
+  // unistd.h is needed for usleep() fct.
+  #include <unistd.h>
+  #define delay_ms( X ) usleep( X * 1000 )
 #else
   #include <windows.h>
+
+  #define snprintf _snprintf
+  #define strdup _strdup
+  #define delay_ms( X ) Sleep( X )
+#endif
+
+// Path to the serial port is OS-dependant.
+// Try to guess what we should use.
+//
+// XXX: Some review from users cross-compiling is welcome!
+#if defined(_WIN32)
+  #define SERIAL_STRING "COM"
+//#elif defined(__APPLE__)
+// TODO: find UART connection string for PN53X device on Mac OS X
+//  #define SERIAL_STRING ""
+#elif defined (__FreeBSD__) || defined (__OpenBSD__)
+  // XXX: Not tested
+  #define SERIAL_STRING "/dev/cuau"
+#elif defined (__linux__)
+  #define SERIAL_STRING "/dev/ttyUSB"
+#else
+  #error "Can't determine serial string for your system"
 #endif
 
 // Define shortcut to types to make code more readable

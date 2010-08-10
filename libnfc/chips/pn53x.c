@@ -337,6 +337,7 @@ pn53x_InListPassiveTarget(nfc_device_t* pnd,
                           const byte_t* pbtInitiatorData, const size_t szInitiatorDataLen,
                           byte_t* pbtTargetsData, size_t* pszTargetsData)
 {
+  size_t szRxLen;
   byte_t abtCmd[sizeof(pncmd_initiator_list_passive)];
   memcpy(abtCmd,pncmd_initiator_list_passive,sizeof(pncmd_initiator_list_passive));
 
@@ -348,7 +349,7 @@ pn53x_InListPassiveTarget(nfc_device_t* pnd,
   if (pbtInitiatorData) memcpy(abtCmd+4,pbtInitiatorData,szInitiatorDataLen);
 
   // Try to find a tag, call the tranceive callback function of the current device
-  size_t szRxLen = MAX_FRAME_LEN;
+  szRxLen = MAX_FRAME_LEN;
   if(pn53x_transceive(pnd,abtCmd,4+szInitiatorDataLen,pbtTargetsData,&szRxLen)) {
     *pszTargetsData = szRxLen;
     return true;
@@ -362,6 +363,16 @@ pn53x_InDeselect(nfc_device_t* pnd, const uint8_t ui8Target)
 {
   byte_t abtCmd[sizeof(pncmd_initiator_deselect)];
   memcpy(abtCmd,pncmd_initiator_deselect,sizeof(pncmd_initiator_deselect));
+  abtCmd[2] = ui8Target;
+  
+  return(pn53x_transceive(pnd,abtCmd,sizeof(abtCmd),NULL,NULL));
+}
+
+bool
+pn53x_InRelease(nfc_device_t* pnd, const uint8_t ui8Target)
+{
+  byte_t abtCmd[sizeof(pncmd_initiator_release)];
+  memcpy(abtCmd,pncmd_initiator_release,sizeof(pncmd_initiator_release));
   abtCmd[2] = ui8Target;
   
   return(pn53x_transceive(pnd,abtCmd,sizeof(abtCmd),NULL,NULL));

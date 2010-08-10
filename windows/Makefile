@@ -70,9 +70,11 @@ NFCIP_TARGET_OBJ=obj\nfcip-target.obj	\
 			obj\nfc-utils.obj
 
 NFC_MFCLASSIC_OBJ=obj\nfc-mfclassic.obj	\
+			obj\mifare.obj \
 			obj\nfc-utils.obj
 
 NFC_MFULTRALIGHT_OBJ=obj\nfc-mfultralight.obj	\
+			obj\mifare.obj \
 			obj\nfc-utils.obj
 
 all: obj bin $(LIBNFC_DLL) $(NFC_LIST) $(NFC_POLL) $(NFC_RELAY) $(NFCIP_INITIATOR) $(NFCIP_TARGET) $(NFC_ANTICOL) $(NFC_EMULATE) $(NFC_MFCLASSIC) $(NFC_MFULTRALIGHT)
@@ -156,6 +158,9 @@ $(NFC_MFULTRALIGHT): $(NFC_MFULTRALIGHT_OBJ) $(LIBNFC_DLL) bin\$(DLLNAME).lib ob
 	$(CC) $(CC_OUT_EXE)$@ $(NFC_MFULTRALIGHT_OBJ) bin\$(DLLNAME).lib obj\nfc-mfultralight.res
 	if exist $@.manifest mt.exe -manifest $@.manifest  -outputresource:$@;#1
 	if exist $@.manifest del $@.manifest
+
+obj\mifare.obj: ..\examples\mifare.c
+	$(CC) /c $(CC_OUT_OBJ)$@ $(CFLAGS) ..\examples\mifare.c
 
 obj\nfc-relay.obj: ..\examples\nfc-relay.c
 	$(CC) /c $(CC_OUT_OBJ)$@ $(CFLAGS) ..\examples\nfc-relay.c

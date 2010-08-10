@@ -102,8 +102,8 @@ void print_nfc_iso14443a_info(const nfc_iso14443a_info_t nai)
 nfc_device_desc_t* parse_device_desc(int argc, const char *argv[], size_t* szFound)
 {
   nfc_device_desc_t* pndd = 0;
-  *szFound = 0;
   int arg;
+  *szFound = 0;
 
   // Get commandline options
   for (arg=1;arg<argc;arg++) {
@@ -111,10 +111,10 @@ nfc_device_desc_t* parse_device_desc(int argc, const char *argv[], size_t* szFou
     if (0 == strcmp(argv[arg], "--device")) {
 
       if (argc > arg+1) {
+        char buffer[256];
 
         pndd = malloc(sizeof(nfc_device_desc_t));
 
-        char buffer[256];
         strncpy(buffer, argv[++arg], 256);
 
         // Driver.

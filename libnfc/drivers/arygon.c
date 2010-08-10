@@ -41,25 +41,6 @@
 // Bus
 #include "uart.h"
 
-#ifdef _WIN32
-  #define SERIAL_STRING "COM"
-  #define snprintf _snprintf
-  #define strdup _strdup
-  #define delay_ms( X ) Sleep( X )
-#else
-  // unistd.h is needed for usleep() fct.
-  #include <unistd.h>
-  #define delay_ms( X ) usleep( X * 1000 )
-  
-  #ifdef __APPLE__
-    // MacOS
-    #define SERIAL_STRING "/dev/tty.SLAB_USBtoUART"
-  #else
-    // *BSD, Linux and others POSIX systems
-    #define SERIAL_STRING "/dev/ttyUSB"
-  #endif
-#endif
-
 #define BUFFER_LENGTH 256
 
 /** @def DEV_ARYGON_PROTOCOL_ARYGON_ASCII

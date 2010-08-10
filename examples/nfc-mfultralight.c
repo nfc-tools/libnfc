@@ -94,9 +94,11 @@ write_card (void)
   uint32_t uiWritenPages = 0;
 
   char buffer[BUFSIZ];
+  bool write_otp;
+
   printf ("Write OTP bytes ? [yN] ");
   fgets (buffer, BUFSIZ, stdin);
-  bool write_otp = ((buffer[0] == 'y') || (buffer[0] == 'Y'));
+  write_otp = ((buffer[0] == 'y') || (buffer[0] == 'Y'));
 
   /* We need to skip 3 first pages. */
   printf ("Writing %d pages |", uiBlocks + 1);

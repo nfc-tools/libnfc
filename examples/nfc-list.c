@@ -56,12 +56,13 @@ int main(int argc, const char* argv[])
   size_t szTargetFound;
   size_t i;
   nfc_target_info_t nti;
+  nfc_device_desc_t *pnddDevices;
   
   // Display libnfc version
   acLibnfcVersion = nfc_version();
   printf("%s use libnfc %s\n", argv[0], acLibnfcVersion);
 
-  nfc_device_desc_t *pnddDevices = parse_device_desc(argc, argv, &szDeviceFound);
+  pnddDevices = parse_device_desc(argc, argv, &szDeviceFound);
 
   if (argc > 1 && szDeviceFound == 0) {
     errx (1, "usage: %s [--device driver:port:speed]", argv[0]);
@@ -106,6 +107,7 @@ int main(int argc, const char* argv[])
 
   for (i = 0; i < szDeviceFound; i++)
   {
+    nfc_target_info_t anti[MAX_TARGET_COUNT];
     pnd = nfc_connect(&(pnddDevices[i]));
 
 
@@ -131,10 +133,10 @@ int main(int argc, const char* argv[])
 
     printf("Connected to NFC reader: %s\n",pnd->acName);
 
-    nfc_target_info_t anti[MAX_TARGET_COUNT];
     if (nfc_initiator_list_passive_targets(pnd, NM_ISO14443A_106, anti, MAX_TARGET_COUNT, &szTargetFound )) {
+      size_t n;
       printf("%zu ISO14443A passive targets was found:\n", szTargetFound);
-      for(size_t n=0; n<szTargetFound; n++) {
+      for(n=0; n<szTargetFound; n++) {
         print_nfc_iso14443a_info (anti[n].nai);
         printf("\n");
       }
