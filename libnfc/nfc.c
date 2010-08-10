@@ -33,6 +33,13 @@
 
 #include <nfc/nfc.h>
 
+#ifdef _WIN32
+  #include <windows.h>
+
+  #define strdup _strdup
+  #define snprintf sprintf_s
+#endif
+
 #include "chips.h"
 #include "drivers.h"
 
@@ -176,6 +183,7 @@ nfc_device_t* nfc_connect(nfc_device_desc_t* pndd)
     // Test if the connection was successful
     if (pnd != NULL)
     {
+      char* pcName;
       DBG("[%s] has been claimed.", pnd->acName);
       // Great we have claimed a device
       pnd->pdc = &(drivers_callbacks_list[uiDriver]);
@@ -191,7 +199,7 @@ nfc_device_t* nfc_connect(nfc_device_desc_t* pndd)
       }
 
       // Add the firmware revision to the device name, PN531 gives 2 bytes info, but PN532 and PN533 gives 4
-      char* pcName = strdup(pnd->acName);
+      pcName = strdup(pnd->acName);
       switch(pnd->nc) {
         case NC_PN531: snprintf(pnd->acName,DEVICE_NAME_LENGTH - 1,"%s - PN531 v%d.%d",pcName,abtFw[0],abtFw[1]); break;
         case NC_PN532: snprintf(pnd->acName,DEVICE_NAME_LENGTH - 1,"%s - PN532 v%d.%d (0x%02x)",pcName,abtFw[1],abtFw[2],abtFw[3]); break;
@@ -423,6 +431,9 @@ nfc_initiator_select_passive_target(const nfc_device_t* pnd,
   byte_t abtInit[MAX_FRAME_LEN];
   size_t szInitLen;
 
+  size_t szTargetsData;
+  byte_t abtTargetsData[MAX_FRAME_LEN];
+
   // Make sure we are dealing with a active device
   if (!pnd->bActive) return false;
 
@@ -458,9 +469,6 @@ nfc_initiator_select_passive_target(const nfc_device_t* pnd,
       szInitLen = szInitDataLen;
     break;
   }
-
-  size_t szTargetsData;
-  byte_t abtTargetsData[MAX_FRAME_LEN];
   
   if(!pn53x_InListPassiveTarget(pnd, nmInitModulation, 1, abtInit, szInitLen, abtTargetsData, &szTargetsData)) return false;
   
@@ -539,14 +547,13 @@ nfc_initiator_select_passive_target(const nfc_device_t* pnd,
 
 bool nfc_initiator_list_passive_targets(nfc_device_t* pnd, const nfc_modulation_t nmInitModulation, nfc_target_info_t anti[], const size_t szTargets, size_t *pszTargetFound )
 {
-  // Let the reader only try once to find a target
-  nfc_configure (pnd, NDO_INFINITE_SELECT, false);
-
   nfc_target_info_t nti;
 
   bool bCollisionDetected = false;
   size_t szTargetFound = 0;
 
+  // Let the reader only try once to find a target
+  nfc_configure (pnd, NDO_INFINITE_SELECT, false);
 
   while (nfc_initiator_select_passive_target (pnd, nmInitModulation, NULL, 0, &nti)) {
     nfc_initiator_deselect_target(pnd);

@@ -69,8 +69,17 @@ main (int argc, const char *argv[])
   }
 
   for (i = 0; i < szFound; i++) {
-    pnd = nfc_connect (&(pnddDevices[i]));
 
+    const byte_t btPollNr = 20;
+    const byte_t btPeriod = 2;
+    const nfc_target_type_t nttMifare = NTT_MIFARE;
+    const size_t szTargetTypes = 1;
+
+    nfc_target_t antTargets[2];
+    size_t szTargetFound;
+    bool res;
+
+    pnd = nfc_connect (&(pnddDevices[i]));
 
     if (pnd == NULL) {
       ERR ("%s", "Unable to connect to NFC device.");
@@ -99,24 +108,17 @@ main (int argc, const char *argv[])
 
 // bool (*transceive)(const nfc_device_spec_t nds, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen);
 
-    const byte_t btPollNr = 20;
-    const byte_t btPeriod = 2;
-    const nfc_target_type_t nttMifare = NTT_MIFARE;
-    const size_t szTargetTypes = 1;
-
-    nfc_target_t antTargets[2];
-    size_t szTargetFound;
-
     if (pnd->nc == NC_PN531) {
       // PN531 doesn't support hardware polling (InAutoPoll)
       WARN ("%s", "PN531 doesn't support hardware polling.");
       continue;
     }
     printf ("PN53x will poll during %ld ms\n", (unsigned long) btPollNr * szTargetTypes * btPeriod * 150);
-    bool res = nfc_initiator_poll_targets (pnd, &nttMifare, 1, btPollNr, btPeriod, antTargets, &szTargetFound);
+    res = nfc_initiator_poll_targets (pnd, &nttMifare, 1, btPollNr, btPeriod, antTargets, &szTargetFound);
     if (res) {
+      uint8_t n;
       printf ("%ld target(s) have been found.\n", (unsigned long) szTargetFound);
-      for (uint8_t n = 0; n < szTargetFound; n++) {
+      for (n = 0; n < szTargetFound; n++) {
         printf ("T%d: targetType=%02x, ", n + 1, antTargets[n].ntt);
         printf ("targetData:\n");
         print_nfc_iso14443a_info (antTargets[n].nti.nai);
