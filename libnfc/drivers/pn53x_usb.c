@@ -2,6 +2,7 @@
  * Public platform independent Near Field Communication (NFC) library
  * 
  * Copyright (C) 2009, Roel Verdult
+ * Copyright (C) 2010, Romain Tartière, Romuald Conty
  * 
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -219,16 +220,17 @@ void pn53x_usb_disconnect(nfc_device_t* pnd)
   int ret;
 
   if((ret = usb_release_interface(pus->pudh,0)) < 0) {
-    DBG("usb_release failed %i",ret);
+    ERR("usb_release_interface failed (%i)",ret);
   }
 
   if((ret = usb_close(pus->pudh)) < 0) {
-    DBG("usb_close failed %i",ret);
+    ERR("usb_close failed (%i)",ret);
   }
-  
-  DBG("%s","resetting USB");
-  usb_reset(pus->pudh);
-
+/*  
+  if((ret = usb_reset(pus->pudh)) < 0) {
+    ERR("usb_reset failed (%i, if errno: %s)",ret, strerror(-ret));
+  }
+*/
   free(pnd->nds);
   free(pnd);
 }
