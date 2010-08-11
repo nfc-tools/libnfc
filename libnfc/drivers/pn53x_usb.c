@@ -281,11 +281,6 @@ bool pn53x_usb_transceive(nfc_device_t* pnd, const byte_t* pbtTx, const size_t s
 #ifdef DEBUG
   PRINT_HEX("RX", abtRx,ret);
 #endif
-  
-  if ((ret != 6) || (memcmp (abtRx, ack_frame, 6))) {
-      DBG ("%s", "===> No ACK!!!!!!");
-    return false;
-  }
 
   if (!pn53x_transceive_callback (pnd, abtRx, ret))
     return false;
