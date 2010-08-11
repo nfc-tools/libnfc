@@ -234,12 +234,14 @@ nfc_device_t* nfc_connect(nfc_device_desc_t* pndd)
  */
 void nfc_disconnect(nfc_device_t* pnd)
 {
-  // Release and deselect all active communications
-  nfc_initiator_deselect_target(pnd);
-  // Disable RF field to avoid heating
-  nfc_configure(pnd,NDO_ACTIVATE_FIELD,false);
-  // Disconnect, clean up and release the device 
-  pnd->pdc->disconnect(pnd);
+  if(pnd) {
+    // Release and deselect all active communications
+    nfc_initiator_deselect_target(pnd);
+    // Disable RF field to avoid heating
+    nfc_configure(pnd,NDO_ACTIVATE_FIELD,false);
+    // Disconnect, clean up and release the device 
+    pnd->pdc->disconnect(pnd);
+  }
 }
 
 /**
