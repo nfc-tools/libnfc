@@ -65,8 +65,8 @@ static void
 print_success_or_failure (bool bFailure, uint32_t * uiBlockCounter)
 {
   printf ("%c", (bFailure) ? 'x' : '.');
-  if (uiBlockCounter)
-    *uiBlockCounter += (bFailure) ? 0 : 4;
+  if (uiBlockCounter && !bFailure)
+    *uiBlockCounter += (*uiBlockCounter < 128) ? 4 : 16;
 }
 
 static bool
