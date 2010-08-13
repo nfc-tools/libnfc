@@ -8,12 +8,12 @@ TESTS = run-test.sh
 TESTS_ENVIRONMENT = NO_MAKE=yes CUTTER="$(CUTTER)"
 
 noinst_LTLIBRARIES = \
-		     test_access.la
+		     test_access_storm.la
 
 AM_LDFLAGS = -module -rpath $(libdir) -avoid-version -no-undefined
 
-test_access_la_SOURCES = test_access.c
-test_access_la_LIBADD = $(top_builddir)/libnfc/libnfc.la
+test_access_storm_la_SOURCES = test_access_storm.c
+test_access_storm_la_LIBADD = $(top_builddir)/libnfc/libnfc.la
 
 echo-cutter:
 		@echo $(CUTTER)
