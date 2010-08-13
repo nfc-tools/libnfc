@@ -69,8 +69,8 @@ typedef struct {
   bool bPar;
 /** The last tx bits setting, we need to reset this if it does not apply anymore */
   uint8_t ui8TxBits;
-/** Last error reported by the PICC */
-  int iPICCError;
+/** Last error reported by the PCD / encountered by the PCD driver */
+  int iLastError;
 } nfc_device_t;
 
 
