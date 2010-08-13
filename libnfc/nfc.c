@@ -1095,7 +1095,7 @@ bool nfc_target_send_dep_bytes(const nfc_device_t* pnd, const byte_t* pbtTx, con
 
 /**
  * @brief Returns the device name
- * @return Returns a string with the device name ( MUST be freed with free() )
+ * @return Returns a string with the device name
  */
 const char* nfc_device_name(nfc_device_t* pnd)
 {
