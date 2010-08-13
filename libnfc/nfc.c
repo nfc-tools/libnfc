@@ -1088,7 +1088,7 @@ bool nfc_target_send_dep_bytes(nfc_device_t* pnd, const byte_t* pbtTx, const siz
 }
 
 /**
- * @brief Return the PCD error string
+ * @brief Return the PICC/PCD error string
  * @return Returns a string
  */
 const char *nfc_strerror (const nfc_device_t *pnd)
@@ -1097,7 +1097,7 @@ const char *nfc_strerror (const nfc_device_t *pnd)
 }
 
 /**
- * @brief Renders the PCD error in pcStrErrBuf for a maximum size of szBufLen caracters
+ * @brief Renders the PICC/PCD error in pcStrErrBuf for a maximum size of szBufLen caracters
  * @return Returns 0 upon success
  */
 int nfc_strerror_r (const nfc_device_t *pnd, char *pcStrErrBuf, size_t szBufLen)
@@ -1106,7 +1106,7 @@ int nfc_strerror_r (const nfc_device_t *pnd, char *pcStrErrBuf, size_t szBufLen)
 }
 
 /**
- * @brief Display the PCD error a-la perror
+ * @brief Display the PICC/PCD error a-la perror
  */
 void nfc_perror (const nfc_device_t *pnd, const char *pcString)
 {

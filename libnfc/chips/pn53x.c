@@ -121,13 +121,13 @@ bool pn53x_transceive(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxL
       case 0x90:	// TgResponseToInitiator
       case 0x92:	// TgSetGeneralBytes
       case 0x94:	// TgSetMetaData
-	  pnd->iErrorCode = pbtRx[0] & 0x3f;
+	  pnd->iPICCError = pbtRx[0] & 0x3f;
 	  break;
       default:
-	  pnd->iErrorCode = 0;
+	  pnd->iPICCError = 0;
   }
 
-  return (0 == pnd->iErrorCode);
+  return (0 == pnd->iPICCError);
 }
 
 byte_t pn53x_get_reg(nfc_device_t* pnd, uint16_t ui16Reg)
@@ -378,7 +378,7 @@ pn53x_InRelease(nfc_device_t* pnd, const uint8_t ui8Target)
   return(pn53x_transceive(pnd,abtCmd,sizeof(abtCmd),NULL,NULL));
 }
 
-struct sErrorMessage {
+static struct sErrorMessage {
   int iErrorCode;
   const char *pcErrorMsg;
 } sErrorMessages[] = {
@@ -421,7 +421,7 @@ pn53x_strerror (const nfc_device_t *pnd)
   size_t i;
 
   for (i=0; i < (sizeof (sErrorMessages) / sizeof (struct sErrorMessage)); i++) {
-    if (sErrorMessages[i].iErrorCode == pnd->iErrorCode) {
+    if (sErrorMessages[i].iErrorCode == pnd->iPICCError) {
       pcRes = sErrorMessages[i].pcErrorMsg;
       break;
     }
