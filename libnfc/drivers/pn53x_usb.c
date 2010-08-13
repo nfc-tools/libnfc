@@ -243,6 +243,7 @@ bool pn53x_usb_transceive(nfc_device_t* pnd, const byte_t* pbtTx, const size_t s
   byte_t abtTx[BUFFER_LENGTH] = { 0x00, 0x00, 0xff }; // Every packet must start with "00 00 ff"
   byte_t abtRx[BUFFER_LENGTH];
   usb_spec_t* pus = (usb_spec_t*)pnd->nds;
+  // TODO: Move this one level up for libnfc-1.6
   uint8_t ack_frame[] = { 0x00, 0x00, 0xff, 0x00, 0xff, 0x00 };
 
   // Packet length = data length (len) + checksum (1) + end of stream marker (1)
@@ -298,6 +299,9 @@ bool pn53x_usb_transceive(nfc_device_t* pnd, const byte_t* pbtTx, const size_t s
     PRINT_HEX("RX", abtRx,ret);
 #endif
 
+#ifdef DEBUG
+  PRINT_HEX("TX", ack_frame,6);
+#endif
   usb_bulk_write(pus->pudh, pus->uiEndPointOut, (char *)ack_frame, 6, USB_TIMEOUT);
 
   // When the answer should be ignored, just return a succesful result

@@ -199,6 +199,8 @@ bool arygon_transceive(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTx
   byte_t abtRxBuf[BUFFER_LENGTH];
   size_t szRxBufLen = BUFFER_LENGTH;
   size_t szPos;
+  // TODO: Move this one level up for libnfc-1.6
+  uint8_t ack_frame[] = { 0x00, 0x00, 0xff, 0x00, 0xff, 0x00 };
 
   // Packet length = data length (len) + checksum (1) + end of stream marker (1)
   abtTxBuf[4] = szTxLen;
@@ -253,6 +255,14 @@ bool arygon_transceive(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTx
 
   // Only succeed when the result is at least 00 00 FF xx Fx Dx xx .. .. .. xx 00 (x = variable)
   if(szRxBufLen < 9) return false;
+
+#ifdef DEBUG
+  PRINT_HEX("TX", ack_frame, 6);
+#endif
+  if (!uart_send((serial_port)pnd->nds, ack_frame, 6)) {
+    ERR("%s", "Unable to transmit data. (TX)");
+    return false;
+  }
 
   // Remove the preceding and appending bytes 00 00 ff 00 ff 00 00 00 FF xx Fx .. .. .. xx 00 (x = variable)
   *pszRxLen = szRxBufLen - 9;
