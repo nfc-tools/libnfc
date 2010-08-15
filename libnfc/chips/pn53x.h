@@ -69,6 +69,11 @@
 #define RFCI_ANALOG_TYPE_B          0x0C //  3
 #define RFCI_ANALOG_TYPE_14443_4    0x0D //  9
 
+/* PN53x specific device-level errors */
+#define DENACK          0x0100        /* NACK */
+#define DEACKMISMATCH   0x0200        /* Unexpected data */
+#define DEISERRFRAME    0x0300        /* Error frame */
+
 bool pn53x_transceive_callback(nfc_device_t* pnd, const byte_t *pbtRxFrame, const size_t szRxFrameLen);
 bool pn53x_transceive(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen);
 byte_t pn53x_get_reg(nfc_device_t* pnd, uint16_t ui16Reg);

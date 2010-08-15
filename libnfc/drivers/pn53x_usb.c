@@ -39,6 +39,7 @@ Thanks to d18c7db and Okko for example code
 #include "../drivers.h"
 #include "../chips/pn53x.h"
 
+#include <nfc/nfc.h>
 #include <nfc/nfc-messages.h>
 
 #define BUFFER_LENGTH 256
@@ -271,6 +272,7 @@ bool pn53x_usb_transceive(nfc_device_t* pnd, const byte_t* pbtTx, const size_t s
   if( ret < 0 )
   {
     DBG("usb_bulk_write failed with error %d", ret);
+    pnd->iLastError = DEIO;
     return false;
   }
 
@@ -278,6 +280,7 @@ bool pn53x_usb_transceive(nfc_device_t* pnd, const byte_t* pbtTx, const size_t s
   if( ret < 0 )
   {
     DBG( "usb_bulk_read failed with error %d", ret);
+    pnd->iLastError = DEIO;
     return false;
   }
 
@@ -292,6 +295,7 @@ bool pn53x_usb_transceive(nfc_device_t* pnd, const byte_t* pbtTx, const size_t s
     if( ret < 0 )
     {
       DBG("usb_bulk_read failed with error %d", ret);
+    pnd->iLastError = DEIO;
       return false;
     }
 
@@ -311,6 +315,7 @@ bool pn53x_usb_transceive(nfc_device_t* pnd, const byte_t* pbtTx, const size_t s
   if(ret < 9) 
   {
     DBG("%s","No data");
+    pnd->iLastError = DEINVAL;
     return false;
   }
 
@@ -327,5 +332,8 @@ bool pn53x_usb_transceive(nfc_device_t* pnd, const byte_t* pbtTx, const size_t s
 
   memcpy( pbtRx, abtRx + 7, *pszRxLen);
 
+  if (abtRx[5] != pbtTx[0] + 1) {
+    pnd->iLastError = DEISERRFRAME;
+  }
   return true;
 }

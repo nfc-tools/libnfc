@@ -258,6 +258,9 @@ bool nfc_configure(nfc_device_t* pnd, const nfc_device_option_t ndo, const bool 
 {
   byte_t btValue;
   byte_t abtCmd[sizeof(pncmd_rf_configure)];
+
+  pnd->iLastError = 0;
+
   memcpy(abtCmd,pncmd_rf_configure,sizeof(pncmd_rf_configure));
 
   // Make sure we are dealing with a active device
@@ -330,6 +333,9 @@ bool nfc_configure(nfc_device_t* pnd, const nfc_device_option_t ndo, const bool 
  */
 bool nfc_initiator_init(nfc_device_t* pnd)
 {
+
+  pnd->iLastError = 0;
+
   // Make sure we are dealing with a active device
   if (!pnd->bActive) return false;
 
@@ -364,6 +370,9 @@ bool nfc_initiator_select_dep_target(nfc_device_t* pnd, const nfc_modulation_t n
   size_t szRxLen;
   size_t offset;
   byte_t abtCmd[sizeof(pncmd_initiator_jump_for_dep)];
+
+  pnd->iLastError = 0;
+
   memcpy(abtCmd,pncmd_initiator_jump_for_dep,sizeof(pncmd_initiator_jump_for_dep));
 
   if(nmInitModulation == NM_ACTIVE_DEP) {
@@ -432,6 +441,9 @@ nfc_initiator_select_passive_target(nfc_device_t* pnd,
 
   size_t szTargetsData;
   byte_t abtTargetsData[MAX_FRAME_LEN];
+
+  pnd->iLastError = 0;
+
 
   // Make sure we are dealing with a active device
   if (!pnd->bActive) return false;
@@ -551,6 +563,9 @@ bool nfc_initiator_list_passive_targets(nfc_device_t* pnd, const nfc_modulation_
   bool bCollisionDetected = false;
   size_t szTargetFound = 0;
 
+  pnd->iLastError = 0;
+
+
   // Let the reader only try once to find a target
   nfc_configure (pnd, NDO_INFINITE_SELECT, false);
 
@@ -628,6 +643,9 @@ bool nfc_initiator_list_passive_targets(nfc_device_t* pnd, const nfc_modulation_
  */
 bool nfc_initiator_deselect_target(nfc_device_t* pnd)
 {
+
+  pnd->iLastError = 0;
+
   return (pn53x_InDeselect(pnd, 0)); // 0 mean deselect all selected targets
 }
 
@@ -652,6 +670,9 @@ nfc_initiator_poll_targets(nfc_device_t* pnd,
   byte_t abtRx[256];
   bool res;
   byte_t *pbtTxInAutoPoll;
+
+  pnd->iLastError = 0;
+
   if(pnd->nc == NC_PN531) {
     // errno = ENOSUPP
     return false;
@@ -671,7 +692,7 @@ nfc_initiator_poll_targets(nfc_device_t* pnd,
   res = pn53x_transceive(pnd, pbtTxInAutoPoll, szTxInAutoPoll, abtRx, &szRxLen);
 
   if((szRxLen == 0)||(res == false)) {
-    DBG("pnd->pdc->tranceive() failed: szRxLen=%ld, res=%d", (unsigned long) szRxLen, res);
+    DBG("pn53x_transceive() failed: szRxLen=%ld, res=%d", (unsigned long) szRxLen, res);
     return false;
   } else {
     *pszTargetFound = abtRx[0];
@@ -720,6 +741,9 @@ bool nfc_initiator_transceive_bits(nfc_device_t* pnd, const byte_t* pbtTx, const
   size_t szFrameBytes = 0;
   uint8_t ui8Bits = 0;
   byte_t abtCmd[sizeof(pncmd_initiator_exchange_raw_data)];
+
+  pnd->iLastError = 0;
+
   memcpy(abtCmd,pncmd_initiator_exchange_raw_data,sizeof(pncmd_initiator_exchange_raw_data));
 
   // Check if we should prepare the parity bits ourself
@@ -781,6 +805,9 @@ bool nfc_initiator_transceive_dep_bytes(nfc_device_t* pnd, const byte_t* pbtTx, 
   byte_t abtRx[MAX_FRAME_LEN];
   size_t szRxLen;
   byte_t abtCmd[sizeof(pncmd_initiator_exchange_data)];
+
+  pnd->iLastError = 0;
+
   memcpy(abtCmd,pncmd_initiator_exchange_data,sizeof(pncmd_initiator_exchange_data));
 
   // We can not just send bytes without parity if while the PN53X expects we handled them
@@ -825,6 +852,9 @@ bool nfc_initiator_transceive_bytes(nfc_device_t* pnd, const byte_t* pbtTx, cons
   byte_t abtRx[MAX_FRAME_LEN];
   size_t szRxLen;
   byte_t abtCmd[sizeof(pncmd_initiator_exchange_raw_data)];
+
+  pnd->iLastError = 0;
+
   memcpy(abtCmd,pncmd_initiator_exchange_raw_data,sizeof(pncmd_initiator_exchange_raw_data));
 
   // We can not just send bytes without parity if while the PN53X expects we handled them
@@ -867,6 +897,9 @@ bool nfc_target_init(nfc_device_t* pnd, byte_t* pbtRx, size_t* pszRxBits)
   bool bCrc = pnd->bCrc;
   bool bPar = pnd->bPar;
   byte_t abtCmd[sizeof(pncmd_target_init)];
+
+  pnd->iLastError = 0;
+
   memcpy(abtCmd,pncmd_target_init,sizeof(pncmd_target_init));
 
   // Clear the target init struct, reset to all zeros
@@ -923,6 +956,9 @@ bool nfc_target_receive_bits(nfc_device_t* pnd, byte_t* pbtRx, size_t* pszRxBits
   size_t szFrameBits;
   uint8_t ui8Bits;
 
+  pnd->iLastError = 0;
+
+
   // Try to gather a received frame from the reader
   if (!pn53x_transceive(pnd,pncmd_target_receive,2,abtRx,&szRxLen)) return false;
 
@@ -959,6 +995,9 @@ bool nfc_target_receive_dep_bytes(nfc_device_t* pnd, byte_t* pbtRx, size_t* pszR
   byte_t abtRx[MAX_FRAME_LEN];
   size_t szRxLen;
 
+  pnd->iLastError = 0;
+
+
   // Try to gather a received frame from the reader
   if (!pn53x_transceive(pnd,pncmd_target_get_data,2,abtRx,&szRxLen)) return false;
 
@@ -982,6 +1021,9 @@ bool nfc_target_receive_bytes(nfc_device_t* pnd, byte_t* pbtRx, size_t* pszRxLen
 {
   byte_t abtRx[MAX_FRAME_LEN];
   size_t szRxLen;
+
+  pnd->iLastError = 0;
+
 
   // Try to gather a received frame from the reader
   if (!pn53x_transceive(pnd,pncmd_target_receive,2,abtRx,&szRxLen)) return false;
@@ -1008,6 +1050,9 @@ bool nfc_target_send_bits(nfc_device_t* pnd, const byte_t* pbtTx, const size_t s
   size_t szFrameBytes = 0;
   uint8_t ui8Bits = 0;
   byte_t abtCmd[sizeof(pncmd_target_send)];
+
+  pnd->iLastError = 0;
+
   memcpy(abtCmd,pncmd_target_send,sizeof(pncmd_target_send));
 
   // Check if we should prepare the parity bits ourself
@@ -1048,6 +1093,9 @@ bool nfc_target_send_bits(nfc_device_t* pnd, const byte_t* pbtTx, const size_t s
 bool nfc_target_send_bytes(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxLen)
 {
   byte_t abtCmd[sizeof(pncmd_target_send)];
+
+  pnd->iLastError = 0;
+
   memcpy(abtCmd,pncmd_target_send,sizeof(pncmd_target_send));
 
   // We can not just send bytes without parity if while the PN53X expects we handled them
@@ -1072,6 +1120,9 @@ bool nfc_target_send_bytes(nfc_device_t* pnd, const byte_t* pbtTx, const size_t 
 bool nfc_target_send_dep_bytes(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxLen)
 {
   byte_t abtCmd[sizeof(pncmd_target_set_data)];
+
+  pnd->iLastError = 0;
+
   memcpy(abtCmd,pncmd_target_set_data,sizeof(pncmd_target_set_data));
 
   // We can not just send bytes without parity if while the PN53X expects we handled them
@@ -1097,7 +1148,7 @@ const char *nfc_strerror (const nfc_device_t *pnd)
 }
 
 /**
- * @brief Renders the PCD error in pcStrErrBuf for a maximum size of szBufLen caracters
+ * @brief Renders the PCD error in pcStrErrBuf for a maximum size of szBufLen chars
  * @return Returns 0 upon success
  */
 int nfc_strerror_r (const nfc_device_t *pnd, char *pcStrErrBuf, size_t szBufLen)

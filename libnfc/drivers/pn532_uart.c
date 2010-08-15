@@ -33,6 +33,7 @@
 
 #include "pn532_uart.h"
 
+#include <nfc/nfc.h>
 #include <nfc/nfc-messages.h>
 
 // Bus
@@ -43,7 +44,7 @@
 #define SERIAL_DEFAULT_PORT_SPEED 115200
 
 void pn532_uart_wakeup(const nfc_device_spec_t nds);
-bool pn532_uart_check_communication(const nfc_device_spec_t nds);
+bool pn532_uart_check_communication(const nfc_device_spec_t nds, bool* success);
 
 nfc_device_desc_t *
 pn532_uart_pick_device (void)
@@ -101,12 +102,16 @@ pn532_uart_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_
 
     if ((sp != INVALID_SERIAL_PORT) && (sp != CLAIMED_SERIAL_PORT))
     {
+      bool bComOk;
       // Serial port claimed but we need to check if a PN532_UART is connected.
       uart_set_speed(sp, SERIAL_DEFAULT_PORT_SPEED);
       // PN532 could be powered down, we need to wake it up before line testing.
       pn532_uart_wakeup((nfc_device_spec_t)sp);
       // Check communication using "Diagnose" command, with "Comunication test" (0x00)
-      if(!pn532_uart_check_communication((nfc_device_spec_t)sp)) continue;
+      if(!pn532_uart_check_communication((nfc_device_spec_t)sp), &bComOk)
+        return false;
+      if (!bComOk)
+        continue;
       uart_close(sp);
 
       snprintf(pnddDevices[*pszDeviceFound].acDevice, DEVICE_NAME_LENGTH - 1, "%s (%s)", "PN532", acPort);
@@ -134,6 +139,7 @@ nfc_device_t* pn532_uart_connect(const nfc_device_desc_t* pndd)
 {
   serial_port sp;
   nfc_device_t* pnd = NULL;
+  bool bComOk;
 
   if( pndd == NULL ) {
     DBG("%s", "pn532_uart_connect() need an nfc_device_desc_t struct.");
@@ -151,7 +157,10 @@ nfc_device_t* pn532_uart_connect(const nfc_device_desc_t* pndd)
   // PN532 could be powered down, we need to wake it up before line testing.
   pn532_uart_wakeup((nfc_device_spec_t)sp);
   // Check communication using "Diagnose" command, with "Comunication test" (0x00)
-  if(!pn532_uart_check_communication((nfc_device_spec_t)sp)) return NULL;
+  if(!pn532_uart_check_communication((nfc_device_spec_t)sp, &bComOk))
+      return NULL;
+  if (!bComOk)
+      return NULL;
 
   DBG("Successfully connected to: %s",pndd->pcPort);
 
@@ -206,12 +215,14 @@ bool pn532_uart_transceive(nfc_device_t* pnd, const byte_t* pbtTx, const size_t 
 #endif
   if (!uart_send((serial_port)pnd->nds,abtTxBuf,szTxLen+7)) {
     ERR("%s", "Unable to transmit data. (TX)");
+    pnd->iLastError = DEIO;
     return false;
   }
 
   szRxBufLen = 6;
   if (!uart_receive((serial_port)pnd->nds,abtRxBuf,&szRxBufLen)) {
     ERR("%s", "Unable to receive data. (RX)");
+    pnd->iLastError = DEIO;
     return false;
   }
 
@@ -236,13 +247,17 @@ bool pn532_uart_transceive(nfc_device_t* pnd, const byte_t* pbtTx, const size_t 
   if(pbtRx == NULL || pszRxLen == NULL) return true;
 
   // Only succeed when the result is at least 00 00 FF xx Fx Dx xx .. .. .. xx 00 (x = variable)
-  if(szRxBufLen < 9) return false;
+  if(szRxBufLen < 9) {
+    pnd->iLastError = DEINVAL;
+    return false;
+  }
 
 #ifdef DEBUG
   PRINT_HEX("TX", ack_frame,6);
 #endif
   if (!uart_send((serial_port)pnd->nds,ack_frame,6)) {
     ERR("%s", "Unable to transmit data. (TX)");
+    pnd->iLastError = DEIO;
     return false;
   }
 
@@ -274,7 +289,7 @@ pn532_uart_wakeup(const nfc_device_spec_t nds)
 }
 
 bool
-pn532_uart_check_communication(const nfc_device_spec_t nds)
+pn532_uart_check_communication(const nfc_device_spec_t nds, bool* success)
 {
   byte_t abtRx[BUFFER_LENGTH];
   size_t szRxLen;
@@ -283,10 +298,13 @@ pn532_uart_check_communication(const nfc_device_spec_t nds)
   /** To be sure that PN532 is alive, we have put a "Diagnose" command to execute a "Communication Line Test" */
   const byte_t pncmd_communication_test[] = { 0x00,0x00,0xff,0x09,0xf7,0xd4,0x00,0x00,'l','i','b','n','f','c',0xbe,0x00 };
 
+  *success = false;
+
 #ifdef DEBUG
   PRINT_HEX("TX", pncmd_communication_test,sizeof(pncmd_communication_test));
 #endif
-  uart_send((serial_port)nds, pncmd_communication_test, sizeof(pncmd_communication_test));
+  if (!uart_send((serial_port)nds, pncmd_communication_test, sizeof(pncmd_communication_test)))
+      return false;
 
   if(!uart_receive((serial_port)nds,abtRx,&szRxLen)) {
     return false;
@@ -295,10 +313,9 @@ pn532_uart_check_communication(const nfc_device_spec_t nds)
   PRINT_HEX("RX", abtRx,szRxLen);
 #endif
 
-  if(0 != memcmp(abtRx,attempted_result,sizeof(attempted_result))) {
-    DBG("%s", "Communication test failed, result doesn't match to attempted one.");
-    return false;
-  }
+  if(0 == memcmp(abtRx,attempted_result,sizeof(attempted_result)))
+    *success = true;
+
   return true;
 }
 

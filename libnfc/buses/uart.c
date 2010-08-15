@@ -36,6 +36,7 @@ http://www.teuniz.net/RS-232/index.html
 
 #include "uart.h"
 
+#include <nfc/nfc.h>
 #include <nfc/nfc-messages.h>
 
 // Test if we are dealing with unix operating systems
@@ -106,8 +107,9 @@ serial_port uart_open(const char* pcPortName)
   return sp;
 }
 
-void uart_set_speed(serial_port sp, const uint32_t uiPortSpeed)
+void uart_set_speed(nfc_device_t* pnd, const uint32_t uiPortSpeed)
 {
+  serial_port sp = (serial_port)pnd->nds;
   DBG("Serial port speed requested to be set to %d bauds.", uiPortSpeed);
   // Set port speed (Input and Output)
 
@@ -149,8 +151,9 @@ void uart_set_speed(serial_port sp, const uint32_t uiPortSpeed)
   }
 }
 
-uint32_t uart_get_speed(const serial_port sp)
+uint32_t uart_get_speed(const nfc_device_t* pnd)
 {
+  serial_port sp = (serial_port)pnd->nds;
   uint32_t uiPortSpeed = 0;
   const serial_port_unix* spu = (serial_port_unix*)sp;
   switch (cfgetispeed(&spu->tiNew))
@@ -191,12 +194,13 @@ void uart_close(const serial_port sp)
   free(sp);
 }
 
-bool uart_receive(const serial_port sp, byte_t* pbtRx, size_t* pszRxLen)
+bool uart_receive(nfc_device_t* pnd, byte_t* pbtRx, size_t* pszRxLen)
 {
   int res;
   int byteCount;
   fd_set rfds;
   struct timeval tv;
+  serial_port sp = (serial_port)pnd->nds;
 
   // Reset the output count  
   *pszRxLen = 0;
@@ -211,6 +215,7 @@ bool uart_receive(const serial_port sp, byte_t* pbtRx, size_t* pszRxLen)
     // Read error
     if (res < 0) {
       DBG("%s", "RX error.");
+      pnd->iLastError = DEIO;
       return false;
     }
 
@@ -219,6 +224,7 @@ bool uart_receive(const serial_port sp, byte_t* pbtRx, size_t* pszRxLen)
       if (*pszRxLen == 0) {
         // Error, we received no data
         DBG("%s", "RX time-out, buffer empty.");
+        pnd->iLastError = DETIMEOUT;
         return false;
       } else {
         // We received some data, but nothing more is available
@@ -228,13 +234,19 @@ bool uart_receive(const serial_port sp, byte_t* pbtRx, size_t* pszRxLen)
 
     // Retrieve the count of the incoming bytes
     res = ioctl(((serial_port_unix*)sp)->fd, FIONREAD, &byteCount);
-    if (res < 0) return false;
+    if (res < 0) {
+      pnd->iLastError = DEIO;
+      return false;
+    }
 
     // There is something available, read the data
     res = read(((serial_port_unix*)sp)->fd,pbtRx+(*pszRxLen),byteCount);
 
     // Stop if the OS has some troubles reading the data
-    if (res <= 0) return false;
+    if (res <= 0) {
+      pnd->iLastError = DEIO;
+      return false;
+    }
 
     *pszRxLen += res;
 
@@ -243,12 +255,13 @@ bool uart_receive(const serial_port sp, byte_t* pbtRx, size_t* pszRxLen)
   return true;
 }
 
-bool uart_send(const serial_port sp, const byte_t* pbtTx, const size_t szTxLen)
+bool uart_send(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxLen)
 {
   int32_t res;
   size_t szPos = 0;
   fd_set rfds;
   struct timeval tv;
+  serial_port sp = (serial_port)pnd->nds;
 
   while (szPos < szTxLen)
   {
@@ -261,12 +274,14 @@ bool uart_send(const serial_port sp, const byte_t* pbtTx, const size_t szTxLen)
     // Write error
     if (res < 0) {
       DBG("%s", "TX error.");
+      pnd->iLastError = DEIO;
       return false;
     }
 
     // Write time-out
     if (res == 0) {
       DBG("%s", "TX time-out.");
+      pnd->iLastError = DETIMEOUT;
       return false;
     }
 
@@ -274,7 +289,10 @@ bool uart_send(const serial_port sp, const byte_t* pbtTx, const size_t szTxLen)
     res = write(((serial_port_unix*)sp)->fd,pbtTx+szPos,szTxLen-szPos);
     
     // Stop if the OS has some troubles sending the data
-    if (res <= 0) return false;
+    if (res <= 0) {
+      pnd->iLastError = DEIO;
+      return false;
+    }
 
     szPos += res;
   }
@@ -342,6 +360,7 @@ serial_port uart_open(const char* pcPortName)
 
 void uart_close(const serial_port sp)
 {
+  serial_port sp = (serial_port)pnd->nds;
   if (((serial_port_windows*)sp)->hPort != INVALID_HANDLE_VALUE) {
     CloseHandle(((serial_port_windows*)sp)->hPort);
   }
@@ -350,6 +369,7 @@ void uart_close(const serial_port sp)
 
 void uart_set_speed(serial_port sp, const uint32_t uiPortSpeed)
 {
+  serial_port sp = (serial_port)pnd->nds;
   serial_port_windows* spw;
 
   DBG("Serial port speed requested to be set to %d bauds.", uiPortSpeed);
@@ -377,6 +397,7 @@ void uart_set_speed(serial_port sp, const uint32_t uiPortSpeed)
 
 uint32_t uart_get_speed(const serial_port sp)
 {
+  serial_port sp = (serial_port)pnd->nds;
   const serial_port_windows* spw = (serial_port_windows*)sp;
   if (!GetCommState(spw->hPort, (serial_port)&spw->dcb))
     return spw->dcb.BaudRate;
@@ -384,16 +405,24 @@ uint32_t uart_get_speed(const serial_port sp)
   return 0;
 }
 
-bool uart_receive(const serial_port sp, byte_t* pbtRx, size_t* pszRxLen)
+bool uart_receive(nfc_device_t* pnd, byte_t* pbtRx, size_t* pszRxLen)
 {
-  ReadFile(((serial_port_windows*)sp)->hPort,pbtRx,*pszRxLen,(LPDWORD)pszRxLen,NULL);
+  serial_port sp = (serial_port)pnd->nds;
+  if (!ReadFile(((serial_port_windows*)sp)->hPort,pbtRx,*pszRxLen,(LPDWORD)pszRxLen,NULL)) {
+    pnd->iLastError = DEIO;
+    return false;
+  }
   return (*pszRxLen != 0);
 }
 
-bool uart_send(const serial_port sp, const byte_t* pbtTx, const size_t szTxLen)
+bool uart_send(nfc_device_t* pnd, const serial_port sp, const byte_t* pbtTx, const size_t szTxLen)
 {
+  serial_port sp = (serial_port)pnd->nds;
   DWORD dwTxLen = 0;
-  return WriteFile(((serial_port_windows*)sp)->hPort,pbtTx,szTxLen,&dwTxLen,NULL);
+  if (!WriteFile(((serial_port_windows*)sp)->hPort,pbtTx,szTxLen,&dwTxLen,NULL)) {
+    pnd->iLastError = DEIO;
+    return false;
+  }
   return (dwTxLen != 0);
 }
 

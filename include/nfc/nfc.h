@@ -92,6 +92,11 @@ NFC_EXPORT void iso14443a_crc(byte_t* pbtData, size_t szLen, byte_t* pbtCrc);
 NFC_EXPORT void append_iso14443a_crc(byte_t* pbtData, size_t szLen);
 NFC_EXPORT const char* nfc_version(void);
 
+/* Common device-level errors */
+#define DEIO            0x1000  /* Input/output error */
+#define DEINVAL         0x2000  /* Invalid argument */
+#define DETIMEOUT       0x3000  /* Operation timeout */
+
 #ifdef __cplusplus 
 }
 #endif // __cplusplus

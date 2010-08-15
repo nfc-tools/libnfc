@@ -30,6 +30,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <nfc/nfc.h>
 // FIXME: WTF are doing debug macros in this file?
 #include <nfc/nfc-messages.h>
 
@@ -69,17 +70,19 @@ static const byte_t pn53x_nack_frame[] = { 0x00,0x00,0xff,0xff,0x00,0x00 };
 
 bool pn53x_transceive_callback(nfc_device_t* pnd, const byte_t *pbtRxFrame, const size_t szRxFrameLen)
 {
-  (void) pnd; // I guess we will want to set some error here at some point
-
   if (szRxFrameLen == sizeof (pn53x_ack_frame)) {
     if (0 == memcmp (pbtRxFrame, pn53x_ack_frame, sizeof (pn53x_ack_frame))) {
       DBG("%s", "PN53x ACKed");
       return true;
     } else if (0 == memcmp (pbtRxFrame, pn53x_nack_frame, sizeof (pn53x_nack_frame))) {
       DBG("%s", "PN53x NACKed");
+      // TODO: Try to recover
+      // A counter could allow the command to be sent again (e.g. max 3 times)
+      pnd->iLastError = DENACK;
       return false;
     }
   }
+  pnd->iLastError = DEACKMISMATCH;
   ERR("%s", "Unexpected PN53x reply!");
 #if defined(DEBUG)
   // coredump so that we can have a backtrace about how this code was reached.
@@ -382,6 +385,7 @@ static struct sErrorMessage {
   int iErrorCode;
   const char *pcErrorMsg;
 } sErrorMessages[] = {
+  /* Chip-level errors */
   { 0x00, "Success" },
   { 0x01, "Timeout" },
   { 0x02, "CRC Error" },
@@ -411,7 +415,16 @@ static struct sErrorMessage {
   { 0x2B, "Card Discarded" },
   { 0x2C, "NFCID3 Mismatch" },
   { 0x2D, "Over Current" },
-  { 0x2E, "NAD Missing in DEP Frame" }
+  { 0x2E, "NAD Missing in DEP Frame" },
+
+  /* Driver-level error */
+  { DENACK,             "Received NACK" },
+  { DEACKMISMATCH,      "Expected ACK/NACK" },
+  { DEISERRFRAME,       "Received an error frame" },
+  /* TODO: Move me in more generic code for libnfc 1.6 */
+  { DEINVAL,            "Invalid argument" },
+  { DEIO,               "Input/output error" },
+  { DETIMEOUT,          "Operation timed-out" }
 };
 
 const char *
