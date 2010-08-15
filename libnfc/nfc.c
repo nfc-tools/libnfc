@@ -797,7 +797,7 @@ bool nfc_initiator_transceive_dep_bytes(const nfc_device_t* pnd, const byte_t* p
   if (!pn53x_set_tx_bits(pnd,0)) return false;
 
   // Send the frame to the PN53X chip and get the answer
-  // We have to give the amount of bytes + (the two command bytes 0xD4, 0x42)
+  // We have to give the amount of bytes + (the two command bytes 0xD4, 0x40)
   if (!pn53x_transceive(pnd,abtCmd,szTxLen+3,abtRx,&szRxLen)) return false;
 
   // Save the received byte count
