@@ -360,14 +360,13 @@ serial_port uart_open(const char* pcPortName)
 
 void uart_close(const serial_port sp)
 {
-  serial_port sp = (serial_port)pnd->nds;
   if (((serial_port_windows*)sp)->hPort != INVALID_HANDLE_VALUE) {
     CloseHandle(((serial_port_windows*)sp)->hPort);
   }
   free(sp);
 }
 
-void uart_set_speed(serial_port sp, const uint32_t uiPortSpeed)
+void uart_set_speed(nfc_device_t* pnd, const uint32_t uiPortSpeed)
 {
   serial_port sp = (serial_port)pnd->nds;
   serial_port_windows* spw;
@@ -395,7 +394,7 @@ void uart_set_speed(serial_port sp, const uint32_t uiPortSpeed)
   }
 }
 
-uint32_t uart_get_speed(const serial_port sp)
+uint32_t uart_get_speed(const nfc_device_t* pnd)
 {
   serial_port sp = (serial_port)pnd->nds;
   const serial_port_windows* spw = (serial_port_windows*)sp;
@@ -415,7 +414,7 @@ bool uart_receive(nfc_device_t* pnd, byte_t* pbtRx, size_t* pszRxLen)
   return (*pszRxLen != 0);
 }
 
-bool uart_send(nfc_device_t* pnd, const serial_port sp, const byte_t* pbtTx, const size_t szTxLen)
+bool uart_send(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxLen)
 {
   serial_port sp = (serial_port)pnd->nds;
   DWORD dwTxLen = 0;
