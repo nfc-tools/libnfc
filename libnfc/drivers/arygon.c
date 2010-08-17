@@ -109,21 +109,13 @@ arygon_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *p
   *pszDeviceFound = 0;
 
   serial_port sp;
-  char acPort[BUFFER_LENGTH];
-  int iDevice;
+  const char** pcPorts = UNIX_SERIAL_PORT_DEVS;
+  const char* pcPort;
+  int iDevice = 0;
 
-  // I have no idea how MAC OS X deals with multiple devices, so a quick workaround
-  for (iDevice=0; iDevice<DRIVERS_MAX_DEVICES; iDevice++)
-  {
-#ifdef __APPLE__
-    strncpy(acPort, SERIAL_STRING, BUFFER_LENGTH - 1);
-    acPort[BUFFER_LENGTH - 1] = '\0';
-#else /* __APPLE__ */
-    snprintf(acPort, BUFFER_LENGTH - 1, "%s%d", SERIAL_STRING, iDevice);
-    acPort[BUFFER_LENGTH - 1] = '\0';
-#endif /* __APPLE__ */
-    sp = uart_open(acPort);
-    DBG("Trying to find ARYGON device on serial port: %s at %d bauds.",acPort, SERIAL_DEFAULT_PORT_SPEED);
+  while( pcPort = pcPorts[i++] ) {
+    sp = uart_open(pcPort);
+    DBG("Trying to find ARYGON device on serial port: %s at %d bauds.", pcPort, SERIAL_DEFAULT_PORT_SPEED);
 
     if ((sp != INVALID_SERIAL_PORT) && (sp != CLAIMED_SERIAL_PORT))
     {
@@ -135,7 +127,7 @@ arygon_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *p
       snprintf(pnddDevices[*pszDeviceFound].acDevice, DEVICE_NAME_LENGTH - 1, "%s (%s)", "ARYGON", acPort);
       pnddDevices[*pszDeviceFound].acDevice[DEVICE_NAME_LENGTH - 1] = '\0';
       pnddDevices[*pszDeviceFound].pcDriver = ARYGON_DRIVER_NAME;
-      pnddDevices[*pszDeviceFound].pcPort = strdup(acPort);
+      pnddDevices[*pszDeviceFound].pcPort = strdup(pcPort);
       pnddDevices[*pszDeviceFound].uiSpeed = SERIAL_DEFAULT_PORT_SPEED;
       DBG("Device found: %s.", pnddDevices[*pszDeviceFound].acDevice);
       (*pszDeviceFound)++;
@@ -144,8 +136,8 @@ arygon_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *p
       if((*pszDeviceFound) >= szDevices) break;
     }
 #ifdef DEBUG
-    if (sp == INVALID_SERIAL_PORT) DBG("Invalid serial port: %s",acPort);
-    if (sp == CLAIMED_SERIAL_PORT) DBG("Serial port already claimed: %s",acPort);
+    if (sp == INVALID_SERIAL_PORT) DBG("Invalid serial port: %s", pcPort);
+    if (sp == CLAIMED_SERIAL_PORT) DBG("Serial port already claimed: %s", pcPort);
 #endif /* DEBUG */
   }
 #endif /* SERIAL_AUTOPROBE_ENABLED */
@@ -157,19 +149,14 @@ nfc_device_t* arygon_connect(const nfc_device_desc_t* pndd)
   serial_port sp;
   nfc_device_t* pnd = NULL;
 
-  if( pndd == NULL ) {
-    DBG("%s", "arygon_connect() need an nfc_device_desc_t struct.");
-    return NULL;
-  } else {
-    DBG("Attempt to connect to: %s at %d bauds.",pndd->pcPort, pndd->uiSpeed);
-    sp = uart_open(pndd->pcPort);
+  DBG("Attempt to connect to: %s at %d bauds.",pndd->pcPort, pndd->uiSpeed);
+  sp = uart_open(pndd->pcPort);
 
-    if (sp == INVALID_SERIAL_PORT) ERR("Invalid serial port: %s",pndd->pcPort);
-    if (sp == CLAIMED_SERIAL_PORT) ERR("Serial port already claimed: %s",pndd->pcPort);
-    if ((sp == CLAIMED_SERIAL_PORT) || (sp == INVALID_SERIAL_PORT)) return NULL;
+  if (sp == INVALID_SERIAL_PORT) ERR("Invalid serial port: %s",pndd->pcPort);
+  if (sp == CLAIMED_SERIAL_PORT) ERR("Serial port already claimed: %s",pndd->pcPort);
+  if ((sp == CLAIMED_SERIAL_PORT) || (sp == INVALID_SERIAL_PORT)) return NULL;
 
-    uart_set_speed(sp, pndd->uiSpeed);
-  }
+  uart_set_speed(sp, pndd->uiSpeed);
 
   DBG("Successfully connected to: %s",pndd->pcPort);
 
