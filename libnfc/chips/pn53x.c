@@ -245,8 +245,8 @@ pn53x_decode_target_data(const byte_t* pbtRawData, size_t szDataLen, nfc_chip_t 
     case NTT_MIFARE:
     case NTT_GENERIC_PASSIVE_106:
       // We skip the first byte: its the target number (Tg)
-
       pbtRawData++;
+      
       // Somehow they switched the lower and upper ATQA bytes around for the PN531 chipset
       if (nc == NC_PN531) {
         pnti->nai.abtAtqa[1] = *(pbtRawData++);
@@ -268,6 +268,76 @@ pn53x_decode_target_data(const byte_t* pbtRawData, size_t szDataLen, nfc_chip_t 
       } else {
         pnti->nai.szAtsLen = 0;
       }
+      
+      // Strip CT (Cascade Tag) to retrieve and store the _real_ UID
+      // (e.g. 0x8801020304050607 is in fact 0x01020304050607)
+      if ((pnti->nai.szUidLen == 8) && (pnti->nai.abtUid[0] == 0x88)) {
+        pnti->nai.szUidLen = 7;
+        memmove (pnti->nai.abtUid, pnti->nai.abtUid + 1, 7);
+      } else if ((pnti->nai.szUidLen == 12) && (pnti->nai.abtUid[0] == 0x88) && (pnti->nai.abtUid[4] == 0x88)) {
+        pnti->nai.szUidLen = 10;
+        memmove (pnti->nai.abtUid, pnti->nai.abtUid + 1, 3);
+        memmove (pnti->nai.abtUid + 3, pnti->nai.abtUid + 5, 7);
+      }
+      break;
+      
+    case NTT_ISO14443B_106:
+      // We skip the first byte: its the target number (Tg)
+      pbtRawData++;
+      
+      // Store the mandatory info
+      memcpy(pnti->nbi.abtAtqb, pbtRawData, 12);
+      pbtRawData += 12;
+      
+      // Store temporarily the ATTRIB_RES length
+      uint8_t ui8AttribResLen = *(pbtRawData++);
+
+      // Store the 4 bytes ID
+      memcpy(pnti->nbi.abtId, pbtRawData,4);
+      pbtRawData += 4;
+
+      pnti->nbi.btParam1 = *(pbtRawData++);
+      pnti->nbi.btParam2 = *(pbtRawData++);
+      pnti->nbi.btParam3 = *(pbtRawData++);
+      pnti->nbi.btParam4 = *(pbtRawData++);
+      
+      // Test if the Higher layer (INF) is available
+      if (ui8AttribResLen > 8) {
+        pnti->nbi.szInfLen = *(pbtRawData++);
+        memcpy(pnti->nbi.abtInf, pbtRawData, pnti->nbi.szInfLen);
+      } else {
+        pnti->nbi.szInfLen = 0;
+      }
+      break;
+      
+    case NTT_FELICA_212:
+    case NTT_FELICA_424:
+      // We skip the first byte: its the target number (Tg)
+      pbtRawData++;
+      
+      // Store the mandatory info
+      pnti->nfi.szLen = *(pbtRawData++);
+      pnti->nfi.btResCode = *(pbtRawData++);
+      // Copy the NFCID2t
+      memcpy(pnti->nfi.abtId, pbtRawData, 8);
+      pbtRawData += 8;
+      // Copy the felica padding
+      memcpy(pnti->nfi.abtPad, pbtRawData, 8);
+      pbtRawData += 8;
+      // Test if the System code (SYST_CODE) is available
+      if (pnti->nfi.szLen > 18)
+      {
+        memcpy(pnti->nfi.abtSysCode, pbtRawData, 2);
+      }
+      break;
+    case NTT_JEWEL_106:
+      // We skip the first byte: its the target number (Tg)
+      pbtRawData++;
+      
+      // Store the mandatory info
+      memcpy(pnti->nji.btSensRes, pbtRawData, 2);
+      pbtRawData += 2;
+      memcpy(pnti->nji.btId, pbtRawData, 4);
       break;
     default:
       return false;

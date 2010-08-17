@@ -484,61 +484,33 @@ nfc_initiator_select_passive_target(const nfc_device_t* pnd,
     switch(nmInitModulation)
     {
       case NM_ISO14443A_106:
-      if(!pn53x_decode_target_data(abtTargetsData+1, szTargetsData-1, pnd->nc, NTT_GENERIC_PASSIVE_106, pnti)) return false;
-      // TODO this should be handled by pn53x_decode_target_data()
-      
-      // Strip CT (Cascade Tag) to retrieve and store the _real_ UID
-      // (e.g. 0x8801020304050607 is in fact 0x01020304050607)
-      if ((pnti->nai.szUidLen == 8) && (pnti->nai.abtUid[0] == 0x88)) {
-        pnti->nai.szUidLen = 7;
-        memmove (pnti->nai.abtUid, pnti->nai.abtUid + 1, 7);
-      } else if ((pnti->nai.szUidLen == 12) && (pnti->nai.abtUid[0] == 0x88) && (pnti->nai.abtUid[4] == 0x88)) {
-        pnti->nai.szUidLen = 10;
-        memmove (pnti->nai.abtUid, pnti->nai.abtUid + 1, 3);
-        memmove (pnti->nai.abtUid + 3, pnti->nai.abtUid + 5, 7);
-      }
+        if(!pn53x_decode_target_data(abtTargetsData+1, szTargetsData-1, pnd->nc, NTT_GENERIC_PASSIVE_106, pnti)) {
+          return false;
+        }
       break;
 
       case NM_FELICA_212:
-      case NM_FELICA_424:
-        // Store the mandatory info
-        pnti->nfi.szLen = abtTargetsData[2];
-        pnti->nfi.btResCode = abtTargetsData[3];
-        // Copy the NFCID2t
-        memcpy(pnti->nfi.abtId,abtTargetsData+4,8);
-        // Copy the felica padding
-        memcpy(pnti->nfi.abtPad,abtTargetsData+12,8);
-        // Test if the System code (SYST_CODE) is available
-        if (szTargetsData > 20)
-        {
-          memcpy(pnti->nfi.abtSysCode,abtTargetsData+20,2);
+        if(!pn53x_decode_target_data(abtTargetsData+1, szTargetsData-1, pnd->nc, NTT_FELICA_212, pnti)) {
+          return false;
         }
-      break;
+        break;
+      case NM_FELICA_424:
+        if(!pn53x_decode_target_data(abtTargetsData+1, szTargetsData-1, pnd->nc, NTT_FELICA_424, pnti)) {
+          return false;
+        }
+        break;
 
       case NM_ISO14443B_106:
-        // Store the mandatory info
-        memcpy(pnti->nbi.abtAtqb,abtTargetsData+2,12);
-        // Ignore the 0x1D byte, and just store the 4 byte id
-        memcpy(pnti->nbi.abtId,abtTargetsData+15,4);
-        pnti->nbi.btParam1 = abtTargetsData[19];
-        pnti->nbi.btParam2 = abtTargetsData[20];
-        pnti->nbi.btParam3 = abtTargetsData[21];
-        pnti->nbi.btParam4 = abtTargetsData[22];
-        // Test if the Higher layer (INF) is available
-        if (szTargetsData > 22)
-        {
-          pnti->nbi.szInfLen = abtTargetsData[23];
-          memcpy(pnti->nbi.abtInf,abtTargetsData+24,pnti->nbi.szInfLen);
-        } else {
-          pnti->nbi.szInfLen = 0;
+        if(!pn53x_decode_target_data(abtTargetsData+1, szTargetsData-1, pnd->nc, NTT_ISO14443B_106, pnti)) {
+          return false;
         }
-      break;
+        break;
 
       case NM_JEWEL_106:
-        // Store the mandatory info
-        memcpy(pnti->nji.btSensRes,abtTargetsData+2,2);
-        memcpy(pnti->nji.btId,abtTargetsData+4,4);
-      break;
+        if(!pn53x_decode_target_data(abtTargetsData+1, szTargetsData-1, pnd->nc, NTT_JEWEL_106, pnti)) {
+          return false;
+        }
+        break;
 
       default:
         // Should not be possible, so whatever...
