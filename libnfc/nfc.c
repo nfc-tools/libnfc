@@ -438,7 +438,7 @@ nfc_initiator_select_passive_target(const nfc_device_t* pnd,
 
   // Make sure we are dealing with a active device
   if (!pnd->bActive) return false;
-
+  // TODO Put this in a function
   switch(nmInitModulation)
   {
     case NM_ISO14443A_106:
@@ -485,7 +485,8 @@ nfc_initiator_select_passive_target(const nfc_device_t* pnd,
     {
       case NM_ISO14443A_106:
       if(!pn53x_decode_target_data(abtTargetsData+1, szTargetsData-1, pnd->nc, NTT_GENERIC_PASSIVE_106, pnti)) return false;
-
+      // TODO this should be handled by pn53x_decode_target_data()
+      
       // Strip CT (Cascade Tag) to retrieve and store the _real_ UID
       // (e.g. 0x8801020304050607 is in fact 0x01020304050607)
       if ((pnti->nai.szUidLen == 8) && (pnti->nai.abtUid[0] == 0x88)) {
@@ -651,55 +652,7 @@ nfc_initiator_poll_targets(const nfc_device_t* pnd,
                            const byte_t btPollNr, const byte_t btPeriod,
                            nfc_target_t* pntTargets, size_t* pszTargetFound)
 {
-  size_t szTxInAutoPoll, n, szRxLen;
-  byte_t abtRx[256];
-  bool res;
-  byte_t *pbtTxInAutoPoll;
-  if(pnd->nc == NC_PN531) {
-    // errno = ENOSUPP
-    return false;
-  }
-//   byte_t abtInAutoPoll[] = { 0xd4, 0x60, 0x0f, 0x01, 0x00 };
-  szTxInAutoPoll = 4 + szTargetTypes;
-  pbtTxInAutoPoll = malloc( szTxInAutoPoll );
-  pbtTxInAutoPoll[0] = 0xd4;
-  pbtTxInAutoPoll[1] = 0x60;
-  pbtTxInAutoPoll[2] = btPollNr;
-  pbtTxInAutoPoll[3] = btPeriod;
-  for(n=0; n<szTargetTypes; n++) {
-    pbtTxInAutoPoll[4+n] = pnttTargetTypes[n];
-  }
-
-  szRxLen = 256;
-  res = pnd->pdc->transceive(pnd->nds, pbtTxInAutoPoll, szTxInAutoPoll, abtRx, &szRxLen);
-
-  if((szRxLen == 0)||(res == false)) {
-    DBG("pnd->pdc->tranceive() failed: szRxLen=%ld, res=%d", (unsigned long) szRxLen, res);
-    return false;
-  } else {
-    *pszTargetFound = abtRx[0];
-    if( *pszTargetFound ) {
-      uint8_t ln;
-      byte_t* pbt = abtRx + 1;
-      /* 1st target */
-      // Target type
-      pntTargets[0].ntt = *(pbt++);
-      // AutoPollTargetData length
-      ln = *(pbt++);
-      pn53x_decode_target_data(pbt, ln, pnd->nc, pntTargets[0].ntt, &(pntTargets[0].nti));
-      pbt += ln;
-
-      if(abtRx[0] > 1) {
-        /* 2nd target */
-        // Target type
-        pntTargets[1].ntt = *(pbt++);
-        // AutoPollTargetData length
-        ln = *(pbt++);
-        pn53x_decode_target_data(pbt, ln, pnd->nc, pntTargets[1].ntt, &(pntTargets[1].nti));
-      }
-    }
-  }
-  return true;
+  return pn53x_InAutoPoll(pnd, pnttTargetTypes, szTargetTypes, btPollNr, btPeriod, pntTargets, pszTargetFound);
 }
 
 /**

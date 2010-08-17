@@ -28,6 +28,7 @@
 
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "pn53x.h"
 #include "../mirror-subr.h"
@@ -335,4 +336,62 @@ pn53x_InRelease(nfc_device_t* pnd, const uint8_t ui8Target)
   abtCmd[2] = ui8Target;
   
   return(pn53x_transceive(pnd,abtCmd,sizeof(abtCmd),NULL,NULL));
+}
+
+bool
+pn53x_InAutoPoll(const nfc_device_t* pnd,
+                 const nfc_target_type_t* pnttTargetTypes, const size_t szTargetTypes,
+                 const byte_t btPollNr, const byte_t btPeriod,
+                 nfc_target_t* pntTargets, size_t* pszTargetFound)
+{
+  size_t szTxInAutoPoll, n, szRxLen;
+  byte_t abtRx[256];
+  bool res;
+  byte_t *pbtTxInAutoPoll;
+
+  if(pnd->nc == NC_PN531) {
+    // TODO This function is not supported by pn531 (set errno = ENOSUPP or similar)
+    return false;
+  }
+
+  // InAutoPoll frame looks like this { 0xd4, 0x60, 0x0f, 0x01, 0x00 } => { direction, command, pollnr, period, types... }
+  szTxInAutoPoll = 4 + szTargetTypes;
+  pbtTxInAutoPoll = malloc( szTxInAutoPoll );
+  pbtTxInAutoPoll[0] = 0xd4;
+  pbtTxInAutoPoll[1] = 0x60;
+  pbtTxInAutoPoll[2] = btPollNr;
+  pbtTxInAutoPoll[3] = btPeriod;
+  for(n=0; n<szTargetTypes; n++) {
+    pbtTxInAutoPoll[4+n] = pnttTargetTypes[n];
+  }
+
+  szRxLen = 256;
+  res = pnd->pdc->transceive(pnd->nds, pbtTxInAutoPoll, szTxInAutoPoll, abtRx, &szRxLen);
+
+  if((szRxLen == 0)||(res == false)) {
+    return false;
+  } else {
+    *pszTargetFound = abtRx[0];
+    if( *pszTargetFound ) {
+      uint8_t ln;
+      byte_t* pbt = abtRx + 1;
+      /* 1st target */
+      // Target type
+      pntTargets[0].ntt = *(pbt++);
+      // AutoPollTargetData length
+      ln = *(pbt++);
+      pn53x_decode_target_data(pbt, ln, pnd->nc, pntTargets[0].ntt, &(pntTargets[0].nti));
+      pbt += ln;
+
+      if(abtRx[0] > 1) {
+        /* 2nd target */
+        // Target type
+        pntTargets[1].ntt = *(pbt++);
+        // AutoPollTargetData length
+        ln = *(pbt++);
+        pn53x_decode_target_data(pbt, ln, pnd->nc, pntTargets[1].ntt, &(pntTargets[1].nti));
+      }
+    }
+  }
+  return true;
 }
