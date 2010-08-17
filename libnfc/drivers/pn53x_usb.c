@@ -160,9 +160,6 @@ nfc_device_t* pn53x_usb_connect(const nfc_device_desc_t* pndd,const char * targe
   us.uiEndPointOut = 0;
   us.pudh = NULL;
 
-  // must specify device to connect to
-  if(pndd == NULL) return NULL;
-
   DBG("Attempt to connect to %s device", target_name);
   usb_init();
 
