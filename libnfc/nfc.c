@@ -520,7 +520,8 @@ nfc_initiator_select_passive_target(const nfc_device_t* pnd,
   return true;
 }
 
-bool nfc_initiator_list_passive_targets(nfc_device_t* pnd, const nfc_modulation_t nmInitModulation, nfc_target_info_t anti[], const size_t szTargets, size_t *pszTargetFound )
+bool 
+nfc_initiator_list_passive_targets(nfc_device_t* pnd, const nfc_modulation_t nmInitModulation, nfc_target_info_t anti[], const size_t szTargets, size_t *pszTargetFound)
 {
   nfc_target_info_t nti;
   size_t szTargetFound = 0;

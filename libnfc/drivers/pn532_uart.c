@@ -83,11 +83,11 @@ pn532_uart_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_
   *pszDeviceFound = 0;
 
   serial_port sp;
-  const char** pcPorts = UNIX_SERIAL_PORT_DEVS;
+  const char* pcPorts[] = DEFAULT_SERIAL_PORTS;
   const char* pcPort;
   int iDevice = 0;
   
-  while( pcPort = pcPorts[i++] ) {
+  while( pcPort = pcPorts[iDevice++] ) {
     sp = uart_open(pcPort);
     DBG("Trying to find PN532 device on serial port: %s at %d bauds.", pcPort, SERIAL_DEFAULT_PORT_SPEED);
 
@@ -113,8 +113,8 @@ pn532_uart_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_
       if((*pszDeviceFound) >= szDevices) break;
     }
 #ifdef DEBUG
-    if (sp == INVALID_SERIAL_PORT) DBG("Invalid serial port: %s",acPort);
-    if (sp == CLAIMED_SERIAL_PORT) DBG("Serial port already claimed: %s",acPort);
+    if (sp == INVALID_SERIAL_PORT) DBG("Invalid serial port: %s", pcPort);
+    if (sp == CLAIMED_SERIAL_PORT) DBG("Serial port already claimed: %s", pcPort);
 #endif /* DEBUG */
   }
 #endif /* SERIAL_AUTOPROBE_ENABLED */

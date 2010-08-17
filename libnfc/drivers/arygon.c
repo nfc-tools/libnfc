@@ -109,11 +109,11 @@ arygon_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *p
   *pszDeviceFound = 0;
 
   serial_port sp;
-  const char** pcPorts = UNIX_SERIAL_PORT_DEVS;
+  const char* pcPorts[] = DEFAULT_SERIAL_PORTS;
   const char* pcPort;
   int iDevice = 0;
 
-  while( pcPort = pcPorts[i++] ) {
+  while( pcPort = pcPorts[iDevice++] ) {
     sp = uart_open(pcPort);
     DBG("Trying to find ARYGON device on serial port: %s at %d bauds.", pcPort, SERIAL_DEFAULT_PORT_SPEED);
 
@@ -124,7 +124,7 @@ arygon_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *p
       uart_close(sp);
 
       // ARYGON reader is found
-      snprintf(pnddDevices[*pszDeviceFound].acDevice, DEVICE_NAME_LENGTH - 1, "%s (%s)", "ARYGON", acPort);
+      snprintf(pnddDevices[*pszDeviceFound].acDevice, DEVICE_NAME_LENGTH - 1, "%s (%s)", "ARYGON", pcPort);
       pnddDevices[*pszDeviceFound].acDevice[DEVICE_NAME_LENGTH - 1] = '\0';
       pnddDevices[*pszDeviceFound].pcDriver = ARYGON_DRIVER_NAME;
       pnddDevices[*pszDeviceFound].pcPort = strdup(pcPort);
