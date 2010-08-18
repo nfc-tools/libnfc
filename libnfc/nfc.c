@@ -593,6 +593,8 @@ nfc_initiator_poll_targets(nfc_device_t* pnd,
                            const byte_t btPollNr, const byte_t btPeriod,
                            nfc_target_t* pntTargets, size_t* pszTargetFound)
 {
+  pnd->iLastError = 0;
+
   return pn53x_InAutoPoll(pnd, pnttTargetTypes, szTargetTypes, btPollNr, btPeriod, pntTargets, pszTargetFound);
 }
 

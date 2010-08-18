@@ -463,8 +463,6 @@ pn53x_InAutoPoll(nfc_device_t* pnd,
   bool res;
   byte_t *pbtTxInAutoPoll;
 
-  pnd->iLastError = 0;
-
   if(pnd->nc == NC_PN531) {
     // TODO This function is not supported by pn531 (set errno = ENOSUPP or similar)
     return false;
