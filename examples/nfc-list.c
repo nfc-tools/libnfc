@@ -47,7 +47,6 @@
 #define MAX_TARGET_COUNT 16
 
 static nfc_device_t* pnd;
-static byte_t abtFelica[5] = { 0x00, 0xff, 0xff, 0x00, 0x00 };
 
 int main(int argc, const char* argv[])
 {
@@ -133,45 +132,54 @@ int main(int argc, const char* argv[])
 
     printf("Connected to NFC reader: %s\n",pnd->acName);
 
+    // List ISO14443A targets
     if (nfc_initiator_list_passive_targets(pnd, NM_ISO14443A_106, anti, MAX_TARGET_COUNT, &szTargetFound )) {
       size_t n;
-      printf("%zu ISO14443A passive targets was found:\n", szTargetFound);
+      printf("%zu ISO14443A passive target(s) was found%s\n", szTargetFound, (szTargetFound==0)?".\n":":");
       for(n=0; n<szTargetFound; n++) {
         print_nfc_iso14443a_info (anti[n].nai);
         printf("\n");
       }
     }
-    printf("-------------------\n");
     
-    // Poll for a Felica tag
-    if (nfc_initiator_select_passive_target(pnd,NM_FELICA_212,abtFelica,5,&nti) || nfc_initiator_select_passive_target(pnd,NM_FELICA_424,abtFelica,5,&nti))
-    {
-      printf("The following (NFC) Felica tag was found:\n\n");
-      printf("%18s","ID (NFCID2): "); print_hex(nti.nfi.abtId,8);
-      printf("%18s","Parameter (PAD): "); print_hex(nti.nfi.abtPad,8);
-    }
-
-    // Poll for a ISO14443B tag
-    if (nfc_initiator_select_passive_target(pnd,NM_ISO14443B_106,(byte_t*)"\x00",1,&nti))
-    {
-      printf("The following (NFC) ISO14443-B tag was found:\n\n");
-      printf("  ATQB: "); print_hex(nti.nbi.abtAtqb,12);
-      printf("    ID: "); print_hex(nti.nbi.abtId,4);
-      printf("   CID: %02x\n",nti.nbi.btCid);
-      if (nti.nbi.szInfLen>0)
-      {
-        printf("   INF: "); print_hex(nti.nbi.abtInf,nti.nbi.szInfLen);
+    // List Felica tags
+    if (nfc_initiator_list_passive_targets(pnd, NM_FELICA_212, anti, MAX_TARGET_COUNT, &szTargetFound )) {
+      size_t n;
+      printf("%zu Felica (212 kbps) passive target(s) was found%s\n", szTargetFound, (szTargetFound==0)?".\n":":");
+      for(n=0; n<szTargetFound; n++) {
+        print_nfc_felica_info (anti[n].nfi);
+        printf("\n");
       }
-      printf("PARAMS: %02x %02x %02x %02x\n",nti.nbi.btParam1,nti.nbi.btParam2,nti.nbi.btParam3,nti.nbi.btParam4);
+    }
+    if (nfc_initiator_list_passive_targets(pnd, NM_FELICA_424, anti, MAX_TARGET_COUNT, &szTargetFound )) {
+      size_t n;
+      printf("%zu Felica (424 kbps) passive target(s) was found%s\n", szTargetFound, (szTargetFound==0)?".\n":":");
+      for(n=0; n<szTargetFound; n++) {
+        print_nfc_felica_info (anti[n].nfi);
+        printf("\n");
+      }
+    }
+    
+    // List ISO14443B targets
+    if (nfc_initiator_list_passive_targets(pnd, NM_ISO14443B_106, anti, MAX_TARGET_COUNT, &szTargetFound )) {
+      size_t n;
+      printf("%zu ISO14443B passive target(s) was found%s\n", szTargetFound, (szTargetFound==0)?".\n":":");
+      for(n=0; n<szTargetFound; n++) {
+        print_nfc_iso14443b_info (anti[n].nbi);
+        printf("\n");
+      }
     }
 
-    // Poll for a Jewel tag
-    if (nfc_initiator_select_passive_target(pnd,NM_JEWEL_106,NULL,0,&nti))
-    {
-      // No test results yet
-      printf("jewel\n");
+/*
+    // List Jewel targets
+    if (nfc_initiator_list_passive_targets(pnd, NM_JEWEL_106, anti, MAX_TARGET_COUNT, &szTargetFound )) {
+      size_t n;
+      printf("%zu Jewel passive target(s) was found%s\n", szTargetFound, (szTargetFound==0)?".\n":":"); for(n=0; n<szTargetFound; n++) {
+        printf("Jewel support is missing in libnfc, feel free to contribute.\n");
+        printf("\n");
+      }
     }
-
+*/
     nfc_disconnect(pnd);
     }
 
