@@ -141,9 +141,6 @@ authenticate (uint32_t uiBlock)
     for (key_index = 0; key_index < num_keys; key_index++) {
       memcpy (mp.mpa.abtKey, keys + (key_index * 6), 6);
       if (nfc_initiator_mifare_cmd (pnd, mc, uiBlock, &mp)) {
-        /** 
-         * @note: what about the other key?
-         */
         if (bUseKeyA)
           memcpy (mtKeys.amb[uiBlock].mbt.abtKeyA, &mp.mpa.abtKey, 6);
         else
@@ -190,7 +187,7 @@ read_card (void)
 
       // Try to authenticate for the current sector
       if (!authenticate (iBlock)) {
-        printf ("!\nError: authentication failed for block %02x\n", iBlock);
+        printf ("!\nError: authentication failed for block 0x%02x\n", iBlock);
         return false;
       }
       // Try to read out the trailer
@@ -199,6 +196,8 @@ read_card (void)
         memcpy (mtDump.amb[iBlock].mbt.abtKeyA, mtKeys.amb[iBlock].mbt.abtKeyA, 6);
         memcpy (mtDump.amb[iBlock].mbt.abtAccessBits, mp.mpd.abtData + 6, 4);
         memcpy (mtDump.amb[iBlock].mbt.abtKeyB, mtKeys.amb[iBlock].mbt.abtKeyB, 6);
+      } else {
+        printf("!\nError: unable to read trailer block 0x%02x\n", iBlock);
       }
     } else {
       // Make sure a earlier readout did not fail
@@ -208,6 +207,8 @@ read_card (void)
           memcpy (mtDump.amb[iBlock].mbd.abtData, mp.mpd.abtData, 16);
         } else {
           bFailure = true;
+          printf("!\nError: unable to read block 0x%02x\n", iBlock);
+          return false;
         }
       }
     }
