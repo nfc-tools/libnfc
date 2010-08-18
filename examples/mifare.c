@@ -69,7 +69,13 @@ bool nfc_initiator_mifare_cmd(nfc_device_t* pnd, const mifare_cmd mc, const uint
   if (!nfc_initiator_transceive_dep_bytes(pnd,abtCmd,2+szParamLen,abtRx,&szRxLen)) return false;
 
   // When we have executed a read command, copy the received bytes into the param
-  if (mc == MC_READ && szRxLen == 17) memcpy(pmp->mpd.abtData,abtRx+1,16);
+  if (mc == MC_READ) {
+    if(szRxLen == 16) {
+      memcpy(pmp->mpd.abtData,abtRx,16);
+    } else {
+      return false;
+    }
+  }
 
   // Command succesfully executed
   return true;

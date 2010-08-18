@@ -4,7 +4,7 @@ AC_DEFUN([LIBNFC_ARG_WITH_DRIVERS],
 [
   AC_MSG_CHECKING(which drivers to build)
   AC_ARG_WITH(drivers,
-  AC_HELP_STRING([--with-drivers=driver@<:@[[[,]]]driver...@:>@], [Only use specific drivers (default set)]),
+  AC_HELP_STRING([--with-drivers=driver@<:@[[[,]]]driver...@:>@], [Only use specific drivers (available drivers: acr122,arygon,pn531_usb,pn533_usb,pn532_uart)]),
   [       case "${withval}" in
           yes | no)
                   dnl ignore calls without any arguments

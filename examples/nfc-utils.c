@@ -84,6 +84,9 @@ void print_hex_par(const byte_t* pbtData, const size_t szBits, const byte_t* pbt
   printf("\n");
 }
 
+#define SAK_ISO14443_4_COMPLIANT 0x20
+#define SAK_ISO18092_COMPLIANT   0x40
+
 void print_nfc_iso14443a_info(const nfc_iso14443a_info_t nai)
 {
   printf("    ATQA (SENS_RES): "); print_hex(nai.abtAtqa,2);
@@ -93,6 +96,28 @@ void print_nfc_iso14443a_info(const nfc_iso14443a_info_t nai)
     printf("          ATS (ATR): ");
     print_hex(nai.abtAts, nai.szAtsLen);
   }
+  if ( (nai.btSak & SAK_ISO14443_4_COMPLIANT) || (nai.btSak & SAK_ISO18092_COMPLIANT) ) {
+    printf("     Compliant with: ");
+    if (nai.btSak & SAK_ISO14443_4_COMPLIANT) printf("ISO/IEC 14443-4 ");
+    if (nai.btSak & SAK_ISO18092_COMPLIANT) printf("ISO/IEC 18092");
+    printf("\n");
+  }
+}
+void print_nfc_felica_info(const nfc_felica_info_t nfi)
+{
+  printf("        ID (NFCID2): "); print_hex(nfi.abtId,8);
+  printf("    Parameter (PAD): "); print_hex(nfi.abtPad,8);
+}
+
+void print_nfc_iso14443b_info(const nfc_iso14443b_info_t nbi)
+{
+  printf("               ATQB: "); print_hex(nbi.abtAtqb,12);
+  printf("                 ID: "); print_hex(nbi.abtId,4);
+  printf("                CID: %02x\n",nbi.btCid);
+  if (nbi.szInfLen>0) {
+    printf("                INF: "); print_hex(nbi.abtInf,nbi.szInfLen);
+  }
+  printf("             PARAMS: %02x %02x %02x %02x\n",nbi.btParam1,nbi.btParam2,nbi.btParam3,nbi.btParam4);
 }
 
 /**

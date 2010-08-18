@@ -447,7 +447,7 @@ nfc_initiator_select_passive_target(nfc_device_t* pnd,
 
   // Make sure we are dealing with a active device
   if (!pnd->bActive) return false;
-
+  // TODO Put this in a function
   switch(nmInitModulation)
   {
     case NM_ISO14443A_106:
@@ -493,60 +493,33 @@ nfc_initiator_select_passive_target(nfc_device_t* pnd,
     switch(nmInitModulation)
     {
       case NM_ISO14443A_106:
-      if(!pn53x_decode_target_data(abtTargetsData+1, szTargetsData-1, pnd->nc, NTT_GENERIC_PASSIVE_106, pnti)) return false;
-
-      // Strip CT (Cascade Tag) to retrieve and store the _real_ UID
-      // (e.g. 0x8801020304050607 is in fact 0x01020304050607)
-      if ((pnti->nai.szUidLen == 8) && (pnti->nai.abtUid[0] == 0x88)) {
-        pnti->nai.szUidLen = 7;
-        memmove (pnti->nai.abtUid, pnti->nai.abtUid + 1, 7);
-      } else if ((pnti->nai.szUidLen == 12) && (pnti->nai.abtUid[0] == 0x88) && (pnti->nai.abtUid[4] == 0x88)) {
-        pnti->nai.szUidLen = 10;
-        memmove (pnti->nai.abtUid, pnti->nai.abtUid + 1, 3);
-        memmove (pnti->nai.abtUid + 3, pnti->nai.abtUid + 5, 7);
-      }
+        if(!pn53x_decode_target_data(abtTargetsData+1, szTargetsData-1, pnd->nc, NTT_GENERIC_PASSIVE_106, pnti)) {
+          return false;
+        }
       break;
 
       case NM_FELICA_212:
-      case NM_FELICA_424:
-        // Store the mandatory info
-        pnti->nfi.szLen = abtTargetsData[2];
-        pnti->nfi.btResCode = abtTargetsData[3];
-        // Copy the NFCID2t
-        memcpy(pnti->nfi.abtId,abtTargetsData+4,8);
-        // Copy the felica padding
-        memcpy(pnti->nfi.abtPad,abtTargetsData+12,8);
-        // Test if the System code (SYST_CODE) is available
-        if (szTargetsData > 20)
-        {
-          memcpy(pnti->nfi.abtSysCode,abtTargetsData+20,2);
+        if(!pn53x_decode_target_data(abtTargetsData+1, szTargetsData-1, pnd->nc, NTT_FELICA_212, pnti)) {
+          return false;
         }
-      break;
+        break;
+      case NM_FELICA_424:
+        if(!pn53x_decode_target_data(abtTargetsData+1, szTargetsData-1, pnd->nc, NTT_FELICA_424, pnti)) {
+          return false;
+        }
+        break;
 
       case NM_ISO14443B_106:
-        // Store the mandatory info
-        memcpy(pnti->nbi.abtAtqb,abtTargetsData+2,12);
-        // Ignore the 0x1D byte, and just store the 4 byte id
-        memcpy(pnti->nbi.abtId,abtTargetsData+15,4);
-        pnti->nbi.btParam1 = abtTargetsData[19];
-        pnti->nbi.btParam2 = abtTargetsData[20];
-        pnti->nbi.btParam3 = abtTargetsData[21];
-        pnti->nbi.btParam4 = abtTargetsData[22];
-        // Test if the Higher layer (INF) is available
-        if (szTargetsData > 22)
-        {
-          pnti->nbi.szInfLen = abtTargetsData[23];
-          memcpy(pnti->nbi.abtInf,abtTargetsData+24,pnti->nbi.szInfLen);
-        } else {
-          pnti->nbi.szInfLen = 0;
+        if(!pn53x_decode_target_data(abtTargetsData+1, szTargetsData-1, pnd->nc, NTT_ISO14443B_106, pnti)) {
+          return false;
         }
-      break;
+        break;
 
       case NM_JEWEL_106:
-        // Store the mandatory info
-        memcpy(pnti->nji.btSensRes,abtTargetsData+2,2);
-        memcpy(pnti->nji.btId,abtTargetsData+4,4);
-      break;
+        if(!pn53x_decode_target_data(abtTargetsData+1, szTargetsData-1, pnd->nc, NTT_JEWEL_106, pnti)) {
+          return false;
+        }
+        break;
 
       default:
         // Should not be possible, so whatever...
@@ -556,11 +529,10 @@ nfc_initiator_select_passive_target(nfc_device_t* pnd,
   return true;
 }
 
-bool nfc_initiator_list_passive_targets(nfc_device_t* pnd, const nfc_modulation_t nmInitModulation, nfc_target_info_t anti[], const size_t szTargets, size_t *pszTargetFound )
+bool 
+nfc_initiator_list_passive_targets(nfc_device_t* pnd, const nfc_modulation_t nmInitModulation, nfc_target_info_t anti[], const size_t szTargets, size_t *pszTargetFound)
 {
   nfc_target_info_t nti;
-
-  bool bCollisionDetected = false;
   size_t szTargetFound = 0;
 
   pnd->iLastError = 0;
@@ -568,16 +540,17 @@ bool nfc_initiator_list_passive_targets(nfc_device_t* pnd, const nfc_modulation_
 
   // Let the reader only try once to find a target
   nfc_configure (pnd, NDO_INFINITE_SELECT, false);
-
-  while (nfc_initiator_select_passive_target (pnd, nmInitModulation, NULL, 0, &nti)) {
+  byte_t* pbtInitData = NULL;
+  size_t szInitDataLen = 0;
+  
+  if(nmInitModulation == NM_ISO14443B_106) {
+    // Application Family Identifier (AFI) must equals 0x00 in order to wakeup all ISO14443-B PICCs (see ISO/IEC 14443-3)
+    pbtInitData = (byte_t*)"\x00";
+    szInitDataLen = 1;
+  }
+  while (nfc_initiator_select_passive_target (pnd, nmInitModulation, pbtInitData, szInitDataLen, &nti)) {
     nfc_initiator_deselect_target(pnd);
 
-    if(nmInitModulation == NM_ISO14443A_106) {
-      if((nti.nai.abtAtqa[0] == 0x00) && (nti.nai.abtAtqa[1] == 0x00)) {
-        bCollisionDetected = true;
-      }
-    }
-        
     if(szTargets > szTargetFound) {
       memcpy( &(anti[szTargetFound]), &nti, sizeof(nfc_target_info_t) );
     }
@@ -585,56 +558,10 @@ bool nfc_initiator_list_passive_targets(nfc_device_t* pnd, const nfc_modulation_
   }
   *pszTargetFound = szTargetFound;
 
-  DBG("%zu targets was found%s.", *pszTargetFound, bCollisionDetected?" (with SENS_RES collision)":"");
-
-/*
-  // TODO This chunk of code attempt to retrieve SENS_RES (ATQA) for ISO14443A which collide previously.
-  // XXX Unfortunately at this stage, I'm not able to REQA each tag correctly to retrieve this SENS_REQ.
-
-
-  // Drop the field for a while
-  nfc_configure(pnd,NDO_ACTIVATE_FIELD,false);
-  // Let the reader only try once to find a tag
-  nfc_configure(pnd,NDO_INFINITE_SELECT,false);
-
-  // Configure the CRC and Parity settings
-  nfc_configure(pnd,NDO_HANDLE_CRC,true);
-  nfc_configure(pnd,NDO_HANDLE_PARITY,true);
-
-  // Enable field so more power consuming cards can power themselves up
-  nfc_configure(pnd,NDO_ACTIVATE_FIELD,true);
-
-  if(bCollisionDetected && (nmInitModulation == NM_ISO14443A_106)) {
-    // nfc_initiator_select_passive_target(pnd, NM_ISO14443A_106, anti[0].nai.abtUid, anti[0].nai.szUidLen, NULL);
-
-    for( size_t n = 0; n < szTargetFound; n++ ) {
-      size_t szTargetsData;
-      byte_t abtTargetsData[MAX_FRAME_LEN];
-      if(!pn53x_InListPassiveTarget(pnd, NM_ISO14443A_106, 2, NULL, 0, abtTargetsData, &szTargetsData)) return false;
-      DBG("pn53x_InListPassiveTarget(): %d selected target(s)", abtTargetsData[0]);
-      if(szTargetsData && (abtTargetsData[0] > 0)) {
-        byte_t* pbtTargetData = abtTargetsData+1;
-        size_t szTargetData = 5 + *(pbtTargetData + 4); // Tg, SENS_RES (2), SEL_RES, NFCIDLength, NFCID1 (NFCIDLength)
-
-        if( (*(pbtTargetData + 3) & 0x40) && ((~(*(pbtTargetData + 3))) & 0x04) ) { // Check if SAK looks like 0bxx1xx0xx, which means compliant with ISO/IEC 14443-4 (= ATS available) (See ISO14443-3 document)
-          szTargetData += 1 + *(pbtTargetData + szTargetData); // Add ATS length
-        }
-        if(!pn53x_decode_target_data(pbtTargetData, szTargetData, pnd->nc, NTT_GENERIC_PASSIVE_106, &nti)) return false;
-  #ifdef DEBUG
-        for(size_t n=0;n<sizeof(nti.nai);n++) printf("%02x  ", *(((byte_t*)(&nti.nai)) + n));
-        printf("\n");
-  #endif // DEBUG
-        pn53x_InDeselect(pnd, 1);
-      }
-    }
-  }
-*/
-
   return true;
 }
 
 /**
- * @fn nfc_initiator_deselect_target(const nfc_device_t* pnd);
  * @brief Deselect a selected passive or emulated tag
  * @return Returns true if action was successfully performed; otherwise returns false.
  * @param pnd nfc_device_t struct pointer that represent currently used device
@@ -666,62 +593,10 @@ nfc_initiator_poll_targets(nfc_device_t* pnd,
                            const byte_t btPollNr, const byte_t btPeriod,
                            nfc_target_t* pntTargets, size_t* pszTargetFound)
 {
-  size_t szTxInAutoPoll, n, szRxLen;
-  byte_t abtRx[256];
-  bool res;
-  byte_t *pbtTxInAutoPoll;
-
-  pnd->iLastError = 0;
-
-  if(pnd->nc == NC_PN531) {
-    // errno = ENOSUPP
-    return false;
-  }
-//   byte_t abtInAutoPoll[] = { 0xd4, 0x60, 0x0f, 0x01, 0x00 };
-  szTxInAutoPoll = 4 + szTargetTypes;
-  pbtTxInAutoPoll = malloc( szTxInAutoPoll );
-  pbtTxInAutoPoll[0] = 0xd4;
-  pbtTxInAutoPoll[1] = 0x60;
-  pbtTxInAutoPoll[2] = btPollNr;
-  pbtTxInAutoPoll[3] = btPeriod;
-  for(n=0; n<szTargetTypes; n++) {
-    pbtTxInAutoPoll[4+n] = pnttTargetTypes[n];
-  }
-
-  szRxLen = 256;
-  res = pn53x_transceive(pnd, pbtTxInAutoPoll, szTxInAutoPoll, abtRx, &szRxLen);
-
-  if((szRxLen == 0)||(res == false)) {
-    DBG("pn53x_transceive() failed: szRxLen=%ld, res=%d", (unsigned long) szRxLen, res);
-    return false;
-  } else {
-    *pszTargetFound = abtRx[0];
-    if( *pszTargetFound ) {
-      uint8_t ln;
-      byte_t* pbt = abtRx + 1;
-      /* 1st target */
-      // Target type
-      pntTargets[0].ntt = *(pbt++);
-      // AutoPollTargetData length
-      ln = *(pbt++);
-      pn53x_decode_target_data(pbt, ln, pnd->nc, pntTargets[0].ntt, &(pntTargets[0].nti));
-      pbt += ln;
-
-      if(abtRx[0] > 1) {
-        /* 2nd target */
-        // Target type
-        pntTargets[1].ntt = *(pbt++);
-        // AutoPollTargetData length
-        ln = *(pbt++);
-        pn53x_decode_target_data(pbt, ln, pnd->nc, pntTargets[1].ntt, &(pntTargets[1].nti));
-      }
-    }
-  }
-  return true;
+  return pn53x_InAutoPoll(pnd, pnttTargetTypes, szTargetTypes, btPollNr, btPeriod, pntTargets, pszTargetFound);
 }
 
 /**
- * @fn nfc_initiator_transceive_bits(const nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxBits, const byte_t* pbtTxPar, byte_t* pbtRx, size_t* pszRxBits, byte_t* pbtRxPar)
  * @brief Transceive raw bit-frames
  * @return Returns true if action was successfully performed; otherwise returns false.
  * @param pbtTx contains a byte array of the frame that needs to be transmitted.
@@ -821,7 +696,7 @@ bool nfc_initiator_transceive_dep_bytes(nfc_device_t* pnd, const byte_t* pbtTx, 
   if (!pn53x_set_tx_bits(pnd,0)) return false;
 
   // Send the frame to the PN53X chip and get the answer
-  // We have to give the amount of bytes + (the two command bytes 0xD4, 0x42)
+  // We have to give the amount of bytes + (the two command bytes 0xD4, 0x40)
   if (!pn53x_transceive(pnd,abtCmd,szTxLen+3,abtRx,&szRxLen)) return false;
 
   // Save the received byte count
@@ -835,10 +710,10 @@ bool nfc_initiator_transceive_dep_bytes(nfc_device_t* pnd, const byte_t* pbtTx, 
 }
 
 /**
- * @brief Transceive byte and APDU frames
+ * @brief Send raw data to target then retrieve raw data from target
  * @return Returns true if action was successfully performed; otherwise returns false.
  *
- * The reader will transmit the supplied bytes in pbtTx to the target (tag).
+ * The reader will transmit the supplied bytes (\a pbtTx) to the target in raw mode: PN53x will not handle input neither output data.
  * It waits for the response and stores the received bytes in the pbtRx byte array.
  * The parity bits are handled by the PN53X chip. The CRC can be generated automatically or handled manually.
  * Using this function, frames can be communicated very fast via the NFC reader to the tag.
@@ -1168,7 +1043,7 @@ void nfc_perror (const nfc_device_t *pnd, const char *pcString)
 
 /**
  * @brief Returns the device name
- * @return Returns a string with the device name ( MUST be freed with free() )
+ * @return Returns a string with the device name
  */
 const char* nfc_device_name(nfc_device_t* pnd)
 {

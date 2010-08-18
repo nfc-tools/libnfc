@@ -59,16 +59,16 @@
 // Try to guess what we should use.
 //
 // XXX: Some review from users cross-compiling is welcome!
-#if defined(_WIN32)
-  #define SERIAL_STRING "COM"
-//#elif defined(__APPLE__)
-// TODO: find UART connection string for PN53X device on Mac OS X
-//  #define SERIAL_STRING ""
+#if defined (_WIN32)
+  #define DEFAULT_SERIAL_PORTS { "COM1", "COM2", "COM3", "COM4", NULL }
+#elif defined(__APPLE__)
+  // XXX: find UART connection string for PN53X device on Mac OS X when multiples devices are used
+  #define DEFAULT_SERIAL_PORTS { "/dev/tty.SLAB_USBtoUART", NULL }
 #elif defined (__FreeBSD__) || defined (__OpenBSD__)
   // XXX: Not tested
-  #define SERIAL_STRING "/dev/cuau"
+  #define DEFAULT_SERIAL_PORTS { "/dev/cuau0", "/dev/cuau1", "/dev/cuau2", "/dev/cuau3", NULL }
 #elif defined (__linux__)
-  #define SERIAL_STRING "/dev/ttyUSB"
+  #define DEFAULT_SERIAL_PORTS { "/dev/ttyUSB0", "/dev/ttyUSB1", "/dev/ttyUSB2", "/dev/ttyUSB3", "/dev/tty0", "/dev/tty1", "/dev/tty2", "/dev/tty3", NULL }
 #else
   #error "Can't determine serial string for your system"
 #endif

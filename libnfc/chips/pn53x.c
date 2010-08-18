@@ -29,6 +29,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include <nfc/nfc.h>
 // FIXME: WTF are doing debug macros in this file?
@@ -289,8 +290,8 @@ pn53x_decode_target_data(const byte_t* pbtRawData, size_t szDataLen, nfc_chip_t 
     case NTT_MIFARE:
     case NTT_GENERIC_PASSIVE_106:
       // We skip the first byte: its the target number (Tg)
-
       pbtRawData++;
+      
       // Somehow they switched the lower and upper ATQA bytes around for the PN531 chipset
       if (nc == NC_PN531) {
         pnti->nai.abtAtqa[1] = *(pbtRawData++);
@@ -312,6 +313,76 @@ pn53x_decode_target_data(const byte_t* pbtRawData, size_t szDataLen, nfc_chip_t 
       } else {
         pnti->nai.szAtsLen = 0;
       }
+      
+      // Strip CT (Cascade Tag) to retrieve and store the _real_ UID
+      // (e.g. 0x8801020304050607 is in fact 0x01020304050607)
+      if ((pnti->nai.szUidLen == 8) && (pnti->nai.abtUid[0] == 0x88)) {
+        pnti->nai.szUidLen = 7;
+        memmove (pnti->nai.abtUid, pnti->nai.abtUid + 1, 7);
+      } else if ((pnti->nai.szUidLen == 12) && (pnti->nai.abtUid[0] == 0x88) && (pnti->nai.abtUid[4] == 0x88)) {
+        pnti->nai.szUidLen = 10;
+        memmove (pnti->nai.abtUid, pnti->nai.abtUid + 1, 3);
+        memmove (pnti->nai.abtUid + 3, pnti->nai.abtUid + 5, 7);
+      }
+      break;
+      
+    case NTT_ISO14443B_106:
+      // We skip the first byte: its the target number (Tg)
+      pbtRawData++;
+      
+      // Store the mandatory info
+      memcpy(pnti->nbi.abtAtqb, pbtRawData, 12);
+      pbtRawData += 12;
+      
+      // Store temporarily the ATTRIB_RES length
+      uint8_t ui8AttribResLen = *(pbtRawData++);
+
+      // Store the 4 bytes ID
+      memcpy(pnti->nbi.abtId, pbtRawData,4);
+      pbtRawData += 4;
+
+      pnti->nbi.btParam1 = *(pbtRawData++);
+      pnti->nbi.btParam2 = *(pbtRawData++);
+      pnti->nbi.btParam3 = *(pbtRawData++);
+      pnti->nbi.btParam4 = *(pbtRawData++);
+      
+      // Test if the Higher layer (INF) is available
+      if (ui8AttribResLen > 8) {
+        pnti->nbi.szInfLen = *(pbtRawData++);
+        memcpy(pnti->nbi.abtInf, pbtRawData, pnti->nbi.szInfLen);
+      } else {
+        pnti->nbi.szInfLen = 0;
+      }
+      break;
+      
+    case NTT_FELICA_212:
+    case NTT_FELICA_424:
+      // We skip the first byte: its the target number (Tg)
+      pbtRawData++;
+      
+      // Store the mandatory info
+      pnti->nfi.szLen = *(pbtRawData++);
+      pnti->nfi.btResCode = *(pbtRawData++);
+      // Copy the NFCID2t
+      memcpy(pnti->nfi.abtId, pbtRawData, 8);
+      pbtRawData += 8;
+      // Copy the felica padding
+      memcpy(pnti->nfi.abtPad, pbtRawData, 8);
+      pbtRawData += 8;
+      // Test if the System code (SYST_CODE) is available
+      if (pnti->nfi.szLen > 18)
+      {
+        memcpy(pnti->nfi.abtSysCode, pbtRawData, 2);
+      }
+      break;
+    case NTT_JEWEL_106:
+      // We skip the first byte: its the target number (Tg)
+      pbtRawData++;
+      
+      // Store the mandatory info
+      memcpy(pnti->nji.btSensRes, pbtRawData, 2);
+      pbtRawData += 2;
+      memcpy(pnti->nji.btId, pbtRawData, 4);
       break;
     default:
       return false;
@@ -379,6 +450,66 @@ pn53x_InRelease(nfc_device_t* pnd, const uint8_t ui8Target)
   abtCmd[2] = ui8Target;
   
   return(pn53x_transceive(pnd,abtCmd,sizeof(abtCmd),NULL,NULL));
+}
+
+bool
+pn53x_InAutoPoll(nfc_device_t* pnd,
+                 const nfc_target_type_t* pnttTargetTypes, const size_t szTargetTypes,
+                 const byte_t btPollNr, const byte_t btPeriod,
+                 nfc_target_t* pntTargets, size_t* pszTargetFound)
+{
+  size_t szTxInAutoPoll, n, szRxLen;
+  byte_t abtRx[256];
+  bool res;
+  byte_t *pbtTxInAutoPoll;
+
+  pnd->iLastError = 0;
+
+  if(pnd->nc == NC_PN531) {
+    // TODO This function is not supported by pn531 (set errno = ENOSUPP or similar)
+    return false;
+  }
+
+  // InAutoPoll frame looks like this { 0xd4, 0x60, 0x0f, 0x01, 0x00 } => { direction, command, pollnr, period, types... }
+  szTxInAutoPoll = 4 + szTargetTypes;
+  pbtTxInAutoPoll = malloc( szTxInAutoPoll );
+  pbtTxInAutoPoll[0] = 0xd4;
+  pbtTxInAutoPoll[1] = 0x60;
+  pbtTxInAutoPoll[2] = btPollNr;
+  pbtTxInAutoPoll[3] = btPeriod;
+  for(n=0; n<szTargetTypes; n++) {
+    pbtTxInAutoPoll[4+n] = pnttTargetTypes[n];
+  }
+
+  szRxLen = 256;
+  res = pnd->pdc->transceive(pnd->nds, pbtTxInAutoPoll, szTxInAutoPoll, abtRx, &szRxLen);
+
+  if((szRxLen == 0)||(res == false)) {
+    return false;
+  } else {
+    *pszTargetFound = abtRx[0];
+    if( *pszTargetFound ) {
+      uint8_t ln;
+      byte_t* pbt = abtRx + 1;
+      /* 1st target */
+      // Target type
+      pntTargets[0].ntt = *(pbt++);
+      // AutoPollTargetData length
+      ln = *(pbt++);
+      pn53x_decode_target_data(pbt, ln, pnd->nc, pntTargets[0].ntt, &(pntTargets[0].nti));
+      pbt += ln;
+
+      if(abtRx[0] > 1) {
+        /* 2nd target */
+        // Target type
+        pntTargets[1].ntt = *(pbt++);
+        // AutoPollTargetData length
+        ln = *(pbt++);
+        pn53x_decode_target_data(pbt, ln, pnd->nc, pntTargets[1].ntt, &(pntTargets[1].nti));
+      }
+    }
+  }
+  return true;
 }
 
 static struct sErrorMessage {
