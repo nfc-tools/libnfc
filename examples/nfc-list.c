@@ -54,7 +54,6 @@ int main(int argc, const char* argv[])
   size_t szDeviceFound;
   size_t szTargetFound;
   size_t i;
-  nfc_target_info_t nti;
   nfc_device_desc_t *pnddDevices;
   
   // Display libnfc version

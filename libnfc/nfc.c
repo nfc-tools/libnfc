@@ -525,11 +525,11 @@ nfc_initiator_list_passive_targets(nfc_device_t* pnd, const nfc_modulation_t nmI
 {
   nfc_target_info_t nti;
   size_t szTargetFound = 0;
+  byte_t* pbtInitData = NULL;
+  size_t szInitDataLen = 0;
 
   // Let the reader only try once to find a target
   nfc_configure (pnd, NDO_INFINITE_SELECT, false);
-  byte_t* pbtInitData = NULL;
-  size_t szInitDataLen = 0;
   
   if(nmInitModulation == NM_ISO14443B_106) {
     // Application Family Identifier (AFI) must equals 0x00 in order to wakeup all ISO14443-B PICCs (see ISO/IEC 14443-3)
