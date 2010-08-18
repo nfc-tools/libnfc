@@ -229,11 +229,10 @@ bool pn532_uart_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, con
     while (!uart_receive((serial_port)nds,abtRxBuf,&szRxBufLen)) {
       delay_ms(10);
     }
-  }
-
 #ifdef DEBUG
-  PRINT_HEX("RX", abtRxBuf,szRxBufLen);
+    PRINT_HEX("RX", abtRxBuf,szRxBufLen);
 #endif
+  }
 
   // When the answer should be ignored, just return a successful result
   if(pbtRx == NULL || pszRxLen == NULL) return true;
