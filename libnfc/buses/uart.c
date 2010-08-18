@@ -50,10 +50,10 @@ typedef struct {
   term_info tiNew;  // Terminal info during the transaction
 } serial_port_unix;
 
-// Set time-out on 30 miliseconds
+// timeval struct that define timeout delay for serial port
 const struct timeval timeout = { 
   .tv_sec  =     0, // 0 second
-  .tv_usec = 50000  // 50 ms
+  .tv_usec = 60000  // 60 ms
 };
 
 // Work-around to claim uart interface using the c_iflag (software input processing) from the termios struct
