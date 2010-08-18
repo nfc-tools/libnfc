@@ -45,6 +45,7 @@
 #include <nfc/nfc.h>
 #include <nfc/nfc-messages.h>
 #include "nfc-utils.h"
+// FIXME: Remove me
 #include "chips/pn53x.h"
 
 #define MAX_FRAME_LEN 264
@@ -81,6 +82,7 @@ bool sam_connection(nfc_device_t* pnd, int mode)
     break;
   }
   
+  // FIXME: Direct call
   if (!pn53x_transceive(pnd,pncmd_sam_config,szCmd,abtRx,&szRxLen)) {
     ERR("%s %d", "Unable to execute SAMConfiguration command with mode byte:", mode);
     return false;
