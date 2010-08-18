@@ -543,7 +543,6 @@ nfc_initiator_list_passive_targets(nfc_device_t* pnd, const nfc_modulation_t nmI
 }
 
 /**
- * @fn nfc_initiator_deselect_target(const nfc_device_t* pnd);
  * @brief Deselect a selected passive or emulated tag
  * @return Returns true if action was successfully performed; otherwise returns false.
  * @param pnd nfc_device_t struct pointer that represent currently used device
@@ -576,7 +575,6 @@ nfc_initiator_poll_targets(const nfc_device_t* pnd,
 }
 
 /**
- * @fn nfc_initiator_transceive_bits(const nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxBits, const byte_t* pbtTxPar, byte_t* pbtRx, size_t* pszRxBits, byte_t* pbtRxPar)
  * @brief Transceive raw bit-frames
  * @return Returns true if action was successfully performed; otherwise returns false.
  * @param pbtTx contains a byte array of the frame that needs to be transmitted.
@@ -684,10 +682,10 @@ bool nfc_initiator_transceive_dep_bytes(const nfc_device_t* pnd, const byte_t* p
 }
 
 /**
- * @brief Transceive byte and APDU frames
+ * @brief Send raw data to target then retrieve raw data from target
  * @return Returns true if action was successfully performed; otherwise returns false.
  *
- * The reader will transmit the supplied bytes in pbtTx to the target (tag).
+ * The reader will transmit the supplied bytes (\a pbtTx) to the target in raw mode: PN53x will not handle input neither output data.
  * It waits for the response and stores the received bytes in the pbtRx byte array.
  * The parity bits are handled by the PN53X chip. The CRC can be generated automatically or handled manually.
  * Using this function, frames can be communicated very fast via the NFC reader to the tag.
