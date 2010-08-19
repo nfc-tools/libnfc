@@ -424,6 +424,9 @@ main (int argc, const char *argv[])
     // Enable field so more power consuming cards can power themselves up
     nfc_configure (pnd, NDO_ACTIVATE_FIELD, true);
 
+    // Disable ISO14443-4 switching in order to read devices that emulate Mifare Classic with ISO14443-4 compliance.
+    nfc_configure(pnd, NDO_AUTO_ISO14443_4, false);
+
     printf ("Connected to NFC reader: %s\n", pnd->acName);
 
     // Try to find a MIFARE Classic tag
@@ -446,21 +449,21 @@ main (int argc, const char *argv[])
 
       // Compare if key dump UID is the same as the current tag UID
       if (memcmp (nti.nai.abtUid, pbtUID, 4) != 0) {
-        printf ("Expected MIFARE Classic %cK card with UID: %02x%02x%02x%02x\n", b4K ? '4' : '1', pbtUID[3], pbtUID[2],
+        printf ("Expected MIFARE Classic %ck card with UID: %02x%02x%02x%02x\n", b4K ? '4' : '1', pbtUID[3], pbtUID[2],
                 pbtUID[1], pbtUID[0]);
       }
     }
     // Get the info from the current tag
     pbtUID = nti.nai.abtUid;
     b4K = (nti.nai.abtAtqa[1] == 0x02);
-    printf ("Found MIFARE Classic %cK card with UID: %02x%02x%02x%02x\n", b4K ? '4' : '1', pbtUID[3], pbtUID[2],
+    printf ("Found MIFARE Classic %ck card with UID: %02x%02x%02x%02x\n", b4K ? '4' : '1', pbtUID[3], pbtUID[2],
             pbtUID[1], pbtUID[0]);
 
     uiBlocks = (b4K) ? 0xff : 0x3f;
 
     if (atAction == ACTION_READ) {
       if (read_card ()) {
-        printf ("Writing data to file: %s ... ", argv[3]);
+        printf ("Writing data to file: %s ...", argv[3]);
         fflush (stdout);
         pfDump = fopen (argv[3], "wb");
         if (fwrite (&mtDump, 1, sizeof (mtDump), pfDump) != sizeof (mtDump)) {
