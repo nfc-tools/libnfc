@@ -368,9 +368,8 @@ void uart_close(const serial_port sp)
   free(sp);
 }
 
-void uart_set_speed(nfc_device_t* pnd, const uint32_t uiPortSpeed)
+void uart_set_speed(serial_port sp, const uint32_t uiPortSpeed)
 {
-  serial_port sp = (serial_port)pnd->nds;
   serial_port_windows* spw;
 
   DBG("Serial port speed requested to be set to %d bauds.", uiPortSpeed);
@@ -396,9 +395,8 @@ void uart_set_speed(nfc_device_t* pnd, const uint32_t uiPortSpeed)
   }
 }
 
-uint32_t uart_get_speed(const nfc_device_t* pnd)
+uint32_t uart_get_speed(const serial_port sp)
 {
-  serial_port sp = (serial_port)pnd->nds;
   const serial_port_windows* spw = (serial_port_windows*)sp;
   if (!GetCommState(spw->hPort, (serial_port)&spw->dcb))
     return spw->dcb.BaudRate;
@@ -406,25 +404,25 @@ uint32_t uart_get_speed(const nfc_device_t* pnd)
   return 0;
 }
 
-bool uart_receive(nfc_device_t* pnd, byte_t* pbtRx, size_t* pszRxLen)
+int uart_receive(serial_port sp, byte_t* pbtRx, size_t* pszRxLen)
 {
-  serial_port sp = (serial_port)pnd->nds;
   if (!ReadFile(((serial_port_windows*)sp)->hPort,pbtRx,*pszRxLen,(LPDWORD)pszRxLen,NULL)) {
-    pnd->iLastError = DEIO;
-    return false;
+    return DEIO;
   }
-  return (*pszRxLen != 0);
+  if (!*pszRxLen)
+    return DEIO;
+  return 0;
 }
 
-bool uart_send(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxLen)
+int uart_send(serial_port sp, const byte_t* pbtTx, const size_t szTxLen)
 {
-  serial_port sp = (serial_port)pnd->nds;
   DWORD dwTxLen = 0;
   if (!WriteFile(((serial_port_windows*)sp)->hPort,pbtTx,szTxLen,&dwTxLen,NULL)) {
-    pnd->iLastError = DEIO;
-    return false;
+    return DEIO;
   }
-  return (dwTxLen != 0);
+  if (!dwTxLen)
+    return DEIO;
+  return 0;
 }
 
 #endif /* _WIN32 */

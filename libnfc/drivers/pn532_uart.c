@@ -177,6 +177,7 @@ bool pn532_uart_transceive(nfc_device_t* pnd, const byte_t* pbtTx, const size_t 
   byte_t abtRxBuf[BUFFER_LENGTH];
   size_t szRxBufLen = BUFFER_LENGTH;
   size_t szPos;
+  int res;
   // TODO: Move this one level up for libnfc-1.6
   uint8_t ack_frame[] = { 0x00, 0x00, 0xff, 0x00, 0xff, 0x00 };
 
@@ -200,7 +201,6 @@ bool pn532_uart_transceive(nfc_device_t* pnd, const byte_t* pbtTx, const size_t 
 #ifdef DEBUG
   PRINT_HEX("TX", abtTxBuf,szTxLen+7);
 #endif
-  int res;
   res = uart_send((serial_port)pnd->nds,abtTxBuf,szTxLen+7);
   if(res != 0) {
     ERR("%s", "Unable to transmit data. (TX)");
