@@ -107,11 +107,10 @@ serial_port uart_open(const char* pcPortName)
   return sp;
 }
 
-void uart_set_speed(nfc_device_t* pnd, const uint32_t uiPortSpeed)
+void uart_set_speed(serial_port sp, const uint32_t uiPortSpeed)
 {
-  serial_port sp = (serial_port)pnd->nds;
   DBG("Serial port speed requested to be set to %d bauds.", uiPortSpeed);
-  // Set port speed (Input and Output)
+  const serial_port_unix* spu = (serial_port_unix*)sp;
 
   // Portability note: on some systems, B9600 != 9600 so we have to do
   // uint32_t <=> speed_t associations by hand.
@@ -142,18 +141,18 @@ void uart_set_speed(nfc_device_t* pnd, const uint32_t uiPortSpeed)
     default:
       ERR("Unable to set serial port speed to %d bauds. Speed value must be one of those defined in termios(3).", uiPortSpeed);
   };
-  const serial_port_unix* spu = (serial_port_unix*)sp;
-  cfsetispeed((struct termios*)&spu->tiNew, stPortSpeed);
-  cfsetospeed((struct termios*)&spu->tiNew, stPortSpeed);
-  if( tcsetattr(spu->fd, TCSADRAIN, &spu->tiNew)  == -1)
+
+  // Set port speed (Input and Output)
+  cfsetispeed((struct termios*)&(spu->tiNew), stPortSpeed);
+  cfsetospeed((struct termios*)&(spu->tiNew), stPortSpeed);
+  if( tcsetattr(spu->fd, TCSADRAIN, &(spu->tiNew))  == -1)
   {
     ERR("%s", "Unable to apply new speed settings.");
   }
 }
 
-uint32_t uart_get_speed(const nfc_device_t* pnd)
+uint32_t uart_get_speed(serial_port sp)
 {
-  serial_port sp = (serial_port)pnd->nds;
   uint32_t uiPortSpeed = 0;
   const serial_port_unix* spu = (serial_port_unix*)sp;
   switch (cfgetispeed(&spu->tiNew))
@@ -194,13 +193,18 @@ void uart_close(const serial_port sp)
   free(sp);
 }
 
-bool uart_receive(nfc_device_t* pnd, byte_t* pbtRx, size_t* pszRxLen)
+/**
+ * @brief Receive data from UART and copy data to \a pbtRx
+ *
+ * @return 0 on success, otherwise driver error code
+ */
+int
+uart_receive(serial_port sp, byte_t* pbtRx, size_t* pszRxLen)
 {
   int res;
   int byteCount;
   fd_set rfds;
   struct timeval tv;
-  serial_port sp = (serial_port)pnd->nds;
 
   // Reset the output count  
   *pszRxLen = 0;
@@ -215,8 +219,7 @@ bool uart_receive(nfc_device_t* pnd, byte_t* pbtRx, size_t* pszRxLen)
     // Read error
     if (res < 0) {
       DBG("%s", "RX error.");
-      pnd->iLastError = DEIO;
-      return false;
+      return DEIO;
     }
 
     // Read time-out
@@ -224,19 +227,17 @@ bool uart_receive(nfc_device_t* pnd, byte_t* pbtRx, size_t* pszRxLen)
       if (*pszRxLen == 0) {
         // Error, we received no data
         DBG("%s", "RX time-out, buffer empty.");
-        pnd->iLastError = DETIMEOUT;
-        return false;
+        return DETIMEOUT;
       } else {
         // We received some data, but nothing more is available
-        return true;
+        return 0;
       }
     }
 
     // Retrieve the count of the incoming bytes
     res = ioctl(((serial_port_unix*)sp)->fd, FIONREAD, &byteCount);
     if (res < 0) {
-      pnd->iLastError = DEIO;
-      return false;
+      return DEIO;
     }
 
     // There is something available, read the data
@@ -244,24 +245,28 @@ bool uart_receive(nfc_device_t* pnd, byte_t* pbtRx, size_t* pszRxLen)
 
     // Stop if the OS has some troubles reading the data
     if (res <= 0) {
-      pnd->iLastError = DEIO;
-      return false;
+      return DEIO;
     }
 
     *pszRxLen += res;
 
   } while (byteCount);
 
-  return true;
+  return 0;
 }
 
-bool uart_send(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxLen)
+/**
+ * @brief Send \a pbtTx content to UART
+ *
+ * @return 0 on success, otherwise a driver error is returned
+ */
+int
+uart_send(serial_port sp, const byte_t* pbtTx, const size_t szTxLen)
 {
   int32_t res;
   size_t szPos = 0;
   fd_set rfds;
   struct timeval tv;
-  serial_port sp = (serial_port)pnd->nds;
 
   while (szPos < szTxLen)
   {
@@ -274,15 +279,13 @@ bool uart_send(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxLen)
     // Write error
     if (res < 0) {
       DBG("%s", "TX error.");
-      pnd->iLastError = DEIO;
-      return false;
+      return DEIO;
     }
 
     // Write time-out
     if (res == 0) {
       DBG("%s", "TX time-out.");
-      pnd->iLastError = DETIMEOUT;
-      return false;
+      return DETIMEOUT;
     }
 
     // Send away the bytes
@@ -290,13 +293,12 @@ bool uart_send(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxLen)
     
     // Stop if the OS has some troubles sending the data
     if (res <= 0) {
-      pnd->iLastError = DEIO;
-      return false;
+      return DEIO;
     }
 
     szPos += res;
   }
-  return true;
+  return 0;
 }
 
 #else

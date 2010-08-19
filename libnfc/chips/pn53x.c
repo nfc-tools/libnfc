@@ -69,9 +69,10 @@ const byte_t pncmd_target_get_status          [  2] = { 0xD4,0x8A };
 static const byte_t pn53x_ack_frame[]  = { 0x00,0x00,0xff,0x00,0xff,0x00 };
 static const byte_t pn53x_nack_frame[] = { 0x00,0x00,0xff,0xff,0x00,0x00 };
 
+// XXX: Is this function correctly named ?
 bool pn53x_transceive_callback(nfc_device_t* pnd, const byte_t *pbtRxFrame, const size_t szRxFrameLen)
 {
-  if (szRxFrameLen == sizeof (pn53x_ack_frame)) {
+  if (szRxFrameLen >= sizeof (pn53x_ack_frame)) {
     if (0 == memcmp (pbtRxFrame, pn53x_ack_frame, sizeof (pn53x_ack_frame))) {
       DBG("%s", "PN53x ACKed");
       return true;

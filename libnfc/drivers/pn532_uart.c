@@ -100,7 +100,7 @@ pn532_uart_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_
       // PN532 could be powered down, we need to wake it up before line testing.
       pn532_uart_wakeup((nfc_device_spec_t)sp);
       // Check communication using "Diagnose" command, with "Comunication test" (0x00)
-      if(!pn532_uart_check_communication((nfc_device_spec_t)sp), &bComOk)
+      if(!pn532_uart_check_communication((nfc_device_spec_t)sp, &bComOk))
         return false;
       if (!bComOk)
         continue;
@@ -200,16 +200,19 @@ bool pn532_uart_transceive(nfc_device_t* pnd, const byte_t* pbtTx, const size_t 
 #ifdef DEBUG
   PRINT_HEX("TX", abtTxBuf,szTxLen+7);
 #endif
-  if (!uart_send((serial_port)pnd->nds,abtTxBuf,szTxLen+7)) {
+  int res;
+  res = uart_send((serial_port)pnd->nds,abtTxBuf,szTxLen+7);
+  if(res != 0) {
     ERR("%s", "Unable to transmit data. (TX)");
-    pnd->iLastError = DEIO;
+    pnd->iLastError = res;
     return false;
   }
 
   szRxBufLen = 6;
-  if (!uart_receive((serial_port)pnd->nds,abtRxBuf,&szRxBufLen)) {
+  res = uart_receive((serial_port)pnd->nds,abtRxBuf,&szRxBufLen);
+  if (res != 0) {
     ERR("%s", "Unable to receive data. (RX)");
-    pnd->iLastError = DEIO;
+    pnd->iLastError = res;
     return false;
   }
 
@@ -217,18 +220,22 @@ bool pn532_uart_transceive(nfc_device_t* pnd, const byte_t* pbtTx, const size_t 
   PRINT_HEX("RX", abtRxBuf,szRxBufLen);
 #endif
 
+  // WARN: UART is a per byte reception, so you usually receive ACK and next frame the same time
   if (!pn53x_transceive_callback(pnd, abtRxBuf, szRxBufLen))
     return false;
+  szRxBufLen -= sizeof(ack_frame);
+  memmove(abtRxBuf, abtRxBuf+sizeof(ack_frame), szRxBufLen);
 
-  szRxBufLen = BUFFER_LENGTH;
-
-    while (!uart_receive((serial_port)pnd->nds,abtRxBuf,&szRxBufLen)) {
+  if (szRxBufLen == 0) {
+    szRxBufLen = BUFFER_LENGTH;
+    do {
       delay_ms(10);
-    }
-
+      res = uart_receive((serial_port)pnd->nds,abtRxBuf,&szRxBufLen);
+    } while (res != 0 );
 #ifdef DEBUG
     PRINT_HEX("RX", abtRxBuf,szRxBufLen);
 #endif
+  }
 
   // When the answer should be ignored, just return a successful result
   if(pbtRx == NULL || pszRxLen == NULL) return true;
@@ -242,9 +249,10 @@ bool pn532_uart_transceive(nfc_device_t* pnd, const byte_t* pbtTx, const size_t 
 #ifdef DEBUG
   PRINT_HEX("TX", ack_frame,6);
 #endif
-  if (!uart_send((serial_port)pnd->nds,ack_frame,6)) {
+  res = uart_send((serial_port)pnd->nds,ack_frame,6);
+  if (res != 0) {
     ERR("%s", "Unable to transmit data. (TX)");
-    pnd->iLastError = DEIO;
+    pnd->iLastError = res;
     return false;
   }
 
@@ -268,7 +276,7 @@ pn532_uart_wakeup(const nfc_device_spec_t nds)
   PRINT_HEX("TX", pncmd_pn532c106_wakeup_preamble,sizeof(pncmd_pn532c106_wakeup_preamble));
 #endif
   uart_send((serial_port)nds, pncmd_pn532c106_wakeup_preamble, sizeof(pncmd_pn532c106_wakeup_preamble));
-  if(uart_receive((serial_port)nds,abtRx,&szRxLen)) {
+  if(0 == uart_receive((serial_port)nds,abtRx,&szRxLen)) {
 #ifdef DEBUG
     PRINT_HEX("RX", abtRx,szRxLen);
 #endif
@@ -290,10 +298,10 @@ pn532_uart_check_communication(const nfc_device_spec_t nds, bool* success)
 #ifdef DEBUG
   PRINT_HEX("TX", pncmd_communication_test,sizeof(pncmd_communication_test));
 #endif
-  if (!uart_send((serial_port)nds, pncmd_communication_test, sizeof(pncmd_communication_test)))
+  if (0 != uart_send((serial_port)nds, pncmd_communication_test, sizeof(pncmd_communication_test)))
       return false;
 
-  if(!uart_receive((serial_port)nds,abtRx,&szRxLen)) {
+  if (0 != uart_receive((serial_port)nds,abtRx,&szRxLen)) {
     return false;
   }
 #ifdef DEBUG
