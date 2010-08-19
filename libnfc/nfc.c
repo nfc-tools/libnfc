@@ -312,8 +312,15 @@ bool nfc_configure(nfc_device_t* pnd, const nfc_device_option_t ndo, const bool 
     case NDO_ACCEPT_MULTIPLE_FRAMES:
       btValue = (bEnable) ? SYMBOL_RX_MULTIPLE : 0x00;
       if (!pn53x_set_reg(pnd,REG_CIU_RX_MODE,SYMBOL_RX_MULTIPLE,btValue)) return false;
-    return true;
-
+      return true;
+    break;
+    
+    case NDO_AUTO_ISO14443_4:
+      // TODO: PN53x parameters could not be read, so we have to buffered current value in order to prevent from configuration overwrite
+      // ATM, buffered current value is not needed due to a single usage of these parameters
+      btValue = (bEnable) ? (SYMBOL_PARAM_fAutomaticRATS | SYMBOL_PARAM_fAutomaticATR_RES): SYMBOL_PARAM_fAutomaticATR_RES;
+      if(!pn53x_set_parameters(pnd,btValue)) return false;
+      return true;
     break;
   }
 

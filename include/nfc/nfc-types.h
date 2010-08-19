@@ -131,7 +131,9 @@ typedef enum {
 /** If this option is enabled, frames that carry less than 4 bits are allowed. According to the standards these frames should normally be handles as invalid frames. */
   NDO_ACCEPT_INVALID_FRAMES   = 0x30,
 /** If the NFC device should only listen to frames, it could be useful to let it gather multiple frames in a sequence. They will be stored in the internal FIFO of the PN53X chip. This could be retrieved by using the receive data functions. Note that if the chip runs out of bytes (FIFO = 64 bytes long), it will overwrite the first received frames, so quick retrieving of the received data is desirable. */
-  NDO_ACCEPT_MULTIPLE_FRAMES  = 0x31
+  NDO_ACCEPT_MULTIPLE_FRAMES  = 0x31,
+/** This option can be used to enable or disable the auto-switching mode to ISO14443-4 is device is compliant */
+  NDO_AUTO_ISO14443_4         = 0x40,
 } nfc_device_option_t;
 
 ////////////////////////////////////////////////////////////////////
