@@ -482,7 +482,7 @@ pn53x_InAutoPoll(nfc_device_t* pnd,
   }
 
   szRxLen = 256;
-  res = pnd->pdc->transceive(pnd->nds, pbtTxInAutoPoll, szTxInAutoPoll, abtRx, &szRxLen);
+  res = pnd->pdc->transceive(pnd, pbtTxInAutoPoll, szTxInAutoPoll, abtRx, &szRxLen);
 
   if((szRxLen == 0)||(res == false)) {
     return false;
