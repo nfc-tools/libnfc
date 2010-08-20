@@ -113,7 +113,7 @@ arygon_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *p
   const char* pcPort;
   int iDevice = 0;
 
-  while( pcPort = pcPorts[iDevice++] ) {
+  while( (pcPort = pcPorts[iDevice++]) ) {
     sp = uart_open(pcPort);
     DBG("Trying to find ARYGON device on serial port: %s at %d bauds.", pcPort, SERIAL_DEFAULT_PORT_SPEED);
 
