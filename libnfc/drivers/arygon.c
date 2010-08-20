@@ -113,7 +113,7 @@ arygon_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *p
   const char* pcPort;
   int iDevice = 0;
 
-  while( pcPort = pcPorts[iDevice++] ) {
+  while( (pcPort = pcPorts[iDevice++]) ) {
     sp = uart_open(pcPort);
     DBG("Trying to find ARYGON device on serial port: %s at %d bauds.", pcPort, SERIAL_DEFAULT_PORT_SPEED);
 
@@ -180,15 +180,14 @@ void arygon_disconnect(nfc_device_t* pnd)
   free(pnd);
 }
 
-bool arygon_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen)
+bool arygon_transceive(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen)
 {
   byte_t abtTxBuf[BUFFER_LENGTH] = { DEV_ARYGON_PROTOCOL_TAMA, 0x00, 0x00, 0xff }; // Every packet must start with "00 00 ff"
   byte_t abtRxBuf[BUFFER_LENGTH];
   size_t szRxBufLen = BUFFER_LENGTH;
   size_t szPos;
-
-  const byte_t pn53x_ack_frame[] = { 0x00,0x00,0xff,0x00,0xff,0x00 };
-  const byte_t pn53x_nack_frame[] = { 0x00,0x00,0xff,0xff,0x00,0x00 };
+  // TODO: Move this one level up for libnfc-1.6
+  uint8_t ack_frame[] = { 0x00, 0x00, 0xff, 0x00, 0xff, 0x00 };
 
   // Packet length = data length (len) + checksum (1) + end of stream marker (1)
   abtTxBuf[4] = szTxLen;
@@ -210,12 +209,13 @@ bool arygon_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, const s
 #ifdef DEBUG
   PRINT_HEX("TX", abtTxBuf,szTxLen+8);
 #endif
-  if (!uart_send((serial_port)nds,abtTxBuf,szTxLen+8)) {
+  if (!uart_send((serial_port)pnd->nds,abtTxBuf,szTxLen+8)) {
     ERR("%s", "Unable to transmit data. (TX)");
     return false;
   }
 
-  if (!uart_receive((serial_port)nds,abtRxBuf,&szRxBufLen)) {
+  szRxBufLen = 6;
+  if (!uart_receive((serial_port)pnd->nds,abtRxBuf,&szRxBufLen)) {
     ERR("%s", "Unable to receive data. (RX)");
     return false;
   }
@@ -224,35 +224,30 @@ bool arygon_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, const s
   PRINT_HEX("RX", abtRxBuf,szRxBufLen);
 #endif
 
-  if(szRxBufLen >= sizeof(pn53x_ack_frame)) {
+  if (!pn53x_transceive_check_ack_frame_callback(pnd, abtRxBuf, szRxBufLen))
+    return false;
 
-    // Check if PN53x reply ACK
-    if(0!=memcmp(pn53x_ack_frame, abtRxBuf, sizeof(pn53x_ack_frame))) {
-      DBG("%s", "PN53x doesn't respond ACK frame.");
-      if (0==memcmp(pn53x_nack_frame, abtRxBuf, sizeof(pn53x_nack_frame))) {
-        ERR("%s", "PN53x reply NACK frame.");
-        // FIXME Handle NACK frame i.e. resend frame, PN53x doesn't received it correctly
-      }
-      return false;
-    }
+  szRxBufLen = BUFFER_LENGTH;
 
-    szRxBufLen -= sizeof(pn53x_ack_frame);
-    if(szRxBufLen) {
-      memmove(abtRxBuf, abtRxBuf+sizeof(pn53x_ack_frame), szRxBufLen);
-    }
-  }
-
-  if(szRxBufLen == 0) {
-    // There was no more data than ACK frame, we need to wait next frame
-    DBG("%s", "There was no more data than ACK frame, we need to wait next frame");
-    while (!uart_receive((serial_port)nds,abtRxBuf,&szRxBufLen)) {
+    while (!uart_receive((serial_port)pnd->nds,abtRxBuf,&szRxBufLen)) {
       delay_ms(10);
     }
-  }
 
 #ifdef DEBUG
   PRINT_HEX("RX", abtRxBuf,szRxBufLen);
 #endif
+
+
+#ifdef DEBUG
+  PRINT_HEX("TX", ack_frame, 6);
+#endif
+  if (!uart_send((serial_port)pnd->nds, ack_frame, 6)) {
+    ERR("%s", "Unable to transmit data. (TX)");
+    return false;
+  }
+
+  if (!pn53x_transceive_check_error_frame_callback(pnd, abtRxBuf, szRxBufLen))
+    return false;
 
   // When the answer should be ignored, just return a successful result
   if(pbtRx == NULL || pszRxLen == NULL) return true;

@@ -113,8 +113,10 @@ int main(int argc, char *argv[])
   printf("[+] Received initiator command: ");
   print_hex_bits(abtRecv,szRecvBits);
   printf("[+] Configuring communication\n");
-  nfc_configure(pnd,NDO_HANDLE_CRC,false);
-  nfc_configure(pnd,NDO_HANDLE_PARITY,true);
+  if (!nfc_configure(pnd,NDO_HANDLE_CRC,false) || !nfc_configure(pnd,NDO_HANDLE_PARITY,true)) {
+    nfc_perror(pnd, "nfc_configure");
+    exit(EXIT_FAILURE);
+  }
   printf("[+] Done, the emulated tag is initialized with UID: %02X%02X%02X%02X\n\n",abtUidBcc[0],abtUidBcc[1],abtUidBcc[2],abtUidBcc[3]);
 
   while(true)
@@ -157,7 +159,10 @@ int main(int argc, char *argv[])
       if(szTxBits)
       {
         // Send and print the command to the screen
-        nfc_target_send_bits(pnd,pbtTx,szTxBits,NULL);
+        if (!nfc_target_send_bits(pnd,pbtTx,szTxBits,NULL)) {
+          nfc_perror(pnd, "nfc_target_send_bits");
+          exit(EXIT_FAILURE);
+        }
         if(!quiet_output)
         {
           printf("T: ");
@@ -168,5 +173,6 @@ int main(int argc, char *argv[])
   }
 
   nfc_disconnect(pnd);
+  exit(EXIT_SUCCESS);
 }
 

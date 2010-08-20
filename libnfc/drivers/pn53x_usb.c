@@ -37,7 +37,9 @@ Thanks to d18c7db and Okko for example code
 #include <string.h>
 
 #include "../drivers.h"
+#include "../chips/pn53x.h"
 
+#include <nfc/nfc.h>
 #include <nfc/nfc-messages.h>
 
 #define BUFFER_LENGTH 256
@@ -232,13 +234,14 @@ void pn53x_usb_disconnect(nfc_device_t* pnd)
   free(pnd);
 }
 
-bool pn53x_usb_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen)
+bool pn53x_usb_transceive(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen)
 {
   size_t uiPos = 0;
   int ret = 0;
   byte_t abtTx[BUFFER_LENGTH] = { 0x00, 0x00, 0xff }; // Every packet must start with "00 00 ff"
   byte_t abtRx[BUFFER_LENGTH];
-  usb_spec_t* pus = (usb_spec_t*)nds;
+  usb_spec_t* pus = (usb_spec_t*)pnd->nds;
+  // TODO: Move this one level up for libnfc-1.6
   uint8_t ack_frame[] = { 0x00, 0x00, 0xff, 0x00, 0xff, 0x00 };
 
   // Packet length = data length (len) + checksum (1) + end of stream marker (1)
@@ -266,6 +269,7 @@ bool pn53x_usb_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, cons
   if( ret < 0 )
   {
     DBG("usb_bulk_write failed with error %d", ret);
+    pnd->iLastError = DEIO;
     return false;
   }
 
@@ -273,33 +277,36 @@ bool pn53x_usb_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, cons
   if( ret < 0 )
   {
     DBG( "usb_bulk_read failed with error %d", ret);
+    pnd->iLastError = DEIO;
     return false;
   }
 
 #ifdef DEBUG
   PRINT_HEX("RX", abtRx,ret);
 #endif
-  
-  if ((ret != 6) || (memcmp (abtRx, ack_frame, 6))) {
-      DBG ("%s", "===> No ACK!!!!!!");
-    return false;
-  }
 
-  if( ret == 6 )
-  {
+  if (!pn53x_transceive_check_ack_frame_callback (pnd, abtRx, ret))
+    return false;
+
     ret = usb_bulk_read(pus->pudh, pus->uiEndPointIn, (char*)abtRx, BUFFER_LENGTH, USB_TIMEOUT);
     if( ret < 0 )
     {
       DBG("usb_bulk_read failed with error %d", ret);
+    pnd->iLastError = DEIO;
       return false;
     }
 
 #ifdef DEBUG
     PRINT_HEX("RX", abtRx,ret);
 #endif
-  }
 
+#ifdef DEBUG
+  PRINT_HEX("TX", ack_frame,6);
+#endif
   usb_bulk_write(pus->pudh, pus->uiEndPointOut, (char *)ack_frame, 6, USB_TIMEOUT);
+
+  if (!pn53x_transceive_check_error_frame_callback (pnd, abtRx, ret))
+    return false;
 
   // When the answer should be ignored, just return a succesful result
   if(pbtRx == NULL || pszRxLen == NULL) return true;
@@ -308,6 +315,7 @@ bool pn53x_usb_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, cons
   if(ret < 9) 
   {
     DBG("%s","No data");
+    pnd->iLastError = DEINVAL;
     return false;
   }
 

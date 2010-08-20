@@ -255,14 +255,14 @@ void acr122_disconnect(nfc_device_t* pnd)
   free(pnd);
 }
 
-bool acr122_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen)
+bool acr122_transceive(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen)
 {
   byte_t abtRxCmd[5] = { 0xFF,0xC0,0x00,0x00 };
   size_t szRxCmdLen = sizeof(abtRxCmd);
   byte_t abtRxBuf[ACR122_RESPONSE_LEN];
   size_t szRxBufLen;
   byte_t abtTxBuf[ACR122_WRAP_LEN+ACR122_COMMAND_LEN] = { 0xFF, 0x00, 0x00, 0x00 };
-  acr122_spec_t* pas = (acr122_spec_t*)nds;
+  acr122_spec_t* pas = (acr122_spec_t*)pnd->nds;
 
   // Make sure the command does not overflow the send buffer
   if (szTxLen > ACR122_COMMAND_LEN) return false;

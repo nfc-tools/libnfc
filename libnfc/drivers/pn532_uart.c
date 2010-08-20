@@ -33,6 +33,7 @@
 
 #include "pn532_uart.h"
 
+#include <nfc/nfc.h>
 #include <nfc/nfc-messages.h>
 
 // Bus
@@ -43,7 +44,7 @@
 #define SERIAL_DEFAULT_PORT_SPEED 115200
 
 void pn532_uart_wakeup(const nfc_device_spec_t nds);
-bool pn532_uart_check_communication(const nfc_device_spec_t nds);
+bool pn532_uart_check_communication(const nfc_device_spec_t nds, bool* success);
 
 nfc_device_desc_t *
 pn532_uart_pick_device (void)
@@ -87,18 +88,22 @@ pn532_uart_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_
   const char* pcPort;
   int iDevice = 0;
   
-  while( pcPort = pcPorts[iDevice++] ) {
+  while( (pcPort = pcPorts[iDevice++]) ) {
     sp = uart_open(pcPort);
     DBG("Trying to find PN532 device on serial port: %s at %d bauds.", pcPort, SERIAL_DEFAULT_PORT_SPEED);
 
     if ((sp != INVALID_SERIAL_PORT) && (sp != CLAIMED_SERIAL_PORT))
     {
+      bool bComOk;
       // Serial port claimed but we need to check if a PN532_UART is connected.
       uart_set_speed(sp, SERIAL_DEFAULT_PORT_SPEED);
       // PN532 could be powered down, we need to wake it up before line testing.
       pn532_uart_wakeup((nfc_device_spec_t)sp);
       // Check communication using "Diagnose" command, with "Comunication test" (0x00)
-      if(!pn532_uart_check_communication((nfc_device_spec_t)sp)) continue;
+      if(!pn532_uart_check_communication((nfc_device_spec_t)sp, &bComOk))
+        return false;
+      if (!bComOk)
+        continue;
       uart_close(sp);
 
       snprintf(pnddDevices[*pszDeviceFound].acDevice, DEVICE_NAME_LENGTH - 1, "%s (%s)", "PN532", pcPort);
@@ -125,6 +130,7 @@ nfc_device_t* pn532_uart_connect(const nfc_device_desc_t* pndd)
 {
   serial_port sp;
   nfc_device_t* pnd = NULL;
+  bool bComOk;
 
   DBG("Attempt to connect to: %s at %d bauds.",pndd->pcPort, pndd->uiSpeed);
   sp = uart_open(pndd->pcPort);
@@ -138,7 +144,10 @@ nfc_device_t* pn532_uart_connect(const nfc_device_desc_t* pndd)
   // PN532 could be powered down, we need to wake it up before line testing.
   pn532_uart_wakeup((nfc_device_spec_t)sp);
   // Check communication using "Diagnose" command, with "Comunication test" (0x00)
-  if(!pn532_uart_check_communication((nfc_device_spec_t)sp)) return NULL;
+  if(!pn532_uart_check_communication((nfc_device_spec_t)sp, &bComOk))
+      return NULL;
+  if (!bComOk)
+      return NULL;
 
   DBG("Successfully connected to: %s",pndd->pcPort);
 
@@ -162,14 +171,15 @@ void pn532_uart_disconnect(nfc_device_t* pnd)
   free(pnd);
 }
 
-bool pn532_uart_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen)
+bool pn532_uart_transceive(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen)
 {
   byte_t abtTxBuf[BUFFER_LENGTH] = { 0x00, 0x00, 0xff }; // Every packet must start with "00 00 ff"
   byte_t abtRxBuf[BUFFER_LENGTH];
   size_t szRxBufLen = BUFFER_LENGTH;
   size_t szPos;
-  const byte_t pn53x_ack_frame[] = { 0x00,0x00,0xff,0x00,0xff,0x00 };
-  const byte_t pn53x_nack_frame[] = { 0x00,0x00,0xff,0xff,0x00,0x00 };
+  int res;
+  // TODO: Move this one level up for libnfc-1.6
+  uint8_t ack_frame[] = { 0x00, 0x00, 0xff, 0x00, 0xff, 0x00 };
 
   // Packet length = data length (len) + checksum (1) + end of stream marker (1)
   abtTxBuf[3] = szTxLen;
@@ -191,13 +201,18 @@ bool pn532_uart_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, con
 #ifdef DEBUG
   PRINT_HEX("TX", abtTxBuf,szTxLen+7);
 #endif
-  if (!uart_send((serial_port)nds,abtTxBuf,szTxLen+7)) {
+  res = uart_send((serial_port)pnd->nds,abtTxBuf,szTxLen+7);
+  if(res != 0) {
     ERR("%s", "Unable to transmit data. (TX)");
+    pnd->iLastError = res;
     return false;
   }
 
-  if (!uart_receive((serial_port)nds,abtRxBuf,&szRxBufLen)) {
+  szRxBufLen = 6;
+  res = uart_receive((serial_port)pnd->nds,abtRxBuf,&szRxBufLen);
+  if (res != 0) {
     ERR("%s", "Unable to receive data. (RX)");
+    pnd->iLastError = res;
     return false;
   }
 
@@ -205,40 +220,45 @@ bool pn532_uart_transceive(const nfc_device_spec_t nds, const byte_t* pbtTx, con
   PRINT_HEX("RX", abtRxBuf,szRxBufLen);
 #endif
 
-  if(szRxBufLen >= sizeof(pn53x_ack_frame)) {
+  // WARN: UART is a per byte reception, so you usually receive ACK and next frame the same time
+  if (!pn53x_transceive_check_ack_frame_callback(pnd, abtRxBuf, szRxBufLen))
+    return false;
+  szRxBufLen -= sizeof(ack_frame);
+  memmove(abtRxBuf, abtRxBuf+sizeof(ack_frame), szRxBufLen);
 
-    // Check if PN53x reply ACK
-    if(0!=memcmp(pn53x_ack_frame, abtRxBuf, sizeof(pn53x_ack_frame))) {
-      DBG("%s", "PN53x doesn't respond ACK frame.");
-      if (0==memcmp(pn53x_nack_frame, abtRxBuf, sizeof(pn53x_nack_frame))) {
-        ERR("%s", "PN53x reply NACK frame.");
-        // FIXME Handle NACK frame i.e. resend frame, PN53x doesn't received it correctly
-      }
-      return false;
-    }
-
-    szRxBufLen -= sizeof(pn53x_ack_frame);
-    if(szRxBufLen) {
-      memmove(abtRxBuf, abtRxBuf+sizeof(pn53x_ack_frame), szRxBufLen);
-    }
-  }
-
-  if(szRxBufLen == 0) {
-    // There was no more data than ACK frame, we need to wait next frame
-    DBG("%s", "There was no more data than ACK frame, we need to wait next frame");
-    while (!uart_receive((serial_port)nds,abtRxBuf,&szRxBufLen)) {
+  if (szRxBufLen == 0) {
+    szRxBufLen = BUFFER_LENGTH;
+    do {
       delay_ms(10);
-    }
+      res = uart_receive((serial_port)pnd->nds,abtRxBuf,&szRxBufLen);
+    } while (res != 0 );
 #ifdef DEBUG
     PRINT_HEX("RX", abtRxBuf,szRxBufLen);
 #endif
   }
 
+
+#ifdef DEBUG
+  PRINT_HEX("TX", ack_frame,6);
+#endif
+  res = uart_send((serial_port)pnd->nds,ack_frame,6);
+  if (res != 0) {
+    ERR("%s", "Unable to transmit data. (TX)");
+    pnd->iLastError = res;
+    return false;
+  }
+
+  if (!pn53x_transceive_check_error_frame_callback (pnd, abtRxBuf, szRxBufLen))
+    return false;
+
   // When the answer should be ignored, just return a successful result
   if(pbtRx == NULL || pszRxLen == NULL) return true;
 
   // Only succeed when the result is at least 00 00 FF xx Fx Dx xx .. .. .. xx 00 (x = variable)
-  if(szRxBufLen < 9) return false;
+  if(szRxBufLen < 9) {
+    pnd->iLastError = DEINVAL;
+    return false;
+  }
 
   // Remove the preceding and appending bytes 00 00 ff 00 ff 00 00 00 FF xx Fx .. .. .. xx 00 (x = variable)
   *pszRxLen = szRxBufLen - 9;
@@ -260,7 +280,7 @@ pn532_uart_wakeup(const nfc_device_spec_t nds)
   PRINT_HEX("TX", pncmd_pn532c106_wakeup_preamble,sizeof(pncmd_pn532c106_wakeup_preamble));
 #endif
   uart_send((serial_port)nds, pncmd_pn532c106_wakeup_preamble, sizeof(pncmd_pn532c106_wakeup_preamble));
-  if(uart_receive((serial_port)nds,abtRx,&szRxLen)) {
+  if(0 == uart_receive((serial_port)nds,abtRx,&szRxLen)) {
 #ifdef DEBUG
     PRINT_HEX("RX", abtRx,szRxLen);
 #endif
@@ -268,7 +288,7 @@ pn532_uart_wakeup(const nfc_device_spec_t nds)
 }
 
 bool
-pn532_uart_check_communication(const nfc_device_spec_t nds)
+pn532_uart_check_communication(const nfc_device_spec_t nds, bool* success)
 {
   byte_t abtRx[BUFFER_LENGTH];
   size_t szRxLen;
@@ -277,22 +297,24 @@ pn532_uart_check_communication(const nfc_device_spec_t nds)
   /** To be sure that PN532 is alive, we have put a "Diagnose" command to execute a "Communication Line Test" */
   const byte_t pncmd_communication_test[] = { 0x00,0x00,0xff,0x09,0xf7,0xd4,0x00,0x00,'l','i','b','n','f','c',0xbe,0x00 };
 
+  *success = false;
+
 #ifdef DEBUG
   PRINT_HEX("TX", pncmd_communication_test,sizeof(pncmd_communication_test));
 #endif
-  uart_send((serial_port)nds, pncmd_communication_test, sizeof(pncmd_communication_test));
+  if (0 != uart_send((serial_port)nds, pncmd_communication_test, sizeof(pncmd_communication_test)))
+      return false;
 
-  if(!uart_receive((serial_port)nds,abtRx,&szRxLen)) {
+  if (0 != uart_receive((serial_port)nds,abtRx,&szRxLen)) {
     return false;
   }
 #ifdef DEBUG
   PRINT_HEX("RX", abtRx,szRxLen);
 #endif
 
-  if(0 != memcmp(abtRx,attempted_result,sizeof(attempted_result))) {
-    DBG("%s", "Communication test failed, result doesn't match to attempted one.");
-    return false;
-  }
+  if(0 == memcmp(abtRx,attempted_result,sizeof(attempted_result)))
+    *success = true;
+
   return true;
 }
 

@@ -117,17 +117,32 @@ int main(int argc, const char* argv[])
     nfc_initiator_init(pnd);
 
     // Drop the field for a while
-    nfc_configure(pnd,NDO_ACTIVATE_FIELD,false);
+    if (!nfc_configure(pnd,NDO_ACTIVATE_FIELD,false)) {
+      nfc_perror(pnd, "nfc_configure");
+      exit(EXIT_FAILURE);
+    }
 
     // Let the reader only try once to find a tag
-    nfc_configure(pnd,NDO_INFINITE_SELECT,false);
+    if (!nfc_configure(pnd,NDO_INFINITE_SELECT,false)) {
+      nfc_perror(pnd, "nfc_configure");
+      exit(EXIT_FAILURE);
+    }
 
     // Configure the CRC and Parity settings
-    nfc_configure(pnd,NDO_HANDLE_CRC,true);
-    nfc_configure(pnd,NDO_HANDLE_PARITY,true);
+    if (!nfc_configure(pnd,NDO_HANDLE_CRC,true)) {
+      nfc_perror(pnd, "nfc_configure");
+      exit(EXIT_FAILURE);
+    }
+    if (!nfc_configure(pnd,NDO_HANDLE_PARITY,true)) {
+      nfc_perror(pnd, "nfc_configure");
+      exit(EXIT_FAILURE);
+    }
 
     // Enable field so more power consuming cards can power themselves up
-    nfc_configure(pnd,NDO_ACTIVATE_FIELD,true);
+    if (!nfc_configure(pnd,NDO_ACTIVATE_FIELD,true)) {
+      nfc_perror(pnd, "nfc_configure");
+      exit(EXIT_FAILURE);
+    }
 
     printf("Connected to NFC reader: %s\n",pnd->acName);
 

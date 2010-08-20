@@ -69,6 +69,15 @@ typedef struct {
   bool bPar;
 /** The last tx bits setting, we need to reset this if it does not apply anymore */
   uint8_t ui8TxBits;
+/** Last error reported by the PCD / encountered by the PCD driver
+ * MSB       LSB
+ *  | 00 | 00 |
+ *    ||   ||
+ *    ||   ++----- Chip-level error (as reported by the PCD)
+ *    |+---------- Driver-level specific error
+ *    +----------- Driver-level general error (common to all drivers)
+ */
+  int iLastError;
 } nfc_device_t;
 
 
@@ -92,12 +101,23 @@ typedef struct {
 } nfc_device_desc_t;
 
 /**
+ * @struct chip_callbacks
+ * @brief Functions for chip specific functions.
+ */
+struct chip_callbacks {
+    /** Error lookup */
+    const char* (*strerror) (const nfc_device_t *pnd);
+};
+
+/**
  * @struct driver_callbacks
  * @brief Generic structure to handle NFC device functions.
  */
 struct driver_callbacks {
   /** Driver name */
   const char* acDriver;
+  /** Chip specific callback functions */
+  const struct chip_callbacks *pcc;
   /** Pick devices callback */
   nfc_device_desc_t *(*pick_device)(void);
   /** List devices callback */
@@ -105,7 +125,7 @@ struct driver_callbacks {
   /** Connect callback */
   nfc_device_t* (*connect)(const nfc_device_desc_t* pndd);
   /** Transceive callback */
-  bool (*transceive)(const nfc_device_spec_t nds, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen);
+  bool (*transceive)(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen);
   /** Disconnect callback */
   void (*disconnect)(nfc_device_t* pnd);
 };

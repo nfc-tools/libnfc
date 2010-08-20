@@ -45,6 +45,8 @@
 #include <nfc/nfc.h>
 #include <nfc/nfc-messages.h>
 #include "nfc-utils.h"
+// FIXME: Remove me
+#include "chips/pn53x.h"
 
 #define MAX_FRAME_LEN 264
 #define TIMEOUT 60 // secs.
@@ -80,7 +82,8 @@ bool sam_connection(nfc_device_t* pnd, int mode)
     break;
   }
   
-  if (!pnd->pdc->transceive(pnd->nds,pncmd_sam_config,szCmd,abtRx,&szRxLen)) {
+  // FIXME: Direct call
+  if (!pn53x_transceive(pnd,pncmd_sam_config,szCmd,abtRx,&szRxLen)) {
     ERR("%s %d", "Unable to execute SAMConfiguration command with mode byte:", mode);
     return false;
   }
@@ -164,18 +167,33 @@ int main(int argc, const char* argv[])
       nfc_initiator_init(pnd);
 
       // Drop the field for a while
-      nfc_configure(pnd,NDO_ACTIVATE_FIELD,false);
+      if (!nfc_configure(pnd,NDO_ACTIVATE_FIELD,false)) {
+        nfc_perror(pnd, "nfc_configure");
+        exit(EXIT_FAILURE);
+      }
 
       // Let the reader only try once to find a tag
-      nfc_configure(pnd,NDO_INFINITE_SELECT,false);
+      if (!nfc_configure(pnd,NDO_INFINITE_SELECT,false)) {
+        nfc_perror(pnd, "nfc_configure");
+        exit(EXIT_FAILURE);
+      }
 
       // Configure the CRC and Parity settings
-      nfc_configure(pnd,NDO_HANDLE_CRC,true);
-      nfc_configure(pnd,NDO_HANDLE_PARITY,true);
+      if (!nfc_configure(pnd,NDO_HANDLE_CRC,true)) {
+        nfc_perror(pnd, "nfc_configure");
+        exit(EXIT_FAILURE);
+      }
+      if (!nfc_configure(pnd,NDO_HANDLE_PARITY,true)) {
+        nfc_perror(pnd, "nfc_configure");
+        exit(EXIT_FAILURE);
+      }
 
       // Enable field so more power consuming cards can power themselves up
-      nfc_configure(pnd,NDO_ACTIVATE_FIELD,true);
-      
+      if (!nfc_configure(pnd,NDO_ACTIVATE_FIELD,true)) {
+        nfc_perror(pnd, "nfc_configure");
+        exit(EXIT_FAILURE);
+      }
+
       // Read the SAM's info
       if (!nfc_initiator_select_passive_target(pnd,NM_ISO14443A_106,NULL,0,&nti)) {
         ERR("%s", "Reading of SAM info failed.");

@@ -132,9 +132,12 @@ int main(int argc,char* argv[])
     return EXIT_FAILURE;
   }
   printf("%s", "Configuring emulator settings...");
-  nfc_configure(pndTag,NDO_HANDLE_CRC,false);
-  nfc_configure(pndTag,NDO_HANDLE_PARITY,false);
-  nfc_configure(pndTag,NDO_ACCEPT_INVALID_FRAMES,true);
+  if (!nfc_configure(pndTag,NDO_HANDLE_CRC,false) ||
+      !nfc_configure(pndTag,NDO_HANDLE_PARITY,false) ||
+      !nfc_configure(pndTag,NDO_ACCEPT_INVALID_FRAMES,true)) {
+    nfc_perror(pndTag, "nfc_configure");
+    exit(EXIT_FAILURE);
+  }
   printf("%s", "Done, emulated tag is initialized");
 
   // Try to open the NFC reader
@@ -143,9 +146,12 @@ int main(int argc,char* argv[])
   printf("Connected to the NFC reader device: %s", pndReader->acName);
   printf("%s", "Configuring NFC reader settings...");
   nfc_initiator_init(pndReader);
-  nfc_configure(pndReader,NDO_HANDLE_CRC,false);
-  nfc_configure(pndReader,NDO_HANDLE_PARITY,false);
-  nfc_configure(pndReader,NDO_ACCEPT_INVALID_FRAMES,true);
+  if (!nfc_configure(pndReader,NDO_HANDLE_CRC,false) ||
+      !nfc_configure(pndReader,NDO_HANDLE_PARITY,false) ||
+      !nfc_configure(pndReader,NDO_ACCEPT_INVALID_FRAMES,true)) {
+    nfc_perror(pndReader, "nfc_configure");
+    exit(EXIT_FAILURE);
+  }
   printf("%s", "Done, relaying frames now!");
 
   while(!quitting)
@@ -157,10 +163,16 @@ int main(int argc,char* argv[])
       if (szReaderRxBits == 7 && abtReaderRx[0] == 0x26)
       {
         // Drop down field for a very short time (original tag will reboot)
-        nfc_configure(pndReader,NDO_ACTIVATE_FIELD,false);
+        if (!nfc_configure(pndReader,NDO_ACTIVATE_FIELD,false)) {
+          nfc_perror(pndReader, "nfc_configure");
+          exit(EXIT_FAILURE);
+        }
         if(!quiet_output)
           printf("\n");
-        nfc_configure(pndReader,NDO_ACTIVATE_FIELD,true);
+        if (!nfc_configure(pndReader,NDO_ACTIVATE_FIELD,true)) {
+          nfc_perror(pndReader, "nfc_configure");
+          exit(EXIT_FAILURE);
+        }
       }
 
       // Print the reader frame to the screen
@@ -173,7 +185,10 @@ int main(int argc,char* argv[])
       if (nfc_initiator_transceive_bits(pndReader,abtReaderRx,szReaderRxBits,abtReaderRxPar,abtTagRx,&szTagRxBits,abtTagRxPar))
       {
         // Redirect the answer back to the reader
-        nfc_target_send_bits(pndTag,abtTagRx,szTagRxBits,abtTagRxPar);
+        if (!nfc_target_send_bits(pndTag,abtTagRx,szTagRxBits,abtTagRxPar)) {
+          nfc_perror(pndTag, "nfc_target_send_bits");
+          exit(EXIT_FAILURE);
+        }
 
         // Print the tag frame to the screen
         if(!quiet_output)

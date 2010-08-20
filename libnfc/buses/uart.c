@@ -36,6 +36,7 @@ http://www.teuniz.net/RS-232/index.html
 
 #include "uart.h"
 
+#include <nfc/nfc.h>
 #include <nfc/nfc-messages.h>
 
 // Test if we are dealing with unix operating systems
@@ -109,7 +110,7 @@ serial_port uart_open(const char* pcPortName)
 void uart_set_speed(serial_port sp, const uint32_t uiPortSpeed)
 {
   DBG("Serial port speed requested to be set to %d bauds.", uiPortSpeed);
-  // Set port speed (Input and Output)
+  const serial_port_unix* spu = (serial_port_unix*)sp;
 
   // Portability note: on some systems, B9600 != 9600 so we have to do
   // uint32_t <=> speed_t associations by hand.
@@ -140,16 +141,17 @@ void uart_set_speed(serial_port sp, const uint32_t uiPortSpeed)
     default:
       ERR("Unable to set serial port speed to %d bauds. Speed value must be one of those defined in termios(3).", uiPortSpeed);
   };
-  const serial_port_unix* spu = (serial_port_unix*)sp;
-  cfsetispeed((struct termios*)&spu->tiNew, stPortSpeed);
-  cfsetospeed((struct termios*)&spu->tiNew, stPortSpeed);
-  if( tcsetattr(spu->fd, TCSADRAIN, &spu->tiNew)  == -1)
+
+  // Set port speed (Input and Output)
+  cfsetispeed((struct termios*)&(spu->tiNew), stPortSpeed);
+  cfsetospeed((struct termios*)&(spu->tiNew), stPortSpeed);
+  if( tcsetattr(spu->fd, TCSADRAIN, &(spu->tiNew))  == -1)
   {
     ERR("%s", "Unable to apply new speed settings.");
   }
 }
 
-uint32_t uart_get_speed(const serial_port sp)
+uint32_t uart_get_speed(serial_port sp)
 {
   uint32_t uiPortSpeed = 0;
   const serial_port_unix* spu = (serial_port_unix*)sp;
@@ -191,7 +193,13 @@ void uart_close(const serial_port sp)
   free(sp);
 }
 
-bool uart_receive(const serial_port sp, byte_t* pbtRx, size_t* pszRxLen)
+/**
+ * @brief Receive data from UART and copy data to \a pbtRx
+ *
+ * @return 0 on success, otherwise driver error code
+ */
+int
+uart_receive(serial_port sp, byte_t* pbtRx, size_t* pszRxLen)
 {
   int res;
   int byteCount;
@@ -211,7 +219,7 @@ bool uart_receive(const serial_port sp, byte_t* pbtRx, size_t* pszRxLen)
     // Read error
     if (res < 0) {
       DBG("%s", "RX error.");
-      return false;
+      return DEIO;
     }
 
     // Read time-out
@@ -219,31 +227,41 @@ bool uart_receive(const serial_port sp, byte_t* pbtRx, size_t* pszRxLen)
       if (*pszRxLen == 0) {
         // Error, we received no data
         DBG("%s", "RX time-out, buffer empty.");
-        return false;
+        return DETIMEOUT;
       } else {
         // We received some data, but nothing more is available
-        return true;
+        return 0;
       }
     }
 
     // Retrieve the count of the incoming bytes
     res = ioctl(((serial_port_unix*)sp)->fd, FIONREAD, &byteCount);
-    if (res < 0) return false;
+    if (res < 0) {
+      return DEIO;
+    }
 
     // There is something available, read the data
     res = read(((serial_port_unix*)sp)->fd,pbtRx+(*pszRxLen),byteCount);
 
     // Stop if the OS has some troubles reading the data
-    if (res <= 0) return false;
+    if (res <= 0) {
+      return DEIO;
+    }
 
     *pszRxLen += res;
 
   } while (byteCount);
 
-  return true;
+  return 0;
 }
 
-bool uart_send(const serial_port sp, const byte_t* pbtTx, const size_t szTxLen)
+/**
+ * @brief Send \a pbtTx content to UART
+ *
+ * @return 0 on success, otherwise a driver error is returned
+ */
+int
+uart_send(serial_port sp, const byte_t* pbtTx, const size_t szTxLen)
 {
   int32_t res;
   size_t szPos = 0;
@@ -261,24 +279,26 @@ bool uart_send(const serial_port sp, const byte_t* pbtTx, const size_t szTxLen)
     // Write error
     if (res < 0) {
       DBG("%s", "TX error.");
-      return false;
+      return DEIO;
     }
 
     // Write time-out
     if (res == 0) {
       DBG("%s", "TX time-out.");
-      return false;
+      return DETIMEOUT;
     }
 
     // Send away the bytes
     res = write(((serial_port_unix*)sp)->fd,pbtTx+szPos,szTxLen-szPos);
     
     // Stop if the OS has some troubles sending the data
-    if (res <= 0) return false;
+    if (res <= 0) {
+      return DEIO;
+    }
 
     szPos += res;
   }
-  return true;
+  return 0;
 }
 
 #else
@@ -384,17 +404,25 @@ uint32_t uart_get_speed(const serial_port sp)
   return 0;
 }
 
-bool uart_receive(const serial_port sp, byte_t* pbtRx, size_t* pszRxLen)
+int uart_receive(serial_port sp, byte_t* pbtRx, size_t* pszRxLen)
 {
-  ReadFile(((serial_port_windows*)sp)->hPort,pbtRx,*pszRxLen,(LPDWORD)pszRxLen,NULL);
-  return (*pszRxLen != 0);
+  if (!ReadFile(((serial_port_windows*)sp)->hPort,pbtRx,*pszRxLen,(LPDWORD)pszRxLen,NULL)) {
+    return DEIO;
+  }
+  if (!*pszRxLen)
+    return DEIO;
+  return 0;
 }
 
-bool uart_send(const serial_port sp, const byte_t* pbtTx, const size_t szTxLen)
+int uart_send(serial_port sp, const byte_t* pbtTx, const size_t szTxLen)
 {
   DWORD dwTxLen = 0;
-  return WriteFile(((serial_port_windows*)sp)->hPort,pbtTx,szTxLen,&dwTxLen,NULL);
-  return (dwTxLen != 0);
+  if (!WriteFile(((serial_port_windows*)sp)->hPort,pbtTx,szTxLen,&dwTxLen,NULL)) {
+    return DEIO;
+  }
+  if (!dwTxLen)
+    return DEIO;
+  return 0;
 }
 
 #endif /* _WIN32 */

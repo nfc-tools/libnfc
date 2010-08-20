@@ -17,7 +17,7 @@
  * After a successful authentication it will be possible to execute other commands (e.g. Read/Write). 
  * The MIFARE Classic Specification (http://www.nxp.com/acrobat/other/identification/M001053_MF1ICS50_rev5_3.pdf) explains more about this process.
  */
-bool nfc_initiator_mifare_cmd(const nfc_device_t* pnd, const mifare_cmd mc, const uint8_t ui8Block, mifare_param* pmp)
+bool nfc_initiator_mifare_cmd(nfc_device_t* pnd, const mifare_cmd mc, const uint8_t ui8Block, mifare_param* pmp)
 {
   byte_t abtRx[265];
   size_t szRxLen;
@@ -66,7 +66,10 @@ bool nfc_initiator_mifare_cmd(const nfc_device_t* pnd, const mifare_cmd mc, cons
   if (szParamLen) memcpy(abtCmd+2,(byte_t*)pmp,szParamLen);
 
   // Fire the mifare command
-  if (!nfc_initiator_transceive_dep_bytes(pnd,abtCmd,2+szParamLen,abtRx,&szRxLen)) return false;
+  if (!nfc_initiator_transceive_dep_bytes(pnd,abtCmd,2+szParamLen,abtRx,&szRxLen)) {
+    nfc_perror (pnd, "nfc_initiator_transceive_dep_bytes");
+    return false;
+  }
 
   // When we have executed a read command, copy the received bytes into the param
   if (mc == MC_READ) {
