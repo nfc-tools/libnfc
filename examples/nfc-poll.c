@@ -117,12 +117,6 @@ main (int argc, const char *argv[])
 
     printf ("Connected to NFC reader: %s\n", pnd->acName);
 
-    if (pnd->nc == NC_PN531) {
-      // PN531 doesn't support hardware polling (InAutoPoll)
-      // TODO find a way to handle this in higher level (i.e. libnfc)
-      WARN ("%s", "PN531 doesn't support hardware polling.");
-      continue;
-    }
     printf ("PN53x will poll during %ld ms\n", (unsigned long) btPollNr * szTargetTypes * btPeriod * 150);
     res = nfc_initiator_poll_targets (pnd, &nttMifare, 1, btPollNr, btPeriod, antTargets, &szTargetFound);
     if (res) {
@@ -134,7 +128,8 @@ main (int argc, const char *argv[])
         print_nfc_iso14443a_info (antTargets[n].nti.nai);
       }
     } else {
-      ERR ("%s", "Polling failed.");
+      nfc_perror (pnd, "nfc_initiator_poll_targets");
+      exit (EXIT_FAILURE);
     }
 
     nfc_disconnect (pnd);
