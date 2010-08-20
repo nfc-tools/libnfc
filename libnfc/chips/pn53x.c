@@ -475,12 +475,13 @@ pn53x_InAutoPoll(nfc_device_t* pnd,
                  nfc_target_t* pntTargets, size_t* pszTargetFound)
 {
   size_t szTxInAutoPoll, n, szRxLen;
-  byte_t abtRx[256];
+  byte_t abtRx[MAX_FRAME_LEN];
   bool res;
   byte_t *pbtTxInAutoPoll;
 
-  if(pnd->nc == NC_PN531) {
-    // TODO This function is not supported by pn531 (set errno = ENOSUPP or similar)
+  if(pnd->nc != NC_PN532) {
+    // This function is not supported by pn531 neither pn533
+    pnd->iLastError = DENOTSUP;
     return false;
   }
 
@@ -495,7 +496,7 @@ pn53x_InAutoPoll(nfc_device_t* pnd,
     pbtTxInAutoPoll[4+n] = pnttTargetTypes[n];
   }
 
-  szRxLen = 256;
+  szRxLen = MAX_FRAME_LEN;
   res = pnd->pdc->transceive(pnd, pbtTxInAutoPoll, szTxInAutoPoll, abtRx, &szRxLen);
 
   if((szRxLen == 0)||(res == false)) {
@@ -569,7 +570,8 @@ static struct sErrorMessage {
   /* TODO: Move me in more generic code for libnfc 1.6 */
   { DEINVAL,            "Invalid argument" },
   { DEIO,               "Input/output error" },
-  { DETIMEOUT,          "Operation timed-out" }
+  { DETIMEOUT,          "Operation timed-out" },
+  { DENOTSUP,           "Operation not supported" }
 };
 
 const char *

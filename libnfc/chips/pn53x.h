@@ -73,6 +73,7 @@
 #define DENACK          0x0100        /* NACK */
 #define DEACKMISMATCH   0x0200        /* Unexpected data */
 #define DEISERRFRAME    0x0300        /* Error frame */
+#define DENOTSUP        0x0400        /* Not supported */
 
 bool pn53x_transceive_check_ack_frame_callback(nfc_device_t* pnd, const byte_t *pbtRxFrame, const size_t szRxFrameLen);
 bool pn53x_transceive_check_error_frame_callback(nfc_device_t* pnd, const byte_t *pbtRxFrame, const size_t szRxFrameLen);
