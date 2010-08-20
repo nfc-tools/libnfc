@@ -224,7 +224,7 @@ bool arygon_transceive(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTx
   PRINT_HEX("RX", abtRxBuf,szRxBufLen);
 #endif
 
-  if (!pn53x_transceive_callback(pnd, abtRxBuf, szRxBufLen))
+  if (!pn53x_transceive_check_ack_frame_callback(pnd, abtRxBuf, szRxBufLen))
     return false;
 
   szRxBufLen = BUFFER_LENGTH;
