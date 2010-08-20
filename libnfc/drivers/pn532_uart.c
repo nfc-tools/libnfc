@@ -237,14 +237,6 @@ bool pn532_uart_transceive(nfc_device_t* pnd, const byte_t* pbtTx, const size_t 
 #endif
   }
 
-  // When the answer should be ignored, just return a successful result
-  if(pbtRx == NULL || pszRxLen == NULL) return true;
-
-  // Only succeed when the result is at least 00 00 FF xx Fx Dx xx .. .. .. xx 00 (x = variable)
-  if(szRxBufLen < 9) {
-    pnd->iLastError = DEINVAL;
-    return false;
-  }
 
 #ifdef DEBUG
   PRINT_HEX("TX", ack_frame,6);
@@ -253,6 +245,18 @@ bool pn532_uart_transceive(nfc_device_t* pnd, const byte_t* pbtTx, const size_t 
   if (res != 0) {
     ERR("%s", "Unable to transmit data. (TX)");
     pnd->iLastError = res;
+    return false;
+  }
+
+  if (!pn53x_transceive_check_error_frame_callback (pnd, abtRxBuf, szRxBufLen))
+    return false;
+
+  // When the answer should be ignored, just return a successful result
+  if(pbtRx == NULL || pszRxLen == NULL) return true;
+
+  // Only succeed when the result is at least 00 00 FF xx Fx Dx xx .. .. .. xx 00 (x = variable)
+  if(szRxBufLen < 9) {
+    pnd->iLastError = DEINVAL;
     return false;
   }
 
