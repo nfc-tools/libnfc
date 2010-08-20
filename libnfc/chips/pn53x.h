@@ -74,7 +74,8 @@
 #define DEACKMISMATCH   0x0200        /* Unexpected data */
 #define DEISERRFRAME    0x0300        /* Error frame */
 
-bool pn53x_transceive_callback(nfc_device_t* pnd, const byte_t *pbtRxFrame, const size_t szRxFrameLen);
+bool pn53x_transceive_check_ack_frame_callback(nfc_device_t* pnd, const byte_t *pbtRxFrame, const size_t szRxFrameLen);
+bool pn53x_transceive_check_error_frame_callback(nfc_device_t* pnd, const byte_t *pbtRxFrame, const size_t szRxFrameLen);
 bool pn53x_transceive(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen);
 byte_t pn53x_get_reg(nfc_device_t* pnd, uint16_t ui16Reg);
 bool pn53x_set_reg(nfc_device_t* pnd, uint16_t ui16Reg, uint8_t ui8SybmolMask, uint8_t ui8Value);

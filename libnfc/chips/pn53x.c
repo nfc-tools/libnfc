@@ -68,9 +68,10 @@ const byte_t pncmd_target_get_status          [  2] = { 0xD4,0x8A };
 
 static const byte_t pn53x_ack_frame[]  = { 0x00,0x00,0xff,0x00,0xff,0x00 };
 static const byte_t pn53x_nack_frame[] = { 0x00,0x00,0xff,0xff,0x00,0x00 };
+static const byte_t pn53x_error_frame[] = { 0x00,0x00,0xff,0x01,0xff,0x7f,0x81,0x00 };
 
 // XXX: Is this function correctly named ?
-bool pn53x_transceive_callback(nfc_device_t* pnd, const byte_t *pbtRxFrame, const size_t szRxFrameLen)
+bool pn53x_transceive_check_ack_frame_callback(nfc_device_t* pnd, const byte_t *pbtRxFrame, const size_t szRxFrameLen)
 {
   if (szRxFrameLen >= sizeof (pn53x_ack_frame)) {
     if (0 == memcmp (pbtRxFrame, pn53x_ack_frame, sizeof (pn53x_ack_frame))) {
@@ -91,6 +92,19 @@ bool pn53x_transceive_callback(nfc_device_t* pnd, const byte_t *pbtRxFrame, cons
   abort();
 #endif
   return false;
+}
+
+bool pn53x_transceive_check_error_frame_callback(nfc_device_t* pnd, const byte_t *pbtRxFrame, const size_t szRxFrameLen)
+{
+  if (szRxFrameLen >= sizeof (pn53x_error_frame)) {
+    if (0 == memcmp (pbtRxFrame, pn53x_error_frame, sizeof (pn53x_error_frame))) {
+      DBG("%s", "PN53x sent an error frame");
+      pnd->iLastError = DEISERRFRAME;
+      return false;
+    }
+  }
+
+  return true;
 }
 
 bool pn53x_transceive(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen)

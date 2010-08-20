@@ -285,7 +285,7 @@ bool pn53x_usb_transceive(nfc_device_t* pnd, const byte_t* pbtTx, const size_t s
   PRINT_HEX("RX", abtRx,ret);
 #endif
 
-  if (!pn53x_transceive_callback (pnd, abtRx, ret))
+  if (!pn53x_transceive_check_ack_frame_callback (pnd, abtRx, ret))
     return false;
 
     ret = usb_bulk_read(pus->pudh, pus->uiEndPointIn, (char*)abtRx, BUFFER_LENGTH, USB_TIMEOUT);
@@ -304,6 +304,9 @@ bool pn53x_usb_transceive(nfc_device_t* pnd, const byte_t* pbtTx, const size_t s
   PRINT_HEX("TX", ack_frame,6);
 #endif
   usb_bulk_write(pus->pudh, pus->uiEndPointOut, (char *)ack_frame, 6, USB_TIMEOUT);
+
+  if (!pn53x_transceive_check_error_frame_callback (pnd, abtRx, ret))
+    return false;
 
   // When the answer should be ignored, just return a succesful result
   if(pbtRx == NULL || pszRxLen == NULL) return true;
@@ -329,8 +332,5 @@ bool pn53x_usb_transceive(nfc_device_t* pnd, const byte_t* pbtTx, const size_t s
 
   memcpy( pbtRx, abtRx + 7, *pszRxLen);
 
-  if (abtRx[5] != pbtTx[0] + 1) {
-    pnd->iLastError = DEISERRFRAME;
-  }
   return true;
 }
