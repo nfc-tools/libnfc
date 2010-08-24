@@ -47,35 +47,6 @@
 
 nfc_device_desc_t * nfc_pick_device (void);
 
-/// @TODO Remove all PN53x related command from this file (should be in pn53x)
-// // PN53X configuration
-// extern const byte_t pncmd_get_firmware_version       [  2];
-// extern const byte_t pncmd_get_general_status         [  2];
-// extern const byte_t pncmd_get_register               [  4];
-// extern const byte_t pncmd_set_register               [  5];
-// extern const byte_t pncmd_set_parameters             [  3];
-// extern const byte_t pncmd_rf_configure               [ 14];
-// 
-// // Reader
-// extern const byte_t pncmd_initiator_list_passive        [264];
-// extern const byte_t pncmd_initiator_jump_for_dep        [ 68];
-// extern const byte_t pncmd_initiator_select              [  3];
-// extern const byte_t pncmd_initiator_deselect            [  3];
-// extern const byte_t pncmd_initiator_release             [  3];
-// extern const byte_t pncmd_initiator_set_baud_rate       [  5];
-// extern const byte_t pncmd_initiator_exchange_data       [265];
-// extern const byte_t pncmd_initiator_exchange_raw_data   [266];
-// extern const byte_t pncmd_initiator_auto_poll           [  5];
-// 
-// // Target
-// extern const byte_t pncmd_target_get_data            [  2];
-// extern const byte_t pncmd_target_set_data            [264];
-// extern const byte_t pncmd_target_init                [ 39];
-// extern const byte_t pncmd_target_virtual_card        [  4];
-// extern const byte_t pncmd_target_receive             [  2];
-// extern const byte_t pncmd_target_send                [264];
-// extern const byte_t pncmd_target_get_status          [  2];
-
 /**
  * @brief Probe for the first discoverable supported devices (ie. only available for some drivers)
  * @return \a nfc_device_desc_t struct pointer
