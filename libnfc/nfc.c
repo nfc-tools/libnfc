@@ -72,7 +72,7 @@ nfc_device_desc_t * nfc_pick_device (void);
 // extern const byte_t pncmd_target_set_data            [264];
 // extern const byte_t pncmd_target_init                [ 39];
 // extern const byte_t pncmd_target_virtual_card        [  4];
-extern const byte_t pncmd_target_receive             [  2];
+// extern const byte_t pncmd_target_receive             [  2];
 extern const byte_t pncmd_target_send                [264];
 // extern const byte_t pncmd_target_get_status          [  2];
 
@@ -538,37 +538,7 @@ bool nfc_target_init(nfc_device_t* pnd, byte_t* pbtRx, size_t* pszRxBits)
  */
 bool nfc_target_receive_bits(nfc_device_t* pnd, byte_t* pbtRx, size_t* pszRxBits, byte_t* pbtRxPar)
 {
-  byte_t abtRx[MAX_FRAME_LEN];
-  size_t szRxLen;
-  size_t szFrameBits;
-  uint8_t ui8Bits;
-
-  pnd->iLastError = 0;
-
-
-  // Try to gather a received frame from the reader
-  if (!pn53x_transceive(pnd,pncmd_target_receive,2,abtRx,&szRxLen)) return false;
-
-  // Get the last bit-count that is stored in the received byte 
-  ui8Bits = pn53x_get_reg(pnd,REG_CIU_CONTROL) & SYMBOL_RX_LAST_BITS;
-
-  // Recover the real frame length in bits
-  szFrameBits = ((szRxLen-1-((ui8Bits==0)?0:1))*8)+ui8Bits;
-
-  // Ignore the status byte from the PN53X here, it was checked earlier in pn53x_transceive()
-  // Check if we should recover the parity bits ourself
-  if (!pnd->bPar)
-  {
-    // Unwrap the response frame
-    pn53x_unwrap_frame(abtRx+1,szFrameBits,pbtRx,pszRxBits,pbtRxPar);
-  } else {
-    // Save the received bits
-    *pszRxBits = szFrameBits;
-    // Copy the received bytes
-    memcpy(pbtRx,abtRx+1,szRxLen-1);
-  }
-  // Everyting seems ok, return true
-  return true;
+  return pn53x_target_receive_bits (pnd, pbtRx, pszRxBits, pbtRxPar);
 }
 
 /**
@@ -590,23 +560,7 @@ bool nfc_target_receive_dep_bytes(nfc_device_t* pnd, byte_t* pbtRx, size_t* pszR
  */
 bool nfc_target_receive_bytes(nfc_device_t* pnd, byte_t* pbtRx, size_t* pszRxLen)
 {
-  byte_t abtRx[MAX_FRAME_LEN];
-  size_t szRxLen;
-
-  pnd->iLastError = 0;
-
-
-  // Try to gather a received frame from the reader
-  if (!pn53x_transceive(pnd,pncmd_target_receive,2,abtRx,&szRxLen)) return false;
-
-  // Save the received byte count
-  *pszRxLen = szRxLen-1;
-
-  // Copy the received bytes
-  memcpy(pbtRx,abtRx+1,*pszRxLen);
-
-  // Everyting seems ok, return true
-  return true;
+  return pn53x_target_receive_bytes(pnd, pbtRx, pszRxLen);
 }
 
 /**
