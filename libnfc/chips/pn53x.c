@@ -691,7 +691,7 @@ pn53x_configure(nfc_device_t* pnd, const nfc_device_option_t ndo, const bool bEn
   return true;
 }
 
-bool pn53x_select_dep_target(nfc_device_t* pnd, const nfc_modulation_t nmInitModulation, const byte_t* pbtPidData, const size_t szPidDataLen, const byte_t* pbtNFCID3i, const size_t szNFCID3iDataLen, const byte_t *pbtGbData, const size_t szGbDataLen, nfc_target_info_t* pnti)
+bool pn53x_initiator_select_dep_target(nfc_device_t* pnd, const nfc_modulation_t nmInitModulation, const byte_t* pbtPidData, const size_t szPidDataLen, const byte_t* pbtNFCID3i, const size_t szNFCID3iDataLen, const byte_t *pbtGbData, const size_t szGbDataLen, nfc_target_info_t* pnti)
 {
   byte_t abtRx[MAX_FRAME_LEN];
   size_t szRxLen;
@@ -743,7 +743,7 @@ bool pn53x_select_dep_target(nfc_device_t* pnd, const nfc_modulation_t nmInitMod
   return true;
 }
 
-bool pn53x_transceive_dep_bytes(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen)
+bool pn53x_initiator_transceive_dep_bytes(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen)
 {
   byte_t abtRx[MAX_FRAME_LEN];
   size_t szRxLen;
@@ -777,7 +777,7 @@ bool pn53x_transceive_dep_bytes(nfc_device_t* pnd, const byte_t* pbtTx, const si
   return true;
 }
 
-bool pn53x_transceive_bits(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxBits, const byte_t* pbtTxPar, byte_t* pbtRx, size_t* pszRxBits, byte_t* pbtRxPar)
+bool pn53x_initiator_transceive_bits(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxBits, const byte_t* pbtTxPar, byte_t* pbtRx, size_t* pszRxBits, byte_t* pbtRxPar)
 {
   byte_t abtRx[MAX_FRAME_LEN];
   size_t szRxLen;
@@ -838,7 +838,7 @@ bool pn53x_transceive_bits(nfc_device_t* pnd, const byte_t* pbtTx, const size_t 
   return true;
 }
 
-bool pn53x_transceive_bytes(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen)
+bool pn53x_initiator_transceive_bytes(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen)
 {
   byte_t abtRx[MAX_FRAME_LEN];
   size_t szRxLen;
