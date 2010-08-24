@@ -38,6 +38,13 @@
 #include "pn53x.h"
 #include "../mirror-subr.h"
 
+#ifdef _WIN32
+  #include <windows.h>
+
+  #define strdup _strdup
+  #define snprintf sprintf_s
+#endif
+
 // PN53X configuration
 const byte_t pncmd_get_firmware_version       [  2] = { 0xD4,0x02 };
 const byte_t pncmd_get_general_status         [  2] = { 0xD4,0x04 };
