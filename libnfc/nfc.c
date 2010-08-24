@@ -49,7 +49,7 @@ nfc_device_desc_t * nfc_pick_device (void);
 
 /// @TODO Remove all PN53x related command from this file (should be in pn53x)
 // // PN53X configuration
-extern const byte_t pncmd_get_firmware_version       [  2];
+// extern const byte_t pncmd_get_firmware_version       [  2];
 // extern const byte_t pncmd_get_general_status         [  2];
 // extern const byte_t pncmd_get_register               [  4];
 // extern const byte_t pncmd_set_register               [  5];
@@ -147,8 +147,6 @@ nfc_device_t* nfc_connect(nfc_device_desc_t* pndd)
 {
   nfc_device_t* pnd = NULL;
   uint32_t uiDriver;
-  byte_t abtFw[4];
-  size_t szFwLen = sizeof(abtFw);
 
   // Search through the device list for an available device
   for (uiDriver=0; uiDriver<sizeof(drivers_callbacks_list)/sizeof(drivers_callbacks_list[0]); uiDriver++)
@@ -183,28 +181,12 @@ nfc_device_t* nfc_connect(nfc_device_desc_t* pndd)
     // Test if the connection was successful
     if (pnd != NULL)
     {
-      char* pcName;
       DBG("[%s] has been claimed.", pnd->acName);
       // Great we have claimed a device
       pnd->pdc = &(drivers_callbacks_list[uiDriver]);
 
-      // Try to retrieve PN53x chip revision
-      if (!pn53x_transceive(pnd,pncmd_get_firmware_version,2,abtFw,&szFwLen))
-      {
-        // Failed to get firmware revision??, whatever...let's disconnect and clean up and return err
-        DBG("Failed to get firmware revision for: %s", pnd->acName);
-        pnd->pdc->disconnect(pnd);
-        return NULL;
-      }
-
-      // Add the firmware revision to the device name, PN531 gives 2 bytes info, but PN532 and PN533 gives 4
-      pcName = strdup(pnd->acName);
-      switch(pnd->nc) {
-        case NC_PN531: snprintf(pnd->acName,DEVICE_NAME_LENGTH - 1,"%s - PN531 v%d.%d",pcName,abtFw[0],abtFw[1]); break;
-        case NC_PN532: snprintf(pnd->acName,DEVICE_NAME_LENGTH - 1,"%s - PN532 v%d.%d (0x%02x)",pcName,abtFw[1],abtFw[2],abtFw[3]); break;
-        case NC_PN533: snprintf(pnd->acName,DEVICE_NAME_LENGTH - 1,"%s - PN533 v%d.%d (0x%02x)",pcName,abtFw[1],abtFw[2],abtFw[3]); break;
-      }
-      free(pcName);
+      if (!pn53x_get_firmware_version(pnd))
+	  return NULL;
 
       // Reset the ending transmission bits register, it is unknown what the last tranmission used there
       if (!pn53x_set_reg(pnd,REG_CIU_BIT_FRAMING,SYMBOL_TX_LAST_BITS,0x00)) return NULL;

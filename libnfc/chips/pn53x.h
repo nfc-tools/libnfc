@@ -94,6 +94,8 @@ bool pn53x_InDeselect(nfc_device_t* pnd, const uint8_t ui8Target);
 bool pn53x_InRelease(nfc_device_t* pnd, const uint8_t ui8Target);
 bool pn53x_InAutoPoll(nfc_device_t* pnd, const nfc_target_type_t* pnttTargetTypes, const size_t szTargetTypes, const byte_t btPollNr, const byte_t btPeriod, nfc_target_t* pntTargets, size_t* pszTargetFound);
 
+bool pn53x_get_firmware_version (nfc_device_t *pnd);
+
 const char *pn53x_strerror (const nfc_device_t *pnd);
 
 static const struct chip_callbacks pn53x_callbacks_list = {

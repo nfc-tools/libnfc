@@ -590,3 +590,28 @@ pn53x_strerror (const nfc_device_t *pnd)
   return pcRes;
 }
 
+bool
+pn53x_get_firmware_version (nfc_device_t *pnd)
+{
+  byte_t abtFw[4];
+  size_t szFwLen = sizeof(abtFw);
+  char* pcName;
+
+  if (!pn53x_transceive(pnd,pncmd_get_firmware_version,2,abtFw,&szFwLen))
+  {
+    // Failed to get firmware revision??, whatever...let's disconnect and clean up and return err
+    DBG("Failed to get firmware revision for: %s", pnd->acName);
+    pnd->pdc->disconnect(pnd);
+    return false;
+  }
+
+  // Add the firmware revision to the device name, PN531 gives 2 bytes info, but PN532 and PN533 gives 4
+  pcName = strdup(pnd->acName);
+  switch(pnd->nc) {
+    case NC_PN531: snprintf(pnd->acName,DEVICE_NAME_LENGTH - 1,"%s - PN531 v%d.%d",pcName,abtFw[0],abtFw[1]); break;
+    case NC_PN532: snprintf(pnd->acName,DEVICE_NAME_LENGTH - 1,"%s - PN532 v%d.%d (0x%02x)",pcName,abtFw[1],abtFw[2],abtFw[3]); break;
+    case NC_PN533: snprintf(pnd->acName,DEVICE_NAME_LENGTH - 1,"%s - PN533 v%d.%d (0x%02x)",pcName,abtFw[1],abtFw[2],abtFw[3]); break;
+  }
+  free(pcName);
+  return true;
+}
