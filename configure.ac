@@ -1,4 +1,6 @@
 # General init
+
+# /!\ Don't forget to update 'windows/Makefile' too /!\
 AC_INIT(libnfc, 1.3.9, info@libnfc.org)
 
 AC_CONFIG_MACRO_DIR([m4])
