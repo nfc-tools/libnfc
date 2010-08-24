@@ -102,6 +102,7 @@ bool pn53x_transceive_bits(nfc_device_t* pnd, const byte_t* pbtTx, const size_t 
 bool pn53x_transceive_bytes(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen);
 
 bool pn53x_target_receive_dep_bytes(nfc_device_t* pnd, byte_t* pbtRx, size_t* pszRxLen);
+bool pn53x_target_send_dep_bytes(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxLen);
 
 const char *pn53x_strerror (const nfc_device_t *pnd);
 

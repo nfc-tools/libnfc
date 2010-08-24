@@ -891,3 +891,24 @@ bool pn53x_target_receive_dep_bytes(nfc_device_t* pnd, byte_t* pbtRx, size_t* ps
   // Everyting seems ok, return true
   return true;
 }
+
+bool pn53x_target_send_dep_bytes(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxLen)
+{
+  byte_t abtCmd[sizeof(pncmd_target_set_data)];
+
+  pnd->iLastError = 0;
+
+  memcpy(abtCmd,pncmd_target_set_data,sizeof(pncmd_target_set_data));
+
+  // We can not just send bytes without parity if while the PN53X expects we handled them
+  if (!pnd->bPar) return false;
+
+  // Copy the data into the command frame
+  memcpy(abtCmd+2,pbtTx,szTxLen);
+
+  // Try to send the bits to the reader
+  if (!pn53x_transceive(pnd,abtCmd,szTxLen+2,NULL,NULL)) return false;
+
+  // Everyting seems ok, return true
+  return true;
+}
