@@ -58,7 +58,7 @@ nfc_device_desc_t * nfc_pick_device (void);
 // 
 // // Reader
 // extern const byte_t pncmd_initiator_list_passive        [264];
-extern const byte_t pncmd_initiator_jump_for_dep        [ 68];
+// extern const byte_t pncmd_initiator_jump_for_dep        [ 68];
 // extern const byte_t pncmd_initiator_select              [  3];
 // extern const byte_t pncmd_initiator_deselect            [  3];
 // extern const byte_t pncmd_initiator_release             [  3];
@@ -286,54 +286,7 @@ bool nfc_initiator_init(nfc_device_t* pnd)
  */
 bool nfc_initiator_select_dep_target(nfc_device_t* pnd, const nfc_modulation_t nmInitModulation, const byte_t* pbtPidData, const size_t szPidDataLen, const byte_t* pbtNFCID3i, const size_t szNFCID3iDataLen, const byte_t *pbtGbData, const size_t szGbDataLen, nfc_target_info_t* pnti)
 {
-  byte_t abtRx[MAX_FRAME_LEN];
-  size_t szRxLen;
-  size_t offset;
-  byte_t abtCmd[sizeof(pncmd_initiator_jump_for_dep)];
-
-  pnd->iLastError = 0;
-
-  memcpy(abtCmd,pncmd_initiator_jump_for_dep,sizeof(pncmd_initiator_jump_for_dep));
-
-  if(nmInitModulation == NM_ACTIVE_DEP) {
-    abtCmd[2] = 0x01; /* active DEP */
-  }
-  abtCmd[3] = 0x00; /* baud rate = 106kbps */
-
-  offset = 5;
-  if(pbtPidData && nmInitModulation != NM_ACTIVE_DEP) { /* can't have passive initiator data when using active mode */
-    abtCmd[4] |= 0x01;
-    memcpy(abtCmd+offset,pbtPidData,szPidDataLen);
-    offset+= szPidDataLen;
-  }
-
-  if(pbtNFCID3i) {
-    abtCmd[4] |= 0x02;
-    memcpy(abtCmd+offset,pbtNFCID3i,szNFCID3iDataLen);
-    offset+= szNFCID3iDataLen;
-  }
-
-  if(pbtGbData) {
-    abtCmd[4] |= 0x04;
-    memcpy(abtCmd+offset,pbtGbData,szGbDataLen);
-    offset+= szGbDataLen;
-  }
-
-  // Try to find a target, call the transceive callback function of the current device
-  if (!pn53x_transceive(pnd,abtCmd,5+szPidDataLen+szNFCID3iDataLen+szGbDataLen,abtRx,&szRxLen)) return false;
-
-  // Make sure one target has been found, the PN53X returns 0x00 if none was available
-  if (abtRx[1] != 1) return false;
-
-  // Is a target info struct available
-  if (pnti)
-  {
-    memcpy(pnti->ndi.NFCID3i,abtRx+2,10);
-    pnti->ndi.btDID = abtRx[12];
-    pnti->ndi.btBSt = abtRx[13];
-    pnti->ndi.btBRt = abtRx[14];
-  }
-  return true;
+  return pn53x_select_dep_target(pnd, nmInitModulation, pbtPidData, szPidDataLen, pbtNFCID3i, szNFCID3iDataLen, pbtGbData, szGbDataLen, pnti);
 }
 
 /**

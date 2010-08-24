@@ -96,6 +96,7 @@ bool pn53x_InAutoPoll(nfc_device_t* pnd, const nfc_target_type_t* pnttTargetType
 
 bool pn53x_get_firmware_version (nfc_device_t *pnd);
 bool pn53x_configure(nfc_device_t* pnd, const nfc_device_option_t ndo, const bool bEnable);
+bool pn53x_select_dep_target(nfc_device_t* pnd, const nfc_modulation_t nmInitModulation, const byte_t* pbtPidData, const size_t szPidDataLen, const byte_t* pbtNFCID3i, const size_t szNFCID3iDataLen, const byte_t *pbtGbData, const size_t szGbDataLen, nfc_target_info_t* pnti);
 
 const char *pn53x_strerror (const nfc_device_t *pnd);
 
