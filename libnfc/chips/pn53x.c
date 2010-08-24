@@ -912,3 +912,58 @@ bool pn53x_target_send_dep_bytes(nfc_device_t* pnd, const byte_t* pbtTx, const s
   // Everyting seems ok, return true
   return true;
 }
+
+bool pn53x_target_init(nfc_device_t* pnd, byte_t* pbtRx, size_t* pszRxBits)
+{
+  byte_t abtRx[MAX_FRAME_LEN];
+  size_t szRxLen;
+  uint8_t ui8Bits;
+  // Save the current configuration settings
+  bool bCrc = pnd->bCrc;
+  bool bPar = pnd->bPar;
+  byte_t abtCmd[sizeof(pncmd_target_init)];
+
+  pnd->iLastError = 0;
+
+  memcpy(abtCmd,pncmd_target_init,sizeof(pncmd_target_init));
+
+  // Clear the target init struct, reset to all zeros
+  memset(abtCmd+2,0x00,37);
+
+  // Set ATQA (SENS_RES)
+  abtCmd[3] = 0x04;
+  abtCmd[4] = 0x00;
+
+  // Set SAK (SEL_RES)
+  abtCmd[8] = 0x20;
+
+  // Set UID
+  abtCmd[5] = 0x00;
+  abtCmd[6] = 0xb0;
+  abtCmd[7] = 0x0b;
+
+  // Make sure the CRC & parity are handled by the device, this is needed for target_init to work properly
+  if (!bCrc) nfc_configure((nfc_device_t*)pnd,NDO_HANDLE_CRC,true);
+  if (!bPar) nfc_configure((nfc_device_t*)pnd,NDO_HANDLE_PARITY,true);
+
+  // Let the PN53X be activated by the RF level detector from power down mode
+  if (!pn53x_set_reg(pnd,REG_CIU_TX_AUTO, SYMBOL_INITIAL_RF_ON,0x04)) return false;
+
+  // Request the initialization as a target
+  szRxLen = MAX_FRAME_LEN;
+  if (!pn53x_transceive(pnd,abtCmd,39,abtRx,&szRxLen)) return false;
+
+  // Get the last bit-count that is stored in the received byte 
+  ui8Bits = pn53x_get_reg(pnd,REG_CIU_CONTROL) & SYMBOL_RX_LAST_BITS;
+
+  // We are sure the parity is handled by the PN53X chip, so we handle it this way
+  *pszRxBits = ((szRxLen-1-((ui8Bits==0)?0:1))*8)+ui8Bits;
+  // Copy the received bytes
+  memcpy(pbtRx,abtRx+1,szRxLen-1);
+
+  // Restore the CRC & parity setting to the original value (if needed)
+  if (!bCrc) nfc_configure((nfc_device_t*)pnd,NDO_HANDLE_CRC,false);
+  if (!bPar) nfc_configure((nfc_device_t*)pnd,NDO_HANDLE_PARITY,false);
+
+  return true;
+}
