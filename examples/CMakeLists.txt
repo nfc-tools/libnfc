@@ -7,6 +7,7 @@ INCLUDE_DIRECTORIES(${LIBUSB_INCLUDE_DIRS} ${PCSC_INCLUDE_DIRS})
 LINK_DIRECTORIES(${LIBUSB_LIBRARY_DIRS} ${PCSC_LIBRARY_DIRS})
 
 ADD_LIBRARY(nfc-utils nfc-utils)
+ADD_LIBRARY(mifare mifare)
 
 # Examples
 FOREACH(source ${EXAMPLES-SOURCES})
@@ -15,6 +16,9 @@ FOREACH(source ${EXAMPLES-SOURCES})
   TARGET_LINK_LIBRARIES(${source} nfc-utils)
   INSTALL(TARGETS ${source} RUNTIME DESTINATION bin COMPONENT examples)
 ENDFOREACH(source)
+
+TARGET_LINK_LIBRARIES(nfc-mfclassic mifare)
+TARGET_LINK_LIBRARIES(nfc-mfultralight mifare)
 
 IF(NOT MSVC)
   # Manuals for the examples
