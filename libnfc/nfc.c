@@ -73,7 +73,7 @@ nfc_device_desc_t * nfc_pick_device (void);
 // extern const byte_t pncmd_target_init                [ 39];
 // extern const byte_t pncmd_target_virtual_card        [  4];
 // extern const byte_t pncmd_target_receive             [  2];
-extern const byte_t pncmd_target_send                [264];
+// extern const byte_t pncmd_target_send                [264];
 // extern const byte_t pncmd_target_get_status          [  2];
 
 /**
@@ -571,41 +571,7 @@ bool nfc_target_receive_bytes(nfc_device_t* pnd, byte_t* pbtRx, size_t* pszRxLen
  */
 bool nfc_target_send_bits(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxBits, const byte_t* pbtTxPar)
 {
-  size_t szFrameBits = 0;
-  size_t szFrameBytes = 0;
-  uint8_t ui8Bits = 0;
-  byte_t abtCmd[sizeof(pncmd_target_send)];
-
-  pnd->iLastError = 0;
-
-  memcpy(abtCmd,pncmd_target_send,sizeof(pncmd_target_send));
-
-  // Check if we should prepare the parity bits ourself
-  if (!pnd->bPar)
-  {
-    // Convert data with parity to a frame
-    pn53x_wrap_frame(pbtTx,szTxBits,pbtTxPar,abtCmd+2,&szFrameBits);
-  } else {
-    szFrameBits = szTxBits;
-  }
-
-  // Retrieve the leading bits
-  ui8Bits = szFrameBits%8;
-
-  // Get the amount of frame bytes + optional (1 byte if there are leading bits) 
-  szFrameBytes = (szFrameBits/8)+((ui8Bits==0)?0:1);
-
-  // When the parity is handled before us, we just copy the data
-  if (pnd->bPar) memcpy(abtCmd+2,pbtTx,szFrameBytes);
-
-  // Set the amount of transmission bits in the PN53X chip register
-  if (!pn53x_set_tx_bits(pnd,ui8Bits)) return false;
-
-  // Try to send the bits to the reader
-  if (!pn53x_transceive(pnd,abtCmd,szFrameBytes+2,NULL,NULL)) return false;
-
-  // Everyting seems ok, return true
-  return true;
+  return pn53x_target_send_bits(pnd, pbtTx, szTxBits, pbtTxPar);
 }
 
 
@@ -617,23 +583,7 @@ bool nfc_target_send_bits(nfc_device_t* pnd, const byte_t* pbtTx, const size_t s
  */
 bool nfc_target_send_bytes(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxLen)
 {
-  byte_t abtCmd[sizeof(pncmd_target_send)];
-
-  pnd->iLastError = 0;
-
-  memcpy(abtCmd,pncmd_target_send,sizeof(pncmd_target_send));
-
-  // We can not just send bytes without parity if while the PN53X expects we handled them
-  if (!pnd->bPar) return false;
-
-  // Copy the data into the command frame
-  memcpy(abtCmd+2,pbtTx,szTxLen);
-
-  // Try to send the bits to the reader
-  if (!pn53x_transceive(pnd,abtCmd,szTxLen+2,NULL,NULL)) return false;
-
-  // Everyting seems ok, return true
-  return true;
+  return pn53x_target_send_bytes (pnd, pbtTx, szTxLen);
 }
 
 /**
