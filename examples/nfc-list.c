@@ -149,7 +149,7 @@ int main(int argc, const char* argv[])
     // List ISO14443A targets
     if (nfc_initiator_list_passive_targets(pnd, NM_ISO14443A_106, anti, MAX_TARGET_COUNT, &szTargetFound )) {
       size_t n;
-      printf("%zu ISO14443A passive target(s) was found%s\n", szTargetFound, (szTargetFound==0)?".\n":":");
+      printf("%d ISO14443A passive target(s) was found%s\n", (int)szTargetFound, (szTargetFound==0)?".\n":":");
       for(n=0; n<szTargetFound; n++) {
         print_nfc_iso14443a_info (anti[n].nai);
         printf("\n");
@@ -159,7 +159,7 @@ int main(int argc, const char* argv[])
     // List Felica tags
     if (nfc_initiator_list_passive_targets(pnd, NM_FELICA_212, anti, MAX_TARGET_COUNT, &szTargetFound )) {
       size_t n;
-      printf("%zu Felica (212 kbps) passive target(s) was found%s\n", szTargetFound, (szTargetFound==0)?".\n":":");
+      printf("%d Felica (212 kbps) passive target(s) was found%s\n", (int)szTargetFound, (szTargetFound==0)?".\n":":");
       for(n=0; n<szTargetFound; n++) {
         print_nfc_felica_info (anti[n].nfi);
         printf("\n");
@@ -167,7 +167,7 @@ int main(int argc, const char* argv[])
     }
     if (nfc_initiator_list_passive_targets(pnd, NM_FELICA_424, anti, MAX_TARGET_COUNT, &szTargetFound )) {
       size_t n;
-      printf("%zu Felica (424 kbps) passive target(s) was found%s\n", szTargetFound, (szTargetFound==0)?".\n":":");
+      printf("%d Felica (424 kbps) passive target(s) was found%s\n", (int)szTargetFound, (szTargetFound==0)?".\n":":");
       for(n=0; n<szTargetFound; n++) {
         print_nfc_felica_info (anti[n].nfi);
         printf("\n");
@@ -177,7 +177,7 @@ int main(int argc, const char* argv[])
     // List ISO14443B targets
     if (nfc_initiator_list_passive_targets(pnd, NM_ISO14443B_106, anti, MAX_TARGET_COUNT, &szTargetFound )) {
       size_t n;
-      printf("%zu ISO14443B passive target(s) was found%s\n", szTargetFound, (szTargetFound==0)?".\n":":");
+      printf("%d ISO14443B passive target(s) was found%s\n", (int)szTargetFound, (szTargetFound==0)?".\n":":");
       for(n=0; n<szTargetFound; n++) {
         print_nfc_iso14443b_info (anti[n].nbi);
         printf("\n");
@@ -188,7 +188,7 @@ int main(int argc, const char* argv[])
     // List Jewel targets
     if (nfc_initiator_list_passive_targets(pnd, NM_JEWEL_106, anti, MAX_TARGET_COUNT, &szTargetFound )) {
       size_t n;
-      printf("%zu Jewel passive target(s) was found%s\n", szTargetFound, (szTargetFound==0)?".\n":":"); for(n=0; n<szTargetFound; n++) {
+      printf("%d Jewel passive target(s) was found%s\n", (int)szTargetFound, (szTargetFound==0)?".\n":":"); for(n=0; n<szTargetFound; n++) {
         printf("Jewel support is missing in libnfc, feel free to contribute.\n");
         printf("\n");
       }
