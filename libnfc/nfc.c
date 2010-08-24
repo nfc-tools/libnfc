@@ -238,6 +238,8 @@ void nfc_disconnect(nfc_device_t* pnd)
  */
 bool nfc_configure(nfc_device_t* pnd, const nfc_device_option_t ndo, const bool bEnable)
 {
+  pnd->iLastError = 0;
+
   return pn53x_configure(pnd, ndo, bEnable);
 }
 
@@ -253,7 +255,6 @@ bool nfc_configure(nfc_device_t* pnd, const nfc_device_option_t ndo, const bool 
  */
 bool nfc_initiator_init(nfc_device_t* pnd)
 {
-
   pnd->iLastError = 0;
 
   // Make sure we are dealing with a active device
@@ -286,6 +287,8 @@ bool nfc_initiator_init(nfc_device_t* pnd)
  */
 bool nfc_initiator_select_dep_target(nfc_device_t* pnd, const nfc_modulation_t nmInitModulation, const byte_t* pbtPidData, const size_t szPidDataLen, const byte_t* pbtNFCID3i, const size_t szNFCID3iDataLen, const byte_t *pbtGbData, const size_t szGbDataLen, nfc_target_info_t* pnti)
 {
+  pnd->iLastError = 0;
+
   return pn53x_initiator_select_dep_target(pnd, nmInitModulation, pbtPidData, szPidDataLen, pbtNFCID3i, szNFCID3iDataLen, pbtGbData, szGbDataLen, pnti);
 }
 
@@ -316,7 +319,6 @@ nfc_initiator_select_passive_target(nfc_device_t* pnd,
   byte_t abtTargetsData[MAX_FRAME_LEN];
 
   pnd->iLastError = 0;
-
 
   // Make sure we are dealing with a active device
   if (!pnd->bActive) return false;
@@ -412,7 +414,6 @@ nfc_initiator_list_passive_targets(nfc_device_t* pnd, const nfc_modulation_t nmI
 
   pnd->iLastError = 0;
 
-
   // Let the reader only try once to find a target
   nfc_configure (pnd, NDO_INFINITE_SELECT, false);
   
@@ -443,7 +444,6 @@ nfc_initiator_list_passive_targets(nfc_device_t* pnd, const nfc_modulation_t nmI
  */
 bool nfc_initiator_deselect_target(nfc_device_t* pnd)
 {
-
   pnd->iLastError = 0;
 
   return (pn53x_InDeselect(pnd, 0)); // 0 mean deselect all selected targets
@@ -485,6 +485,8 @@ nfc_initiator_poll_targets(nfc_device_t* pnd,
  */
 bool nfc_initiator_transceive_bits(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxBits, const byte_t* pbtTxPar, byte_t* pbtRx, size_t* pszRxBits, byte_t* pbtRxPar)
 {
+  pnd->iLastError = 0;
+
   return pn53x_initiator_transceive_bits (pnd, pbtTx, szTxBits, pbtTxPar, pbtRx, pszRxBits, pbtRxPar);
 }
 
@@ -496,6 +498,8 @@ bool nfc_initiator_transceive_bits(nfc_device_t* pnd, const byte_t* pbtTx, const
  */
 bool nfc_initiator_transceive_dep_bytes(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen)
 {
+  pnd->iLastError = 0;
+
   return pn53x_initiator_transceive_dep_bytes(pnd, pbtTx, szTxLen, pbtRx, pszRxLen);
 }
 
@@ -514,6 +518,8 @@ bool nfc_initiator_transceive_dep_bytes(nfc_device_t* pnd, const byte_t* pbtTx, 
  */
 bool nfc_initiator_transceive_bytes(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen)
 {
+  pnd->iLastError = 0;
+
   return pn53x_initiator_transceive_bytes (pnd, pbtTx, szTxLen, pbtRx, pszRxLen);
 }
 
@@ -527,6 +533,8 @@ bool nfc_initiator_transceive_bytes(nfc_device_t* pnd, const byte_t* pbtTx, cons
  */
 bool nfc_target_init(nfc_device_t* pnd, byte_t* pbtRx, size_t* pszRxBits)
 {
+  pnd->iLastError = 0;
+
   return pn53x_target_init(pnd, pbtRx, pszRxBits);
 }
 
@@ -538,6 +546,8 @@ bool nfc_target_init(nfc_device_t* pnd, byte_t* pbtRx, size_t* pszRxBits)
  */
 bool nfc_target_receive_bits(nfc_device_t* pnd, byte_t* pbtRx, size_t* pszRxBits, byte_t* pbtRxPar)
 {
+  pnd->iLastError = 0;
+
   return pn53x_target_receive_bits (pnd, pbtRx, pszRxBits, pbtRxPar);
 }
 
@@ -549,6 +559,8 @@ bool nfc_target_receive_bits(nfc_device_t* pnd, byte_t* pbtRx, size_t* pszRxBits
  */
 bool nfc_target_receive_dep_bytes(nfc_device_t* pnd, byte_t* pbtRx, size_t* pszRxLen)
 {
+  pnd->iLastError = 0;
+
   return pn53x_target_receive_dep_bytes (pnd, pbtRx, pszRxLen);
 }
 
@@ -560,6 +572,8 @@ bool nfc_target_receive_dep_bytes(nfc_device_t* pnd, byte_t* pbtRx, size_t* pszR
  */
 bool nfc_target_receive_bytes(nfc_device_t* pnd, byte_t* pbtRx, size_t* pszRxLen)
 {
+  pnd->iLastError = 0;
+
   return pn53x_target_receive_bytes(pnd, pbtRx, pszRxLen);
 }
 
@@ -571,6 +585,8 @@ bool nfc_target_receive_bytes(nfc_device_t* pnd, byte_t* pbtRx, size_t* pszRxLen
  */
 bool nfc_target_send_bits(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxBits, const byte_t* pbtTxPar)
 {
+  pnd->iLastError = 0;
+
   return pn53x_target_send_bits(pnd, pbtTx, szTxBits, pbtTxPar);
 }
 
@@ -583,6 +599,8 @@ bool nfc_target_send_bits(nfc_device_t* pnd, const byte_t* pbtTx, const size_t s
  */
 bool nfc_target_send_bytes(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxLen)
 {
+  pnd->iLastError = 0;
+
   return pn53x_target_send_bytes (pnd, pbtTx, szTxLen);
 }
 
@@ -594,6 +612,8 @@ bool nfc_target_send_bytes(nfc_device_t* pnd, const byte_t* pbtTx, const size_t 
  */
 bool nfc_target_send_dep_bytes(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxLen)
 {
+  pnd->iLastError = 0;
+
   return pn53x_target_send_dep_bytes(pnd, pbtTx, szTxLen);
 }
 

@@ -622,8 +622,6 @@ pn53x_configure(nfc_device_t* pnd, const nfc_device_option_t ndo, const bool bEn
   byte_t btValue;
   byte_t abtCmd[sizeof(pncmd_rf_configure)];
 
-  pnd->iLastError = 0;
-
   memcpy(abtCmd,pncmd_rf_configure,sizeof(pncmd_rf_configure));
 
   // Make sure we are dealing with a active device
@@ -698,8 +696,6 @@ bool pn53x_initiator_select_dep_target(nfc_device_t* pnd, const nfc_modulation_t
   size_t offset;
   byte_t abtCmd[sizeof(pncmd_initiator_jump_for_dep)];
 
-  pnd->iLastError = 0;
-
   memcpy(abtCmd,pncmd_initiator_jump_for_dep,sizeof(pncmd_initiator_jump_for_dep));
 
   if(nmInitModulation == NM_ACTIVE_DEP) {
@@ -749,8 +745,6 @@ bool pn53x_initiator_transceive_dep_bytes(nfc_device_t* pnd, const byte_t* pbtTx
   size_t szRxLen;
   byte_t abtCmd[sizeof(pncmd_initiator_exchange_data)];
 
-  pnd->iLastError = 0;
-
   memcpy(abtCmd,pncmd_initiator_exchange_data,sizeof(pncmd_initiator_exchange_data));
 
   // We can not just send bytes without parity if while the PN53X expects we handled them
@@ -785,8 +779,6 @@ bool pn53x_initiator_transceive_bits(nfc_device_t* pnd, const byte_t* pbtTx, con
   size_t szFrameBytes = 0;
   uint8_t ui8Bits = 0;
   byte_t abtCmd[sizeof(pncmd_initiator_exchange_raw_data)];
-
-  pnd->iLastError = 0;
 
   memcpy(abtCmd,pncmd_initiator_exchange_raw_data,sizeof(pncmd_initiator_exchange_raw_data));
 
@@ -844,8 +836,6 @@ bool pn53x_initiator_transceive_bytes(nfc_device_t* pnd, const byte_t* pbtTx, co
   size_t szRxLen;
   byte_t abtCmd[sizeof(pncmd_initiator_exchange_raw_data)];
 
-  pnd->iLastError = 0;
-
   memcpy(abtCmd,pncmd_initiator_exchange_raw_data,sizeof(pncmd_initiator_exchange_raw_data));
 
   // We can not just send bytes without parity if while the PN53X expects we handled them
@@ -876,9 +866,6 @@ bool pn53x_target_receive_dep_bytes(nfc_device_t* pnd, byte_t* pbtRx, size_t* ps
   byte_t abtRx[MAX_FRAME_LEN];
   size_t szRxLen;
 
-  pnd->iLastError = 0;
-
-
   // Try to gather a received frame from the reader
   if (!pn53x_transceive(pnd,pncmd_target_get_data,2,abtRx,&szRxLen)) return false;
 
@@ -895,8 +882,6 @@ bool pn53x_target_receive_dep_bytes(nfc_device_t* pnd, byte_t* pbtRx, size_t* ps
 bool pn53x_target_send_dep_bytes(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxLen)
 {
   byte_t abtCmd[sizeof(pncmd_target_set_data)];
-
-  pnd->iLastError = 0;
 
   memcpy(abtCmd,pncmd_target_set_data,sizeof(pncmd_target_set_data));
 
@@ -922,8 +907,6 @@ bool pn53x_target_init(nfc_device_t* pnd, byte_t* pbtRx, size_t* pszRxBits)
   bool bCrc = pnd->bCrc;
   bool bPar = pnd->bPar;
   byte_t abtCmd[sizeof(pncmd_target_init)];
-
-  pnd->iLastError = 0;
 
   memcpy(abtCmd,pncmd_target_init,sizeof(pncmd_target_init));
 
@@ -975,9 +958,6 @@ bool pn53x_target_receive_bits(nfc_device_t* pnd, byte_t* pbtRx, size_t* pszRxBi
   size_t szFrameBits;
   uint8_t ui8Bits;
 
-  pnd->iLastError = 0;
-
-
   // Try to gather a received frame from the reader
   if (!pn53x_transceive(pnd,pncmd_target_receive,2,abtRx,&szRxLen)) return false;
 
@@ -1008,9 +988,6 @@ bool pn53x_target_receive_bytes(nfc_device_t* pnd, byte_t* pbtRx, size_t* pszRxL
   byte_t abtRx[MAX_FRAME_LEN];
   size_t szRxLen;
 
-  pnd->iLastError = 0;
-
-
   // Try to gather a received frame from the reader
   if (!pn53x_transceive(pnd,pncmd_target_receive,2,abtRx,&szRxLen)) return false;
 
@@ -1030,8 +1007,6 @@ bool pn53x_target_send_bits(nfc_device_t* pnd, const byte_t* pbtTx, const size_t
   size_t szFrameBytes = 0;
   uint8_t ui8Bits = 0;
   byte_t abtCmd[sizeof(pncmd_target_send)];
-
-  pnd->iLastError = 0;
 
   memcpy(abtCmd,pncmd_target_send,sizeof(pncmd_target_send));
 
@@ -1066,8 +1041,6 @@ bool pn53x_target_send_bits(nfc_device_t* pnd, const byte_t* pbtTx, const size_t
 bool pn53x_target_send_bytes(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxLen)
 {
   byte_t abtCmd[sizeof(pncmd_target_send)];
-
-  pnd->iLastError = 0;
 
   memcpy(abtCmd,pncmd_target_send,sizeof(pncmd_target_send));
 
