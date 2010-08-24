@@ -54,7 +54,7 @@ nfc_device_desc_t * nfc_pick_device (void);
 // extern const byte_t pncmd_get_register               [  4];
 // extern const byte_t pncmd_set_register               [  5];
 // extern const byte_t pncmd_set_parameters             [  3];
-extern const byte_t pncmd_rf_configure               [ 14];
+// extern const byte_t pncmd_rf_configure               [ 14];
 // 
 // // Reader
 // extern const byte_t pncmd_initiator_list_passive        [264];
@@ -238,76 +238,7 @@ void nfc_disconnect(nfc_device_t* pnd)
  */
 bool nfc_configure(nfc_device_t* pnd, const nfc_device_option_t ndo, const bool bEnable)
 {
-  byte_t btValue;
-  byte_t abtCmd[sizeof(pncmd_rf_configure)];
-
-  pnd->iLastError = 0;
-
-  memcpy(abtCmd,pncmd_rf_configure,sizeof(pncmd_rf_configure));
-
-  // Make sure we are dealing with a active device
-  if (!pnd->bActive) return false;
-
-  switch(ndo)
-  {
-    case NDO_HANDLE_CRC:
-      // Enable or disable automatic receiving/sending of CRC bytes
-      // TX and RX are both represented by the symbol 0x80
-      btValue = (bEnable) ? 0x80 : 0x00;
-      if (!pn53x_set_reg(pnd,REG_CIU_TX_MODE,SYMBOL_TX_CRC_ENABLE,btValue)) return false;
-      if (!pn53x_set_reg(pnd,REG_CIU_RX_MODE,SYMBOL_RX_CRC_ENABLE,btValue)) return false;
-      pnd->bCrc = bEnable;
-    break;
-
-    case NDO_HANDLE_PARITY:
-      // Handle parity bit by PN53X chip or parse it as data bit
-      btValue = (bEnable) ? 0x00 : SYMBOL_PARITY_DISABLE;
-      if (!pn53x_set_reg(pnd,REG_CIU_MANUAL_RCV,SYMBOL_PARITY_DISABLE,btValue)) return false;
-      pnd->bPar = bEnable;
-    break;
-
-    case NDO_ACTIVATE_FIELD:
-      abtCmd[2] = RFCI_FIELD;
-      abtCmd[3] = (bEnable) ? 1 : 0;
-      if (!pn53x_transceive(pnd,abtCmd,4,NULL,NULL)) return false;
-    break;
-
-    case NDO_ACTIVATE_CRYPTO1:
-      btValue = (bEnable) ? SYMBOL_MF_CRYPTO1_ON : 0x00;
-      if (!pn53x_set_reg(pnd,REG_CIU_STATUS2,SYMBOL_MF_CRYPTO1_ON,btValue)) return false;
-    break;
-
-    case NDO_INFINITE_SELECT:
-      // Retry format: 0x00 means only 1 try, 0xff means infinite
-      abtCmd[2] = RFCI_RETRY_SELECT;
-      abtCmd[3] = (bEnable) ? 0xff : 0x00; // MxRtyATR, default: active = 0xff, passive = 0x02
-      abtCmd[4] = (bEnable) ? 0xff : 0x00; // MxRtyPSL, default: 0x01
-      abtCmd[5] = (bEnable) ? 0xff : 0x00; // MxRtyPassiveActivation, default: 0xff
-      if (!pn53x_transceive(pnd,abtCmd,6,NULL,NULL)) return false;
-    break;
-
-    case NDO_ACCEPT_INVALID_FRAMES:
-      btValue = (bEnable) ? SYMBOL_RX_NO_ERROR : 0x00;
-      if (!pn53x_set_reg(pnd,REG_CIU_RX_MODE,SYMBOL_RX_NO_ERROR,btValue)) return false;
-    break;
-
-    case NDO_ACCEPT_MULTIPLE_FRAMES:
-      btValue = (bEnable) ? SYMBOL_RX_MULTIPLE : 0x00;
-      if (!pn53x_set_reg(pnd,REG_CIU_RX_MODE,SYMBOL_RX_MULTIPLE,btValue)) return false;
-      return true;
-    break;
-    
-    case NDO_AUTO_ISO14443_4:
-      // TODO: PN53x parameters could not be read, so we have to buffered current value in order to prevent from configuration overwrite
-      // ATM, buffered current value is not needed due to a single usage of these parameters
-      btValue = (bEnable) ? (SYMBOL_PARAM_fAutomaticRATS | SYMBOL_PARAM_fAutomaticATR_RES): SYMBOL_PARAM_fAutomaticATR_RES;
-      if(!pn53x_set_parameters(pnd,btValue)) return false;
-      return true;
-    break;
-  }
-
-  // When we reach this, the configuration is completed and succesful
-  return true;
+  return pn53x_configure(pnd, ndo, bEnable);
 }
 
 

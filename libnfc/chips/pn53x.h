@@ -95,6 +95,7 @@ bool pn53x_InRelease(nfc_device_t* pnd, const uint8_t ui8Target);
 bool pn53x_InAutoPoll(nfc_device_t* pnd, const nfc_target_type_t* pnttTargetTypes, const size_t szTargetTypes, const byte_t btPollNr, const byte_t btPeriod, nfc_target_t* pntTargets, size_t* pszTargetFound);
 
 bool pn53x_get_firmware_version (nfc_device_t *pnd);
+bool pn53x_configure(nfc_device_t* pnd, const nfc_device_option_t ndo, const bool bEnable);
 
 const char *pn53x_strerror (const nfc_device_t *pnd);
 
