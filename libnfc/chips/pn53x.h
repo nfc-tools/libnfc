@@ -101,6 +101,8 @@ bool pn53x_transceive_dep_bytes(nfc_device_t* pnd, const byte_t* pbtTx, const si
 bool pn53x_transceive_bits(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxBits, const byte_t* pbtTxPar, byte_t* pbtRx, size_t* pszRxBits, byte_t* pbtRxPar);
 bool pn53x_transceive_bytes(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen);
 
+bool pn53x_target_receive_dep_bytes(nfc_device_t* pnd, byte_t* pbtRx, size_t* pszRxLen);
+
 const char *pn53x_strerror (const nfc_device_t *pnd);
 
 static const struct chip_callbacks pn53x_callbacks_list = {

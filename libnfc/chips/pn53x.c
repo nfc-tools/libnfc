@@ -870,3 +870,24 @@ bool pn53x_transceive_bytes(nfc_device_t* pnd, const byte_t* pbtTx, const size_t
   // Everything went successful
   return true;
 }
+
+bool pn53x_target_receive_dep_bytes(nfc_device_t* pnd, byte_t* pbtRx, size_t* pszRxLen)
+{
+  byte_t abtRx[MAX_FRAME_LEN];
+  size_t szRxLen;
+
+  pnd->iLastError = 0;
+
+
+  // Try to gather a received frame from the reader
+  if (!pn53x_transceive(pnd,pncmd_target_get_data,2,abtRx,&szRxLen)) return false;
+
+  // Save the received byte count
+  *pszRxLen = szRxLen-1;
+
+  // Copy the received bytes
+  memcpy(pbtRx,abtRx+1,*pszRxLen);
+
+  // Everyting seems ok, return true
+  return true;
+}
