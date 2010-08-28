@@ -156,27 +156,29 @@ bool pn53x_transceive(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxL
   return (0 == pnd->iLastError);
 }
 
-byte_t pn53x_get_reg(nfc_device_t* pnd, uint16_t ui16Reg)
+bool pn53x_get_reg(nfc_device_t* pnd, uint16_t ui16Reg, uint8_t* ui8Value)
 {
-  uint8_t ui8Value;
   size_t szValueLen = 1;
   byte_t abtCmd[sizeof(pncmd_get_register)];
   memcpy(abtCmd,pncmd_get_register,sizeof(pncmd_get_register));
 
   abtCmd[2] = ui16Reg >> 8;
   abtCmd[3] = ui16Reg & 0xff;
-  pn53x_transceive(pnd,abtCmd,4,&ui8Value,&szValueLen);
-  return ui8Value;
+  return pn53x_transceive(pnd,abtCmd,4,ui8Value,&szValueLen);
 }
 
 bool pn53x_set_reg(nfc_device_t* pnd, uint16_t ui16Reg, uint8_t ui8SybmolMask, uint8_t ui8Value)
 {
+  uint8_t ui8Current;
   byte_t abtCmd[sizeof(pncmd_set_register)];
   memcpy(abtCmd,pncmd_set_register,sizeof(pncmd_set_register));
 
   abtCmd[2] = ui16Reg >> 8;
   abtCmd[3] = ui16Reg & 0xff;
-  abtCmd[4] = ui8Value | (pn53x_get_reg(pnd,ui16Reg) & (~ui8SybmolMask));
+  if (!pn53x_get_reg(pnd,ui16Reg, &ui8Current))
+      return false;
+
+  abtCmd[4] = ui8Value | (ui8Current & (~ui8SybmolMask));
   return pn53x_transceive(pnd,abtCmd,5,NULL,NULL);
 }
 
@@ -784,6 +786,7 @@ bool pn53x_initiator_transceive_bits(nfc_device_t* pnd, const byte_t* pbtTx, con
   size_t szRxLen;
   size_t szFrameBits = 0;
   size_t szFrameBytes = 0;
+  uint8_t ui8rcc;
   uint8_t ui8Bits = 0;
   byte_t abtCmd[sizeof(pncmd_initiator_exchange_raw_data)];
 
@@ -815,7 +818,9 @@ bool pn53x_initiator_transceive_bits(nfc_device_t* pnd, const byte_t* pbtTx, con
   if (!pn53x_transceive(pnd,abtCmd,szFrameBytes+2,abtRx,&szRxLen)) return false;
 
   // Get the last bit-count that is stored in the received byte 
-  ui8Bits = pn53x_get_reg(pnd,REG_CIU_CONTROL) & SYMBOL_RX_LAST_BITS;
+  if (!pn53x_get_reg(pnd,REG_CIU_CONTROL, &ui8rcc))
+      return false;
+  ui8Bits = ui8rcc & SYMBOL_RX_LAST_BITS;
 
   // Recover the real frame length in bits
   szFrameBits = ((szRxLen-1-((ui8Bits==0)?0:1))*8)+ui8Bits;
@@ -909,6 +914,7 @@ bool pn53x_target_init(nfc_device_t* pnd, byte_t* pbtRx, size_t* pszRxBits)
 {
   byte_t abtRx[MAX_FRAME_LEN];
   size_t szRxLen;
+  uint8_t ui8rcc;
   uint8_t ui8Bits;
   // Save the current configuration settings
   bool bCrc = pnd->bCrc;
@@ -944,7 +950,8 @@ bool pn53x_target_init(nfc_device_t* pnd, byte_t* pbtRx, size_t* pszRxBits)
   if (!pn53x_transceive(pnd,abtCmd,39,abtRx,&szRxLen)) return false;
 
   // Get the last bit-count that is stored in the received byte 
-  ui8Bits = pn53x_get_reg(pnd,REG_CIU_CONTROL) & SYMBOL_RX_LAST_BITS;
+  if (!pn53x_get_reg(pnd,REG_CIU_CONTROL, &ui8rcc)) return false;
+  ui8Bits = ui8rcc & SYMBOL_RX_LAST_BITS;
 
   // We are sure the parity is handled by the PN53X chip, so we handle it this way
   *pszRxBits = ((szRxLen-1-((ui8Bits==0)?0:1))*8)+ui8Bits;
@@ -963,13 +970,15 @@ bool pn53x_target_receive_bits(nfc_device_t* pnd, byte_t* pbtRx, size_t* pszRxBi
   byte_t abtRx[MAX_FRAME_LEN];
   size_t szRxLen;
   size_t szFrameBits;
+  uint8_t ui8rcc;
   uint8_t ui8Bits;
 
   // Try to gather a received frame from the reader
   if (!pn53x_transceive(pnd,pncmd_target_receive,2,abtRx,&szRxLen)) return false;
 
   // Get the last bit-count that is stored in the received byte 
-  ui8Bits = pn53x_get_reg(pnd,REG_CIU_CONTROL) & SYMBOL_RX_LAST_BITS;
+  if (!pn53x_get_reg(pnd,REG_CIU_CONTROL, &ui8rcc)) return false;
+  ui8Bits = ui8rcc & SYMBOL_RX_LAST_BITS;
 
   // Recover the real frame length in bits
   szFrameBits = ((szRxLen-1-((ui8Bits==0)?0:1))*8)+ui8Bits;
