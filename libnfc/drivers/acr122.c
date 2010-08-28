@@ -41,7 +41,7 @@
   #include <wintypes.h>
 #endif
 
-
+#include <nfc/nfc.h>
 #include <nfc/nfc-messages.h>
 
 // WINDOWS: #define IOCTL_CCID_ESCAPE_SCARD_CTL_CODE SCARD_CTL_CODE(3500)
@@ -264,8 +264,12 @@ bool acr122_transceive(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTx
   byte_t abtTxBuf[ACR122_WRAP_LEN+ACR122_COMMAND_LEN] = { 0xFF, 0x00, 0x00, 0x00 };
   acr122_spec_t* pas = (acr122_spec_t*)pnd->nds;
 
+  // FIXME: Should be handled by the library.
   // Make sure the command does not overflow the send buffer
-  if (szTxLen > ACR122_COMMAND_LEN) return false;
+  if (szTxLen > ACR122_COMMAND_LEN) {
+    pnd->iLastError = DEIO;
+    return false;
+  }
 
   // Store the length of the command we are going to send
   abtTxBuf[4] = szTxLen;
@@ -279,23 +283,38 @@ bool acr122_transceive(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTx
 
   if (pas->ioCard.dwProtocol == SCARD_PROTOCOL_UNDEFINED)
   {
-    if (SCardControl(pas->hCard,IOCTL_CCID_ESCAPE_SCARD_CTL_CODE,abtTxBuf,szTxLen+5,abtRxBuf,szRxBufLen,(void*)&szRxBufLen) != SCARD_S_SUCCESS) return false;
+    if (SCardControl(pas->hCard,IOCTL_CCID_ESCAPE_SCARD_CTL_CODE,abtTxBuf,szTxLen+5,abtRxBuf,szRxBufLen,(void*)&szRxBufLen) != SCARD_S_SUCCESS) {
+      pnd->iLastError = DEIO;
+      return false;
+    }
   } else {
-    if (SCardTransmit(pas->hCard,&(pas->ioCard),abtTxBuf,szTxLen+5,NULL,abtRxBuf,(void*)&szRxBufLen) != SCARD_S_SUCCESS) return false;
+    if (SCardTransmit(pas->hCard,&(pas->ioCard),abtTxBuf,szTxLen+5,NULL,abtRxBuf,(void*)&szRxBufLen) != SCARD_S_SUCCESS) {
+      pnd->iLastError = DEIO;
+      return false;
+    }
   }
 
   if (pas->ioCard.dwProtocol == SCARD_PROTOCOL_T0)
   {
     // Make sure we received the byte-count we expected
-    if (szRxBufLen != 2) return false;
+    if (szRxBufLen != 2) {
+      pnd->iLastError = DEIO;
+      return false;
+    }
 
     // Check if the operation was successful, so an answer is available
-    if (*abtRxBuf == SCARD_OPERATION_ERROR) return false;
+    if (*abtRxBuf == SCARD_OPERATION_ERROR) {
+      pnd->iLastError = DEISERRFRAME;
+      return false;
+    }
 
     // Retrieve the response bytes
     abtRxCmd[4] = abtRxBuf[1];
     szRxBufLen = sizeof(abtRxBuf);
-    if (SCardTransmit(pas->hCard,&(pas->ioCard),abtRxCmd,szRxCmdLen,NULL,abtRxBuf,(void*)&szRxBufLen) != SCARD_S_SUCCESS) return false;
+    if (SCardTransmit(pas->hCard,&(pas->ioCard),abtRxCmd,szRxCmdLen,NULL,abtRxBuf,(void*)&szRxBufLen) != SCARD_S_SUCCESS) {
+      pnd->iLastError = DEIO;
+      return false;
+    }
   }
 
 #ifdef DEBUG
@@ -306,7 +325,10 @@ bool acr122_transceive(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTx
   if (pbtRx == NULL || pszRxLen == NULL) return true;
 
   // Make sure we have an emulated answer that fits the return buffer
-  if (szRxBufLen < 4 || (szRxBufLen-4) > *pszRxLen) return false;
+  if (szRxBufLen < 4 || (szRxBufLen-4) > *pszRxLen) {
+    pnd->iLastError = DEIO;
+    return false;
+  }
   // Wipe out the 4 APDU emulation bytes: D5 4B .. .. .. 90 00
   *pszRxLen = ((size_t)szRxBufLen)-4;
   memcpy(pbtRx,abtRxBuf+2,*pszRxLen);
