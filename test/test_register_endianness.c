@@ -28,12 +28,10 @@ test_register_endianness (void)
     /* Read valid XRAM memory */
     res = pn53x_get_reg (device, 0xF0FF, &value);
     cut_assert_true (res, cut_message ("read register 0xF0FF"));
-    nfc_perror (device, "get");
 
     /* Read invalid SFR register */
     res = pn53x_get_reg (device, 0xFFF0, &value);
     cut_assert_false (res, cut_message ("read register 0xFFF0"));
-    nfc_perror (device, "get");
 
     nfc_disconnect (device);
 }
