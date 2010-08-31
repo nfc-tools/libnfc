@@ -186,6 +186,7 @@ bool arygon_transceive(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTx
   byte_t abtRxBuf[BUFFER_LENGTH];
   size_t szRxBufLen = BUFFER_LENGTH;
   size_t szPos;
+  int res;
   // TODO: Move this one level up for libnfc-1.6
   uint8_t ack_frame[] = { 0x00, 0x00, 0xff, 0x00, 0xff, 0x00 };
 
@@ -198,8 +199,7 @@ bool arygon_transceive(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTx
 
   // Calculate data payload checksum
   abtTxBuf[szTxLen+6] = 0;
-  for(szPos=0; szPos < szTxLen; szPos++) 
-  {
+  for(szPos=0; szPos < szTxLen; szPos++) {
     abtTxBuf[szTxLen+6] -= abtTxBuf[szPos+6];
   }
 
@@ -209,14 +209,20 @@ bool arygon_transceive(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTx
 #ifdef DEBUG
   PRINT_HEX("TX", abtTxBuf,szTxLen+8);
 #endif
-  if (!uart_send((serial_port)pnd->nds,abtTxBuf,szTxLen+8)) {
+  res = uart_send((serial_port)pnd->nds,abtTxBuf,szTxLen+8);
+  if (res != 0) {
     ERR("%s", "Unable to transmit data. (TX)");
+    pnd->iLastError = res;
     return false;
   }
 
-  szRxBufLen = 6;
-  if (!uart_receive((serial_port)pnd->nds,abtRxBuf,&szRxBufLen)) {
+#ifdef DEBUG
+  bzero(abtRxBuf, sizeof(abtRxBuf));
+#endif
+  res = uart_receive((serial_port)pnd->nds,abtRxBuf,&szRxBufLen);
+  if (res != 0) {
     ERR("%s", "Unable to receive data. (RX)");
+    pnd->iLastError = res;
     return false;
   }
 
@@ -224,28 +230,35 @@ bool arygon_transceive(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTx
   PRINT_HEX("RX", abtRxBuf,szRxBufLen);
 #endif
 
+  // WARN: UART is a per byte reception, so you usually receive ACK and next frame the same time
   if (!pn53x_transceive_check_ack_frame_callback(pnd, abtRxBuf, szRxBufLen))
     return false;
 
-  szRxBufLen = BUFFER_LENGTH;
-
-    while (!uart_receive((serial_port)pnd->nds,abtRxBuf,&szRxBufLen)) {
+  szRxBufLen -= sizeof(ack_frame);
+  memmove(abtRxBuf, abtRxBuf+sizeof(ack_frame), szRxBufLen);
+  
+  if (szRxBufLen == 0) {
+    szRxBufLen = BUFFER_LENGTH;
+    do {
       delay_ms(10);
-    }
-
-#ifdef DEBUG
-  PRINT_HEX("RX", abtRxBuf,szRxBufLen);
-#endif
-
-
-#ifdef DEBUG
-  PRINT_HEX("TX", ack_frame, 6);
-#endif
-  if (!uart_send((serial_port)pnd->nds, ack_frame, 6)) {
-    ERR("%s", "Unable to transmit data. (TX)");
-    return false;
+      res = uart_receive((serial_port)pnd->nds,abtRxBuf,&szRxBufLen);
+    } while (res != 0 );
+    #ifdef DEBUG
+    PRINT_HEX("RX", abtRxBuf,szRxBufLen);
+    #endif
   }
 
+/*
+#ifdef DEBUG
+  PRINT_HEX("TX", ack_frame, sizeof(ack_frame));
+#endif
+  res = uart_send((serial_port)pnd->nds, ack_frame, sizeof(ack_frame)); 
+  if (res != 0) {
+    ERR("%s", "Unable to transmit data. (TX)");
+    pnd->iLastError = res;
+    return false;
+  }
+*/
   if (!pn53x_transceive_check_error_frame_callback(pnd, abtRxBuf, szRxBufLen))
     return false;
 
@@ -269,6 +282,7 @@ arygon_check_communication(const nfc_device_spec_t nds)
   byte_t abtRx[BUFFER_LENGTH];
   size_t szRxLen;
   const byte_t attempted_result[] = { 0x00,0x00,0xff,0x00,0xff,0x00,0x00,0x00,0xff,0x09,0xf7,0xD5,0x01,0x00,'l','i','b','n','f','c',0xbc,0x00};
+  int res;
 
   /** To be sure that PN532 is alive, we have put a "Diagnose" command to execute a "Communication Line Test" */
   const byte_t pncmd_communication_test[] = { DEV_ARYGON_PROTOCOL_TAMA, 0x00,0x00,0xff,0x09,0xf7,0xd4,0x00,0x00,'l','i','b','n','f','c',0xbe,0x00 };
@@ -276,9 +290,15 @@ arygon_check_communication(const nfc_device_spec_t nds)
 #ifdef DEBUG
   PRINT_HEX("TX", pncmd_communication_test,sizeof(pncmd_communication_test));
 #endif
-  uart_send((serial_port)nds, pncmd_communication_test, sizeof(pncmd_communication_test));
-
-  if(!uart_receive((serial_port)nds,abtRx,&szRxLen)) {
+  res = uart_send((serial_port)nds, pncmd_communication_test, sizeof(pncmd_communication_test));
+  if (res != 0) {
+    ERR("%s", "Unable to transmit data. (TX)");
+    return false;
+  }
+  
+  res = uart_receive((serial_port)nds,abtRx,&szRxLen);
+  if (res != 0) {
+    ERR("%s", "Unable to receive data. (RX)");
     return false;
   }
 #ifdef DEBUG
