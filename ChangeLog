@@ -1,8 +1,35 @@
-???
-----
+Aug 31, 2010 - 1.3.9
+--------------------
+
+Fixes:
+ - libnfc: fix ATS
+ - pn53x_usb: fix USB issues
+ - nfc-mfultralight: fix read and write counters
+
+Improvments:
+ - libnfc: rearrange source code
+ - libnfc: enhance documentation
+ - libnfc: add regression tests (not much as expected but its here!)
+ - build: configure script now supports --with-drivers option instead of --disable-pcsclite and --disable-libusb (see --help)
+ - nfc-mfultralight: we now can write OTP bytes if user want to
 
 Changes:
- - API: New nfc_perror(), nfc_strerror() and nfc_strerror_r() functions.
+ - API: nfc_initiator_select_tag() is now nfc_initiator_select_passive_target()
+ - API: nfc_initiator_deselect_tag() is now nfc_initiator_deselect_target()
+ - API: new function nfc_initiator_list_passive_targets() to list available targets in field
+ - API: new nfc_perror(), nfc_strerror() and nfc_strerror_r() functions to handle errors
+ - API: new types: nfc_target_type_t and nfc_target_t
+ - API: add configuration option to enable/disable auto iso14443-4 mode.
+ - API: (experimental) new nfc_initiator_poll_targets() which allow to use hardware polling function
+ - examples: add draft of a new example: nfc-sam. It tests the comunication with a connected SAM (Secure Access Module)
+ - examples: add new example to show how to use new polling function
+ - examples: add new example to diagnose basic elements (communication, rom and ram) of pn53x
+ - nfc-mfultralight: on write failure, continue if authenticate works.
+ - nfc-mfclassic: take care of 16-blocks-long sectors of Mifare Classic 4K in the nfc-mfclassic example's blocks counting routine.
+ - nfc-mfclassic: now fails ealier when something goes wrong (this allow to prevent from false-success).
+ - nfc-mfclassic: disable ISO14443-4 auto-switching in order to read devices that emulate Mifare Classic with ISO14443-4 compliance.(e.g. Nokia 6212 Classic)
+
+Note: This release will not install extra headers (like mifare.h), programs that depends on should copy theses files into their sources.
 
 
 
