@@ -208,7 +208,6 @@ bool pn532_uart_transceive(nfc_device_t* pnd, const byte_t* pbtTx, const size_t 
     return false;
   }
 
-  szRxBufLen = 6;
   res = uart_receive((serial_port)pnd->nds,abtRxBuf,&szRxBufLen);
   if (res != 0) {
     ERR("%s", "Unable to receive data. (RX)");
@@ -293,6 +292,7 @@ pn532_uart_check_communication(const nfc_device_spec_t nds, bool* success)
   byte_t abtRx[BUFFER_LENGTH];
   size_t szRxLen;
   const byte_t attempted_result[] = { 0x00,0x00,0xff,0x00,0xff,0x00,0x00,0x00,0xff,0x09,0xf7,0xD5,0x01,0x00,'l','i','b','n','f','c',0xbc,0x00};
+  int res;
 
   /** To be sure that PN532 is alive, we have put a "Diagnose" command to execute a "Communication Line Test" */
   const byte_t pncmd_communication_test[] = { 0x00,0x00,0xff,0x09,0xf7,0xd4,0x00,0x00,'l','i','b','n','f','c',0xbe,0x00 };
@@ -302,12 +302,18 @@ pn532_uart_check_communication(const nfc_device_spec_t nds, bool* success)
 #ifdef DEBUG
   PRINT_HEX("TX", pncmd_communication_test,sizeof(pncmd_communication_test));
 #endif
-  if (0 != uart_send((serial_port)nds, pncmd_communication_test, sizeof(pncmd_communication_test)))
-      return false;
-
-  if (0 != uart_receive((serial_port)nds,abtRx,&szRxLen)) {
+  res = uart_send((serial_port)nds, pncmd_communication_test, sizeof(pncmd_communication_test));
+  if (res != 0) {
+    ERR("%s", "Unable to transmit data. (TX)");
     return false;
   }
+  
+  res = uart_receive((serial_port)nds,abtRx,&szRxLen);
+  if (res != 0) {
+    ERR("%s", "Unable to receive data. (RX)");
+    return false;
+  }
+  
 #ifdef DEBUG
   PRINT_HEX("RX", abtRx,szRxLen);
 #endif
