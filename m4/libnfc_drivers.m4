@@ -4,7 +4,7 @@ AC_DEFUN([LIBNFC_ARG_WITH_DRIVERS],
 [
   AC_MSG_CHECKING(which drivers to build)
   AC_ARG_WITH(drivers,
-  AC_HELP_STRING([--with-drivers=driver@<:@[[[,]]]driver...@:>@], [Only use specific drivers (available drivers: acr122,arygon,pn531_usb,pn533_usb,pn532_uart)]),
+  AC_HELP_STRING([--with-drivers=DRIVERS], [Use a custom driver set, where DRIVERS is a coma-separated list of drivers to build support for. Available drivers are: 'acr122', 'arygon', 'pn531_usb', 'pn533_usb' and 'pn532_uart'. Default drivers set is 'acr122,arygon,pn531_usb,pn533_usb'. The special driver set 'all' compile all available drivers.]),
   [       case "${withval}" in
           yes | no)
                   dnl ignore calls without any arguments
