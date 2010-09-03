@@ -21,7 +21,7 @@ Changes:
  - API: new types: nfc_target_type_t and nfc_target_t
  - API: new configuration option NDO_AUTO_ISO14443_4 to enable/disable auto iso14443-4 mode.
  - API: new configuration option NDO_EASY_FRAMING to enable/disable auto frames encapsulation and chaining
- - API: nfc_initiator_transceive_dep_bytes() has been removed (use NDO_EASY_FRAMING instead)
+ - API: nfc_initiator_transceive_dep_bytes(), nfc_target_receive_dep_bytes() and nfc_target_send_dep_bytes() have been removed (unset NDO_EASY_FRAMING instead of these functions)
  - API: (experimental) new nfc_initiator_poll_targets() which allow to use hardware polling function
  - examples: add draft of a new example: nfc-sam. It tests the comunication with a connected SAM (Secure Access Module)
  - examples: add new example to show how to use new polling function

@@ -511,19 +511,6 @@ bool nfc_target_receive_bits(nfc_device_t* pnd, byte_t* pbtRx, size_t* pszRxBits
 }
 
 /**
- * @brief Receive data
- * @return Returns true if action was successfully performed; otherwise returns false.
- *
- * The main receive function that returns the received data from a nearby reader. The difference between this function and nfc_target_receive_bytes is that here pbtRx contains *only* the data received and not any additional commands, that is all handled internally by the PN53X.
- */
-bool nfc_target_receive_dep_bytes(nfc_device_t* pnd, byte_t* pbtRx, size_t* pszRxLen)
-{
-  pnd->iLastError = 0;
-
-  return pn53x_target_receive_dep_bytes (pnd, pbtRx, pszRxLen);
-}
-
-/**
  * @brief Receive bytes and APDU frames
  * @return Returns true if action was successfully performed; otherwise returns false.
  *
@@ -561,19 +548,6 @@ bool nfc_target_send_bytes(nfc_device_t* pnd, const byte_t* pbtTx, const size_t 
   pnd->iLastError = 0;
 
   return pn53x_target_send_bytes (pnd, pbtTx, szTxLen);
-}
-
-/**
- * @brief Send data
- * @return Returns true if action was successfully performed; otherwise returns false.
- *
- * To communicate data to the reader, this function could be used. The difference between this function and nfc_target_send_bytes is that here pbtTx contains *only* the data sent and not any additional commands, that is all handled internally by the PN53X.
- */
-bool nfc_target_send_dep_bytes(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxLen)
-{
-  pnd->iLastError = 0;
-
-  return pn53x_target_send_dep_bytes(pnd, pbtTx, szTxLen);
 }
 
 /**

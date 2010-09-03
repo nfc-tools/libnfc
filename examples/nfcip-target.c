@@ -49,7 +49,7 @@ int main(int argc, const char *argv[])
     return 1;
   }
 
-  if (!nfc_target_receive_dep_bytes(pnd, abtRecv, &szRecvBits)) {
+  if (!nfc_target_receive_bytes(pnd, abtRecv, &szRecvBits)) {
     printf("unable to receive data\n");
     return 1;
   }
@@ -57,7 +57,7 @@ int main(int argc, const char *argv[])
   printf("Received: %s\n", abtRecv);
   printf("Sending : %s\n", send);
 
-  if (!nfc_target_send_dep_bytes(pnd, send, 11)) {
+  if (!nfc_target_send_bytes(pnd, send, 11)) {
     printf("unable to send data\n");
     return 1;
   }
