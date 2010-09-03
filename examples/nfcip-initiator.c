@@ -55,7 +55,7 @@ int main(int argc, const char *argv[])
   }
 
   printf("Sending : %s\n", send);
-  if (!nfc_initiator_transceive_dep_bytes(pnd,
+  if (!nfc_initiator_transceive_bytes(pnd,
 					  send,
 					  strlen((char*)send), abtRecv,
 					  &szRecvBits)) {

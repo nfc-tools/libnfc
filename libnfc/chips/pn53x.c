@@ -654,6 +654,10 @@ pn53x_configure(nfc_device_t* pnd, const nfc_device_option_t ndo, const bool bEn
       pnd->bPar = bEnable;
     break;
 
+    case NDO_EASY_FRAMING:
+      pnd->bEasyFraming = bEnable;
+    break;
+
     case NDO_ACTIVATE_FIELD:
       abtCmd[2] = RFCI_FIELD;
       abtCmd[3] = (bEnable) ? 1 : 0;
@@ -748,38 +752,6 @@ bool pn53x_initiator_select_dep_target(nfc_device_t* pnd, const nfc_modulation_t
   return true;
 }
 
-bool pn53x_initiator_transceive_dep_bytes(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen)
-{
-  byte_t abtRx[MAX_FRAME_LEN];
-  size_t szRxLen;
-  byte_t abtCmd[sizeof(pncmd_initiator_exchange_data)];
-
-  memcpy(abtCmd,pncmd_initiator_exchange_data,sizeof(pncmd_initiator_exchange_data));
-
-  // We can not just send bytes without parity if while the PN53X expects we handled them
-  if (!pnd->bPar) return false;
-
-  // Copy the data into the command frame
-  abtCmd[2] = 1; /* target number */
-  memcpy(abtCmd+3,pbtTx,szTxLen);
-
-  // To transfer command frames bytes we can not have any leading bits, reset this to zero
-  if (!pn53x_set_tx_bits(pnd,0)) return false;
-
-  // Send the frame to the PN53X chip and get the answer
-  // We have to give the amount of bytes + (the two command bytes 0xD4, 0x40)
-  if (!pn53x_transceive(pnd,abtCmd,szTxLen+3,abtRx,&szRxLen)) return false;
-
-  // Save the received byte count
-  *pszRxLen = szRxLen-1;
-
-  // Copy the received bytes
-  memcpy(pbtRx,abtRx+1,*pszRxLen);
-
-  // Everything went successful
-  return true;
-}
-
 bool pn53x_initiator_transceive_bits(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxBits, const byte_t* pbtTxPar, byte_t* pbtRx, size_t* pszRxBits, byte_t* pbtRxPar)
 {
   byte_t abtRx[MAX_FRAME_LEN];
@@ -845,23 +817,30 @@ bool pn53x_initiator_transceive_bits(nfc_device_t* pnd, const byte_t* pbtTx, con
 bool pn53x_initiator_transceive_bytes(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen)
 {
   byte_t abtRx[MAX_FRAME_LEN];
-  size_t szRxLen;
+  size_t szExtraTxLen, szRxLen;
   byte_t abtCmd[sizeof(pncmd_initiator_exchange_raw_data)];
-
-  memcpy(abtCmd,pncmd_initiator_exchange_raw_data,sizeof(pncmd_initiator_exchange_raw_data));
 
   // We can not just send bytes without parity if while the PN53X expects we handled them
   if (!pnd->bPar) return false;
 
   // Copy the data into the command frame
-  memcpy(abtCmd+2,pbtTx,szTxLen);
+  if (pnd->bEasyFraming) {
+    memcpy(abtCmd,pncmd_initiator_exchange_data,sizeof(pncmd_initiator_exchange_data));
+    abtCmd[2] = 1; /* target number */
+    memcpy(abtCmd+3,pbtTx,szTxLen);
+    szExtraTxLen = 3;
+  } else {
+    memcpy(abtCmd,pncmd_initiator_exchange_raw_data,sizeof(pncmd_initiator_exchange_raw_data));
+    memcpy(abtCmd+2,pbtTx,szTxLen);
+    szExtraTxLen = 2;
+  }
 
   // To transfer command frames bytes we can not have any leading bits, reset this to zero
   if (!pn53x_set_tx_bits(pnd,0)) return false;
 
   // Send the frame to the PN53X chip and get the answer
   // We have to give the amount of bytes + (the two command bytes 0xD4, 0x42)
-  if (!pn53x_transceive(pnd,abtCmd,szTxLen+2,abtRx,&szRxLen)) return false;
+  if (!pn53x_transceive(pnd,abtCmd,szTxLen + szExtraTxLen,abtRx,&szRxLen)) return false;
 
   // Save the received byte count
   *pszRxLen = szRxLen-1;

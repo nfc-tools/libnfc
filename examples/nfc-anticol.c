@@ -166,6 +166,11 @@ int main(int argc,char* argv[])
     exit (EXIT_FAILURE);
   }
 
+  if (!nfc_configure(pnd, NDO_EASY_FRAMING, false)) {
+      nfc_perror (pnd, "nfc_configure");
+      exit (EXIT_FAILURE);
+  }
+
   printf("\nConnected to NFC reader: %s\n\n",pnd->acName);
 
   // Send the 7 bits request command specified in ISO 14443A (0x26)

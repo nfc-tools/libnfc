@@ -67,6 +67,8 @@ typedef struct {
   bool bCrc;
 /** Does the PN53x chip handles parity bits, all parities are handled as data */
   bool bPar;
+/** Should the PN53x chip handle frames encapsulation and chaining */
+  bool bEasyFraming;
 /** The last tx bits setting, we need to reset this if it does not apply anymore */
   uint8_t ui8TxBits;
 /** Last error reported by the PCD / encountered by the PCD driver
@@ -142,6 +144,8 @@ typedef enum {
   NDO_HANDLE_CRC              = 0x00,
 /** Parity bits in the network layer of ISO14443-A are by default generated and validated in the PN53X chip. This is a very convenient feature. On certain times though it is useful to get full control of the transmitted data. The proprietary MIFARE Classic protocol uses for example custom (encrypted) parity bits. For interoperability it is required to be completely compatible, including the arbitrary parity bits. When this option is disabled, the functions to communicating bits should be used. */
   NDO_HANDLE_PARITY           = 0x01,
+/** Use automatic frames encapsulation and chaining. */
+  NDO_EASY_FRAMING            = 0x02,
 /** This option can be used to enable or disable the electronic field of the NFC device. */
   NDO_ACTIVATE_FIELD          = 0x10,
 /** The internal CRYPTO1 co-processor can be used to transmit messages encrypted. This option is automatically activated after a successful MIFARE Classic authentication. */

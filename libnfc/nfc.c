@@ -236,6 +236,8 @@ bool nfc_initiator_init(nfc_device_t* pnd)
   // Configure the PN53X to be an Initiator or Reader/Writer
   if (!pn53x_set_reg(pnd,REG_CIU_CONTROL,SYMBOL_INITIATOR,0x10)) return false;
 
+  nfc_configure (pnd, NDO_EASY_FRAMING, true);
+
   return true;
 }
 
@@ -458,19 +460,6 @@ bool nfc_initiator_transceive_bits(nfc_device_t* pnd, const byte_t* pbtTx, const
   pnd->iLastError = 0;
 
   return pn53x_initiator_transceive_bits (pnd, pbtTx, szTxBits, pbtTxPar, pbtRx, pszRxBits, pbtRxPar);
-}
-
-/**
- * @brief Transceive data
- * @return Returns true if action was successfully performed; otherwise returns false.
- *
- * The reader will transmit the supplied (data) bytes in pbtTx to the target (tag). It waits for the response and stores the received bytes in the pbtRx byte array. The difference between this function and nfc_initiator_transceive_bytes is that here pbtTx and pbtRx contain *only* the data sent and received and not any additional commands, that is all handled internally by the PN53X.
- */
-bool nfc_initiator_transceive_dep_bytes(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen)
-{
-  pnd->iLastError = 0;
-
-  return pn53x_initiator_transceive_dep_bytes(pnd, pbtTx, szTxLen, pbtRx, pszRxLen);
 }
 
 /**

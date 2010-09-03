@@ -9,7 +9,7 @@ Fixes:
 Improvments:
  - libnfc: rearrange source code
  - libnfc: enhance documentation
- - libnfc: add regression tests (not much as expected but its here!)
+ - libnfc: add regression tests (not as much as expected but its here!)
  - build: configure script now supports --with-drivers option instead of --disable-pcsclite and --disable-libusb (see --help)
  - nfc-mfultralight: we now can write OTP bytes if user want to
 
@@ -19,7 +19,9 @@ Changes:
  - API: new function nfc_initiator_list_passive_targets() to list available targets in field
  - API: new nfc_perror(), nfc_strerror() and nfc_strerror_r() functions to handle errors
  - API: new types: nfc_target_type_t and nfc_target_t
- - API: add configuration option to enable/disable auto iso14443-4 mode.
+ - API: new configuration option NDO_AUTO_ISO14443_4 to enable/disable auto iso14443-4 mode.
+ - API: new configuration option NDO_EASY_FRAMING to enable/disable auto frames encapsulation and chaining
+ - API: nfc_initiator_transceive_dep_bytes() has been removed (use NDO_EASY_FRAMING instead)
  - API: (experimental) new nfc_initiator_poll_targets() which allow to use hardware polling function
  - examples: add draft of a new example: nfc-sam. It tests the comunication with a connected SAM (Secure Access Module)
  - examples: add new example to show how to use new polling function

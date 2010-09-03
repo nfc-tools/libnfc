@@ -68,7 +68,6 @@ NFC_EXPORT bool nfc_initiator_select_dep_target(nfc_device_t* pnd, const nfc_mod
 NFC_EXPORT bool nfc_initiator_deselect_target(nfc_device_t* pnd);
 NFC_EXPORT bool nfc_initiator_transceive_bits(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxBits, const byte_t* pbtTxPar, byte_t* pbtRx, size_t* pszRxBits, byte_t* pbtRxPar);
 NFC_EXPORT bool nfc_initiator_transceive_bytes(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen);
-NFC_EXPORT bool nfc_initiator_transceive_dep_bytes(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen);
 
 /* NFC target: act as tag (i.e. MIFARE Classic) or NFC target device. */
 NFC_EXPORT bool nfc_target_init(nfc_device_t* pnd, byte_t* pbtRx, size_t* pszRxBits);
