@@ -144,6 +144,11 @@ int main(int argc, const char* argv[])
       exit(EXIT_FAILURE);
     }
 
+    if (!nfc_configure(pnd, NDO_AUTO_ISO14443_4, true)) {
+	nfc_perror(pnd, "nfc_configure");
+	exit(EXIT_FAILURE);
+    }
+
     printf("Connected to NFC reader: %s\n",pnd->acName);
 
     // List ISO14443A targets
