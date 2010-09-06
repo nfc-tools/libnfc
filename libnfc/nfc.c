@@ -236,7 +236,11 @@ bool nfc_initiator_init(nfc_device_t* pnd)
   // Configure the PN53X to be an Initiator or Reader/Writer
   if (!pn53x_set_reg(pnd,REG_CIU_CONTROL,SYMBOL_INITIATOR,0x10)) return false;
 
+  // NDO_EASY_FRAMING is activated by default
   nfc_configure (pnd, NDO_EASY_FRAMING, true);
+
+  // NDO_AUTO_ISO14443_4 is activated by default
+  nfc_configure (pnd, NDO_AUTO_ISO14443_4, true);
 
   return true;
 }
