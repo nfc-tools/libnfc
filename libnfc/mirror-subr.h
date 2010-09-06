@@ -28,8 +28,6 @@
 
 #include <nfc/nfc-types.h>
 
-byte_t oddparity(const byte_t bt);
-void oddparity_byte_ts(const byte_t* pbtData, const size_t szLen, byte_t* pbtPar);
 
 byte_t mirror(byte_t bt);
 uint32_t mirror32(uint32_t ui32Bits);
