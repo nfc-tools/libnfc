@@ -21,6 +21,21 @@ static const byte_t OddParity[256] = {
   1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1
 };
 
+byte_t oddparity(const byte_t bt)
+{
+  return OddParity[bt];
+}
+
+void oddparity_bytes_ts(const byte_t* pbtData, const size_t szLen, byte_t* pbtPar)
+{
+  size_t szByteNr;
+  // Calculate the parity bits for the command
+  for (szByteNr=0; szByteNr<szLen; szByteNr++)
+  {
+    pbtPar[szByteNr] = OddParity[pbtData[szByteNr]];
+  }
+}
+
 void print_hex(const byte_t* pbtData, const size_t szBytes)
 {
   size_t szPos;

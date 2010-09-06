@@ -18,7 +18,7 @@
  * 
  * 
  * @file nfc-utils.h
- * @brief
+ * @brief Provide some examples shared functions like print, parity calculation, options parsing.
  */
 
 #ifndef _EXAMPLES_NFC_UTILS_H_
@@ -27,6 +27,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+byte_t oddparity(const byte_t bt);
+void oddparity_byte_ts(const byte_t* pbtData, const size_t szLen, byte_t* pbtPar);
 
 void print_hex(const byte_t* pbtData, const size_t szLen);
 void print_hex_bits(const byte_t* pbtData, const size_t szBits);
