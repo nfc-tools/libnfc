@@ -1,5 +1,5 @@
 LIBRARY NFC
-VERSION 1.3
+VERSION 1.3.9
 
 EXPORTS
 	nfc_list_devices
