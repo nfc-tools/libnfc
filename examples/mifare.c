@@ -67,7 +67,8 @@ bool nfc_initiator_mifare_cmd(nfc_device_t* pnd, const mifare_cmd mc, const uint
 
   // Fire the mifare command
   if (!nfc_initiator_transceive_bytes(pnd,abtCmd,2+szParamLen,abtRx,&szRxLen)) {
-    nfc_perror (pnd, "nfc_initiator_transceive_bytes");
+    if (pnd->iLastError != 0x14)
+	nfc_perror (pnd, "nfc_initiator_transceive_bytes");
     return false;
   }
 
