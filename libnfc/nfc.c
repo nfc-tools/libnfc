@@ -161,12 +161,25 @@ nfc_device_t* nfc_connect(nfc_device_desc_t* pndd)
       // Reset the ending transmission bits register, it is unknown what the last tranmission used there
       if (!pn53x_set_reg(pnd,REG_CIU_BIT_FRAMING,SYMBOL_TX_LAST_BITS,0x00)) return NULL;
 
+      // Set default configuration options
       // Make sure we reset the CRC and parity to chip handling.
       if (!nfc_configure(pnd,NDO_HANDLE_CRC,true)) return NULL;
       if (!nfc_configure(pnd,NDO_HANDLE_PARITY,true)) return NULL;
 
       // Deactivate the CRYPTO1 chiper, it may could cause problems when still active
       if (!nfc_configure(pnd,NDO_ACTIVATE_CRYPTO1,false)) return NULL;
+
+      // Activate "easy framing" feature by default
+      if (!nfc_configure (pnd, NDO_EASY_FRAMING, true)) return NULL;
+
+      // Activate auto ISO14443-4 switching by default
+      if (!nfc_configure (pnd, NDO_AUTO_ISO14443_4, true)) return NULL;
+      
+      // Disallow invalid frame
+      if (!nfc_configure (pnd, NDO_ACCEPT_INVALID_FRAMES, false)) return NULL;
+
+      // Disallow multiple frames
+      if (!nfc_configure (pnd, NDO_ACCEPT_MULTIPLE_FRAMES, false)) return NULL;
 
       return pnd;
     } else {
@@ -235,12 +248,6 @@ bool nfc_initiator_init(nfc_device_t* pnd)
 
   // Configure the PN53X to be an Initiator or Reader/Writer
   if (!pn53x_set_reg(pnd,REG_CIU_CONTROL,SYMBOL_INITIATOR,0x10)) return false;
-
-  // NDO_EASY_FRAMING is activated by default
-  nfc_configure (pnd, NDO_EASY_FRAMING, true);
-
-  // NDO_AUTO_ISO14443_4 is activated by default
-  nfc_configure (pnd, NDO_AUTO_ISO14443_4, true);
 
   return true;
 }
