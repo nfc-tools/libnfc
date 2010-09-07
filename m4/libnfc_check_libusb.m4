@@ -18,8 +18,6 @@ AC_DEFUN([LIBNFC_CHECK_LIBUSB],
       fi
     fi
 
-    AC_MSG_CHECKING(for libusb)
-  
     # Search using libusb-config
     if test x"$HAVE_LIBUSB" = "x0"; then
       AC_PATH_PROG(libusb_CONFIG,libusb-config)
@@ -40,10 +38,7 @@ AC_DEFUN([LIBNFC_CHECK_LIBUSB],
     fi
 
     if test x"$HAVE_LIBUSB" = "x0"; then
-      AC_MSG_RESULT(no)
       AC_MSG_ERROR([libusb is mandatory.])
-    else
-      AC_MSG_RESULT(yes)
     fi
 
     AC_SUBST(libusb_LIBS)

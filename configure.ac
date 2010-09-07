@@ -34,11 +34,14 @@ AC_PATH_PROG(PKG_CONFIG, pkg-config, [AC_MSG_ERROR([pkg-config not found.])])
 # Checks for header files.
 AC_HEADER_STDC
 AC_HEADER_STDBOOL
-AC_CHECK_HEADERS([stdio.h stdlib.h stdint.h stddef.h stdbool.h])
-AC_CHECK_FUNCS([strdup, usleep], [AC_DEFINE([_XOPEN_SOURCE], [600], [Enable POSIX extensions if present])])
+AC_CHECK_HEADERS([fcntl.h limits.h stdio.h stdlib.h stdint.h stddef.h stdbool.h sys/ioctl.h sys/param.h sys/time.h termios.h])
+AC_CHECK_FUNCS([bzero memmove memset select strdup strerror strstr strtol usleep],
+	       [AC_DEFINE([_XOPEN_SOURCE], [600], [Enable POSIX extensions if present])])
 
 AC_DEFINE(_NETBSD_SOURCE, 1, [Define on NetBSD to activate all library features])
 AC_DEFINE(_DARWIN_C_SOURCE, 1, [Define on Darwin to activate all library features])
+
+AC_FUNC_MALLOC
 
 # Checks for types
 AC_TYPE_SIZE_T
@@ -47,6 +50,8 @@ AC_TYPE_UINT16_T
 AC_TYPE_UINT32_T
 AC_TYPE_UINT64_T
 AC_TYPE_INT32_T
+
+AC_TYPE_SIGNAL
 
 LIBNFC_CFLAGS='-I$(top_srcdir)/libnfc -I$(top_builddir)/include -I$(top_srcdir)/include'
 AC_SUBST(LIBNFC_CFLAGS)
