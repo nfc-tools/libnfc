@@ -37,6 +37,10 @@
 #  include <strings.h>
 #endif
 
+#ifdef _WIN32
+#  define bzero(a, b) memset(a, 0x00, b)
+#endif
+
 #include "arygon.h"
 
 #include <nfc/nfc-messages.h>
