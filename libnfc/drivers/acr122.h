@@ -22,29 +22,29 @@
  */
 
 #ifndef __NFC_DRIVER_ACR122_H__
-#define __NFC_DRIVER_ACR122_H__
+#  define __NFC_DRIVER_ACR122_H__
 
-#include <stdint.h>
-#include <stdbool.h>
+#  include <stdint.h>
+#  include <stdbool.h>
 
 
-#include <nfc/nfc-types.h>
+#  include <nfc/nfc-types.h>
 
-#define ACR122_DRIVER_NAME "ACR122"
+#  define ACR122_DRIVER_NAME "ACR122"
 
-nfc_device_desc_t* acr122_pick_device(void);
-bool acr122_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *pszDeviceFound);
+nfc_device_desc_t *acr122_pick_device (void);
+bool    acr122_list_devices (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * pszDeviceFound);
 
 // Functions used by developer to handle connection to this device
-nfc_device_t* acr122_connect(const nfc_device_desc_t* pndd);
-void acr122_disconnect(nfc_device_t* pnd);
+nfc_device_t *acr122_connect (const nfc_device_desc_t * pndd);
+void    acr122_disconnect (nfc_device_t * pnd);
 
 // Callback function used by libnfc to transmit commands to the PN53X chip
-bool acr122_transceive(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen);
+bool    acr122_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxLen, byte_t * pbtRx,
+                           size_t * pszRxLen);
 
 // Various additional features this device supports
-char* acr122_firmware(const nfc_device_spec_t nds);
-bool acr122_led_red(const nfc_device_spec_t nds, bool bOn);
+char   *acr122_firmware (const nfc_device_spec_t nds);
+bool    acr122_led_red (const nfc_device_spec_t nds, bool bOn);
 
 #endif // ! __NFC_DRIVER_ACR122_H__
-

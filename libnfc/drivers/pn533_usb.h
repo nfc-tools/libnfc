@@ -22,14 +22,13 @@
  */
 
 #ifndef __NFC_DRIVER_PN533_USB_H__
-#define __NFC_DRIVER_PN533_USB_H__
+#  define __NFC_DRIVER_PN533_USB_H__
 
-#define PN533_USB_DRIVER_NAME "PN533_USB"
+#  define PN533_USB_DRIVER_NAME "PN533_USB"
 
 // Functions used by developer to handle connection to this device
-nfc_device_t* pn533_usb_connect(const nfc_device_desc_t* pndd);
-bool pn533_usb_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *pszDeviceFound);
-nfc_device_desc_t * pn533_usb_pick_device (void);
+nfc_device_t *pn533_usb_connect (const nfc_device_desc_t * pndd);
+bool    pn533_usb_list_devices (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * pszDeviceFound);
+nfc_device_desc_t *pn533_usb_pick_device (void);
 
 #endif // ! __NFC_DRIVER_PN533_USB_H__
-

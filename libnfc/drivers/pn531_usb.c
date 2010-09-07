@@ -27,7 +27,7 @@ Thanks to d18c7db and Okko for example code
 */
 
 #ifdef HAVE_CONFIG_H
-  #include "config.h"
+#  include "config.h"
 #endif // HAVE_CONFIG_H
 
 #include <stdlib.h>
@@ -35,39 +35,41 @@ Thanks to d18c7db and Okko for example code
 #include "../drivers.h"
 #include <nfc/nfc-messages.h>
 
-nfc_device_desc_t * pn531_usb_pick_device (void)
+nfc_device_desc_t *
+pn531_usb_pick_device (void)
 {
   nfc_device_desc_t *pndd;
 
-  if ((pndd = malloc (sizeof (*pndd))))
-  {
-    size_t szN;
+  if ((pndd = malloc (sizeof (*pndd)))) {
+    size_t  szN;
 
-    if (!pn531_usb_list_devices (pndd, 1, &szN))
-    {
-      DBG("%s", "pn531_usb_list_devices failed");
+    if (!pn531_usb_list_devices (pndd, 1, &szN)) {
+      DBG ("%s", "pn531_usb_list_devices failed");
       return NULL;
     }
 
-    if (szN == 0)
-    {
-      DBG("%s", "No device found");
+    if (szN == 0) {
+      DBG ("%s", "No device found");
       return NULL;
     }
   }
   return pndd;
 }
 
-bool pn531_usb_list_devices(nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *pszDeviceFound)
+bool
+pn531_usb_list_devices (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * pszDeviceFound)
 {
   // array of {vendor,product} pairs for USB devices
-  usb_candidate_t candidates[]= {{0x04CC,0x0531},{0x054c,0x0193}};
+  usb_candidate_t candidates[] = { {0x04CC, 0x0531}
+  , {0x054c, 0x0193}
+  };
 
-  return pn53x_usb_list_devices(&pnddDevices[0], szDevices, pszDeviceFound, &candidates[0], sizeof(candidates) / sizeof(usb_candidate_t),PN531_USB_DRIVER_NAME);
+  return pn53x_usb_list_devices (&pnddDevices[0], szDevices, pszDeviceFound, &candidates[0],
+                                 sizeof (candidates) / sizeof (usb_candidate_t), PN531_USB_DRIVER_NAME);
 }
 
-nfc_device_t* pn531_usb_connect(const nfc_device_desc_t* pndd)
+nfc_device_t *
+pn531_usb_connect (const nfc_device_desc_t * pndd)
 {
-  return pn53x_usb_connect(pndd, pndd->acDevice, NC_PN531);
+  return pn53x_usb_connect (pndd, pndd->acDevice, NC_PN531);
 }
-

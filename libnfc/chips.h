@@ -16,18 +16,17 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
- 
+
 /** 
  * @file chips.h
  * @brief NFC chips header
  */
 
 #ifndef __NFC_CHIPS_H__
-#define __NFC_CHIPS_H__
+#  define __NFC_CHIPS_H__
 
-#include <nfc/nfc-types.h>
+#  include <nfc/nfc-types.h>
 
-#include "chips/pn53x.h"
+#  include "chips/pn53x.h"
 
 #endif // __NFC_CHIPS_H__
-

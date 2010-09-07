@@ -69,7 +69,7 @@ print_success_or_failure (bool bFailure, uint32_t * uiBlockCounter)
     *uiBlockCounter += (*uiBlockCounter < 128) ? 4 : 16;
 }
 
-static bool
+static  bool
 is_first_block (uint32_t uiBlock)
 {
   // Test if we are in the small or big sectors
@@ -79,7 +79,7 @@ is_first_block (uint32_t uiBlock)
     return ((uiBlock) % 16 == 0);
 }
 
-static bool
+static  bool
 is_trailer_block (uint32_t uiBlock)
 {
   // Test if we are in the small or big sectors
@@ -89,7 +89,7 @@ is_trailer_block (uint32_t uiBlock)
     return ((uiBlock + 1) % 16 == 0);
 }
 
-static uint32_t
+static  uint32_t
 get_trailer_block (uint32_t uiFirstBlock)
 {
   // Test if we are in the small or big sectors
@@ -102,12 +102,12 @@ get_trailer_block (uint32_t uiFirstBlock)
   return trailer_block;
 }
 
-static bool
+static  bool
 authenticate (uint32_t uiBlock)
 {
   mifare_cmd mc;
   uint32_t uiTrailerBlock;
-  size_t key_index;
+  size_t  key_index;
 
   // Key file authentication.
   if (bUseKeyFile) {
@@ -156,11 +156,11 @@ authenticate (uint32_t uiBlock)
   return false;
 }
 
-static bool
+static  bool
 read_card (void)
 {
   int32_t iBlock;
-  bool bFailure = false;
+  bool    bFailure = false;
   uint32_t uiReadBlocks = 0;
 
   printf ("Reading out %d blocks |", uiBlocks + 1);
@@ -197,7 +197,7 @@ read_card (void)
         memcpy (mtDump.amb[iBlock].mbt.abtAccessBits, mp.mpd.abtData + 6, 4);
         memcpy (mtDump.amb[iBlock].mbt.abtKeyB, mtKeys.amb[iBlock].mbt.abtKeyB, 6);
       } else {
-        printf("!\nError: unable to read trailer block 0x%02x\n", iBlock);
+        printf ("!\nError: unable to read trailer block 0x%02x\n", iBlock);
       }
     } else {
       // Make sure a earlier readout did not fail
@@ -207,7 +207,7 @@ read_card (void)
           memcpy (mtDump.amb[iBlock].mbd.abtData, mp.mpd.abtData, 16);
         } else {
           bFailure = true;
-          printf("!\nError: unable to read block 0x%02x\n", iBlock);
+          printf ("!\nError: unable to read block 0x%02x\n", iBlock);
           return false;
         }
       }
@@ -221,11 +221,11 @@ read_card (void)
   return true;
 }
 
-static bool
+static  bool
 write_card (void)
 {
   uint32_t uiBlock;
-  bool bFailure = false;
+  bool    bFailure = false;
   uint32_t uiWriteBlocks = 0;
 
   printf ("Writing %d blocks |", uiBlocks + 1);
@@ -295,8 +295,8 @@ mifare_classic_extract_payload (const char *abDump, char *pbPayload)
 {
   uint8_t uiSectorIndex;
   uint8_t uiBlockIndex;
-  size_t szDumpOffset;
-  size_t szPayloadIndex = 0;
+  size_t  szDumpOffset;
+  size_t  szPayloadIndex = 0;
 
   for (uiSectorIndex = 1; uiSectorIndex < 16; uiSectorIndex++) {
     for (uiBlockIndex = 0; uiBlockIndex < 3; uiBlockIndex++) {
@@ -308,8 +308,7 @@ mifare_classic_extract_payload (const char *abDump, char *pbPayload)
   }
 }
 
-typedef enum
-{
+typedef enum {
   ACTION_READ,
   ACTION_WRITE,
   ACTION_EXTRACT,
@@ -335,11 +334,11 @@ print_usage (const char *pcProgramName)
 int
 main (int argc, const char *argv[])
 {
-  bool b4K;
+  bool    b4K;
   action_t atAction = ACTION_USAGE;
   byte_t *pbtUID;
-  FILE *pfKeys = NULL;
-  FILE *pfDump = NULL;
+  FILE   *pfKeys = NULL;
+  FILE   *pfDump = NULL;
   const char *command = argv[1];
 
   if (argc < 2) {
@@ -415,32 +414,29 @@ main (int argc, const char *argv[])
 
     // Drop the field for a while
     if (!nfc_configure (pnd, NDO_ACTIVATE_FIELD, false)) {
-      nfc_perror(pnd, "nfc_configure");
+      nfc_perror (pnd, "nfc_configure");
       exit (EXIT_FAILURE);
     }
-
     // Let the reader only try once to find a tag
     if (!nfc_configure (pnd, NDO_INFINITE_SELECT, false)) {
-      nfc_perror(pnd, "nfc_configure");
+      nfc_perror (pnd, "nfc_configure");
       exit (EXIT_FAILURE);
     }
     if (!nfc_configure (pnd, NDO_HANDLE_CRC, true)) {
-      nfc_perror(pnd, "nfc_configure");
+      nfc_perror (pnd, "nfc_configure");
       exit (EXIT_FAILURE);
     }
     if (!nfc_configure (pnd, NDO_HANDLE_PARITY, true)) {
-      nfc_perror(pnd, "nfc_configure");
+      nfc_perror (pnd, "nfc_configure");
       exit (EXIT_FAILURE);
     }
-
     // Enable field so more power consuming cards can power themselves up
     if (!nfc_configure (pnd, NDO_ACTIVATE_FIELD, true)) {
-      nfc_perror(pnd, "nfc_configure");
+      nfc_perror (pnd, "nfc_configure");
       exit (EXIT_FAILURE);
     }
-
     // Disable ISO14443-4 switching in order to read devices that emulate Mifare Classic with ISO14443-4 compliance.
-    nfc_configure(pnd, NDO_AUTO_ISO14443_4, false);
+    nfc_configure (pnd, NDO_AUTO_ISO14443_4, false);
 
     printf ("Connected to NFC reader: %s\n", pnd->acName);
 
@@ -499,11 +495,11 @@ main (int argc, const char *argv[])
       const char *pcDump = argv[2];
       const char *pcPayload = argv[3];
 
-      FILE *pfDump = NULL;
-      FILE *pfPayload = NULL;
+      FILE   *pfDump = NULL;
+      FILE   *pfPayload = NULL;
 
-      char abDump[4096];
-      char abPayload[4096];
+      char    abDump[4096];
+      char    abPayload[4096];
 
       pfDump = fopen (pcDump, "rb");
 

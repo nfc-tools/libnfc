@@ -23,7 +23,7 @@
  */
 
 #ifdef HAVE_CONFIG_H
-  #include "config.h"
+#  include "config.h"
 #endif // HAVE_CONFIG_H
 
 #include <err.h>
@@ -33,40 +33,36 @@
 
 #define MAX_FRAME_LEN 264
 
-int main(int argc, const char *argv[])
+int
+main (int argc, const char *argv[])
 {
   nfc_device_t *pnd;
   nfc_target_info_t ti;
-  byte_t abtRecv[MAX_FRAME_LEN];
-  size_t szRecvBits;
-  byte_t send[] = "Hello World!";
+  byte_t  abtRecv[MAX_FRAME_LEN];
+  size_t  szRecvBits;
+  byte_t  send[] = "Hello World!";
 
   if (argc > 1) {
     errx (1, "usage: %s", argv[0]);
   }
 
-  pnd = nfc_connect(NULL);
-  if (!pnd || !nfc_initiator_init(pnd)
-      || !nfc_initiator_select_dep_target(pnd, NM_PASSIVE_DEP, NULL, 0,
-					  NULL, 0, NULL, 0, &ti)) {
-    printf
-	("unable to connect, initialize, or select the target\n");
+  pnd = nfc_connect (NULL);
+  if (!pnd || !nfc_initiator_init (pnd)
+      || !nfc_initiator_select_dep_target (pnd, NM_PASSIVE_DEP, NULL, 0, NULL, 0, NULL, 0, &ti)) {
+    printf ("unable to connect, initialize, or select the target\n");
     return 1;
   }
 
-  printf("Sending : %s\n", send);
-  if (!nfc_initiator_transceive_bytes(pnd,
-					  send,
-					  strlen((char*)send), abtRecv,
-					  &szRecvBits)) {
-    printf("unable to send data\n");
+  printf ("Sending : %s\n", send);
+  if (!nfc_initiator_transceive_bytes (pnd, send, strlen ((char *) send), abtRecv, &szRecvBits)) {
+    printf ("unable to send data\n");
     return 1;
   }
 
   abtRecv[szRecvBits] = 0;
-  printf("Received: %s\n", abtRecv);
+  printf ("Received: %s\n", abtRecv);
 
-  nfc_initiator_deselect_target(pnd);
-  nfc_disconnect(pnd);
+  nfc_initiator_deselect_target (pnd);
+  nfc_disconnect (pnd);
   return 0;
 }

@@ -55,11 +55,11 @@ print_success_or_failure (bool bFailure, uint32_t * uiCounter)
     *uiCounter += (bFailure) ? 0 : 1;
 }
 
-static bool
+static  bool
 read_card (void)
 {
   uint32_t page;
-  bool bFailure = false;
+  bool    bFailure = false;
   uint32_t uiReadedPages = 0;
 
   printf ("Reading %d pages |", uiBlocks + 1);
@@ -85,16 +85,16 @@ read_card (void)
   return (!bFailure);
 }
 
-static bool
+static  bool
 write_card (void)
 {
   uint32_t uiBlock = 0;
-  int page = 0x4;
-  bool bFailure = false;
+  int     page = 0x4;
+  bool    bFailure = false;
   uint32_t uiWritenPages = 0;
 
-  char buffer[BUFSIZ];
-  bool write_otp;
+  char    buffer[BUFSIZ];
+  bool    write_otp;
 
   printf ("Write OTP bytes ? [yN] ");
   fgets (buffer, BUFSIZ, stdin);
@@ -104,11 +104,11 @@ write_card (void)
   printf ("Writing %d pages |", uiBlocks + 1);
   printf ("sss");
 
-  if(write_otp) {
+  if (write_otp) {
     page = 0x3;
   } else {
     /* If user don't want to write OTP, we skip 1 page more. */
-    printf("s");
+    printf ("s");
     page = 0x4;
   }
 
@@ -122,7 +122,6 @@ write_card (void)
       }
       bFailure = false;
     }
-
     // For the Mifare Ultralight, this write command can be used
     // in compatibility mode, which only actually writes the first 
     // page (4 bytes). The Ultralight-specific Write command only
@@ -130,12 +129,13 @@ write_card (void)
     uiBlock = page / 4;
     memcpy (mp.mpd.abtData, mtDump.amb[uiBlock].mbd.abtData + ((page % 4) * 4), 16);
     if (!nfc_initiator_mifare_cmd (pnd, MC_WRITE, page, &mp))
-        bFailure = true;
+      bFailure = true;
 
     print_success_or_failure (bFailure, &uiWritenPages);
   }
   printf ("|\n");
-  printf ("Done, %d of %d pages written (%d first pages are skipped).\n", uiWritenPages, uiBlocks + 1, write_otp?3:4);
+  printf ("Done, %d of %d pages written (%d first pages are skipped).\n", uiWritenPages, uiBlocks + 1,
+          write_otp ? 3 : 4);
 
   return true;
 }
@@ -143,9 +143,9 @@ write_card (void)
 int
 main (int argc, const char *argv[])
 {
-  bool bReadAction;
+  bool    bReadAction;
   byte_t *pbtUID;
-  FILE *pfDump;
+  FILE   *pfDump;
 
   if (argc < 3) {
     printf ("\n");
@@ -191,28 +191,26 @@ main (int argc, const char *argv[])
 
   // Drop the field for a while
   if (!nfc_configure (pnd, NDO_ACTIVATE_FIELD, false)) {
-    nfc_perror(pnd, "nfc_configure");
-    exit(EXIT_FAILURE);
+    nfc_perror (pnd, "nfc_configure");
+    exit (EXIT_FAILURE);
   }
-
   // Let the reader only try once to find a tag
   if (!nfc_configure (pnd, NDO_INFINITE_SELECT, false)) {
-    nfc_perror(pnd, "nfc_configure");
-    exit(EXIT_FAILURE);
+    nfc_perror (pnd, "nfc_configure");
+    exit (EXIT_FAILURE);
   }
   if (!nfc_configure (pnd, NDO_HANDLE_CRC, true)) {
-    nfc_perror(pnd, "nfc_configure");
-    exit(EXIT_FAILURE);
+    nfc_perror (pnd, "nfc_configure");
+    exit (EXIT_FAILURE);
   }
   if (!nfc_configure (pnd, NDO_HANDLE_PARITY, true)) {
-    nfc_perror(pnd, "nfc_configure");
-    exit(EXIT_FAILURE);
+    nfc_perror (pnd, "nfc_configure");
+    exit (EXIT_FAILURE);
   }
-
   // Enable field so more power consuming cards can power themselves up
   if (!nfc_configure (pnd, NDO_ACTIVATE_FIELD, true)) {
-    nfc_perror(pnd, "nfc_configure");
-    exit(EXIT_FAILURE);
+    nfc_perror (pnd, "nfc_configure");
+    exit (EXIT_FAILURE);
   }
 
   printf ("Connected to NFC reader: %s\n", pnd->acName);
@@ -230,7 +228,6 @@ main (int argc, const char *argv[])
     nfc_disconnect (pnd);
     return EXIT_FAILURE;
   }
-
   // Get the info from the current tag (UID is stored little-endian)
   pbtUID = nti.nai.abtUid;
   printf ("Found MIFARE Ultralight card with UID: %02x%02x%02x%02x\n", pbtUID[3], pbtUID[2], pbtUID[1], pbtUID[0]);

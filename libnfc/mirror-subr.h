@@ -22,16 +22,16 @@
  */
 
 #ifndef _LIBNFC_MIRROR_SUBR_H_
-#define _LIBNFC_MIRROR_SUBR_H_
+#  define _LIBNFC_MIRROR_SUBR_H_
 
-#include <stdint.h>
+#  include <stdint.h>
 
-#include <nfc/nfc-types.h>
+#  include <nfc/nfc-types.h>
 
 
-byte_t mirror(byte_t bt);
-uint32_t mirror32(uint32_t ui32Bits);
-uint64_t mirror64(uint64_t ui64Bits);
-void mirror_byte_ts(byte_t *pbts, size_t szLen);
+byte_t  mirror (byte_t bt);
+uint32_t mirror32 (uint32_t ui32Bits);
+uint64_t mirror64 (uint64_t ui64Bits);
+void    mirror_byte_ts (byte_t * pbts, size_t szLen);
 
 #endif // _LIBNFC_MIRROR_SUBR_H_

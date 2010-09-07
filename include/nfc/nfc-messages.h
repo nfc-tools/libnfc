@@ -22,25 +22,25 @@
  */
 
 #ifndef _LIBNFC_MESSAGES_H_
-#define _LIBNFC_MESSAGES_H_
+#  define _LIBNFC_MESSAGES_H_
 
-#include <err.h>
+#  include <err.h>
 
 // #define DEBUG   /* DEBUG flag can also be enabled using ./configure --enable-debug */
 
 // Useful macros
-#ifdef DEBUG
+#  ifdef DEBUG
 //   #define DBG(x, args...) printf("DBG %s:%d: " x "\n", __FILE__, __LINE__,## args )
-  #define DBG(...) do { \
+#    define DBG(...) do { \
     warnx ("DBG %s:%d", __FILE__, __LINE__); \
     warnx ("    " __VA_ARGS__ ); \
   } while (0)
-#else
-  #define DBG(...) {}
-#endif
+#  else
+#    define DBG(...) {}
+#  endif
 
-#define INFO(...) warnx ("INFO: " __VA_ARGS__ )
-#define WARN(...) warnx ("WARNING: " __VA_ARGS__ )
-#define ERR(...)  warnx ("ERROR: " __VA_ARGS__ )
+#  define INFO(...) warnx ("INFO: " __VA_ARGS__ )
+#  define WARN(...) warnx ("WARNING: " __VA_ARGS__ )
+#  define ERR(...)  warnx ("ERROR: " __VA_ARGS__ )
 
 #endif // _LIBNFC_MESSAGES_H_

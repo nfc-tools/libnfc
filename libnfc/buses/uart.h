@@ -24,68 +24,67 @@
  */
 
 #ifndef __NFC_BUS_UART_H__
-#define __NFC_BUS_UART_H__
+#  define __NFC_BUS_UART_H__
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
+#  include <stdio.h>
+#  include <string.h>
+#  include <stdlib.h>
 
 
-#include <nfc/nfc-types.h>
+#  include <nfc/nfc-types.h>
 
 // Handle platform specific includes
-#ifndef _WIN32
-  #include <termios.h>
-  #include <sys/ioctl.h>
-  #include <unistd.h>
-  #include <fcntl.h>
-  #include <sys/types.h>
-  #include <sys/stat.h>
-  #include <limits.h>
-  #include <sys/time.h>
+#  ifndef _WIN32
+#    include <termios.h>
+#    include <sys/ioctl.h>
+#    include <unistd.h>
+#    include <fcntl.h>
+#    include <sys/types.h>
+#    include <sys/stat.h>
+#    include <limits.h>
+#    include <sys/time.h>
 
   // unistd.h is needed for usleep() fct.
-  #include <unistd.h>
-  #define delay_ms( X ) usleep( X * 1000 )
-#else
-  #include <windows.h>
+#    include <unistd.h>
+#    define delay_ms( X ) usleep( X * 1000 )
+#  else
+#    include <windows.h>
 
-  #define snprintf _snprintf
-  #define strdup _strdup
-  #define delay_ms( X ) Sleep( X )
-#endif
+#    define snprintf _snprintf
+#    define strdup _strdup
+#    define delay_ms( X ) Sleep( X )
+#  endif
 
 // Path to the serial port is OS-dependant.
 // Try to guess what we should use.
 //
 // XXX: Some review from users cross-compiling is welcome!
-#if defined (_WIN32)
-  #define DEFAULT_SERIAL_PORTS { "COM1", "COM2", "COM3", "COM4", NULL }
-#elif defined(__APPLE__)
+#  if defined (_WIN32)
+#    define DEFAULT_SERIAL_PORTS { "COM1", "COM2", "COM3", "COM4", NULL }
+#  elif defined(__APPLE__)
   // XXX: find UART connection string for PN53X device on Mac OS X when multiples devices are used
-  #define DEFAULT_SERIAL_PORTS { "/dev/tty.SLAB_USBtoUART", NULL }
-#elif defined (__FreeBSD__) || defined (__OpenBSD__)
+#    define DEFAULT_SERIAL_PORTS { "/dev/tty.SLAB_USBtoUART", NULL }
+#  elif defined (__FreeBSD__) || defined (__OpenBSD__)
   // XXX: Not tested
-  #define DEFAULT_SERIAL_PORTS { "/dev/cuau0", "/dev/cuau1", "/dev/cuau2", "/dev/cuau3", NULL }
-#elif defined (__linux__)
-  #define DEFAULT_SERIAL_PORTS { "/dev/ttyUSB0", "/dev/ttyUSB1", "/dev/ttyUSB2", "/dev/ttyUSB3", "/dev/tty0", "/dev/tty1", "/dev/tty2", "/dev/tty3", NULL }
-#else
-  #error "Can't determine serial string for your system"
-#endif
+#    define DEFAULT_SERIAL_PORTS { "/dev/cuau0", "/dev/cuau1", "/dev/cuau2", "/dev/cuau3", NULL }
+#  elif defined (__linux__)
+#    define DEFAULT_SERIAL_PORTS { "/dev/ttyUSB0", "/dev/ttyUSB1", "/dev/ttyUSB2", "/dev/ttyUSB3", "/dev/tty0", "/dev/tty1", "/dev/tty2", "/dev/tty3", NULL }
+#  else
+#    error "Can't determine serial string for your system"
+#  endif
 
 // Define shortcut to types to make code more readable
-typedef void* serial_port;
-#define INVALID_SERIAL_PORT (void*)(~1)
-#define CLAIMED_SERIAL_PORT (void*)(~2)
+typedef void *serial_port;
+#  define INVALID_SERIAL_PORT (void*)(~1)
+#  define CLAIMED_SERIAL_PORT (void*)(~2)
 
-serial_port uart_open(const char* pcPortName);
-void uart_close(const serial_port sp);
+serial_port uart_open (const char *pcPortName);
+void    uart_close (const serial_port sp);
 
-void uart_set_speed(serial_port sp, const uint32_t uiPortSpeed);
-uint32_t uart_get_speed(const serial_port sp);
+void    uart_set_speed (serial_port sp, const uint32_t uiPortSpeed);
+uint32_t uart_get_speed (const serial_port sp);
 
-int uart_receive(serial_port sp, byte_t* pbtRx, size_t* pszRxLen);
-int uart_send(serial_port sp, const byte_t* pbtTx, const size_t szTxLen);
+int     uart_receive (serial_port sp, byte_t * pbtRx, size_t * pszRxLen);
+int     uart_send (serial_port sp, const byte_t * pbtTx, const size_t szTxLen);
 
 #endif // __NFC_BUS_UART_H__
-

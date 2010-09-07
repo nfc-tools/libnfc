@@ -22,4 +22,3 @@
  */
 
 #include <nfc/nfc-types.h>
-

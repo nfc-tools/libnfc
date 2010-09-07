@@ -22,7 +22,7 @@
  */
 
 #ifndef __NFC_TYPES_H__
-#define __NFC_TYPES_H__
+#  define __NFC_TYPES_H__
 
 /**
  * @file types.h
@@ -30,45 +30,45 @@
  *
  * Define libnfc specific types: typedef, enum, struct, etc.
  */
-#include <stddef.h>
-#include <stdint.h>
-#include <stdbool.h>
-#include <stdio.h>
+#  include <stddef.h>
+#  include <stdint.h>
+#  include <stdbool.h>
+#  include <stdio.h>
 
 typedef uint8_t byte_t;
 
 typedef enum {
-  NC_PN531                    = 0x10,
-  NC_PN532                    = 0x20,
-  NC_PN533                    = 0x30,
+  NC_PN531 = 0x10,
+  NC_PN532 = 0x20,
+  NC_PN533 = 0x30,
 } nfc_chip_t;
 
-struct driver_callbacks;                // Prototype the callback struct
+struct driver_callbacks;        // Prototype the callback struct
 
-typedef void*               nfc_device_spec_t; // Device connection specification
+typedef void *nfc_device_spec_t;        // Device connection specification
 
-#define DEVICE_NAME_LENGTH  256
+#  define DEVICE_NAME_LENGTH  256
 /**
  * @struct nfc_device_t
  * @brief NFC device information
  */
 typedef struct {
 /** Callback functions for handling device specific wrapping */
-  const struct driver_callbacks* pdc;
+  const struct driver_callbacks *pdc;
 /** Device name string, including device wrapper firmware */
-  char acName[DEVICE_NAME_LENGTH];
+  char    acName[DEVICE_NAME_LENGTH];
 /** PN53X chip type, this is useful for some "bug" work-arounds */
   nfc_chip_t nc;
 /** Pointer to the device connection specification */
- nfc_device_spec_t nds;
+  nfc_device_spec_t nds;
 /** This represents if the PN53X device was initialized succesful */
-  bool bActive;
+  bool    bActive;
 /** Is the crc automaticly added, checked and removed from the frames */
-  bool bCrc;
+  bool    bCrc;
 /** Does the PN53x chip handles parity bits, all parities are handled as data */
-  bool bPar;
+  bool    bPar;
 /** Should the PN53x chip handle frames encapsulation and chaining */
-  bool bEasyFraming;
+  bool    bEasyFraming;
 /** The last tx bits setting, we need to reset this if it does not apply anymore */
   uint8_t ui8TxBits;
 /** Last error reported by the PCD / encountered by the PCD driver
@@ -79,7 +79,7 @@ typedef struct {
  *    |+---------- Driver-level specific error
  *    +----------- Driver-level general error (common to all drivers)
  */
-  int iLastError;
+  int     iLastError;
 } nfc_device_t;
 
 
@@ -91,11 +91,11 @@ typedef struct {
  */
 typedef struct {
   /** Device name (e.g. "ACS ACR 38U-CCID 00 00") */
-  char acDevice[DEVICE_NAME_LENGTH];
+  char    acDevice[DEVICE_NAME_LENGTH];
   /** Driver name (e.g. "PN532_UART")*/
-  char* pcDriver;
+  char   *pcDriver;
   /** Port (e.g. "/dev/ttyUSB0") */
-  char* pcPort;
+  char   *pcPort;
   /** Port speed (e.g. "115200") */
   uint32_t uiSpeed;
   /** Device index for backward compatibility (used to choose one specific device in USB or PSCS devices list) */
@@ -108,7 +108,7 @@ typedef struct {
  */
 struct chip_callbacks {
     /** Error lookup */
-    const char* (*strerror) (const nfc_device_t *pnd);
+  const char *(*strerror) (const nfc_device_t * pnd);
 };
 
 /**
@@ -117,23 +117,27 @@ struct chip_callbacks {
  */
 struct driver_callbacks {
   /** Driver name */
-  const char* acDriver;
+  const char *acDriver;
   /** Chip specific callback functions */
   const struct chip_callbacks *pcc;
   /** Pick devices callback */
-  nfc_device_desc_t *(*pick_device)(void);
+  nfc_device_desc_t *(*pick_device) (void);
   /** List devices callback */
-  bool (*list_devices)(nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *pszDeviceFound);
+          bool (*list_devices) (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * pszDeviceFound);
   /** Connect callback */
-  nfc_device_t* (*connect)(const nfc_device_desc_t* pndd);
+  nfc_device_t *(*connect) (const nfc_device_desc_t * pndd);
   /** Transceive callback */
-  bool (*transceive)(nfc_device_t* pnd, const byte_t* pbtTx, const size_t szTxLen, byte_t* pbtRx, size_t* pszRxLen);
+     
+     
+     
+    bool (*transceive) (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxLen, byte_t * pbtRx,
+                        size_t * pszRxLen);
   /** Disconnect callback */
-  void (*disconnect)(nfc_device_t* pnd);
+  void    (*disconnect) (nfc_device_t * pnd);
 };
 
 // Compiler directive, set struct alignment to 1 byte_t for compatibility
-#pragma pack(1)
+#  pragma pack(1)
 
 /**
  * @enum nfc_device_option_t
@@ -141,23 +145,23 @@ struct driver_callbacks {
  */
 typedef enum {
 /** Let the PN53X chip handle the CRC bytes. This means that the chip appends the CRC bytes to the frames that are transmitted. It will parse the last bytes from received frames as incoming CRC bytes. They will be verified against the used modulation and protocol. If an frame is expected with incorrect CRC bytes this option should be disabled. Example frames where this is useful are the ATQA and UID+BCC that are transmitted without CRC bytes during the anti-collision phase of the ISO14443-A protocol. */
-  NDO_HANDLE_CRC              = 0x00,
+  NDO_HANDLE_CRC = 0x00,
 /** Parity bits in the network layer of ISO14443-A are by default generated and validated in the PN53X chip. This is a very convenient feature. On certain times though it is useful to get full control of the transmitted data. The proprietary MIFARE Classic protocol uses for example custom (encrypted) parity bits. For interoperability it is required to be completely compatible, including the arbitrary parity bits. When this option is disabled, the functions to communicating bits should be used. */
-  NDO_HANDLE_PARITY           = 0x01,
+  NDO_HANDLE_PARITY = 0x01,
 /** This option can be used to enable or disable the electronic field of the NFC device. */
-  NDO_ACTIVATE_FIELD          = 0x10,
+  NDO_ACTIVATE_FIELD = 0x10,
 /** The internal CRYPTO1 co-processor can be used to transmit messages encrypted. This option is automatically activated after a successful MIFARE Classic authentication. */
-  NDO_ACTIVATE_CRYPTO1        = 0x11,
+  NDO_ACTIVATE_CRYPTO1 = 0x11,
 /** The default configuration defines that the PN53X chip will try indefinitely to invite a tag in the field to respond. This could be desired when it is certain a tag will enter the field. On the other hand, when this is uncertain, it will block the application. This option could best be compared to the (NON)BLOCKING option used by (socket)network programming. */
-  NDO_INFINITE_SELECT         = 0x20,
+  NDO_INFINITE_SELECT = 0x20,
 /** If this option is enabled, frames that carry less than 4 bits are allowed. According to the standards these frames should normally be handles as invalid frames. */
-  NDO_ACCEPT_INVALID_FRAMES   = 0x30,
+  NDO_ACCEPT_INVALID_FRAMES = 0x30,
 /** If the NFC device should only listen to frames, it could be useful to let it gather multiple frames in a sequence. They will be stored in the internal FIFO of the PN53X chip. This could be retrieved by using the receive data functions. Note that if the chip runs out of bytes (FIFO = 64 bytes long), it will overwrite the first received frames, so quick retrieving of the received data is desirable. */
-  NDO_ACCEPT_MULTIPLE_FRAMES  = 0x31,
+  NDO_ACCEPT_MULTIPLE_FRAMES = 0x31,
 /** This option can be used to enable or disable the auto-switching mode to ISO14443-4 is device is compliant */
-  NDO_AUTO_ISO14443_4         = 0x40,
+  NDO_AUTO_ISO14443_4 = 0x40,
 /** Use automatic frames encapsulation and chaining. */
-  NDO_EASY_FRAMING            = 0x41,
+  NDO_EASY_FRAMING = 0x41,
 } nfc_device_option_t;
 
 ////////////////////////////////////////////////////////////////////
@@ -169,15 +173,15 @@ typedef enum {
  */
 typedef enum {
 /** ISO14443-A (NXP MIFARE) http://en.wikipedia.org/wiki/MIFARE */
-  NM_ISO14443A_106  = 0x00,
+  NM_ISO14443A_106 = 0x00,
 /** JIS X 6319-4 (Sony Felica) http://en.wikipedia.org/wiki/FeliCa */
-  NM_FELICA_212     = 0x01,
+  NM_FELICA_212 = 0x01,
 /** JIS X 6319-4 (Sony Felica) http://en.wikipedia.org/wiki/FeliCa */
-  NM_FELICA_424     = 0x02,
+  NM_FELICA_424 = 0x02,
 /** ISO14443-B http://en.wikipedia.org/wiki/ISO/IEC_14443 */
-  NM_ISO14443B_106  = 0x03,
+  NM_ISO14443B_106 = 0x03,
 /** Jewel Topaz (Innovision Research & Development) */
-  NM_JEWEL_106      = 0x04,
+  NM_JEWEL_106 = 0x04,
 /** Active DEP */
   NM_ACTIVE_DEP = 0x05,
 /** Passive DEP */
@@ -189,10 +193,10 @@ typedef enum {
  * @brief NFC tag information in Data Exchange Protocol
  */
 typedef struct {
-  byte_t NFCID3i[10];
-  byte_t btDID;
-  byte_t btBSt;
-  byte_t btBRt;
+  byte_t  NFCID3i[10];
+  byte_t  btDID;
+  byte_t  btBSt;
+  byte_t  btBRt;
 } nfc_dep_info_t;
 
 /**
@@ -200,12 +204,12 @@ typedef struct {
  * @brief NFC ISO14443A tag (MIFARE) information
  */
 typedef struct {
-  byte_t abtAtqa[2];
-  byte_t btSak;
-  size_t szUidLen;
-  byte_t abtUid[10];
-  size_t szAtsLen;
-  byte_t abtAts[36];
+  byte_t  abtAtqa[2];
+  byte_t  btSak;
+  size_t  szUidLen;
+  byte_t  abtUid[10];
+  size_t  szAtsLen;
+  byte_t  abtAts[36];
 } nfc_iso14443a_info_t;
 
 /**
@@ -213,11 +217,11 @@ typedef struct {
  * @brief NFC FeLiCa tag information
  */
 typedef struct {
-  size_t szLen;
-  byte_t btResCode;
-  byte_t abtId[8];
-  byte_t abtPad[8];
-  byte_t abtSysCode[2];
+  size_t  szLen;
+  byte_t  btResCode;
+  byte_t  abtId[8];
+  byte_t  abtPad[8];
+  byte_t  abtSysCode[2];
 } nfc_felica_info_t;
 
 /**
@@ -225,15 +229,15 @@ typedef struct {
  * @brief NFC ISO14443B tag information
  */
 typedef struct {
-  byte_t abtAtqb[12];
-  byte_t abtId[4];
-  byte_t btParam1;
-  byte_t btParam2;
-  byte_t btParam3;
-  byte_t btParam4;
-  byte_t btCid;
-  size_t szInfLen;
-  byte_t abtInf[64];
+  byte_t  abtAtqb[12];
+  byte_t  abtId[4];
+  byte_t  btParam1;
+  byte_t  btParam2;
+  byte_t  btParam3;
+  byte_t  btParam4;
+  byte_t  btCid;
+  size_t  szInfLen;
+  byte_t  abtInf[64];
 } nfc_iso14443b_info_t;
 
 /**
@@ -241,8 +245,8 @@ typedef struct {
  * @brief NFC Jewel tag information
  */
 typedef struct {
-  byte_t btSensRes[2];
-  byte_t btId[4];
+  byte_t  btSensRes[2];
+  byte_t  btId[4];
 } nfc_jewel_info_t;
 
 /**
@@ -306,6 +310,6 @@ typedef struct {
 } nfc_target_t;
 
 // Reset struct alignment to default
-#pragma pack()
+#  pragma pack()
 
 #endif // _LIBNFC_TYPES_H_

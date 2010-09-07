@@ -23,30 +23,32 @@
  */
 
 #ifdef HAVE_CONFIG_H
-  #include "config.h"
+#  include "config.h"
 #endif // HAVE_CONFIG_H
 
 #include <stdio.h>
 
 #include <nfc/nfc.h>
 
-void iso14443a_crc(byte_t* pbtData, size_t szLen, byte_t* pbtCrc)
+void
+iso14443a_crc (byte_t * pbtData, size_t szLen, byte_t * pbtCrc)
 {
-  byte_t bt;
+  byte_t  bt;
   uint32_t wCrc = 0x6363;
 
   do {
     bt = *pbtData++;
-    bt = (bt^(byte_t)(wCrc & 0x00FF));
-    bt = (bt^(bt<<4));
-    wCrc = (wCrc >> 8)^((uint32_t)bt << 8)^((uint32_t)bt<<3)^((uint32_t)bt>>4);
+    bt = (bt ^ (byte_t) (wCrc & 0x00FF));
+    bt = (bt ^ (bt << 4));
+    wCrc = (wCrc >> 8) ^ ((uint32_t) bt << 8) ^ ((uint32_t) bt << 3) ^ ((uint32_t) bt >> 4);
   } while (--szLen);
 
   *pbtCrc++ = (byte_t) (wCrc & 0xFF);
   *pbtCrc = (byte_t) ((wCrc >> 8) & 0xFF);
 }
 
-void append_iso14443a_crc(byte_t* pbtData, size_t szLen)
+void
+append_iso14443a_crc (byte_t * pbtData, size_t szLen)
 {
-  iso14443a_crc(pbtData, szLen, pbtData + szLen);
+  iso14443a_crc (pbtData, szLen, pbtData + szLen);
 }

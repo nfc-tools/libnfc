@@ -44,8 +44,8 @@ static nfc_device_t *pnd;
 int
 main (int argc, const char *argv[])
 {
-  size_t szFound;
-  size_t i;
+  size_t  szFound;
+  size_t  i;
   nfc_device_desc_t *pnddDevices;
 
   // Display libnfc version
@@ -76,8 +76,8 @@ main (int argc, const char *argv[])
     const size_t szTargetTypes = 1;
 
     nfc_target_t antTargets[2];
-    size_t szTargetFound;
-    bool res;
+    size_t  szTargetFound;
+    bool    res;
 
     pnd = nfc_connect (&(pnddDevices[i]));
 
@@ -89,30 +89,27 @@ main (int argc, const char *argv[])
 
     // Drop the field for a while
     if (!nfc_configure (pnd, NDO_ACTIVATE_FIELD, false)) {
-      nfc_perror(pnd, "nfc_configure");
-      exit(EXIT_FAILURE);
+      nfc_perror (pnd, "nfc_configure");
+      exit (EXIT_FAILURE);
     }
-
     // Let the reader only try once to find a tag
     if (!nfc_configure (pnd, NDO_INFINITE_SELECT, false)) {
-      nfc_perror(pnd, "nfc_configure");
-      exit(EXIT_FAILURE);
+      nfc_perror (pnd, "nfc_configure");
+      exit (EXIT_FAILURE);
     }
-
     // Configure the CRC and Parity settings
     if (!nfc_configure (pnd, NDO_HANDLE_CRC, true)) {
-      nfc_perror(pnd, "nfc_configure");
-      exit(EXIT_FAILURE);
+      nfc_perror (pnd, "nfc_configure");
+      exit (EXIT_FAILURE);
     }
     if (!nfc_configure (pnd, NDO_HANDLE_PARITY, true)) {
-      nfc_perror(pnd, "nfc_configure");
-      exit(EXIT_FAILURE);
+      nfc_perror (pnd, "nfc_configure");
+      exit (EXIT_FAILURE);
     }
-
     // Enable field so more power consuming cards can power themselves up
     if (!nfc_configure (pnd, NDO_ACTIVATE_FIELD, true)) {
-      nfc_perror(pnd, "nfc_configure");
-      exit(EXIT_FAILURE);
+      nfc_perror (pnd, "nfc_configure");
+      exit (EXIT_FAILURE);
     }
 
     printf ("Connected to NFC reader: %s\n", pnd->acName);
