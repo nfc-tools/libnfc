@@ -26,16 +26,6 @@ main (int argc, const char *argv[])
   // Set connected NFC device to initiator mode
   nfc_initiator_init (pnd);
 
-  // Drop the field for a while
-  nfc_configure (pnd, NDO_ACTIVATE_FIELD, false);
-
-  // Let the reader only try once to find a tag
-  nfc_configure (pnd, NDO_INFINITE_SELECT, false);
-
-  // Configure the CRC and Parity settings
-  nfc_configure (pnd, NDO_HANDLE_CRC, true);
-  nfc_configure (pnd, NDO_HANDLE_PARITY, true);
-
   // Enable field so more power consuming cards can power themselves up
   nfc_configure (pnd, NDO_ACTIVATE_FIELD, true);
 
