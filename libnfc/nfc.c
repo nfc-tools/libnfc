@@ -287,7 +287,6 @@ nfc_initiator_select_dep_target (nfc_device_t * pnd, const nfc_modulation_t nmIn
 }
 
 /**
- * @fn nfc_initiator_select_passive_target(const nfc_device_t* pnd, const nfc_modulation_t nmInitModulation, const byte_t* pbtInitData, const size_t szInitDataLen, nfc_target_info_t* pti)
  * @brief Select a passive or emulated tag
  * @return Returns true if action was successfully performed; otherwise returns false.
  *
@@ -396,6 +395,20 @@ nfc_initiator_select_passive_target (nfc_device_t * pnd,
   return true;
 }
 
+
+/**
+ * @brief List passive or emulated tags
+ * @return Returns true if action was successfully performed; otherwise returns false.
+ *
+ * @param pnd nfc_device_t struct pointer that represent currently used device
+ * @param nmInitModulation Desired modulation
+ * @param anti Array of \a nfc_target_info_t that will be filled with targets info
+ * @param szTargets Size of \a anti (will be the max targets listed)
+ * @param pszTargetFound Pointer where target found counter will be stored
+ *
+ * The NFC device will try to find the available passive tags. Some NFC devices are capable to emulate passive tags. The standards (ISO18092 and ECMA-340) describe the modulation that can be used for reader to passive communications. The chip needs to know with what kind of tag it is dealing with, therefore the initial modulation and speed (106, 212 or 424 kbps) should be supplied.
+ * @note For every initial modulation type there is a different collection of information returned (in nfc_target_info_t pointer pti) They all fit in the data-type which is called nfc_target_info_t. This is a union which contains the tag information that belongs to the according initial modulation type.
+ */
 bool
 nfc_initiator_list_passive_targets (nfc_device_t * pnd, const nfc_modulation_t nmInitModulation,
                                     nfc_target_info_t anti[], const size_t szTargets, size_t * pszTargetFound)
