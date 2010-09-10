@@ -2,6 +2,7 @@
  * Public platform independent Near Field Communication (NFC) library
  * 
  * Copyright (C) 2009, Roel Verdult
+ * Copyright (C) 2010, Romuald Conty
  * 
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -60,9 +61,9 @@ extern  "C" {
 #  endif                        // __cplusplus
 
 /* NFC Device/Hardware manipulation */
-  NFC_EXPORT void nfc_list_devices (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * pszDeviceFound);
   NFC_EXPORT nfc_device_t *nfc_connect (nfc_device_desc_t * pndd);
   NFC_EXPORT void nfc_disconnect (nfc_device_t * pnd);
+  NFC_EXPORT void nfc_list_devices (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * pszDeviceFound);
   NFC_EXPORT bool nfc_configure (nfc_device_t * pnd, const nfc_device_option_t ndo, const bool bEnable);
 
 /* NFC initiator: act as "reader" */
@@ -82,20 +83,20 @@ extern  "C" {
                                                    const byte_t * pbtGbData, const size_t szGbDataLen,
                                                    nfc_target_info_t * pti);
   NFC_EXPORT bool nfc_initiator_deselect_target (nfc_device_t * pnd);
-  NFC_EXPORT bool nfc_initiator_transceive_bits (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxBits,
-                                                 const byte_t * pbtTxPar, byte_t * pbtRx, size_t * pszRxBits,
-                                                 byte_t * pbtRxPar);
   NFC_EXPORT bool nfc_initiator_transceive_bytes (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxLen,
                                                   byte_t * pbtRx, size_t * pszRxLen);
-
+  NFC_EXPORT bool nfc_initiator_transceive_bits (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxBits,
+                                                  const byte_t * pbtTxPar, byte_t * pbtRx, size_t * pszRxBits,
+                                                  byte_t * pbtRxPar);
+                                                                                                 
 /* NFC target: act as tag (i.e. MIFARE Classic) or NFC target device. */
   NFC_EXPORT bool nfc_target_init (nfc_device_t * pnd, byte_t * pbtRx, size_t * pszRxBits);
-  NFC_EXPORT bool nfc_target_receive_bits (nfc_device_t * pnd, byte_t * pbtRx, size_t * pszRxBits, byte_t * pbtRxPar);
+  NFC_EXPORT bool nfc_target_send_bytes (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxLen);
   NFC_EXPORT bool nfc_target_receive_bytes (nfc_device_t * pnd, byte_t * pbtRx, size_t * pszRxLen);
   NFC_EXPORT bool nfc_target_send_bits (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxBits,
                                         const byte_t * pbtTxPar);
-  NFC_EXPORT bool nfc_target_send_bytes (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxLen);
-
+  NFC_EXPORT bool nfc_target_receive_bits (nfc_device_t * pnd, byte_t * pbtRx, size_t * pszRxBits, byte_t * pbtRxPar);
+  
 /* Error reporting */
   NFC_EXPORT const char *nfc_strerror (const nfc_device_t * pnd);
   NFC_EXPORT int nfc_strerror_r (const nfc_device_t * pnd, char *pcStrErrBuf, size_t szBufLen);
