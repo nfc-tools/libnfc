@@ -58,12 +58,12 @@ byte_t  abtSelectTag[9] = { 0x93, 0x70, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 byte_t  abtRats[4] = { 0xe0, 0x50, 0xbc, 0xa5 };
 byte_t  abtHalt[4] = { 0x50, 0x00, 0x57, 0xcd };
 
-static bool
+static  bool
 transmit_bits (const byte_t * pbtTx, const size_t szTxBits)
 {
   // Show transmitted command
   if (!quiet_output) {
-    printf ("R: ");
+    printf ("Sent bits: ");
     print_hex_bits (pbtTx, szTxBits);
   }
   // Transmit the bit frame command, we don't use the arbitrary parity feature
@@ -72,7 +72,7 @@ transmit_bits (const byte_t * pbtTx, const size_t szTxBits)
 
   // Show received answer
   if (!quiet_output) {
-    printf ("T: ");
+    printf ("Received bits: ");
     print_hex_bits (abtRx, szRxBits);
   }
   // Succesful transfer
@@ -80,12 +80,12 @@ transmit_bits (const byte_t * pbtTx, const size_t szTxBits)
 }
 
 
-static bool
+static  bool
 transmit_bytes (const byte_t * pbtTx, const size_t szTxLen)
 {
   // Show transmitted command
   if (!quiet_output) {
-    printf ("R: ");
+    printf ("Sent bits: ");
     print_hex (pbtTx, szTxLen);
   }
   // Transmit the command bytes
@@ -94,7 +94,7 @@ transmit_bytes (const byte_t * pbtTx, const size_t szTxLen)
 
   // Show received answer
   if (!quiet_output) {
-    printf ("T: ");
+    printf ("Received bits: ");
     print_hex (abtRx, szRxLen);
   }
   // Succesful transfer
@@ -119,14 +119,14 @@ main (int argc, char *argv[])
   for (arg = 1; arg < argc; arg++) {
     if (0 == strcmp (argv[arg], "-h")) {
       print_usage (argv);
-      return 0;
+      exit(EXIT_SUCCESS);
     } else if (0 == strcmp (argv[arg], "-q")) {
       INFO ("%s", "Quiet mode.");
       quiet_output = true;
     } else {
       ERR ("%s is not supported option.", argv[arg]);
       print_usage (argv);
-      return -1;
+      exit(EXIT_FAILURE);
     }
   }
 
@@ -135,8 +135,10 @@ main (int argc, char *argv[])
 
   if (!pnd) {
     printf ("Error connecting NFC reader\n");
-    return 1;
+    exit(EXIT_FAILURE);
   }
+
+  // Initialise NFC device as "initiator"
   nfc_initiator_init (pnd);
 
   // Drop the field for a while
@@ -144,6 +146,7 @@ main (int argc, char *argv[])
     nfc_perror (pnd, "nfc_configure");
     exit (EXIT_FAILURE);
   }
+
   // Configure the CRC
   if (!nfc_configure (pnd, NDO_HANDLE_CRC, false)) {
     nfc_perror (pnd, "nfc_configure");
@@ -154,13 +157,19 @@ main (int argc, char *argv[])
     nfc_perror (pnd, "nfc_configure");
     exit (EXIT_FAILURE);
   }
-  // Enable field so more power consuming cards can power themselves up
-  if (!nfc_configure (pnd, NDO_ACTIVATE_FIELD, true)) {
+  // Use raw send/receive methods
+  if (!nfc_configure (pnd, NDO_EASY_FRAMING, false)) {
+    nfc_perror (pnd, "nfc_configure");
+    exit (EXIT_FAILURE);
+  }
+  // Disable 14443-4 autoswitching
+  if (!nfc_configure (pnd, NDO_AUTO_ISO14443_4, false)) {
     nfc_perror (pnd, "nfc_configure");
     exit (EXIT_FAILURE);
   }
 
-  if (!nfc_configure (pnd, NDO_EASY_FRAMING, false)) {
+  // Enable field so more power consuming cards can power themselves up
+  if (!nfc_configure (pnd, NDO_ACTIVATE_FIELD, true)) {
     nfc_perror (pnd, "nfc_configure");
     exit (EXIT_FAILURE);
   }
