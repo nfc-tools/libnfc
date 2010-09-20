@@ -170,7 +170,7 @@ nfc_pick_device (void)
 {
   uint32_t uiDriver;
   nfc_device_desc_t *nddRes;
-  
+
   for (uiDriver = 0; uiDriver < sizeof (drivers_callbacks_list) / sizeof (drivers_callbacks_list[0]); uiDriver++) {
     if (drivers_callbacks_list[uiDriver].pick_device != NULL) {
       nddRes = drivers_callbacks_list[uiDriver].pick_device ();
@@ -178,7 +178,7 @@ nfc_pick_device (void)
         return nddRes;
     }
   }
-  
+
   return NULL;
 }
 
@@ -193,16 +193,16 @@ nfc_list_devices (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * ps
 {
   uint32_t uiDriver;
   size_t  szN;
-  
+
   *pszDeviceFound = 0;
-  
+
   for (uiDriver = 0; uiDriver < sizeof (drivers_callbacks_list) / sizeof (drivers_callbacks_list[0]); uiDriver++) {
     if (drivers_callbacks_list[uiDriver].list_devices != NULL) {
       szN = 0;
-      if (drivers_callbacks_list[uiDriver].
-        list_devices (pnddDevices + (*pszDeviceFound), szDevices - (*pszDeviceFound), &szN)) {
+      if (drivers_callbacks_list[uiDriver].list_devices
+          (pnddDevices + (*pszDeviceFound), szDevices - (*pszDeviceFound), &szN)) {
         *pszDeviceFound += szN;
-      DBG ("%ld device(s) found using %s driver", (unsigned long) szN, drivers_callbacks_list[uiDriver].acDriver);
+        DBG ("%ld device(s) found using %s driver", (unsigned long) szN, drivers_callbacks_list[uiDriver].acDriver);
       }
     } else {
       DBG ("No listing function avaible for %s driver", drivers_callbacks_list[uiDriver].acDriver);
@@ -457,7 +457,7 @@ nfc_initiator_select_dep_target (nfc_device_t * pnd, const nfc_modulation_t nmIn
                                  const byte_t * pbtGbData, const size_t szGbDataLen, nfc_target_info_t * pnti)
 {
   pnd->iLastError = 0;
-  
+
   return pn53x_initiator_select_dep_target (pnd, nmInitModulation, pbtPidData, szPidDataLen, pbtNFCID3i,
                                             szNFCID3iDataLen, pbtGbData, szGbDataLen, pnti);
 }
@@ -474,7 +474,7 @@ bool
 nfc_initiator_deselect_target (nfc_device_t * pnd)
 {
   pnd->iLastError = 0;
-  
+
   return (pn53x_InDeselect (pnd, 0));   // 0 mean deselect all selected targets
 }
 
@@ -499,7 +499,7 @@ nfc_initiator_transceive_bytes (nfc_device_t * pnd, const byte_t * pbtTx, const 
                                 size_t * pszRxLen)
 {
   pnd->iLastError = 0;
-  
+
   return pn53x_initiator_transceive_bytes (pnd, pbtTx, szTxLen, pbtRx, pszRxLen);
 }
 
@@ -550,7 +550,7 @@ bool
 nfc_target_send_bytes (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxLen)
 {
   pnd->iLastError = 0;
-  
+
   return pn53x_target_send_bytes (pnd, pbtTx, szTxLen);
 }
 
@@ -564,7 +564,7 @@ bool
 nfc_target_receive_bytes (nfc_device_t * pnd, byte_t * pbtRx, size_t * pszRxLen)
 {
   pnd->iLastError = 0;
-  
+
   return pn53x_target_receive_bytes (pnd, pbtRx, pszRxLen);
 }
 
@@ -578,7 +578,7 @@ bool
 nfc_target_send_bits (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxBits, const byte_t * pbtTxPar)
 {
   pnd->iLastError = 0;
-  
+
   return pn53x_target_send_bits (pnd, pbtTx, szTxBits, pbtTxPar);
 }
 

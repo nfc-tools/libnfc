@@ -68,27 +68,27 @@ static const struct driver_callbacks drivers_callbacks_list[] = {
   {ACR122_DRIVER_NAME, &pn53x_callbacks_list, acr122_pick_device, acr122_list_devices, acr122_connect,
    acr122_transceive, acr122_disconnect},
 #  endif
-       /* DRIVER_ACR122_ENABLED */
+  /* DRIVER_ACR122_ENABLED */
 #  if defined (DRIVER_PN531_USB_ENABLED)
   {PN531_USB_DRIVER_NAME, &pn53x_callbacks_list, pn531_usb_pick_device, pn531_usb_list_devices, pn531_usb_connect,
    pn53x_usb_transceive, pn53x_usb_disconnect},
 #  endif
-       /* DRIVER_PN531_USB_ENABLED */
+  /* DRIVER_PN531_USB_ENABLED */
 #  if defined (DRIVER_PN533_USB_ENABLED)
   {PN533_USB_DRIVER_NAME, &pn53x_callbacks_list, pn533_usb_pick_device, pn533_usb_list_devices, pn533_usb_connect,
    pn53x_usb_transceive, pn53x_usb_disconnect},
 #  endif
-       /* DRIVER_PN533_USB_ENABLED */
+  /* DRIVER_PN533_USB_ENABLED */
 #  if defined (DRIVER_ARYGON_ENABLED)
   {ARYGON_DRIVER_NAME, &pn53x_callbacks_list, arygon_pick_device, arygon_list_devices, arygon_connect,
    arygon_transceive, arygon_disconnect},
 #  endif
-       /* DRIVER_ARYGON_ENABLED */
+  /* DRIVER_ARYGON_ENABLED */
 #  if defined (DRIVER_PN532_UART_ENABLED)
   {PN532_UART_DRIVER_NAME, &pn53x_callbacks_list, pn532_uart_pick_device, pn532_uart_list_devices, pn532_uart_connect,
    pn532_uart_transceive, pn532_uart_disconnect},
 #  endif
-       /* DRIVER_PN532_UART_ENABLED */
+  /* DRIVER_PN532_UART_ENABLED */
 };
 
 #  ifdef DEBUG
