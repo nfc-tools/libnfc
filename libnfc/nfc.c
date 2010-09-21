@@ -405,6 +405,8 @@ nfc_initiator_list_passive_targets (nfc_device_t * pnd, const nfc_modulation_t n
 
     if (szTargets > szTargetFound) {
       memcpy (&(anti[szTargetFound]), &nti, sizeof (nfc_target_info_t));
+    } else {
+      break;
     }
     szTargetFound++;
   }
