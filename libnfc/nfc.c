@@ -399,7 +399,12 @@ nfc_initiator_list_passive_targets (nfc_device_t * pnd, const nfc_modulation_t n
     // Application Family Identifier (AFI) must equals 0x00 in order to wakeup all ISO14443-B PICCs (see ISO/IEC 14443-3)
     pbtInitData = (byte_t *) "\x00";
     szInitDataLen = 1;
+  } else if (nmInitModulation == NM_FELICA_212 || nmInitModulation == NM_FELICA_424) {
+    // polling payload must be present (see ISO/IEC 18092 11.2.2.5)
+    pbtInitData = (byte_t *) "\x00\xff\xff\x01\x00";
+    szInitDataLen = 5;
   }
+
   while (nfc_initiator_select_passive_target (pnd, nmInitModulation, pbtInitData, szInitDataLen, &nti)) {
     nfc_initiator_deselect_target (pnd);
 
@@ -409,6 +414,10 @@ nfc_initiator_list_passive_targets (nfc_device_t * pnd, const nfc_modulation_t n
       break;
     }
     szTargetFound++;
+    // deselect has no effect on FeliCa cards so we'll stop after one...
+    if (nmInitModulation == NM_FELICA_212 || nmInitModulation == NM_FELICA_424) {
+        break;
+    }
   }
   *pszTargetFound = szTargetFound;
 
