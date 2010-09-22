@@ -72,8 +72,8 @@ main (int argc, const char *argv[])
 
     const byte_t btPollNr = 20;
     const byte_t btPeriod = 2;
-    const nfc_target_type_t nttMifare = NTT_MIFARE;
-    const size_t szTargetTypes = 1;
+    const nfc_target_type_t nttArray[4] = {NTT_GENERIC_PASSIVE_106, NTT_GENERIC_PASSIVE_212, NTT_GENERIC_PASSIVE_424, NTT_ISO14443B_106};
+    const size_t szTargetTypes = 4;
 
     nfc_target_t antTargets[2];
     size_t  szTargetFound;
@@ -115,14 +115,26 @@ main (int argc, const char *argv[])
     printf ("Connected to NFC reader: %s\n", pnd->acName);
 
     printf ("PN53x will poll during %ld ms\n", (unsigned long) btPollNr * szTargetTypes * btPeriod * 150);
-    res = nfc_initiator_poll_targets (pnd, &nttMifare, 1, btPollNr, btPeriod, antTargets, &szTargetFound);
+    res = nfc_initiator_poll_targets (pnd, nttArray, szTargetTypes, btPollNr, btPeriod, antTargets, &szTargetFound);
     if (res) {
       uint8_t n;
       printf ("%ld target(s) have been found.\n", (unsigned long) szTargetFound);
       for (n = 0; n < szTargetFound; n++) {
         printf ("T%d: targetType=%02x, ", n + 1, antTargets[n].ntt);
         printf ("targetData:\n");
-        print_nfc_iso14443a_info (antTargets[n].nti.nai);
+        switch(antTargets[n].ntt) {
+          case NTT_MIFARE:
+          case NTT_ISO14443A_106:
+            print_nfc_iso14443a_info (antTargets[n].nti.nai);
+            break;
+          case NTT_FELICA_212:
+          case NTT_FELICA_424:
+            print_nfc_felica_info (antTargets[n].nti.nfi);
+            break;
+          case NTT_ISO14443B_TCL_106:
+            print_nfc_iso14443b_info (antTargets[n].nti.nbi);
+            break;
+        };
       }
     } else {
       nfc_perror (pnd, "nfc_initiator_poll_targets");
