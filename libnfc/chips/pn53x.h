@@ -85,7 +85,7 @@ bool    pn53x_transceive_check_error_frame_callback (nfc_device_t * pnd, const b
 bool    pn53x_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxLen, byte_t * pbtRx,
                           size_t * pszRxLen);
 bool    pn53x_get_reg (nfc_device_t * pnd, uint16_t ui16Reg, uint8_t * ui8Value);
-bool    pn53x_set_reg (nfc_device_t * pnd, uint16_t ui16Reg, uint8_t ui8SybmolMask, uint8_t ui8Value);
+bool    pn53x_set_reg (nfc_device_t * pnd, uint16_t ui16Reg, uint8_t ui8SymbolMask, uint8_t ui8Value);
 bool    pn53x_set_parameters (nfc_device_t * pnd, uint8_t ui8Value);
 bool    pn53x_set_tx_bits (nfc_device_t * pnd, uint8_t ui8Bits);
 bool    pn53x_wrap_frame (const byte_t * pbtTx, const size_t szTxBits, const byte_t * pbtTxPar, byte_t * pbtFrame,

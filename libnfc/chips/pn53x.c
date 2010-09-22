@@ -134,7 +134,7 @@ pn53x_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxLen
   // Call the tranceive callback function of the current device
   if (!pnd->pdc->transceive (pnd, pbtTx, szTxLen, pbtRx, pszRxLen))
     return false;
-
+  // XXX Should we put all these numbers behind a human-readable #define ?
   switch (pbtTx[1]) {
   case 0x16:                   // PowerDown
   case 0x40:                   // InDataExchange
@@ -174,7 +174,7 @@ pn53x_get_reg (nfc_device_t * pnd, uint16_t ui16Reg, uint8_t * ui8Value)
 }
 
 bool
-pn53x_set_reg (nfc_device_t * pnd, uint16_t ui16Reg, uint8_t ui8SybmolMask, uint8_t ui8Value)
+pn53x_set_reg (nfc_device_t * pnd, uint16_t ui16Reg, uint8_t ui8SymbolMask, uint8_t ui8Value)
 {
   uint8_t ui8Current;
   byte_t  abtCmd[sizeof (pncmd_set_register)];
@@ -185,7 +185,7 @@ pn53x_set_reg (nfc_device_t * pnd, uint16_t ui16Reg, uint8_t ui8SybmolMask, uint
   if (!pn53x_get_reg (pnd, ui16Reg, &ui8Current))
     return false;
 
-  abtCmd[4] = ui8Value | (ui8Current & (~ui8SybmolMask));
+  abtCmd[4] = ui8Value | (ui8Current & (~ui8SymbolMask));
   return pn53x_transceive (pnd, abtCmd, 5, NULL, NULL);
 }
 
