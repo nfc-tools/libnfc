@@ -137,14 +137,8 @@ print_nfc_iso14443b_info (const nfc_iso14443b_info_t nbi)
 {
   printf ("               ATQB: ");
   print_hex (nbi.abtAtqb, 12);
-  printf ("                 ID: ");
-  print_hex (nbi.abtId, 4);
-  printf ("                CID: %02x\n", nbi.btCid);
-  if (nbi.szInfLen > 0) {
-    printf ("                INF: ");
-    print_hex (nbi.abtInf, nbi.szInfLen);
-  }
-  printf ("             PARAMS: %02x %02x %02x %02x\n", nbi.btParam1, nbi.btParam2, nbi.btParam3, nbi.btParam4);
+  printf ("         ATTRIB_RES: ");
+  print_hex (nbi.abtAttribRes, nbi.szAttribRes);
 }
 
 /**

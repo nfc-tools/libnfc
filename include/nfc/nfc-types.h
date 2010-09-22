@@ -230,14 +230,8 @@ typedef struct {
  */
 typedef struct {
   byte_t  abtAtqb[12];
-  byte_t  abtId[4];
-  byte_t  btParam1;
-  byte_t  btParam2;
-  byte_t  btParam3;
-  byte_t  btParam4;
-  byte_t  btCid;
-  size_t  szInfLen;
-  byte_t  abtInf[64];
+  size_t  szAttribRes;
+  byte_t  abtAttribRes[64];
 } nfc_iso14443b_info_t;
 
 /**
