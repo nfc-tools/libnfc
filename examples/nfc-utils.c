@@ -132,15 +132,31 @@ print_nfc_felica_info (const nfc_felica_info_t nfi)
   print_hex (nfi.abtPad, 8);
 }
 
+#define PI_ISO14443_4_SUPPORTED 0x01
+#define PI_NAD_SUPPORTED        0x01
+#define PI_CID_SUPPORTED        0x02
 void
 print_nfc_iso14443b_info (const nfc_iso14443b_info_t nbi)
 {
+  const int iMaxFrameSizes[] = { 16, 24, 32, 40, 48, 64, 96, 128, 256 };
   printf ("               PUPI: ");
   print_hex (nbi.abtPupi, 4);
   printf ("   Application Data: ");
   print_hex (nbi.abtApplicationData, 4);
   printf ("      Protocol Info: ");
   print_hex (nbi.abtProtocolInfo, 3);
+  if( (nbi.abtProtocolInfo[1] & 0xf0) <= 0x80 ) {
+    printf ("Maximum frame sizes: %d bytes\n", iMaxFrameSizes[((nbi.abtProtocolInfo[1] & 0xf0) >> 4)]);
+  }
+  if((nbi.abtProtocolInfo[1] & 0x0f) == PI_ISO14443_4_SUPPORTED) {
+    printf ("Protocol types supported: ISO/IEC 14443-4\n");
+  }
+  if((nbi.abtProtocolInfo[2] & (PI_NAD_SUPPORTED|PI_CID_SUPPORTED)) != 0) {
+    printf (" Frame options supported: ");
+    if ((nbi.abtProtocolInfo[2] & PI_NAD_SUPPORTED) != 0) printf ("NAD ");
+    if ((nbi.abtProtocolInfo[2] & PI_CID_SUPPORTED) != 0) printf ("CID ");
+    printf("\n");
+  }
 }
 
 /**
