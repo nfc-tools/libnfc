@@ -369,10 +369,22 @@ pn53x_decode_target_data (const byte_t * pbtRawData, size_t szDataLen, nfc_chip_
     // We skip the first byte: its the target number (Tg)
     pbtRawData++;
 
-    // Store the mandatory info
-    memcpy (pnti->nbi.abtAtqb, pbtRawData, 12);
-    pbtRawData += 12;
+    // Now we are in ATQB, we skip the first ATQB byte always equal to 0x50
+    pbtRawData++;
+    
+    // Store the PUPI (Pseudo-Unique PICC Identifier)
+    memcpy (pnti->nbi.abtPupi, pbtRawData, 4);
+    pbtRawData += 4;
 
+    // Store the Application Data
+    memcpy (pnti->nbi.abtApplicationData, pbtRawData, 4);
+    pbtRawData += 4;
+
+    // Store the Protocol Info
+    memcpy (pnti->nbi.abtProtocolInfo, pbtRawData, 3);
+    pbtRawData += 3;
+
+    // We leave the ATQB field, we now enter in Card IDentifier
     szAttribRes = *(pbtRawData++);
     if (szAttribRes) {
       pnti->nbi.ui8CardIdentifier = *(pbtRawData++);

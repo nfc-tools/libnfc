@@ -231,8 +231,12 @@ typedef struct {
  * @brief NFC ISO14443B tag information
  */
 typedef struct {
-/** abtAtqb store ATQB (Answer To reQuest of type B) */
-  byte_t  abtAtqb[12];
+/** abtPupi store PUPI contained in ATQB (Answer To reQuest of type B) (see ISO14443-3) */
+  byte_t  abtPupi[4];
+/** abtApplicationData store Application Data contained in ATQB (see ISO14443-3) */
+  byte_t abtApplicationData[4];
+/** abtProtocolInfo store Protocol Info contained in ATQB (see ISO14443-3) */
+  byte_t abtProtocolInfo[3];
 /** ui8CardIdentifier store CID (Card Identifier) attributted by PCD to the PICC */
   uint8_t ui8CardIdentifier;
 } nfc_iso14443b_info_t;

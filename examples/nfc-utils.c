@@ -135,8 +135,12 @@ print_nfc_felica_info (const nfc_felica_info_t nfi)
 void
 print_nfc_iso14443b_info (const nfc_iso14443b_info_t nbi)
 {
-  printf ("               ATQB: ");
-  print_hex (nbi.abtAtqb, 12);
+  printf ("               PUPI: ");
+  print_hex (nbi.abtPupi, 4);
+  printf ("   Application Data: ");
+  print_hex (nbi.abtApplicationData, 4);
+  printf ("      Protocol Info: ");
+  print_hex (nbi.abtProtocolInfo, 3);
 }
 
 /**
