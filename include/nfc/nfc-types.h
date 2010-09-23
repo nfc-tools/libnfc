@@ -162,6 +162,8 @@ typedef enum {
   NDO_AUTO_ISO14443_4 = 0x40,
 /** Use automatic frames encapsulation and chaining. */
   NDO_EASY_FRAMING = 0x41,
+/** Force the chip to switch in ISO14443-A */
+  NDO_FORCE_ISO14443_A = 0x42,
 } nfc_device_option_t;
 
 ////////////////////////////////////////////////////////////////////

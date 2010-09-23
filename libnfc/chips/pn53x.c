@@ -708,10 +708,24 @@ pn53x_configure (nfc_device_t * pnd, const nfc_device_option_t ndo, const bool b
   case NDO_AUTO_ISO14443_4:
     // TODO: PN53x parameters could not be read, so we have to buffered current value in order to prevent from configuration overwrite
     // ATM, buffered current value is not needed due to a single usage of these parameters
-    btValue =
-      (bEnable) ? (SYMBOL_PARAM_fAutomaticRATS | SYMBOL_PARAM_fAutomaticATR_RES) : SYMBOL_PARAM_fAutomaticATR_RES;
+    btValue = (bEnable) ? (SYMBOL_PARAM_fAutomaticRATS | SYMBOL_PARAM_fAutomaticATR_RES) : SYMBOL_PARAM_fAutomaticATR_RES;
     if (!pn53x_set_parameters (pnd, btValue))
       return false;
+    return true;
+    break;
+
+  case NDO_FORCE_ISO14443_A:
+    if(!bEnable) {
+      // Nothing to do
+      return true;
+    }
+    // Force pn53x to be in ISO1444-A mode
+    if (!pn53x_set_reg (pnd, REG_CIU_TX_MODE, SYMBOL_TX_FRAMING, 0x00)) {
+      return false;
+    }
+    if (!pn53x_set_reg (pnd, REG_CIU_RX_MODE, SYMBOL_RX_FRAMING, 0x00)) {
+      return false;
+    }
     return true;
     break;
   }

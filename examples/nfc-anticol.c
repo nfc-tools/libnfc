@@ -167,6 +167,11 @@ main (int argc, char *argv[])
     nfc_perror (pnd, "nfc_configure");
     exit (EXIT_FAILURE);
   }
+  // Force 14443-A mode
+  if (!nfc_configure (pnd, NDO_FORCE_ISO14443_A, true)) {
+    nfc_perror (pnd, "nfc_configure");
+    exit (EXIT_FAILURE);
+  }
 
   // Enable field so more power consuming cards can power themselves up
   if (!nfc_configure (pnd, NDO_ACTIVATE_FIELD, true)) {
