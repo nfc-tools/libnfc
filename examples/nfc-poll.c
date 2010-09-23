@@ -137,8 +137,8 @@ main (int argc, const char *argv[])
         };
       }
     } else {
-      nfc_disconnect (pnd);
       nfc_perror (pnd, "nfc_initiator_poll_targets");
+      nfc_disconnect (pnd);
       exit (EXIT_FAILURE);
     }
     nfc_disconnect (pnd);
