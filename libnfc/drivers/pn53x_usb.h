@@ -27,6 +27,7 @@ typedef struct {
   usb_dev_handle *pudh;
   uint32_t uiEndPointIn;
   uint32_t uiEndPointOut;
+  uint32_t wMaxPacketSize;
 } usb_spec_t;
 
 typedef struct {

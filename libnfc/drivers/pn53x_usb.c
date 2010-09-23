@@ -65,10 +65,12 @@ get_end_points (struct usb_device *dev, usb_spec_t * pus)
     // Test if we dealing with a bulk IN endpoint
     if ((uiEndPoint & USB_ENDPOINT_DIR_MASK) == USB_ENDPOINT_IN) {
       pus->uiEndPointIn = uiEndPoint;
+      pus->wMaxPacketSize = puid->endpoint[uiIndex].wMaxPacketSize;
     }
     // Test if we dealing with a bulk OUT endpoint
     if ((uiEndPoint & USB_ENDPOINT_DIR_MASK) == USB_ENDPOINT_OUT) {
       pus->uiEndPointOut = uiEndPoint;
+      pus->wMaxPacketSize = puid->endpoint[uiIndex].wMaxPacketSize;
     }
   }
 }
@@ -258,6 +260,11 @@ pn53x_usb_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szT
 #endif
 
   ret = usb_bulk_write (pus->pudh, pus->uiEndPointOut, (char *) abtTx, szTxLen + 7, USB_TIMEOUT);
+  // XXX This little hack is a well know problem of libusb, see http://www.libusb.org/ticket/6 for more details
+  if ((ret % pus->wMaxPacketSize) == 0) {
+    usb_bulk_write (pus->pudh, pus->uiEndPointOut, "\0", 0, USB_TIMEOUT);
+  }
+
   if (ret < 0) {
     DBG ("usb_bulk_write failed with error %d", ret);
     pnd->iLastError = DEIO;
