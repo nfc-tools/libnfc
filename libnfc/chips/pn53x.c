@@ -321,6 +321,8 @@ bool
 pn53x_decode_target_data (const byte_t * pbtRawData, size_t szDataLen, nfc_chip_t nc, nfc_target_type_t ntt,
                           nfc_target_info_t * pnti)
 {
+  uint8_t szAttribRes;
+
   switch (ntt) {
   case NTT_MIFARE:
   case NTT_GENERIC_PASSIVE_106:
@@ -371,9 +373,10 @@ pn53x_decode_target_data (const byte_t * pbtRawData, size_t szDataLen, nfc_chip_
     memcpy (pnti->nbi.abtAtqb, pbtRawData, 12);
     pbtRawData += 12;
 
-    // FIXME This part is not correct: ATTRIB_RES should be decoded but I can't find the right document that explains how to CORRECTLY decode this frame
-    pnti->nbi.szAttribRes = *(pbtRawData++);
-    memcpy (pnti->nbi.abtAttribRes, pbtRawData, pnti->nbi.szAttribRes);
+    szAttribRes = *(pbtRawData++);
+    if (szAttribRes) {
+      pnti->nbi.ui8CardIdentifier = *(pbtRawData++);
+    }
     break;
 
   case NTT_FELICA_212:

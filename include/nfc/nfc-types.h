@@ -229,9 +229,10 @@ typedef struct {
  * @brief NFC ISO14443B tag information
  */
 typedef struct {
+/** abtAtqb store ATQB (Answer To reQuest of type B) */
   byte_t  abtAtqb[12];
-  size_t  szAttribRes;
-  byte_t  abtAttribRes[64];
+/** ui8CardIdentifier store CID (Card Identifier) attributted by PCD to the PICC */
+  uint8_t ui8CardIdentifier;
 } nfc_iso14443b_info_t;
 
 /**
