@@ -940,9 +940,9 @@ pn53x_target_init (nfc_device_t * pnd, byte_t * pbtRx, size_t * pszRxBits)
 
   // Make sure the CRC & parity are handled by the device, this is needed for target_init to work properly
   if (!bCrc)
-    nfc_configure ((nfc_device_t *) pnd, NDO_HANDLE_CRC, true);
+    pn53x_configure ((nfc_device_t *) pnd, NDO_HANDLE_CRC, true);
   if (!bPar)
-    nfc_configure ((nfc_device_t *) pnd, NDO_HANDLE_PARITY, true);
+    pn53x_configure ((nfc_device_t *) pnd, NDO_HANDLE_PARITY, true);
 
   // Let the PN53X be activated by the RF level detector from power down mode
   if (!pn53x_set_reg (pnd, REG_CIU_TX_AUTO, SYMBOL_INITIAL_RF_ON, 0x04))
@@ -965,9 +965,9 @@ pn53x_target_init (nfc_device_t * pnd, byte_t * pbtRx, size_t * pszRxBits)
 
   // Restore the CRC & parity setting to the original value (if needed)
   if (!bCrc)
-    nfc_configure ((nfc_device_t *) pnd, NDO_HANDLE_CRC, false);
+    pn53x_configure ((nfc_device_t *) pnd, NDO_HANDLE_CRC, false);
   if (!bPar)
-    nfc_configure ((nfc_device_t *) pnd, NDO_HANDLE_PARITY, false);
+    pn53x_configure ((nfc_device_t *) pnd, NDO_HANDLE_PARITY, false);
 
   return true;
 }
