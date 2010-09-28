@@ -145,14 +145,43 @@ print_nfc_iso14443b_info (const nfc_iso14443b_info_t nbi)
   print_hex (nbi.abtApplicationData, 4);
   printf ("      Protocol Info: ");
   print_hex (nbi.abtProtocolInfo, 3);
+  printf ("Bit Rate Capability:\n");
+  if (nbi.abtProtocolInfo[0] == 0) {
+    printf ("* PICC supports only 106 kbits/s in both directions\n");
+  }
+  if (nbi.abtProtocolInfo[0] & 1<<7) {
+    printf ("* Same bitrate in both directions mandatory\n");
+  }
+  if (nbi.abtProtocolInfo[0] & 1<<4) {
+    printf ("* PICC to PCD, 1etu=64/fc, bitrate 212 kbits/s supported\n");
+  }
+  if (nbi.abtProtocolInfo[0] & 1<<5) {
+    printf ("* PICC to PCD, 1etu=32/fc, bitrate 424 kbits/s supported\n");
+  }
+  if (nbi.abtProtocolInfo[0] & 1<<6) {
+    printf ("* PICC to PCD, 1etu=16/fc, bitrate 847 kbits/s supported\n");
+  }
+  if (nbi.abtProtocolInfo[0] & 1<<0) {
+    printf ("* PCD to PICC, 1etu=64/fc, bitrate 212 kbits/s supported\n");
+  }
+  if (nbi.abtProtocolInfo[0] & 1<<1) {
+    printf ("* PCD to PICC, 1etu=32/fc, bitrate 424 kbits/s supported\n");
+  }
+  if (nbi.abtProtocolInfo[0] & 1<<2) {
+    printf ("* PCD to PICC, 1etu=16/fc, bitrate 847 kbits/s supported\n");
+  }
+  if (nbi.abtProtocolInfo[0] & 1<<3) {
+    printf ("* ERROR unknown value\n");
+  }
   if( (nbi.abtProtocolInfo[1] & 0xf0) <= 0x80 ) {
     printf ("Maximum frame sizes: %d bytes\n", iMaxFrameSizes[((nbi.abtProtocolInfo[1] & 0xf0) >> 4)]);
   }
   if((nbi.abtProtocolInfo[1] & 0x0f) == PI_ISO14443_4_SUPPORTED) {
     printf ("Protocol types supported: ISO/IEC 14443-4\n");
   }
+  printf ("Frame Waiting Time: %.4g ms\n",256.0*16.0*(1<<((nbi.abtProtocolInfo[2] & 0xf0) >> 4))/13560.0);
   if((nbi.abtProtocolInfo[2] & (PI_NAD_SUPPORTED|PI_CID_SUPPORTED)) != 0) {
-    printf (" Frame options supported: ");
+    printf ("Frame options supported: ");
     if ((nbi.abtProtocolInfo[2] & PI_NAD_SUPPORTED) != 0) printf ("NAD ");
     if ((nbi.abtProtocolInfo[2] & PI_CID_SUPPORTED) != 0) printf ("CID ");
     printf("\n");
