@@ -910,12 +910,10 @@ pn53x_initiator_transceive_bytes (nfc_device_t * pnd, const byte_t * pbtTx, cons
 }
 
 bool
-pn53x_target_init (nfc_device_t * pnd, byte_t * pbtRx, size_t * pszRxBits)
+pn53x_target_init (nfc_device_t * pnd, nfc_target_mode_t tm, byte_t * pbtRx, size_t * pszRxLen)
 {
   byte_t  abtRx[MAX_FRAME_LEN];
   size_t  szRxLen;
-  uint8_t ui8rcc;
-  uint8_t ui8Bits;
   // Save the current configuration settings
   bool    bCrc = pnd->bCrc;
   bool    bPar = pnd->bPar;
@@ -925,6 +923,9 @@ pn53x_target_init (nfc_device_t * pnd, byte_t * pbtRx, size_t * pszRxBits)
 
   // Clear the target init struct, reset to all zeros
   memset (abtCmd + 2, 0x00, 37);
+
+  // Store the target mode in the initialization params
+  abtCmd[2] = tm;
 
   // Set ATQA (SENS_RES)
   abtCmd[3] = 0x04;
@@ -937,6 +938,29 @@ pn53x_target_init (nfc_device_t * pnd, byte_t * pbtRx, size_t * pszRxBits)
   abtCmd[5] = 0x00;
   abtCmd[6] = 0xb0;
   abtCmd[7] = 0x0b;
+
+  // Configure the target corresponding to the requested mode
+  switch(tm)
+  {
+    case NTM_PASSIVE:
+      pn53x_set_parameters(pnd,0);
+      pn53x_configure(pnd,NDO_EASY_FRAMING,false);
+    break;
+
+    case NTM_DEP:
+      pn53x_set_parameters(pnd,SYMBOL_PARAM_fAutomaticATR_RES);
+      pn53x_configure(pnd,NDO_EASY_FRAMING,true);
+    break;
+
+    case NTM_PICC:
+      pn53x_set_parameters(pnd,SYMBOL_PARAM_fISO14443_4_PICC);
+      pn53x_configure(pnd,NDO_EASY_FRAMING,false);
+    break;
+
+    default:
+      // Unknown mode
+      return false;
+  }
 
   // Make sure the CRC & parity are handled by the device, this is needed for target_init to work properly
   if (!bCrc)
@@ -953,15 +977,11 @@ pn53x_target_init (nfc_device_t * pnd, byte_t * pbtRx, size_t * pszRxBits)
   if (!pn53x_transceive (pnd, abtCmd, 39, abtRx, &szRxLen))
     return false;
 
-  // Get the last bit-count that is stored in the received byte 
-  if (!pn53x_get_reg (pnd, REG_CIU_CONTROL, &ui8rcc))
-    return false;
-  ui8Bits = ui8rcc & SYMBOL_RX_LAST_BITS;
+  // Save the received byte count
+  *pszRxLen = szRxLen - 1;
 
-  // We are sure the parity is handled by the PN53X chip, so we handle it this way
-  *pszRxBits = ((szRxLen - 1 - ((ui8Bits == 0) ? 0 : 1)) * 8) + ui8Bits;
   // Copy the received bytes
-  memcpy (pbtRx, abtRx + 1, szRxLen - 1);
+  memcpy (pbtRx, abtRx + 1, *pszRxLen);
 
   // Restore the CRC & parity setting to the original value (if needed)
   if (!bCrc)

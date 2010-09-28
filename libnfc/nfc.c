@@ -544,11 +544,11 @@ nfc_initiator_transceive_bits (nfc_device_t * pnd, const byte_t * pbtTx, const s
  * @warning Be aware that this function will wait (hang) until a command is received that is not part of the anti-collision. The RATS command for example would wake up the emulator. After this is received, the send and receive functions can be used.
  */
 bool
-nfc_target_init (nfc_device_t * pnd, byte_t * pbtRx, size_t * pszRxBits)
+nfc_target_init (nfc_device_t * pnd, nfc_target_mode_t tm, byte_t * pbtRx, size_t * pszRxLen)
 {
   pnd->iLastError = 0;
 
-  return pn53x_target_init (pnd, pbtRx, pszRxBits);
+  return pn53x_target_init (pnd, tm, pbtRx, pszRxLen);
 }
 
 /**

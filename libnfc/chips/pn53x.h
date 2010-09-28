@@ -66,6 +66,7 @@
 
 #  define SYMBOL_PARAM_fAutomaticRATS     0x10
 #  define SYMBOL_PARAM_fAutomaticATR_RES  0x04
+#  define SYMBOL_PARAM_fISO14443_4_PICC   0x20
 
 // Internal parameters flags
 #  define PARAM_NONE                  0x00
@@ -131,7 +132,7 @@ bool    pn53x_initiator_transceive_bits (nfc_device_t * pnd, const byte_t * pbtT
 bool    pn53x_initiator_transceive_bytes (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxLen,
                                           byte_t * pbtRx, size_t * pszRxLen);
 
-bool    pn53x_target_init (nfc_device_t * pnd, byte_t * pbtRx, size_t * pszRxBits);
+bool    pn53x_target_init (nfc_device_t * pnd, nfc_target_mode_t tm, byte_t * pbtRx, size_t * pszRxLen);
 bool    pn53x_target_receive_bits (nfc_device_t * pnd, byte_t * pbtRx, size_t * pszRxBits, byte_t * pbtRxPar);
 bool    pn53x_target_receive_bytes (nfc_device_t * pnd, byte_t * pbtRx, size_t * pszRxLen);
 bool    pn53x_target_send_bits (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxBits,

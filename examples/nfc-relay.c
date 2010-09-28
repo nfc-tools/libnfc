@@ -125,7 +125,7 @@ main (int argc, char *argv[])
   printf ("[+] Try to break out the auto-emulation, this requires a second reader!\n");
   printf ("[+] To do this, please send any command after the anti-collision\n");
   printf ("[+] For example, send a RATS command or use the \"nfc-anticol\" tool\n");
-  if (!nfc_target_init (pndTag, abtReaderRx, &szReaderRxBits)) {
+  if (!nfc_target_init (pndTag, NTM_PASSIVE, abtReaderRx, &szReaderRxBits)) {
     ERR ("%s", "Initialization of NFC emulator failed");
     nfc_disconnect (pndTag);
     return EXIT_FAILURE;

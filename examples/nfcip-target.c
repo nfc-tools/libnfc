@@ -59,7 +59,7 @@ main (int argc, const char *argv[])
     errx (1, "usage: %s", argv[0]);
   }
 
-  if (!pnd || !nfc_target_init (pnd, abtRecv, &szRecvBits)) {
+  if (!pnd || !nfc_target_init (pnd, NTM_DEP, abtRecv, &szRecvBits)) {
     printf ("unable to connect or initialize\n");
     return 1;
   }

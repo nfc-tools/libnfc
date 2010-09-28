@@ -207,7 +207,7 @@ main (int argc, const char *argv[])
 
       // FIXME: it does not work as expected...Probably the issue is in "nfc_target_init"
       // which doesn't provide a way to set custom data for SENS_RES, NFCID1, SEL_RES, etc.
-      if (!nfc_target_init (pnd, abtRx, &szRxLen))
+      if (!nfc_target_init (pnd, NTM_PICC, abtRx, &szRxLen))
         return EXIT_FAILURE;
 
       printf ("Now both the NFC reader and SAM are readable for 1 minute from an external reader.\n");

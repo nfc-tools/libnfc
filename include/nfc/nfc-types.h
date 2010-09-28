@@ -263,6 +263,19 @@ typedef union {
 } nfc_target_info_t;
 
 /**
+ * @enum nfc_target_mode_t
+ * @brief NFC target type enumeration
+ */
+typedef enum {
+  /** Configure the PN532 to accept to be initialized only in passive mode */
+  NTM_PASSIVE = 0x01,
+  /** configure the PN532 to accept to be initialized only as DEP target */
+  NTM_DEP = 0x02,
+  /** configure the PN532 to accept to be initialized only as ISO/IEC14443-4 PICC */
+  NTM_PICC = 0x04
+} nfc_target_mode_t;
+
+/**
  * @enum nfc_target_type_t
  * @brief NFC target type enumeration
  */

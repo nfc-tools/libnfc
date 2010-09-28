@@ -106,7 +106,7 @@ main (int argc, char *argv[])
   printf ("[+] Try to break out the auto-emulation, this requires a second reader!\n");
   printf ("[+] To do this, please send any command after the anti-collision\n");
   printf ("[+] For example, send a RATS command or use the \"nfc-anticol\" tool\n");
-  if (!nfc_target_init (pnd, abtRecv, &szRecvBits)) {
+  if (!nfc_target_init (pnd, NTM_PASSIVE, abtRecv, &szRecvBits)) {
     printf ("Error: Could not come out of auto-emulation, no command was received\n");
     return 1;
   }
