@@ -414,8 +414,8 @@ nfc_initiator_list_passive_targets (nfc_device_t * pnd, const nfc_modulation_t n
       break;
     }
     szTargetFound++;
-    // deselect has no effect on FeliCa cards so we'll stop after one...
-    if (nmInitModulation == NM_FELICA_212 || nmInitModulation == NM_FELICA_424) {
+    // deselect has no effect on FeliCa and Jewel cards so we'll stop after one...
+    if (nmInitModulation == NM_FELICA_212 || nmInitModulation == NM_FELICA_424 || nmInitModulation == NM_JEWEL_106) {
         break;
     }
   }

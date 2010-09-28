@@ -132,6 +132,15 @@ print_nfc_felica_info (const nfc_felica_info_t nfi)
   print_hex (nfi.abtPad, 8);
 }
 
+void
+print_nfc_jewel_info (const nfc_jewel_info_t nji)
+{
+  printf ("            JEWELID: ");
+  print_hex (nji.btId, 4);
+  printf ("           SENS_RES: ");
+  print_hex (nji.btSensRes, 2);
+}
+
 #define PI_ISO14443_4_SUPPORTED 0x01
 #define PI_NAD_SUPPORTED        0x01
 #define PI_CID_SUPPORTED        0x02

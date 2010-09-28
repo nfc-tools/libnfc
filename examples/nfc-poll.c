@@ -72,8 +72,8 @@ main (int argc, const char *argv[])
 
     const byte_t btPollNr = 20;
     const byte_t btPeriod = 2;
-    const nfc_target_type_t nttArray[4] = {NTT_GENERIC_PASSIVE_106, NTT_GENERIC_PASSIVE_212, NTT_GENERIC_PASSIVE_424, NTT_ISO14443B_106};
-    const size_t szTargetTypes = 4;
+    const nfc_target_type_t nttArray[5] = {NTT_GENERIC_PASSIVE_106, NTT_GENERIC_PASSIVE_212, NTT_GENERIC_PASSIVE_424, NTT_ISO14443B_106, NTT_JEWEL_106};
+    const size_t szTargetTypes = 5;
 
     nfc_target_t antTargets[2];
     size_t  szTargetFound;
@@ -120,19 +120,49 @@ main (int argc, const char *argv[])
       uint8_t n;
       printf ("%ld target(s) have been found.\n", (unsigned long) szTargetFound);
       for (n = 0; n < szTargetFound; n++) {
-        printf ("T%d: targetType=%02x, ", n + 1, antTargets[n].ntt);
-        printf ("targetData:\n");
+        printf ("T%d: targetType=%02x ", n + 1, antTargets[n].ntt);
         switch(antTargets[n].ntt) {
+          case NTT_JEWEL_106:
+            printf ("(Innovision Jewel tag), targetData:\n");
+            print_nfc_jewel_info (antTargets[n].nti.nji);
+            break;
           case NTT_MIFARE:
-          case NTT_ISO14443A_106:
+            printf ("(Mifare card), targetData:\n");
             print_nfc_iso14443a_info (antTargets[n].nti.nai);
             break;
           case NTT_FELICA_212:
-          case NTT_FELICA_424:
+            printf ("(FeliCa 212 kbps card), targetData:\n");
             print_nfc_felica_info (antTargets[n].nti.nfi);
             break;
+          case NTT_FELICA_424:
+            printf ("(FeliCa 212 kbps card), targetData:\n");
+            print_nfc_felica_info (antTargets[n].nti.nfi);
+            break;
+          case NTT_ISO14443A_106:
+            printf ("(Passive 106 kbps ISO/IEC 14443-4A card), targetData:\n");
+            print_nfc_iso14443a_info (antTargets[n].nti.nai);
+            break;
           case NTT_ISO14443B_TCL_106:
+            printf ("(Passive 106 kbps ISO/IEC 14443-4B card), targetData:\n");
             print_nfc_iso14443b_info (antTargets[n].nti.nbi);
+            break;
+          case NTT_DEP_PASSIVE_106:
+            printf ("(DEP passive 106 kbps)\n");
+            break;
+          case NTT_DEP_PASSIVE_212:
+            printf ("(DEP passive 212 kbps)\n");
+            break;
+          case NTT_DEP_PASSIVE_424:
+            printf ("(DEP passive 424 kbps)\n");
+            break;
+          case NTT_DEP_ACTIVE_106:
+            printf ("(DEP active 106 kbps)\n");
+            break;
+          case NTT_DEP_ACTIVE_212:
+            printf ("(DEP active 212 kbps)\n");
+            break;
+          case NTT_DEP_ACTIVE_424:
+            printf ("(DEP active 424 kbps)\n");
             break;
         };
       }

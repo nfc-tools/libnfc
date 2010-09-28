@@ -181,16 +181,15 @@ main (int argc, const char *argv[])
       }
     }
 
-/*
     // List Jewel targets
     if (nfc_initiator_list_passive_targets(pnd, NM_JEWEL_106, anti, MAX_TARGET_COUNT, &szTargetFound )) {
       size_t n;
-      printf("%d Jewel passive target(s) was found%s\n", (int)szTargetFound, (szTargetFound==0)?".\n":":"); for(n=0; n<szTargetFound; n++) {
-        printf("Jewel support is missing in libnfc, feel free to contribute.\n");
+      printf("%d Jewel passive target(s) was found%s\n", (int)szTargetFound, (szTargetFound==0)?".\n":":");
+      for(n=0; n<szTargetFound; n++) {
+        print_nfc_jewel_info (anti[n].nji);
         printf("\n");
       }
     }
-*/
     nfc_disconnect (pnd);
   }
 
