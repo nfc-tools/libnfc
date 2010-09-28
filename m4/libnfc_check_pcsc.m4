@@ -10,6 +10,7 @@ AC_DEFUN([LIBNFC_CHECK_PCSC],
         AC_MSG_CHECKING(for PC/SC)
         libpcsclite_LIBS="-Wl,-framework,PCSC"
         libpcsclite_CFLAGS="-I/System/Library/Frameworks/PCSC.framework/Headers"
+        HAVE_PCSC=1
         AC_MSG_RESULT(yes: darwin PC/SC framework)
       ;;
       *)
