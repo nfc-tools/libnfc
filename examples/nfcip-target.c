@@ -38,8 +38,22 @@ main (int argc, const char *argv[])
 {
   byte_t  abtRecv[MAX_FRAME_LEN];
   size_t  szRecvBits;
+  size_t  szDeviceFound;
   byte_t  send[] = "Hello Mars!";
-  nfc_device_t *pnd = nfc_connect (NULL);
+  nfc_device_t *pnd;
+  #define MAX_DEVICE_COUNT 2
+  nfc_device_desc_t pnddDevices[MAX_DEVICE_COUNT];
+  nfc_list_devices (pnddDevices, MAX_DEVICE_COUNT, &szDeviceFound);
+  # Little hack to allow using nfcip-initiator & nfcip-target from
+  # the same machine: if there is more than one readers connected
+  # nfcip-target will connect to the second reader
+  # (we hope they're always detected in the same order)
+  if (szDeviceFound == 1) {
+      pnd = nfc_connect (&(pnddDevices[0]));
+  }
+  else if (szDeviceFound > 1) {
+      pnd = nfc_connect (&(pnddDevices[1]));
+  }
 
   if (argc > 1) {
     errx (1, "usage: %s", argv[0]);
