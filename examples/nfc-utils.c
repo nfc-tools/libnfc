@@ -135,7 +135,7 @@ print_nfc_felica_info (const nfc_felica_info_t nfi)
 void
 print_nfc_jewel_info (const nfc_jewel_info_t nji)
 {
-  printf ("            JEWELID: ");
+  printf ("      4-LSB JEWELID: ");
   print_hex (nji.btId, 4);
   printf ("           SENS_RES: ");
   print_hex (nji.btSensRes, 2);
