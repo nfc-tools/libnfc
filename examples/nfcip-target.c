@@ -44,10 +44,10 @@ main (int argc, const char *argv[])
   #define MAX_DEVICE_COUNT 2
   nfc_device_desc_t pnddDevices[MAX_DEVICE_COUNT];
   nfc_list_devices (pnddDevices, MAX_DEVICE_COUNT, &szDeviceFound);
-  # Little hack to allow using nfcip-initiator & nfcip-target from
-  # the same machine: if there is more than one readers connected
-  # nfcip-target will connect to the second reader
-  # (we hope they're always detected in the same order)
+  //# Little hack to allow using nfcip-initiator & nfcip-target from
+  //# the same machine: if there is more than one readers connected
+  //# nfcip-target will connect to the second reader
+  //# (we hope they're always detected in the same order)
   if (szDeviceFound == 1) {
       pnd = nfc_connect (&(pnddDevices[0]));
   }
