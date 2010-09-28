@@ -239,6 +239,14 @@ pn53x_usb_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szT
   // TODO: Move this one level up for libnfc-1.6
   uint8_t ack_frame[] = { 0x00, 0x00, 0xff, 0x00, 0xff, 0x00 };
 
+  // FIXME Little hack to reset chip before talking to it:
+  if (pbtTx[1] == 2) { // hooked to the getfirmware command...
+#ifdef DEBUG
+  PRINT_HEX ("TX", ack_frame, 6);
+#endif
+  usb_bulk_write (pus->pudh, pus->uiEndPointOut, (char *) ack_frame, 6, USB_TIMEOUT);
+}
+
   // Packet length = data length (len) + checksum (1) + end of stream marker (1)
   abtTx[3] = szTxLen;
   // Packet length checksum 
