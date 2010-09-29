@@ -197,6 +197,58 @@ pn53x_usb_connect (const nfc_device_desc_t * pndd, const char *target_name, int 
         pnd->bCrc = true;
         pnd->bPar = true;
         pnd->ui8TxBits = 0;
+
+        // TODO Move this HACK1 into an upper level in rder to benefit to other devices that use PN53x
+        // HACK1: Send first an ACK as Abort command, to reset chip before talking to it:
+        uint8_t ack_frame[] = { 0x00, 0x00, 0xff, 0x00, 0xff, 0x00 };
+#ifdef DEBUG
+        PRINT_HEX ("TX", ack_frame, 6);
+#endif
+        usb_bulk_write (pus->pudh, pus->uiEndPointOut, (char *) ack_frame, 6, USB_TIMEOUT);
+
+        // HACK2: Then send a GetFirmware command to resync USB toggle bit between host & device
+        // in case host used set_configuration and expects the device to have reset its toggle bit, which PN53x doesn't do
+        byte_t  abtTx[] = { 0x00, 0x00, 0xff, 0x02, 0xfe, 0xd4, 0x02, 0x2a, 0x00 };
+        byte_t  abtRx[BUFFER_LENGTH];
+        int ret;
+#ifdef DEBUG
+        PRINT_HEX ("TX", abtTx, sizeof(abtTx));
+#endif
+        ret = usb_bulk_write (pus->pudh, pus->uiEndPointOut, (char *) abtTx, sizeof(abtTx), USB_TIMEOUT);
+        if (ret < 0) {
+          DBG ("usb_bulk_write failed with error %d", ret);
+          usb_close (us.pudh);
+          // we failed to use the specified device
+          return NULL;
+        }
+        ret = usb_bulk_read (pus->pudh, pus->uiEndPointIn, (char *) abtRx, BUFFER_LENGTH, USB_TIMEOUT);
+        if (ret < 0) {
+          DBG ("usb_bulk_read failed with error %d", ret);
+          usb_close (us.pudh);
+          // we failed to use the specified device
+          return NULL;
+        }
+#ifdef DEBUG
+        PRINT_HEX ("RX", abtRx, ret);
+#endif
+        if (ret == 6) { // we got the ACK/NACK properly
+          if (!pn53x_transceive_check_ack_frame_callback (pnd, abtRx, ret)) {
+            DBG ("usb_bulk_read failed getting ACK");
+            usb_close (us.pudh);
+            // we failed to use the specified device
+            return NULL;
+          }
+          ret = usb_bulk_read (pus->pudh, pus->uiEndPointIn, (char *) abtRx, BUFFER_LENGTH, USB_TIMEOUT);
+          if (ret < 0) {
+            DBG ("usb_bulk_read failed with error %d", ret);
+            usb_close (us.pudh);
+            // we failed to use the specified device
+            return NULL;
+          }
+#ifdef DEBUG
+          PRINT_HEX ("RX", abtRx, ret);
+#endif
+        }
         return pnd;
       }
     }
@@ -238,14 +290,6 @@ pn53x_usb_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szT
   usb_spec_t *pus = (usb_spec_t *) pnd->nds;
   // TODO: Move this one level up for libnfc-1.6
   uint8_t ack_frame[] = { 0x00, 0x00, 0xff, 0x00, 0xff, 0x00 };
-
-  // FIXME Little hack to reset chip before talking to it:
-  if (pbtTx[1] == 2) { // hooked to the getfirmware command...
-#ifdef DEBUG
-  PRINT_HEX ("TX", ack_frame, 6);
-#endif
-  usb_bulk_write (pus->pudh, pus->uiEndPointOut, (char *) ack_frame, 6, USB_TIMEOUT);
-}
 
   // Packet length = data length (len) + checksum (1) + end of stream marker (1)
   abtTx[3] = szTxLen;
