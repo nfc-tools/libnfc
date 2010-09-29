@@ -1,3 +1,26 @@
+Sep 30, 2010 - 1.4.0
+--------------------
+
+Fixes:
+ - pn53x_usb: fix ZLP USB issue
+ - pn53x_usb: fix toggle bit USB issue
+ - libnfc: fix Felica listing
+ - libnfc: ISO14443B targets data is now correctly stored
+ - libnfc: fix MacOS build
+ - nfc-anticol: now works even after running another program that change the modulation
+
+Improvments:
+ - libnfc: minor documentation improvements
+ - libnfc: decode select/initialization datas for almost all supported target types (ISO14443 A/B, Jewel/Topaz, Felica)
+ - nfc-poll: now poll using all supported modulations
+ - examples: print_iso14443b_info() now displays many decoded information
+ - nfcip-target: add an hack to allow to use two devices on the same machine (for tests/debug purpose)
+
+Changes:
+ - examples: add new example to emulate an NFC Forum tag type 4 (nfc-emulate-ndef)
+
+
+
 Aug 31, 2010 - 1.3.9
 --------------------
 
