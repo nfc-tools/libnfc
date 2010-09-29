@@ -48,16 +48,16 @@ nfc_device_desc_t *nfc_pick_device (void);
 
 /**
  * @brief Connect to a NFC device
- * @param pndd Device description if specific device is wanted, NULL otherwise
- * @return Returns pointer to a nfc_device_t struct if successfull; otherwise returns NULL value.
+ * @param pndd Device description if specific device is wanted, \c NULL otherwise
+ * @return Returns pointer to a \a nfc_device_t struct if successfull; otherwise returns \c NULL value.
  *
- * If \a pndd is NULL, the first available NFC device is claimed by libnfc.
+ * If \e pndd is \c NULL, the first available NFC device is claimed.
  * It will automatically search the system using all available drivers to determine a device is free.
  *
- * If \a pndd is passed then libnfc will try to claim the right device using information provided by this struct.
+ * If \e pndd is passed then this function will try to claim the right device using information provided by the \a nfc_device_desc_t struct.
  *
  * When it has successfully claimed a NFC device, memory is allocated to save the device information. It will return a pointer to a \a nfc_device_t struct.
- * This pointer should be supplied by every next function of libnfc that should perform an action with this device.
+ * This pointer should be supplied by every next functions of libnfc that should perform an action with this device.
  */
 nfc_device_t *
 nfc_connect (nfc_device_desc_t * pndd)
@@ -146,7 +146,7 @@ nfc_connect (nfc_device_desc_t * pndd)
  * @brief Disconnect from a NFC device
  * @param pnd \a nfc_device_t struct pointer that represent currently used device
  *
- * Initiator is disconnected and the device, including allocated \a nfc_device_t struct, is released.
+ * Initiator's selected tag is disconnected and the device, including allocated \a nfc_device_t struct, is released.
  */
 void
 nfc_disconnect (nfc_device_t * pnd)
@@ -184,9 +184,9 @@ nfc_pick_device (void)
 
 /**
  * @brief Probe for discoverable supported devices (ie. only available for some drivers)
- * @param pnddDevices Array of \a nfc_device_desc_t previously allocated by the caller.
+ * @param[out] pnddDevices array of \a nfc_device_desc_t previously allocated by the caller.
  * @param szDevices size of the \a pnddDevices array.
- * @param pszDeviceFound number of devices found.
+ * @param[out] pszDeviceFound number of devices found.
  */
 void
 nfc_list_devices (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * pszDeviceFound)
@@ -212,14 +212,13 @@ nfc_list_devices (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * ps
 
 /**
  * @brief Configure advanced NFC device settings
- * @return Returns true if action was successfully performed; otherwise returns false.
+ * @return Returns \c true if action was successfully performed; otherwise returns \c false.
  * @param pnd \a nfc_device_t struct pointer that represent currently used device
  * @param ndo \a nfc_device_option_t struct that contains options to set to device
  * @param bEnable boolean
  *
  * Configures parameters and registers that control for example timing, modulation, frame and error handling.
- * There are different categories for configuring the PN53X chip features (handle, activate, infinite and accept).
- * These are defined to organize future settings that will become available when they are needed.
+ * There are different categories for configuring the \e PN53X chip features (handle, activate, infinite and accept).
  */
 bool
 nfc_configure (nfc_device_t * pnd, const nfc_device_option_t ndo, const bool bEnable)
@@ -231,7 +230,7 @@ nfc_configure (nfc_device_t * pnd, const nfc_device_option_t ndo, const bool bEn
 
 /**
  * @brief Initialize NFC device as initiator (reader)
- * @return Returns true if action was successfully performed; otherwise returns false.
+ * @return Returns \c true if action was successfully performed; otherwise returns \c false.
  * @param pnd \a nfc_device_t struct pointer that represent currently used device
  *
  * The NFC device is configured to function as RFID reader.
@@ -260,15 +259,18 @@ nfc_initiator_init (nfc_device_t * pnd)
 
 /**
  * @brief Select a passive or emulated tag
- * @return Returns true if action was successfully performed; otherwise returns false.
+ * @return Returns \c true if action was successfully performed; otherwise returns \c false.
  *
- * @param pnd nfc_device_t struct pointer that represent currently used device
+ * @param pnd \a nfc_device_t struct pointer that represent currently used device
  * @param nmInitModulation Desired modulation
- * @param pbtInitData Optional initiator data used for Felica, ISO14443B, Topaz Polling or for ISO14443A selecting a specific UID.
+ * @param pbtInitData Optional initiator data used for Felica, ISO14443B, Topaz polling or to select a specific UID in ISO14443A.
  * @param szInitDataLen Length of initiator data \a pbtInitData.
- * @param pnti nfc_target_info_t struct pointer which will filled if available
+ * @param[out] pnti nfc_target_info_t struct pointer which will filled if available
  *
- * The NFC device will try to find the available passive tags. Some NFC devices are capable to emulate passive tags. The standards (ISO18092 and ECMA-340) describe the modulation that can be used for reader to passive communications. The chip needs to know with what kind of tag it is dealing with, therefore the initial modulation and speed (106, 212 or 424 kbps) should be supplied.
+ * The NFC device will try to find one available passive tag or emulated tag. 
+ *
+ * The chip needs to know with what kind of tag it is dealing with, therefore the initial modulation and speed (106, 212 or 424 kbps) should be supplied.
+ *
  * @note For every initial modulation type there is a different collection of information returned (in nfc_target_info_t pointer pti) They all fit in the data-type which is called nfc_target_info_t. This is a union which contains the tag information that belongs to the according initial modulation type.
  */
 bool
@@ -370,13 +372,13 @@ nfc_initiator_select_passive_target (nfc_device_t * pnd,
 
 /**
  * @brief List passive or emulated tags
- * @return Returns true if action was successfully performed; otherwise returns false.
+ * @return Returns \c true if action was successfully performed; otherwise returns \c false.
  *
- * @param pnd nfc_device_t struct pointer that represent currently used device
+ * @param pnd \a nfc_device_t struct pointer that represent currently used device
  * @param nmInitModulation Desired modulation
- * @param anti Array of \a nfc_target_info_t that will be filled with targets info
+ * @param[out] anti array of \a nfc_target_info_t that will be filled with targets info
  * @param szTargets Size of \a anti (will be the max targets listed)
- * @param pszTargetFound Pointer where target found counter will be stored
+ * @param[out] pszTargetFound Pointer where target found counter will be stored
  *
  * The NFC device will try to find the available passive tags. Some NFC devices are capable to emulate passive tags. The standards (ISO18092 and ECMA-340) describe the modulation that can be used for reader to passive communications. The chip needs to know with what kind of tag it is dealing with, therefore the initial modulation and speed (106, 212 or 424 kbps) should be supplied.
  * @note For every initial modulation type there is a different collection of information returned (in \a nfc_target_info_t pointer pti) They all fit in the data-type which is called nfc_target_info_t. This is a union which contains the tag information that belongs to the according initial modulation type.
@@ -426,14 +428,16 @@ nfc_initiator_list_passive_targets (nfc_device_t * pnd, const nfc_modulation_t n
 
 /**
  * @brief Polling for NFC targets
+ * @return Returns \c true if action was successfully performed; otherwise returns \c false.
+ *
  * @param pnd \a nfc_device_t struct pointer that represent currently used device
  * @param pnttTargetTypes array of desired target types
  * @param szTargetTypes pnttTargetTypes count
  * @param btPollNr specifies the number of polling
  * @note one polling is a polling for each desired target type
  * @param btPeriod indicates the polling period in units of 150 ms
- * @param pntTargets pointer on array of 2 \a nfc_target_t (over)writables struct
- * @param pszTargetFound found targets count
+ * @param[out] pntTargets pointer on array of 2 \a nfc_target_t (over)writables struct
+ * @param[out] pszTargetFound found targets count
  */
 bool
 nfc_initiator_poll_targets (nfc_device_t * pnd,
@@ -448,18 +452,19 @@ nfc_initiator_poll_targets (nfc_device_t * pnd,
 
 /**
  * @brief Select a target and request active or passive mode for DEP (Data Exchange Protocol)
- * @return Returns true if action was successfully performed; otherwise returns false.
- * @param pnd nfc_device_t struct pointer that represent currently used device
- * @param nmInitModulation Desired modulation (NM_ACTIVE_DEP or NM_PASSIVE_DEP for active, respectively passive mode)
- * @param pbtPidData passive initiator data, 4 or 5 bytes long, (optional, only for NM_PASSIVE_DEP, can be NULL)
- * @param szPidDataLen size of \a pbtPidData
- * @param pbtNFCID3i the NFCID3, 10 bytes long, of the initiator (optional, can be NULL)
- * @param szNFCID3iDataLen size of \a pbtNFCID3i
- * @param pbtGbData generic data of the initiator, max 48 bytes long, (optional, can be NULL)
- * @param szGbDataLen size of \a pbtGbData
- * @param pnti is a \a nfc_target_info_t struct pointer where target information will be put.
+ * @return Returns \c true if action was successfully performed; otherwise returns \c false.
  *
- * The NFC device will try to find the available target. The standards (ISO18092 and ECMA-340) describe the modulation that can be used for reader to passive communications.
+ * @param pnd \a nfc_device_t struct pointer that represent currently used device
+ * @param nmInitModulation desired modulation (\a NM_ACTIVE_DEP or \a NM_PASSIVE_DEP for active, respectively passive mode)
+ * @param pbtPidData passive initiator data, 4 or 5 bytes long, (optional, only for \a NM_PASSIVE_DEP, can be \c NULL)
+ * @param szPidDataLen size of \a pbtPidData
+ * @param pbtNFCID3i the NFCID3, 10 bytes long, of the initiator (optional, can be \c NULL)
+ * @param szNFCID3iDataLen size of \a pbtNFCID3i
+ * @param pbtGbData generic data of the initiator, max 48 bytes long, (optional, can be \c NULL)
+ * @param szGbDataLen size of \a pbtGbData
+ * @param[out] pnti is a \a nfc_target_info_t struct pointer where target information will be put.
+ *
+ * The NFC device will try to find an available D.E.P. target. The standards (ISO18092 and ECMA-340) describe the modulation that can be used for reader to passive communications.
  * @note \a nfc_dep_info_t will be returned when the target was acquired successfully.
  */
 bool
@@ -475,11 +480,11 @@ nfc_initiator_select_dep_target (nfc_device_t * pnd, const nfc_modulation_t nmIn
 
 /**
  * @brief Deselect a selected passive or emulated tag
- * @return Returns true if action was successfully performed; otherwise returns false.
- * @param pnd \a nfc_device_t struct pointer that represent currently used device
+ * @return Returns \c true if action was successfully performed; otherwise returns \c false.
+ * @param pnd \a nfc_device_t struct pointer that represents currently used device
  *
  * After selecting and communicating with a passive tag, this function could be used to deactivate and release the tag. 
- *This is very useful when there are multiple tags available in the field. It is possible to use the nfc_initiator_select_passive_target() function to select the first available tag, test it for the available features and support, deselect it and skip to the next tag until the correct tag is found.
+ *This is very useful when there are multiple tags available in the field. It is possible to use the \fn nfc_initiator_select_passive_target() function to select the first available tag, test it for the available features and support, deselect it and skip to the next tag until the correct tag is found.
  */
 bool
 nfc_initiator_deselect_target (nfc_device_t * pnd)
@@ -491,19 +496,19 @@ nfc_initiator_deselect_target (nfc_device_t * pnd)
 
 /**
  * @brief Send data to target then retrieve data from target
- * @return Returns true if action was successfully performed; otherwise returns false.
+ * @return Returns \c true if action was successfully performed; otherwise returns \c false.
  *
- * The reader will transmit the supplied bytes (\a pbtTx) to the target.
+ * The NFC device (configured as initiator) will transmit the supplied bytes (\a pbtTx) to the target.
  * It waits for the response and stores the received bytes in the \a pbtRx byte array.
  *
- * If \a NDO_EASY_FRAMING option is disabled the frames will sent and received in raw mode: PN53x will not handle input neither output data.
+ * If \a NDO_EASY_FRAMING option is disabled the frames will sent and received in raw mode: \e PN53x will not handle input neither output data.
  *
- * The parity bits are handled by the PN53X chip. The CRC can be generated automatically or handled manually.
- * Using this function, frames can be communicated very fast via the NFC reader to the tag.
+ * The parity bits are handled by the \e PN53x chip. The CRC can be generated automatically or handled manually.
+ * Using this function, frames can be communicated very fast via the NFC initiator to the tag.
  *
  * Tests show that on average this way of communicating is much faster than using the regular driver/middle-ware (often supplied by manufacturers).
  *
- * @warning The configuration option \a NDO_HANDLE_PARITY must be set to true (the default value).
+ * @warning The configuration option \a NDO_HANDLE_PARITY must be set to \c true (the default value).
  */
 bool
 nfc_initiator_transceive_bytes (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxLen, byte_t * pbtRx,
@@ -515,8 +520,9 @@ nfc_initiator_transceive_bytes (nfc_device_t * pnd, const byte_t * pbtTx, const 
 }
 
 /**
- * @brief Transceive raw bit-frames
- * @return Returns true if action was successfully performed; otherwise returns false.
+ * @brief Transceive raw bit-frames to a target
+ * @return Returns \c true if action was successfully performed; otherwise returns \c false.
+ *
  * @param pbtTx contains a byte array of the frame that needs to be transmitted.
  * @param szTxBits contains the length in bits.
  * @note For example the REQA (0x26) command (first anti-collision command of ISO14443-A) must be precise 7 bits long. This is not possible by using nfc_initiator_transceive_bytes(). With that function you can only communicate frames that consist of full bytes. When you send a full byte (8 bits + 1 parity) with the value of REQA (0x26), a tag will simply not respond. More information about this can be found in the anti-colision example.
@@ -524,7 +530,8 @@ nfc_initiator_transceive_bytes (nfc_device_t * pnd, const byte_t * pbtTx, const 
  * @note For example if you send the SELECT_ALL (0x93, 0x20) = [ 10010011, 00100000 ] command, you have to supply the following parity bytes (0x01, 0x00) to define the correct odd parity bits. This is only an example to explain how it works, if you just are sending two bytes with ISO14443-A compliant parity bits you better can use the nfc_initiator_transceive_bytes() function.
  * @returns The received response from the tag will be stored in the parameters (pbtRx, pszRxBits and pbtRxPar). They work the same way as the corresponding parameters for transmission.
  *
- * The NFC reader will transmit low-level messages where only the modulation is handled by the PN53X chip. Construction of the frame (data, CRC and parity) is completely done by libnfc. This can be very useful for testing purposes. Some protocols (e.g. MIFARE Classic) require to violate the ISO14443-A standard by sending incorrect parity and CRC bytes. Using this feature you are able to simulate these frames.
+ * The NFC device (configured as \e initiator) will transmit low-level messages where only the modulation is handled by the \e PN53x chip. Construction of the frame (data, CRC and parity) is completely done by libnfc.
+ * This can be very useful for testing purposes. Some protocols (e.g. MIFARE Classic) require to violate the ISO14443-A standard by sending incorrect parity and CRC bytes. Using this feature you are able to simulate these frames.
  */
 bool
 nfc_initiator_transceive_bits (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxBits, const byte_t * pbtTxPar,
@@ -537,25 +544,34 @@ nfc_initiator_transceive_bits (nfc_device_t * pnd, const byte_t * pbtTx, const s
 
 /**
  * @brief Initialize NFC device as an emulated tag
- * @return Returns true if action was successfully performed; otherwise returns false.
+ * @return Returns \c true if action was successfully performed; otherwise returns \c false.
  *
- * This functionality allows the NFC device to act as an emulated tag. There seems to be quite some options available for this feature. Not all of the PN53X modulations are tested and documented at the moment. At the moment it could best be seen as a preliminary functionality.
+ * @param pnd \a nfc_device_t struct pointer that represent currently used device
+ * @param ntm the target mode that you want to emulate
+ * @param[out] pbtRx pointer to Rx buffer
+ * @param[out] pszRxLen received byte count
+ *
+ * This function initialize NFC device in \e target mode in order to emulate a tag using the specified \a nfc_target_mode_t.
  *
  * @warning Be aware that this function will wait (hang) until a command is received that is not part of the anti-collision. The RATS command for example would wake up the emulator. After this is received, the send and receive functions can be used.
  */
 bool
-nfc_target_init (nfc_device_t * pnd, nfc_target_mode_t tm, byte_t * pbtRx, size_t * pszRxLen)
+nfc_target_init (nfc_device_t * pnd, nfc_target_mode_t ntm, byte_t * pbtRx, size_t * pszRxLen)
 {
   pnd->iLastError = 0;
 
-  return pn53x_target_init (pnd, tm, pbtRx, pszRxLen);
+  return pn53x_target_init (pnd, ntm, pbtRx, pszRxLen);
 }
 
 /**
  * @brief Send bytes and APDU frames
- * @return Returns true if action was successfully performed; otherwise returns false.
+ * @return Returns \c true if action was successfully performed; otherwise returns \c false.
  *
- * To communicate byte frames and APDU responses to the reader, this function could be used.
+ * @param pnd \a nfc_device_t struct pointer that represent currently used device
+ * @param pbtTx pointer to Tx buffer
+ * @param szTxLen size of Tx buffer
+ *
+ * This function make the NFC device (configured as \e target) send byte frames (e.g. APDU responses) to the \e initiator.
  */
 bool
 nfc_target_send_bytes (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxLen)
@@ -567,9 +583,12 @@ nfc_target_send_bytes (nfc_device_t * pnd, const byte_t * pbtTx, const size_t sz
 
 /**
  * @brief Receive bytes and APDU frames
- * @return Returns true if action was successfully performed; otherwise returns false.
+ * @return Returns \c true if action was successfully performed; otherwise returns \c false.
+ * @param pnd \a nfc_device_t struct pointer that represent currently used device
+ * @param[out] pbtRx pointer to Rx buffer
+ * @param[out] pszRxLen received byte count
  *
- * The main receive function that returns the received frames from a nearby reader.
+ * This function retrieves bytes frames (e.g. ADPU) sent by the \e initiator to the NFC device (configured as \e target).
  */
 bool
 nfc_target_receive_bytes (nfc_device_t * pnd, byte_t * pbtRx, size_t * pszRxLen)
@@ -581,9 +600,9 @@ nfc_target_receive_bytes (nfc_device_t * pnd, byte_t * pbtRx, size_t * pszRxLen)
 
 /**
  * @brief Send raw bit-frames
- * @return Returns true if action was successfully performed; otherwise returns false.
+ * @return Returns \c true if action was successfully performed; otherwise returns \c false.
  *
- * This function can be used to transmit (raw) bit-frames to the reader.
+ * This function can be used to transmit (raw) bit-frames to the \e initiator using the specified NFC device (configured as \e target).
  */
 bool
 nfc_target_send_bits (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxBits, const byte_t * pbtTxPar)
@@ -595,9 +614,12 @@ nfc_target_send_bits (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szT
 
 /**
  * @brief Receive bit-frames
- * @return Returns true if action was successfully performed; otherwise returns false.
+ * @return Returns \c true if action was successfully performed; otherwise returns \c false.
  *
- * This function makes it possible to receive (raw) bit-frames. It returns all the messages that are stored in the FIFO buffer of the PN53X chip. It does not require to send any frame and thereby could be used to snoop frames that are transmitted by a nearby reader. Check out the NDO_ACCEPT_MULTIPLE_FRAMES configuration option to avoid losing transmitted frames.
+ * This function makes it possible to receive (raw) bit-frames.
+ * It returns all the messages that are stored in the FIFO buffer of the \e PN53x chip.
+ * It does not require to send any frame and thereby could be used to snoop frames that are transmitted by a nearby \e initiator.
+ * @note Check out the NDO_ACCEPT_MULTIPLE_FRAMES configuration option to avoid losing transmitted frames.
  */
 bool
 nfc_target_receive_bits (nfc_device_t * pnd, byte_t * pbtRx, size_t * pszRxBits, byte_t * pbtRxPar)
