@@ -1,4 +1,16 @@
-bin_PROGRAMS = nfc-anticol nfc-list nfc-mfclassic nfc-mfultralight nfc-relay nfc-emulate nfcip-target nfcip-initiator nfc-poll pn53x-diagnose nfc-sam
+bin_PROGRAMS = \
+		nfc-anticol \
+		nfc-emulate \
+		nfc-emulate-ndef \
+		nfc-list \
+		nfc-mfclassic \
+		nfc-mfultralight \
+		nfc-poll \
+		nfc-relay \
+		nfc-sam \
+		nfcip-initiator \
+		nfcip-target \
+		pn53x-diagnose
 
 # set the include path found by configure
 INCLUDES= $(all_includes) $(LIBNFC_CFLAGS)
@@ -34,6 +46,10 @@ nfc_relay_LDADD = $(top_builddir)/libnfc/libnfc.la \
 
 nfc_emulate_SOURCES = nfc-emulate.c
 nfc_emulate_LDADD = $(top_builddir)/libnfc/libnfc.la \
+		    libnfcutils.la
+
+nfc_emulate_ndef_SOURCES = nfc-emulate-ndef.c
+nfc_emulate_ndef_LDADD = $(top_builddir)/libnfc/libnfc.la \
 		    libnfcutils.la
 
 nfcip_target_SOURCES = nfcip-target.c
