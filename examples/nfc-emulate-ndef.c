@@ -1,7 +1,7 @@
 /*-
  * Public platform independent Near Field Communication (NFC) library
  *
- * Copyright (C) 2009, Roel Verdult
+ * Copyright (C) 2010, Roel Verdult
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -18,8 +18,8 @@
  */
 
 /**
- * @file nfc-emulate.c
- * @brief
+ * @file nfc-emulate-ndef.c
+ * @brief Emulate a NFC Forum Tag Type 4 with a NDEF message
  */
 
 #ifdef HAVE_CONFIG_H
@@ -57,12 +57,16 @@ transmit_bytes (const byte_t * pbtTx, const size_t szTxLen)
 
   // Transmit the command bytes
   pn53x_set_parameters(pnd,0);
-  if (!nfc_target_send_bytes(pnd, pbtTx, szTxLen))
+  if (!nfc_target_send_bytes(pnd, pbtTx, szTxLen)) {
+    nfc_perror (pnd, "nfc_target_send_bytes");
     return false;
+  }
   pn53x_set_parameters(pnd,SYMBOL_PARAM_fISO14443_4_PICC);
 
-  if (!pn53x_target_receive_bytes(pnd,abtRx,&szRxLen))
+  if (!pn53x_target_receive_bytes(pnd,abtRx,&szRxLen)) {
+    nfc_perror (pnd, "pn53x_target_receive_bytes");
     return false;
+  }
 
   // Show received answer
   if (!quiet_output) {
@@ -80,15 +84,16 @@ main (int argc, char *argv[])
   pnd = nfc_connect (NULL);
 
   if (pnd == NULL) {
-    printf ("Error connecting NFC reader\n");
-    return 1;
+    ERR("Unable to connect to NFC device");
+    return EXIT_FAILURE;
   }
 
-  printf ("[+] Connected to NFC reader: %s\n", pnd->acName);
+  printf ("[+] Connected to NFC device: %s\n", pnd->acName);
   printf ("[+] Emulating NDEF tag now, please touch it with a second NFC device\n");
   if (!nfc_target_init (pnd, NTM_PICC, abtRx, &szRxLen)) {
-    printf ("Error: Could not come out of auto-emulation, no command was received\n");
-    return 1;
+    nfc_perror (pnd, "nfc_target_init");
+    ERR("Could not come out of auto-emulation, no command was received");
+    return EXIT_FAILURE;
   }
 
   transmit_bytes("\x0a\x00\x6a\x87",4);
