@@ -204,12 +204,9 @@ acr122_connect (const nfc_device_desc_t * pndd)
   if (!(pscc = acr122_get_scardcontext ()))
     return NULL;
   // Test if we were able to connect to the "emulator" card
-  if (SCardConnect
-      (*pscc, pndd->acDevice, SCARD_SHARE_EXCLUSIVE, SCARD_PROTOCOL_T0 | SCARD_PROTOCOL_T1, &(as.hCard),
-       (void *) &(as.ioCard.dwProtocol)) != SCARD_S_SUCCESS) {
+  if (SCardConnect (*pscc, pndd->acDevice, SCARD_SHARE_EXCLUSIVE, SCARD_PROTOCOL_T0 | SCARD_PROTOCOL_T1, &(as.hCard), (void *) &(as.ioCard.dwProtocol)) != SCARD_S_SUCCESS) {
     // Connect to ACR122 firmware version >2.0
-    if (SCardConnect (*pscc, pndd->acDevice, SCARD_SHARE_DIRECT, 0, &(as.hCard), (void *) &(as.ioCard.dwProtocol)) !=
-        SCARD_S_SUCCESS) {
+    if (SCardConnect (*pscc, pndd->acDevice, SCARD_SHARE_DIRECT, 0, &(as.hCard), (void *) &(as.ioCard.dwProtocol)) != SCARD_S_SUCCESS) {
       // We can not connect to this device.
       DBG ("%s", "PCSC connect failed");
       return NULL;
