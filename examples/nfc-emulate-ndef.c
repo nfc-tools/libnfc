@@ -51,7 +51,7 @@ transmit_bytes (const byte_t * pbtTx, const size_t szTxLen)
 {
   // Show transmitted command
   if (!quiet_output) {
-    printf ("Tx: ");
+    printf ("Sent data: ");
     print_hex (pbtTx, szTxLen);
   }
 
@@ -71,7 +71,7 @@ transmit_bytes (const byte_t * pbtTx, const size_t szTxLen)
 
   // Show received answer
   if (!quiet_output) {
-    printf ("Rx: ");
+    printf ("Received data: ");
     print_hex (abtRx, szRxLen);
   }
   // Succesful transfer
@@ -95,6 +95,11 @@ main (int argc, char *argv[])
     nfc_perror (pnd, "nfc_target_init");
     ERR("Could not come out of auto-emulation, no command was received");
     return EXIT_FAILURE;
+  }
+
+  if (!quiet_output) {
+    printf ("Received data: ");
+    print_hex (abtRx, szRxLen);
   }
 
   transmit_bytes((const byte_t*)"\x0a\x00\x6a\x87",4);
