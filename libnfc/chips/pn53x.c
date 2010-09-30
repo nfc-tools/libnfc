@@ -910,46 +910,23 @@ pn53x_initiator_transceive_bytes (nfc_device_t * pnd, const byte_t * pbtTx, cons
 }
 
 bool
-pn53x_target_init (nfc_device_t * pnd, nfc_target_mode_t tm, byte_t * pbtRx, size_t * pszRxLen)
+pn53x_target_init (nfc_device_t * pnd, nfc_target_mode_t ntm, byte_t * pbtRx, size_t * pszRxLen)
 {
-  byte_t  abtRx[MAX_FRAME_LEN];
-  size_t  szRxLen;
   // Save the current configuration settings
   bool    bCrc = pnd->bCrc;
   bool    bPar = pnd->bPar;
-  byte_t  abtCmd[sizeof (pncmd_target_init)];
-
-  memcpy (abtCmd, pncmd_target_init, sizeof (pncmd_target_init));
-
-  // Clear the target init struct, reset to all zeros
-  memset (abtCmd + 2, 0x00, 37);
-
-  // Store the target mode in the initialization params
-  abtCmd[2] = tm;
-
-  // Set ATQA (SENS_RES)
-  abtCmd[3] = 0x04;
-  abtCmd[4] = 0x00;
-
-  // Set SAK (SEL_RES)
-  abtCmd[8] = 0x20;
-
-  // Set UID
-  abtCmd[5] = 0x00;
-  abtCmd[6] = 0xb0;
-  abtCmd[7] = 0x0b;
 
   // Configure the target corresponding to the requested mode
-  switch(tm)
+  switch(ntm)
   {
     case NTM_PASSIVE:
-      pn53x_set_parameters(pnd,0);
-      pn53x_configure(pnd,NDO_EASY_FRAMING,false);
+      pn53x_set_parameters(pnd, 0);
+      pn53x_configure(pnd, NDO_EASY_FRAMING, false);
     break;
 
     case NTM_DEP:
-      pn53x_set_parameters(pnd,SYMBOL_PARAM_fAutomaticATR_RES);
-      pn53x_configure(pnd,NDO_EASY_FRAMING,true);
+      pn53x_set_parameters(pnd, SYMBOL_PARAM_fAutomaticATR_RES);
+      pn53x_configure(pnd, NDO_EASY_FRAMING, true);
     break;
 
     case NTM_PICC:
@@ -958,8 +935,8 @@ pn53x_target_init (nfc_device_t * pnd, nfc_target_mode_t tm, byte_t * pbtRx, siz
         pnd->iLastError = DENOTSUP;
         return false;
       }
-      pn53x_set_parameters(pnd,SYMBOL_PARAM_fISO14443_4_PICC);
-      pn53x_configure(pnd,NDO_EASY_FRAMING,false);
+      pn53x_set_parameters(pnd, SYMBOL_PARAM_fISO14443_4_PICC);
+      pn53x_configure(pnd, NDO_EASY_FRAMING, false);
     break;
 
     default:
@@ -977,6 +954,46 @@ pn53x_target_init (nfc_device_t * pnd, nfc_target_mode_t tm, byte_t * pbtRx, siz
   if (!pn53x_set_reg (pnd, REG_CIU_TX_AUTO, SYMBOL_INITIAL_RF_ON, 0x04))
     return false;
 
+  if(!pn53x_TgInitAsTarget(pnd, ntm, pbtRx, pszRxLen)) {
+    return false;
+  }
+
+  // Restore the CRC & parity setting to the original value (if needed)
+  if (!bCrc)
+    pn53x_configure ((nfc_device_t *) pnd, NDO_HANDLE_CRC, false);
+  if (!bPar)
+    pn53x_configure ((nfc_device_t *) pnd, NDO_HANDLE_PARITY, false);
+
+  return true;
+}
+
+bool
+pn53x_TgInitAsTarget (nfc_device_t * pnd, nfc_target_mode_t ntm, byte_t * pbtRx, size_t * pszRxLen)
+{
+  byte_t  abtRx[MAX_FRAME_LEN];
+  size_t  szRxLen;
+  byte_t  abtCmd[sizeof (pncmd_target_init)];
+
+  memcpy (abtCmd, pncmd_target_init, sizeof (pncmd_target_init));
+
+  // Clear the target init struct, reset to all zeros
+  memset (abtCmd + 2, 0x00, 37);
+
+  // Store the target mode in the initialization params
+  abtCmd[2] = ntm;
+
+  // Set ATQA (SENS_RES)
+  abtCmd[3] = 0x04;
+  abtCmd[4] = 0x00;
+
+  // Set SAK (SEL_RES)
+  abtCmd[8] = 0x20;
+
+  // Set UID
+  abtCmd[5] = 0x00;
+  abtCmd[6] = 0xb0;
+  abtCmd[7] = 0x0b;
+
   // Request the initialization as a target
   szRxLen = MAX_FRAME_LEN;
   if (!pn53x_transceive (pnd, abtCmd, 39, abtRx, &szRxLen))
@@ -987,12 +1004,6 @@ pn53x_target_init (nfc_device_t * pnd, nfc_target_mode_t tm, byte_t * pbtRx, siz
 
   // Copy the received bytes
   memcpy (pbtRx, abtRx + 1, *pszRxLen);
-
-  // Restore the CRC & parity setting to the original value (if needed)
-  if (!bCrc)
-    pn53x_configure ((nfc_device_t *) pnd, NDO_HANDLE_CRC, false);
-  if (!bPar)
-    pn53x_configure ((nfc_device_t *) pnd, NDO_HANDLE_PARITY, false);
 
   return true;
 }
