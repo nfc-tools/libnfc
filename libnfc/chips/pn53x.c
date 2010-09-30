@@ -953,6 +953,11 @@ pn53x_target_init (nfc_device_t * pnd, nfc_target_mode_t tm, byte_t * pbtRx, siz
     break;
 
     case NTM_PICC:
+      if(pnd->nc != NC_PN532) {
+        // This mode is not supported by pn531 neither pn533
+        pnd->iLastError = DENOTSUP;
+        return false;
+      }
       pn53x_set_parameters(pnd,SYMBOL_PARAM_fISO14443_4_PICC);
       pn53x_configure(pnd,NDO_EASY_FRAMING,false);
     break;
