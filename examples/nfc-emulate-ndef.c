@@ -56,6 +56,7 @@ transmit_bytes (const byte_t * pbtTx, const size_t szTxLen)
   }
 
   // Transmit the command bytes
+  // FIXME doesn't use a pn53x specific function, use libnfc's API
   pn53x_set_parameters(pnd,0);
   if (!nfc_target_send_bytes(pnd, pbtTx, szTxLen)) {
     nfc_perror (pnd, "nfc_target_send_bytes");
@@ -96,15 +97,15 @@ main (int argc, char *argv[])
     return EXIT_FAILURE;
   }
 
-  transmit_bytes("\x0a\x00\x6a\x87",4);
-  transmit_bytes("\x0b\x00\x6a\x87",4);
-  transmit_bytes("\x0a\x00\x90\x00",4);
-  transmit_bytes("\x0b\x00\x90\x00",4);
-  transmit_bytes("\x0a\x00\x00\x0f\x10\x00\x3b\x00\x34\x04\x06\xe1\x04\x0e\xe0\x00\x00\x90\x00",19);
-  transmit_bytes("\x0b\x00\x90\x00",4);
-  transmit_bytes("\x0a\x00\x00\x21\x90\x00",6);
-  transmit_bytes("\x0b\x00\xd1\x02\x1c\x53\x70\x91\x01\x09\x54\x02\x65\x6e\x4c\x69\x62\x6e\x66\x63\x51\x01\x0b\x55\x03\x6c\x69\x62\x6e\x66\x63\x2e\x6f\x72\x67\x90\x00",37);
-  transmit_bytes("\xca\x00",2);
+  transmit_bytes((const byte_t*)"\x0a\x00\x6a\x87",4);
+  transmit_bytes((const byte_t*)"\x0b\x00\x6a\x87",4);
+  transmit_bytes((const byte_t*)"\x0a\x00\x90\x00",4);
+  transmit_bytes((const byte_t*)"\x0b\x00\x90\x00",4);
+  transmit_bytes((const byte_t*)"\x0a\x00\x00\x0f\x10\x00\x3b\x00\x34\x04\x06\xe1\x04\x0e\xe0\x00\x00\x90\x00",19);
+  transmit_bytes((const byte_t*)"\x0b\x00\x90\x00",4);
+  transmit_bytes((const byte_t*)"\x0a\x00\x00\x21\x90\x00",6);
+  transmit_bytes((const byte_t*)"\x0b\x00\xd1\x02\x1c\x53\x70\x91\x01\x09\x54\x02\x65\x6e\x4c\x69\x62\x6e\x66\x63\x51\x01\x0b\x55\x03\x6c\x69\x62\x6e\x66\x63\x2e\x6f\x72\x67\x90\x00",37);
+  transmit_bytes((const byte_t*)"\xca\x00",2);
 
   nfc_disconnect(pnd);
   exit (EXIT_SUCCESS);
