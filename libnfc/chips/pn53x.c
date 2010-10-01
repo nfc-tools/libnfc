@@ -164,13 +164,24 @@ pn53x_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxLen
 bool
 pn53x_get_reg (nfc_device_t * pnd, uint16_t ui16Reg, uint8_t * ui8Value)
 {
-  size_t  szValueLen = 1;
+  size_t  szValueLen;
   byte_t  abtCmd[sizeof (pncmd_get_register)];
   memcpy (abtCmd, pncmd_get_register, sizeof (pncmd_get_register));
 
   abtCmd[2] = ui16Reg >> 8;
   abtCmd[3] = ui16Reg & 0xff;
-  return pn53x_transceive (pnd, abtCmd, 4, ui8Value, &szValueLen);
+  if (pn53x_transceive (pnd, abtCmd, sizeof (pncmd_get_register), ui8Value, &szValueLen)) {
+    if (pnd->nc == NC_PN533) {
+       // PN533 prepends its answer by a status byte
+       if (ui8Value[0] == 0) {
+         ui8Value[0] = ui8Value[1];
+       } else {
+         return false;
+       }
+    }
+    return true;
+  }
+  return false;
 }
 
 bool
@@ -186,7 +197,7 @@ pn53x_set_reg (nfc_device_t * pnd, uint16_t ui16Reg, uint8_t ui8SymbolMask, uint
     return false;
 
   abtCmd[4] = ui8Value | (ui8Current & (~ui8SymbolMask));
-  return pn53x_transceive (pnd, abtCmd, 5, NULL, NULL);
+  return pn53x_transceive (pnd, abtCmd, sizeof (pncmd_set_register), NULL, NULL);
 }
 
 bool
@@ -196,7 +207,7 @@ pn53x_set_parameters (nfc_device_t * pnd, uint8_t ui8Value)
   memcpy (abtCmd, pncmd_set_parameters, sizeof (pncmd_set_parameters));
 
   abtCmd[2] = ui8Value;
-  return pn53x_transceive (pnd, abtCmd, 3, NULL, NULL);
+  return pn53x_transceive (pnd, abtCmd, sizeof (pncmd_set_parameters), NULL, NULL);
 }
 
 bool

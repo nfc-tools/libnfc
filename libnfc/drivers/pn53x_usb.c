@@ -367,14 +367,6 @@ pn53x_usb_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szT
   // Remove the preceding and appending bytes 00 00 FF xx Fx .. .. .. xx 00 (x = variable)
   *pszRxLen = ret - 7 - 2;
 
-  // Get register: nuke extra byte (awful hack)
-  if ((abtRx[5] == 0xd5) && (abtRx[6] == 0x07) && (*pszRxLen == 2)) {
-    // DBG("awful hack: abtRx[7]=%02x, abtRx[8]=%02x, we only keep abtRx[8]=%02x", abtRx[7], abtRx[8], abtRx[8]);
-    *pszRxLen = (*pszRxLen) - 1;
-    memcpy (pbtRx, abtRx + 8, *pszRxLen);
-    return true;
-  }
-
   memcpy (pbtRx, abtRx + 7, *pszRxLen);
 
   return true;
