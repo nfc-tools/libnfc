@@ -123,15 +123,11 @@ struct driver_callbacks {
   /** Pick devices callback */
   nfc_device_desc_t *(*pick_device) (void);
   /** List devices callback */
-          bool (*list_devices) (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * pszDeviceFound);
+  bool (*list_devices) (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * pszDeviceFound);
   /** Connect callback */
   nfc_device_t *(*connect) (const nfc_device_desc_t * pndd);
   /** Transceive callback */
-     
-     
-     
-    bool (*transceive) (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxLen, byte_t * pbtRx,
-                        size_t * pszRxLen);
+  bool (*transceive) (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxLen, byte_t * pbtRx, size_t * pszRxLen);
   /** Disconnect callback */
   void    (*disconnect) (nfc_device_t * pnd);
 };
