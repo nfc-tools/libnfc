@@ -110,7 +110,10 @@ main (int argc, char *argv[])
   transmit_bytes((const byte_t*)"\x0b\x00\x90\x00",4);
   transmit_bytes((const byte_t*)"\x0a\x00\x00\x21\x90\x00",6);
   transmit_bytes((const byte_t*)"\x0b\x00\xd1\x02\x1c\x53\x70\x91\x01\x09\x54\x02\x65\x6e\x4c\x69\x62\x6e\x66\x63\x51\x01\x0b\x55\x03\x6c\x69\x62\x6e\x66\x63\x2e\x6f\x72\x67\x90\x00",37);
-  transmit_bytes((const byte_t*)"\xca\x00",2);
+  // At this point we should have received a S(DESELECT)
+  // We don't have to reply ourselves because when using
+  // ISO/IEC14443-4 PICC mode, S(DESELECT) response is automatic
+  //transmit_bytes((const byte_t*)"\xca\x00",2);
 
   nfc_disconnect(pnd);
   exit (EXIT_SUCCESS);
