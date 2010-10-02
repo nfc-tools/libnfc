@@ -10,7 +10,8 @@ bin_PROGRAMS = \
 		nfc-sam \
 		nfcip-initiator \
 		nfcip-target \
-		pn53x-diagnose
+		pn53x-diagnose \
+		pn53x-tamashell
 
 # set the include path found by configure
 INCLUDES= $(all_includes) $(LIBNFC_CFLAGS)
@@ -61,6 +62,13 @@ nfcip_initiator_LDADD = $(top_builddir)/libnfc/libnfc.la
 pn53x_diagnose_SOURCES = pn53x-diagnose.c
 pn53x_diagnose_LDADD = $(top_builddir)/libnfc/libnfc.la \
 		    libnfcutils.la
+
+pn53x_tamashell_SOURCES = pn53x-tamashell.c
+pn53x_tamashell_LDADD = $(top_builddir)/libnfc/libnfc.la \
+		    libnfcutils.la
+# Should be guarded by test on availability of readline
+#pn53x_tamashell_CFLAGS = -DHAVE_READLINE
+#pn53x_tamashell_LDFLAGS = -lreadline
 
 nfc_sam_SOURCES = nfc-sam.c
 nfc_sam_LDADD = $(top_builddir)/libnfc/libnfc.la \
