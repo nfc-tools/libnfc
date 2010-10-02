@@ -988,7 +988,7 @@ pn53x_TgInitAsTarget (nfc_device_t * pnd, nfc_target_mode_t ntm, byte_t * pbtRx,
   memcpy (abtCmd, pncmd_target_init, sizeof (pncmd_target_init));
 
   // Clear the target init struct, reset to all zeros
-  memset (abtCmd + 2, 0x00, 37);
+  memset (abtCmd + 2, 0x00, sizeof (pncmd_target_init)-2);
 
   // Store the target mode in the initialization params
   abtCmd[2] = ntm;
@@ -1007,7 +1007,7 @@ pn53x_TgInitAsTarget (nfc_device_t * pnd, nfc_target_mode_t ntm, byte_t * pbtRx,
 
   // Request the initialization as a target
   szRxLen = MAX_FRAME_LEN;
-  if (!pn53x_transceive (pnd, abtCmd, 39, abtRx, &szRxLen))
+  if (!pn53x_transceive (pnd, abtCmd, sizeof (pncmd_target_init), abtRx, &szRxLen))
     return false;
 
   // Save the received byte count
