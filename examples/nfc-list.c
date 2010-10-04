@@ -141,7 +141,7 @@ main (int argc, const char *argv[])
       exit (EXIT_FAILURE);
     }
 
-    printf ("Connected to NFC reader: %s\n", pnd->acName);
+    printf ("Connected to NFC device: %s\n", pnd->acName);
 
     // List ISO14443A targets
     if (nfc_initiator_list_passive_targets (pnd, NM_ISO14443A_106, anti, MAX_TARGET_COUNT, &szTargetFound)) {
