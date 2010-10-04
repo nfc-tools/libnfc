@@ -29,7 +29,6 @@
 #include <nfc/nfc-messages.h>
 
 #include "nfc-utils.h"
-// FIXME: Delete me
 #include "chips/pn53x.h"
 
 #define MAX_DEVICE_COUNT 16

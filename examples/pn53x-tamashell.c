@@ -17,22 +17,29 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 */
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif // HAVE_CONFIG_H
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 #include <unistd.h>
+
 #if defined(HAVE_READLINE)
 #  include <readline/readline.h>
 #  include <readline/history.h>
 #else
    extern FILE* stdin;
 #endif //HAVE_READLINE
+
 #include <nfc/nfc.h>
 #include <nfc/nfc-messages.h>
 
 #include "nfc-utils.h"
+
+#include "chips/pn53x.h"
 
 #define MAX_FRAME_LEN 264
 

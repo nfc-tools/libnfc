@@ -125,6 +125,7 @@ if test x$ac_cv_with_cutter = xyes -a x$ac_cv_use_cutter = xno; then
 fi
 AM_CONDITIONAL([WITH_CUTTER], [test "$ac_cv_use_cutter" != "no"])
 
+AC_CHECK_READLINE
 
 # Defines and C flags
 CFLAGS="$CFLAGS -std=c99"
