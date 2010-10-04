@@ -56,13 +56,10 @@ transmit_bytes (const byte_t * pbtTx, const size_t szTxLen)
   }
 
   // Transmit the command bytes
-  // FIXME doesn't use a pn53x specific function, use libnfc's API
-  pn53x_set_parameters(pnd,0);
   if (!nfc_target_send_bytes(pnd, pbtTx, szTxLen)) {
     nfc_perror (pnd, "nfc_target_send_bytes");
     return false;
   }
-  pn53x_set_parameters(pnd,SYMBOL_PARAM_fISO14443_4_PICC);
 
   if (!nfc_target_receive_bytes(pnd,abtRx,&szRxLen)) {
     nfc_perror (pnd, "nfc_target_receive_bytes");
@@ -89,8 +86,8 @@ main (int argc, char *argv[])
     return EXIT_FAILURE;
   }
 
-  printf ("[+] Connected to NFC device: %s\n", pnd->acName);
-  printf ("[+] Emulating NDEF tag now, please touch it with a second NFC device\n");
+  printf ("Connected to NFC device: %s\n", pnd->acName);
+  printf ("Emulating NDEF tag now, please touch it with a second NFC device\n");
 
   nfc_target_t nt = {
     .ntt = NTT_MIFARE,
@@ -100,6 +97,9 @@ main (int argc, char *argv[])
     .nti.nai.szUidLen = 4,
     .nti.nai.szAtsLen = 0,
   };
+
+  // FIXME doesn't use a pn53x specific function, use libnfc's API
+  pn53x_set_parameters(pnd,SYMBOL_PARAM_fISO14443_4_PICC);
 
   if (!nfc_target_init (pnd, NTM_ISO14443_4_PICC, nt, abtRx, &szRxLen)) {
     nfc_perror (pnd, "nfc_target_init");
