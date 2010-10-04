@@ -64,8 +64,8 @@ transmit_bytes (const byte_t * pbtTx, const size_t szTxLen)
   }
   pn53x_set_parameters(pnd,SYMBOL_PARAM_fISO14443_4_PICC);
 
-  if (!pn53x_target_receive_bytes(pnd,abtRx,&szRxLen)) {
-    nfc_perror (pnd, "pn53x_target_receive_bytes");
+  if (!nfc_target_receive_bytes(pnd,abtRx,&szRxLen)) {
+    nfc_perror (pnd, "nfc_target_receive_bytes");
     return false;
   }
 
@@ -101,7 +101,7 @@ main (int argc, char *argv[])
     .nti.nai.szAtsLen = 0,
   };
 
-  if (!nfc_target_init (pnd, NTM_PICC, nt, abtRx, &szRxLen)) {
+  if (!nfc_target_init (pnd, NTM_ISO14443_4_PICC, nt, abtRx, &szRxLen)) {
     nfc_perror (pnd, "nfc_target_init");
     ERR("Could not come out of auto-emulation, no command was received");
     return EXIT_FAILURE;
