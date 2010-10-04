@@ -65,6 +65,12 @@ target_io( const nfc_target_t nt, const byte_t * pbtInput, const size_t szInput,
           memcpy(pbtOutput+1, nt.nti.nai.abtAts, nt.nti.nai.szAtsLen);
         }
         break;
+      case 0xc2: // S-block DESELECT
+        if (!quiet_output) {
+          printf("Target released me. Bye!\n");
+        }
+        loop = false;
+        break;
       default: // Unknown
         if (!quiet_output) {
           printf("Unknown frame, emulated target abort.\n");
@@ -73,7 +79,7 @@ target_io( const nfc_target_t nt, const byte_t * pbtInput, const size_t szInput,
     }
   }
   // Show transmitted command
-  if (!quiet_output) {
+  if ((!quiet_output) && *pszOutput) {
     printf ("    Out: ");
     print_hex (pbtOutput, *pszOutput);
   }
@@ -88,19 +94,22 @@ nfc_target_emulate_tag(nfc_device_t* pnd, const nfc_target_t nt)
   bool loop = true;
 
   if (!nfc_target_init (pnd, NTM_PASSIVE, nt, abtRx, &szRxLen)) {
+    nfc_perror (pnd, "nfc_target_init");
     return false;
   }
 
   while ( loop ) {
     loop = target_io( nt, abtRx, szRxLen, abtTx, &szTx );
     if (szTx) {
-       if (!nfc_target_send_bytes(pnd, abtTx, szTx)) {
-         return false;
+      if (!nfc_target_send_bytes(pnd, abtTx, szTx)) {
+        nfc_perror (pnd, "nfc_target_send_bytes");
+        return false;
       }
     }
     if ( loop ) {
       if (!nfc_target_receive_bytes(pnd, abtRx, &szRxLen)) {
-         return false;
+        nfc_perror (pnd, "nfc_target_receive_bytes");
+        return false;
       }
     }    
   }
