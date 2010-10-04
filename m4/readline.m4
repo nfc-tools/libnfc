@@ -1,6 +1,6 @@
 dnl Based on wojtekka's m4 from http://wloc.wsinf.edu.pl/~kklos/ekg-20080219/m4/readline.m4
 
-AC_DEFUN(AC_CHECK_READLINE,[
+AC_DEFUN([AC_CHECK_READLINE],[
   AC_SUBST(READLINE_LIBS)
   AC_SUBST(READLINE_INCLUDES)
 
