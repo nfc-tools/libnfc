@@ -215,7 +215,7 @@ main (int argc, const char *argv[])
         .nti.nai.szUidLen = 4,
         .nti.nai.szAtsLen = 0,
       };
-      if (!nfc_target_init (pnd, NTM_PICC, nt, abtRx, &szRxLen))
+      if (!nfc_target_init (pnd, NTM_NORMAL, nt, abtRx, &szRxLen))
         return EXIT_FAILURE;
 
       printf ("Now both the NFC reader and SAM are readable for 1 minute from an external reader.\n");
