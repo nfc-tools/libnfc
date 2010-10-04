@@ -59,7 +59,17 @@ main (int argc, const char *argv[])
     errx (1, "usage: %s", argv[0]);
   }
 
-  if (!pnd || !nfc_target_init (pnd, NTM_DEP, abtRecv, &szRecvBits)) {
+  // Note: We have to build a "fake" nfc_target_t in order to do exactly the same that was done before the new nfc_target_init() was introduced.
+  nfc_target_t nt = {
+    .ntt = NTT_GENERIC_PASSIVE_106,
+    .nti.nai.abtAtqa = "\x04\x00",
+    .nti.nai.abtUid = "\xde\xad\xbe\xaf\x62",
+    .nti.nai.btSak = 0x20,
+    .nti.nai.szUidLen = 5,
+    .nti.nai.szAtsLen = 0,
+  };
+
+  if (!pnd || !nfc_target_init (pnd, NTM_DEP, nt, abtRecv, &szRecvBits)) {
     printf ("unable to connect or initialize\n");
     return 1;
   }

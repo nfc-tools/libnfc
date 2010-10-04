@@ -112,6 +112,7 @@ bool    pn53x_decode_target_data (const byte_t * pbtRawData, size_t szDataLen, n
 
 bool    pn53x_get_firmware_version (nfc_device_t * pnd);
 bool    pn53x_configure (nfc_device_t * pnd, const nfc_device_option_t ndo, const bool bEnable);
+// NFC device as Initiator functions
 bool    pn53x_initiator_select_dep_target (nfc_device_t * pnd, const nfc_modulation_t nmInitModulation,
                                            const byte_t * pbtPidData, const size_t szPidDataLen,
                                            const byte_t * pbtNFCID3i, const size_t szNFCID3iDataLen,
@@ -122,16 +123,15 @@ bool    pn53x_initiator_transceive_bits (nfc_device_t * pnd, const byte_t * pbtT
                                          byte_t * pbtRxPar);
 bool    pn53x_initiator_transceive_bytes (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxLen,
                                           byte_t * pbtRx, size_t * pszRxLen);
-
-bool    pn53x_target_init (nfc_device_t * pnd, nfc_target_mode_t tm, byte_t * pbtRx, size_t * pszRxLen);
+// NFC device as Target functions
+bool    pn53x_target_init (nfc_device_t * pnd, const nfc_target_mode_t ntm, const nfc_target_t nt, byte_t * pbtRx, size_t * pszRxLen);
 bool    pn53x_target_receive_bits (nfc_device_t * pnd, byte_t * pbtRx, size_t * pszRxBits, byte_t * pbtRxPar);
 bool    pn53x_target_receive_bytes (nfc_device_t * pnd, byte_t * pbtRx, size_t * pszRxLen);
 bool    pn53x_target_send_bits (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxBits,
                                 const byte_t * pbtTxPar);
 bool    pn53x_target_send_bytes (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxLen);
-
+// Error handling functions
 const char *pn53x_strerror (const nfc_device_t * pnd);
-
 static const struct chip_callbacks pn53x_callbacks_list = {
   pn53x_strerror
 };
@@ -145,7 +145,9 @@ bool    pn53x_InRelease (nfc_device_t * pnd, const uint8_t ui8Target);
 bool    pn53x_InAutoPoll (nfc_device_t * pnd, const nfc_target_type_t * pnttTargetTypes, const size_t szTargetTypes,
                           const byte_t btPollNr, const byte_t btPeriod, nfc_target_t * pntTargets,
                           size_t * pszTargetFound);
-bool    pn53x_TgInitAsTarget (nfc_device_t * pnd, nfc_target_mode_t tm, byte_t * pbtRx, size_t * pszRxLen);
+bool	pn53x_TgInitAsTarget (nfc_device_t * pnd, nfc_target_mode_t ntm, 
+                              const byte_t * pbtMifareParams, const byte_t * pbtFeliCaParams, const byte_t * pbtNFCID3t, 
+                              byte_t * pbtRx, size_t * pszRxLen);
 
 
 #endif // __NFC_CHIPS_PN53X_H__

@@ -19,7 +19,7 @@
 
 /**
  * @file nfc-sam.c
- * @brief Configure the reader to comunicate with a SAM (Secure Access Module).
+ * @brief Configure the NFC device to comunicate with a SAM (Secure Access Module).
  */
 
 #ifdef HAVE_CONFIG_H
@@ -129,7 +129,7 @@ main (int argc, const char *argv[])
     return EXIT_FAILURE;
   }
 
-  printf ("Connected to NFC reader: %s\n", pnd->acName);
+  printf ("Connected to NFC device: %s\n", pnd->acName);
 
   // Print the example's menu
   printf ("\nSelect the comunication mode:\n");
@@ -152,7 +152,7 @@ main (int argc, const char *argv[])
   switch (mode) {
   case VIRTUAL_CARD_MODE:
     {
-      // FIXME: after the loop the reader doesn't respond to host commands...
+      // FIXME: after the loop the device doesn't respond to host commands...
       printf ("Now the SAM is readable for 1 minute from an external reader.\n");
       wait_one_minute ();
     }
@@ -207,7 +207,15 @@ main (int argc, const char *argv[])
 
       // FIXME: it does not work as expected...Probably the issue is in "nfc_target_init"
       // which doesn't provide a way to set custom data for SENS_RES, NFCID1, SEL_RES, etc.
-      if (!nfc_target_init (pnd, NTM_PICC, abtRx, &szRxLen))
+      nfc_target_t nt = {
+        .ntt = NTT_GENERIC_PASSIVE_106,
+        .nti.nai.abtAtqa = "\x04\x00",
+        .nti.nai.abtUid = "\x08\xad\xbe\xaf",
+        .nti.nai.btSak = 0x20,
+        .nti.nai.szUidLen = 4,
+        .nti.nai.szAtsLen = 0,
+      };
+      if (!nfc_target_init (pnd, NTM_PICC, nt, abtRx, &szRxLen))
         return EXIT_FAILURE;
 
       printf ("Now both the NFC reader and SAM are readable for 1 minute from an external reader.\n");

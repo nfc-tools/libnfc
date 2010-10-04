@@ -91,7 +91,17 @@ main (int argc, char *argv[])
 
   printf ("[+] Connected to NFC device: %s\n", pnd->acName);
   printf ("[+] Emulating NDEF tag now, please touch it with a second NFC device\n");
-  if (!nfc_target_init (pnd, NTM_PICC, abtRx, &szRxLen)) {
+
+  nfc_target_t nt = {
+    .ntt = NTT_MIFARE,
+    .nti.nai.abtAtqa = { 0x00, 0x04 },
+    .nti.nai.abtUid = { 0x08, 0x00, 0xb0, 0x0b },
+    .nti.nai.btSak = 0x20,
+    .nti.nai.szUidLen = 4,
+    .nti.nai.szAtsLen = 0,
+  };
+
+  if (!nfc_target_init (pnd, NTM_PICC, nt, abtRx, &szRxLen)) {
     nfc_perror (pnd, "nfc_target_init");
     ERR("Could not come out of auto-emulation, no command was received");
     return EXIT_FAILURE;

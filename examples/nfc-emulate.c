@@ -19,7 +19,7 @@
 
 /**
  * @file nfc-emulate.c
- * @brief
+ * @brief This example can be used to emulate a tag which which have a "really" custom UID
  */
 
 #ifdef HAVE_CONFIG_H
@@ -106,7 +106,17 @@ main (int argc, char *argv[])
   printf ("[+] Try to break out the auto-emulation, this requires a second reader!\n");
   printf ("[+] To do this, please send any command after the anti-collision\n");
   printf ("[+] For example, send a RATS command or use the \"nfc-anticol\" tool\n");
-  if (!nfc_target_init (pnd, NTM_PASSIVE, abtRecv, &szRecvBits)) {
+
+  // Note: We have to build a "fake" nfc_target_t in order to do exactly the same that was done before the new nfc_target_init() was introduced.
+  nfc_target_t nt = {
+    .ntt = NTT_GENERIC_PASSIVE_106,
+    .nti.nai.abtAtqa = "\x04\x00",
+    .nti.nai.abtUid = "\xde\xad\xbe\xaf\x62",
+    .nti.nai.btSak = 0x20,
+    .nti.nai.szUidLen = 5,
+    .nti.nai.szAtsLen = 0,
+  };
+  if (!nfc_target_init (pnd, NTM_PASSIVE, nt, abtRecv, &szRecvBits)) {
     printf ("Error: Could not come out of auto-emulation, no command was received\n");
     return 1;
   }

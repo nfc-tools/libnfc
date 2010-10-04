@@ -921,7 +921,7 @@ pn53x_initiator_transceive_bytes (nfc_device_t * pnd, const byte_t * pbtTx, cons
 }
 
 bool
-pn53x_target_init (nfc_device_t * pnd, nfc_target_mode_t ntm, byte_t * pbtRx, size_t * pszRxLen)
+pn53x_target_init (nfc_device_t * pnd, const nfc_target_mode_t ntm, const nfc_target_t nt, byte_t * pbtRx, size_t * pszRxLen)
 {
   // Save the current configuration settings
   bool    bCrc = pnd->bCrc;
@@ -965,7 +965,30 @@ pn53x_target_init (nfc_device_t * pnd, nfc_target_mode_t ntm, byte_t * pbtRx, si
   if (!pn53x_set_reg (pnd, REG_CIU_TX_AUTO, SYMBOL_INITIAL_RF_ON, 0x04))
     return false;
 
-  if(!pn53x_TgInitAsTarget(pnd, ntm, pbtRx, pszRxLen)) {
+  byte_t abtMifareParams[6];
+  byte_t * pbtMifareParams = NULL;
+
+  switch(nt.ntt) {
+    case NTT_MIFARE:
+    case NTT_GENERIC_PASSIVE_106:
+    case NTT_ISO14443A_106: {
+      // Set ATQA (SENS_RES)
+      abtMifareParams[0] = nt.nti.nai.abtAtqa[1];
+      abtMifareParams[1] = nt.nti.nai.abtAtqa[0];
+      // Set UID 
+      // Note: in this mode we can only emulate a single size (4 bytes) UID where the first is fixed by PN53x as 0x08
+      abtMifareParams[2] = nt.nti.nai.abtUid[1];
+      abtMifareParams[3] = nt.nti.nai.abtUid[2];
+      abtMifareParams[4] = nt.nti.nai.abtUid[3];
+      // Set SAK (SEL_RES)
+      abtMifareParams[5] = nt.nti.nai.btSak;
+
+      pbtMifareParams = abtMifareParams;
+    }
+    break;
+  }
+
+  if(!pn53x_TgInitAsTarget(pnd, ntm, pbtMifareParams, NULL, NULL, pbtRx, pszRxLen)) {
     return false;
   }
 
@@ -979,7 +1002,9 @@ pn53x_target_init (nfc_device_t * pnd, nfc_target_mode_t ntm, byte_t * pbtRx, si
 }
 
 bool
-pn53x_TgInitAsTarget (nfc_device_t * pnd, nfc_target_mode_t ntm, byte_t * pbtRx, size_t * pszRxLen)
+pn53x_TgInitAsTarget (nfc_device_t * pnd, nfc_target_mode_t ntm, 
+                      const byte_t * pbtMifareParams, const byte_t * pbtFeliCaParams, const byte_t * pbtNFCID3t, 
+                      byte_t * pbtRx, size_t * pszRxLen)
 {
   byte_t  abtRx[MAX_FRAME_LEN];
   size_t  szRxLen;
@@ -993,26 +1018,27 @@ pn53x_TgInitAsTarget (nfc_device_t * pnd, nfc_target_mode_t ntm, byte_t * pbtRx,
   // Store the target mode in the initialization params
   abtCmd[2] = ntm;
 
-  // Set ATQA (SENS_RES)
-  abtCmd[3] = 0x04;
-  abtCmd[4] = 0x00;
-
-  // Set SAK (SEL_RES)
-  abtCmd[8] = 0x20;
-
-  // Set UID
-  abtCmd[5] = 0x00;
-  abtCmd[6] = 0xb0;
-  abtCmd[7] = 0x0b;
+  if (pbtMifareParams) {
+    memcpy (abtCmd+3, pbtMifareParams, 6);
+  }
+  if (pbtFeliCaParams) {
+    memcpy (abtCmd+9, pbtFeliCaParams, 18);
+  }
+  if (pbtNFCID3t) {
+    memcpy(abtCmd+27, pbtNFCID3t, 10);
+  }
+  // TODO Handle General bytes and Tk (Historical bytes) lenght
 
   // Request the initialization as a target
   szRxLen = MAX_FRAME_LEN;
   if (!pn53x_transceive (pnd, abtCmd, sizeof (pncmd_target_init), abtRx, &szRxLen))
     return false;
 
+  // Note: the first byte is skip: 
+  //       its the "mode" byte which contains baudrate, DEP and Framing type (Mifare, active or FeliCa) datas.
+
   // Save the received byte count
   *pszRxLen = szRxLen - 1;
-
   // Copy the received bytes
   memcpy (pbtRx, abtRx + 1, *pszRxLen);
 
