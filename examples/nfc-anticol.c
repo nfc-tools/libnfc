@@ -19,7 +19,7 @@
 
 /** 
  * @file nfc-anticol.c
- * @brief
+ * @brief Generate one ISO14443-A anticollision process "by-hand"
  */
 
 #ifdef HAVE_CONFIG_H
@@ -179,7 +179,7 @@ main (int argc, char *argv[])
     exit (EXIT_FAILURE);
   }
 
-  printf ("\nConnected to NFC reader: %s\n\n", pnd->acName);
+  printf ("Connected to NFC reader: %s\n\n", pnd->acName);
 
   // Send the 7 bits request command specified in ISO 14443A (0x26)
   if (!transmit_bits (abtReqa, 7)) {

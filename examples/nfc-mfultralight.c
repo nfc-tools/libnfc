@@ -19,7 +19,7 @@
 
 /**
  * @file nfc-mfultool.c
- * @brief MIFARE Ultralight dump tool
+ * @brief MIFARE Ultralight dump/restore tool
  */
 
 #ifdef HAVE_CONFIG_H
@@ -180,10 +180,10 @@ main (int argc, const char *argv[])
   }
   DBG ("Successfully opened the dump file\n");
 
-  // Try to open the NFC reader
+  // Try to open the NFC device
   pnd = nfc_connect (NULL);
   if (pnd == NULL) {
-    ERR ("Error connecting NFC reader\n");
+    ERR ("Error connecting NFC device\n");
     return 1;
   }
 
@@ -194,7 +194,7 @@ main (int argc, const char *argv[])
     nfc_perror (pnd, "nfc_configure");
     exit (EXIT_FAILURE);
   }
-  // Let the reader only try once to find a tag
+  // Let the device only try once to find a tag
   if (!nfc_configure (pnd, NDO_INFINITE_SELECT, false)) {
     nfc_perror (pnd, "nfc_configure");
     exit (EXIT_FAILURE);
@@ -213,7 +213,7 @@ main (int argc, const char *argv[])
     exit (EXIT_FAILURE);
   }
 
-  printf ("Connected to NFC reader: %s\n", pnd->acName);
+  printf ("Connected to NFC device: %s\n", pnd->acName);
 
   // Try to find a MIFARE Ultralight tag
   if (!nfc_initiator_select_passive_target (pnd, NM_ISO14443A_106, NULL, 0, &nti)) {
