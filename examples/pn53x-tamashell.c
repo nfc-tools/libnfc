@@ -78,15 +78,20 @@ int main(int argc, const char* argv[])
     }
     add_history(cmd);
 #else
-    cmd = malloc(1024);
+    cmd = NULL;
     printf("%s", prompt);
     fflush(0);
-    int s = read(0, cmd, 1024);
-    if (s == 0) {
+    size_t n;
+    extern FILE* stdin;
+    //FIXME: getline not in stdio.h ???
+    int s = getline(&cmd, &n, stdin);
+    if (s <= 0) {
       printf("Bye!\n");
       free(cmd);
       break;
     }
+    //FIXME: print only if read from redirected stdin (i.e. script)
+    printf("%s", cmd);
 #endif //HAVE_READLINE
     if (cmd[0]=='q') {
       printf("Bye!\n");
