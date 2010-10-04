@@ -940,7 +940,7 @@ pn53x_target_init (nfc_device_t * pnd, const nfc_target_mode_t ntm, const nfc_ta
       pn53x_configure(pnd, NDO_EASY_FRAMING, true);
     break;
 
-    case NTM_PICC:
+    case NTM_ISO14443_4_PICC:
       if(pnd->nc != NC_PN532) {
         // This mode is not supported by pn531 neither pn533
         pnd->iLastError = DENOTSUP;
