@@ -36,8 +36,6 @@
 
 #include <nfc/nfc-messages.h>
 #include "nfc-utils.h"
-// FIXME doesn't use a pn53x specific function, use libnfc's API
-#include "chips/pn53x.h"
 
 #define MAX_FRAME_LEN 264
 
@@ -48,8 +46,7 @@ static bool quiet_output = false;
 
 #define SYMBOL_PARAM_fISO14443_4_PICC   0x20
 
-bool
-transmit_bytes (const byte_t * pbtTx, const size_t szTxLen)
+bool send_bytes (const byte_t * pbtTx, const size_t szTxLen)
 {
   // Show transmitted command
   if (!quiet_output) {
@@ -60,12 +57,17 @@ transmit_bytes (const byte_t * pbtTx, const size_t szTxLen)
   // Transmit the command bytes
   if (!nfc_target_send_bytes(pnd, pbtTx, szTxLen)) {
     nfc_perror (pnd, "nfc_target_send_bytes");
-    return false;
+    exit(EXIT_FAILURE);
   }
+  // Succesful transfer
+  return true;
+}
 
+bool receive_bytes (void)
+{
   if (!nfc_target_receive_bytes(pnd,abtRx,&szRxLen)) {
     nfc_perror (pnd, "nfc_target_receive_bytes");
-    return false;
+    exit(EXIT_FAILURE);
   }
 
   // Show received answer
@@ -100,9 +102,6 @@ main (int argc, char *argv[])
     .nti.nai.szAtsLen = 0,
   };
 
-  // FIXME doesn't use a pn53x specific function, use libnfc's API
-  pn53x_set_parameters(pnd,SYMBOL_PARAM_fISO14443_4_PICC);
-
   if (!nfc_target_init (pnd, NTM_ISO14443_4_PICC, nt, abtRx, &szRxLen)) {
     nfc_perror (pnd, "nfc_target_init");
     ERR("Could not come out of auto-emulation, no command was received");
@@ -117,35 +116,41 @@ main (int argc, char *argv[])
 //Receiving data: e0  40
 //= RATS, FSD=48
 //Actually PN532 already sent back the ATS so nothing to send now
-  transmit_bytes((const byte_t*)"\x0a\x00\x6a\x87",4);
-//Receiving data: 0b  00      00  a4  04  00  06  e1  03  e1  03  e1  03
+  receive_bytes();
+//Receiving data: 00  a4  04  00  06  e1  03  e1  03  e1  03
 //= App Select by name "e103e103e103"
-  transmit_bytes((const byte_t*)"\x0b\x00\x6a\x87",4);
-//Receiving data: 0a  00      00  a4  04  00  07  d2  76  00  00  85  01  00
+  send_bytes((const byte_t*)"\x6a\x87",2);
+  receive_bytes();
+//Receiving data: 00  a4  04  00  06  e1  03  e1  03  e1  03
+//= App Select by name "e103e103e103"
+  send_bytes((const byte_t*)"\x6a\x87",2);
+  receive_bytes();
+//Receiving data: 00  a4  04  00  07  d2  76  00  00  85  01  00
 //= App Select by name "D2760000850100"
-  transmit_bytes((const byte_t*)"\x0a\x00\x90\x00",4);
-//Receiving data: 0b  00      00  a4  00  00  02  e1  03
+  send_bytes((const byte_t*)"\x90\x00",2);
+  receive_bytes();
+//Receiving data: 00  a4  00  00  02  e1  03
 //= Select CC
-  transmit_bytes((const byte_t*)"\x0b\x00\x90\x00",4);
-//Receiving data: 0a  00      00  b0  00  00  0f
+  send_bytes((const byte_t*)"\x90\x00",2);
+  receive_bytes();
+//Receiving data: 00  b0  00  00  0f
 //= ReadBinary CC
 //We send CC + OK
-  transmit_bytes((const byte_t*)"\x0a\x00\x00\x0f\x10\x00\x3b\x00\x34\x04\x06\xe1\x04\x0e\xe0\x00\x00\x90\x00",19);
-//Receiving data: 0b  00      00  a4  00  00  02  e1  04
+  send_bytes((const byte_t*)"\x00\x0f\x10\x00\x3b\x00\x34\x04\x06\xe1\x04\x0e\xe0\x00\x00\x90\x00",17);
+  receive_bytes();
+//Receiving data: 00  a4  00  00  02  e1  04
 //= Select NDEF
-  transmit_bytes((const byte_t*)"\x0b\x00\x90\x00",4);
-//Receiving data: 0a  00      00  b0  00  00  02
+  send_bytes((const byte_t*)"\x90\x00",2);
+  receive_bytes();
+//Receiving data: 00  b0  00  00  02
 //=  Read first 2 NDEF bytes
 //Sent NDEF Length=0x21
-  transmit_bytes((const byte_t*)"\x0a\x00\x00\x21\x90\x00",6);
-//Receiving data: 0b  00      00  b0  00  02  21
-  transmit_bytes((const byte_t*)"\x0b\x00\xd1\x02\x1c\x53\x70\x91\x01\x09\x54\x02\x65\x6e\x4c\x69\x62\x6e\x66\x63\x51\x01\x0b\x55\x03\x6c\x69\x62\x6e\x66\x63\x2e\x6f\x72\x67\x90\x00",37);
-//Receiving data: ca  00
-//= S(DESELECT)
-// We don't have to reply ourselves because when using
-// ISO/IEC14443-4 PICC mode, S(DESELECT) response is automatic
+  send_bytes((const byte_t*)"\x00\x21\x90\x00",4);
+  receive_bytes();
+//Receiving data: 00  b0  00  02  21
+//= Read remaining of NDEF file
+  send_bytes((const byte_t*)"\xd1\x02\x1c\x53\x70\x91\x01\x09\x54\x02\x65\x6e\x4c\x69\x62\x6e\x66\x63\x51\x01\x0b\x55\x03\x6c\x69\x62\x6e\x66\x63\x2e\x6f\x72\x67\x90\x00",35);
 
   nfc_disconnect(pnd);
   exit (EXIT_SUCCESS);
 }
-

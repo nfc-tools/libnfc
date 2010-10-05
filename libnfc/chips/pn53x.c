@@ -70,6 +70,8 @@ const byte_t pncmd_initiator_auto_poll[5] = { 0xD4, 0x60 };
 const byte_t pncmd_target_get_data[2] = { 0xD4, 0x86 };
 const byte_t pncmd_target_set_data[264] = { 0xD4, 0x8E };
 const byte_t pncmd_target_init[39] = { 0xD4, 0x8C };
+//Example of default values:
+//const byte_t pncmd_target_init[39] = { 0xD4, 0x8C, 0x00, 0x08, 0x00, 0x12, 0x34, 0x56, 0x40, 0x01, 0xFE, 0xa2, 0xa3, 0xa4, 0xa5, 0xa6, 0xa7, 0xc0, 0xc1, 0xc2, 0xc3, 0xc4, 0xc5, 0xc6, 0xc7, 0xFF, 0xFF, 0xAA, 0x99, 0x88, 0x77, 0x66, 0x55, 0x44, 0x33, 0x22, 0x11, 0x00, 0x00 };
 const byte_t pncmd_target_virtual_card[4] = { 0xD4, 0x14 };
 const byte_t pncmd_target_receive[2] = { 0xD4, 0x88 };
 const byte_t pncmd_target_send[264] = { 0xD4, 0x90 };
@@ -947,7 +949,7 @@ pn53x_target_init (nfc_device_t * pnd, const nfc_target_mode_t ntm, const nfc_ta
         return false;
       }
       pn53x_set_parameters(pnd, SYMBOL_PARAM_fISO14443_4_PICC);
-      pn53x_configure(pnd, NDO_EASY_FRAMING, false);
+      pn53x_configure(pnd, NDO_EASY_FRAMING, true);
     break;
 
     default:
@@ -1027,7 +1029,7 @@ pn53x_TgInitAsTarget (nfc_device_t * pnd, nfc_target_mode_t ntm,
   if (pbtNFCID3t) {
     memcpy(abtCmd+27, pbtNFCID3t, 10);
   }
-  // TODO Handle General bytes and Tk (Historical bytes) lenght
+  // TODO Handle General bytes and Tk (Historical bytes) length
 
   // Request the initialization as a target
   szRxLen = MAX_FRAME_LEN;
