@@ -37,15 +37,25 @@
 // Bus
 #include <winscard.h>
 
-#ifdef __APPLE__
+// XXX: Some review from users cross-compiling is welcome!
+#if defined (_WIN32)
+#  define IOCTL_CCID_ESCAPE_SCARD_CTL_CODE SCARD_CTL_CODE(3500)
+#elif defined(__APPLE__)
 #  include <wintypes.h>
+#  define IOCTL_CCID_ESCAPE_SCARD_CTL_CODE (((0x31) << 16) | ((3500) << 2))
+#elif defined (__FreeBSD__) || defined (__OpenBSD__)
+#  define IOCTL_CCID_ESCAPE_SCARD_CTL_CODE (((0x31) << 16) | ((3500) << 2))
+#elif defined (__linux__)
+#  include <reader.h>
+// Escape IOCTL tested successfully:
+#  define IOCTL_CCID_ESCAPE_SCARD_CTL_CODE SCARD_CTL_CODE(1)
+#else
+#    error "Can't determine serial string for your system"
 #endif
 
 #include <nfc/nfc.h>
 #include <nfc/nfc-messages.h>
 
-// WINDOWS: #define IOCTL_CCID_ESCAPE_SCARD_CTL_CODE SCARD_CTL_CODE(3500)
-#define IOCTL_CCID_ESCAPE_SCARD_CTL_CODE (((0x31) << 16) | ((3500) << 2))
 #define SCARD_OPERATION_SUCCESS	0x61
 #define SCARD_OPERATION_ERROR	0x63
 
