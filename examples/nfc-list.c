@@ -83,7 +83,14 @@ main (int argc, const char *argv[])
   ndd.pcDriver = "ARYGON";
   ndd.pcPort = "/dev/ttyUSB0";
   ndd.uiSpeed = 115200;
+  pnd = nfc_connect (&ndd);
+#endif
 
+  /* If specific device is wanted, i.e. a SCL3711 on USB */
+#if 0
+  nfc_device_desc_t ndd;
+  ndd.pcDriver = "PN533_USB";
+  strcpy(ndd.acDevice, "SCM Micro / SCL3711-NFC&RW");
   pnd = nfc_connect (&ndd);
 #endif
 
