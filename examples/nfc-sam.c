@@ -45,7 +45,8 @@
 #include <nfc/nfc.h>
 #include <nfc/nfc-messages.h>
 #include "nfc-utils.h"
-// FIXME: Remove me
+
+// FIXME Avoid usage of pn53x specific function or change the name from nfc-sam to pn53x-sam
 #include "chips/pn53x.h"
 
 #define MAX_FRAME_LEN 264
@@ -82,8 +83,9 @@ sam_connection (nfc_device_t * pnd, int mode)
     break;
   }
 
-  // FIXME: Direct call
+  // FIXME Avoid direct call to pn53x functions
   if (!pn53x_transceive (pnd, pncmd_sam_config, szCmd, abtRx, &szRxLen)) {
+    nfc_perror(pnd, "pn53x_transceive");
     ERR ("%s %d", "Unable to execute SAMConfiguration command with mode byte:", mode);
     return false;
   }
@@ -152,7 +154,7 @@ main (int argc, const char *argv[])
   switch (mode) {
   case VIRTUAL_CARD_MODE:
     {
-      // FIXME: after the loop the device doesn't respond to host commands...
+      // FIXME after the loop the device doesn't respond to host commands...
       printf ("Now the SAM is readable for 1 minute from an external reader.\n");
       wait_one_minute ();
     }
@@ -175,15 +177,6 @@ main (int argc, const char *argv[])
         nfc_perror (pnd, "nfc_configure");
         exit (EXIT_FAILURE);
       }
-      // Configure the CRC and Parity settings
-      if (!nfc_configure (pnd, NDO_HANDLE_CRC, true)) {
-        nfc_perror (pnd, "nfc_configure");
-        exit (EXIT_FAILURE);
-      }
-      if (!nfc_configure (pnd, NDO_HANDLE_PARITY, true)) {
-        nfc_perror (pnd, "nfc_configure");
-        exit (EXIT_FAILURE);
-      }
       // Enable field so more power consuming cards can power themselves up
       if (!nfc_configure (pnd, NDO_ACTIVATE_FIELD, true)) {
         nfc_perror (pnd, "nfc_configure");
@@ -191,6 +184,7 @@ main (int argc, const char *argv[])
       }
       // Read the SAM's info
       if (!nfc_initiator_select_passive_target (pnd, NM_ISO14443A_106, NULL, 0, &nti)) {
+        nfc_perror (pnd, "nfc_initiator_select_passive_target");
         ERR ("%s", "Reading of SAM info failed.");
         return EXIT_FAILURE;
       }
@@ -205,8 +199,6 @@ main (int argc, const char *argv[])
       byte_t  abtRx[MAX_FRAME_LEN];
       size_t  szRxLen;
 
-      // FIXME: it does not work as expected...Probably the issue is in "nfc_target_init"
-      // which doesn't provide a way to set custom data for SENS_RES, NFCID1, SEL_RES, etc.
       nfc_target_t nt = {
         .ntt = NTT_GENERIC_PASSIVE_106,
         .nti.nai.abtAtqa = "\x04\x00",
@@ -215,11 +207,13 @@ main (int argc, const char *argv[])
         .nti.nai.szUidLen = 4,
         .nti.nai.szAtsLen = 0,
       };
-      if (!nfc_target_init (pnd, NTM_NORMAL, nt, abtRx, &szRxLen))
+      printf ("Now both, NFC device (configured as target) and SAM are readables from an external NFC initiator.\n");
+      printf ("Please note that NFC device (configured as target) stay in target mode until it receive RATS, ATR_REQ or proprietary command.\n");
+      if (!nfc_target_init (pnd, NTM_NORMAL, nt, abtRx, &szRxLen)) {
+        nfc_perror(pnd, "nfc_target_init");
         return EXIT_FAILURE;
-
-      printf ("Now both the NFC reader and SAM are readable for 1 minute from an external reader.\n");
-      wait_one_minute ();
+      }
+      // wait_one_minute ();
     }
     break;
   }
