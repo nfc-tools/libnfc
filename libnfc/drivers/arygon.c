@@ -183,9 +183,7 @@ arygon_connect (const nfc_device_desc_t * pndd)
   pnd->nc = NC_PN532;
   pnd->nds = (nfc_device_spec_t) sp;
   pnd->bActive = true;
-  pnd->bCrc = true;
-  pnd->bPar = true;
-  pnd->ui8TxBits = 0;
+
   return pnd;
 }
 

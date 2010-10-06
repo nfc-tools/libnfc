@@ -69,8 +69,10 @@ typedef struct {
   bool    bPar;
 /** Should the PN53x chip handle frames encapsulation and chaining */
   bool    bEasyFraming;
-/** The last tx bits setting, we need to reset this if it does not apply anymore */
+/** Register cache for REG_CIU_BIT_FRAMING, SYMBOL_TX_LAST_BITS: The last TX bits setting, we need to reset this if it does not apply anymore */
   uint8_t ui8TxBits;
+/** Register cache for SetParameters function. */
+  uint8_t ui8Parameters;
 /** Last error reported by the PCD / encountered by the PCD driver
  * MSB       LSB
  *  | 00 | 00 |

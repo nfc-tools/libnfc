@@ -64,18 +64,15 @@
 #  define REG_CIU_BIT_FRAMING       0x633D
 #  define SYMBOL_TX_LAST_BITS       0x07
 
-#  define SYMBOL_PARAM_fAutomaticRATS     0x10
-#  define SYMBOL_PARAM_fAutomaticATR_RES  0x04
-#  define SYMBOL_PARAM_fISO14443_4_PICC   0x20
-
 // Internal parameters flags
 #  define PARAM_NONE                  0x00
 #  define PARAM_NAD_USED              0x01
 #  define PARAM_DID_USED              0x02
 #  define PARAM_AUTO_ATR_RES          0x04
 #  define PARAM_AUTO_RATS             0x10
-#  define PARAM_14443_4_PICC          0x20
-#  define PARAM_NO_AMBLE              0x40
+#  define PARAM_14443_4_PICC          0x20 /* Only for PN532 */
+#  define PARAM_NFC_SECURE            0x20 /* Only for PN533 */
+#  define PARAM_NO_AMBLE              0x40 /* Only for PN532 */
 
 // Radio Field Configure Items           // Configuration Data length
 #  define RFCI_FIELD                  0x01      //  1
@@ -93,6 +90,7 @@
 #  define DEISERRFRAME    0x0300/* Error frame */
 #  define DENOTSUP        0x0400/* Not supported */
 
+bool	pn53x_init(nfc_device_t * pnd);
 bool    pn53x_transceive_check_ack_frame_callback (nfc_device_t * pnd, const byte_t * pbtRxFrame,
                                                    const size_t szRxFrameLen);
 bool    pn53x_transceive_check_error_frame_callback (nfc_device_t * pnd, const byte_t * pbtRxFrame,
@@ -101,8 +99,8 @@ bool    pn53x_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t
                           size_t * pszRxLen);
 bool    pn53x_get_reg (nfc_device_t * pnd, uint16_t ui16Reg, uint8_t * ui8Value);
 bool    pn53x_set_reg (nfc_device_t * pnd, uint16_t ui16Reg, uint8_t ui8SymbolMask, uint8_t ui8Value);
-bool    pn53x_set_parameters (nfc_device_t * pnd, uint8_t ui8Value);
-bool    pn53x_set_tx_bits (nfc_device_t * pnd, uint8_t ui8Bits);
+bool    pn53x_set_parameter (nfc_device_t * pnd, const uint8_t ui8Value, const bool bEnable);
+bool    pn53x_set_tx_bits (nfc_device_t * pnd, const uint8_t ui8Bits);
 bool    pn53x_wrap_frame (const byte_t * pbtTx, const size_t szTxBits, const byte_t * pbtTxPar, byte_t * pbtFrame,
                           size_t * pszFrameBits);
 bool    pn53x_unwrap_frame (const byte_t * pbtFrame, const size_t szFrameBits, byte_t * pbtRx, size_t * pszRxBits,
@@ -137,6 +135,7 @@ static const struct chip_callbacks pn53x_callbacks_list = {
 };
 
 // C wrappers for PN53x commands
+bool    pn53x_SetParameters (nfc_device_t * pnd, const uint8_t ui8Value);
 bool    pn53x_InListPassiveTarget (nfc_device_t * pnd, const nfc_modulation_t nmInitModulation,
                                    const byte_t szMaxTargets, const byte_t * pbtInitiatorData,
                                    const size_t szInitiatorDataLen, byte_t * pbtTargetsData, size_t * pszTargetsData);

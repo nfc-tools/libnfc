@@ -99,11 +99,11 @@ nfc_connect (nfc_device_desc_t * pndd)
       // Great we have claimed a device
       pnd->pdc = &(drivers_callbacks_list[uiDriver]);
 
+      // FIXME Why do we do this ?
       if (!pn53x_get_firmware_version (pnd))
         return NULL;
 
-      // Reset the ending transmission bits register, it is unknown what the last tranmission used there
-      if (!pn53x_set_reg (pnd, REG_CIU_BIT_FRAMING, SYMBOL_TX_LAST_BITS, 0x00))
+      if (!pn53x_init (pnd))
         return NULL;
 
       // Set default configuration options

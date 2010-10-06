@@ -194,11 +194,8 @@ pn53x_usb_connect (const nfc_device_desc_t * pndd, const char *target_name, int 
         pnd->nc = target_chip;
         pnd->nds = (nfc_device_spec_t) pus;
         pnd->bActive = true;
-        pnd->bCrc = true;
-        pnd->bPar = true;
-        pnd->ui8TxBits = 0;
 
-        // TODO Move this HACK1 into an upper level in rder to benefit to other devices that use PN53x
+        // TODO Move this HACK1 into an upper level in order to benefit to other devices that use PN53x
         // HACK1: Send first an ACK as Abort command, to reset chip before talking to it:
         uint8_t ack_frame[] = { 0x00, 0x00, 0xff, 0x00, 0xff, 0x00 };
 #ifdef DEBUG
@@ -249,6 +246,7 @@ pn53x_usb_connect (const nfc_device_desc_t * pndd, const char *target_name, int 
           PRINT_HEX ("RX", abtRx, ret);
 #endif
         }
+
         return pnd;
       }
     }

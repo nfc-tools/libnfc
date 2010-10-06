@@ -81,6 +81,29 @@ static const byte_t pn53x_ack_frame[] = { 0x00, 0x00, 0xff, 0x00, 0xff, 0x00 };
 static const byte_t pn53x_nack_frame[] = { 0x00, 0x00, 0xff, 0xff, 0x00, 0x00 };
 static const byte_t pn53x_error_frame[] = { 0x00, 0x00, 0xff, 0x01, 0xff, 0x7f, 0x81, 0x00 };
 
+bool
+pn53x_init(nfc_device_t * pnd)
+{
+  // CRC handling is enabled by default
+  pnd->bCrc = true;
+  // Parity handling is enabled by default
+  pnd->bPar = true;
+
+  // Reset the ending transmission bits register, it is unknown what the last tranmission used there
+  pnd->ui8TxBits = 0;
+  if (!pn53x_set_reg (pnd, REG_CIU_BIT_FRAMING, SYMBOL_TX_LAST_BITS, 0x00)) {
+    return false;
+  }
+
+  // We can't read these parameters, so we set a default config by using the SetParameters wrapper
+  // Note: pn53x_SetParameters() will save the sent value in pnd->ui8Parameters cache
+  if(!pn53x_SetParameters(pnd, PARAM_AUTO_ATR_RES | PARAM_AUTO_RATS)) {
+    return false;
+  }
+
+  return true;
+}
+
 // XXX: Is this function correctly named ?
 bool
 pn53x_transceive_check_ack_frame_callback (nfc_device_t * pnd, const byte_t * pbtRxFrame, const size_t szRxFrameLen)
@@ -203,17 +226,32 @@ pn53x_set_reg (nfc_device_t * pnd, uint16_t ui16Reg, uint8_t ui8SymbolMask, uint
 }
 
 bool
-pn53x_set_parameters (nfc_device_t * pnd, uint8_t ui8Value)
+pn53x_set_parameter (nfc_device_t * pnd, const uint8_t ui8Parameter, const bool bEnable)
+{
+  uint8_t ui8Value = (bEnable) ? (pnd->ui8Parameters | ui8Parameter) : (pnd->ui8Parameters & ~(ui8Parameter));
+  if (ui8Value != pnd->ui8Parameters) {
+    return pn53x_SetParameters(pnd, ui8Value);
+  }
+  return true;
+}
+
+bool
+pn53x_SetParameters (nfc_device_t * pnd, const uint8_t ui8Value)
 {
   byte_t  abtCmd[sizeof (pncmd_set_parameters)];
   memcpy (abtCmd, pncmd_set_parameters, sizeof (pncmd_set_parameters));
 
   abtCmd[2] = ui8Value;
-  return pn53x_transceive (pnd, abtCmd, sizeof (pncmd_set_parameters), NULL, NULL);
+  if(!pn53x_transceive (pnd, abtCmd, sizeof (pncmd_set_parameters), NULL, NULL)) {
+    return false;
+  }
+  // We save last parameters in register cache
+  pnd->ui8Parameters = ui8Value;
+  return true;
 }
 
 bool
-pn53x_set_tx_bits (nfc_device_t * pnd, uint8_t ui8Bits)
+pn53x_set_tx_bits (nfc_device_t * pnd, const uint8_t ui8Bits)
 {
   // Test if we need to update the transmission bits register setting
   if (pnd->ui8TxBits != ui8Bits) {
@@ -228,8 +266,8 @@ pn53x_set_tx_bits (nfc_device_t * pnd, uint8_t ui8Bits)
 }
 
 bool
-pn53x_wrap_frame (const byte_t * pbtTx, const size_t szTxBits, const byte_t * pbtTxPar, byte_t * pbtFrame,
-                  size_t * pszFrameBits)
+pn53x_wrap_frame (const byte_t * pbtTx, const size_t szTxBits, const byte_t * pbtTxPar, 
+                  byte_t * pbtFrame, size_t * pszFrameBits)
 {
   byte_t  btFrame;
   byte_t  btData;
@@ -759,12 +797,7 @@ pn53x_configure (nfc_device_t * pnd, const nfc_device_option_t ndo, const bool b
     break;
 
   case NDO_AUTO_ISO14443_4:
-    // TODO: PN53x parameters could not be read, so we have to buffered current value in order to prevent from configuration overwrite
-    // ATM, buffered current value is not needed due to a single usage of these parameters
-    btValue = (bEnable) ? (SYMBOL_PARAM_fAutomaticRATS | SYMBOL_PARAM_fAutomaticATR_RES) : SYMBOL_PARAM_fAutomaticATR_RES;
-    if (!pn53x_set_parameters (pnd, btValue))
-      return false;
-    return true;
+    return pn53x_set_parameter(pnd, PARAM_AUTO_RATS, bEnable);
     break;
 
   case NDO_FORCE_ISO14443_A:
@@ -958,15 +991,16 @@ pn53x_target_init (nfc_device_t * pnd, const nfc_target_mode_t ntm, const nfc_ta
   bool    bPar = pnd->bPar;
 
   // Configure the target corresponding to the requested mode
+  // XXX I (Romuald) don't think that a good thing to select NDO_EASY_FRAMING here, that's a user choice...
   switch(ntm)
   {
     case NTM_PASSIVE:
-      pn53x_set_parameters(pnd, 0);
+      pn53x_set_parameter(pnd, PARAM_AUTO_ATR_RES, false);
       pn53x_configure(pnd, NDO_EASY_FRAMING, false);
     break;
 
     case NTM_DEP:
-      pn53x_set_parameters(pnd, SYMBOL_PARAM_fAutomaticATR_RES);
+      pn53x_set_parameter(pnd, PARAM_AUTO_ATR_RES, true);
       pn53x_configure(pnd, NDO_EASY_FRAMING, true);
     break;
 
@@ -976,7 +1010,7 @@ pn53x_target_init (nfc_device_t * pnd, const nfc_target_mode_t ntm, const nfc_ta
         pnd->iLastError = DENOTSUP;
         return false;
       }
-      pn53x_set_parameters(pnd, SYMBOL_PARAM_fISO14443_4_PICC);
+      pn53x_set_parameter(pnd, PARAM_14443_4_PICC, true);
       pn53x_configure(pnd, NDO_EASY_FRAMING, true);
     break;
 
