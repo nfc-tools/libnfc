@@ -350,13 +350,9 @@ acr122_firmware (const nfc_device_spec_t nds)
   size_t  szFwLen = sizeof (abtFw);
   memset (abtFw, 0x00, szFwLen);
   if (pas->ioCard.dwProtocol == SCARD_PROTOCOL_UNDEFINED) {
-    uiResult =
-      SCardControl (pas->hCard, IOCTL_CCID_ESCAPE_SCARD_CTL_CODE, abtGetFw, sizeof (abtGetFw), abtFw, szFwLen,
-                    (void *) &szFwLen);
+    uiResult = SCardControl (pas->hCard, IOCTL_CCID_ESCAPE_SCARD_CTL_CODE, abtGetFw, sizeof (abtGetFw), abtFw, szFwLen-1, (void *) &szFwLen);
   } else {
-    uiResult =
-      SCardTransmit (pas->hCard, &(pas->ioCard), abtGetFw, sizeof (abtGetFw), NULL, (byte_t *) abtFw,
-                     (void *) &szFwLen);
+    uiResult = SCardTransmit (pas->hCard, &(pas->ioCard), abtGetFw, sizeof (abtGetFw), NULL, (byte_t *) abtFw, (void *) &szFwLen);
   }
 
 #ifdef DEBUG
