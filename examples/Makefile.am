@@ -8,10 +8,10 @@ bin_PROGRAMS = \
 		nfc-mfultralight \
 		nfc-poll \
 		nfc-relay \
-		nfc-sam \
 		nfcip-initiator \
 		nfcip-target \
 		pn53x-diagnose \
+		pn53x-sam \
 		pn53x-tamashell
 
 # set the include path found by configure
@@ -58,10 +58,6 @@ nfc_emulate_tag_SOURCES = nfc-emulate-tag.c
 nfc_emulate_tag_LDADD = $(top_builddir)/libnfc/libnfc.la \
 			 libnfcutils.la
 
-nfc_sam_SOURCES = nfc-sam.c
-nfc_sam_LDADD = $(top_builddir)/libnfc/libnfc.la \
-		libnfcutils.la
-
 nfcip_target_SOURCES = nfcip-target.c
 nfcip_target_LDADD = $(top_builddir)/libnfc/libnfc.la
 
@@ -72,11 +68,15 @@ pn53x_diagnose_SOURCES = pn53x-diagnose.c
 pn53x_diagnose_LDADD = $(top_builddir)/libnfc/libnfc.la \
 		       libnfcutils.la
 
+pn53x_sam_SOURCES = pn53x-sam.c
+pn53x_sam_LDADD = $(top_builddir)/libnfc/libnfc.la \
+		libnfcutils.la
+
 pn53x_tamashell_SOURCES = pn53x-tamashell.c
 pn53x_tamashell_LDADD = $(top_builddir)/libnfc/libnfc.la \
 		    libnfcutils.la
 pn53x_tamashell_LDFLAGS = @READLINE_LIBS@
 
-dist_man_MANS = nfc-anticol.1 nfc-emulate.1 nfc-list.1 nfc-mfclassic.1 nfc-mfultralight.1 nfc-relay.1 nfc-sam.1
+dist_man_MANS = nfc-anticol.1 nfc-emulate.1 nfc-list.1 nfc-mfclassic.1 nfc-mfultralight.1 nfc-relay.1 pn53x-sam.1
 
 EXTRA_DIST = CMakeLists.txt

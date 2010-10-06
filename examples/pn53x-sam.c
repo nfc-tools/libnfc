@@ -18,7 +18,7 @@
  */
 
 /**
- * @file nfc-sam.c
+ * @file pn53x-sam.c
  * @brief Configure the NFC device to comunicate with a SAM (Secure Access Module).
  */
 
@@ -46,7 +46,6 @@
 #include <nfc/nfc-messages.h>
 #include "nfc-utils.h"
 
-// FIXME Avoid usage of pn53x specific function or change the name from nfc-sam to pn53x-sam
 #include "chips/pn53x.h"
 
 #define MAX_FRAME_LEN 264
@@ -83,7 +82,6 @@ sam_connection (nfc_device_t * pnd, int mode)
     break;
   }
 
-  // FIXME Avoid direct call to pn53x functions
   if (!pn53x_transceive (pnd, pncmd_sam_config, szCmd, abtRx, &szRxLen)) {
     nfc_perror(pnd, "pn53x_transceive");
     ERR ("%s %d", "Unable to execute SAMConfiguration command with mode byte:", mode);
