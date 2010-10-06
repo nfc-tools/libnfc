@@ -463,8 +463,36 @@ pn53x_InListPassiveTarget (nfc_device_t * pnd,
   byte_t  abtCmd[sizeof (pncmd_initiator_list_passive)];
   memcpy (abtCmd, pncmd_initiator_list_passive, sizeof (pncmd_initiator_list_passive));
 
-  // FIXME PN531 doesn't support all available modulations
   abtCmd[2] = szMaxTargets;     // MaxTg
+
+  // XXX Is there is a better way to do this ?
+  switch(nmInitModulation) {
+    case NM_ISO14443A_106:
+    case NM_FELICA_212:
+    case NM_FELICA_424:
+      // all gone fine.
+      break;
+    case NM_ISO14443B_106:
+    case NM_JEWEL_106:
+      if(pnd->nc == NC_PN531) {
+        // These modulations are not supported by pn531
+        pnd->iLastError = DENOTSUP;
+        return false;
+      }
+      break;
+    case NM_ISO14443B_212:
+    case NM_ISO14443B_424:
+    case NM_ISO14443B_847:
+      if(pnd->nc != NC_PN533) {
+        // These modulations are not supported by pn531 neither pn532
+        pnd->iLastError = DENOTSUP;
+        return false;
+      }
+      break;
+    default:
+      pnd->iLastError = DENOTSUP;
+      return false;
+  }
   abtCmd[3] = nmInitModulation; // BrTy, the type of init modulation used for polling a passive tag
 
   // Set the optional initiator data (used for Felica, ISO14443B, Topaz Polling or for ISO14443A selecting a specific UID).

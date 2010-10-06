@@ -162,9 +162,6 @@ typedef enum {
   NDO_FORCE_ISO14443_A = 0x42,
 } nfc_device_option_t;
 
-////////////////////////////////////////////////////////////////////
-// nfc_reader_list_passive - using InListPassiveTarget 
-
 /**
  * @enum nfc_modulation_t
  * @brief NFC modulation
@@ -176,14 +173,20 @@ typedef enum {
   NM_FELICA_212 = 0x01,
 /** JIS X 6319-4 (Sony Felica) http://en.wikipedia.org/wiki/FeliCa */
   NM_FELICA_424 = 0x02,
-/** ISO14443-B http://en.wikipedia.org/wiki/ISO/IEC_14443 */
-  NM_ISO14443B_106 = 0x03,
-/** Jewel Topaz (Innovision Research & Development) */
+/** ISO14443-B http://en.wikipedia.org/wiki/ISO/IEC_14443 (Not supported by PN531) */
+  NM_ISO14443B_106 = 0x03, 
+/** Jewel Topaz (Innovision Research & Development) (Not supported by PN531) */
   NM_JEWEL_106 = 0x04,
+/** ISO14443-B http://en.wikipedia.org/wiki/ISO/IEC_14443 (Not supported by PN531 nor PN532) */
+  NM_ISO14443B_212 = 0x06,
+/** ISO14443-B http://en.wikipedia.org/wiki/ISO/IEC_14443 (Not supported by PN531 nor PN532) */
+  NM_ISO14443B_424 = 0x07,
+/** ISO14443-B http://en.wikipedia.org/wiki/ISO/IEC_14443 (Not supported by PN531 nor PN532) */
+  NM_ISO14443B_847 = 0x08,
 /** Active DEP */
-  NM_ACTIVE_DEP = 0x05,
+  NM_ACTIVE_DEP,
 /** Passive DEP */
-  NM_PASSIVE_DEP = 0x06
+  NM_PASSIVE_DEP
 } nfc_modulation_t;
 
 /**
