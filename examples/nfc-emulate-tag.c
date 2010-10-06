@@ -18,9 +18,13 @@
  */
 
 /**
- * @file nfc-emulate-ndef.c
+ * @file nfc-emulate-tag.c
  * @brief Emulate a tag
  */
+
+// Note that depending on the reader you'll use against this emulator
+// it might work or not. Some readers are very strict on responses
+// timings, e.g. a Nokia NFC and will drop communication too soon for us.
 
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
@@ -43,6 +47,7 @@ static byte_t abtRx[MAX_FRAME_LEN];
 static size_t szRxLen;
 static nfc_device_t *pnd;
 static bool quiet_output = false;
+static bool init_mfc_auth = false;
 
 bool 
 target_io( const nfc_target_t nt, const byte_t * pbtInput, const size_t szInput, byte_t * pbtOutput, size_t *pszOutput )
@@ -57,6 +62,15 @@ target_io( const nfc_target_t nt, const byte_t * pbtInput, const size_t szInput,
   }
   if(szInput) {
     switch(pbtInput[0]) {
+      case 0x60: // Mifare authA
+      case 0x61: // Mifare authB
+        // Let's give back a very random nonce...
+        *pszOutput = 2;
+        pbtOutput[0] = 0x12;
+        pbtOutput[1] = 0x34;
+        // Next commands will be without CRC
+        init_mfc_auth = true;
+        break;
       case 0xe0: // RATS
         // Send ATS
         *pszOutput = nt.nti.nai.szAtsLen + 1;
@@ -107,11 +121,15 @@ nfc_target_emulate_tag(nfc_device_t* pnd, const nfc_target_t nt)
       }
     }
     if ( loop ) {
+      if ( init_mfc_auth ) {
+        nfc_configure (pnd, NDO_HANDLE_CRC, false);
+        init_mfc_auth = false;
+      }
       if (!nfc_target_receive_bytes(pnd, abtRx, &szRxLen)) {
         nfc_perror (pnd, "nfc_target_receive_bytes");
         return false;
       }
-    }    
+    }
   }
   return true;
 }
@@ -135,6 +153,19 @@ main (int argc, char *argv[])
 
   printf ("Connected to NFC device: %s\n", pnd->acName);
   
+/*
+  // Example of a Mifare Classic Mini
+  // Note that crypto1 is not implemented in this example
+  nfc_target_t nt = {
+    .ntt = NTT_MIFARE,
+    .nti.nai.abtAtqa = { 0x00, 0x04 },
+    .nti.nai.abtUid = { 0x08, 0xab, 0xcd, 0xef },
+    .nti.nai.btSak = 0x09,
+    .nti.nai.szUidLen = 4,
+    .nti.nai.szAtsLen = 0,
+  };
+*/
+  // Example of a ISO14443-4 (DESfire)
   nfc_target_t nt = {
     .ntt = NTT_MIFARE,
     .nti.nai.abtAtqa = { 0x03, 0x44 },
