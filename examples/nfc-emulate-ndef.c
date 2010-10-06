@@ -22,6 +22,24 @@
  * @brief Emulate a NFC Forum Tag Type 4 with a NDEF message
  */
 
+// Notes & differences with nfc-emulate-tag:
+// - This example only works with PN532 because it relies on
+//   its internal handling of ISO14443-4 specificities.
+// - Thanks to this internal handling & injection of WTX frames,
+//   this example works on readers very strict on timing
+// - This example expects a hardcoded list of commands and
+//   more precisely the commands sent by a Nokia NFC when
+//   discovering a NFC-Forum tag type4:
+//   * Anticoll & RATS
+//   * App Select by name "e103e103e103"
+//   * App Select by name "e103e103e103"
+//   * App Select by name "D2760000850100"
+//   * Select CC
+//   * ReadBinary CC
+//   * Select NDEF
+//   * Read first 2 NDEF bytes
+//   * Read remaining of NDEF file
+
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif // HAVE_CONFIG_H
