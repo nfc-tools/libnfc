@@ -292,14 +292,13 @@ arygon_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxLe
   return true;
 }
 
-//TODO Use tranceive function instead of raw uart send/receive for communication check.
 bool
 arygon_check_communication (const nfc_device_spec_t nds)
 {
   byte_t  abtRx[BUFFER_LENGTH];
   size_t  szRxLen;
   const byte_t attempted_result[] =
-    { 0x00, 0x00, 0xff, 0x00, 0xff, 0x00, 0x00, 0x00, 0xff, 0x09, 0xf7, 0xD5, 0x01, 0x00, 'l', 'i', 'b', 'n', 'f', 'c',
+    { 0x00, 0x00, 0xff, 0x00, 0xff, 0x00, 0x00, 0x00, 0xff, 0x09, 0xf7, 0xd5, 0x01, 0x00, 'l', 'i', 'b', 'n', 'f', 'c',
 0xbc, 0x00 };
   int     res;
 
