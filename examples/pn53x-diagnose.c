@@ -78,25 +78,18 @@ main (int argc, const char *argv[])
 
     printf ("NFC device [%s] connected.\n", pnd->acName);
 
-    // FIXME: Direct call
-    result =
-      pn53x_transceive (pnd, pncmd_diagnose_communication_line_test, sizeof (pncmd_diagnose_communication_line_test),
-                        abtRx, &szRxLen);
+    result = pn53x_transceive (pnd, pncmd_diagnose_communication_line_test, sizeof (pncmd_diagnose_communication_line_test), abtRx, &szRxLen);
     if (result) {
-      result =
-        (memcmp (pncmd_diagnose_communication_line_test + 2, abtRx, sizeof (pncmd_diagnose_communication_line_test) - 2)
-         == 0);
+      result = (memcmp (pncmd_diagnose_communication_line_test + 2, abtRx, sizeof (pncmd_diagnose_communication_line_test) - 2) == 0);
     }
     printf (" Communication line test: %s\n", result ? "OK" : "Failed");
 
-    // FIXME: Direct call
     result = pn53x_transceive (pnd, pncmd_diagnose_rom_test, sizeof (pncmd_diagnose_rom_test), abtRx, &szRxLen);
     if (result) {
       result = ((szRxLen == 1) && (abtRx[0] == 0x00));
     }
     printf (" ROM test: %s\n", result ? "OK" : "Failed");
 
-    // FIXME: Direct call
     result = pn53x_transceive (pnd, pncmd_diagnose_ram_test, sizeof (pncmd_diagnose_ram_test), abtRx, &szRxLen);
     if (result) {
       result = ((szRxLen == 1) && (abtRx[0] == 0x00));
