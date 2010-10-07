@@ -21,18 +21,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #  include "config.h"
 #endif // HAVE_CONFIG_H
 
-#include <stdio.h>
+#if defined(HAVE_READLINE)
+#  include <stdio.h>
+#  include <readline/readline.h>
+#  include <readline/history.h>
+#else
+#  define _GNU_SOURCE // for getline on system with glibc < 2.10
+#  define _POSIX_C_SOURCE 200809L // for getline on system with glibc >= 2.10
+#  include <stdio.h>
+   extern FILE* stdin;
+#endif //HAVE_READLINE
+
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 #include <unistd.h>
-
-#if defined(HAVE_READLINE)
-#  include <readline/readline.h>
-#  include <readline/history.h>
-#else
-   extern FILE* stdin;
-#endif //HAVE_READLINE
 
 #include <nfc/nfc.h>
 #include <nfc/nfc-messages.h>
@@ -51,7 +54,6 @@ int main(int argc, const char* argv[])
   size_t szRxLen;
   size_t szTxLen;
 
-  nfc_device_desc_t device_desc;
   // Try to open the NFC reader
   pnd = nfc_connect(NULL);
 
@@ -67,7 +69,6 @@ int main(int argc, const char* argv[])
   char * cmd;
   char * prompt="> ";
   while(1) {
-    bool result;
     int offset=0;
 #if defined(HAVE_READLINE)
     cmd=readline(prompt);
@@ -83,14 +84,13 @@ int main(int argc, const char* argv[])
     fflush(0);
     size_t n;
     extern FILE* stdin;
-    //FIXME: getline not in stdio.h ???
     int s = getline(&cmd, &n, stdin);
     if (s <= 0) {
       printf("Bye!\n");
       free(cmd);
       break;
     }
-    //FIXME: print only if read from redirected stdin (i.e. script)
+    // FIXME print only if read from redirected stdin (i.e. script)
     printf("%s", cmd);
 #endif //HAVE_READLINE
     if (cmd[0]=='q') {
@@ -105,7 +105,7 @@ int main(int argc, const char* argv[])
       while (isspace(cmd[offset])) {
         offset++;
       }
-      size = sscanf(cmd+offset, "%2x", &byte);
+      size = sscanf(cmd+offset, "%2x", (unsigned int*)&byte);
       if (size<1) {
         break;
       }

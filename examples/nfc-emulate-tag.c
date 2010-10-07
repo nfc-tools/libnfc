@@ -153,7 +153,6 @@ main (int argc, char *argv[])
 
   printf ("Connected to NFC device: %s\n", pnd->acName);
   
-/*
   // Example of a Mifare Classic Mini
   // Note that crypto1 is not implemented in this example
   nfc_target_t nt = {
@@ -164,7 +163,7 @@ main (int argc, char *argv[])
     .nti.nai.szUidLen = 4,
     .nti.nai.szAtsLen = 0,
   };
-*/
+/*
   // Example of a ISO14443-4 (DESfire)
   nfc_target_t nt = {
     .ntt = NTT_MIFARE,
@@ -175,6 +174,7 @@ main (int argc, char *argv[])
     .nti.nai.abtAts = { 0x75, 0x77, 0x81, 0x02, 0x80 },
     .nti.nai.szAtsLen = 5,
   };
+*/
 
   printf ("%s will emulate this ISO14443-A tag:\n", argv[0]);
   print_nfc_iso14443a_info( nt.nti.nai );
