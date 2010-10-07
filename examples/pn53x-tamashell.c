@@ -125,7 +125,6 @@ int main(int argc, const char* argv[])
     printf("Tx: ");
     print_hex((byte_t*)abtTx+1,szTxLen-1);
 
-    // FIXME: Direct call
     if (!pn53x_transceive (pnd, abtTx, szTxLen, abtRx, &szRxLen)) {
       free(cmd);
       nfc_perror (pnd, "Rx");
