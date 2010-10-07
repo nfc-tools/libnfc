@@ -222,7 +222,7 @@ pn53x_set_reg (nfc_device_t * pnd, uint16_t ui16Reg, uint8_t ui8SymbolMask, uint
     return false;
 
   abtCmd[4] = ui8Value | (ui8Current & (~ui8SymbolMask));
-  return pn53x_transceive (pnd, abtCmd, sizeof (pncmd_set_register), NULL, NULL);
+  return (abtCmd[4] != ui8Current) ? pn53x_transceive (pnd, abtCmd, sizeof (pncmd_set_register), NULL, NULL) : true;
 }
 
 bool
