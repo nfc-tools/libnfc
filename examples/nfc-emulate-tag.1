@@ -1,0 +1,43 @@
+.TH NFC-EMULATE-TAG 1 "October 8, 2010"
+.SH NAME
+nfc-emulate-tag \- Simple tag emulation command line demonstration tool
+.SH SYNOPSIS
+.B nfc-emulate-tag
+.SH DESCRIPTION
+.B nfc-emulate-tag
+is an simple tag emulation tool that demonstrate how emulation can be done
+using libnfc.
+
+Currently, this tool partialy emulates a Mifare Mini: its shown as Mifare Mini
+but internal MIFARE proprietary commands are not yet implemented.
+
+To be able to emulate a target, there are two main parts:
+ - communication: handle modulation, anticollision, etc.
+ - computation: process commands (input) and produce results (output).
+
+This demonstration tool purpose a logical structure to handle communication and
+a simple function to deal with computation.
+
+To improve the target capabilities, we can now implement more allowed commands
+in a single function: target_io()
+
+Please note that, due to timing issues is quiet impossible to implement a
+ISO14443-4 tag this way: RATS request expect a quick ATS answer. By the way,
+even you implements another kind of tag, timing issues are often the source of
+problems like CRC or parity errors.
+
+.SH BUGS
+Please report any bugs on the
+.B libnfc
+forum at
+.BR http://www.libnfc.org/community/ "."
+.SH LICENCE
+.B libnfc
+and
+.B libnfc-examples
+are covered by the GNU Lesser General Public License (LGPL), version 3.
+.SH AUTHORS
+Romuald Conty <romuald@libnfc.org>
+.PP
+This manual page was written by Romuald Conty <romuald@libnfc.org>.
+It is licensed under the terms of the GNU GPL (version 2 or later).

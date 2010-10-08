@@ -79,6 +79,7 @@ pn53x_tamashell_LDFLAGS = @READLINE_LIBS@
 
 dist_man_MANS = \
 		nfc-anticol.1 \
+		nfc-emulate-tag.1 \
 		nfc-emulate-uid.1 \
 		nfc-list.1 \
 		nfc-mfclassic.1 \

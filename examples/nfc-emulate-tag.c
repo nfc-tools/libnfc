@@ -19,11 +19,11 @@
 
 /**
  * @file nfc-emulate-tag.c
- * @brief Emulate a tag
+ * @brief Emulate a simple tag
  */
 
-// Note that depending on the reader you'll use against this emulator
-// it might work or not. Some readers are very strict on responses
+// Note that depending on the device (initiator) you'll use against this
+// emulator it might work or not. Some readers are very strict on responses
 // timings, e.g. a Nokia NFC and will drop communication too soon for us.
 
 #ifdef HAVE_CONFIG_H
@@ -182,7 +182,6 @@ main (int argc, char *argv[])
   printf ("NFC device (configured as target) is now emulating the tag, please touch it with a second NFC device (initiator)\n");
   if (!nfc_target_emulate_tag (pnd, nt)) {
     nfc_perror (pnd, "nfc_target_emulate_tag");
-    ERR("Could not come out of auto-emulation, no command was received");
     return EXIT_FAILURE;
   }
 
