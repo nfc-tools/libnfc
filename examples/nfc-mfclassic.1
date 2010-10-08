@@ -24,6 +24,9 @@ and its ease-of-use. It's possible to read and write the complete content of a
 Mifare Classic 4KB tag within 1 second. It uses a binary Mifare Dump file (MFD)
 to store the keys and data for all sectors.
 
+Be cautious that some parts of a Mifare Classic memory are used for r/w access
+of the rest of the memory, so please read the tag documentation before experimenting too much!
+
 .SH OPTIONS
 .BR r " | " w
 Perform read from (

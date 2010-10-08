@@ -1,15 +1,18 @@
 .TH PN53X-SAM 1 "June 15, 2010"
 .SH NAME
-pn53x-sam \- PN53x SAM comunication demonstration tool
+pn53x-sam \- PN53x SAM communication demonstration tool
 .SH SYNOPSIS
 .B pn53x-sam
 .SH DESCRIPTION
 .B pn53x-sam
-is a utility attempts to test a simple connection with a SAM (Secure Access
+is a utility attempt to test a simple connection with a SAM (Secure Access
 Module) in several modes.
 
 To run this utility you must have a SAM (like the NXP's P5CN072 chip)
 successfully connected to your PN53x chip.
+
+Warning: the SAM inside the Touchatag is \fInot\fP hooked to the PN532
+but to the intermediate controller so \fBpn53x-sam\fP won't work with a Touchatag.
 
 .SH BUGS
 Please report any bugs on the

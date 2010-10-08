@@ -5,7 +5,7 @@ nfc-relay \- Relay attack command line tool based on libnfc
 .B nfc-relay
 .SH DESCRIPTION
 .B nfc-relay
-is an utility that demonstrates an relay attack.
+is a utility that demonstrates a relay attack.
 
 This tool requires two NFC devices. One device (configured as target) will
 emulate an ISO/IEC 14443 type A tag, while the second device (configured as
@@ -13,6 +13,9 @@ initiator) will act as a reader. The genuine tag can be placed on the second
 device (initiator) and the tag emulator (target) can be placed close to the
 original reader. All communication is now relayed and shown in the screen on
 real-time.
+
+This tool has the same issues regarding timing as \fBnfc-emulate-uid\fP has,
+therefore we advise you to try it against e.g. an OmniKey CardMan 5321 reader.
 
 .SH BUGS
 Please report any bugs on the

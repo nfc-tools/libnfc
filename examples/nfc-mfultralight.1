@@ -8,12 +8,17 @@ nfc-mfultralight \- MIFARE Ultralight command line tool
 
 .SH DESCRIPTION
 .B nfc-mfultralight
-is a MIFARE Ultralight tool that allow to read or write
+is a MIFARE Ultralight tool that allows to read or write
+a tag data to/from a
 .IR DUMP
 file.
 
 MIFARE Ultralight tag is one of the most widely used RFID tags for ticketing application.
 It uses a binary Mifare Dump file (MFD) to store data for all sectors.
+
+Be cautious that some parts of a Ultralight memory can be written only once
+and some parts are used as lock bits, so please read the tag documentation
+before experimenting too much!
 
 .SH OPTIONS
 .BR r " | " w
