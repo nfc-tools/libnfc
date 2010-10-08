@@ -2,6 +2,7 @@
  * Public platform independent Near Field Communication (NFC) library
  * 
  * Copyright (C) 2009, Roel Verdult
+ * Copyright (C) 2010, Romuald Conty
  * 
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -18,7 +19,7 @@
  */
 
 /**
- * @file nfcip-initiator.c
+ * @file nfc-dep-initiator.c
  * @brief Turns the NFC device into a D.E.P. initiator (see NFCIP-1)
  */
 

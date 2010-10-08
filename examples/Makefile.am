@@ -1,5 +1,7 @@
 bin_PROGRAMS = \
 		nfc-anticol \
+		nfc-dep-initiator \
+		nfc-dep-target \
 		nfc-emulate-forum-tag4 \
 		nfc-emulate-tag \
 		nfc-emulate-uid \
@@ -8,8 +10,6 @@ bin_PROGRAMS = \
 		nfc-mfultralight \
 		nfc-poll \
 		nfc-relay \
-		nfcip-initiator \
-		nfcip-target \
 		pn53x-diagnose \
 		pn53x-sam \
 		pn53x-tamashell
@@ -58,12 +58,12 @@ nfc_emulate_uid_SOURCES = nfc-emulate-uid.c
 nfc_emulate_uid_LDADD = $(top_builddir)/libnfc/libnfc.la \
 		        libnfcutils.la
 
-nfcip_target_SOURCES = nfcip-target.c
-nfcip_target_LDADD = $(top_builddir)/libnfc/libnfc.la \
+nfc_dep_target_SOURCES = nfc-dep-target.c
+nfc_dep_target_LDADD = $(top_builddir)/libnfc/libnfc.la \
 		     libnfcutils.la
 
-nfcip_initiator_SOURCES = nfcip-initiator.c
-nfcip_initiator_LDADD = $(top_builddir)/libnfc/libnfc.la \
+nfc_dep_initiator_SOURCES = nfc-dep-initiator.c
+nfc_dep_initiator_LDADD = $(top_builddir)/libnfc/libnfc.la \
 			libnfcutils.la
 
 pn53x_diagnose_SOURCES = pn53x-diagnose.c
@@ -81,6 +81,8 @@ pn53x_tamashell_LDFLAGS = @READLINE_LIBS@
 
 dist_man_MANS = \
 		nfc-anticol.1 \
+		nfc-dep-initiator.1 \
+		nfc-dep-target.1 \
 		nfc-emulate-forum-tag4.1 \
 		nfc-emulate-tag.1 \
 		nfc-emulate-uid.1 \

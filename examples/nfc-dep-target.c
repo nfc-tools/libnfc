@@ -2,6 +2,7 @@
  * Public platform independent Near Field Communication (NFC) library
  * 
  * Copyright (C) 2009, Roel Verdult
+ * Copyright (C) 2009, Romuald Conty
  * 
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -18,7 +19,7 @@
  */
 
 /**
- * @file nfcip-target.c
+ * @file nfc-dep-target.c
  * @brief Turns the NFC device into a D.E.P. target (see NFCIP-1)
  */
 
@@ -44,9 +45,9 @@ main (int argc, const char *argv[])
   #define MAX_DEVICE_COUNT 2
   nfc_device_desc_t pnddDevices[MAX_DEVICE_COUNT];
   nfc_list_devices (pnddDevices, MAX_DEVICE_COUNT, &szDeviceFound);
-  // Little hack to allow using nfcip-initiator & nfcip-target from
+  // Little hack to allow using nfc-dep-initiator & nfc-dep-target from
   // the same machine: if there is more than one readers connected
-  // nfcip-target will connect to the second reader
+  // nfc-dep-target will connect to the second reader
   // (we hope they're always detected in the same order)
   if (szDeviceFound == 1) {
     pnd = nfc_connect (&(pnddDevices[0]));
