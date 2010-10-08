@@ -1,6 +1,6 @@
 bin_PROGRAMS = \
 		nfc-anticol \
-		nfc-emulate-ndef \
+		nfc-emulate-forum-tag4 \
 		nfc-emulate-tag \
 		nfc-emulate-uid \
 		nfc-list \
@@ -46,9 +46,9 @@ nfc_relay_SOURCES = nfc-relay.c
 nfc_relay_LDADD = $(top_builddir)/libnfc/libnfc.la \
 		  libnfcutils.la
 
-nfc_emulate_ndef_SOURCES = nfc-emulate-ndef.c
-nfc_emulate_ndef_LDADD = $(top_builddir)/libnfc/libnfc.la \
-			 libnfcutils.la
+nfc_emulate_forum_tag4_SOURCES = nfc-emulate-forum-tag4.c
+nfc_emulate_forum_tag4_LDADD = $(top_builddir)/libnfc/libnfc.la \
+			       libnfcutils.la
 
 nfc_emulate_tag_SOURCES = nfc-emulate-tag.c
 nfc_emulate_tag_LDADD = $(top_builddir)/libnfc/libnfc.la \
@@ -79,6 +79,7 @@ pn53x_tamashell_LDFLAGS = @READLINE_LIBS@
 
 dist_man_MANS = \
 		nfc-anticol.1 \
+		nfc-emulate-forum-tag4.1 \
 		nfc-emulate-tag.1 \
 		nfc-emulate-uid.1 \
 		nfc-list.1 \

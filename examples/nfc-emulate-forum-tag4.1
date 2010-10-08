@@ -1,0 +1,34 @@
+.TH NFC-EMULATE-FORUM-TAG4 1 "October 8, 2010"
+.SH NAME
+nfc-emulate-forum-tag4 \- NFC Forum tag type 4 emulation command line demonstration tool
+.SH SYNOPSIS
+.B nfc-emulate-forum-tag4
+.SH DESCRIPTION
+.B nfc-emulate-forum-tag4
+is an demonstration tool that emulate a NFC Forum tag type 4 with NDEF content.
+
+Currently, this tool only works with a Nokia 6212 Classic phone as initiator
+and a PN532 equipped NFC device as target.
+
+This example use the hardware capability of PN532 to handle ISO/IEC 14443-4
+low-level frames like RATS/ATS, WTX, etc.
+
+At the moment, only the Nokia 6212 Classic can be used with this example
+because its based on a pre-established communication plan: example send the
+expected replies to the initiator without interprete queries.
+
+.SH BUGS
+Please report any bugs on the
+.B libnfc
+forum at
+.BR http://www.libnfc.org/community/ "."
+.SH LICENCE
+.B libnfc
+and
+.B libnfc-examples
+are covered by the GNU Lesser General Public License (LGPL), version 3.
+.SH AUTHORS
+Roel Verduly <roel@libnfc.org>
+.PP
+This manual page was written by Romuald Conty <romuald@libnfc.org>.
+It is licensed under the terms of the GNU GPL (version 2 or later).
