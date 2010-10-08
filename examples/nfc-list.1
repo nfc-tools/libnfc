@@ -7,6 +7,9 @@ nfc-list \- List NFC targets
 .B nfc-list
 is a utility for listing any available targets like ISO14443-A, FeliCa, Jewel
 or ISO14443-B (according to the device capabilities).
+It may detect several tags at once thanks to a mechanism called anti-collision
+but all types of tags don't support anti-collision and there is some physical
+limitation of the number of tags the reader can discover.
 
 This tool displays all available information at selection time.
 

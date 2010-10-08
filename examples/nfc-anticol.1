@@ -1,6 +1,6 @@
 .TH NFC-ANTICOL 1 "June 26, 2009"
 .SH NAME
-nfc-anticol \- Demonstration NFC anti-collison command line tool based on libnfc
+nfc-anticol \- Demonstration of NFC anti-collision command line tool based on libnfc
 .SH SYNOPSIS
 .B nfc-anticol
 .SH DESCRIPTION
@@ -14,6 +14,9 @@ software and should hope it does not contain vulnerabilities during the
 anti-collision phase.  Performing the anti-collision using custom frames could
 protect against a malicious tag that, for example, violates the standard by
 sending frames with unsupported lengths.
+Note that this is only a demonstration tool, which can not handle multiple tags
+as real life anti-collisions with multiple tags generate "messy" bits which
+are neither 0 nor 1.
 
 .SH BUGS
 Please report any bugs on the

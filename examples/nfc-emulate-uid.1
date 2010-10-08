@@ -7,20 +7,37 @@ nfc-emulate-uid \- NFC target emulation command line tool based on libnfc
 .RI [ UID ]
 .SH DESCRIPTION
 .B nfc-emulate-uid
-is an tag emulation tool that allow to choose tag UID. Tag emulation is one of
-the main added features in NFC. To avoid abuse of existing systems,
+is a tag emulation tool that allows to choose any tag UID. Tag emulation is one
+of the main added features in NFC. But to avoid abuse of existing systems,
 manufacturers of the NFC controller intentionally did not support emulation of
-fully customized UID. The nfc-emulate-uid tool demonstrates that this can still
-be done using transmission of raw-frames, and the desired UID can be optionally
-specified.
-
-Fast communication is necessary to respond in time during the anti-collision
-protocol. Using the ACR122 device gives many timing issues, "PN53x only" USB
-devices also give some timing issues but an embedded microprocessor could be
-fast enough to emulate a tag with any UID.
+fully customized UID but only of "random" UIDs, which always start with 0x08.
+The nfc-emulate-uid tool demonstrates that this can still be done using
+transmission of raw frames, and the desired UID can be optionally specified.
 
 This makes it a serious thread for security systems that rely only on the
 uniqueness of the UID.
+
+Unfortunately, this example can't directly start in fully customisable
+target mode. Just after launching this example, you will have to go through
+the hardcoded initial anti-collision with the 0x08-prefixed UID.
+To achieve it, you can e.g. send a RATS (Request for Answer To Select) command
+by using a second NFC device (placed in target's field) and launching nfc-list 
+or nfc-anticol. After this first step, you now have a NFC device (configured
+as target) that really emulates a custom UID.
+You could view it using the second NFC device with nfc-list.
+
+Timing control is very important for a successful anti-collision sequence:
+
+- The emulator must be very fast to react:
+Using the ACR122 device gives many timing issues, "PN53x only" USB
+devices also give some timing issues but an embedded microprocessor
+would probably improve greatly the situation.
+
+- The reader should not be too strict on timing (the standard is very
+strict). The OmniKey CardMan 5321 is known to be very large on
+timings and is a good choice if you want to experiment with this
+emulator with a tolerant reader.
+Nokia NFC 6212 and Pegoda readers are much too strict and won't be fooled.
 
 .SH OPTIONS
 .IR UID

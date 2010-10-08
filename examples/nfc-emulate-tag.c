@@ -22,7 +22,7 @@
  * @brief Emulate a simple tag
  */
 
-// Note that depending on the device (initiator) you'll use against this
+// Note that depending on the device (initiator) you'll use against, this
 // emulator it might work or not. Some readers are very strict on responses
 // timings, e.g. a Nokia NFC and will drop communication too soon for us.
 

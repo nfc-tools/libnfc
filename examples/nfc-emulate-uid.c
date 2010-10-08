@@ -21,19 +21,11 @@
  * @file nfc-emulate-uid.c
  * @brief This example can be used to emulate a tag which which have a "really" custom UID
  * 
- * NFC devices are able to emulate passive tags but manufacters restricts the
- * customization of UID. With PN53x, UID is only 4 bytes long and the first
- * byte of emulated UID is hardwarely set to 0x08.  This example show how to
- * emulate a full customized UID by "manually" replying to anticollision
- * process sent by the initiator.
- *
- * @note Unfortunately, this example can't directly start in fully customisable
- * target mode. Just after launching this example, you will have to unlock an
- * hardware situation by sending a RATS (Request for Answer To Select) command.
- * To do this, you can use a second NFC device (placed in target's field) and
- * launch nfc-list or nfc-anticol. After this first step, you now have a NFC
- * device (configured as target) that really emulate custom UID. You could view
- * it using the second NFC device with nfc-list.
+ * NFC devices are able to emulate passive tags but manufacturers restrict the
+ * customization of UID. With PN53x, UID is only 4-byte long and the first
+ * byte of emulated UID is hard-wired to 0x08 which is the standard way to say
+ * this is a random UID.  This example shows how to emulate a fully customized
+ * UID by "manually" replying to anti-collision process sent by the initiator.
  */
 
 #ifdef HAVE_CONFIG_H
