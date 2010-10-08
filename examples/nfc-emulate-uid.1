@@ -1,0 +1,43 @@
+.TH NFC-EMULATE-UID 1 "June 26, 2009"
+.SH NAME
+nfc-emulate-uid \- NFC target emulation command line tool based on libnfc
+.SH SYNOPSIS
+.B nfc-emulate-uid
+.RI [ OPTIONS ]
+.RI [ UID ]
+.SH DESCRIPTION
+.B nfc-emulate-uid
+is an tag emulation tool that allow to choose tag UID. Tag emulation is one of
+the main added features in NFC. To avoid abuse of existing systems,
+manufacturers of the NFC controller intentionally did not support emulation of
+fully customized UID. The nfc-emulate-uid tool demonstrates that this can still
+be done using transmission of raw-frames, and the desired UID can be optionally
+specified.
+
+Fast communication is necessary to respond in time during the anti-collision
+protocol. Using the ACR122 device gives many timing issues, "PN53x only" USB
+devices also give some timing issues but an embedded microprocessor could be
+fast enough to emulate a tag with any UID.
+
+This makes it a serious thread for security systems that rely only on the
+uniqueness of the UID.
+
+.SH OPTIONS
+.IR UID
+8 hex digits format that represents desired UID (default is DEADBEAF).
+
+.SH BUGS
+Please report any bugs on the
+.B libnfc
+forum at
+.BR http://www.libnfc.org/community/ "."
+.SH LICENCE
+.B libnfc
+and
+.B libnfc-examples
+are covered by the GNU Lesser General Public License (LGPL), version 3.
+.SH AUTHORS
+Roel Verdult <roel@libnfc.org>
+.PP
+This manual page was written by Romuald Conty <romuald@libnfc.org>.
+It is licensed under the terms of the GNU GPL (version 2 or later).

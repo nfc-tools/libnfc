@@ -18,8 +18,22 @@
  */
 
 /**
- * @file nfc-emulate.c
+ * @file nfc-emulate-uid.c
  * @brief This example can be used to emulate a tag which which have a "really" custom UID
+ * 
+ * NFC devices are able to emulate passive tags but manufacters restricts the
+ * customization of UID. With PN53x, UID is only 4 bytes long and the first
+ * byte of emulated UID is hardwarely set to 0x08.  This example show how to
+ * emulate a full customized UID by "manually" replying to anticollision
+ * process sent by the initiator.
+ *
+ * @note Unfortunately, this example can't directly start in fully customisable
+ * target mode. Just after launching this example, you will have to unlock an
+ * hardware situation by sending a RATS (Request for Answer To Select) command.
+ * To do this, you can use a second NFC device (placed in target's field) and
+ * launch nfc-list or nfc-anticol. After this first step, you now have a NFC
+ * device (configured as target) that really emulate custom UID. You could view
+ * it using the second NFC device with nfc-list.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -54,7 +68,7 @@ print_usage (char *argv[])
   printf ("Usage: %s [OPTIONS] [UID]\n", argv[0]);
   printf ("Options:\n");
   printf ("\t-h\tHelp. Print this message.\n");
-  printf ("\t-q\tQuiet mode. Suppress output of READER and EMULATOR data (improves timing).\n");
+  printf ("\t-q\tQuiet mode. Silent output: received and sent frames will not be shown (improves timing).\n");
   printf ("\n");
   printf ("\t[UID]\tUID to emulate, specified as 8 HEX digits (default is DEADBEAF).\n");
 }
@@ -73,9 +87,9 @@ main (int argc, char *argv[])
   for (arg = 1; arg < argc; arg++) {
     if (0 == strcmp (argv[arg], "-h")) {
       print_usage (argv);
-      return 0;
+      exit(EXIT_SUCCESS);
     } else if (0 == strcmp (argv[arg], "-q")) {
-      INFO ("%s", "Quiet mode.");
+      printf ("Quiet mode.\n");
       quiet_output = true;
     } else if ((arg == argc - 1) && (strlen (argv[arg]) == 8)) {        // See if UID was specified as HEX string
       byte_t  abtTmp[3] = { 0x00, 0x00, 0x00 };
@@ -89,23 +103,23 @@ main (int argc, char *argv[])
     } else {
       ERR ("%s is not supported option.", argv[arg]);
       print_usage (argv);
-      return -1;
+      exit(EXIT_FAILURE);
     }
   }
 
-  // Try to open the NFC reader
+  // Try to open the NFC device
   pnd = nfc_connect (NULL);
 
   if (pnd == NULL) {
-    printf ("Error connecting NFC reader\n");
-    return 1;
+    printf ("Unable to connect to NFC device\n");
+    exit(EXIT_FAILURE);
   }
 
   printf ("\n");
-  printf ("[+] Connected to NFC reader: %s\n", pnd->acName);
-  printf ("[+] Try to break out the auto-emulation, this requires a second reader!\n");
+  printf ("Connected to NFC device: %s\n", pnd->acName);
+  printf ("[+] Try to break out the auto-emulation, this requires a second NFC device!\n");
   printf ("[+] To do this, please send any command after the anti-collision\n");
-  printf ("[+] For example, send a RATS command or use the \"nfc-anticol\" tool\n");
+  printf ("[+] For example, send a RATS command or use the \"nfc-anticol\" or \"nfc-list\" tool.\n");
 
   // Note: We have to build a "fake" nfc_target_t in order to do exactly the same that was done before the new nfc_target_init() was introduced.
   nfc_target_t nt = {
@@ -117,8 +131,8 @@ main (int argc, char *argv[])
     .nti.nai.szAtsLen = 0,
   };
   if (!nfc_target_init (pnd, NTM_PASSIVE, nt, abtRecv, &szRecvBits)) {
-    printf ("Error: Could not come out of auto-emulation, no command was received\n");
-    return 1;
+    ERR ("Could not come out of auto-emulation, no command was received");
+    exit(EXIT_FAILURE);
   }
   printf ("[+] Received initiator command: ");
   print_hex_bits (abtRecv, szRecvBits);
