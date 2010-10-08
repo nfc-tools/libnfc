@@ -19,15 +19,15 @@
 
 /**
  * @file nfcip-initiator.c
- * @brief
+ * @brief Turns the NFC device into a D.E.P. initiator (see NFCIP-1)
  */
 
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif // HAVE_CONFIG_H
 
-#include <err.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <nfc/nfc.h>
 
@@ -38,31 +38,41 @@ main (int argc, const char *argv[])
 {
   nfc_device_t *pnd;
   nfc_target_info_t ti;
-  byte_t  abtRecv[MAX_FRAME_LEN];
-  size_t  szRecvBits;
+  byte_t  abtRx[MAX_FRAME_LEN];
+  size_t  szRx;
   byte_t  send[] = "Hello World!";
 
   if (argc > 1) {
-    errx (1, "usage: %s", argv[0]);
+    printf ("Usage: %s\n", argv[0]);
+    return EXIT_FAILURE;
   }
 
   pnd = nfc_connect (NULL);
-  if (!pnd || !nfc_initiator_init (pnd)
-      || !nfc_initiator_select_dep_target (pnd, NM_PASSIVE_DEP, NULL, 0, NULL, 0, NULL, 0, &ti)) {
-    printf ("unable to connect, initialize, or select the target\n");
-    return 1;
+  if (!pnd) {
+    printf("Unable to connect to NFC device.\n");
+    return EXIT_FAILURE;
   }
 
-  printf ("Sending : %s\n", send);
-  if (!nfc_initiator_transceive_bytes (pnd, send, strlen ((char *) send), abtRecv, &szRecvBits)) {
-    printf ("unable to send data\n");
-    return 1;
+  if (!nfc_initiator_init (pnd)) {
+    nfc_perror(pnd, "nfc_initiator_init");
+    return EXIT_FAILURE;
   }
 
-  abtRecv[szRecvBits] = 0;
-  printf ("Received: %s\n", abtRecv);
+  if(!nfc_initiator_select_dep_target (pnd, NM_PASSIVE_DEP, NULL, 0, NULL, 0, NULL, 0, &ti)) {
+    nfc_perror(pnd, "nfc_initiator_select_dep_target");
+    return EXIT_FAILURE;
+  }
+
+  printf ("Sending: %s\n", send);
+  if (!nfc_initiator_transceive_bytes (pnd, send, strlen ((char *) send), abtRx, &szRx)) {
+    nfc_perror(pnd, "nfc_initiator_transceive_bytes");
+    return EXIT_FAILURE;
+  }
+
+  abtRx[szRx] = 0;
+  printf ("Received: %s\n", abtRx);
 
   nfc_initiator_deselect_target (pnd);
   nfc_disconnect (pnd);
-  return 0;
+  return EXIT_SUCCESS;
 }
