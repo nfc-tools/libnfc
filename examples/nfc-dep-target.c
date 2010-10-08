@@ -32,6 +32,8 @@
 
 #include <nfc/nfc.h>
 
+#include "nfc-utils.h"
+
 #define MAX_FRAME_LEN 264
 
 int
@@ -63,14 +65,17 @@ main (int argc, const char *argv[])
     return EXIT_FAILURE;
   }
 
-  // Note: We have to build a "fake" nfc_target_t in order to do exactly the same that was done before the new nfc_target_init() was introduced.
-  nfc_target_t nt = {
-    .ntt = NTT_GENERIC_PASSIVE_106,
-    .nti.nai.abtAtqa = "\x04\x00",
-    .nti.nai.abtUid = "\xde\xad\xbe\xaf\x62",
-    .nti.nai.btSak = 0x20,
-    .nti.nai.szUidLen = 5,
-    .nti.nai.szAtsLen = 0,
+  const nfc_target_t nt = {
+    .ntt = NTT_DEP_PASSIVE_106,
+    .nti.ndi.abtNFCID3 = { 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xff, 0x00, 0x00 },
+    .nti.ndi.szGB = 4,
+    .nti.ndi.abtGB = { 0x12, 0x34, 0x56, 0x78 },
+    /* These bytes are not used by nfc_target_init: the chip will provide them automatically to the initiator */
+    .nti.ndi.btDID = 0x00,
+    .nti.ndi.btBS = 0x00,
+    .nti.ndi.btBR = 0x00,
+    .nti.ndi.btTO = 0x00,
+    .nti.ndi.btPP = 0x01,
   };
 
   if (!pnd) {
@@ -79,6 +84,8 @@ main (int argc, const char *argv[])
   }
   printf ("Connected to NFC device: %s\n", pnd->acName);
 
+  printf ("NFC device will now act as this D.E.P. target:\n");
+  print_nfc_dep_info ( nt.nti.ndi );
   printf ("Waiting for initiator request...\n");
   if(!nfc_target_init (pnd, NTM_DEP, nt, abtRx, &szRx)) {
     nfc_perror(pnd, "nfc_target_init");

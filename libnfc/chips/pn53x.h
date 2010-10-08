@@ -144,8 +144,10 @@ bool    pn53x_InRelease (nfc_device_t * pnd, const uint8_t ui8Target);
 bool    pn53x_InAutoPoll (nfc_device_t * pnd, const nfc_target_type_t * pnttTargetTypes, const size_t szTargetTypes,
                           const byte_t btPollNr, const byte_t btPeriod, nfc_target_t * pntTargets,
                           size_t * pszTargetFound);
-bool	pn53x_TgInitAsTarget (nfc_device_t * pnd, nfc_target_mode_t ntm, 
-                              const byte_t * pbtMifareParams, const byte_t * pbtFeliCaParams, const byte_t * pbtNFCID3t, 
+bool	pn53x_TgInitAsTarget (nfc_device_t * pnd, nfc_target_mode_t ntm,
+                              const byte_t * pbtMifareParams,
+                              const byte_t * pbtFeliCaParams,
+                              const byte_t * pbtNFCID3t, const byte_t * pbtGB, const size_t szGB,
                               byte_t * pbtRx, size_t * pszRxLen);
 
 

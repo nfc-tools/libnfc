@@ -1040,6 +1040,10 @@ pn53x_target_init (nfc_device_t * pnd, const nfc_target_mode_t ntm, const nfc_ta
   byte_t abtMifareParams[6];
   byte_t * pbtMifareParams = NULL;
 
+  const byte_t * pbtNFCID3t = NULL;
+  const byte_t * pbtGB = NULL;
+  size_t szGB = 0;
+
   switch(nt.ntt) {
     case NTT_MIFARE:
     case NTT_GENERIC_PASSIVE_106:
@@ -1058,9 +1062,16 @@ pn53x_target_init (nfc_device_t * pnd, const nfc_target_mode_t ntm, const nfc_ta
       pbtMifareParams = abtMifareParams;
     }
     break;
+    case NTT_DEP_PASSIVE_106:
+    case NTT_DEP_PASSIVE_212:
+    case NTT_DEP_PASSIVE_424:
+      pbtNFCID3t = nt.nti.ndi.abtNFCID3;
+      szGB = nt.nti.ndi.szGB;
+      if (szGB) pbtGB = nt.nti.ndi.abtGB;
+    break;
   }
 
-  if(!pn53x_TgInitAsTarget(pnd, ntm, pbtMifareParams, NULL, NULL, pbtRx, pszRxLen)) {
+  if(!pn53x_TgInitAsTarget(pnd, ntm, pbtMifareParams, NULL, pbtNFCID3t, pbtGB, szGB, pbtRx, pszRxLen)) {
     return false;
   }
 
@@ -1075,12 +1086,15 @@ pn53x_target_init (nfc_device_t * pnd, const nfc_target_mode_t ntm, const nfc_ta
 
 bool
 pn53x_TgInitAsTarget (nfc_device_t * pnd, nfc_target_mode_t ntm, 
-                      const byte_t * pbtMifareParams, const byte_t * pbtFeliCaParams, const byte_t * pbtNFCID3t, 
+                      const byte_t * pbtMifareParams,
+                      const byte_t * pbtFeliCaParams,
+                      const byte_t * pbtNFCID3t, const byte_t * pbtGB, const size_t szGB,
                       byte_t * pbtRx, size_t * pszRxLen)
 {
   byte_t  abtRx[MAX_FRAME_LEN];
   size_t  szRxLen;
-  byte_t  abtCmd[sizeof (pncmd_target_init)];
+  byte_t  abtCmd[sizeof (pncmd_target_init) + 48]; // 47 bytes max. for General Bytes and 1 for GB lenght
+  size_t  szOptionalBytes = 0;
 
   memcpy (abtCmd, pncmd_target_init, sizeof (pncmd_target_init));
 
@@ -1099,11 +1113,21 @@ pn53x_TgInitAsTarget (nfc_device_t * pnd, nfc_target_mode_t ntm,
   if (pbtNFCID3t) {
     memcpy(abtCmd+27, pbtNFCID3t, 10);
   }
-  // TODO Handle General bytes and Tk (Historical bytes) length
+  if (szGB) {
+    if( pnd->nc == NC_PN531 ) {
+      memcpy (abtCmd+37, pbtGB, szGB);
+      szOptionalBytes = szGB;
+    } else {
+      abtCmd[37] = (byte_t)(szGB);
+      memcpy (abtCmd+38, pbtGB, szGB);
+      szOptionalBytes = szGB + 1;
+    }
+  }
+  // TODO Handle Tk (Historical bytes) length (only available on PN532, PN533)
 
   // Request the initialization as a target
   szRxLen = MAX_FRAME_LEN;
-  if (!pn53x_transceive (pnd, abtCmd, sizeof (pncmd_target_init), abtRx, &szRxLen))
+  if (!pn53x_transceive (pnd, abtCmd, sizeof (pncmd_target_init) + szOptionalBytes, abtRx, &szRxLen))
     return false;
 
   // Note: the first byte is skip: 
