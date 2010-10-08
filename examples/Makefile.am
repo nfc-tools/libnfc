@@ -59,10 +59,12 @@ nfc_emulate_uid_LDADD = $(top_builddir)/libnfc/libnfc.la \
 		        libnfcutils.la
 
 nfcip_target_SOURCES = nfcip-target.c
-nfcip_target_LDADD = $(top_builddir)/libnfc/libnfc.la
+nfcip_target_LDADD = $(top_builddir)/libnfc/libnfc.la \
+		     libnfcutils.la
 
 nfcip_initiator_SOURCES = nfcip-initiator.c
-nfcip_initiator_LDADD = $(top_builddir)/libnfc/libnfc.la
+nfcip_initiator_LDADD = $(top_builddir)/libnfc/libnfc.la \
+			libnfcutils.la
 
 pn53x_diagnose_SOURCES = pn53x-diagnose.c
 pn53x_diagnose_LDADD = $(top_builddir)/libnfc/libnfc.la \

@@ -29,7 +29,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include <nfc/nfc.h>
+
+#include "nfc-utils.h"
 
 #define MAX_FRAME_LEN 264
 
@@ -37,10 +40,10 @@ int
 main (int argc, const char *argv[])
 {
   nfc_device_t *pnd;
-  nfc_target_info_t ti;
+  nfc_target_info_t nti;
   byte_t  abtRx[MAX_FRAME_LEN];
   size_t  szRx;
-  byte_t  send[] = "Hello World!";
+  byte_t  abtTx[] = "Hello World!";
 
   if (argc > 1) {
     printf ("Usage: %s\n", argv[0]);
@@ -58,13 +61,15 @@ main (int argc, const char *argv[])
     return EXIT_FAILURE;
   }
 
-  if(!nfc_initiator_select_dep_target (pnd, NM_PASSIVE_DEP, NULL, 0, NULL, 0, NULL, 0, &ti)) {
+  if(!nfc_initiator_select_dep_target (pnd, NM_PASSIVE_DEP, NULL, 0, NULL, 0, NULL, 0, &nti)) {
     nfc_perror(pnd, "nfc_initiator_select_dep_target");
     return EXIT_FAILURE;
   }
+  printf( "This D.E.P. target have been found:\n" );
+  print_nfc_dep_info (nti.ndi);
 
-  printf ("Sending: %s\n", send);
-  if (!nfc_initiator_transceive_bytes (pnd, send, strlen ((char *) send), abtRx, &szRx)) {
+  printf ("Sending: %s\n", abtTx);
+  if (!nfc_initiator_transceive_bytes (pnd, abtTx, sizeof(abtTx), abtRx, &szRx)) {
     nfc_perror(pnd, "nfc_initiator_transceive_bytes");
     return EXIT_FAILURE;
   }

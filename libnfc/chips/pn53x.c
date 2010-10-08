@@ -805,7 +805,7 @@ pn53x_configure (nfc_device_t * pnd, const nfc_device_option_t ndo, const bool b
       // Nothing to do
       return true;
     }
-    // Force pn53x to be in ISO1444-A mode
+    // Force pn53x to be in ISO14443-A mode
     if (!pn53x_set_reg (pnd, REG_CIU_TX_MODE, SYMBOL_TX_FRAMING, 0x00)) {
       return false;
     }
@@ -866,10 +866,18 @@ pn53x_initiator_select_dep_target (nfc_device_t * pnd, const nfc_modulation_t nm
 
   // Is a target info struct available
   if (pnti) {
-    memcpy (pnti->ndi.NFCID3i, abtRx + 2, 10);
+    memcpy (pnti->ndi.abtNFCID3, abtRx + 2, 10);
     pnti->ndi.btDID = abtRx[12];
-    pnti->ndi.btBSt = abtRx[13];
-    pnti->ndi.btBRt = abtRx[14];
+    pnti->ndi.btBS = abtRx[13];
+    pnti->ndi.btBR = abtRx[14];
+    pnti->ndi.btTO = abtRx[15];
+    pnti->ndi.btPP = abtRx[16];
+    if(szRxLen > 17) {
+      pnti->ndi.szGB = szRxLen - 17;
+      memcpy (pnti->ndi.abtGB, abtRx + 17, pnti->ndi.szGB);
+    } else {
+      pnti->ndi.szGB = 0;
+    }
   }
   return true;
 }

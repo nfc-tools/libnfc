@@ -197,6 +197,21 @@ print_nfc_iso14443b_info (const nfc_iso14443b_info_t nbi)
   }
 }
 
+void
+print_nfc_dep_info (const nfc_dep_info_t ndi)
+{
+  printf ("       NFCID3: ");
+  print_hex (ndi.abtNFCID3, 10);
+  printf ("           BS: %02x\n", ndi.btBS);
+  printf ("           BR: %02x\n", ndi.btBR);
+  printf ("           TO: %02x\n", ndi.btTO);
+  printf ("           PP: %02x\n", ndi.btPP);
+  if (ndi.szGB) {
+    printf ("General Bytes: ");
+    print_hex (ndi.abtGB, ndi.szGB);
+  }
+}
+
 /**
  * @brief Tries to parse arguments to find device descriptions.
  * @return Returns the list of found device descriptions.

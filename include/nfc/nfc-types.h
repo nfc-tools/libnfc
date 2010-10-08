@@ -2,6 +2,7 @@
  * Public platform independent Near Field Communication (NFC) library
  * 
  * Copyright (C) 2009, Roel Verdult
+ * Copyright (C) 2009, Romain Tartière, Romuald Conty
  * 
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -193,13 +194,24 @@ typedef enum {
 
 /**
  * @struct nfc_dep_info_t
- * @brief NFC tag information in Data Exchange Protocol
+ * @brief NFC tag information in D.E.P. (Data Exchange Protocol) see ISO/IEC 18092
  */
 typedef struct {
-  byte_t  NFCID3i[10];
+/** NFCID3 */
+  byte_t  abtNFCID3[10];
+/** DID */
   byte_t  btDID;
-  byte_t  btBSt;
-  byte_t  btBRt;
+/** Supported send-bit rate */
+  byte_t  btBS;
+/** Supported receive-bit rate */
+  byte_t  btBR;
+/** Timeout value */
+  byte_t  btTO;
+/** PP Parameters */
+  byte_t  btPP;
+/** General Bytes */
+  byte_t  abtGB[48];
+  size_t  szGB;
 } nfc_dep_info_t;
 
 /**
