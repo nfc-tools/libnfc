@@ -1,6 +1,6 @@
 .TH NFC-MFCLASSIC 1 "Nov 02, 2009"
 .SH NAME
-nfc-mfclassic \- MIFARE Classic command line tool based on libnfc
+nfc-mfclassic \- MIFARE Classic command line tool
 .SH SYNOPSIS
 .B nfc-mfclassic
 .RI \fR\fBr\fR|\fBw\fR
@@ -17,10 +17,12 @@ file using Mifare keys provide in
 file.
 
 MIFARE Classic tag is one of the most widely used RFID tags.
-The firmware in the NFC controller supports authenticating, reading and writing to/from Mifare Classic tags.
-This tool demonstrate the speed of this library and its easy-of-use.
-It possible to read and write the complete content of a Mifare Classic 4KB tag within 1 second.
-It uses a binary Mifare Dump file (MFD) to store the keys and data for all sectors.
+
+The firmware in the NFC controller supports authenticating, reading and writing
+to/from Mifare Classic tags. This tool demonstrate the speed of this library
+and its easy-of-use. It possible to read and write the complete content of a
+Mifare Classic 4KB tag within 1 second. It uses a binary Mifare Dump file (MFD)
+to store the keys and data for all sectors.
 
 .SH OPTIONS
 .BR r " | " w

@@ -1,14 +1,23 @@
 .TH NFC-LIST 1 "June 26, 2009"
 .SH NAME
-nfc-list \- List NFC targets command line tool based on libnfc
+nfc-list \- List NFC targets
 .SH SYNOPSIS
 .B nfc-list
 .SH DESCRIPTION
 .B nfc-list
-utility attempts to select available tags in the field. The NFC
-controller is used to perform the selection procedure. This is different for each modulation type.
-It tries to ﬁnd a ISO/IEC 14443 type A, type B, Felica or Jewel Topaz tags.
-This tool demonstrates that it is possible to setup a simple NFC system using less than 10 lines of code.
+is a utility for listing any available targets like ISO14443-A, FeliCa, Jewel
+or ISO14443-B (according to the device capabilities).
+
+This tool displays all available information at selection time.
+
+.SH EXAMPLE
+For an ISO/IEC 14443-A tag (i.e.Mifare DESFire):
+
+    ATQA (SENS_RES): 03  44  
+       UID (NFCID1): 04  45  35  01  db  24  80  
+      SAK (SEL_RES): 20  
+          ATS (ATR): 75  77  81  02  80  
+     Compliant with: ISO/IEC 14443-4 
 
 .SH BUGS
 Please report any bugs on the
