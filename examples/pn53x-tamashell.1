@@ -1,0 +1,64 @@
+.TH PN53X-TAMASHELL 1 "September 15, 2010"
+.SH NAME
+pn53x-tamashell \- PN53x TAMA communication demonstration shell
+.SH SYNOPSIS
+.B pn53x-tamashell
+.SH DESCRIPTION
+.B pn53x-tamashell
+is a simple interactive tool to send so called TAMA commands
+and receive the answers.
+TAMA refers to the command set supported by the PN53x family.
+Messages are binary and the shell expects hexadecimal notation.
+TAMA commands and responses prefixes (0xD4/0xD5), CRC and any framing above are handled transparently.
+
+You can use the shell interactively (with readline support) or you
+can write your own script file consisting in commands and
+comments (anything that starts with ";", "#" or "//").
+
+\fIq\fP or \fICtrl-d\fP to quit.
+
+.SH EXAMPLES
+
+GetFirmware command is D4 02, so one has just to send the command "02":
+
+ $ \fBpn53x-tamashell\fP
+ Connected to NFC reader: SCM Micro/SCL3711-NFC&RW - PN533 v2.7 (0x07)
+ > 02
+ Tx: 02
+ Rx: 33  02  07  07
+ > 40
+ Tx: 40
+ Rx: Command Not Acceptable
+ > q
+ Bye!
+
+Same thing, with a script:
+
+ $ cat << EOF | \fBpn53x-tamashell\fP
+ // This is a comment
+ 02 // GetFirmware
+ 40 // Command with missing arguments
+ EOF
+
+ Connected to NFC reader: SCM Micro/SCL3711-NFC&RW - PN533 v2.7 (0x07)
+ > // This is a comment
+ > 02 // GetFirmware
+ Tx: 02
+ Rx: 33  02  07  07
+ > 40 // Command with missing arguments
+ Tx: 40
+ Rx: Command Not Acceptable
+ > Bye!
+
+.SH BUGS
+Please report any bugs on the
+.B libnfc
+forum at
+.BR http://www.libnfc.org/community/ "."
+.SH LICENCE
+.B libnfc
+and
+.B libnfc-examples
+are covered by the GNU Lesser General Public License (LGPL), version 3.
+.PP
+This manual page is licensed under the terms of the GNU GPL (version 2 or later).
