@@ -114,7 +114,7 @@ main (int argc, const char *argv[])
 
     if (pnd == NULL) {
       ERR ("%s", "Unable to connect to NFC device.");
-      return 1;
+      return EXIT_FAILURE;
     }
     nfc_initiator_init (pnd);
 
@@ -125,15 +125,6 @@ main (int argc, const char *argv[])
     }
     // Let the reader only try once to find a tag
     if (!nfc_configure (pnd, NDO_INFINITE_SELECT, false)) {
-      nfc_perror (pnd, "nfc_configure");
-      exit (EXIT_FAILURE);
-    }
-    // Configure the CRC and Parity settings
-    if (!nfc_configure (pnd, NDO_HANDLE_CRC, true)) {
-      nfc_perror (pnd, "nfc_configure");
-      exit (EXIT_FAILURE);
-    }
-    if (!nfc_configure (pnd, NDO_HANDLE_PARITY, true)) {
       nfc_perror (pnd, "nfc_configure");
       exit (EXIT_FAILURE);
     }
