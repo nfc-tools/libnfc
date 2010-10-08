@@ -1,8 +1,8 @@
 bin_PROGRAMS = \
 		nfc-anticol \
-		nfc-emulate \
 		nfc-emulate-ndef \
 		nfc-emulate-tag \
+		nfc-emulate-uid \
 		nfc-list \
 		nfc-mfclassic \
 		nfc-mfultralight \
@@ -46,10 +46,6 @@ nfc_relay_SOURCES = nfc-relay.c
 nfc_relay_LDADD = $(top_builddir)/libnfc/libnfc.la \
 		  libnfcutils.la
 
-nfc_emulate_SOURCES = nfc-emulate.c
-nfc_emulate_LDADD = $(top_builddir)/libnfc/libnfc.la \
-		    libnfcutils.la
-
 nfc_emulate_ndef_SOURCES = nfc-emulate-ndef.c
 nfc_emulate_ndef_LDADD = $(top_builddir)/libnfc/libnfc.la \
 			 libnfcutils.la
@@ -57,6 +53,10 @@ nfc_emulate_ndef_LDADD = $(top_builddir)/libnfc/libnfc.la \
 nfc_emulate_tag_SOURCES = nfc-emulate-tag.c
 nfc_emulate_tag_LDADD = $(top_builddir)/libnfc/libnfc.la \
 			 libnfcutils.la
+
+nfc_emulate_uid_SOURCES = nfc-emulate-uid.c
+nfc_emulate_uid_LDADD = $(top_builddir)/libnfc/libnfc.la \
+		        libnfcutils.la
 
 nfcip_target_SOURCES = nfcip-target.c
 nfcip_target_LDADD = $(top_builddir)/libnfc/libnfc.la
@@ -77,6 +77,13 @@ pn53x_tamashell_LDADD = $(top_builddir)/libnfc/libnfc.la \
 		    libnfcutils.la
 pn53x_tamashell_LDFLAGS = @READLINE_LIBS@
 
-dist_man_MANS = nfc-anticol.1 nfc-emulate.1 nfc-list.1 nfc-mfclassic.1 nfc-mfultralight.1 nfc-relay.1 pn53x-sam.1
+dist_man_MANS = \
+		nfc-anticol.1 \
+		nfc-emulate-uid.1 \
+		nfc-list.1 \
+		nfc-mfclassic.1 \
+		nfc-mfultralight.1 \
+		nfc-relay.1 \
+		pn53x-sam.1
 
 EXTRA_DIST = CMakeLists.txt
