@@ -85,6 +85,7 @@ dist_man_MANS = \
 		nfc-list.1 \
 		nfc-mfclassic.1 \
 		nfc-mfultralight.1 \
+		nfc-poll.1 \
 		nfc-relay.1 \
 		pn53x-diagnose.1 \
 		pn53x-sam.1

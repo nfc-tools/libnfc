@@ -97,15 +97,6 @@ main (int argc, const char *argv[])
       nfc_perror (pnd, "nfc_configure");
       exit (EXIT_FAILURE);
     }
-    // Configure the CRC and Parity settings
-    if (!nfc_configure (pnd, NDO_HANDLE_CRC, true)) {
-      nfc_perror (pnd, "nfc_configure");
-      exit (EXIT_FAILURE);
-    }
-    if (!nfc_configure (pnd, NDO_HANDLE_PARITY, true)) {
-      nfc_perror (pnd, "nfc_configure");
-      exit (EXIT_FAILURE);
-    }
     // Enable field so more power consuming cards can power themselves up
     if (!nfc_configure (pnd, NDO_ACTIVATE_FIELD, true)) {
       nfc_perror (pnd, "nfc_configure");
@@ -114,7 +105,7 @@ main (int argc, const char *argv[])
 
     printf ("Connected to NFC reader: %s\n", pnd->acName);
 
-    printf ("PN53x will poll during %ld ms\n", (unsigned long) btPollNr * szTargetTypes * btPeriod * 150);
+    printf ("PN532 will poll during %ld ms\n", (unsigned long) btPollNr * szTargetTypes * btPeriod * 150);
     res = nfc_initiator_poll_targets (pnd, nttArray, szTargetTypes, btPollNr, btPeriod, antTargets, &szTargetFound);
     if (res) {
       uint8_t n;
