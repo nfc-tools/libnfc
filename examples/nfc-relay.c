@@ -119,7 +119,7 @@ main (int argc, char *argv[])
     return EXIT_FAILURE;
   }
 
-  printf ("Hint: tag <---> emulator (relay) <---> reader (relay) <---> original reader\n\n");
+  printf ("Hint: tag <---> initiator (relay) <---> target (relay) <---> original reader\n\n");
 
   printf ("Connected to the NFC emulator device: %s\n", pndTag->acName);
   printf ("[+] Try to break out the auto-emulation, this requires a second reader!\n");
@@ -130,9 +130,9 @@ main (int argc, char *argv[])
   nfc_target_t nt = {
     .ntt = NTT_GENERIC_PASSIVE_106,
     .nti.nai.abtAtqa = "\x04\x00",
-    .nti.nai.abtUid = "\xde\xad\xbe\xaf\x62",
+    .nti.nai.abtUid = "\xde\xad\xbe\xef",
     .nti.nai.btSak = 0x20,
-    .nti.nai.szUidLen = 5,
+    .nti.nai.szUidLen = 4,
     .nti.nai.szAtsLen = 0,
   };
 
