@@ -43,6 +43,10 @@
 
 #define SERIAL_DEFAULT_PORT_SPEED 115200
 
+// TODO Move this one level up for libnfc-1.6
+static const byte_t ack_frame[] = { 0x00, 0x00, 0xff, 0x00, 0xff, 0x00 };
+
+void    pn532_uart_ack (const nfc_device_spec_t nds);
 void    pn532_uart_wakeup (const nfc_device_spec_t nds);
 bool    pn532_uart_check_communication (const nfc_device_spec_t nds, bool * success);
 
@@ -96,6 +100,8 @@ pn532_uart_list_devices (nfc_device_desc_t pnddDevices[], size_t szDevices, size
       bool    bComOk;
       // Serial port claimed but we need to check if a PN532_UART is connected.
       uart_set_speed (sp, SERIAL_DEFAULT_PORT_SPEED);
+      // Send ACK frame to cancel a previous command
+      pn532_uart_ack ((nfc_device_spec_t) sp);
       // PN532 could be powered down, we need to wake it up before line testing.
       pn532_uart_wakeup ((nfc_device_spec_t) sp);
       // Check communication using "Diagnose" command, with "Comunication test" (0x00)
@@ -186,8 +192,6 @@ pn532_uart_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t sz
   size_t  szRxBufLen = BUFFER_LENGTH;
   size_t  szPos;
   int     res;
-  // TODO: Move this one level up for libnfc-1.6
-  uint8_t ack_frame[] = { 0x00, 0x00, 0xff, 0x00, 0xff, 0x00 };
 
   // Packet length = data length (len) + checksum (1) + end of stream marker (1)
   abtTxBuf[3] = szTxLen;
@@ -269,6 +273,15 @@ pn532_uart_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t sz
   memcpy (pbtRx, abtRxBuf + 7, *pszRxLen);
 
   return true;
+}
+
+void
+pn532_uart_ack (const nfc_device_spec_t nds)
+{
+#ifdef DEBUG
+  PRINT_HEX ("TX", ack_frame, sizeof (ack_frame));
+#endif
+  uart_send ((serial_port) nds, ack_frame, sizeof (ack_frame));
 }
 
 void
