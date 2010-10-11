@@ -69,6 +69,10 @@
 
 #define SERIAL_DEFAULT_PORT_SPEED 9600
 
+// TODO Move this one level up for libnfc-1.6
+static const byte_t ack_frame[] = { 0x00, 0x00, 0xff, 0x00, 0xff, 0x00 };
+
+void    arygon_ack (const nfc_device_spec_t nds);
 bool    arygon_check_communication (const nfc_device_spec_t nds);
 
 /**
@@ -126,6 +130,10 @@ arygon_list_devices (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *
 
     if ((sp != INVALID_SERIAL_PORT) && (sp != CLAIMED_SERIAL_PORT)) {
       uart_set_speed (sp, SERIAL_DEFAULT_PORT_SPEED);
+
+      // Send ACK frame to cancel a previous command
+      arygon_ack ((nfc_device_spec_t) sp);
+  
       if (!arygon_check_communication ((nfc_device_spec_t) sp))
         continue;
       uart_close (sp);
@@ -163,6 +171,9 @@ arygon_connect (const nfc_device_desc_t * pndd)
 
   DBG ("Attempt to connect to: %s at %d bauds.", pndd->pcPort, pndd->uiSpeed);
   sp = uart_open (pndd->pcPort);
+
+  // Send ACK frame to cancel a previous command
+  arygon_ack ((nfc_device_spec_t) sp);
 
   if (sp == INVALID_SERIAL_PORT)
     ERR ("Invalid serial port: %s", pndd->pcPort);
@@ -202,8 +213,6 @@ arygon_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxLe
   size_t  szRxBufLen = BUFFER_LENGTH;
   size_t  szPos;
   int     res;
-  // TODO: Move this one level up for libnfc-1.6
-  uint8_t ack_frame[] = { 0x00, 0x00, 0xff, 0x00, 0xff, 0x00 };
 
   // Packet length = data length (len) + checksum (1) + end of stream marker (1)
   abtTxBuf[4] = szTxLen;
@@ -261,17 +270,6 @@ arygon_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxLe
 #endif
   }
 
-/*
-#ifdef DEBUG
-  PRINT_HEX("TX", ack_frame, sizeof(ack_frame));
-#endif
-  res = uart_send((serial_port)pnd->nds, ack_frame, sizeof(ack_frame)); 
-  if (res != 0) {
-    ERR("%s", "Unable to transmit data. (TX)");
-    pnd->iLastError = res;
-    return false;
-  }
-*/
   if (!pn53x_transceive_check_error_frame_callback (pnd, abtRxBuf, szRxBufLen))
     return false;
 
@@ -288,6 +286,15 @@ arygon_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxLe
   memcpy (pbtRx, abtRxBuf + 7, *pszRxLen);
 
   return true;
+}
+
+void
+arygon_ack (const nfc_device_spec_t nds)
+{
+#ifdef DEBUG
+  PRINT_HEX ("TX", ack_frame, sizeof (ack_frame));
+#endif
+  uart_send ((serial_port) nds, ack_frame, sizeof (ack_frame));
 }
 
 bool
