@@ -897,7 +897,7 @@ pn53x_InJumpForDEP (nfc_device_t * pnd, const nfc_modulation_t nmInitModulation,
     pnti->ndi.btTO = abtRx[15];
     pnti->ndi.btPP = abtRx[16];
     if(szRxLen > 17) {
-      pnti->ndi.szGB = szRxLen - 17; // FIXME This computation is not applicable to all PN53x chips
+      pnti->ndi.szGB = szRxLen - 17;
       memcpy (pnti->ndi.abtGB, abtRx + 17, pnti->ndi.szGB);
     } else {
       pnti->ndi.szGB = 0;
