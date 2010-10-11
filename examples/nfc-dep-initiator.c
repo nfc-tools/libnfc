@@ -62,7 +62,7 @@ main (int argc, const char *argv[])
     return EXIT_FAILURE;
   }
 
-  if(!nfc_initiator_select_dep_target (pnd, NM_PASSIVE_DEP, NULL, 0, NULL, 0, NULL, 0, &nti)) {
+  if(!nfc_initiator_select_dep_target (pnd, NM_PASSIVE_DEP, NULL, &nti)) {
     nfc_perror(pnd, "nfc_initiator_select_dep_target");
     return EXIT_FAILURE;
   }

@@ -289,7 +289,7 @@ nfc_initiator_select_passive_target (nfc_device_t * pnd,
   // Make sure we are dealing with a active device
   if (!pnd->bActive)
     return false;
-  // TODO Put this in a function
+  // TODO Put this in a function: this part is defined by ISO14443-3 (UID and Cascade levels)
   switch (nmInitModulation) {
   case NM_ISO14443A_106:
     switch (szInitDataLen) {
@@ -456,26 +456,21 @@ nfc_initiator_poll_targets (nfc_device_t * pnd,
  *
  * @param pnd \a nfc_device_t struct pointer that represent currently used device
  * @param nmInitModulation desired modulation (\a NM_ACTIVE_DEP or \a NM_PASSIVE_DEP for active, respectively passive mode)
- * @param pbtPidData passive initiator data, 4 or 5 bytes long, (optional, only for \a NM_PASSIVE_DEP, can be \c NULL)
- * @param szPidDataLen size of \a pbtPidData
- * @param pbtNFCID3i the NFCID3, 10 bytes long, of the initiator (optional, can be \c NULL)
- * @param szNFCID3iDataLen size of \a pbtNFCID3i
- * @param pbtGbData generic data of the initiator, max 48 bytes long, (optional, can be \c NULL)
- * @param szGbDataLen size of \a pbtGbData
+ * @param ndiInitiator \a nfc_dep_info_t struct that contains NFCID3 and General Bytes to set to the initiator device
  * @param[out] pnti is a \a nfc_target_info_t struct pointer where target information will be put.
  *
- * The NFC device will try to find an available D.E.P. target. The standards (ISO18092 and ECMA-340) describe the modulation that can be used for reader to passive communications.
+ * The NFC device will try to find an available D.E.P. target. The standards
+ * (ISO18092 and ECMA-340) describe the modulation that can be used for reader
+ * to passive communications.
+ * 
  * @note \a nfc_dep_info_t will be returned when the target was acquired successfully.
  */
 bool
-nfc_initiator_select_dep_target (nfc_device_t * pnd, const nfc_modulation_t nmInitModulation, const byte_t * pbtPidData,
-                                 const size_t szPidDataLen, const byte_t * pbtNFCID3i, const size_t szNFCID3iDataLen,
-                                 const byte_t * pbtGbData, const size_t szGbDataLen, nfc_target_info_t * pnti)
+nfc_initiator_select_dep_target (nfc_device_t * pnd, const nfc_modulation_t nmInitModulation, const nfc_dep_info_t * pndiInitiator, nfc_target_info_t * pnti)
 {
   pnd->iLastError = 0;
 
-  return pn53x_initiator_select_dep_target (pnd, nmInitModulation, pbtPidData, szPidDataLen, pbtNFCID3i,
-                                            szNFCID3iDataLen, pbtGbData, szGbDataLen, pnti);
+  return pn53x_initiator_select_dep_target (pnd, nmInitModulation, pndiInitiator, pnti);
 }
 
 /**
@@ -483,8 +478,12 @@ nfc_initiator_select_dep_target (nfc_device_t * pnd, const nfc_modulation_t nmIn
  * @return Returns \c true if action was successfully performed; otherwise returns \c false.
  * @param pnd \a nfc_device_t struct pointer that represents currently used device
  *
- * After selecting and communicating with a passive tag, this function could be used to deactivate and release the tag. 
- *This is very useful when there are multiple tags available in the field. It is possible to use the \fn nfc_initiator_select_passive_target() function to select the first available tag, test it for the available features and support, deselect it and skip to the next tag until the correct tag is found.
+ * After selecting and communicating with a passive tag, this function could be
+ * used to deactivate and release the tag.  This is very useful when there are
+ * multiple tags available in the field. It is possible to use the \fn
+ * nfc_initiator_select_passive_target() function to select the first available
+ * tag, test it for the available features and support, deselect it and skip to
+ * the next tag until the correct tag is found.
  */
 bool
 nfc_initiator_deselect_target (nfc_device_t * pnd)
