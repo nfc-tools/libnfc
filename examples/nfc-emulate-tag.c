@@ -35,6 +35,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
+#include <signal.h>
 
 #include <nfc/nfc.h>
 
@@ -48,6 +49,16 @@ static size_t szRx;
 static nfc_device_t *pnd;
 static bool quiet_output = false;
 static bool init_mfc_auth = false;
+
+void
+intr_hdlr (void)
+{
+  printf ("\nQuitting...\n");
+  if (pnd != NULL) {
+    nfc_disconnect(pnd);
+  }
+  exit (EXIT_FAILURE);
+}
 
 bool 
 target_io( const nfc_target_t nt, const byte_t * pbtInput, const size_t szInput, byte_t * pbtOutput, size_t *pszOutput )
@@ -138,6 +149,12 @@ int
 main (int argc, char *argv[])
 {
   const char *acLibnfcVersion;
+
+#ifdef WIN32
+  signal (SIGINT, (void (__cdecl *) (int)) intr_hdlr);
+#else
+  signal (SIGINT, (void (*)()) intr_hdlr);
+#endif
 
   // Try to open the NFC reader
   pnd = nfc_connect (NULL);

@@ -45,6 +45,11 @@ Thanks to d18c7db and Okko for example code
 #define BUFFER_LENGTH 256
 #define USB_TIMEOUT   30000
 
+// TODO Move this HACK1 into an upper level in order to benefit to other devices that use PN53x
+static const byte_t ack_frame[] = { 0x00, 0x00, 0xff, 0x00, 0xff, 0x00 };
+
+void pn53x_usb_ack (nfc_device_t * pnd);
+
 // Find transfer endpoints for bulk transfers
 void
 get_end_points (struct usb_device *dev, usb_spec_t * pus)
@@ -195,13 +200,8 @@ pn53x_usb_connect (const nfc_device_desc_t * pndd, const char *target_name, int 
         pnd->nds = (nfc_device_spec_t) pus;
         pnd->bActive = true;
 
-        // TODO Move this HACK1 into an upper level in order to benefit to other devices that use PN53x
         // HACK1: Send first an ACK as Abort command, to reset chip before talking to it:
-        uint8_t ack_frame[] = { 0x00, 0x00, 0xff, 0x00, 0xff, 0x00 };
-#ifdef DEBUG
-        PRINT_HEX ("TX", ack_frame, 6);
-#endif
-        usb_bulk_write (pus->pudh, pus->uiEndPointOut, (char *) ack_frame, 6, USB_TIMEOUT);
+        pn53x_usb_ack (pnd);
 
         // HACK2: Then send a GetFirmware command to resync USB toggle bit between host & device
         // in case host used set_configuration and expects the device to have reset its toggle bit, which PN53x doesn't do
@@ -261,6 +261,8 @@ pn53x_usb_disconnect (nfc_device_t * pnd)
 {
   usb_spec_t *pus = (usb_spec_t *) pnd->nds;
   int     ret;
+
+  pn53x_usb_ack (pnd);
 
   if ((ret = usb_release_interface (pus->pudh, 0)) < 0) {
     ERR ("usb_release_interface failed (%i)", ret);
@@ -368,4 +370,14 @@ pn53x_usb_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szT
   memcpy (pbtRx, abtRx + 7, *pszRx);
 
   return true;
+}
+
+void
+pn53x_usb_ack (nfc_device_t * pnd)
+{
+  usb_spec_t *pus = (usb_spec_t *) pnd->nds;
+#ifdef DEBUG
+  PRINT_HEX ("TX", ack_frame, sizeof (ack_frame));
+#endif
+  usb_bulk_write (pus->pudh, pus->uiEndPointOut, (char *) ack_frame, sizeof (ack_frame), USB_TIMEOUT);
 }

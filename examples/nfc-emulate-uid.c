@@ -37,6 +37,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
+#include <signal.h>
 
 #include <nfc/nfc.h>
 
@@ -53,6 +54,16 @@ static nfc_device_t *pnd;
 byte_t  abtAtqa[2] = { 0x04, 0x00 };
 byte_t  abtUidBcc[5] = { 0xDE, 0xAD, 0xBE, 0xAF, 0x62 };
 byte_t  abtSak[9] = { 0x08, 0xb6, 0xdd };
+
+void
+intr_hdlr (void)
+{
+  printf ("\nQuitting...\n");
+  if (pnd != NULL) {
+    nfc_disconnect(pnd);
+  }
+  exit (EXIT_FAILURE);
+}
 
 void
 print_usage (char *argv[])
@@ -98,6 +109,12 @@ main (int argc, char *argv[])
       exit(EXIT_FAILURE);
     }
   }
+
+#ifdef WIN32
+  signal (SIGINT, (void (__cdecl *) (int)) intr_hdlr);
+#else
+  signal (SIGINT, (void (*)()) intr_hdlr);
+#endif
 
   // Try to open the NFC device
   pnd = nfc_connect (NULL);
