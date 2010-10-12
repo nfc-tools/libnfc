@@ -327,6 +327,8 @@ pn53x_usb_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szT
   if (ret < 0) {
     DBG ("usb_bulk_read failed with error %d", ret);
     pnd->iLastError = DEIO;
+    // try to interrupt current device state
+    pn53x_usb_ack(pnd);
     return false;
   }
 #ifdef DEBUG
@@ -340,6 +342,8 @@ pn53x_usb_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szT
   if (ret < 0) {
     DBG ("usb_bulk_read failed with error %d", ret);
     pnd->iLastError = DEIO;
+    // try to interrupt current device state
+    pn53x_usb_ack(pnd);
     return false;
   }
 #ifdef DEBUG
