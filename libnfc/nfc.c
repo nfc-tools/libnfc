@@ -547,8 +547,8 @@ nfc_initiator_transceive_bits (nfc_device_t * pnd, const byte_t * pbtTx, const s
  *
  * @param pnd \a nfc_device_t struct pointer that represent currently used device
  * @param ntm the target mode that you want to emulate
- * @param[out] pbtRx pointer to Rx buffer
- * @param[out] pszRx received byte count
+ * @param[out] pbtRx Rx buffer pointer
+ * @param[out] pszRx received bytes count
  *
  * This function initialize NFC device in \e target mode in order to emulate a tag using the specified \a nfc_target_mode_t.
  *
