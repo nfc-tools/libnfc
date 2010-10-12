@@ -44,7 +44,7 @@
 
 static byte_t abtRx[MAX_FRAME_LEN];
 static size_t szRxBits;
-static size_t szRxLen;
+static size_t szRx;
 static byte_t abtUid[10];
 static size_t szUidLen = 4;
 static nfc_device_t *pnd;
@@ -81,21 +81,21 @@ transmit_bits (const byte_t * pbtTx, const size_t szTxBits)
 
 
 static  bool
-transmit_bytes (const byte_t * pbtTx, const size_t szTxLen)
+transmit_bytes (const byte_t * pbtTx, const size_t szTx)
 {
   // Show transmitted command
   if (!quiet_output) {
     printf ("Sent bits: ");
-    print_hex (pbtTx, szTxLen);
+    print_hex (pbtTx, szTx);
   }
   // Transmit the command bytes
-  if (!nfc_initiator_transceive_bytes (pnd, pbtTx, szTxLen, abtRx, &szRxLen))
+  if (!nfc_initiator_transceive_bytes (pnd, pbtTx, szTx, abtRx, &szRx))
     return false;
 
   // Show received answer
   if (!quiet_output) {
     printf ("Received bits: ");
-    print_hex (abtRx, szRxLen);
+    print_hex (abtRx, szRx);
   }
   // Succesful transfer
   return true;

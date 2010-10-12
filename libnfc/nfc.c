@@ -510,12 +510,12 @@ nfc_initiator_deselect_target (nfc_device_t * pnd)
  * @warning The configuration option \a NDO_HANDLE_PARITY must be set to \c true (the default value).
  */
 bool
-nfc_initiator_transceive_bytes (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxLen, byte_t * pbtRx,
-                                size_t * pszRxLen)
+nfc_initiator_transceive_bytes (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, byte_t * pbtRx,
+                                size_t * pszRx)
 {
   pnd->iLastError = 0;
 
-  return pn53x_initiator_transceive_bytes (pnd, pbtTx, szTxLen, pbtRx, pszRxLen);
+  return pn53x_initiator_transceive_bytes (pnd, pbtTx, szTx, pbtRx, pszRx);
 }
 
 /**
@@ -548,18 +548,18 @@ nfc_initiator_transceive_bits (nfc_device_t * pnd, const byte_t * pbtTx, const s
  * @param pnd \a nfc_device_t struct pointer that represent currently used device
  * @param ntm the target mode that you want to emulate
  * @param[out] pbtRx pointer to Rx buffer
- * @param[out] pszRxLen received byte count
+ * @param[out] pszRx received byte count
  *
  * This function initialize NFC device in \e target mode in order to emulate a tag using the specified \a nfc_target_mode_t.
  *
  * @warning Be aware that this function will wait (hang) until a command is received that is not part of the anti-collision. The RATS command for example would wake up the emulator. After this is received, the send and receive functions can be used.
  */
 bool
-nfc_target_init (nfc_device_t * pnd, const nfc_target_mode_t ntm, const nfc_target_t nt, byte_t * pbtRx, size_t * pszRxLen)
+nfc_target_init (nfc_device_t * pnd, const nfc_target_mode_t ntm, const nfc_target_t nt, byte_t * pbtRx, size_t * pszRx)
 {
   pnd->iLastError = 0;
 
-  return pn53x_target_init (pnd, ntm, nt, pbtRx, pszRxLen);
+  return pn53x_target_init (pnd, ntm, nt, pbtRx, pszRx);
 }
 
 /**
@@ -568,16 +568,16 @@ nfc_target_init (nfc_device_t * pnd, const nfc_target_mode_t ntm, const nfc_targ
  *
  * @param pnd \a nfc_device_t struct pointer that represent currently used device
  * @param pbtTx pointer to Tx buffer
- * @param szTxLen size of Tx buffer
+ * @param szTx size of Tx buffer
  *
  * This function make the NFC device (configured as \e target) send byte frames (e.g. APDU responses) to the \e initiator.
  */
 bool
-nfc_target_send_bytes (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxLen)
+nfc_target_send_bytes (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx)
 {
   pnd->iLastError = 0;
 
-  return pn53x_target_send_bytes (pnd, pbtTx, szTxLen);
+  return pn53x_target_send_bytes (pnd, pbtTx, szTx);
 }
 
 /**
@@ -585,16 +585,16 @@ nfc_target_send_bytes (nfc_device_t * pnd, const byte_t * pbtTx, const size_t sz
  * @return Returns \c true if action was successfully performed; otherwise returns \c false.
  * @param pnd \a nfc_device_t struct pointer that represent currently used device
  * @param[out] pbtRx pointer to Rx buffer
- * @param[out] pszRxLen received byte count
+ * @param[out] pszRx received byte count
  *
  * This function retrieves bytes frames (e.g. ADPU) sent by the \e initiator to the NFC device (configured as \e target).
  */
 bool
-nfc_target_receive_bytes (nfc_device_t * pnd, byte_t * pbtRx, size_t * pszRxLen)
+nfc_target_receive_bytes (nfc_device_t * pnd, byte_t * pbtRx, size_t * pszRx)
 {
   pnd->iLastError = 0;
 
-  return pn53x_target_receive_bytes (pnd, pbtRx, pszRxLen);
+  return pn53x_target_receive_bytes (pnd, pbtRx, pszRx);
 }
 
 /**

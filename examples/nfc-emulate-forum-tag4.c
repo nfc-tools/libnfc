@@ -58,22 +58,22 @@
 #define MAX_FRAME_LEN 264
 
 static byte_t abtRx[MAX_FRAME_LEN];
-static size_t szRxLen;
+static size_t szRx;
 static nfc_device_t *pnd;
 static bool quiet_output = false;
 
 #define SYMBOL_PARAM_fISO14443_4_PICC   0x20
 
-bool send_bytes (const byte_t * pbtTx, const size_t szTxLen)
+bool send_bytes (const byte_t * pbtTx, const size_t szTx)
 {
   // Show transmitted command
   if (!quiet_output) {
     printf ("Sent data: ");
-    print_hex (pbtTx, szTxLen);
+    print_hex (pbtTx, szTx);
   }
 
   // Transmit the command bytes
-  if (!nfc_target_send_bytes(pnd, pbtTx, szTxLen)) {
+  if (!nfc_target_send_bytes(pnd, pbtTx, szTx)) {
     nfc_perror (pnd, "nfc_target_send_bytes");
     exit(EXIT_FAILURE);
   }
@@ -83,7 +83,7 @@ bool send_bytes (const byte_t * pbtTx, const size_t szTxLen)
 
 bool receive_bytes (void)
 {
-  if (!nfc_target_receive_bytes(pnd,abtRx,&szRxLen)) {
+  if (!nfc_target_receive_bytes(pnd,abtRx,&szRx)) {
     nfc_perror (pnd, "nfc_target_receive_bytes");
     exit(EXIT_FAILURE);
   }
@@ -91,7 +91,7 @@ bool receive_bytes (void)
   // Show received answer
   if (!quiet_output) {
     printf ("Received data: ");
-    print_hex (abtRx, szRxLen);
+    print_hex (abtRx, szRx);
   }
   // Succesful transfer
   return true;
@@ -120,7 +120,7 @@ main (int argc, char *argv[])
     .nti.nai.szAtsLen = 0,
   };
 
-  if (!nfc_target_init (pnd, NTM_ISO14443_4_PICC, nt, abtRx, &szRxLen)) {
+  if (!nfc_target_init (pnd, NTM_ISO14443_4_PICC, nt, abtRx, &szRx)) {
     nfc_perror (pnd, "nfc_target_init");
     ERR("Could not come out of auto-emulation, no command was received");
     return EXIT_FAILURE;
@@ -128,7 +128,7 @@ main (int argc, char *argv[])
 
   if (!quiet_output) {
     printf ("Received data: ");
-    print_hex (abtRx, szRxLen);
+    print_hex (abtRx, szRx);
   }
 
 //Receiving data: e0  40

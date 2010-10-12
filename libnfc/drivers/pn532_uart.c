@@ -186,8 +186,8 @@ pn532_uart_disconnect (nfc_device_t * pnd)
 }
 
 bool
-pn532_uart_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxLen, byte_t * pbtRx,
-                       size_t * pszRxLen)
+pn532_uart_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, byte_t * pbtRx,
+                       size_t * pszRx)
 {
   byte_t  abtTxBuf[BUFFER_LENGTH] = { 0x00, 0x00, 0xff };       // Every packet must start with "00 00 ff"
   byte_t  abtRxBuf[BUFFER_LENGTH];
@@ -196,25 +196,25 @@ pn532_uart_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t sz
   int     res;
 
   // Packet length = data length (len) + checksum (1) + end of stream marker (1)
-  abtTxBuf[3] = szTxLen;
+  abtTxBuf[3] = szTx;
   // Packet length checksum
   abtTxBuf[4] = BUFFER_LENGTH - abtTxBuf[3];
   // Copy the PN53X command into the packet buffer
-  memmove (abtTxBuf + 5, pbtTx, szTxLen);
+  memmove (abtTxBuf + 5, pbtTx, szTx);
 
   // Calculate data payload checksum
-  abtTxBuf[szTxLen + 5] = 0;
-  for (szPos = 0; szPos < szTxLen; szPos++) {
-    abtTxBuf[szTxLen + 5] -= abtTxBuf[szPos + 5];
+  abtTxBuf[szTx + 5] = 0;
+  for (szPos = 0; szPos < szTx; szPos++) {
+    abtTxBuf[szTx + 5] -= abtTxBuf[szPos + 5];
   }
 
   // End of stream marker
-  abtTxBuf[szTxLen + 6] = 0;
+  abtTxBuf[szTx + 6] = 0;
 
 #ifdef DEBUG
-  PRINT_HEX ("TX", abtTxBuf, szTxLen + 7);
+  PRINT_HEX ("TX", abtTxBuf, szTx + 7);
 #endif
-  res = uart_send ((serial_port) pnd->nds, abtTxBuf, szTxLen + 7);
+  res = uart_send ((serial_port) pnd->nds, abtTxBuf, szTx + 7);
   if (res != 0) {
     ERR ("%s", "Unable to transmit data. (TX)");
     pnd->iLastError = res;
@@ -262,7 +262,7 @@ pn532_uart_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t sz
     return false;
 
   // When the answer should be ignored, just return a successful result
-  if (pbtRx == NULL || pszRxLen == NULL)
+  if (pbtRx == NULL || pszRx == NULL)
     return true;
 
   // Only succeed when the result is at least 00 00 FF xx Fx Dx xx .. .. .. xx 00 (x = variable)
@@ -271,8 +271,8 @@ pn532_uart_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t sz
     return false;
   }
   // Remove the preceding and appending bytes 00 00 ff 00 ff 00 00 00 FF xx Fx .. .. .. xx 00 (x = variable)
-  *pszRxLen = szRxBufLen - 9;
-  memcpy (pbtRx, abtRxBuf + 7, *pszRxLen);
+  *pszRx = szRxBufLen - 9;
+  memcpy (pbtRx, abtRxBuf + 7, *pszRx);
 
   return true;
 }
@@ -290,7 +290,7 @@ void
 pn532_uart_wakeup (const nfc_device_spec_t nds)
 {
   byte_t  abtRx[BUFFER_LENGTH];
-  size_t  szRxLen;
+  size_t  szRx;
   /** PN532C106 wakeup. */
   /** High Speed Unit (HSU) wake up consist to send 0x55 and wait a "long" delay for PN532 being wakeup. */
   /** After the preamble we request the PN532C106 chip to switch to "normal" mode (SAM is not used) */
@@ -301,9 +301,9 @@ pn532_uart_wakeup (const nfc_device_spec_t nds)
   PRINT_HEX ("TX", pncmd_pn532c106_wakeup_preamble, sizeof (pncmd_pn532c106_wakeup_preamble));
 #endif
   uart_send ((serial_port) nds, pncmd_pn532c106_wakeup_preamble, sizeof (pncmd_pn532c106_wakeup_preamble));
-  if (0 == uart_receive ((serial_port) nds, abtRx, &szRxLen)) {
+  if (0 == uart_receive ((serial_port) nds, abtRx, &szRx)) {
 #ifdef DEBUG
-    PRINT_HEX ("RX", abtRx, szRxLen);
+    PRINT_HEX ("RX", abtRx, szRx);
 #endif
   }
 }
@@ -312,7 +312,7 @@ bool
 pn532_uart_check_communication (const nfc_device_spec_t nds, bool * success)
 {
   byte_t  abtRx[BUFFER_LENGTH];
-  size_t  szRxLen;
+  size_t  szRx;
   const byte_t attempted_result[] =
     { 0x00, 0x00, 0xff, 0x00, 0xff, 0x00, 0x00, 0x00, 0xff, 0x09, 0xf7, 0xD5, 0x01, 0x00, 'l', 'i', 'b', 'n', 'f', 'c',
 0xbc, 0x00 };
@@ -333,13 +333,13 @@ pn532_uart_check_communication (const nfc_device_spec_t nds, bool * success)
     return false;
   }
 
-  res = uart_receive ((serial_port) nds, abtRx, &szRxLen);
+  res = uart_receive ((serial_port) nds, abtRx, &szRx);
   if (res != 0) {
     ERR ("%s", "Unable to receive data. (RX)");
     return false;
   }
 #ifdef DEBUG
-  PRINT_HEX ("RX", abtRx, szRxLen);
+  PRINT_HEX ("RX", abtRx, szRx);
 #endif
 
   if (0 == memcmp (abtRx, attempted_result, sizeof (attempted_result)))

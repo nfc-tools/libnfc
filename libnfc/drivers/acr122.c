@@ -258,7 +258,7 @@ acr122_disconnect (nfc_device_t * pnd)
 }
 
 bool
-acr122_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxLen, byte_t * pbtRx, size_t * pszRxLen)
+acr122_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, byte_t * pbtRx, size_t * pszRx)
 {
   byte_t  abtRxCmd[5] = { 0xFF, 0xC0, 0x00, 0x00 };
   size_t  szRxCmdLen = sizeof (abtRxCmd);
@@ -269,29 +269,29 @@ acr122_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxLe
 
   // FIXME: Should be handled by the library.
   // Make sure the command does not overflow the send buffer
-  if (szTxLen > ACR122_COMMAND_LEN) {
+  if (szTx > ACR122_COMMAND_LEN) {
     pnd->iLastError = DEIO;
     return false;
   }
   // Store the length of the command we are going to send
-  abtTxBuf[4] = szTxLen;
+  abtTxBuf[4] = szTx;
 
   // Prepare and transmit the send buffer
-  memcpy (abtTxBuf + 5, pbtTx, szTxLen);
+  memcpy (abtTxBuf + 5, pbtTx, szTx);
   szRxBufLen = sizeof (abtRxBuf);
 #ifdef DEBUG
-  PRINT_HEX ("TX", abtTxBuf, szTxLen + 5);
+  PRINT_HEX ("TX", abtTxBuf, szTx + 5);
 #endif
 
   if (pas->ioCard.dwProtocol == SCARD_PROTOCOL_UNDEFINED) {
     if (SCardControl
-        (pas->hCard, IOCTL_CCID_ESCAPE_SCARD_CTL_CODE, abtTxBuf, szTxLen + 5, abtRxBuf, szRxBufLen,
+        (pas->hCard, IOCTL_CCID_ESCAPE_SCARD_CTL_CODE, abtTxBuf, szTx + 5, abtRxBuf, szRxBufLen,
          (void *) &szRxBufLen) != SCARD_S_SUCCESS) {
       pnd->iLastError = DEIO;
       return false;
     }
   } else {
-    if (SCardTransmit (pas->hCard, &(pas->ioCard), abtTxBuf, szTxLen + 5, NULL, abtRxBuf, (void *) &szRxBufLen) !=
+    if (SCardTransmit (pas->hCard, &(pas->ioCard), abtTxBuf, szTx + 5, NULL, abtRxBuf, (void *) &szRxBufLen) !=
         SCARD_S_SUCCESS) {
       pnd->iLastError = DEIO;
       return false;
@@ -323,17 +323,17 @@ acr122_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxLe
 #endif
 
   // When the answer should be ignored, just return a succesful result
-  if (pbtRx == NULL || pszRxLen == NULL)
+  if (pbtRx == NULL || pszRx == NULL)
     return true;
 
   // Make sure we have an emulated answer that fits the return buffer
-  if (szRxBufLen < 4 || (szRxBufLen - 4) > *pszRxLen) {
+  if (szRxBufLen < 4 || (szRxBufLen - 4) > *pszRx) {
     pnd->iLastError = DEIO;
     return false;
   }
   // Wipe out the 4 APDU emulation bytes: D5 4B .. .. .. 90 00
-  *pszRxLen = ((size_t) szRxBufLen) - 4;
-  memcpy (pbtRx, abtRxBuf + 2, *pszRxLen);
+  *pszRx = ((size_t) szRxBufLen) - 4;
+  memcpy (pbtRx, abtRxBuf + 2, *pszRx);
 
   // Transmission went successful
   return true;

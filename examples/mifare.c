@@ -21,7 +21,7 @@ bool
 nfc_initiator_mifare_cmd (nfc_device_t * pnd, const mifare_cmd mc, const uint8_t ui8Block, mifare_param * pmp)
 {
   byte_t  abtRx[265];
-  size_t  szRxLen;
+  size_t  szRx;
   size_t  szParamLen;
   byte_t  abtCmd[265];
 
@@ -68,14 +68,14 @@ nfc_initiator_mifare_cmd (nfc_device_t * pnd, const mifare_cmd mc, const uint8_t
     memcpy (abtCmd + 2, (byte_t *) pmp, szParamLen);
 
   // Fire the mifare command
-  if (!nfc_initiator_transceive_bytes (pnd, abtCmd, 2 + szParamLen, abtRx, &szRxLen)) {
+  if (!nfc_initiator_transceive_bytes (pnd, abtCmd, 2 + szParamLen, abtRx, &szRx)) {
     if (pnd->iLastError != 0x14)
       nfc_perror (pnd, "nfc_initiator_transceive_bytes");
     return false;
   }
   // When we have executed a read command, copy the received bytes into the param
   if (mc == MC_READ) {
-    if (szRxLen == 16) {
+    if (szRx == 16) {
       memcpy (pmp->mpd.abtData, abtRx, 16);
     } else {
       return false;

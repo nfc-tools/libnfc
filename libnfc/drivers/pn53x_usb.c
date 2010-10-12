@@ -279,7 +279,7 @@ pn53x_usb_disconnect (nfc_device_t * pnd)
 }
 
 bool
-pn53x_usb_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxLen, byte_t * pbtRx, size_t * pszRxLen)
+pn53x_usb_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, byte_t * pbtRx, size_t * pszRx)
 {
   size_t  uiPos = 0;
   int     ret = 0;
@@ -290,26 +290,26 @@ pn53x_usb_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szT
   uint8_t ack_frame[] = { 0x00, 0x00, 0xff, 0x00, 0xff, 0x00 };
 
   // Packet length = data length (len) + checksum (1) + end of stream marker (1)
-  abtTx[3] = szTxLen;
+  abtTx[3] = szTx;
   // Packet length checksum 
   abtTx[4] = 0x0100 - abtTx[3];
   // Copy the PN53X command into the packet abtTx
-  memmove (abtTx + 5, pbtTx, szTxLen);
+  memmove (abtTx + 5, pbtTx, szTx);
 
   // Calculate data payload checksum
-  abtTx[szTxLen + 5] = 0;
-  for (uiPos = 0; uiPos < szTxLen; uiPos++) {
-    abtTx[szTxLen + 5] -= abtTx[uiPos + 5];
+  abtTx[szTx + 5] = 0;
+  for (uiPos = 0; uiPos < szTx; uiPos++) {
+    abtTx[szTx + 5] -= abtTx[uiPos + 5];
   }
 
   // End of stream marker
-  abtTx[szTxLen + 6] = 0;
+  abtTx[szTx + 6] = 0;
 
 #ifdef DEBUG
-  PRINT_HEX ("TX", abtTx, szTxLen + 7);
+  PRINT_HEX ("TX", abtTx, szTx + 7);
 #endif
 
-  ret = usb_bulk_write (pus->pudh, pus->uiEndPointOut, (char *) abtTx, szTxLen + 7, USB_TIMEOUT);
+  ret = usb_bulk_write (pus->pudh, pus->uiEndPointOut, (char *) abtTx, szTx + 7, USB_TIMEOUT);
   // XXX This little hack is a well know problem of libusb, see http://www.libusb.org/ticket/6 for more details
   if ((ret % pus->wMaxPacketSize) == 0) {
     usb_bulk_write (pus->pudh, pus->uiEndPointOut, "\0", 0, USB_TIMEOUT);
@@ -353,7 +353,7 @@ pn53x_usb_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szT
     return false;
 
   // When the answer should be ignored, just return a succesful result
-  if (pbtRx == NULL || pszRxLen == NULL)
+  if (pbtRx == NULL || pszRx == NULL)
     return true;
 
   // Only succeed when the result is at least 00 00 FF xx Fx Dx xx .. .. .. xx 00 (x = variable)
@@ -363,9 +363,9 @@ pn53x_usb_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szT
     return false;
   }
   // Remove the preceding and appending bytes 00 00 FF xx Fx .. .. .. xx 00 (x = variable)
-  *pszRxLen = ret - 7 - 2;
+  *pszRx = ret - 7 - 2;
 
-  memcpy (pbtRx, abtRx + 7, *pszRxLen);
+  memcpy (pbtRx, abtRx + 7, *pszRx);
 
   return true;
 }

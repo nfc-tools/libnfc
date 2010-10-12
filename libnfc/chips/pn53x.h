@@ -95,8 +95,8 @@ bool    pn53x_transceive_check_ack_frame_callback (nfc_device_t * pnd, const byt
                                                    const size_t szRxFrameLen);
 bool    pn53x_transceive_check_error_frame_callback (nfc_device_t * pnd, const byte_t * pbtRxFrame,
                                                      const size_t szRxFrameLen);
-bool    pn53x_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxLen, byte_t * pbtRx,
-                          size_t * pszRxLen);
+bool    pn53x_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, byte_t * pbtRx,
+                          size_t * pszRx);
 bool    pn53x_get_reg (nfc_device_t * pnd, uint16_t ui16Reg, uint8_t * ui8Value);
 bool    pn53x_set_reg (nfc_device_t * pnd, uint16_t ui16Reg, uint8_t ui8SymbolMask, uint8_t ui8Value);
 bool    pn53x_set_parameter (nfc_device_t * pnd, const uint8_t ui8Value, const bool bEnable);
@@ -118,15 +118,15 @@ bool    pn53x_initiator_select_dep_target (nfc_device_t * pnd, const nfc_modulat
 bool    pn53x_initiator_transceive_bits (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxBits,
                                          const byte_t * pbtTxPar, byte_t * pbtRx, size_t * pszRxBits,
                                          byte_t * pbtRxPar);
-bool    pn53x_initiator_transceive_bytes (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxLen,
-                                          byte_t * pbtRx, size_t * pszRxLen);
+bool    pn53x_initiator_transceive_bytes (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx,
+                                          byte_t * pbtRx, size_t * pszRx);
 // NFC device as Target functions
-bool    pn53x_target_init (nfc_device_t * pnd, const nfc_target_mode_t ntm, const nfc_target_t nt, byte_t * pbtRx, size_t * pszRxLen);
+bool    pn53x_target_init (nfc_device_t * pnd, const nfc_target_mode_t ntm, const nfc_target_t nt, byte_t * pbtRx, size_t * pszRx);
 bool    pn53x_target_receive_bits (nfc_device_t * pnd, byte_t * pbtRx, size_t * pszRxBits, byte_t * pbtRxPar);
-bool    pn53x_target_receive_bytes (nfc_device_t * pnd, byte_t * pbtRx, size_t * pszRxLen);
+bool    pn53x_target_receive_bytes (nfc_device_t * pnd, byte_t * pbtRx, size_t * pszRx);
 bool    pn53x_target_send_bits (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxBits,
                                 const byte_t * pbtTxPar);
-bool    pn53x_target_send_bytes (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxLen);
+bool    pn53x_target_send_bytes (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx);
 // Error handling functions
 const char *pn53x_strerror (const nfc_device_t * pnd);
 static const struct chip_callbacks pn53x_callbacks_list = {
@@ -152,7 +152,7 @@ bool	pn53x_TgInitAsTarget (nfc_device_t * pnd, nfc_target_mode_t ntm,
                               const byte_t * pbtMifareParams,
                               const byte_t * pbtFeliCaParams,
                               const byte_t * pbtNFCID3t, const byte_t * pbtGB, const size_t szGB,
-                              byte_t * pbtRx, size_t * pszRxLen, byte_t * pbtModeByte);
+                              byte_t * pbtRx, size_t * pszRx, byte_t * pbtModeByte);
 
 
 #endif // __NFC_CHIPS_PN53X_H__

@@ -206,7 +206,7 @@ arygon_disconnect (nfc_device_t * pnd)
 }
 
 bool
-arygon_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxLen, byte_t * pbtRx, size_t * pszRxLen)
+arygon_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, byte_t * pbtRx, size_t * pszRx)
 {
   byte_t  abtTxBuf[BUFFER_LENGTH] = { DEV_ARYGON_PROTOCOL_TAMA, 0x00, 0x00, 0xff };     // Every packet must start with "00 00 ff"
   byte_t  abtRxBuf[BUFFER_LENGTH];
@@ -215,25 +215,25 @@ arygon_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxLe
   int     res;
 
   // Packet length = data length (len) + checksum (1) + end of stream marker (1)
-  abtTxBuf[4] = szTxLen;
+  abtTxBuf[4] = szTx;
   // Packet length checksum
   abtTxBuf[5] = BUFFER_LENGTH - abtTxBuf[4];
   // Copy the PN53X command into the packet buffer
-  memmove (abtTxBuf + 6, pbtTx, szTxLen);
+  memmove (abtTxBuf + 6, pbtTx, szTx);
 
   // Calculate data payload checksum
-  abtTxBuf[szTxLen + 6] = 0;
-  for (szPos = 0; szPos < szTxLen; szPos++) {
-    abtTxBuf[szTxLen + 6] -= abtTxBuf[szPos + 6];
+  abtTxBuf[szTx + 6] = 0;
+  for (szPos = 0; szPos < szTx; szPos++) {
+    abtTxBuf[szTx + 6] -= abtTxBuf[szPos + 6];
   }
 
   // End of stream marker
-  abtTxBuf[szTxLen + 7] = 0;
+  abtTxBuf[szTx + 7] = 0;
 
 #ifdef DEBUG
-  PRINT_HEX ("TX", abtTxBuf, szTxLen + 8);
+  PRINT_HEX ("TX", abtTxBuf, szTx + 8);
 #endif
-  res = uart_send ((serial_port) pnd->nds, abtTxBuf, szTxLen + 8);
+  res = uart_send ((serial_port) pnd->nds, abtTxBuf, szTx + 8);
   if (res != 0) {
     ERR ("%s", "Unable to transmit data. (TX)");
     pnd->iLastError = res;
@@ -274,7 +274,7 @@ arygon_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxLe
     return false;
 
   // When the answer should be ignored, just return a successful result
-  if (pbtRx == NULL || pszRxLen == NULL)
+  if (pbtRx == NULL || pszRx == NULL)
     return true;
 
   // Only succeed when the result is at least 00 00 FF xx Fx Dx xx .. .. .. xx 00 (x = variable)
@@ -282,8 +282,8 @@ arygon_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxLe
     return false;
 
   // Remove the preceding and appending bytes 00 00 ff 00 ff 00 00 00 FF xx Fx .. .. .. xx 00 (x = variable)
-  *pszRxLen = szRxBufLen - 9;
-  memcpy (pbtRx, abtRxBuf + 7, *pszRxLen);
+  *pszRx = szRxBufLen - 9;
+  memcpy (pbtRx, abtRxBuf + 7, *pszRx);
 
   return true;
 }
@@ -301,7 +301,7 @@ bool
 arygon_check_communication (const nfc_device_spec_t nds)
 {
   byte_t  abtRx[BUFFER_LENGTH];
-  size_t  szRxLen;
+  size_t  szRx;
   const byte_t attempted_result[] =
     { 0x00, 0x00, 0xff, 0x00, 0xff, 0x00, 0x00, 0x00, 0xff, 0x09, 0xf7, 0xd5, 0x01, 0x00, 'l', 'i', 'b', 'n', 'f', 'c',
 0xbc, 0x00 };
@@ -321,13 +321,13 @@ arygon_check_communication (const nfc_device_spec_t nds)
     return false;
   }
 
-  res = uart_receive ((serial_port) nds, abtRx, &szRxLen);
+  res = uart_receive ((serial_port) nds, abtRx, &szRx);
   if (res != 0) {
     ERR ("%s", "Unable to receive data. (RX)");
     return false;
   }
 #ifdef DEBUG
-  PRINT_HEX ("RX", abtRx, szRxLen);
+  PRINT_HEX ("RX", abtRx, szRx);
 #endif
 
   if (0 != memcmp (abtRx, attempted_result, sizeof (attempted_result))) {

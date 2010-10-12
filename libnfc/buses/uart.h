@@ -84,7 +84,7 @@ void    uart_close (const serial_port sp);
 void    uart_set_speed (serial_port sp, const uint32_t uiPortSpeed);
 uint32_t uart_get_speed (const serial_port sp);
 
-int     uart_receive (serial_port sp, byte_t * pbtRx, size_t * pszRxLen);
-int     uart_send (serial_port sp, const byte_t * pbtTx, const size_t szTxLen);
+int     uart_receive (serial_port sp, byte_t * pbtRx, size_t * pszRx);
+int     uart_send (serial_port sp, const byte_t * pbtTx, const size_t szTx);
 
 #endif // __NFC_BUS_UART_H__

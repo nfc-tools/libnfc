@@ -211,7 +211,7 @@ uart_close (const serial_port sp)
  * @return 0 on success, otherwise driver error code
  */
 int
-uart_receive (serial_port sp, byte_t * pbtRx, size_t * pszRxLen)
+uart_receive (serial_port sp, byte_t * pbtRx, size_t * pszRx)
 {
   int     res;
   int     byteCount;
@@ -219,7 +219,7 @@ uart_receive (serial_port sp, byte_t * pbtRx, size_t * pszRxLen)
   struct timeval tv;
 
   // Reset the output count  
-  *pszRxLen = 0;
+  *pszRx = 0;
 
   do {
     // Reset file descriptor
@@ -235,7 +235,7 @@ uart_receive (serial_port sp, byte_t * pbtRx, size_t * pszRxLen)
     }
     // Read time-out
     if (res == 0) {
-      if (*pszRxLen == 0) {
+      if (*pszRx == 0) {
         // Error, we received no data
         DBG ("%s", "RX time-out, buffer empty.");
         return DETIMEOUT;
@@ -250,14 +250,14 @@ uart_receive (serial_port sp, byte_t * pbtRx, size_t * pszRxLen)
       return DEIO;
     }
     // There is something available, read the data
-    res = read (((serial_port_unix *) sp)->fd, pbtRx + (*pszRxLen), byteCount);
+    res = read (((serial_port_unix *) sp)->fd, pbtRx + (*pszRx), byteCount);
 
     // Stop if the OS has some troubles reading the data
     if (res <= 0) {
       return DEIO;
     }
 
-    *pszRxLen += res;
+    *pszRx += res;
 
   } while (byteCount);
 
@@ -270,14 +270,14 @@ uart_receive (serial_port sp, byte_t * pbtRx, size_t * pszRxLen)
  * @return 0 on success, otherwise a driver error is returned
  */
 int
-uart_send (serial_port sp, const byte_t * pbtTx, const size_t szTxLen)
+uart_send (serial_port sp, const byte_t * pbtTx, const size_t szTx)
 {
   int32_t res;
   size_t  szPos = 0;
   fd_set  rfds;
   struct timeval tv;
 
-  while (szPos < szTxLen) {
+  while (szPos < szTx) {
     // Reset file descriptor
     FD_ZERO (&rfds);
     FD_SET (((serial_port_unix *) sp)->fd, &rfds);
@@ -295,7 +295,7 @@ uart_send (serial_port sp, const byte_t * pbtTx, const size_t szTxLen)
       return DETIMEOUT;
     }
     // Send away the bytes
-    res = write (((serial_port_unix *) sp)->fd, pbtTx + szPos, szTxLen - szPos);
+    res = write (((serial_port_unix *) sp)->fd, pbtTx + szPos, szTx - szPos);
 
     // Stop if the OS has some troubles sending the data
     if (res <= 0) {
@@ -410,21 +410,21 @@ uart_get_speed (const serial_port sp)
 }
 
 int
-uart_receive (serial_port sp, byte_t * pbtRx, size_t * pszRxLen)
+uart_receive (serial_port sp, byte_t * pbtRx, size_t * pszRx)
 {
-  if (!ReadFile (((serial_port_windows *) sp)->hPort, pbtRx, *pszRxLen, (LPDWORD) pszRxLen, NULL)) {
+  if (!ReadFile (((serial_port_windows *) sp)->hPort, pbtRx, *pszRx, (LPDWORD) pszRx, NULL)) {
     return DEIO;
   }
-  if (!*pszRxLen)
+  if (!*pszRx)
     return DEIO;
   return 0;
 }
 
 int
-uart_send (serial_port sp, const byte_t * pbtTx, const size_t szTxLen)
+uart_send (serial_port sp, const byte_t * pbtTx, const size_t szTx)
 {
   DWORD   dwTxLen = 0;
-  if (!WriteFile (((serial_port_windows *) sp)->hPort, pbtTx, szTxLen, &dwTxLen, NULL)) {
+  if (!WriteFile (((serial_port_windows *) sp)->hPort, pbtTx, szTx, &dwTxLen, NULL)) {
     return DEIO;
   }
   if (!dwTxLen)

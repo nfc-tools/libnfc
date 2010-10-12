@@ -51,8 +51,8 @@ int main(int argc, const char* argv[])
   nfc_device_t* pnd;
   byte_t abtRx[MAX_FRAME_LEN];
   byte_t abtTx[MAX_FRAME_LEN] = { 0xD4 };
-  size_t szRxLen;
-  size_t szTxLen;
+  size_t szRx;
+  size_t szTx;
 
   // Try to open the NFC reader
   pnd = nfc_connect(NULL);
@@ -98,7 +98,7 @@ int main(int argc, const char* argv[])
       free(cmd);
       break;
     }
-    szTxLen = 0;
+    szTx = 0;
     for(int i = 0; i<MAX_FRAME_LEN-10; i++) {
       int size;
       byte_t byte;
@@ -110,29 +110,29 @@ int main(int argc, const char* argv[])
         break;
       }
       abtTx[i+1] = byte;
-      szTxLen++;
+      szTx++;
       if (cmd[offset+1] == 0) { // if last hex was only 1 symbol
         break;
       }
       offset += 2;
     }
 
-    if ((int)szTxLen < 1) {
+    if ((int)szTx < 1) {
       free(cmd);
       continue;
     }
-    szTxLen++;
+    szTx++;
     printf("Tx: ");
-    print_hex((byte_t*)abtTx+1,szTxLen-1);
+    print_hex((byte_t*)abtTx+1,szTx-1);
 
-    if (!pn53x_transceive (pnd, abtTx, szTxLen, abtRx, &szRxLen)) {
+    if (!pn53x_transceive (pnd, abtTx, szTx, abtRx, &szRx)) {
       free(cmd);
       nfc_perror (pnd, "Rx");
       continue;
     }
 
     printf("Rx: ");
-    print_hex(abtRx, szRxLen);
+    print_hex(abtRx, szRx);
     free(cmd);
   }
 

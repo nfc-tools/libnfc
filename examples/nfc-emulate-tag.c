@@ -44,7 +44,7 @@
 #define MAX_FRAME_LEN 264
 
 static byte_t abtRx[MAX_FRAME_LEN];
-static size_t szRxLen;
+static size_t szRx;
 static nfc_device_t *pnd;
 static bool quiet_output = false;
 static bool init_mfc_auth = false;
@@ -107,13 +107,13 @@ nfc_target_emulate_tag(nfc_device_t* pnd, const nfc_target_t nt)
   byte_t abtTx[MAX_FRAME_LEN];
   bool loop = true;
 
-  if (!nfc_target_init (pnd, NTM_PASSIVE, nt, abtRx, &szRxLen)) {
+  if (!nfc_target_init (pnd, NTM_PASSIVE, nt, abtRx, &szRx)) {
     nfc_perror (pnd, "nfc_target_init");
     return false;
   }
 
   while ( loop ) {
-    loop = target_io( nt, abtRx, szRxLen, abtTx, &szTx );
+    loop = target_io( nt, abtRx, szRx, abtTx, &szTx );
     if (szTx) {
       if (!nfc_target_send_bytes(pnd, abtTx, szTx)) {
         nfc_perror (pnd, "nfc_target_send_bytes");
@@ -125,7 +125,7 @@ nfc_target_emulate_tag(nfc_device_t* pnd, const nfc_target_t nt)
         nfc_configure (pnd, NDO_HANDLE_CRC, false);
         init_mfc_auth = false;
       }
-      if (!nfc_target_receive_bytes(pnd, abtRx, &szRxLen)) {
+      if (!nfc_target_receive_bytes(pnd, abtRx, &szRx)) {
         nfc_perror (pnd, "nfc_target_receive_bytes");
         return false;
       }
