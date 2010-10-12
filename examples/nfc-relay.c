@@ -126,11 +126,10 @@ main (int argc, char *argv[])
   printf ("[+] To do this, please send any command after the anti-collision\n");
   printf ("[+] For example, send a RATS command or use the \"nfc-anticol\" tool\n");
 
-  // Note: We have to build a "fake" nfc_target_t in order to do exactly the same that was done before the new nfc_target_init() was introduced.
   nfc_target_t nt = {
-    .ntt = NTT_GENERIC_PASSIVE_106,
-    .nti.nai.abtAtqa = "\x04\x00",
-    .nti.nai.abtUid = "\xde\xad\xbe\xef",
+    .ntt = NTT_MIFARE,
+    .nti.nai.abtAtqa = { 0x04, 0x00 },
+    .nti.nai.abtUid = { 0xde, 0xad, 0xbe, 0xef },
     .nti.nai.btSak = 0x20,
     .nti.nai.szUidLen = 4,
     .nti.nai.szAtsLen = 0,

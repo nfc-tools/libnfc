@@ -198,9 +198,9 @@ main (int argc, const char *argv[])
       size_t  szRxLen;
 
       nfc_target_t nt = {
-        .ntt = NTT_GENERIC_PASSIVE_106,
-        .nti.nai.abtAtqa = "\x04\x00",
-        .nti.nai.abtUid = "\x08\xad\xbe\xaf",
+        .ntt = NTT_MIFARE,
+        .nti.nai.abtAtqa = { 0x04, 0x00 },
+        .nti.nai.abtUid = { 0x08, 0xad, 0xbe, 0xaf },
         .nti.nai.btSak = 0x20,
         .nti.nai.szUidLen = 4,
         .nti.nai.szAtsLen = 0,
