@@ -152,7 +152,7 @@ main (int argc, char *argv[])
   }
 
   printf ("Connected to NFC device: %s\n", pnd->acName);
-  
+
   // Example of a Mifare Classic Mini
   // Note that crypto1 is not implemented in this example
   nfc_target_t nt = {
@@ -163,6 +163,15 @@ main (int argc, char *argv[])
     .nti.nai.szUidLen = 4,
     .nti.nai.szAtsLen = 0,
   };
+/*
+  // Example of a FeliCa
+  nfc_target_t nt = {
+    .ntt = NTT_FELICA_212,
+    .nti.nfi.abtId = { 0x01, 0xFE, 0x56, 0x78, 0x9A, 0xBC, 0xDE, 0xFF },
+    .nti.nfi.abtPad = { 0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC, 0xDE, 0xFF },
+    .nti.nfi.abtSysCode = { 0xFF, 0xFF },
+  };
+*/
 /*
   // Example of a ISO14443-4 (DESfire)
   nfc_target_t nt = {

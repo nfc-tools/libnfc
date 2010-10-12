@@ -1062,7 +1062,9 @@ pn53x_target_init (nfc_device_t * pnd, const nfc_target_mode_t ntm, const nfc_ta
     return false;
 
   byte_t abtMifareParams[6];
+  byte_t abtFeliCaParams[18];
   byte_t * pbtMifareParams = NULL;
+  byte_t * pbtFeliCaParams = NULL;
 
   const byte_t * pbtNFCID3t = NULL;
   const byte_t * pbtGB = NULL;
@@ -1086,6 +1088,18 @@ pn53x_target_init (nfc_device_t * pnd, const nfc_target_mode_t ntm, const nfc_ta
       pbtMifareParams = abtMifareParams;
     }
     break;
+
+    case NTT_FELICA_212:
+    case NTT_FELICA_424:
+      // Set NFCID2t 
+      memcpy(abtFeliCaParams, nt.nti.nfi.abtId, 8);
+      // Set PAD
+      memcpy(abtFeliCaParams+8, nt.nti.nfi.abtPad, 8);
+      // Set SystemCode
+      memcpy(abtFeliCaParams+16, nt.nti.nfi.abtSysCode, 2);
+      pbtFeliCaParams = abtFeliCaParams;
+    break;
+
     case NTT_DEP_PASSIVE_106:
     case NTT_DEP_PASSIVE_212:
     case NTT_DEP_PASSIVE_424:
@@ -1095,7 +1109,7 @@ pn53x_target_init (nfc_device_t * pnd, const nfc_target_mode_t ntm, const nfc_ta
     break;
   }
 
-  if(!pn53x_TgInitAsTarget(pnd, ntm, pbtMifareParams, NULL, pbtNFCID3t, pbtGB, szGB, pbtRx, pszRxLen)) {
+  if(!pn53x_TgInitAsTarget(pnd, ntm, pbtMifareParams, pbtFeliCaParams, pbtNFCID3t, pbtGB, szGB, pbtRx, pszRxLen, NULL)) {
     return false;
   }
 
@@ -1113,7 +1127,7 @@ pn53x_TgInitAsTarget (nfc_device_t * pnd, nfc_target_mode_t ntm,
                       const byte_t * pbtMifareParams,
                       const byte_t * pbtFeliCaParams,
                       const byte_t * pbtNFCID3t, const byte_t * pbtGB, const size_t szGB,
-                      byte_t * pbtRx, size_t * pszRxLen)
+                      byte_t * pbtRx, size_t * pszRxLen, byte_t * pbtModeByte)
 {
   byte_t  abtRx[MAX_FRAME_LEN];
   size_t  szRxLen;
@@ -1128,12 +1142,15 @@ pn53x_TgInitAsTarget (nfc_device_t * pnd, nfc_target_mode_t ntm,
   // Store the target mode in the initialization params
   abtCmd[2] = ntm;
 
+  // MIFARE part
   if (pbtMifareParams) {
     memcpy (abtCmd+3, pbtMifareParams, 6);
   }
+  // FeliCa part
   if (pbtFeliCaParams) {
     memcpy (abtCmd+9, pbtFeliCaParams, 18);
   }
+  // DEP part
   if (pbtNFCID3t) {
     memcpy(abtCmd+27, pbtNFCID3t, 10);
   }
@@ -1156,6 +1173,9 @@ pn53x_TgInitAsTarget (nfc_device_t * pnd, nfc_target_mode_t ntm,
 
   // Note: the first byte is skip: 
   //       its the "mode" byte which contains baudrate, DEP and Framing type (Mifare, active or FeliCa) datas.
+  if(pbtModeByte) {
+    *pbtModeByte = pbtRx[0];
+  }
 
   // Save the received byte count
   *pszRxLen = szRxLen - 1;
