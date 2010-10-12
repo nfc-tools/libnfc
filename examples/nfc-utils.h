@@ -40,6 +40,8 @@ void    print_nfc_felica_info (const nfc_felica_info_t nfi);
 void    print_nfc_jewel_info (const nfc_jewel_info_t nji);
 void    print_nfc_dep_info (const nfc_dep_info_t ndi);
 
+void    print_nfc_target_type( const nfc_target_type_t ntt );
+
 nfc_device_desc_t *parse_device_desc (int argc, const char *argv[], size_t * szFound);
 
 #endif
