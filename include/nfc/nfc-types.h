@@ -302,19 +302,19 @@ typedef enum {
   /** Generic passive 424 kbps (FeliCa, DEP) */
   NTT_GENERIC_PASSIVE_424 = 0x02,
   /** Passive 106 kbps ISO/IEC14443-4B */
-  NTT_ISO14443B_106 = 0x03,
+  NTT_ISO14443_4B_106 = 0x03,
   /** Innovision Jewel tag */
   NTT_JEWEL_106 = 0x04,
-  /** mifare card */
+  /** Mifare card */
   NTT_MIFARE = 0x10,
   /** FeliCa 212 kbps card */
   NTT_FELICA_212 = 0x11,
   /** FeliCa 424 kbps card */
   NTT_FELICA_424 = 0x12,
-  /** Passive 106 kbps ISO/IEC14443-4A */
-  NTT_ISO14443A_106 = 0x20,
-  /** Passive 106 kbps ISO/IEC14443-4B with TCL flag */
-  NTT_ISO14443B_TCL_106 = 0x23,
+  /** Passive 106 kbps ISO/IEC 14443-4A */
+  NTT_ISO14443_4A_106 = 0x20,
+  /** Passive 106 kbps ISO/IEC 14443-4B with TCL flag */
+  NTT_ISO14443_4B_TCL_106 = 0x23,
   /** DEP passive 106 kbps */
   NTT_DEP_PASSIVE_106 = 0x40,
   /** DEP passive 212 kbps */

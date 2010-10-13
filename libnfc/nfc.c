@@ -350,7 +350,7 @@ nfc_initiator_select_passive_target (nfc_device_t * pnd,
       break;
 
     case NM_ISO14443B_106:
-      if (!pn53x_decode_target_data (abtTargetsData + 1, szTargetsData - 1, pnd->nc, NTT_ISO14443B_106, pnti)) {
+      if (!pn53x_decode_target_data (abtTargetsData + 1, szTargetsData - 1, pnd->nc, NTT_ISO14443_4B_106, pnti)) {
         return false;
       }
       break;

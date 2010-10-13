@@ -377,7 +377,7 @@ pn53x_decode_target_data (const byte_t * pbtRawData, size_t szDataLen, nfc_chip_
   switch (ntt) {
   case NTT_MIFARE:
   case NTT_GENERIC_PASSIVE_106:
-  case NTT_ISO14443A_106:
+  case NTT_ISO14443_4A_106:
     // We skip the first byte: its the target number (Tg)
     pbtRawData++;
 
@@ -415,8 +415,8 @@ pn53x_decode_target_data (const byte_t * pbtRawData, size_t szDataLen, nfc_chip_
     }
     break;
 
-  case NTT_ISO14443B_106:
-  case NTT_ISO14443B_TCL_106:
+  case NTT_ISO14443_4B_106:
+  case NTT_ISO14443_4B_TCL_106:
     // We skip the first byte: its the target number (Tg)
     pbtRawData++;
 
@@ -1073,7 +1073,7 @@ pn53x_target_init (nfc_device_t * pnd, const nfc_target_mode_t ntm, const nfc_ta
   switch(nt.ntt) {
     case NTT_MIFARE:
     case NTT_GENERIC_PASSIVE_106:
-    case NTT_ISO14443A_106: {
+    case NTT_ISO14443_4A_106: {
       // Set ATQA (SENS_RES)
       abtMifareParams[0] = nt.nti.nai.abtAtqa[1];
       abtMifareParams[1] = nt.nti.nai.abtAtqa[0];

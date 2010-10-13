@@ -224,7 +224,7 @@ void print_nfc_target_type( const nfc_target_type_t ntt )
     case NTT_GENERIC_PASSIVE_424:
       printf ("Generic passive 424 kbps (FeliCa, DEP)\n");
     break;
-    case NTT_ISO14443B_106:
+    case NTT_ISO14443_4B_106:
       printf ("Passive 106 kbps ISO/IEC14443-4B\n");
     break;
     case NTT_JEWEL_106:
@@ -239,10 +239,10 @@ void print_nfc_target_type( const nfc_target_type_t ntt )
     case NTT_FELICA_424:
       printf ("FeliCa 424 kbps card\n");
     break;
-    case NTT_ISO14443A_106:
+    case NTT_ISO14443_4A_106:
       printf ("Passive 106 kbps ISO/IEC14443-4A\n");
     break;
-    case NTT_ISO14443B_TCL_106:
+    case NTT_ISO14443_4B_TCL_106:
       printf ("Passive 106 kbps ISO/IEC14443-4B with TCL flag\n");
     break;
     case NTT_DEP_PASSIVE_106:

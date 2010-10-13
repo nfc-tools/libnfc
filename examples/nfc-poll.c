@@ -72,7 +72,7 @@ main (int argc, const char *argv[])
 
     const byte_t btPollNr = 20;
     const byte_t btPeriod = 2;
-    const nfc_target_type_t nttArray[5] = {NTT_GENERIC_PASSIVE_106, NTT_GENERIC_PASSIVE_212, NTT_GENERIC_PASSIVE_424, NTT_ISO14443B_106, NTT_JEWEL_106};
+    const nfc_target_type_t nttArray[5] = {NTT_GENERIC_PASSIVE_106, NTT_GENERIC_PASSIVE_212, NTT_GENERIC_PASSIVE_424, NTT_ISO14443_4B_106, NTT_JEWEL_106};
     const size_t szTargetTypes = 5;
 
     nfc_target_t antTargets[2];
@@ -129,11 +129,11 @@ main (int argc, const char *argv[])
             printf ("(FeliCa 212 kbps card), targetData:\n");
             print_nfc_felica_info (antTargets[n].nti.nfi);
             break;
-          case NTT_ISO14443A_106:
+          case NTT_ISO14443_4A_106:
             printf ("(Passive 106 kbps ISO/IEC 14443-4A card), targetData:\n");
             print_nfc_iso14443a_info (antTargets[n].nti.nai);
             break;
-          case NTT_ISO14443B_TCL_106:
+          case NTT_ISO14443_4B_TCL_106:
             printf ("(Passive 106 kbps ISO/IEC 14443-4B card), targetData:\n");
             print_nfc_iso14443b_info (antTargets[n].nti.nbi);
             break;
