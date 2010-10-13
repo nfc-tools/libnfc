@@ -255,28 +255,47 @@ parse_device_desc (int argc, const char *argv[], size_t * szFound)
   return pndd;
 }
 
+const char *
+str_nfc_baud_rate (const nfc_baud_rate_t nbr)
+{
+  switch(nbr) {
+    case NBR_UNDEFINED:
+      return "undefined baud rate";
+    break;
+    case NBR_106:
+      return "106 kbps";
+    break;
+    case NBR_212:
+      return "212 kbps";
+    break;
+    case NBR_424:
+      return "424 kbps";
+    break;
+  }
+}
+
 void
 print_nfc_target (const nfc_target_t nt)
 {
-  switch(nt.nmt) {
+  switch(nt.nm.nmt) {
     case NMT_ISO14443A:
-      printf ("ISO/IEC 14443A target:\n");
+      printf ("ISO/IEC 14443A (%s) target:\n", str_nfc_baud_rate(nt.nm.nbr));
       print_nfc_iso14443a_info (nt.nti.nai);
     break;
     case NMT_JEWEL:
-      printf ("Innovision Jewel target:\n");
+      printf ("Innovision Jewel (%s) target:\n", str_nfc_baud_rate(nt.nm.nbr));
       print_nfc_jewel_info (nt.nti.nji);
     break;
     case NMT_FELICA:
-      printf ("FeliCa target:\n");
+      printf ("FeliCa (%s) target:\n", str_nfc_baud_rate(nt.nm.nbr));
       print_nfc_felica_info (nt.nti.nfi);
     break;
     case NMT_ISO14443B:
-      printf ("ISO/IEC 14443-4B target:\n");
+      printf ("ISO/IEC 14443-4B (%s) target:\n", str_nfc_baud_rate(nt.nm.nbr));
       print_nfc_iso14443b_info (nt.nti.nbi);
     break;
     case NMT_DEP:
-      printf ("D.E.P. target:\n");
+      printf ("D.E.P. (%s) target:\n", str_nfc_baud_rate(nt.nm.nbr));
       print_nfc_dep_info (nt.nti.ndi);
     break;
   }

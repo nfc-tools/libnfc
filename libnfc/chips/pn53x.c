@@ -652,7 +652,7 @@ pn53x_InAutoPoll (nfc_device_t * pnd,
       /* 1st target */
       // Target type
       pn53x_target_type_t ptt = *(pbt++);
-      pntTargets[0].nmt = pn53x_ptt_to_nmt(ptt);
+      pntTargets[0].nm.nmt = pn53x_ptt_to_nmt(ptt);
       // AutoPollTargetData length
       ln = *(pbt++);
       pn53x_decode_target_data (pbt, ln, pnd->nc, ptt, &(pntTargets[0].nti));
@@ -662,7 +662,7 @@ pn53x_InAutoPoll (nfc_device_t * pnd,
         /* 2nd target */
         // Target type
         ptt = *(pbt++);
-        pntTargets[1].nmt = pn53x_ptt_to_nmt(*(pbt++));
+        pntTargets[1].nm.nmt = pn53x_ptt_to_nmt(*(pbt++));
         // AutoPollTargetData length
         ln = *(pbt++);
         pn53x_decode_target_data (pbt, ln, pnd->nc, ptt, &(pntTargets[1].nti));
@@ -1115,7 +1115,7 @@ pn53x_target_init (nfc_device_t * pnd, const nfc_target_mode_t ntm, const nfc_ta
   const byte_t * pbtGB = NULL;
   size_t szGB = 0;
 
-  switch(nt.nmt) {
+  switch(nt.nm.nmt) {
     case NMT_ISO14443A: {
       // Set ATQA (SENS_RES)
       abtMifareParams[0] = nt.nti.nai.abtAtqa[1];

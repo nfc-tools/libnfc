@@ -117,7 +117,7 @@ main (int argc, const char *argv[])
       uint8_t n;
       printf ("%ld target(s) have been found.\n", (unsigned long) szTargetFound);
       for (n = 0; n < szTargetFound; n++) {
-        printf ("T%d: targetType=%02x ", n + 1, antTargets[n].nmt);
+        printf ("T%d: ", n + 1);
         print_nfc_target ( antTargets[n] );
 
       }

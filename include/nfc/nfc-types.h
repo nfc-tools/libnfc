@@ -268,6 +268,7 @@ typedef enum {
  * @brief NFC baud rate enumeration
  */
 typedef enum {
+  NBR_UNDEFINED = 0,
   NBR_106,
   NBR_212,
   NBR_424,
@@ -301,7 +302,7 @@ typedef struct {
  */
 typedef struct {
   nfc_target_info_t nti;
-  nfc_modulation_type_t nmt;
+  nfc_modulation_t nm;
 } nfc_target_t;
 
 // Reset struct alignment to default

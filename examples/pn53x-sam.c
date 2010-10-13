@@ -202,7 +202,8 @@ main (int argc, const char *argv[])
       size_t  szRx;
 
       nfc_target_t nt = {
-        .nmt = NMT_ISO14443A,
+        .nm.nmt = NMT_ISO14443A,
+        .nm.nbr = NBR_UNDEFINED,
         .nti.nai.abtAtqa = { 0x04, 0x00 },
         .nti.nai.abtUid = { 0x08, 0xad, 0xbe, 0xaf },
         .nti.nai.btSak = 0x20,
