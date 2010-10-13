@@ -555,6 +555,7 @@ pn53x_InListPassiveTarget (nfc_device_t * pnd,
       // all gone fine.
       break;
     case PM_ISO14443B_106:
+      // FIXME Some PN532 doesn't support type B !
     case PM_JEWEL_106:
       if(pnd->nc == NC_PN531) {
         // These modulations are not supported by pn531
@@ -746,7 +747,7 @@ pn53x_get_firmware_version (nfc_device_t * pnd)
   byte_t  abtFw[4];
   size_t  szFwLen = sizeof (abtFw);
   char   *pcName;
-
+  // TODO Read more info here: there are modulation capabilities info to know if ISO14443B is supported
   if (!pn53x_transceive (pnd, pncmd_get_firmware_version, 2, abtFw, &szFwLen)) {
     // Failed to get firmware revision??, whatever...let's disconnect and clean up and return err
     DBG ("Failed to get firmware revision for: %s", pnd->acName);
