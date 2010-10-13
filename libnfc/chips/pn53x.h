@@ -105,7 +105,7 @@ bool    pn53x_wrap_frame (const byte_t * pbtTx, const size_t szTxBits, const byt
                           size_t * pszFrameBits);
 bool    pn53x_unwrap_frame (const byte_t * pbtFrame, const size_t szFrameBits, byte_t * pbtRx, size_t * pszRxBits,
                             byte_t * pbtRxPar);
-bool    pn53x_decode_target_data (const byte_t * pbtRawData, size_t szDataLen, nfc_chip_t nc, nfc_target_type_t ntt,
+bool    pn53x_decode_target_data (const byte_t * pbtRawData, size_t szDataLen, nfc_chip_t nc, pn53x_target_type_t ptt,
                                   nfc_target_info_t * pnti);
 
 bool    pn53x_get_firmware_version (nfc_device_t * pnd);
@@ -140,7 +140,7 @@ bool    pn53x_InListPassiveTarget (nfc_device_t * pnd, const nfc_modulation_t nm
                                    const size_t szInitiatorDataLen, byte_t * pbtTargetsData, size_t * pszTargetsData);
 bool    pn53x_InDeselect (nfc_device_t * pnd, const uint8_t ui8Target);
 bool    pn53x_InRelease (nfc_device_t * pnd, const uint8_t ui8Target);
-bool    pn53x_InAutoPoll (nfc_device_t * pnd, const nfc_target_type_t * pnttTargetTypes, const size_t szTargetTypes,
+bool    pn53x_InAutoPoll (nfc_device_t * pnd, const pn53x_target_type_t * ppttTargetTypes, const size_t szTargetTypes,
                           const byte_t btPollNr, const byte_t btPeriod, nfc_target_t * pntTargets,
                           size_t * pszTargetFound);
 bool    pn53x_InJumpForDEP (nfc_device_t * pnd, const nfc_modulation_t nmInitModulation,

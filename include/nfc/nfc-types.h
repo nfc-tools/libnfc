@@ -291,43 +291,43 @@ typedef enum {
 } nfc_target_mode_t;
 
 /**
- * @enum nfc_target_type_t
+ * @enum pn53x_target_type_t
  * @brief NFC target type enumeration
  */
 typedef enum {
   /** Generic passive 106 kbps (ISO/IEC14443-4A, mifare, DEP) */
-  NTT_GENERIC_PASSIVE_106 = 0x00,
+  PTT_GENERIC_PASSIVE_106 = 0x00,
   /** Generic passive 212 kbps (FeliCa, DEP) */
-  NTT_GENERIC_PASSIVE_212 = 0x01,
+  PTT_GENERIC_PASSIVE_212 = 0x01,
   /** Generic passive 424 kbps (FeliCa, DEP) */
-  NTT_GENERIC_PASSIVE_424 = 0x02,
+  PTT_GENERIC_PASSIVE_424 = 0x02,
   /** Passive 106 kbps ISO/IEC14443-4B */
-  NTT_ISO14443_4B_106 = 0x03,
+  PTT_ISO14443_4B_106 = 0x03,
   /** Innovision Jewel tag */
-  NTT_JEWEL_106 = 0x04,
+  PTT_JEWEL_106 = 0x04,
   /** Mifare card */
-  NTT_MIFARE = 0x10,
+  PTT_MIFARE = 0x10,
   /** FeliCa 212 kbps card */
-  NTT_FELICA_212 = 0x11,
+  PTT_FELICA_212 = 0x11,
   /** FeliCa 424 kbps card */
-  NTT_FELICA_424 = 0x12,
+  PTT_FELICA_424 = 0x12,
   /** Passive 106 kbps ISO/IEC 14443-4A */
-  NTT_ISO14443_4A_106 = 0x20,
+  PTT_ISO14443_4A_106 = 0x20,
   /** Passive 106 kbps ISO/IEC 14443-4B with TCL flag */
-  NTT_ISO14443_4B_TCL_106 = 0x23,
+  PTT_ISO14443_4B_TCL_106 = 0x23,
   /** DEP passive 106 kbps */
-  NTT_DEP_PASSIVE_106 = 0x40,
+  PTT_DEP_PASSIVE_106 = 0x40,
   /** DEP passive 212 kbps */
-  NTT_DEP_PASSIVE_212 = 0x41,
+  PTT_DEP_PASSIVE_212 = 0x41,
   /** DEP passive 424 kbps */
-  NTT_DEP_PASSIVE_424 = 0x42,
+  PTT_DEP_PASSIVE_424 = 0x42,
   /** DEP active 106 kbps */
-  NTT_DEP_ACTIVE_106 = 0x80,
+  PTT_DEP_ACTIVE_106 = 0x80,
   /** DEP active 212 kbps */
-  NTT_DEP_ACTIVE_212 = 0x81,
+  PTT_DEP_ACTIVE_212 = 0x81,
   /** DEP active 424 kbps */
-  NTT_DEP_ACTIVE_424 = 0x82,
-} nfc_target_type_t;
+  PTT_DEP_ACTIVE_424 = 0x82,
+} pn53x_target_type_t;
 
 /**
  * @struct nfc_target_t
@@ -335,7 +335,7 @@ typedef enum {
  */
 typedef struct {
   nfc_target_info_t nti;
-  nfc_target_type_t ntt;
+  pn53x_target_type_t ptt;
 } nfc_target_t;
 
 // Reset struct alignment to default

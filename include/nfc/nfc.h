@@ -74,7 +74,7 @@ extern  "C" {
   NFC_EXPORT bool nfc_initiator_list_passive_targets (nfc_device_t * pnd, const nfc_modulation_t nmInitModulation,
                                                       nfc_target_info_t anti[], const size_t szTargets,
                                                       size_t * pszTargetFound);
-  NFC_EXPORT bool nfc_initiator_poll_targets (nfc_device_t * pnd, const nfc_target_type_t * pnttTargetTypes,
+  NFC_EXPORT bool nfc_initiator_poll_targets (nfc_device_t * pnd, const pn53x_target_type_t * ppttTargetTypes,
                                               const size_t szTargetTypes, const byte_t btPollNr, const byte_t btPeriod,
                                               nfc_target_t * pntTargets, size_t * pszTargetFound);
   NFC_EXPORT bool nfc_initiator_select_dep_target (nfc_device_t * pnd, const nfc_modulation_t nmInitModulation,

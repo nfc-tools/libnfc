@@ -333,30 +333,30 @@ nfc_initiator_select_passive_target (nfc_device_t * pnd,
     // Fill the tag info struct with the values corresponding to this init modulation
     switch (nmInitModulation) {
     case NM_ISO14443A_106:
-      if (!pn53x_decode_target_data (abtTargetsData + 1, szTargetsData - 1, pnd->nc, NTT_GENERIC_PASSIVE_106, pnti)) {
+      if (!pn53x_decode_target_data (abtTargetsData + 1, szTargetsData - 1, pnd->nc, PTT_GENERIC_PASSIVE_106, pnti)) {
         return false;
       }
       break;
 
     case NM_FELICA_212:
-      if (!pn53x_decode_target_data (abtTargetsData + 1, szTargetsData - 1, pnd->nc, NTT_FELICA_212, pnti)) {
+      if (!pn53x_decode_target_data (abtTargetsData + 1, szTargetsData - 1, pnd->nc, PTT_FELICA_212, pnti)) {
         return false;
       }
       break;
     case NM_FELICA_424:
-      if (!pn53x_decode_target_data (abtTargetsData + 1, szTargetsData - 1, pnd->nc, NTT_FELICA_424, pnti)) {
+      if (!pn53x_decode_target_data (abtTargetsData + 1, szTargetsData - 1, pnd->nc, PTT_FELICA_424, pnti)) {
         return false;
       }
       break;
 
     case NM_ISO14443B_106:
-      if (!pn53x_decode_target_data (abtTargetsData + 1, szTargetsData - 1, pnd->nc, NTT_ISO14443_4B_106, pnti)) {
+      if (!pn53x_decode_target_data (abtTargetsData + 1, szTargetsData - 1, pnd->nc, PTT_ISO14443_4B_106, pnti)) {
         return false;
       }
       break;
 
     case NM_JEWEL_106:
-      if (!pn53x_decode_target_data (abtTargetsData + 1, szTargetsData - 1, pnd->nc, NTT_JEWEL_106, pnti)) {
+      if (!pn53x_decode_target_data (abtTargetsData + 1, szTargetsData - 1, pnd->nc, PTT_JEWEL_106, pnti)) {
         return false;
       }
       break;
@@ -431,8 +431,8 @@ nfc_initiator_list_passive_targets (nfc_device_t * pnd, const nfc_modulation_t n
  * @return Returns \c true if action was successfully performed; otherwise returns \c false.
  *
  * @param pnd \a nfc_device_t struct pointer that represent currently used device
- * @param pnttTargetTypes array of desired target types
- * @param szTargetTypes pnttTargetTypes count
+ * @param ppttTargetTypes array of desired target types
+ * @param szTargetTypes ppttTargetTypes count
  * @param btPollNr specifies the number of polling
  * @note one polling is a polling for each desired target type
  * @param btPeriod indicates the polling period in units of 150 ms
@@ -441,13 +441,13 @@ nfc_initiator_list_passive_targets (nfc_device_t * pnd, const nfc_modulation_t n
  */
 bool
 nfc_initiator_poll_targets (nfc_device_t * pnd,
-                            const nfc_target_type_t * pnttTargetTypes, const size_t szTargetTypes,
+                            const pn53x_target_type_t * ppttTargetTypes, const size_t szTargetTypes,
                             const byte_t btPollNr, const byte_t btPeriod,
                             nfc_target_t * pntTargets, size_t * pszTargetFound)
 {
   pnd->iLastError = 0;
 
-  return pn53x_InAutoPoll (pnd, pnttTargetTypes, szTargetTypes, btPollNr, btPeriod, pntTargets, pszTargetFound);
+  return pn53x_InAutoPoll (pnd, ppttTargetTypes, szTargetTypes, btPollNr, btPeriod, pntTargets, pszTargetFound);
 }
 
 /**

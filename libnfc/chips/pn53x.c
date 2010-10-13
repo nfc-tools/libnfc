@@ -369,15 +369,15 @@ pn53x_unwrap_frame (const byte_t * pbtFrame, const size_t szFrameBits, byte_t * 
 }
 
 bool
-pn53x_decode_target_data (const byte_t * pbtRawData, size_t szDataLen, nfc_chip_t nc, nfc_target_type_t ntt,
+pn53x_decode_target_data (const byte_t * pbtRawData, size_t szDataLen, nfc_chip_t nc, pn53x_target_type_t ptt,
                           nfc_target_info_t * pnti)
 {
   uint8_t szAttribRes;
 
-  switch (ntt) {
-  case NTT_MIFARE:
-  case NTT_GENERIC_PASSIVE_106:
-  case NTT_ISO14443_4A_106:
+  switch (ptt) {
+  case PTT_MIFARE:
+  case PTT_GENERIC_PASSIVE_106:
+  case PTT_ISO14443_4A_106:
     // We skip the first byte: its the target number (Tg)
     pbtRawData++;
 
@@ -415,8 +415,8 @@ pn53x_decode_target_data (const byte_t * pbtRawData, size_t szDataLen, nfc_chip_
     }
     break;
 
-  case NTT_ISO14443_4B_106:
-  case NTT_ISO14443_4B_TCL_106:
+  case PTT_ISO14443_4B_106:
+  case PTT_ISO14443_4B_TCL_106:
     // We skip the first byte: its the target number (Tg)
     pbtRawData++;
 
@@ -442,8 +442,8 @@ pn53x_decode_target_data (const byte_t * pbtRawData, size_t szDataLen, nfc_chip_
     }
     break;
 
-  case NTT_FELICA_212:
-  case NTT_FELICA_424:
+  case PTT_FELICA_212:
+  case PTT_FELICA_424:
     // We skip the first byte: its the target number (Tg)
     pbtRawData++;
 
@@ -461,7 +461,7 @@ pn53x_decode_target_data (const byte_t * pbtRawData, size_t szDataLen, nfc_chip_
       memcpy (pnti->nfi.abtSysCode, pbtRawData, 2);
     }
     break;
-  case NTT_JEWEL_106:
+  case PTT_JEWEL_106:
     // We skip the first byte: its the target number (Tg)
     pbtRawData++;
 
@@ -569,7 +569,7 @@ pn53x_InRelease (nfc_device_t * pnd, const uint8_t ui8Target)
 
 bool
 pn53x_InAutoPoll (nfc_device_t * pnd,
-                  const nfc_target_type_t * pnttTargetTypes, const size_t szTargetTypes,
+                  const pn53x_target_type_t * ppttTargetTypes, const size_t szTargetTypes,
                   const byte_t btPollNr, const byte_t btPeriod, nfc_target_t * pntTargets, size_t * pszTargetFound)
 {
   size_t  szTxInAutoPoll,
@@ -592,7 +592,7 @@ pn53x_InAutoPoll (nfc_device_t * pnd,
   pbtTxInAutoPoll[2] = btPollNr;
   pbtTxInAutoPoll[3] = btPeriod;
   for (n = 0; n < szTargetTypes; n++) {
-    pbtTxInAutoPoll[4 + n] = pnttTargetTypes[n];
+    pbtTxInAutoPoll[4 + n] = ppttTargetTypes[n];
   }
 
   szRx = MAX_FRAME_LEN;
@@ -607,19 +607,19 @@ pn53x_InAutoPoll (nfc_device_t * pnd,
       byte_t *pbt = abtRx + 1;
       /* 1st target */
       // Target type
-      pntTargets[0].ntt = *(pbt++);
+      pntTargets[0].ptt = *(pbt++);
       // AutoPollTargetData length
       ln = *(pbt++);
-      pn53x_decode_target_data (pbt, ln, pnd->nc, pntTargets[0].ntt, &(pntTargets[0].nti));
+      pn53x_decode_target_data (pbt, ln, pnd->nc, pntTargets[0].ptt, &(pntTargets[0].nti));
       pbt += ln;
 
       if (abtRx[0] > 1) {
         /* 2nd target */
         // Target type
-        pntTargets[1].ntt = *(pbt++);
+        pntTargets[1].ptt = *(pbt++);
         // AutoPollTargetData length
         ln = *(pbt++);
-        pn53x_decode_target_data (pbt, ln, pnd->nc, pntTargets[1].ntt, &(pntTargets[1].nti));
+        pn53x_decode_target_data (pbt, ln, pnd->nc, pntTargets[1].ptt, &(pntTargets[1].nti));
       }
     }
   }
@@ -1070,10 +1070,10 @@ pn53x_target_init (nfc_device_t * pnd, const nfc_target_mode_t ntm, const nfc_ta
   const byte_t * pbtGB = NULL;
   size_t szGB = 0;
 
-  switch(nt.ntt) {
-    case NTT_MIFARE:
-    case NTT_GENERIC_PASSIVE_106:
-    case NTT_ISO14443_4A_106: {
+  switch(nt.ptt) {
+    case PTT_MIFARE:
+    case PTT_GENERIC_PASSIVE_106:
+    case PTT_ISO14443_4A_106: {
       // Set ATQA (SENS_RES)
       abtMifareParams[0] = nt.nti.nai.abtAtqa[1];
       abtMifareParams[1] = nt.nti.nai.abtAtqa[0];
@@ -1089,8 +1089,8 @@ pn53x_target_init (nfc_device_t * pnd, const nfc_target_mode_t ntm, const nfc_ta
     }
     break;
 
-    case NTT_FELICA_212:
-    case NTT_FELICA_424:
+    case PTT_FELICA_212:
+    case PTT_FELICA_424:
       // Set NFCID2t 
       memcpy(abtFeliCaParams, nt.nti.nfi.abtId, 8);
       // Set PAD
@@ -1100,9 +1100,9 @@ pn53x_target_init (nfc_device_t * pnd, const nfc_target_mode_t ntm, const nfc_ta
       pbtFeliCaParams = abtFeliCaParams;
     break;
 
-    case NTT_DEP_PASSIVE_106:
-    case NTT_DEP_PASSIVE_212:
-    case NTT_DEP_PASSIVE_424:
+    case PTT_DEP_PASSIVE_106:
+    case PTT_DEP_PASSIVE_212:
+    case PTT_DEP_PASSIVE_424:
       pbtNFCID3t = nt.nti.ndi.abtNFCID3;
       szGB = nt.nti.ndi.szGB;
       if (szGB) pbtGB = nt.nti.ndi.abtGB;
