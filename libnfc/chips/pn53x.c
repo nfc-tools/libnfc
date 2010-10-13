@@ -511,10 +511,16 @@ pn53x_initiator_poll_targets (nfc_device_t * pnd,
                               const byte_t btPollNr, const byte_t btPeriod,
                               nfc_target_t * pntTargets, size_t * pszTargetFound)
 {
-  const size_t szTargetTypes = szModulations;
+  size_t szTargetTypes = 0;
   pn53x_target_type_t apttTargetTypes[32];
-  for (size_t n=0; n<szTargetTypes; n++) {
-    apttTargetTypes[n] = pn53x_nm_to_ptt(pnmModulations[n]);
+  for (size_t n=0; n<szModulations; n++) {
+    apttTargetTypes[szTargetTypes] = pn53x_nm_to_ptt(pnmModulations[n]);
+    if( apttTargetTypes[szTargetTypes] == PTT_MIFARE ) { // Hack to have ATR
+      apttTargetTypes[szTargetTypes] = PTT_ISO14443_4A_106;
+      szTargetTypes++;
+      apttTargetTypes[szTargetTypes] = PTT_MIFARE;
+    }
+    szTargetTypes++;
   }
 
   return pn53x_InAutoPoll (pnd, apttTargetTypes, szTargetTypes, btPollNr, btPeriod, pntTargets, pszTargetFound);
@@ -1463,6 +1469,7 @@ pn53x_nm_to_ptt(const nfc_modulation_t nm)
   switch(nm.nmt) {
     case NMT_ISO14443A:
       return PTT_MIFARE;
+      // return PTT_ISO14443_4A_106;
     break;
 
     case NMT_ISO14443B:
