@@ -272,6 +272,7 @@ str_nfc_baud_rate (const nfc_baud_rate_t nbr)
       return "424 kbps";
     break;
   }
+  return "";
 }
 
 void
@@ -299,4 +300,5 @@ print_nfc_target (const nfc_target_t nt)
       print_nfc_dep_info (nt.nti.ndi);
     break;
   }
-};
+}
+

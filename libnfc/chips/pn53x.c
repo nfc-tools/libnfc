@@ -82,7 +82,7 @@ static const byte_t pn53x_nack_frame[] = { 0x00, 0x00, 0xff, 0xff, 0x00, 0x00 };
 static const byte_t pn53x_error_frame[] = { 0x00, 0x00, 0xff, 0x01, 0xff, 0x7f, 0x81, 0x00 };
 
 /* prototypes */
-const nfc_modulation_type_t pn53x_ptt_to_nmt( const pn53x_target_type_t ptt );
+const nfc_modulation_t pn53x_ptt_to_nm( const pn53x_target_type_t ptt );
 const pn53x_modulation_t pn53x_nm_to_pm(const nfc_modulation_t nm);
 const pn53x_target_type_t pn53x_nm_to_ptt(const nfc_modulation_t nm);
 
@@ -653,20 +653,20 @@ pn53x_InAutoPoll (nfc_device_t * pnd,
       /* 1st target */
       // Target type
       pn53x_target_type_t ptt = *(pbt++);
-      pntTargets[0].nm.nmt = pn53x_ptt_to_nmt(ptt);
+      pntTargets[0].nm = pn53x_ptt_to_nm(ptt);
       // AutoPollTargetData length
       ln = *(pbt++);
-      pn53x_decode_target_data (pbt, ln, pnd->nc, ptt, &(pntTargets[0].nti));
+      pn53x_decode_target_data (pbt, ln, pnd->nc, pntTargets[0].nm.nmt, &(pntTargets[0].nti));
       pbt += ln;
 
       if (abtRx[0] > 1) {
         /* 2nd target */
         // Target type
         ptt = *(pbt++);
-        pntTargets[1].nm.nmt = pn53x_ptt_to_nmt(ptt);
+        pntTargets[1].nm = pn53x_ptt_to_nm(ptt);
         // AutoPollTargetData length
         ln = *(pbt++);
-        pn53x_decode_target_data (pbt, ln, pnd->nc, ptt, &(pntTargets[1].nti));
+        pn53x_decode_target_data (pbt, ln, pnd->nc, pntTargets[1].nm.nmt, &(pntTargets[1].nti));
       }
     }
   }
@@ -1149,6 +1149,11 @@ pn53x_target_init (nfc_device_t * pnd, const nfc_target_mode_t ntm, const nfc_ta
       szGB = nt.nti.ndi.szGB;
       if (szGB) pbtGB = nt.nti.ndi.abtGB;
     break;
+    case NMT_ISO14443B:
+    case NMT_JEWEL:
+      pnd->iLastError = DENOTSUP;
+      return false;
+    break;
   }
 
   if(!pn53x_TgInitAsTarget(pnd, ntm, pbtMifareParams, pbtFeliCaParams, pbtNFCID3t, pbtGB, szGB, pbtRx, pszRx, NULL)) {
@@ -1377,6 +1382,9 @@ pn53x_nm_to_pm(const nfc_modulation_t nm)
         case NBR_424:
           return PM_ISO14443B_424;
         break;
+        case NBR_UNDEFINED:
+          // XXX What to do ?
+        break;
       }
     break;
 
@@ -1392,49 +1400,58 @@ pn53x_nm_to_pm(const nfc_modulation_t nm)
         case NBR_424:
           return PM_FELICA_424;
         break;
+        case NBR_106:
+        case NBR_UNDEFINED:
+          // XXX What to do ?
+        break;
       }
     break;
   }
 }
 
 // FIXME How to handle corner case ?
-const nfc_modulation_type_t
-pn53x_ptt_to_nmt( const pn53x_target_type_t ptt )
+const nfc_modulation_t
+pn53x_ptt_to_nm( const pn53x_target_type_t ptt )
 {
   switch (ptt) {
     case PTT_GENERIC_PASSIVE_106:
     case PTT_GENERIC_PASSIVE_212:
     case PTT_GENERIC_PASSIVE_424:
       // XXX This should not happend, how handle it cleanly ?
-      return NMT_UNKNOWN;
     break;
 
     case PTT_MIFARE:
     case PTT_ISO14443_4A_106:
-      return NMT_ISO14443A;
+      return (const nfc_modulation_t){ .nmt = NMT_ISO14443A, .nbr = NBR_106 };
     break;
 
     case PTT_ISO14443_4B_106:
     case PTT_ISO14443_4B_TCL_106:
-      return NMT_ISO14443B;
+      return (const nfc_modulation_t){ .nmt = NMT_ISO14443B, .nbr = NBR_106 };
     break;
 
     case PTT_JEWEL_106:
-      return NMT_JEWEL;
+      return (const nfc_modulation_t){ .nmt = NMT_JEWEL, .nbr = NBR_106 };
     break;
 
     case PTT_FELICA_212:
+      return (const nfc_modulation_t){ .nmt = NMT_FELICA, .nbr = NBR_212 };
+    break;
     case PTT_FELICA_424:
-      return NMT_FELICA;
+      return (const nfc_modulation_t){ .nmt = NMT_FELICA, .nbr = NBR_424 };
     break;
 
     case PTT_DEP_PASSIVE_106:
-    case PTT_DEP_PASSIVE_212:
-    case PTT_DEP_PASSIVE_424:
     case PTT_DEP_ACTIVE_106:
+      return (const nfc_modulation_t){ .nmt = NMT_DEP, .nbr = NBR_106 };
+    break;
+    case PTT_DEP_PASSIVE_212:
     case PTT_DEP_ACTIVE_212:
+      return (const nfc_modulation_t){ .nmt = NMT_DEP, .nbr = NBR_212 };
+    break;
+    case PTT_DEP_PASSIVE_424:
     case PTT_DEP_ACTIVE_424:
-      return NMT_DEP;
+      return (const nfc_modulation_t){ .nmt = NMT_DEP, .nbr = NBR_424 };
     break;
   }
 }

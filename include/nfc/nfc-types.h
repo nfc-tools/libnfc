@@ -288,7 +288,6 @@ typedef enum {
  * @brief NFC modulation type enumeration
  */
 typedef enum {
-  NMT_UNKNOWN,
   NMT_ISO14443A,
   NMT_ISO14443B,
   NMT_FELICA,
