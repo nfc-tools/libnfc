@@ -9,7 +9,9 @@ r736, nfc-dep-initiator, SCM Micro / SCL3711-NFC&RW - PN533 v2.7, ACS ACR 38U-CC
 r736, nfc-dep-target, ACS ACR 38U-CCID 00 00 / ACR122U102 - PN532 v1.4, SCM Micro / SCL3711-NFC&RW - PN533 v2.7, OK
 r736, nfc-emulate-forum-tag4, ACS ACR 38U-CCID 00 00 / ACR122U102 - PN532 v1.4, Nokia 6212 Classic, OK
 r736, nfc-emulate-forum-tag4, ACS ACR122U PICC Interface 00 00 / ACR122U102 - PN532 v1.4, ctrl-c & use, FAIL
+r736, nfc-emulate-tag, ACS ACR 38U-CCID 00 00 / ACR122U102 - PN532 v1.4, SCM Micro / SCL3711-NFC&RW - PN533 v2.7, OK
 r736, nfc-emulate-tag, ACS ACR122U PICC Interface 00 00 / ACR122U102 - PN532 v1.4, ctrl-c & use, FAIL
+r736, nfc-emulate-tag, SCM Micro / SCL3711-NFC&RW - PN533 v2.7, ACS ACR 38U-CCID 00 00 / ACR122U102 - PN532 v1.4, OK
 r736, nfc-emulate-tag, SCM Micro / SCL3711-NFC&RW - PN533 v2.7, ctrl-c & use, OK
 r736, nfc-emulate-uid, ACS ACR122U PICC Interface 00 00 / ACR122U102 - PN532 v1.4, ctrl-c & use, FAIL
 r736, nfc-emulate-uid, SCM Micro / SCL3711-NFC&RW - PN533 v2.7, ctrl-c & use, OK
