@@ -1438,7 +1438,7 @@ pn53x_ptt_to_nmt( const pn53x_target_type_t ptt )
   }
 }
 
-// FIXME How to handle conner case ?
+// FIXME How to handle corner case ?
 const pn53x_target_type_t
 pn53x_nm_to_ptt(const nfc_modulation_t nm)
 {
