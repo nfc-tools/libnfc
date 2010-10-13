@@ -87,7 +87,7 @@ main (int argc, const char *argv[])
   printf ("NFC device will now act as this D.E.P. target:\n");
   print_nfc_dep_info ( nt.nti.ndi );
   printf ("Waiting for initiator request...\n");
-  if(!nfc_target_init (pnd, NTM_DEP, nt, abtRx, &szRx)) {
+  if(!nfc_target_init (pnd, NTM_DEP_ONLY, nt, abtRx, &szRx)) {
     nfc_perror(pnd, "nfc_target_init");
     return EXIT_FAILURE;
   }

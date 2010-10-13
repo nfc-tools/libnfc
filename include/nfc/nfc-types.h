@@ -245,7 +245,7 @@ typedef struct {
  */
 typedef struct {
 /** abtPupi store PUPI contained in ATQB (Answer To reQuest of type B) (see ISO14443-3) */
-  byte_t  abtPupi[4];
+  byte_t abtPupi[4];
 /** abtApplicationData store Application Data contained in ATQB (see ISO14443-3) */
   byte_t abtApplicationData[4];
 /** abtProtocolInfo store Protocol Info contained in ATQB (see ISO14443-3) */
@@ -283,11 +283,11 @@ typedef enum {
   /** Configure the PN53x to accept all initiator mode */
   NTM_NORMAL = 0x00,
   /** Configure the PN53x to accept to be initialized only in passive mode */
-  NTM_PASSIVE = 0x01,
+  NTM_PASSIVE_ONLY = 0x01,
   /** Configure the PN53x to accept to be initialized only as DEP target */
-  NTM_DEP = 0x02,
+  NTM_DEP_ONLY = 0x02,
   /** Configure the PN532 to accept to be initialized only as ISO/IEC14443-4 PICC */
-  NTM_ISO14443_4_PICC = 0x04
+  NTM_ISO14443_4_PICC_ONLY = 0x04
 } nfc_target_mode_t;
 
 /**

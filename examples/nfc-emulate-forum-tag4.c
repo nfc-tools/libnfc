@@ -120,7 +120,7 @@ main (int argc, char *argv[])
     .nti.nai.szAtsLen = 0,
   };
 
-  if (!nfc_target_init (pnd, NTM_ISO14443_4_PICC, nt, abtRx, &szRx)) {
+  if (!nfc_target_init (pnd, NTM_ISO14443_4_PICC_ONLY, nt, abtRx, &szRx)) {
     nfc_perror (pnd, "nfc_target_init");
     ERR("Could not come out of auto-emulation, no command was received");
     return EXIT_FAILURE;

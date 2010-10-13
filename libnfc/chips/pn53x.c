@@ -1026,17 +1026,17 @@ pn53x_target_init (nfc_device_t * pnd, const nfc_target_mode_t ntm, const nfc_ta
   // XXX I (Romuald) don't think that a good thing to select NDO_EASY_FRAMING here, that's a user choice...
   switch(ntm)
   {
-    case NTM_PASSIVE:
+    case NTM_PASSIVE_ONLY:
       pn53x_set_parameter(pnd, PARAM_AUTO_ATR_RES, false);
       pn53x_configure(pnd, NDO_EASY_FRAMING, false);
     break;
 
-    case NTM_DEP:
+    case NTM_DEP_ONLY:
       pn53x_set_parameter(pnd, PARAM_AUTO_ATR_RES, true);
       pn53x_configure(pnd, NDO_EASY_FRAMING, true);
     break;
 
-    case NTM_ISO14443_4_PICC:
+    case NTM_ISO14443_4_PICC_ONLY:
       if(pnd->nc != NC_PN532) {
         // This mode is not supported by pn531 neither pn533
         pnd->iLastError = DENOTSUP;

@@ -139,7 +139,7 @@ main (int argc, char *argv[])
     .nti.nai.szUidLen = 4,
     .nti.nai.szAtsLen = 0,
   };
-  if (!nfc_target_init (pnd, NTM_PASSIVE, nt, abtRecv, &szRecvBits)) {
+  if (!nfc_target_init (pnd, NTM_PASSIVE_ONLY, nt, abtRecv, &szRecvBits)) {
     ERR ("Could not come out of auto-emulation, no command was received");
     exit(EXIT_FAILURE);
   }
