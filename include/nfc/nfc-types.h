@@ -167,7 +167,7 @@ typedef enum {
 
 /**
  * @struct nfc_dep_info_t
- * @brief NFC tag information in D.E.P. (Data Exchange Protocol) see ISO/IEC 18092
+ * @brief NFC target information in D.E.P. (Data Exchange Protocol) see ISO/IEC 18092 (NFCIP-1)
  */
 typedef struct {
 /** NFCID3 */
@@ -186,6 +186,15 @@ typedef struct {
   byte_t  abtGB[48];
   size_t  szGB;
 } nfc_dep_info_t;
+
+/**
+ * @enum nfc_dep_mode_t
+ * @brief NFC D.E.P. (Data Exchange Protocol) active/passive mode
+ */
+typedef enum {
+  NDM_PASSIVE,
+  NDM_ACTIVE,
+} nfc_dep_mode_t;
 
 /**
  * @struct nfc_iso14443a_info_t

@@ -868,14 +868,14 @@ pn53x_configure (nfc_device_t * pnd, const nfc_device_option_t ndo, const bool b
 }
 
 bool
-pn53x_initiator_select_dep_target(nfc_device_t * pnd, const bool bActiveDep,
+pn53x_initiator_select_dep_target(nfc_device_t * pnd, const nfc_dep_mode_t ndm,
                                   const nfc_dep_info_t * pndiInitiator,
                                   nfc_target_info_t * pnti)
 {
   if (pndiInitiator) {
-    return pn53x_InJumpForDEP (pnd, bActiveDep, NULL, 0, pndiInitiator->abtNFCID3, pndiInitiator->abtGB, pndiInitiator->szGB, pnti);
+    return pn53x_InJumpForDEP (pnd, ndm, NULL, 0, pndiInitiator->abtNFCID3, pndiInitiator->abtGB, pndiInitiator->szGB, pnti);
   } else {
-    return pn53x_InJumpForDEP (pnd, bActiveDep, NULL, 0, NULL, NULL, 0, pnti);
+    return pn53x_InJumpForDEP (pnd, ndm, NULL, 0, NULL, NULL, 0, pnti);
   }
 }
 
@@ -890,7 +890,8 @@ pn53x_initiator_select_dep_target(nfc_device_t * pnd, const bool bActiveDep,
  * @param[out] pnti nfc_target_info_t which will be filled by this function
  */
 bool
-pn53x_InJumpForDEP (nfc_device_t * pnd, const bool bActiveDep,
+pn53x_InJumpForDEP (nfc_device_t * pnd,
+                    const nfc_dep_mode_t ndm,
                     const byte_t * pbtPassiveInitiatorData, const size_t szPassiveInitiatorData, 
                     const byte_t * pbtNFCID3i,
                     const byte_t * pbtGB, const size_t szGB,
@@ -903,13 +904,13 @@ pn53x_InJumpForDEP (nfc_device_t * pnd, const bool bActiveDep,
 
   memcpy (abtCmd, pncmd_initiator_jump_for_dep, sizeof (pncmd_initiator_jump_for_dep));
 
-  abtCmd[2] = (bActiveDep) ? 0x01 : 0x00;
+  abtCmd[2] = (ndm == NDM_ACTIVE) ? 0x01 : 0x00;
 
   // FIXME Baud rate in D.E.P. mode is hard-wired as 106kbps
   abtCmd[3] = 0x00;             /* baud rate = 106kbps */
 
   offset = 5;
-  if (pbtPassiveInitiatorData && !bActiveDep) {        /* can't have passive initiator data when using active mode */
+  if (pbtPassiveInitiatorData && (ndm == NDM_PASSIVE)) {        /* can't have passive initiator data when using active mode */
     abtCmd[4] |= 0x01;
     memcpy (abtCmd + offset, pbtPassiveInitiatorData, szPassiveInitiatorData);
     offset += szPassiveInitiatorData;
