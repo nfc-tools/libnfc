@@ -663,7 +663,7 @@ pn53x_InAutoPoll (nfc_device_t * pnd,
         /* 2nd target */
         // Target type
         ptt = *(pbt++);
-        pntTargets[1].nm.nmt = pn53x_ptt_to_nmt(*(pbt++));
+        pntTargets[1].nm.nmt = pn53x_ptt_to_nmt(ptt);
         // AutoPollTargetData length
         ln = *(pbt++);
         pn53x_decode_target_data (pbt, ln, pnd->nc, ptt, &(pntTargets[1].nti));
@@ -909,7 +909,7 @@ pn53x_InJumpForDEP (nfc_device_t * pnd, const bool bActiveDep,
   abtCmd[3] = 0x00;             /* baud rate = 106kbps */
 
   offset = 5;
-  if (pbtPassiveInitiatorData && bActiveDep) {        /* can't have passive initiator data when using active mode */
+  if (pbtPassiveInitiatorData && !bActiveDep) {        /* can't have passive initiator data when using active mode */
     abtCmd[4] |= 0x01;
     memcpy (abtCmd + offset, pbtPassiveInitiatorData, szPassiveInitiatorData);
     offset += szPassiveInitiatorData;
@@ -1356,7 +1356,7 @@ pn53x_target_send_bytes (nfc_device_t * pnd, const byte_t * pbtTx, const size_t 
   return true;
 }
 
-// FIXME How to handle conner case ?
+// FIXME How to handle corner case ?
 const pn53x_modulation_t
 pn53x_nm_to_pm(const nfc_modulation_t nm)
 {
@@ -1396,7 +1396,7 @@ pn53x_nm_to_pm(const nfc_modulation_t nm)
   }
 }
 
-// FIXME How to handle conner case ?
+// FIXME How to handle corner case ?
 const nfc_modulation_type_t
 pn53x_ptt_to_nmt( const pn53x_target_type_t ptt )
 {
