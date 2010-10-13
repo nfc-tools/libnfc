@@ -32,7 +32,7 @@ main (int argc, const char *argv[])
   printf ("Connected to NFC reader: %s\n", pnd->acName);
 
   // Poll for a ISO14443A (MIFARE) tag
-  if (nfc_initiator_select_passive_target (pnd, NM_ISO14443A_106, NULL, 0, &nti)) {
+  if (nfc_initiator_select_passive_target (pnd, PM_ISO14443A_106, NULL, 0, &nti)) {
     printf ("The following (NFC) ISO14443A tag was found:\n");
     printf ("    ATQA (SENS_RES): ");
     print_hex (nti.nai.abtAtqa, 2);

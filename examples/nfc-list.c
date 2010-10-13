@@ -142,7 +142,7 @@ main (int argc, const char *argv[])
     printf ("Connected to NFC device: %s\n", pnd->acName);
 
     // List ISO14443A targets
-    if (nfc_initiator_list_passive_targets (pnd, NM_ISO14443A_106, anti, MAX_TARGET_COUNT, &szTargetFound)) {
+    if (nfc_initiator_list_passive_targets (pnd, PM_ISO14443A_106, anti, MAX_TARGET_COUNT, &szTargetFound)) {
       size_t  n;
       printf ("%d ISO14443A passive target(s) was found%s\n", (int) szTargetFound, (szTargetFound == 0) ? ".\n" : ":");
       for (n = 0; n < szTargetFound; n++) {
@@ -151,7 +151,7 @@ main (int argc, const char *argv[])
       }
     }
     // List Felica tags
-    if (nfc_initiator_list_passive_targets (pnd, NM_FELICA_212, anti, MAX_TARGET_COUNT, &szTargetFound)) {
+    if (nfc_initiator_list_passive_targets (pnd, PM_FELICA_212, anti, MAX_TARGET_COUNT, &szTargetFound)) {
       size_t  n;
       printf ("%d Felica (212 kbps) passive target(s) was found%s\n", (int) szTargetFound,
               (szTargetFound == 0) ? ".\n" : ":");
@@ -160,7 +160,7 @@ main (int argc, const char *argv[])
         printf ("\n");
       }
     }
-    if (nfc_initiator_list_passive_targets (pnd, NM_FELICA_424, anti, MAX_TARGET_COUNT, &szTargetFound)) {
+    if (nfc_initiator_list_passive_targets (pnd, PM_FELICA_424, anti, MAX_TARGET_COUNT, &szTargetFound)) {
       size_t  n;
       printf ("%d Felica (424 kbps) passive target(s) was found%s\n", (int) szTargetFound,
               (szTargetFound == 0) ? ".\n" : ":");
@@ -170,7 +170,7 @@ main (int argc, const char *argv[])
       }
     }
     // List ISO14443B targets
-    if (nfc_initiator_list_passive_targets (pnd, NM_ISO14443B_106, anti, MAX_TARGET_COUNT, &szTargetFound)) {
+    if (nfc_initiator_list_passive_targets (pnd, PM_ISO14443B_106, anti, MAX_TARGET_COUNT, &szTargetFound)) {
       size_t  n;
       printf ("%d ISO14443B passive target(s) was found%s\n", (int) szTargetFound, (szTargetFound == 0) ? ".\n" : ":");
       for (n = 0; n < szTargetFound; n++) {
@@ -180,7 +180,7 @@ main (int argc, const char *argv[])
     }
 
     // List Jewel targets
-    if (nfc_initiator_list_passive_targets(pnd, NM_JEWEL_106, anti, MAX_TARGET_COUNT, &szTargetFound )) {
+    if (nfc_initiator_list_passive_targets(pnd, PM_JEWEL_106, anti, MAX_TARGET_COUNT, &szTargetFound )) {
       size_t n;
       printf("%d Jewel passive target(s) was found%s\n", (int)szTargetFound, (szTargetFound==0)?".\n":":");
       for(n=0; n<szTargetFound; n++) {

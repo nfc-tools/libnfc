@@ -181,7 +181,7 @@ main (int argc, const char *argv[])
         exit (EXIT_FAILURE);
       }
       // Read the SAM's info
-      if (!nfc_initiator_select_passive_target (pnd, NM_ISO14443A_106, NULL, 0, &nti)) {
+      if (!nfc_initiator_select_passive_target (pnd, PM_ISO14443A_106, NULL, 0, &nti)) {
         nfc_perror (pnd, "nfc_initiator_select_passive_target");
         ERR ("%s", "Reading of SAM info failed.");
         return EXIT_FAILURE;

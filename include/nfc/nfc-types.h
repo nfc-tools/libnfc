@@ -166,31 +166,31 @@ typedef enum {
 } nfc_device_option_t;
 
 /**
- * @enum nfc_modulation_t
+ * @enum pn53x_modulation_t
  * @brief NFC modulation
  */
 typedef enum {
 /** ISO14443-A (NXP MIFARE) http://en.wikipedia.org/wiki/MIFARE */
-  NM_ISO14443A_106 = 0x00,
+  PM_ISO14443A_106 = 0x00,
 /** JIS X 6319-4 (Sony Felica) http://en.wikipedia.org/wiki/FeliCa */
-  NM_FELICA_212 = 0x01,
+  PM_FELICA_212 = 0x01,
 /** JIS X 6319-4 (Sony Felica) http://en.wikipedia.org/wiki/FeliCa */
-  NM_FELICA_424 = 0x02,
+  PM_FELICA_424 = 0x02,
 /** ISO14443-B http://en.wikipedia.org/wiki/ISO/IEC_14443 (Not supported by PN531) */
-  NM_ISO14443B_106 = 0x03, 
+  PM_ISO14443B_106 = 0x03, 
 /** Jewel Topaz (Innovision Research & Development) (Not supported by PN531) */
-  NM_JEWEL_106 = 0x04,
+  PM_JEWEL_106 = 0x04,
 /** ISO14443-B http://en.wikipedia.org/wiki/ISO/IEC_14443 (Not supported by PN531 nor PN532) */
-  NM_ISO14443B_212 = 0x06,
+  PM_ISO14443B_212 = 0x06,
 /** ISO14443-B http://en.wikipedia.org/wiki/ISO/IEC_14443 (Not supported by PN531 nor PN532) */
-  NM_ISO14443B_424 = 0x07,
+  PM_ISO14443B_424 = 0x07,
 /** ISO14443-B http://en.wikipedia.org/wiki/ISO/IEC_14443 (Not supported by PN531 nor PN532) */
-  NM_ISO14443B_847 = 0x08,
+  PM_ISO14443B_847 = 0x08,
 /** Active DEP */
-  NM_ACTIVE_DEP,
+  PM_ACTIVE_DEP,
 /** Passive DEP */
-  NM_PASSIVE_DEP
-} nfc_modulation_t;
+  PM_PASSIVE_DEP
+} pn53x_modulation_t;
 
 /**
  * @struct nfc_dep_info_t

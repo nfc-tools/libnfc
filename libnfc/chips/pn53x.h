@@ -112,7 +112,7 @@ bool    pn53x_get_firmware_version (nfc_device_t * pnd);
 bool    pn53x_configure (nfc_device_t * pnd, const nfc_device_option_t ndo, const bool bEnable);
 
 // NFC device as Initiator functions
-bool    pn53x_initiator_select_dep_target (nfc_device_t * pnd, const nfc_modulation_t nmInitModulation,
+bool    pn53x_initiator_select_dep_target (nfc_device_t * pnd, const pn53x_modulation_t pmInitModulation,
                                            const nfc_dep_info_t * pndiInitiator, 
                                            nfc_target_info_t * pnti);
 bool    pn53x_initiator_transceive_bits (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxBits,
@@ -135,7 +135,7 @@ static const struct chip_callbacks pn53x_callbacks_list = {
 
 // C wrappers for PN53x commands
 bool    pn53x_SetParameters (nfc_device_t * pnd, const uint8_t ui8Value);
-bool    pn53x_InListPassiveTarget (nfc_device_t * pnd, const nfc_modulation_t nmInitModulation,
+bool    pn53x_InListPassiveTarget (nfc_device_t * pnd, const pn53x_modulation_t pmInitModulation,
                                    const byte_t szMaxTargets, const byte_t * pbtInitiatorData,
                                    const size_t szInitiatorDataLen, byte_t * pbtTargetsData, size_t * pszTargetsData);
 bool    pn53x_InDeselect (nfc_device_t * pnd, const uint8_t ui8Target);
@@ -143,7 +143,7 @@ bool    pn53x_InRelease (nfc_device_t * pnd, const uint8_t ui8Target);
 bool    pn53x_InAutoPoll (nfc_device_t * pnd, const pn53x_target_type_t * ppttTargetTypes, const size_t szTargetTypes,
                           const byte_t btPollNr, const byte_t btPeriod, nfc_target_t * pntTargets,
                           size_t * pszTargetFound);
-bool    pn53x_InJumpForDEP (nfc_device_t * pnd, const nfc_modulation_t nmInitModulation,
+bool    pn53x_InJumpForDEP (nfc_device_t * pnd, const pn53x_modulation_t pmInitModulation,
                             const byte_t * pbtPassiveInitiatorData, const size_t szPassiveInitiatorData,
                             const byte_t * pbtNFCID3i,
                             const byte_t * pbtGB, const size_t szGB,

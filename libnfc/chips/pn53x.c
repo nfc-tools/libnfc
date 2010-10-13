@@ -482,7 +482,7 @@ pn53x_decode_target_data (const byte_t * pbtRawData, size_t szDataLen, nfc_chip_
  * @return true if command is successfully sent
  *
  * @param pnd nfc_device_t struct pointer that represent currently used device
- * @param nmInitModulation Desired modulation
+ * @param pmInitModulation Desired modulation
  * @param pbtInitiatorData Optional initiator data used for Felica, ISO14443B, Topaz Polling or for ISO14443A selecting a specific UID
  * @param szInitiatorDataLen Length of initiator data \a pbtInitiatorData
  * @param pbtTargetsData pointer on a pre-allocated byte array to receive TargetData[n] as described in pn53x user manual
@@ -493,7 +493,7 @@ pn53x_decode_target_data (const byte_t * pbtRawData, size_t szDataLen, nfc_chip_
  */
 bool
 pn53x_InListPassiveTarget (nfc_device_t * pnd,
-                           const nfc_modulation_t nmInitModulation, const byte_t szMaxTargets,
+                           const pn53x_modulation_t pmInitModulation, const byte_t szMaxTargets,
                            const byte_t * pbtInitiatorData, const size_t szInitiatorDataLen,
                            byte_t * pbtTargetsData, size_t * pszTargetsData)
 {
@@ -504,23 +504,23 @@ pn53x_InListPassiveTarget (nfc_device_t * pnd,
   abtCmd[2] = szMaxTargets;     // MaxTg
 
   // XXX Is there is a better way to do this ?
-  switch(nmInitModulation) {
-    case NM_ISO14443A_106:
-    case NM_FELICA_212:
-    case NM_FELICA_424:
+  switch(pmInitModulation) {
+    case PM_ISO14443A_106:
+    case PM_FELICA_212:
+    case PM_FELICA_424:
       // all gone fine.
       break;
-    case NM_ISO14443B_106:
-    case NM_JEWEL_106:
+    case PM_ISO14443B_106:
+    case PM_JEWEL_106:
       if(pnd->nc == NC_PN531) {
         // These modulations are not supported by pn531
         pnd->iLastError = DENOTSUP;
         return false;
       }
       break;
-    case NM_ISO14443B_212:
-    case NM_ISO14443B_424:
-    case NM_ISO14443B_847:
+    case PM_ISO14443B_212:
+    case PM_ISO14443B_424:
+    case PM_ISO14443B_847:
       if(pnd->nc != NC_PN533) {
         // These modulations are not supported by pn531 neither pn532
         pnd->iLastError = DENOTSUP;
@@ -531,7 +531,7 @@ pn53x_InListPassiveTarget (nfc_device_t * pnd,
       pnd->iLastError = DENOTSUP;
       return false;
   }
-  abtCmd[3] = nmInitModulation; // BrTy, the type of init modulation used for polling a passive tag
+  abtCmd[3] = pmInitModulation; // BrTy, the type of init modulation used for polling a passive tag
 
   // Set the optional initiator data (used for Felica, ISO14443B, Topaz Polling or for ISO14443A selecting a specific UID).
   if (pbtInitiatorData)
@@ -821,20 +821,20 @@ pn53x_configure (nfc_device_t * pnd, const nfc_device_option_t ndo, const bool b
 }
 
 bool
-pn53x_initiator_select_dep_target(nfc_device_t * pnd, const nfc_modulation_t nmInitModulation,
+pn53x_initiator_select_dep_target(nfc_device_t * pnd, const pn53x_modulation_t pmInitModulation,
                                   const nfc_dep_info_t * pndiInitiator,
                                   nfc_target_info_t * pnti)
 {
   if (pndiInitiator) {
-    return pn53x_InJumpForDEP (pnd, nmInitModulation, NULL, 0, pndiInitiator->abtNFCID3, pndiInitiator->abtGB, pndiInitiator->szGB, pnti);
+    return pn53x_InJumpForDEP (pnd, pmInitModulation, NULL, 0, pndiInitiator->abtNFCID3, pndiInitiator->abtGB, pndiInitiator->szGB, pnti);
   } else {
-    return pn53x_InJumpForDEP (pnd, nmInitModulation, NULL, 0, NULL, NULL, 0, pnti);
+    return pn53x_InJumpForDEP (pnd, pmInitModulation, NULL, 0, NULL, NULL, 0, pnti);
   }
 }
 
 /**
  * @brief Wrapper for InJumpForDEP command
- * @param nmInitModulation desired initial modulation
+ * @param pmInitModulation desired initial modulation
  * @param pbtPassiveInitiatorData NFCID1 at 106kbps (see NFCIP-1: 11.2.1.26) or Polling Request Frame's payload at 212/424kbps (see NFCIP-1: 11.2.2.5)
  * @param szPassiveInitiatorData size of pbtPassiveInitiatorData content
  * @param pbtNFCID3i NFCID3 of the initiator
@@ -843,7 +843,7 @@ pn53x_initiator_select_dep_target(nfc_device_t * pnd, const nfc_modulation_t nmI
  * @param[out] pnti nfc_target_info_t which will be filled by this function
  */
 bool
-pn53x_InJumpForDEP (nfc_device_t * pnd, const nfc_modulation_t nmInitModulation,
+pn53x_InJumpForDEP (nfc_device_t * pnd, const pn53x_modulation_t pmInitModulation,
                     const byte_t * pbtPassiveInitiatorData, const size_t szPassiveInitiatorData, 
                     const byte_t * pbtNFCID3i,
                     const byte_t * pbtGB, const size_t szGB,
@@ -856,14 +856,14 @@ pn53x_InJumpForDEP (nfc_device_t * pnd, const nfc_modulation_t nmInitModulation,
 
   memcpy (abtCmd, pncmd_initiator_jump_for_dep, sizeof (pncmd_initiator_jump_for_dep));
 
-  if (nmInitModulation == NM_ACTIVE_DEP) {
+  if (pmInitModulation == PM_ACTIVE_DEP) {
     abtCmd[2] = 0x01;           /* active DEP */
   }
   // FIXME Baud rate in D.E.P. mode is hard-wired as 106kbps
   abtCmd[3] = 0x00;             /* baud rate = 106kbps */
 
   offset = 5;
-  if (pbtPassiveInitiatorData && (nmInitModulation != NM_ACTIVE_DEP)) {        /* can't have passive initiator data when using active mode */
+  if (pbtPassiveInitiatorData && (pmInitModulation != PM_ACTIVE_DEP)) {        /* can't have passive initiator data when using active mode */
     abtCmd[4] |= 0x01;
     memcpy (abtCmd + offset, pbtPassiveInitiatorData, szPassiveInitiatorData);
     offset += szPassiveInitiatorData;
