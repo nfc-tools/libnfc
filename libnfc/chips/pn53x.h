@@ -112,10 +112,6 @@ typedef enum {
   PM_ISO14443B_424 = 0x07,
 /** ISO14443-B http://en.wikipedia.org/wiki/ISO/IEC_14443 (Not supported by PN531 nor PN532) */
   PM_ISO14443B_847 = 0x08,
-/** Active DEP */
-  PM_ACTIVE_DEP,
-/** Passive DEP */
-  PM_PASSIVE_DEP
 } pn53x_modulation_t;
 
 /**
