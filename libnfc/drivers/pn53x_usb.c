@@ -43,7 +43,7 @@ Thanks to d18c7db and Okko for example code
 #include <nfc/nfc-messages.h>
 
 #define BUFFER_LENGTH 256
-#define USB_TIMEOUT   30000
+#define USB_TIMEOUT   0
 
 // TODO Move this HACK1 into an upper level in order to benefit to other devices that use PN53x
 static const byte_t ack_frame[] = { 0x00, 0x00, 0xff, 0x00, 0xff, 0x00 };
