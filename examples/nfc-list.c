@@ -111,13 +111,13 @@ main (int argc, const char *argv[])
     nfc_target_info_t anti[MAX_TARGET_COUNT];
     pnd = nfc_connect (&(pnddDevices[i]));
 
-
     if (pnd == NULL) {
       ERR ("%s", "Unable to connect to NFC device.");
       return EXIT_FAILURE;
     }
     nfc_initiator_init (pnd);
 
+    // TODO move these conf in nfc_initiator_list_passive_targets() (without them it will not work correctly)
     // Drop the field for a while
     if (!nfc_configure (pnd, NDO_ACTIVATE_FIELD, false)) {
       nfc_perror (pnd, "nfc_configure");
