@@ -1410,7 +1410,7 @@ pn53x_ptt_to_nmt( const pn53x_target_type_t ptt )
 
     case PTT_MIFARE:
     case PTT_ISO14443_4A_106:
-      return NMT_ISO14443B;
+      return NMT_ISO14443A;
     break;
 
     case PTT_ISO14443_4B_106:
