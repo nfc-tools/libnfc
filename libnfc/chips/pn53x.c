@@ -81,6 +81,11 @@ static const byte_t pn53x_ack_frame[] = { 0x00, 0x00, 0xff, 0x00, 0xff, 0x00 };
 static const byte_t pn53x_nack_frame[] = { 0x00, 0x00, 0xff, 0xff, 0x00, 0x00 };
 static const byte_t pn53x_error_frame[] = { 0x00, 0x00, 0xff, 0x01, 0xff, 0x7f, 0x81, 0x00 };
 
+/* prototypes */
+const nfc_modulation_type_t pn53x_ptt_to_nmt( const pn53x_target_type_t ptt );
+const pn53x_modulation_t pn53x_nm_to_pm(const nfc_modulation_t nm);
+const pn53x_target_type_t pn53x_nm_to_ptt(const nfc_modulation_t nm);
+
 bool
 pn53x_init(nfc_device_t * pnd)
 {
@@ -369,15 +374,13 @@ pn53x_unwrap_frame (const byte_t * pbtFrame, const size_t szFrameBits, byte_t * 
 }
 
 bool
-pn53x_decode_target_data (const byte_t * pbtRawData, size_t szDataLen, nfc_chip_t nc, pn53x_target_type_t ptt,
+pn53x_decode_target_data (const byte_t * pbtRawData, size_t szRawData, nfc_chip_t nc, nfc_modulation_type_t nmt,
                           nfc_target_info_t * pnti)
 {
   uint8_t szAttribRes;
 
-  switch (ptt) {
-  case PTT_MIFARE:
-  case PTT_GENERIC_PASSIVE_106:
-  case PTT_ISO14443_4A_106:
+  switch (nmt) {
+  case NMT_ISO14443A:
     // We skip the first byte: its the target number (Tg)
     pbtRawData++;
 
@@ -396,7 +399,7 @@ pn53x_decode_target_data (const byte_t * pbtRawData, size_t szDataLen, nfc_chip_
     pbtRawData += pnti->nai.szUidLen;
 
     // Did we received an optional ATS (Smardcard ATR)
-    if (szDataLen > (pnti->nai.szUidLen + 5)) {
+    if (szRawData > (pnti->nai.szUidLen + 5)) {
       pnti->nai.szAtsLen = ((*(pbtRawData++)) - 1);     // In pbtRawData, ATS Length byte is counted in ATS Frame.
       memcpy (pnti->nai.abtAts, pbtRawData, pnti->nai.szAtsLen);
     } else {
@@ -415,8 +418,7 @@ pn53x_decode_target_data (const byte_t * pbtRawData, size_t szDataLen, nfc_chip_
     }
     break;
 
-  case PTT_ISO14443_4B_106:
-  case PTT_ISO14443_4B_TCL_106:
+  case NMT_ISO14443B:
     // We skip the first byte: its the target number (Tg)
     pbtRawData++;
 
@@ -442,8 +444,7 @@ pn53x_decode_target_data (const byte_t * pbtRawData, size_t szDataLen, nfc_chip_
     }
     break;
 
-  case PTT_FELICA_212:
-  case PTT_FELICA_424:
+  case NMT_FELICA:
     // We skip the first byte: its the target number (Tg)
     pbtRawData++;
 
@@ -461,7 +462,7 @@ pn53x_decode_target_data (const byte_t * pbtRawData, size_t szDataLen, nfc_chip_
       memcpy (pnti->nfi.abtSysCode, pbtRawData, 2);
     }
     break;
-  case PTT_JEWEL_106:
+  case NMT_JEWEL:
     // We skip the first byte: its the target number (Tg)
     pbtRawData++;
 
@@ -477,6 +478,49 @@ pn53x_decode_target_data (const byte_t * pbtRawData, size_t szDataLen, nfc_chip_
   return true;
 }
 
+bool
+pn53x_initiator_select_passive_target (nfc_device_t * pnd,
+                                       const nfc_modulation_t nm,
+                                       const byte_t * pbtInitData, const size_t szInitData,
+                                       nfc_target_info_t * pnti)
+{
+  size_t  szTargetsData;
+  byte_t  abtTargetsData[MAX_FRAME_LEN];
+
+  pn53x_modulation_t pm = pn53x_nm_to_pm(nm);
+  if (!pn53x_InListPassiveTarget (pnd, pm, 1, pbtInitData, szInitData, abtTargetsData, &szTargetsData))
+    return false;
+
+  // Make sure one tag has been found, the PN53X returns 0x00 if none was available
+  if (abtTargetsData[0] == 0)
+    return false;
+
+  // Is a tag info struct available
+  if (pnti) {
+    // Fill the tag info struct with the values corresponding to this init modulation
+    if (!pn53x_decode_target_data (abtTargetsData + 1, szTargetsData - 1, pnd->nc, nm.nmt, pnti)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+bool
+pn53x_initiator_poll_targets (nfc_device_t * pnd,
+                              const nfc_modulation_t * pnmModulations, const size_t szModulations,
+                              const byte_t btPollNr, const byte_t btPeriod,
+                              nfc_target_t * pntTargets, size_t * pszTargetFound)
+{
+  const size_t szTargetTypes = szModulations;
+  pn53x_target_type_t apttTargetTypes[32];
+  for (size_t n=0; n<szTargetTypes; n++) {
+    apttTargetTypes[n] = pn53x_nm_to_ptt(pnmModulations[n]);
+  }
+
+  return pn53x_InAutoPoll (pnd, apttTargetTypes, szTargetTypes, btPollNr, btPeriod, pntTargets, pszTargetFound);
+}
+
+
 /**
  * @brief C wrapper to InListPassiveTarget command
  * @return true if command is successfully sent
@@ -484,7 +528,7 @@ pn53x_decode_target_data (const byte_t * pbtRawData, size_t szDataLen, nfc_chip_
  * @param pnd nfc_device_t struct pointer that represent currently used device
  * @param pmInitModulation Desired modulation
  * @param pbtInitiatorData Optional initiator data used for Felica, ISO14443B, Topaz Polling or for ISO14443A selecting a specific UID
- * @param szInitiatorDataLen Length of initiator data \a pbtInitiatorData
+ * @param szInitiatorData Length of initiator data \a pbtInitiatorData
  * @param pbtTargetsData pointer on a pre-allocated byte array to receive TargetData[n] as described in pn53x user manual
  * @param pszTargetsData size_t pointer where size of \a pbtTargetsData will be written
  *
@@ -494,7 +538,7 @@ pn53x_decode_target_data (const byte_t * pbtRawData, size_t szDataLen, nfc_chip_
 bool
 pn53x_InListPassiveTarget (nfc_device_t * pnd,
                            const pn53x_modulation_t pmInitModulation, const byte_t szMaxTargets,
-                           const byte_t * pbtInitiatorData, const size_t szInitiatorDataLen,
+                           const byte_t * pbtInitiatorData, const size_t szInitiatorData,
                            byte_t * pbtTargetsData, size_t * pszTargetsData)
 {
   size_t  szRx;
@@ -535,11 +579,11 @@ pn53x_InListPassiveTarget (nfc_device_t * pnd,
 
   // Set the optional initiator data (used for Felica, ISO14443B, Topaz Polling or for ISO14443A selecting a specific UID).
   if (pbtInitiatorData)
-    memcpy (abtCmd + 4, pbtInitiatorData, szInitiatorDataLen);
+    memcpy (abtCmd + 4, pbtInitiatorData, szInitiatorData);
 
   // Try to find a tag, call the tranceive callback function of the current device
   szRx = MAX_FRAME_LEN;
-  if (pn53x_transceive (pnd, abtCmd, 4 + szInitiatorDataLen, pbtTargetsData, &szRx)) {
+  if (pn53x_transceive (pnd, abtCmd, 4 + szInitiatorData, pbtTargetsData, &szRx)) {
     *pszTargetsData = szRx;
     return true;
   } else {
@@ -607,19 +651,21 @@ pn53x_InAutoPoll (nfc_device_t * pnd,
       byte_t *pbt = abtRx + 1;
       /* 1st target */
       // Target type
-      pntTargets[0].ptt = *(pbt++);
+      pn53x_target_type_t ptt = *(pbt++);
+      pntTargets[0].nmt = pn53x_ptt_to_nmt(ptt);
       // AutoPollTargetData length
       ln = *(pbt++);
-      pn53x_decode_target_data (pbt, ln, pnd->nc, pntTargets[0].ptt, &(pntTargets[0].nti));
+      pn53x_decode_target_data (pbt, ln, pnd->nc, ptt, &(pntTargets[0].nti));
       pbt += ln;
 
       if (abtRx[0] > 1) {
         /* 2nd target */
         // Target type
-        pntTargets[1].ptt = *(pbt++);
+        ptt = *(pbt++);
+        pntTargets[1].nmt = pn53x_ptt_to_nmt(*(pbt++));
         // AutoPollTargetData length
         ln = *(pbt++);
-        pn53x_decode_target_data (pbt, ln, pnd->nc, pntTargets[1].ptt, &(pntTargets[1].nti));
+        pn53x_decode_target_data (pbt, ln, pnd->nc, ptt, &(pntTargets[1].nti));
       }
     }
   }
@@ -821,14 +867,14 @@ pn53x_configure (nfc_device_t * pnd, const nfc_device_option_t ndo, const bool b
 }
 
 bool
-pn53x_initiator_select_dep_target(nfc_device_t * pnd, const pn53x_modulation_t pmInitModulation,
+pn53x_initiator_select_dep_target(nfc_device_t * pnd, const bool bActiveDep,
                                   const nfc_dep_info_t * pndiInitiator,
                                   nfc_target_info_t * pnti)
 {
   if (pndiInitiator) {
-    return pn53x_InJumpForDEP (pnd, pmInitModulation, NULL, 0, pndiInitiator->abtNFCID3, pndiInitiator->abtGB, pndiInitiator->szGB, pnti);
+    return pn53x_InJumpForDEP (pnd, bActiveDep, NULL, 0, pndiInitiator->abtNFCID3, pndiInitiator->abtGB, pndiInitiator->szGB, pnti);
   } else {
-    return pn53x_InJumpForDEP (pnd, pmInitModulation, NULL, 0, NULL, NULL, 0, pnti);
+    return pn53x_InJumpForDEP (pnd, bActiveDep, NULL, 0, NULL, NULL, 0, pnti);
   }
 }
 
@@ -843,7 +889,7 @@ pn53x_initiator_select_dep_target(nfc_device_t * pnd, const pn53x_modulation_t p
  * @param[out] pnti nfc_target_info_t which will be filled by this function
  */
 bool
-pn53x_InJumpForDEP (nfc_device_t * pnd, const pn53x_modulation_t pmInitModulation,
+pn53x_InJumpForDEP (nfc_device_t * pnd, const bool bActiveDep,
                     const byte_t * pbtPassiveInitiatorData, const size_t szPassiveInitiatorData, 
                     const byte_t * pbtNFCID3i,
                     const byte_t * pbtGB, const size_t szGB,
@@ -856,14 +902,13 @@ pn53x_InJumpForDEP (nfc_device_t * pnd, const pn53x_modulation_t pmInitModulatio
 
   memcpy (abtCmd, pncmd_initiator_jump_for_dep, sizeof (pncmd_initiator_jump_for_dep));
 
-  if (pmInitModulation == PM_ACTIVE_DEP) {
-    abtCmd[2] = 0x01;           /* active DEP */
-  }
+  abtCmd[2] = (bActiveDep) ? 0x01 : 0x00;
+
   // FIXME Baud rate in D.E.P. mode is hard-wired as 106kbps
   abtCmd[3] = 0x00;             /* baud rate = 106kbps */
 
   offset = 5;
-  if (pbtPassiveInitiatorData && (pmInitModulation != PM_ACTIVE_DEP)) {        /* can't have passive initiator data when using active mode */
+  if (pbtPassiveInitiatorData && bActiveDep) {        /* can't have passive initiator data when using active mode */
     abtCmd[4] |= 0x01;
     memcpy (abtCmd + offset, pbtPassiveInitiatorData, szPassiveInitiatorData);
     offset += szPassiveInitiatorData;
@@ -1070,10 +1115,8 @@ pn53x_target_init (nfc_device_t * pnd, const nfc_target_mode_t ntm, const nfc_ta
   const byte_t * pbtGB = NULL;
   size_t szGB = 0;
 
-  switch(nt.ptt) {
-    case PTT_MIFARE:
-    case PTT_GENERIC_PASSIVE_106:
-    case PTT_ISO14443_4A_106: {
+  switch(nt.nmt) {
+    case NMT_ISO14443A: {
       // Set ATQA (SENS_RES)
       abtMifareParams[0] = nt.nti.nai.abtAtqa[1];
       abtMifareParams[1] = nt.nti.nai.abtAtqa[0];
@@ -1089,8 +1132,7 @@ pn53x_target_init (nfc_device_t * pnd, const nfc_target_mode_t ntm, const nfc_ta
     }
     break;
 
-    case PTT_FELICA_212:
-    case PTT_FELICA_424:
+    case NMT_FELICA:
       // Set NFCID2t 
       memcpy(abtFeliCaParams, nt.nti.nfi.abtId, 8);
       // Set PAD
@@ -1100,9 +1142,7 @@ pn53x_target_init (nfc_device_t * pnd, const nfc_target_mode_t ntm, const nfc_ta
       pbtFeliCaParams = abtFeliCaParams;
     break;
 
-    case PTT_DEP_PASSIVE_106:
-    case PTT_DEP_PASSIVE_212:
-    case PTT_DEP_PASSIVE_424:
+    case NMT_DEP:
       pbtNFCID3t = nt.nti.ndi.abtNFCID3;
       szGB = nt.nti.ndi.szGB;
       if (szGB) pbtGB = nt.nti.ndi.abtGB;
@@ -1314,3 +1354,120 @@ pn53x_target_send_bytes (nfc_device_t * pnd, const byte_t * pbtTx, const size_t 
   // Everyting seems ok, return true
   return true;
 }
+
+// FIXME How to handle conner case ?
+const pn53x_modulation_t
+pn53x_nm_to_pm(const nfc_modulation_t nm)
+{
+  switch(nm.nmt) {
+    case NMT_ISO14443A:
+      return PM_ISO14443A_106;
+    break;
+
+    case NMT_ISO14443B:
+      switch(nm.nbr) {
+        case NBR_106:
+          return PM_ISO14443B_106;
+        break;
+        case NBR_212:
+          return PM_ISO14443B_212;
+        break;
+        case NBR_424:
+          return PM_ISO14443B_424;
+        break;
+      }
+    break;
+
+    case NMT_JEWEL:
+      return PM_JEWEL_106;
+    break;
+
+    case NMT_FELICA:
+      switch(nm.nbr) {
+        case NBR_212:
+          return PM_FELICA_212;
+        break;
+        case NBR_424:
+          return PM_FELICA_424;
+        break;
+      }
+    break;
+  }
+}
+
+// FIXME How to handle conner case ?
+const nfc_modulation_type_t
+pn53x_ptt_to_nmt( const pn53x_target_type_t ptt )
+{
+  switch (ptt) {
+    case PTT_GENERIC_PASSIVE_106:
+    case PTT_GENERIC_PASSIVE_212:
+    case PTT_GENERIC_PASSIVE_424:
+      // XXX This should not happend, how handle it cleanly ?
+      return NMT_UNKNOWN;
+    break;
+
+    case PTT_MIFARE:
+    case PTT_ISO14443_4A_106:
+      return NMT_ISO14443B;
+    break;
+
+    case PTT_ISO14443_4B_106:
+    case PTT_ISO14443_4B_TCL_106:
+      return NMT_ISO14443B;
+    break;
+
+    case PTT_JEWEL_106:
+      return NMT_JEWEL;
+    break;
+
+    case PTT_FELICA_212:
+    case PTT_FELICA_424:
+      return NMT_FELICA;
+    break;
+
+    case PTT_DEP_PASSIVE_106:
+    case PTT_DEP_PASSIVE_212:
+    case PTT_DEP_PASSIVE_424:
+    case PTT_DEP_ACTIVE_106:
+    case PTT_DEP_ACTIVE_212:
+    case PTT_DEP_ACTIVE_424:
+      return NMT_DEP;
+    break;
+  }
+}
+
+// FIXME How to handle conner case ?
+const pn53x_target_type_t
+pn53x_nm_to_ptt(const nfc_modulation_t nm)
+{
+  switch(nm.nmt) {
+    case NMT_ISO14443A:
+      return PTT_MIFARE;
+    break;
+
+    case NMT_ISO14443B:
+      switch(nm.nbr) {
+        case NBR_106:
+          return PTT_ISO14443_4B_106;
+        break;
+      }
+    break;
+
+    case NMT_JEWEL:
+      return PTT_JEWEL_106;
+    break;
+
+    case NMT_FELICA:
+      switch(nm.nbr) {
+        case NBR_212:
+          return PTT_FELICA_212;
+        break;
+        case NBR_424:
+          return PTT_FELICA_424;
+        break;
+      }
+    break;
+  }
+}
+

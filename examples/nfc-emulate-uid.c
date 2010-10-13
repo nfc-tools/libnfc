@@ -132,7 +132,7 @@ main (int argc, char *argv[])
 
   // Note: We have to build a "fake" nfc_target_t in order to do exactly the same that was done before the new nfc_target_init() was introduced.
   nfc_target_t nt = {
-    .ptt = PTT_MIFARE,
+    .nmt = NMT_ISO14443A,
     .nti.nai.abtAtqa = { 0x04, 0x00 },
     .nti.nai.abtUid = { 0xde, 0xad, 0xbe, 0xaf },
     .nti.nai.btSak = 0x20,

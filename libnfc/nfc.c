@@ -275,14 +275,12 @@ nfc_initiator_init (nfc_device_t * pnd)
  */
 bool
 nfc_initiator_select_passive_target (nfc_device_t * pnd,
-                                     const pn53x_modulation_t pmInitModulation,
-                                     const byte_t * pbtInitData, const size_t szInitDataLen, nfc_target_info_t * pnti)
+                                     const nfc_modulation_t nm,
+                                     const byte_t * pbtInitData, const size_t szInitData,
+                                     nfc_target_info_t * pnti)
 {
   byte_t  abtInit[MAX_FRAME_LEN];
-  size_t  szInitLen;
-
-  size_t  szTargetsData;
-  byte_t  abtTargetsData[MAX_FRAME_LEN];
+  size_t  szInit;
 
   pnd->iLastError = 0;
 
@@ -290,13 +288,13 @@ nfc_initiator_select_passive_target (nfc_device_t * pnd,
   if (!pnd->bActive)
     return false;
   // TODO Put this in a function: this part is defined by ISO14443-3 (UID and Cascade levels)
-  switch (pmInitModulation) {
-  case PM_ISO14443A_106:
-    switch (szInitDataLen) {
+  switch (nm.nmt) {
+  case NMT_ISO14443A:
+    switch (szInitData) {
     case 7:
       abtInit[0] = 0x88;
       memcpy (abtInit + 1, pbtInitData, 7);
-      szInitLen = 8;
+      szInit = 8;
       break;
 
     case 10:
@@ -304,71 +302,25 @@ nfc_initiator_select_passive_target (nfc_device_t * pnd,
       memcpy (abtInit + 1, pbtInitData, 3);
       abtInit[4] = 0x88;
       memcpy (abtInit + 5, pbtInitData + 3, 7);
-      szInitLen = 12;
+      szInit = 12;
       break;
 
     case 4:
     default:
-      memcpy (abtInit, pbtInitData, szInitDataLen);
-      szInitLen = szInitDataLen;
+      memcpy (abtInit, pbtInitData, szInitData);
+      szInit = szInitData;
       break;
     }
     break;
 
   default:
-    memcpy (abtInit, pbtInitData, szInitDataLen);
-    szInitLen = szInitDataLen;
+    memcpy (abtInit, pbtInitData, szInitData);
+    szInit = szInitData;
     break;
   }
 
-  if (!pn53x_InListPassiveTarget (pnd, pmInitModulation, 1, abtInit, szInitLen, abtTargetsData, &szTargetsData))
-    return false;
-
-  // Make sure one tag has been found, the PN53X returns 0x00 if none was available
-  if (abtTargetsData[0] == 0)
-    return false;
-
-  // Is a tag info struct available
-  if (pnti) {
-    // Fill the tag info struct with the values corresponding to this init modulation
-    switch (pmInitModulation) {
-    case PM_ISO14443A_106:
-      if (!pn53x_decode_target_data (abtTargetsData + 1, szTargetsData - 1, pnd->nc, PTT_GENERIC_PASSIVE_106, pnti)) {
-        return false;
-      }
-      break;
-
-    case PM_FELICA_212:
-      if (!pn53x_decode_target_data (abtTargetsData + 1, szTargetsData - 1, pnd->nc, PTT_FELICA_212, pnti)) {
-        return false;
-      }
-      break;
-    case PM_FELICA_424:
-      if (!pn53x_decode_target_data (abtTargetsData + 1, szTargetsData - 1, pnd->nc, PTT_FELICA_424, pnti)) {
-        return false;
-      }
-      break;
-
-    case PM_ISO14443B_106:
-      if (!pn53x_decode_target_data (abtTargetsData + 1, szTargetsData - 1, pnd->nc, PTT_ISO14443_4B_106, pnti)) {
-        return false;
-      }
-      break;
-
-    case PM_JEWEL_106:
-      if (!pn53x_decode_target_data (abtTargetsData + 1, szTargetsData - 1, pnd->nc, PTT_JEWEL_106, pnti)) {
-        return false;
-      }
-      break;
-
-    default:
-      // Should not be possible, so whatever...
-      break;
-    }
-  }
-  return true;
+  return pn53x_initiator_select_passive_target (pnd, nm, abtInit, szInit, pnti);
 }
-
 
 /**
  * @brief List passive or emulated tags
@@ -384,7 +336,7 @@ nfc_initiator_select_passive_target (nfc_device_t * pnd,
  * @note For every initial modulation type there is a different collection of information returned (in \a nfc_target_info_t pointer pti) They all fit in the data-type which is called nfc_target_info_t. This is a union which contains the tag information that belongs to the according initial modulation type.
  */
 bool
-nfc_initiator_list_passive_targets (nfc_device_t * pnd, const pn53x_modulation_t pmInitModulation,
+nfc_initiator_list_passive_targets (nfc_device_t * pnd, const nfc_modulation_t nm,
                                     nfc_target_info_t anti[], const size_t szTargets, size_t * pszTargetFound)
 {
   nfc_target_info_t nti;
@@ -397,17 +349,25 @@ nfc_initiator_list_passive_targets (nfc_device_t * pnd, const pn53x_modulation_t
   // Let the reader only try once to find a target
   nfc_configure (pnd, NDO_INFINITE_SELECT, false);
 
-  if (pmInitModulation == PM_ISO14443B_106) {
-    // Application Family Identifier (AFI) must equals 0x00 in order to wakeup all ISO14443-B PICCs (see ISO/IEC 14443-3)
-    pbtInitData = (byte_t *) "\x00";
-    szInitDataLen = 1;
-  } else if (pmInitModulation == PM_FELICA_212 || pmInitModulation == PM_FELICA_424) {
-    // polling payload must be present (see ISO/IEC 18092 11.2.2.5)
-    pbtInitData = (byte_t *) "\x00\xff\xff\x01\x00";
-    szInitDataLen = 5;
+  switch (nm.nmt) {
+    case NMT_ISO14443B: {
+      // Application Family Identifier (AFI) must equals 0x00 in order to wakeup all ISO14443-B PICCs (see ISO/IEC 14443-3)
+      pbtInitData = (byte_t *) "\x00";
+      szInitDataLen = 1;
+    }
+    break;
+    case NMT_FELICA: {
+      // polling payload must be present (see ISO/IEC 18092 11.2.2.5)
+      pbtInitData = (byte_t *) "\x00\xff\xff\x01\x00";
+      szInitDataLen = 5;
+    }
+    break;
+    default:
+      // nothing to do
+    break;
   }
 
-  while (nfc_initiator_select_passive_target (pnd, pmInitModulation, pbtInitData, szInitDataLen, &nti)) {
+  while (nfc_initiator_select_passive_target (pnd, nm, pbtInitData, szInitDataLen, &nti)) {
     nfc_initiator_deselect_target (pnd);
 
     if (szTargets > szTargetFound) {
@@ -417,7 +377,7 @@ nfc_initiator_list_passive_targets (nfc_device_t * pnd, const pn53x_modulation_t
     }
     szTargetFound++;
     // deselect has no effect on FeliCa and Jewel cards so we'll stop after one...
-    if (pmInitModulation == PM_FELICA_212 || pmInitModulation == PM_FELICA_424 || pmInitModulation == PM_JEWEL_106) {
+    if ((nm.nmt == NMT_FELICA) || (nm.nmt == NMT_JEWEL)) {
         break;
     }
   }
@@ -441,14 +401,15 @@ nfc_initiator_list_passive_targets (nfc_device_t * pnd, const pn53x_modulation_t
  */
 bool
 nfc_initiator_poll_targets (nfc_device_t * pnd,
-                            const pn53x_target_type_t * ppttTargetTypes, const size_t szTargetTypes,
+                            const nfc_modulation_t * pnmModulations, const size_t szModulations,
                             const byte_t btPollNr, const byte_t btPeriod,
                             nfc_target_t * pntTargets, size_t * pszTargetFound)
 {
   pnd->iLastError = 0;
 
-  return pn53x_InAutoPoll (pnd, ppttTargetTypes, szTargetTypes, btPollNr, btPeriod, pntTargets, pszTargetFound);
+  return pn53x_initiator_poll_targets (pnd, pnmModulations, szModulations, btPollNr, btPeriod, pntTargets, pszTargetFound);
 }
+
 
 /**
  * @brief Select a target and request active or passive mode for DEP (Data Exchange Protocol)
@@ -466,11 +427,11 @@ nfc_initiator_poll_targets (nfc_device_t * pnd,
  * @note \a nfc_dep_info_t will be returned when the target was acquired successfully.
  */
 bool
-nfc_initiator_select_dep_target (nfc_device_t * pnd, const pn53x_modulation_t pmInitModulation, const nfc_dep_info_t * pndiInitiator, nfc_target_info_t * pnti)
+nfc_initiator_select_dep_target (nfc_device_t * pnd, const bool bActiveDep, const nfc_dep_info_t * pndiInitiator, nfc_target_info_t * pnti)
 {
   pnd->iLastError = 0;
 
-  return pn53x_initiator_select_dep_target (pnd, pmInitModulation, pndiInitiator, pnti);
+  return pn53x_initiator_select_dep_target (pnd, bActiveDep, pndiInitiator, pnti);
 }
 
 /**

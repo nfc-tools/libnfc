@@ -127,7 +127,7 @@ main (int argc, char *argv[])
   printf ("[+] For example, send a RATS command or use the \"nfc-anticol\" tool\n");
 
   nfc_target_t nt = {
-    .ptt = PTT_MIFARE,
+    .nmt = NMT_ISO14443A,
     .nti.nai.abtAtqa = { 0x04, 0x00 },
     .nti.nai.abtUid = { 0xde, 0xad, 0xbe, 0xef },
     .nti.nai.btSak = 0x20,
