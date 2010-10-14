@@ -107,6 +107,7 @@ extern  "C" {
 /* Misc. functions */
   NFC_EXPORT void iso14443a_crc (byte_t * pbtData, size_t szLen, byte_t * pbtCrc);
   NFC_EXPORT void append_iso14443a_crc (byte_t * pbtData, size_t szLen);
+  NFC_EXPORT byte_t * iso14443a_extract_historical_bytes (byte_t * pbtAts, size_t szAts, size_t * pszHB);
   NFC_EXPORT const char *nfc_version (void);
 
 /* Common device-level errors */

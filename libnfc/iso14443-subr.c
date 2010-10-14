@@ -54,7 +54,7 @@ append_iso14443a_crc (byte_t * pbtData, size_t szLen)
 }
 
 byte_t *
-extract_historical_bytes(byte_t * pbtAts, size_t szAts, size_t * pszHB)
+iso14443a_extract_historical_bytes(byte_t * pbtAts, size_t szAts, size_t * pszHB)
 {
   if (szAts) {
     size_t offset = 1;

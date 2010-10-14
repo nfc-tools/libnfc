@@ -1157,8 +1157,11 @@ pn53x_target_init (nfc_device_t * pnd, const nfc_target_mode_t ntm, nfc_target_t
     return false;
 
   byte_t abtMifareParams[6];
-  byte_t abtFeliCaParams[18];
   byte_t * pbtMifareParams = NULL;
+  byte_t * pbtHBt = NULL;
+  size_t szHBt = 0;
+
+  byte_t abtFeliCaParams[18];
   byte_t * pbtFeliCaParams = NULL;
 
   const byte_t * pbtNFCID3t = NULL;
@@ -1179,6 +1182,9 @@ pn53x_target_init (nfc_device_t * pnd, const nfc_target_mode_t ntm, nfc_target_t
       abtMifareParams[5] = pnt->nti.nai.btSak;
 
       pbtMifareParams = abtMifareParams;
+
+      // Historical Bytes
+      pbtHBt = iso14443a_extract_historical_bytes (pnt->nti.nai.abtAts, pnt->nti.nai.szAtsLen, &szHBt);
     }
     break;
 
@@ -1208,7 +1214,7 @@ pn53x_target_init (nfc_device_t * pnd, const nfc_target_mode_t ntm, nfc_target_t
 
   byte_t btActivatedMode;
 target_activation:
-  if(!pn53x_TgInitAsTarget(pnd, ntm, pbtMifareParams, pbtFeliCaParams, pbtNFCID3t, pbtGBt, szGBt, pbtRx, pszRx, &btActivatedMode)) {
+  if(!pn53x_TgInitAsTarget(pnd, ntm, pbtMifareParams, pbtHBt, szHBt, pbtFeliCaParams, pbtNFCID3t, pbtGBt, szGBt, pbtRx, pszRx, &btActivatedMode)) {
     return false;
   }
 
@@ -1258,8 +1264,9 @@ target_activation:
 bool
 pn53x_TgInitAsTarget (nfc_device_t * pnd, nfc_target_mode_t ntm, 
                       const byte_t * pbtMifareParams,
+                      const byte_t * pbtHBt, size_t szHBt,
                       const byte_t * pbtFeliCaParams,
-                      const byte_t * pbtNFCID3t, const byte_t * pbtGB, const size_t szGB,
+                      const byte_t * pbtNFCID3t, const byte_t * pbtGBt, const size_t szGBt,
                       byte_t * pbtRx, size_t * pszRx, byte_t * pbtModeByte)
 {
   byte_t  abtRx[MAX_FRAME_LEN];
@@ -1287,17 +1294,25 @@ pn53x_TgInitAsTarget (nfc_device_t * pnd, nfc_target_mode_t ntm,
   if (pbtNFCID3t) {
     memcpy(abtCmd+27, pbtNFCID3t, 10);
   }
-  if (szGB) {
-    if( pnd->nc == NC_PN531 ) {
-      memcpy (abtCmd+37, pbtGB, szGB);
-      szOptionalBytes = szGB;
+  // General Bytes (ISO/IEC 18092)
+  if (szGBt) {
+    if (pnd->nc == NC_PN531) {
+      memcpy (abtCmd+37, pbtGBt, szGBt);
+      szOptionalBytes = szGBt;
     } else {
-      abtCmd[37] = (byte_t)(szGB);
-      memcpy (abtCmd+38, pbtGB, szGB);
-      szOptionalBytes = szGB + 1;
+      abtCmd[37] = (byte_t)(szGBt);
+      memcpy (abtCmd+38, pbtGBt, szGBt);
+      szOptionalBytes = szGBt + 1;
     }
   }
-  // TODO Handle Tk (Historical bytes) length (only available on PN532, PN533)
+  // Historical bytes (ISO/IEC 14443-4)
+  if (pnd->nc != NC_PN531) { // PN531 does not handle Historical Bytes
+    if (szHBt) {
+      abtCmd[37+szOptionalBytes] = (byte_t)(szHBt);
+      memcpy (abtCmd+38+szOptionalBytes, pbtHBt, szHBt);
+      szOptionalBytes += szHBt + 1;
+    }
+  }
 
   // Request the initialization as a target
   szRx = MAX_FRAME_LEN;
