@@ -65,9 +65,9 @@ main (int argc, const char *argv[])
     return EXIT_FAILURE;
   }
 
-  const nfc_target_t nt = {
+  nfc_target_t nt = {
     .nm.nmt = NMT_DEP,
-    .nm.nbr = NBR_UNDEFINED, // Not used by nfc_target_init
+    .nm.nbr = NBR_UNDEFINED, // Will be updated by nfc_target_init
     .nti.ndi.abtNFCID3 = { 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xff, 0x00, 0x00 },
     .nti.ndi.szGB = 4,
     .nti.ndi.abtGB = { 0x12, 0x34, 0x56, 0x78 },
@@ -89,7 +89,7 @@ main (int argc, const char *argv[])
   print_nfc_target (nt);
 
   printf ("Waiting for initiator request...\n");
-  if(!nfc_target_init (pnd, NTM_DEP_ONLY, nt, abtRx, &szRx)) {
+  if(!nfc_target_init (pnd, NTM_DEP_ONLY, &nt, abtRx, &szRx)) {
     nfc_perror(pnd, "nfc_target_init");
     return EXIT_FAILURE;
   }

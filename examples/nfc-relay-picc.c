@@ -343,7 +343,7 @@ main (int argc, char *argv[])
 
     printf ("Connected to the NFC emulator device: %s\n", pndTarget->acName);
 
-    if (!nfc_target_init (pndTarget, NTM_ISO14443_4_PICC_ONLY, ntEmulatedTarget, abtCapdu, &szCapduLen)) {
+    if (!nfc_target_init (pndTarget, NTM_ISO14443_4_PICC_ONLY, &ntEmulatedTarget, abtCapdu, &szCapduLen)) {
       ERR ("%s", "Initialization of NFC emulator failed");
       if (!target_only_mode) {
         nfc_disconnect (pndInitiator);

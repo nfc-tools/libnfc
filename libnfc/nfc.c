@@ -538,6 +538,11 @@ nfc_initiator_transceive_bits (nfc_device_t * pnd, const byte_t * pbtTx, const s
  *
  * @param pnd \a nfc_device_t struct pointer that represent currently used device
  * @param ntm target mode restriction that you want to emulate (eg. NTM_PASSIVE_ONLY)
+ * @param pnt pointer to \a nfc_target_t struct that represents the wanted emulated target
+ *
+ * @note \a pnt can be updated by this function: if you set NBR_UNDEFINED
+ * and/or NDM_UNDEFINED (ie. for DEP mode), these fields will be updated.
+ *
  * @param[out] pbtRx Rx buffer pointer
  * @param[out] pszRx received bytes count
  *
@@ -550,11 +555,11 @@ nfc_initiator_transceive_bits (nfc_device_t * pnd, const byte_t * pbtTx, const s
  * receive functions can be used.
  */
 bool
-nfc_target_init (nfc_device_t * pnd, const nfc_target_mode_t ntm, const nfc_target_t nt, byte_t * pbtRx, size_t * pszRx)
+nfc_target_init (nfc_device_t * pnd, const nfc_target_mode_t ntm, nfc_target_t * pnt, byte_t * pbtRx, size_t * pszRx)
 {
   pnd->iLastError = 0;
 
-  return pn53x_target_init (pnd, ntm, nt, pbtRx, pszRx);
+  return pn53x_target_init (pnd, ntm, pnt, pbtRx, pszRx);
 }
 
 /**

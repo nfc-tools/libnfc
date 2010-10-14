@@ -1108,7 +1108,7 @@ pn53x_initiator_transceive_bytes (nfc_device_t * pnd, const byte_t * pbtTx, cons
 }
 
 bool
-pn53x_target_init (nfc_device_t * pnd, const nfc_target_mode_t ntm, const nfc_target_t nt, byte_t * pbtRx, size_t * pszRx)
+pn53x_target_init (nfc_device_t * pnd, const nfc_target_mode_t ntm, nfc_target_t * pnt, byte_t * pbtRx, size_t * pszRx)
 {
   // Save the current configuration settings
   bool    bCrc = pnd->bCrc;
@@ -1165,18 +1165,18 @@ pn53x_target_init (nfc_device_t * pnd, const nfc_target_mode_t ntm, const nfc_ta
   const byte_t * pbtGBt = NULL;
   size_t szGBt = 0;
 
-  switch(nt.nm.nmt) {
+  switch(pnt->nm.nmt) {
     case NMT_ISO14443A: {
       // Set ATQA (SENS_RES)
-      abtMifareParams[0] = nt.nti.nai.abtAtqa[1];
-      abtMifareParams[1] = nt.nti.nai.abtAtqa[0];
+      abtMifareParams[0] = pnt->nti.nai.abtAtqa[1];
+      abtMifareParams[1] = pnt->nti.nai.abtAtqa[0];
       // Set UID 
       // Note: in this mode we can only emulate a single size (4 bytes) UID where the first is hard-wired by PN53x as 0x08
-      abtMifareParams[2] = nt.nti.nai.abtUid[1];
-      abtMifareParams[3] = nt.nti.nai.abtUid[2];
-      abtMifareParams[4] = nt.nti.nai.abtUid[3];
+      abtMifareParams[2] = pnt->nti.nai.abtUid[1];
+      abtMifareParams[3] = pnt->nti.nai.abtUid[2];
+      abtMifareParams[4] = pnt->nti.nai.abtUid[3];
       // Set SAK (SEL_RES)
-      abtMifareParams[5] = nt.nti.nai.btSak;
+      abtMifareParams[5] = pnt->nti.nai.btSak;
 
       pbtMifareParams = abtMifareParams;
     }
@@ -1184,20 +1184,20 @@ pn53x_target_init (nfc_device_t * pnd, const nfc_target_mode_t ntm, const nfc_ta
 
     case NMT_FELICA:
       // Set NFCID2t 
-      memcpy(abtFeliCaParams, nt.nti.nfi.abtId, 8);
+      memcpy(abtFeliCaParams, pnt->nti.nfi.abtId, 8);
       // Set PAD
-      memcpy(abtFeliCaParams+8, nt.nti.nfi.abtPad, 8);
+      memcpy(abtFeliCaParams+8, pnt->nti.nfi.abtPad, 8);
       // Set SystemCode
-      memcpy(abtFeliCaParams+16, nt.nti.nfi.abtSysCode, 2);
+      memcpy(abtFeliCaParams+16, pnt->nti.nfi.abtSysCode, 2);
       pbtFeliCaParams = abtFeliCaParams;
     break;
 
     case NMT_DEP:
       // Set NFCID3
-      pbtNFCID3t = nt.nti.ndi.abtNFCID3;
+      pbtNFCID3t = pnt->nti.ndi.abtNFCID3;
       // Set General Bytes, if relevant
-      szGBt = nt.nti.ndi.szGB;
-      if (szGBt) pbtGBt = nt.nti.ndi.abtGB;
+      szGBt = pnt->nti.ndi.szGB;
+      if (szGBt) pbtGBt = pnt->nti.ndi.abtGB;
     break;
     case NMT_ISO14443B:
     case NMT_JEWEL:
@@ -1241,7 +1241,10 @@ target_activation:
   }
 
   // XXX When using DEP, shouldn't we update target modulation ?
-  if(nm.nmt != nt.nm.nmt) goto target_activation;
+  if(nm.nmt != pnt->nm.nmt) {
+    goto target_activation;
+  }
+  pnt->nm.nbr = nm.nbr;
 
   // Restore the CRC & parity setting to the original value (if needed)
   if (!bCrc)

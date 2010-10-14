@@ -136,7 +136,7 @@ main (int argc, char *argv[])
     .nti.nai.szAtsLen = 0,
   };
 
-  if (!nfc_target_init (pndTag, NTM_PASSIVE_ONLY, nt, abtReaderRx, &szReaderRxBits)) {
+  if (!nfc_target_init (pndTag, NTM_PASSIVE_ONLY, &nt, abtReaderRx, &szReaderRxBits)) {
     ERR ("%s", "Initialization of NFC emulator failed");
     nfc_disconnect (pndTag);
     return EXIT_FAILURE;

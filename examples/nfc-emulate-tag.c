@@ -61,7 +61,7 @@ intr_hdlr (void)
 }
 
 bool 
-target_io( const nfc_target_t nt, const byte_t * pbtInput, const size_t szInput, byte_t * pbtOutput, size_t *pszOutput )
+target_io( nfc_target_t * pnt, const byte_t * pbtInput, const size_t szInput, byte_t * pbtOutput, size_t *pszOutput )
 {
   bool loop = true;
   *pszOutput = 0;
@@ -84,10 +84,10 @@ target_io( const nfc_target_t nt, const byte_t * pbtInput, const size_t szInput,
         break;
       case 0xe0: // RATS
         // Send ATS
-        *pszOutput = nt.nti.nai.szAtsLen + 1;
-        pbtOutput[0] = nt.nti.nai.szAtsLen + 1; // ISO14443-4 says that ATS contains ATS_Lenght as first byte
-        if(nt.nti.nai.szAtsLen) {
-          memcpy(pbtOutput+1, nt.nti.nai.abtAts, nt.nti.nai.szAtsLen);
+        *pszOutput = pnt->nti.nai.szAtsLen + 1;
+        pbtOutput[0] = pnt->nti.nai.szAtsLen + 1; // ISO14443-4 says that ATS contains ATS_Lenght as first byte
+        if(pnt->nti.nai.szAtsLen) {
+          memcpy(pbtOutput+1, pnt->nti.nai.abtAts, pnt->nti.nai.szAtsLen);
         }
         break;
       case 0xc2: // S-block DESELECT
@@ -112,19 +112,19 @@ target_io( const nfc_target_t nt, const byte_t * pbtInput, const size_t szInput,
 }
 
 bool
-nfc_target_emulate_tag(nfc_device_t* pnd, const nfc_target_t nt)
+nfc_target_emulate_tag(nfc_device_t* pnd, nfc_target_t * pnt)
 {
   size_t szTx;
   byte_t abtTx[MAX_FRAME_LEN];
   bool loop = true;
 
-  if (!nfc_target_init (pnd, NTM_PASSIVE_ONLY, nt, abtRx, &szRx)) {
+  if (!nfc_target_init (pnd, NTM_PASSIVE_ONLY, pnt, abtRx, &szRx)) {
     nfc_perror (pnd, "nfc_target_init");
     return false;
   }
 
   while ( loop ) {
-    loop = target_io( nt, abtRx, szRx, abtTx, &szTx );
+    loop = target_io( pnt, abtRx, szRx, abtTx, &szTx );
     if (szTx) {
       if (!nfc_target_send_bytes(pnd, abtTx, szTx)) {
         nfc_perror (pnd, "nfc_target_send_bytes");
@@ -209,7 +209,7 @@ main (int argc, char *argv[])
   print_nfc_iso14443a_info( nt.nti.nai );
 
   printf ("NFC device (configured as target) is now emulating the tag, please touch it with a second NFC device (initiator)\n");
-  if (!nfc_target_emulate_tag (pnd, nt)) {
+  if (!nfc_target_emulate_tag (pnd, &nt)) {
     nfc_perror (pnd, "nfc_target_emulate_tag");
     return EXIT_FAILURE;
   }
