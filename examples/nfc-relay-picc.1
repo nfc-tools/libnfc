@@ -1,0 +1,74 @@
+.TH NFC-RELAY-PICC 1 "October 12, 2010"
+.SH NAME
+nfc-relay-picc \- Relay demonstration tool for ISO14443-4
+.SH SYNOPSIS
+.B nfc-relay-picc
+.SH DESCRIPTION
+.B nfc-relay-picc
+
+This tool requires two NFC devices. One device (configured as target) will
+emulate an ISO/IEC 14443-4 type A tag, while the second device (configured as
+initiator) will act as a reader. The genuine tag can be placed on the second
+device (initiator) and the tag emulator (target) can be placed close to the
+original reader. All communication is now relayed and shown in the screen on
+real-time.
+
+tag <---> initiator (relay) <---> target (relay) <---> original reader
+
+.SH OPTIONS
+\fB-h\fP
+    Help
+    List options
+
+\fB-q\fP
+    Quiet mode
+    Suppress printing of relayed data (improves timing)
+
+\fB-t\fP
+    Target mode only (to be used on reader side)
+    Commands are sent to file descriptor 4
+    Responses are read from file descriptor 3
+
+\fB-i\fP
+    Initiator mode only (to be used on tag side)
+    Commands are read from file descriptor 3
+    Responses are sent to file descriptor 4
+
+\fB-n\fP \fIN\fP
+    Adds a waiting time of \fIN\fP seconds (integer) in the loop
+
+.SH EXAMPLES
+Basic usage:
+
+  \fBnfc-relay-picc\fP
+
+Remote relay over TCP/IP:
+
+  \fBsocat\fP
+    TCP-LISTEN:port,reuseaddr
+    "EXEC:\fBnfc-relay-picc -i\fP,fdin=3,fdout=4"
+  \fBsocat\fP
+    TCP:remotehost:port
+    "EXEC:\fBnfc-relay-picc -t\fP,fdin=3,fdout=4"
+
+.SH NOTES
+There are some differences with \fBnfc-relay\fP:
+
+This example only works with PN532 because it relies on
+its internal handling of ISO14443-4 specificities.
+
+Thanks to this internal handling & injection of WTX frames,
+this example works on readers very strict on timing.
+
+.SH BUGS
+Please report any bugs on the
+.B libnfc
+forum at
+.BR http://www.libnfc.org/community/ "."
+.SH LICENCE
+.B libnfc
+and
+.B libnfc-examples
+are covered by the GNU Lesser General Public License (LGPL), version 3.
+.PP
+This manual page is licensed under the terms of the GNU GPL (version 2 or later).

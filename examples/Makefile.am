@@ -10,6 +10,7 @@ bin_PROGRAMS = \
 		nfc-mfultralight \
 		nfc-poll \
 		nfc-relay \
+		nfc-relay-picc \
 		pn53x-diagnose \
 		pn53x-sam \
 		pn53x-tamashell
@@ -44,6 +45,10 @@ nfc_mfclassic_LDADD = $(top_builddir)/libnfc/libnfc.la
 
 nfc_relay_SOURCES = nfc-relay.c
 nfc_relay_LDADD = $(top_builddir)/libnfc/libnfc.la \
+		  libnfcutils.la
+
+nfc_relay_picc_SOURCES = nfc-relay-picc.c
+nfc_relay_picc_LDADD = $(top_builddir)/libnfc/libnfc.la \
 		  libnfcutils.la
 
 nfc_emulate_forum_tag4_SOURCES = nfc-emulate-forum-tag4.c
@@ -91,6 +96,7 @@ dist_man_MANS = \
 		nfc-mfultralight.1 \
 		nfc-poll.1 \
 		nfc-relay.1 \
+		nfc-relay-picc.1 \
 		pn53x-diagnose.1 \
 		pn53x-sam.1 \
 		pn53x-tamashell.1
