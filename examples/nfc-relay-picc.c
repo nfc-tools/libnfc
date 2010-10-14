@@ -232,6 +232,11 @@ main (int argc, char *argv[])
       pndInitiator = nfc_connect (&(pnddDevices[1]));
     }
 
+    if (!pndInitiator) {
+      printf ("Error connecting NFC reader\n");
+      exit(EXIT_FAILURE);
+    }
+
     printf ("Connected to the NFC reader device: %s\n", pndInitiator->acName);
 
     // Try to find a ISO 14443-4A tag

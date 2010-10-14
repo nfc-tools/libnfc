@@ -223,7 +223,7 @@ bool    pn53x_InJumpForDEP (nfc_device_t * pnd,
                             nfc_target_t * pnt);
 bool	pn53x_TgInitAsTarget (nfc_device_t * pnd, nfc_target_mode_t ntm,
                               const byte_t * pbtMifareParams,
-                              const byte_t * pbtHBt, size_t szHBt,
+                              const byte_t * pbtTkt, size_t szTkt,
                               const byte_t * pbtFeliCaParams,
                               const byte_t * pbtNFCID3t, const byte_t * pbtGB, const size_t szGB,
                               byte_t * pbtRx, size_t * pszRx, byte_t * pbtModeByte);
