@@ -19,7 +19,7 @@
 
 /**
  * @file nfc-list.c
- * @brief List the first target present of each founded device
+ * @brief Lists the first target present of each founded device
  */
 
 #ifdef HAVE_CONFIG_H

@@ -17,6 +17,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 */
+
+/**
+ * @file pn53x-tamashell.c
+ * @brief Configures the NFC device to communicate with a SAM (Secure Access Module).
+ */
+
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif // HAVE_CONFIG_H

@@ -19,7 +19,7 @@
 
 /**
  * @file nfc-emulate-forum-tag4.c
- * @brief Emulate a NFC Forum Tag Type 4 with a NDEF message
+ * @brief Emulates a NFC Forum Tag Type 4 with a NDEF message
  */
 
 // Notes & differences with nfc-emulate-tag:

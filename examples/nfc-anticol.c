@@ -19,7 +19,7 @@
 
 /** 
  * @file nfc-anticol.c
- * @brief Generate one ISO14443-A anti-collision process "by-hand"
+ * @brief Generates one ISO14443-A anti-collision process "by-hand"
  */
 
 #ifdef HAVE_CONFIG_H

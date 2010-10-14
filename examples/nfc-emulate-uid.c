@@ -19,7 +19,7 @@
 
 /**
  * @file nfc-emulate-uid.c
- * @brief This example can be used to emulate a tag which which have a "really" custom UID
+ * @brief Emulates a tag which which have a "really" custom UID
  * 
  * NFC devices are able to emulate passive tags but manufacturers restrict the
  * customization of UID. With PN53x, UID is only 4-byte long and the first
@@ -52,7 +52,7 @@ static nfc_device_t *pnd;
 
 // ISO14443A Anti-Collision response
 byte_t  abtAtqa[2] = { 0x04, 0x00 };
-byte_t  abtUidBcc[5] = { 0xDE, 0xAD, 0xBE, 0xAF, 0x62 };
+byte_t  abtUidBcc[5] = { 0xDE, 0xAD, 0xBE, 0xEF, 0x62 };
 byte_t  abtSak[9] = { 0x08, 0xb6, 0xdd };
 
 void
@@ -73,7 +73,7 @@ print_usage (char *argv[])
   printf ("\t-h\tHelp. Print this message.\n");
   printf ("\t-q\tQuiet mode. Silent output: received and sent frames will not be shown (improves timing).\n");
   printf ("\n");
-  printf ("\t[UID]\tUID to emulate, specified as 8 HEX digits (default is DEADBEAF).\n");
+  printf ("\t[UID]\tUID to emulate, specified as 8 HEX digits (default is DEADBEEF).\n");
 }
 
 int
@@ -135,7 +135,7 @@ main (int argc, char *argv[])
     .nm.nmt = NMT_ISO14443A,
     .nm.nbr = NBR_UNDEFINED,
     .nti.nai.abtAtqa = { 0x04, 0x00 },
-    .nti.nai.abtUid = { 0xde, 0xad, 0xbe, 0xaf },
+    .nti.nai.abtUid = { 0xde, 0xad, 0xbe, 0xef },
     .nti.nai.btSak = 0x20,
     .nti.nai.szUidLen = 4,
     .nti.nai.szAtsLen = 0,

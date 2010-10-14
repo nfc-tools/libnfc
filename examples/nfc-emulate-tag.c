@@ -19,7 +19,7 @@
 
 /**
  * @file nfc-emulate-tag.c
- * @brief Emulate a simple tag
+ * @brief Emulates a simple tag
  */
 
 // Note that depending on the device (initiator) you'll use against, this

@@ -104,7 +104,7 @@ pn532_uart_list_devices (nfc_device_desc_t pnddDevices[], size_t szDevices, size
       pn532_uart_ack ((nfc_device_spec_t) sp);
       // PN532 could be powered down, we need to wake it up before line testing.
       pn532_uart_wakeup ((nfc_device_spec_t) sp);
-      // Check communication using "Diagnose" command, with "Comunication test" (0x00)
+      // Check communication using "Diagnose" command, with "Communication test" (0x00)
       if (!pn532_uart_check_communication ((nfc_device_spec_t) sp, &bComOk))
         return false;
       if (!bComOk)
@@ -158,7 +158,7 @@ pn532_uart_connect (const nfc_device_desc_t * pndd)
   pn532_uart_ack ((nfc_device_spec_t) sp);
   // PN532 could be powered down, we need to wake it up before line testing.
   pn532_uart_wakeup ((nfc_device_spec_t) sp);
-  // Check communication using "Diagnose" command, with "Comunication test" (0x00)
+  // Check communication using "Diagnose" command, with "Communication test" (0x00)
   if (!pn532_uart_check_communication ((nfc_device_spec_t) sp, &bComOk))
     return NULL;
   if (!bComOk)

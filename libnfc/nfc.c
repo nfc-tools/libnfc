@@ -498,7 +498,7 @@ nfc_initiator_transceive_bytes (nfc_device_t * pnd, const byte_t * pbtTx, const 
  * nfc_initiator_transceive_bytes(). With that function you can only
  * communicate frames that consist of full bytes. When you send a full byte (8
  * bits + 1 parity) with the value of REQA (0x26), a tag will simply not
- * respond. More information about this can be found in the anti-colision
+ * respond. More information about this can be found in the anti-collision
  * example (\e nfc-anticol).
  *
  * @param pbtTxPar parameter contains a byte array of the corresponding parity bits needed to send per byte.

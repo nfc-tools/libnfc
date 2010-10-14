@@ -19,7 +19,7 @@
 
 /**
  * @file pn53x-sam.c
- * @brief Configure the NFC device to comunicate with a SAM (Secure Access Module).
+ * @brief Configures the NFC device to communicate with a SAM (Secure Access Module).
  */
 
 #ifdef HAVE_CONFIG_H
@@ -132,7 +132,7 @@ main (int argc, const char *argv[])
   printf ("Connected to NFC device: %s\n", pnd->acName);
 
   // Print the example's menu
-  printf ("\nSelect the comunication mode:\n");
+  printf ("\nSelect the communication mode:\n");
   printf ("[1] Virtual card mode.\n");
   printf ("[2] Wired card mode.\n");
   printf ("[3] Dual card mode.\n");
@@ -205,7 +205,7 @@ main (int argc, const char *argv[])
         .nm.nmt = NMT_ISO14443A,
         .nm.nbr = NBR_UNDEFINED,
         .nti.nai.abtAtqa = { 0x04, 0x00 },
-        .nti.nai.abtUid = { 0x08, 0xad, 0xbe, 0xaf },
+        .nti.nai.abtUid = { 0x08, 0xad, 0xbe, 0xef },
         .nti.nai.btSak = 0x20,
         .nti.nai.szUidLen = 4,
         .nti.nai.szAtsLen = 0,
