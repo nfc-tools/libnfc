@@ -113,6 +113,33 @@ print_nfc_iso14443a_info (const nfc_iso14443a_info_t nai)
     printf ("          ATS (ATR): ");
     print_hex (nai.abtAts, nai.szAtsLen);
   }
+  if (nai.szAtsLen) {
+    // Decode ATS according to ISO/IEC 14443-4 (5.2 Answer to select)
+    printf ("                 T0: " );
+    size_t offset = 1;
+    if (nai.abtAts[0] & 0x10) { // TA
+      printf ("TA=%02x ", nai.abtAts[offset]);
+      offset++;
+    }
+    if (nai.abtAts[0] & 0x20) { // TB
+      printf ("TB=%02x ", nai.abtAts[offset]);
+      offset++;
+    }
+    if (nai.abtAts[0] & 0x40) { // TC
+      printf ("TC=%02x ", nai.abtAts[offset]);
+      offset++;
+    }
+    printf ("\n");
+    if (nai.szAtsLen > offset) {
+      // XXX More decoding can be done following ISO/IEC 7816-4 (8.1.1 Historical bytes)
+      printf ("                 T1: %02x\n", nai.abtAts[offset] );
+      offset++;
+      if (nai.szAtsLen > offset) {
+        printf ("                 Tk: " );
+        print_hex (nai.abtAts + offset, (nai.szAtsLen - offset));
+      }
+    }
+  }
   if ((nai.btSak & SAK_ISO14443_4_COMPLIANT) || (nai.btSak & SAK_ISO18092_COMPLIANT)) {
     printf ("     Compliant with: ");
     if (nai.btSak & SAK_ISO14443_4_COMPLIANT)

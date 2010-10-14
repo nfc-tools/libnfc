@@ -931,7 +931,6 @@ pn53x_InJumpForDEP (nfc_device_t * pnd,
   offset = 5; // 2 bytes for command, 1 byte for DEP mode (Active/Passive), 1 byte for baud rate, 1 byte for following parameters flag
   abtCmd[2] = (ndm == NDM_ACTIVE) ? 0x01 : 0x00;
 
-  // FIXME Baud rate in D.E.P. mode is hard-wired as 106kbps
   switch (nbr) {
     case NBR_106:
       abtCmd[3] = 0x00; // baud rate is 106 kbps
