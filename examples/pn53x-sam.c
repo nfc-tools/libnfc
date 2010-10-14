@@ -181,7 +181,11 @@ main (int argc, const char *argv[])
         exit (EXIT_FAILURE);
       }
       // Read the SAM's info
-      if (!nfc_initiator_select_passive_target (pnd, NM_ISO14443A_106, NULL, 0, &nti)) {
+      const nfc_modulation_t nmSAM = {
+        .nmt = NMT_ISO14443A,
+        .nbr = NBR_106,
+      };
+      if (!nfc_initiator_select_passive_target (pnd, nmSAM, NULL, 0, &nti)) {
         nfc_perror (pnd, "nfc_initiator_select_passive_target");
         ERR ("%s", "Reading of SAM info failed.");
         return EXIT_FAILURE;
@@ -198,7 +202,8 @@ main (int argc, const char *argv[])
       size_t  szRx;
 
       nfc_target_t nt = {
-        .ntt = NTT_MIFARE,
+        .nm.nmt = NMT_ISO14443A,
+        .nm.nbr = NBR_UNDEFINED,
         .nti.nai.abtAtqa = { 0x04, 0x00 },
         .nti.nai.abtUid = { 0x08, 0xad, 0xbe, 0xaf },
         .nti.nai.btSak = 0x20,

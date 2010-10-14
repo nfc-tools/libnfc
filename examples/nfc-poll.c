@@ -72,8 +72,14 @@ main (int argc, const char *argv[])
 
     const byte_t btPollNr = 20;
     const byte_t btPeriod = 2;
-    const nfc_target_type_t nttArray[5] = {NTT_GENERIC_PASSIVE_106, NTT_GENERIC_PASSIVE_212, NTT_GENERIC_PASSIVE_424, NTT_ISO14443_4B_106, NTT_JEWEL_106};
-    const size_t szTargetTypes = 5;
+    const nfc_modulation_t nmModulations[5] = {
+      { .nmt = NMT_ISO14443A, .nbr = NBR_106 },
+      { .nmt = NMT_ISO14443B, .nbr = NBR_106 },
+      { .nmt = NMT_FELICA, .nbr = NBR_212 },
+      { .nmt = NMT_FELICA, .nbr = NBR_424 },
+      { .nmt = NMT_JEWEL, .nbr = NBR_106 },
+    };
+    const size_t szModulations = 5;
 
     nfc_target_t antTargets[2];
     size_t  szTargetFound;
@@ -105,57 +111,15 @@ main (int argc, const char *argv[])
 
     printf ("Connected to NFC reader: %s\n", pnd->acName);
 
-    printf ("PN532 will poll during %ld ms\n", (unsigned long) btPollNr * szTargetTypes * btPeriod * 150);
-    res = nfc_initiator_poll_targets (pnd, nttArray, szTargetTypes, btPollNr, btPeriod, antTargets, &szTargetFound);
+    printf ("PN532 will poll during %ld ms\n", (unsigned long) btPollNr * szModulations * btPeriod * 150);
+    res = nfc_initiator_poll_targets (pnd, nmModulations, szModulations, btPollNr, btPeriod, antTargets, &szTargetFound);
     if (res) {
       uint8_t n;
       printf ("%ld target(s) have been found.\n", (unsigned long) szTargetFound);
       for (n = 0; n < szTargetFound; n++) {
-        printf ("T%d: targetType=%02x ", n + 1, antTargets[n].ntt);
-        switch(antTargets[n].ntt) {
-          case NTT_JEWEL_106:
-            printf ("(Innovision Jewel tag), targetData:\n");
-            print_nfc_jewel_info (antTargets[n].nti.nji);
-            break;
-          case NTT_MIFARE:
-            printf ("(Mifare card), targetData:\n");
-            print_nfc_iso14443a_info (antTargets[n].nti.nai);
-            break;
-          case NTT_FELICA_212:
-            printf ("(FeliCa 212 kbps card), targetData:\n");
-            print_nfc_felica_info (antTargets[n].nti.nfi);
-            break;
-          case NTT_FELICA_424:
-            printf ("(FeliCa 212 kbps card), targetData:\n");
-            print_nfc_felica_info (antTargets[n].nti.nfi);
-            break;
-          case NTT_ISO14443_4A_106:
-            printf ("(Passive 106 kbps ISO/IEC 14443-4A card), targetData:\n");
-            print_nfc_iso14443a_info (antTargets[n].nti.nai);
-            break;
-          case NTT_ISO14443_4B_TCL_106:
-            printf ("(Passive 106 kbps ISO/IEC 14443-4B card), targetData:\n");
-            print_nfc_iso14443b_info (antTargets[n].nti.nbi);
-            break;
-          case NTT_DEP_PASSIVE_106:
-            printf ("(DEP passive 106 kbps)\n");
-            break;
-          case NTT_DEP_PASSIVE_212:
-            printf ("(DEP passive 212 kbps)\n");
-            break;
-          case NTT_DEP_PASSIVE_424:
-            printf ("(DEP passive 424 kbps)\n");
-            break;
-          case NTT_DEP_ACTIVE_106:
-            printf ("(DEP active 106 kbps)\n");
-            break;
-          case NTT_DEP_ACTIVE_212:
-            printf ("(DEP active 212 kbps)\n");
-            break;
-          case NTT_DEP_ACTIVE_424:
-            printf ("(DEP active 424 kbps)\n");
-            break;
-        };
+        printf ("T%d: ", n + 1);
+        print_nfc_target ( antTargets[n] );
+
       }
     } else {
       nfc_perror (pnd, "nfc_initiator_poll_targets");

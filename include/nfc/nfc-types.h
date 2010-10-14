@@ -166,35 +166,8 @@ typedef enum {
 } nfc_device_option_t;
 
 /**
- * @enum nfc_modulation_t
- * @brief NFC modulation
- */
-typedef enum {
-/** ISO14443-A (NXP MIFARE) http://en.wikipedia.org/wiki/MIFARE */
-  NM_ISO14443A_106 = 0x00,
-/** JIS X 6319-4 (Sony Felica) http://en.wikipedia.org/wiki/FeliCa */
-  NM_FELICA_212 = 0x01,
-/** JIS X 6319-4 (Sony Felica) http://en.wikipedia.org/wiki/FeliCa */
-  NM_FELICA_424 = 0x02,
-/** ISO14443-B http://en.wikipedia.org/wiki/ISO/IEC_14443 (Not supported by PN531) */
-  NM_ISO14443B_106 = 0x03, 
-/** Jewel Topaz (Innovision Research & Development) (Not supported by PN531) */
-  NM_JEWEL_106 = 0x04,
-/** ISO14443-B http://en.wikipedia.org/wiki/ISO/IEC_14443 (Not supported by PN531 nor PN532) */
-  NM_ISO14443B_212 = 0x06,
-/** ISO14443-B http://en.wikipedia.org/wiki/ISO/IEC_14443 (Not supported by PN531 nor PN532) */
-  NM_ISO14443B_424 = 0x07,
-/** ISO14443-B http://en.wikipedia.org/wiki/ISO/IEC_14443 (Not supported by PN531 nor PN532) */
-  NM_ISO14443B_847 = 0x08,
-/** Active DEP */
-  NM_ACTIVE_DEP,
-/** Passive DEP */
-  NM_PASSIVE_DEP
-} nfc_modulation_t;
-
-/**
  * @struct nfc_dep_info_t
- * @brief NFC tag information in D.E.P. (Data Exchange Protocol) see ISO/IEC 18092
+ * @brief NFC target information in D.E.P. (Data Exchange Protocol) see ISO/IEC 18092 (NFCIP-1)
  */
 typedef struct {
 /** NFCID3 */
@@ -213,6 +186,15 @@ typedef struct {
   byte_t  abtGB[48];
   size_t  szGB;
 } nfc_dep_info_t;
+
+/**
+ * @enum nfc_dep_mode_t
+ * @brief NFC D.E.P. (Data Exchange Protocol) active/passive mode
+ */
+typedef enum {
+  NDM_PASSIVE,
+  NDM_ACTIVE,
+} nfc_dep_mode_t;
 
 /**
  * @struct nfc_iso14443a_info_t
@@ -291,43 +273,36 @@ typedef enum {
 } nfc_target_mode_t;
 
 /**
- * @enum nfc_target_type_t
- * @brief NFC target type enumeration
+ * @enum nfc_baud_rate_t
+ * @brief NFC baud rate enumeration
  */
 typedef enum {
-  /** Generic passive 106 kbps (ISO/IEC14443-4A, mifare, DEP) */
-  NTT_GENERIC_PASSIVE_106 = 0x00,
-  /** Generic passive 212 kbps (FeliCa, DEP) */
-  NTT_GENERIC_PASSIVE_212 = 0x01,
-  /** Generic passive 424 kbps (FeliCa, DEP) */
-  NTT_GENERIC_PASSIVE_424 = 0x02,
-  /** Passive 106 kbps ISO/IEC14443-4B */
-  NTT_ISO14443_4B_106 = 0x03,
-  /** Innovision Jewel tag */
-  NTT_JEWEL_106 = 0x04,
-  /** Mifare card */
-  NTT_MIFARE = 0x10,
-  /** FeliCa 212 kbps card */
-  NTT_FELICA_212 = 0x11,
-  /** FeliCa 424 kbps card */
-  NTT_FELICA_424 = 0x12,
-  /** Passive 106 kbps ISO/IEC 14443-4A */
-  NTT_ISO14443_4A_106 = 0x20,
-  /** Passive 106 kbps ISO/IEC 14443-4B with TCL flag */
-  NTT_ISO14443_4B_TCL_106 = 0x23,
-  /** DEP passive 106 kbps */
-  NTT_DEP_PASSIVE_106 = 0x40,
-  /** DEP passive 212 kbps */
-  NTT_DEP_PASSIVE_212 = 0x41,
-  /** DEP passive 424 kbps */
-  NTT_DEP_PASSIVE_424 = 0x42,
-  /** DEP active 106 kbps */
-  NTT_DEP_ACTIVE_106 = 0x80,
-  /** DEP active 212 kbps */
-  NTT_DEP_ACTIVE_212 = 0x81,
-  /** DEP active 424 kbps */
-  NTT_DEP_ACTIVE_424 = 0x82,
-} nfc_target_type_t;
+  NBR_UNDEFINED = 0,
+  NBR_106,
+  NBR_212,
+  NBR_424,
+} nfc_baud_rate_t;
+
+/**
+ * @enum nfc_modulation_type_t
+ * @brief NFC modulation type enumeration
+ */
+typedef enum {
+  NMT_ISO14443A,
+  NMT_ISO14443B,
+  NMT_FELICA,
+  NMT_JEWEL,
+  NMT_DEP,
+} nfc_modulation_type_t;
+
+/**
+ * @struct nfc_modulation_t
+ * @brief NFC modulation structure
+ */
+typedef struct {
+  nfc_modulation_type_t nmt;
+  nfc_baud_rate_t nbr;
+} nfc_modulation_t;
 
 /**
  * @struct nfc_target_t
@@ -335,7 +310,7 @@ typedef enum {
  */
 typedef struct {
   nfc_target_info_t nti;
-  nfc_target_type_t ntt;
+  nfc_modulation_t nm;
 } nfc_target_t;
 
 // Reset struct alignment to default

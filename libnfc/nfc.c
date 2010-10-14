@@ -262,7 +262,7 @@ nfc_initiator_init (nfc_device_t * pnd)
  * @return Returns \c true if action was successfully performed; otherwise returns \c false.
  *
  * @param pnd \a nfc_device_t struct pointer that represent currently used device
- * @param nmInitModulation Desired modulation
+ * @param pmInitModulation Desired modulation
  * @param pbtInitData Optional initiator data used for Felica, ISO14443B, Topaz polling or to select a specific UID in ISO14443A.
  * @param szInitDataLen Length of initiator data \a pbtInitData.
  * @param[out] pnti nfc_target_info_t struct pointer which will filled if available
@@ -275,14 +275,12 @@ nfc_initiator_init (nfc_device_t * pnd)
  */
 bool
 nfc_initiator_select_passive_target (nfc_device_t * pnd,
-                                     const nfc_modulation_t nmInitModulation,
-                                     const byte_t * pbtInitData, const size_t szInitDataLen, nfc_target_info_t * pnti)
+                                     const nfc_modulation_t nm,
+                                     const byte_t * pbtInitData, const size_t szInitData,
+                                     nfc_target_info_t * pnti)
 {
   byte_t  abtInit[MAX_FRAME_LEN];
-  size_t  szInitLen;
-
-  size_t  szTargetsData;
-  byte_t  abtTargetsData[MAX_FRAME_LEN];
+  size_t  szInit;
 
   pnd->iLastError = 0;
 
@@ -290,13 +288,13 @@ nfc_initiator_select_passive_target (nfc_device_t * pnd,
   if (!pnd->bActive)
     return false;
   // TODO Put this in a function: this part is defined by ISO14443-3 (UID and Cascade levels)
-  switch (nmInitModulation) {
-  case NM_ISO14443A_106:
-    switch (szInitDataLen) {
+  switch (nm.nmt) {
+  case NMT_ISO14443A:
+    switch (szInitData) {
     case 7:
       abtInit[0] = 0x88;
       memcpy (abtInit + 1, pbtInitData, 7);
-      szInitLen = 8;
+      szInit = 8;
       break;
 
     case 10:
@@ -304,78 +302,32 @@ nfc_initiator_select_passive_target (nfc_device_t * pnd,
       memcpy (abtInit + 1, pbtInitData, 3);
       abtInit[4] = 0x88;
       memcpy (abtInit + 5, pbtInitData + 3, 7);
-      szInitLen = 12;
+      szInit = 12;
       break;
 
     case 4:
     default:
-      memcpy (abtInit, pbtInitData, szInitDataLen);
-      szInitLen = szInitDataLen;
+      memcpy (abtInit, pbtInitData, szInitData);
+      szInit = szInitData;
       break;
     }
     break;
 
   default:
-    memcpy (abtInit, pbtInitData, szInitDataLen);
-    szInitLen = szInitDataLen;
+    memcpy (abtInit, pbtInitData, szInitData);
+    szInit = szInitData;
     break;
   }
 
-  if (!pn53x_InListPassiveTarget (pnd, nmInitModulation, 1, abtInit, szInitLen, abtTargetsData, &szTargetsData))
-    return false;
-
-  // Make sure one tag has been found, the PN53X returns 0x00 if none was available
-  if (abtTargetsData[0] == 0)
-    return false;
-
-  // Is a tag info struct available
-  if (pnti) {
-    // Fill the tag info struct with the values corresponding to this init modulation
-    switch (nmInitModulation) {
-    case NM_ISO14443A_106:
-      if (!pn53x_decode_target_data (abtTargetsData + 1, szTargetsData - 1, pnd->nc, NTT_GENERIC_PASSIVE_106, pnti)) {
-        return false;
-      }
-      break;
-
-    case NM_FELICA_212:
-      if (!pn53x_decode_target_data (abtTargetsData + 1, szTargetsData - 1, pnd->nc, NTT_FELICA_212, pnti)) {
-        return false;
-      }
-      break;
-    case NM_FELICA_424:
-      if (!pn53x_decode_target_data (abtTargetsData + 1, szTargetsData - 1, pnd->nc, NTT_FELICA_424, pnti)) {
-        return false;
-      }
-      break;
-
-    case NM_ISO14443B_106:
-      if (!pn53x_decode_target_data (abtTargetsData + 1, szTargetsData - 1, pnd->nc, NTT_ISO14443_4B_106, pnti)) {
-        return false;
-      }
-      break;
-
-    case NM_JEWEL_106:
-      if (!pn53x_decode_target_data (abtTargetsData + 1, szTargetsData - 1, pnd->nc, NTT_JEWEL_106, pnti)) {
-        return false;
-      }
-      break;
-
-    default:
-      // Should not be possible, so whatever...
-      break;
-    }
-  }
-  return true;
+  return pn53x_initiator_select_passive_target (pnd, nm, abtInit, szInit, pnti);
 }
-
 
 /**
  * @brief List passive or emulated tags
  * @return Returns \c true if action was successfully performed; otherwise returns \c false.
  *
  * @param pnd \a nfc_device_t struct pointer that represent currently used device
- * @param nmInitModulation Desired modulation
+ * @param pmInitModulation Desired modulation
  * @param[out] anti array of \a nfc_target_info_t that will be filled with targets info
  * @param szTargets Size of \a anti (will be the max targets listed)
  * @param[out] pszTargetFound Pointer where target found counter will be stored
@@ -384,7 +336,7 @@ nfc_initiator_select_passive_target (nfc_device_t * pnd,
  * @note For every initial modulation type there is a different collection of information returned (in \a nfc_target_info_t pointer pti) They all fit in the data-type which is called nfc_target_info_t. This is a union which contains the tag information that belongs to the according initial modulation type.
  */
 bool
-nfc_initiator_list_passive_targets (nfc_device_t * pnd, const nfc_modulation_t nmInitModulation,
+nfc_initiator_list_passive_targets (nfc_device_t * pnd, const nfc_modulation_t nm,
                                     nfc_target_info_t anti[], const size_t szTargets, size_t * pszTargetFound)
 {
   nfc_target_info_t nti;
@@ -397,17 +349,25 @@ nfc_initiator_list_passive_targets (nfc_device_t * pnd, const nfc_modulation_t n
   // Let the reader only try once to find a target
   nfc_configure (pnd, NDO_INFINITE_SELECT, false);
 
-  if (nmInitModulation == NM_ISO14443B_106) {
-    // Application Family Identifier (AFI) must equals 0x00 in order to wakeup all ISO14443-B PICCs (see ISO/IEC 14443-3)
-    pbtInitData = (byte_t *) "\x00";
-    szInitDataLen = 1;
-  } else if (nmInitModulation == NM_FELICA_212 || nmInitModulation == NM_FELICA_424) {
-    // polling payload must be present (see ISO/IEC 18092 11.2.2.5)
-    pbtInitData = (byte_t *) "\x00\xff\xff\x01\x00";
-    szInitDataLen = 5;
+  switch (nm.nmt) {
+    case NMT_ISO14443B: {
+      // Application Family Identifier (AFI) must equals 0x00 in order to wakeup all ISO14443-B PICCs (see ISO/IEC 14443-3)
+      pbtInitData = (byte_t *) "\x00";
+      szInitDataLen = 1;
+    }
+    break;
+    case NMT_FELICA: {
+      // polling payload must be present (see ISO/IEC 18092 11.2.2.5)
+      pbtInitData = (byte_t *) "\x00\xff\xff\x01\x00";
+      szInitDataLen = 5;
+    }
+    break;
+    default:
+      // nothing to do
+    break;
   }
 
-  while (nfc_initiator_select_passive_target (pnd, nmInitModulation, pbtInitData, szInitDataLen, &nti)) {
+  while (nfc_initiator_select_passive_target (pnd, nm, pbtInitData, szInitDataLen, &nti)) {
     nfc_initiator_deselect_target (pnd);
 
     if (szTargets > szTargetFound) {
@@ -417,7 +377,7 @@ nfc_initiator_list_passive_targets (nfc_device_t * pnd, const nfc_modulation_t n
     }
     szTargetFound++;
     // deselect has no effect on FeliCa and Jewel cards so we'll stop after one...
-    if (nmInitModulation == NM_FELICA_212 || nmInitModulation == NM_FELICA_424 || nmInitModulation == NM_JEWEL_106) {
+    if ((nm.nmt == NMT_FELICA) || (nm.nmt == NMT_JEWEL)) {
         break;
     }
   }
@@ -431,8 +391,8 @@ nfc_initiator_list_passive_targets (nfc_device_t * pnd, const nfc_modulation_t n
  * @return Returns \c true if action was successfully performed; otherwise returns \c false.
  *
  * @param pnd \a nfc_device_t struct pointer that represent currently used device
- * @param pnttTargetTypes array of desired target types
- * @param szTargetTypes pnttTargetTypes count
+ * @param ppttTargetTypes array of desired target types
+ * @param szTargetTypes ppttTargetTypes count
  * @param btPollNr specifies the number of polling
  * @note one polling is a polling for each desired target type
  * @param btPeriod indicates the polling period in units of 150 ms
@@ -441,21 +401,22 @@ nfc_initiator_list_passive_targets (nfc_device_t * pnd, const nfc_modulation_t n
  */
 bool
 nfc_initiator_poll_targets (nfc_device_t * pnd,
-                            const nfc_target_type_t * pnttTargetTypes, const size_t szTargetTypes,
+                            const nfc_modulation_t * pnmModulations, const size_t szModulations,
                             const byte_t btPollNr, const byte_t btPeriod,
                             nfc_target_t * pntTargets, size_t * pszTargetFound)
 {
   pnd->iLastError = 0;
 
-  return pn53x_InAutoPoll (pnd, pnttTargetTypes, szTargetTypes, btPollNr, btPeriod, pntTargets, pszTargetFound);
+  return pn53x_initiator_poll_targets (pnd, pnmModulations, szModulations, btPollNr, btPeriod, pntTargets, pszTargetFound);
 }
+
 
 /**
  * @brief Select a target and request active or passive mode for DEP (Data Exchange Protocol)
  * @return Returns \c true if action was successfully performed; otherwise returns \c false.
  *
  * @param pnd \a nfc_device_t struct pointer that represent currently used device
- * @param nmInitModulation desired modulation (\a NM_ACTIVE_DEP or \a NM_PASSIVE_DEP for active, respectively passive mode)
+ * @param pmInitModulation desired modulation (\a PM_ACTIVE_DEP or \a PM_PASSIVE_DEP for active, respectively passive mode)
  * @param ndiInitiator \a nfc_dep_info_t struct that contains NFCID3 and General Bytes to set to the initiator device
  * @param[out] pnti is a \a nfc_target_info_t struct pointer where target information will be put.
  *
@@ -466,11 +427,11 @@ nfc_initiator_poll_targets (nfc_device_t * pnd,
  * @note \a nfc_dep_info_t will be returned when the target was acquired successfully.
  */
 bool
-nfc_initiator_select_dep_target (nfc_device_t * pnd, const nfc_modulation_t nmInitModulation, const nfc_dep_info_t * pndiInitiator, nfc_target_info_t * pnti)
+nfc_initiator_select_dep_target (nfc_device_t * pnd, const bool bActiveDep, const nfc_dep_info_t * pndiInitiator, nfc_target_info_t * pnti)
 {
   pnd->iLastError = 0;
 
-  return pn53x_initiator_select_dep_target (pnd, nmInitModulation, pndiInitiator, pnti);
+  return pn53x_initiator_select_dep_target (pnd, bActiveDep, pndiInitiator, pnti);
 }
 
 /**

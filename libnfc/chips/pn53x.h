@@ -90,6 +90,69 @@
 #  define DEISERRFRAME    0x0300/* Error frame */
 #  define DENOTSUP        0x0400/* Not supported */
 
+/* PN53x specific types */
+/**
+ * @enum pn53x_modulation_t
+ * @brief NFC modulation
+ */
+typedef enum {
+/** ISO14443-A (NXP MIFARE) http://en.wikipedia.org/wiki/MIFARE */
+  PM_ISO14443A_106 = 0x00,
+/** JIS X 6319-4 (Sony Felica) http://en.wikipedia.org/wiki/FeliCa */
+  PM_FELICA_212 = 0x01,
+/** JIS X 6319-4 (Sony Felica) http://en.wikipedia.org/wiki/FeliCa */
+  PM_FELICA_424 = 0x02,
+/** ISO14443-B http://en.wikipedia.org/wiki/ISO/IEC_14443 (Not supported by PN531) */
+  PM_ISO14443B_106 = 0x03, 
+/** Jewel Topaz (Innovision Research & Development) (Not supported by PN531) */
+  PM_JEWEL_106 = 0x04,
+/** ISO14443-B http://en.wikipedia.org/wiki/ISO/IEC_14443 (Not supported by PN531 nor PN532) */
+  PM_ISO14443B_212 = 0x06,
+/** ISO14443-B http://en.wikipedia.org/wiki/ISO/IEC_14443 (Not supported by PN531 nor PN532) */
+  PM_ISO14443B_424 = 0x07,
+/** ISO14443-B http://en.wikipedia.org/wiki/ISO/IEC_14443 (Not supported by PN531 nor PN532) */
+  PM_ISO14443B_847 = 0x08,
+} pn53x_modulation_t;
+
+/**
+ * @enum pn53x_target_type_t
+ * @brief NFC target type enumeration
+ */
+typedef enum {
+  /** Generic passive 106 kbps (ISO/IEC14443-4A, mifare, DEP) */
+  PTT_GENERIC_PASSIVE_106 = 0x00,
+  /** Generic passive 212 kbps (FeliCa, DEP) */
+  PTT_GENERIC_PASSIVE_212 = 0x01,
+  /** Generic passive 424 kbps (FeliCa, DEP) */
+  PTT_GENERIC_PASSIVE_424 = 0x02,
+  /** Passive 106 kbps ISO/IEC14443-4B */
+  PTT_ISO14443_4B_106 = 0x03,
+  /** Innovision Jewel tag */
+  PTT_JEWEL_106 = 0x04,
+  /** Mifare card */
+  PTT_MIFARE = 0x10,
+  /** FeliCa 212 kbps card */
+  PTT_FELICA_212 = 0x11,
+  /** FeliCa 424 kbps card */
+  PTT_FELICA_424 = 0x12,
+  /** Passive 106 kbps ISO/IEC 14443-4A */
+  PTT_ISO14443_4A_106 = 0x20,
+  /** Passive 106 kbps ISO/IEC 14443-4B with TCL flag */
+  PTT_ISO14443_4B_TCL_106 = 0x23,
+  /** DEP passive 106 kbps */
+  PTT_DEP_PASSIVE_106 = 0x40,
+  /** DEP passive 212 kbps */
+  PTT_DEP_PASSIVE_212 = 0x41,
+  /** DEP passive 424 kbps */
+  PTT_DEP_PASSIVE_424 = 0x42,
+  /** DEP active 106 kbps */
+  PTT_DEP_ACTIVE_106 = 0x80,
+  /** DEP active 212 kbps */
+  PTT_DEP_ACTIVE_212 = 0x81,
+  /** DEP active 424 kbps */
+  PTT_DEP_ACTIVE_424 = 0x82,
+} pn53x_target_type_t;
+
 bool	pn53x_init(nfc_device_t * pnd);
 bool    pn53x_transceive_check_ack_frame_callback (nfc_device_t * pnd, const byte_t * pbtRxFrame,
                                                    const size_t szRxFrameLen);
@@ -105,14 +168,22 @@ bool    pn53x_wrap_frame (const byte_t * pbtTx, const size_t szTxBits, const byt
                           size_t * pszFrameBits);
 bool    pn53x_unwrap_frame (const byte_t * pbtFrame, const size_t szFrameBits, byte_t * pbtRx, size_t * pszRxBits,
                             byte_t * pbtRxPar);
-bool    pn53x_decode_target_data (const byte_t * pbtRawData, size_t szDataLen, nfc_chip_t nc, nfc_target_type_t ntt,
+bool    pn53x_decode_target_data (const byte_t * pbtRawData, size_t szRawData, nfc_chip_t nc, nfc_modulation_type_t nmt,
                                   nfc_target_info_t * pnti);
 
 bool    pn53x_get_firmware_version (nfc_device_t * pnd);
 bool    pn53x_configure (nfc_device_t * pnd, const nfc_device_option_t ndo, const bool bEnable);
 
 // NFC device as Initiator functions
-bool    pn53x_initiator_select_dep_target (nfc_device_t * pnd, const nfc_modulation_t nmInitModulation,
+bool    pn53x_initiator_select_passive_target (nfc_device_t * pnd,
+                                               const nfc_modulation_t nm,
+                                               const byte_t * pbtInitData, const size_t szInitData,
+                                               nfc_target_info_t * pnti);
+bool    pn53x_initiator_poll_targets (nfc_device_t * pnd,
+                                      const nfc_modulation_t * pnmModulations, const size_t szModulations,
+                                      const byte_t btPollNr, const byte_t btPeriod,
+                                      nfc_target_t * pntTargets, size_t * pszTargetFound);
+bool    pn53x_initiator_select_dep_target (nfc_device_t * pnd, nfc_dep_mode_t ndm,
                                            const nfc_dep_info_t * pndiInitiator, 
                                            nfc_target_info_t * pnti);
 bool    pn53x_initiator_transceive_bits (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxBits,
@@ -135,15 +206,15 @@ static const struct chip_callbacks pn53x_callbacks_list = {
 
 // C wrappers for PN53x commands
 bool    pn53x_SetParameters (nfc_device_t * pnd, const uint8_t ui8Value);
-bool    pn53x_InListPassiveTarget (nfc_device_t * pnd, const nfc_modulation_t nmInitModulation,
+bool    pn53x_InListPassiveTarget (nfc_device_t * pnd, const pn53x_modulation_t pmInitModulation,
                                    const byte_t szMaxTargets, const byte_t * pbtInitiatorData,
                                    const size_t szInitiatorDataLen, byte_t * pbtTargetsData, size_t * pszTargetsData);
 bool    pn53x_InDeselect (nfc_device_t * pnd, const uint8_t ui8Target);
 bool    pn53x_InRelease (nfc_device_t * pnd, const uint8_t ui8Target);
-bool    pn53x_InAutoPoll (nfc_device_t * pnd, const nfc_target_type_t * pnttTargetTypes, const size_t szTargetTypes,
+bool    pn53x_InAutoPoll (nfc_device_t * pnd, const pn53x_target_type_t * ppttTargetTypes, const size_t szTargetTypes,
                           const byte_t btPollNr, const byte_t btPeriod, nfc_target_t * pntTargets,
                           size_t * pszTargetFound);
-bool    pn53x_InJumpForDEP (nfc_device_t * pnd, const nfc_modulation_t nmInitModulation,
+bool    pn53x_InJumpForDEP (nfc_device_t * pnd, nfc_dep_mode_t ndm,
                             const byte_t * pbtPassiveInitiatorData, const size_t szPassiveInitiatorData,
                             const byte_t * pbtNFCID3i,
                             const byte_t * pbtGB, const size_t szGB,

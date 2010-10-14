@@ -173,7 +173,8 @@ main (int argc, char *argv[])
   // Example of a Mifare Classic Mini
   // Note that crypto1 is not implemented in this example
   nfc_target_t nt = {
-    .ntt = NTT_MIFARE,
+    .nm.nmt = NMT_ISO14443A,
+    .nm.nbr = NBR_UNDEFINED,
     .nti.nai.abtAtqa = { 0x00, 0x04 },
     .nti.nai.abtUid = { 0x08, 0xab, 0xcd, 0xef },
     .nti.nai.btSak = 0x09,
@@ -183,7 +184,8 @@ main (int argc, char *argv[])
 /*
   // Example of a FeliCa
   nfc_target_t nt = {
-    .ntt = NTT_FELICA_212,
+    .nm.nmt = NMT_FELICA,
+    .nm.nbr = NBR_UNDEFINED,
     .nti.nfi.abtId = { 0x01, 0xFE, 0x56, 0x78, 0x9A, 0xBC, 0xDE, 0xFF },
     .nti.nfi.abtPad = { 0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC, 0xDE, 0xFF },
     .nti.nfi.abtSysCode = { 0xFF, 0xFF },
@@ -192,7 +194,8 @@ main (int argc, char *argv[])
 /*
   // Example of a ISO14443-4 (DESfire)
   nfc_target_t nt = {
-    .ntt = NTT_MIFARE,
+    .nm.nmt = NMT_ISO14443A,
+    .nm.nbr = NBR_UNDEFINED,
     .nti.nai.abtAtqa = { 0x03, 0x44 },
     .nti.nai.abtUid = { 0x08, 0xab, 0xcd, 0xef },
     .nti.nai.btSak = 0x20,

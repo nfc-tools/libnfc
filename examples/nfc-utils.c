@@ -212,60 +212,6 @@ print_nfc_dep_info (const nfc_dep_info_t ndi)
   }
 }
 
-void print_nfc_target_type( const nfc_target_type_t ntt )
-{
-  switch (ntt) {
-    case NTT_GENERIC_PASSIVE_106:
-      printf ("Generic passive 106 kbps (ISO/IEC14443-4A, mifare, DEP)\n");
-    break;
-    case NTT_GENERIC_PASSIVE_212:
-      printf ("Generic passive 212 kbps (FeliCa, DEP)\n");
-    break;
-    case NTT_GENERIC_PASSIVE_424:
-      printf ("Generic passive 424 kbps (FeliCa, DEP)\n");
-    break;
-    case NTT_ISO14443_4B_106:
-      printf ("Passive 106 kbps ISO/IEC14443-4B\n");
-    break;
-    case NTT_JEWEL_106:
-      printf ("Innovision Jewel tag\n");
-    break;
-    case NTT_MIFARE:
-      printf ("mifare card\n");
-    break;
-    case NTT_FELICA_212:
-      printf ("FeliCa 212 kbps card\n");
-    break;
-    case NTT_FELICA_424:
-      printf ("FeliCa 424 kbps card\n");
-    break;
-    case NTT_ISO14443_4A_106:
-      printf ("Passive 106 kbps ISO/IEC14443-4A\n");
-    break;
-    case NTT_ISO14443_4B_TCL_106:
-      printf ("Passive 106 kbps ISO/IEC14443-4B with TCL flag\n");
-    break;
-    case NTT_DEP_PASSIVE_106:
-      printf ("DEP passive 106 kbps\n");
-    break;
-    case NTT_DEP_PASSIVE_212:
-      printf ("DEP passive 212 kbps\n");
-    break;
-    case NTT_DEP_PASSIVE_424:
-      printf ("DEP passive 424 kbps\n");
-    break;
-    case NTT_DEP_ACTIVE_106:
-      printf ("DEP active 106 kbps\n");
-    break;
-    case NTT_DEP_ACTIVE_212:
-      printf ("DEP active 212 kbps\n");
-    break;
-    case NTT_DEP_ACTIVE_424:
-      printf ("DEP active 424 kbps\n");
-    break;
-  }
-}
-
 /**
  * @brief Tries to parse arguments to find device descriptions.
  * @return Returns the list of found device descriptions.
@@ -308,3 +254,51 @@ parse_device_desc (int argc, const char *argv[], size_t * szFound)
 
   return pndd;
 }
+
+const char *
+str_nfc_baud_rate (const nfc_baud_rate_t nbr)
+{
+  switch(nbr) {
+    case NBR_UNDEFINED:
+      return "undefined baud rate";
+    break;
+    case NBR_106:
+      return "106 kbps";
+    break;
+    case NBR_212:
+      return "212 kbps";
+    break;
+    case NBR_424:
+      return "424 kbps";
+    break;
+  }
+  return "";
+}
+
+void
+print_nfc_target (const nfc_target_t nt)
+{
+  switch(nt.nm.nmt) {
+    case NMT_ISO14443A:
+      printf ("ISO/IEC 14443A (%s) target:\n", str_nfc_baud_rate(nt.nm.nbr));
+      print_nfc_iso14443a_info (nt.nti.nai);
+    break;
+    case NMT_JEWEL:
+      printf ("Innovision Jewel (%s) target:\n", str_nfc_baud_rate(nt.nm.nbr));
+      print_nfc_jewel_info (nt.nti.nji);
+    break;
+    case NMT_FELICA:
+      printf ("FeliCa (%s) target:\n", str_nfc_baud_rate(nt.nm.nbr));
+      print_nfc_felica_info (nt.nti.nfi);
+    break;
+    case NMT_ISO14443B:
+      printf ("ISO/IEC 14443-4B (%s) target:\n", str_nfc_baud_rate(nt.nm.nbr));
+      print_nfc_iso14443b_info (nt.nti.nbi);
+    break;
+    case NMT_DEP:
+      printf ("D.E.P. (%s) target:\n", str_nfc_baud_rate(nt.nm.nbr));
+      print_nfc_dep_info (nt.nti.ndi);
+    break;
+  }
+}
+

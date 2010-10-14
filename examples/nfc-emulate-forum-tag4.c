@@ -112,7 +112,8 @@ main (int argc, char *argv[])
   printf ("Emulating NDEF tag now, please touch it with a second NFC device\n");
 
   nfc_target_t nt = {
-    .ntt = NTT_MIFARE,
+    .nm.nmt = NMT_ISO14443A,
+    .nm.nbr = NBR_UNDEFINED,
     .nti.nai.abtAtqa = { 0x00, 0x04 },
     .nti.nai.abtUid = { 0x08, 0x00, 0xb0, 0x0b },
     .nti.nai.btSak = 0x20,

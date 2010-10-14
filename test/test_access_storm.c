@@ -56,7 +56,11 @@ test_access_storm (void)
 	    res = nfc_configure(device,NDO_ACTIVATE_FIELD,true);
 	    cut_assert_true (res, cut_message ("nfc_configure"));
 
-	    res = nfc_initiator_list_passive_targets(device, NM_ISO14443A_106, anti, MAX_TARGET_COUNT, &target_count);
+	    const nfc_modulation_t nm = {
+		.nmt = NMT_ISO14443A,
+		.nbr = NBR_106,
+	    };
+	    res = nfc_initiator_list_passive_targets(device, nm, anti, MAX_TARGET_COUNT, &target_count);
 	    cut_assert_true (res, cut_message ("nfc_initiator_list_passive_targets"));
 
 	    nfc_disconnect (device);

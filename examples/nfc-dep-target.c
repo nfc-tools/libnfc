@@ -66,7 +66,8 @@ main (int argc, const char *argv[])
   }
 
   const nfc_target_t nt = {
-    .ntt = NTT_DEP_PASSIVE_106,
+    .nm.nmt = NMT_DEP,
+    .nm.nbr = NBR_UNDEFINED,
     .nti.ndi.abtNFCID3 = { 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xff, 0x00, 0x00 },
     .nti.ndi.szGB = 4,
     .nti.ndi.abtGB = { 0x12, 0x34, 0x56, 0x78 },
