@@ -52,3 +52,26 @@ append_iso14443a_crc (byte_t * pbtData, size_t szLen)
 {
   iso14443a_crc (pbtData, szLen, pbtData + szLen);
 }
+
+byte_t *
+extract_historical_bytes(byte_t * pbtAts, size_t szAts, size_t * pszHB)
+{
+  if (szAts) {
+    size_t offset = 1;
+    if (pbtAts[0] & 0x10) { // TA
+      offset++;
+    }
+    if (pbtAts[0] & 0x20) { // TB
+      offset++;
+    }
+    if (pbtAts[0] & 0x40) { // TC
+      offset++;
+    }
+    if (szAts > offset) {
+      *pszHB = (szAts-offset);
+      return (pbtAts+offset);
+    }
+  }
+  *pszHB = 0;
+  return NULL;
+}
