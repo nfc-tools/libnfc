@@ -160,7 +160,7 @@ main (int argc, const char *argv[])
 
   case WIRED_CARD_MODE:
     {
-      nfc_target_info_t nti;
+      nfc_target_t nt;
 
       // Set connected NFC device to initiator mode
       nfc_initiator_init (pnd);
@@ -185,14 +185,14 @@ main (int argc, const char *argv[])
         .nmt = NMT_ISO14443A,
         .nbr = NBR_106,
       };
-      if (!nfc_initiator_select_passive_target (pnd, nmSAM, NULL, 0, &nti)) {
+      if (!nfc_initiator_select_passive_target (pnd, nmSAM, NULL, 0, &nt)) {
         nfc_perror (pnd, "nfc_initiator_select_passive_target");
         ERR ("%s", "Reading of SAM info failed.");
         return EXIT_FAILURE;
       }
 
       printf ("The following ISO14443A tag (SAM) was found:\n\n");
-      print_nfc_iso14443a_info (nti.nai);
+      print_nfc_iso14443a_info (nt.nti.nai);
     }
     break;
 

@@ -41,7 +41,7 @@
 #include "nfc-utils.h"
 
 static nfc_device_t *pnd;
-static nfc_target_info_t nti;
+static nfc_target_t nt;
 static mifare_param mp;
 static mifare_classic_tag mtKeys;
 static mifare_classic_tag mtDump;
@@ -118,7 +118,7 @@ authenticate (uint32_t uiBlock)
   // Key file authentication.
   if (bUseKeyFile) {
     // Set the authentication information (uid)
-    memcpy (mp.mpa.abtUid, nti.nai.abtUid, 4);
+    memcpy (mp.mpa.abtUid, nt.nti.nai.abtUid, 4);
 
     // Locate the trailer (with the keys) used for this sector
     uiTrailerBlock = get_trailer_block (uiBlock);
@@ -142,7 +142,7 @@ authenticate (uint32_t uiBlock)
     mc = (bUseKeyA) ? MC_AUTH_A : MC_AUTH_B;
 
     // Set the authentication information (uid)
-    memcpy (mp.mpa.abtUid, nti.nai.abtUid, 4);
+    memcpy (mp.mpa.abtUid, nt.nti.nai.abtUid, 4);
 
     for (key_index = 0; key_index < num_keys; key_index++) {
       memcpy (mp.mpa.abtKey, keys + (key_index * 6), 6);
@@ -182,7 +182,7 @@ read_card (void)
       // Show if the readout went well
       if (bFailure) {
         // When a failure occured we need to redo the anti-collision
-        if (!nfc_initiator_select_passive_target (pnd, nmMifare, NULL, 0, &nti)) {
+        if (!nfc_initiator_select_passive_target (pnd, nmMifare, NULL, 0, &nt)) {
           printf ("!\nError: tag was removed\n");
           return false;
         }
@@ -247,7 +247,7 @@ write_card (void)
       // Show if the readout went well
       if (bFailure) {
         // When a failure occured we need to redo the anti-collision
-        if (!nfc_initiator_select_passive_target (pnd, nmMifare, NULL, 0, &nti)) {
+        if (!nfc_initiator_select_passive_target (pnd, nmMifare, NULL, 0, &nt)) {
           printf ("!\nError: tag was removed\n");
           return false;
         }
@@ -447,13 +447,13 @@ main (int argc, const char *argv[])
     printf ("Connected to NFC reader: %s\n", pnd->acName);
 
     // Try to find a MIFARE Classic tag
-    if (!nfc_initiator_select_passive_target (pnd, nmMifare, NULL, 0, &nti)) {
+    if (!nfc_initiator_select_passive_target (pnd, nmMifare, NULL, 0, &nt)) {
       printf ("Error: no tag was found\n");
       nfc_disconnect (pnd);
       exit (EXIT_FAILURE);
     }
     // Test if we are dealing with a MIFARE compatible tag
-    if ((nti.nai.btSak & 0x08) == 0) {
+    if ((nt.nti.nai.btSak & 0x08) == 0) {
       printf ("Error: tag is not a MIFARE Classic card\n");
       nfc_disconnect (pnd);
       exit (EXIT_FAILURE);
@@ -465,14 +465,14 @@ main (int argc, const char *argv[])
       pbtUID = mtKeys.amb[0].mbm.abtUID;
 
       // Compare if key dump UID is the same as the current tag UID
-      if (memcmp (nti.nai.abtUid, pbtUID, 4) != 0) {
+      if (memcmp (nt.nti.nai.abtUid, pbtUID, 4) != 0) {
         printf ("Expected MIFARE Classic %ck card with UID: %02x%02x%02x%02x\n", b4K ? '4' : '1', pbtUID[3], pbtUID[2],
                 pbtUID[1], pbtUID[0]);
       }
     }
     // Get the info from the current tag
-    pbtUID = nti.nai.abtUid;
-    b4K = (nti.nai.abtAtqa[1] == 0x02);
+    pbtUID = nt.nti.nai.abtUid;
+    b4K = (nt.nti.nai.abtAtqa[1] == 0x02);
     printf ("Found MIFARE Classic %ck card with UID: %02x%02x%02x%02x\n", b4K ? '4' : '1', pbtUID[3], pbtUID[2],
             pbtUID[1], pbtUID[0]);
 

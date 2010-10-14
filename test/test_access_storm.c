@@ -30,7 +30,7 @@ test_access_storm (void)
 
 	for (i = 0; i < device_count; i++) {
 	    nfc_device_t *device;
-	    nfc_target_info_t anti[MAX_TARGET_COUNT];
+	    nfc_target_t ant[MAX_TARGET_COUNT];
 
 	    device = nfc_connect (&(devices[i]));
 	    cut_assert_not_null (device, cut_message ("nfc_connect"));
@@ -60,7 +60,7 @@ test_access_storm (void)
 		.nmt = NMT_ISO14443A,
 		.nbr = NBR_106,
 	    };
-	    res = nfc_initiator_list_passive_targets(device, nm, anti, MAX_TARGET_COUNT, &target_count);
+	    res = nfc_initiator_list_passive_targets(device, nm, ant, MAX_TARGET_COUNT, &target_count);
 	    cut_assert_true (res, cut_message ("nfc_initiator_list_passive_targets"));
 
 	    nfc_disconnect (device);

@@ -482,7 +482,7 @@ bool
 pn53x_initiator_select_passive_target (nfc_device_t * pnd,
                                        const nfc_modulation_t nm,
                                        const byte_t * pbtInitData, const size_t szInitData,
-                                       nfc_target_info_t * pnti)
+                                       nfc_target_t * pnt)
 {
   size_t  szTargetsData;
   byte_t  abtTargetsData[MAX_FRAME_LEN];
@@ -496,9 +496,10 @@ pn53x_initiator_select_passive_target (nfc_device_t * pnd,
     return false;
 
   // Is a tag info struct available
-  if (pnti) {
+  if (pnt) {
+    pnt->nm = nm;
     // Fill the tag info struct with the values corresponding to this init modulation
-    if (!pn53x_decode_target_data (abtTargetsData + 1, szTargetsData - 1, pnd->nc, nm.nmt, pnti)) {
+    if (!pn53x_decode_target_data (abtTargetsData + 1, szTargetsData - 1, pnd->nc, nm.nmt, &(pnt->nti))) {
       return false;
     }
   }
@@ -876,12 +877,12 @@ pn53x_configure (nfc_device_t * pnd, const nfc_device_option_t ndo, const bool b
 bool
 pn53x_initiator_select_dep_target(nfc_device_t * pnd, const nfc_dep_mode_t ndm,
                                   const nfc_dep_info_t * pndiInitiator,
-                                  nfc_target_info_t * pnti)
+                                  nfc_target_t * pnt)
 {
   if (pndiInitiator) {
-    return pn53x_InJumpForDEP (pnd, ndm, NULL, 0, pndiInitiator->abtNFCID3, pndiInitiator->abtGB, pndiInitiator->szGB, pnti);
+    return pn53x_InJumpForDEP (pnd, ndm, NULL, 0, pndiInitiator->abtNFCID3, pndiInitiator->abtGB, pndiInitiator->szGB, pnt);
   } else {
-    return pn53x_InJumpForDEP (pnd, ndm, NULL, 0, NULL, NULL, 0, pnti);
+    return pn53x_InJumpForDEP (pnd, ndm, NULL, 0, NULL, NULL, 0, pnt);
   }
 }
 
@@ -893,7 +894,7 @@ pn53x_initiator_select_dep_target(nfc_device_t * pnd, const nfc_dep_mode_t ndm,
  * @param pbtNFCID3i NFCID3 of the initiator
  * @param pbtGB General Bytes
  * @param szGB count of General Bytes
- * @param[out] pnti nfc_target_info_t which will be filled by this function
+ * @param[out] pnt \a nfc_target_t which will be filled by this function
  */
 bool
 pn53x_InJumpForDEP (nfc_device_t * pnd,
@@ -901,7 +902,7 @@ pn53x_InJumpForDEP (nfc_device_t * pnd,
                     const byte_t * pbtPassiveInitiatorData, const size_t szPassiveInitiatorData, 
                     const byte_t * pbtNFCID3i,
                     const byte_t * pbtGB, const size_t szGB,
-                    nfc_target_info_t * pnti)
+                    nfc_target_t * pnt)
 {
   byte_t  abtRx[MAX_FRAME_LEN];
   size_t  szRx;
@@ -941,19 +942,21 @@ pn53x_InJumpForDEP (nfc_device_t * pnd,
   if (abtRx[1] != 1)
     return false;
 
-  // Is a target info struct available
-  if (pnti) {
-    memcpy (pnti->ndi.abtNFCID3, abtRx + 2, 10);
-    pnti->ndi.btDID = abtRx[12];
-    pnti->ndi.btBS = abtRx[13];
-    pnti->ndi.btBR = abtRx[14];
-    pnti->ndi.btTO = abtRx[15];
-    pnti->ndi.btPP = abtRx[16];
+  // Is a target struct available
+  if (pnt) {
+    pnt->nm.nmt = NMT_DEP;
+    pnt->nm.nmt = NBR_UNDEFINED;
+    memcpy (pnt->nti.ndi.abtNFCID3, abtRx + 2, 10);
+    pnt->nti.ndi.btDID = abtRx[12];
+    pnt->nti.ndi.btBS = abtRx[13];
+    pnt->nti.ndi.btBR = abtRx[14];
+    pnt->nti.ndi.btTO = abtRx[15];
+    pnt->nti.ndi.btPP = abtRx[16];
     if(szRx > 17) {
-      pnti->ndi.szGB = szRx - 17;
-      memcpy (pnti->ndi.abtGB, abtRx + 17, pnti->ndi.szGB);
+      pnt->nti.ndi.szGB = szRx - 17;
+      memcpy (pnt->nti.ndi.abtGB, abtRx + 17, pnt->nti.ndi.szGB);
     } else {
-      pnti->ndi.szGB = 0;
+      pnt->nti.ndi.szGB = 0;
     }
   }
   return true;

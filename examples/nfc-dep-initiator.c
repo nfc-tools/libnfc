@@ -41,7 +41,7 @@ int
 main (int argc, const char *argv[])
 {
   nfc_device_t *pnd;
-  nfc_target_info_t nti;
+  nfc_target_t nt;
   byte_t  abtRx[MAX_FRAME_LEN];
   size_t  szRx;
   byte_t  abtTx[] = "Hello World!";
@@ -62,12 +62,11 @@ main (int argc, const char *argv[])
     return EXIT_FAILURE;
   }
 
-  if(!nfc_initiator_select_dep_target (pnd, NDM_PASSIVE, NULL, &nti)) {
+  if(!nfc_initiator_select_dep_target (pnd, NDM_PASSIVE, NULL, &nt)) {
     nfc_perror(pnd, "nfc_initiator_select_dep_target");
     return EXIT_FAILURE;
   }
-  printf( "This D.E.P. target have been found:\n" );
-  print_nfc_dep_info (nti.ndi);
+  print_nfc_target (nt);
 
   printf ("Sending: %s\n", abtTx);
   if (!nfc_initiator_transceive_bytes (pnd, abtTx, sizeof(abtTx), abtRx, &szRx)) {

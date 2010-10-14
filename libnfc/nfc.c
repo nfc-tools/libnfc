@@ -268,23 +268,18 @@ nfc_initiator_init (nfc_device_t * pnd)
  * @param nm desired modulation
  * @param pbtInitData optional initiator data used for Felica, ISO14443B, Topaz polling or to select a specific UID in ISO14443A.
  * @param szInitData length of initiator data \a pbtInitData.
- * @param[out] pnti \a nfc_target_info_t struct pointer which will filled if available
+ * @param[out] pnt \a nfc_target_t struct pointer which will filled if available
  *
  * The NFC device will try to find one available passive tag or emulated tag. 
  *
  * The chip needs to know with what kind of tag it is dealing with, therefore
  * the initial modulation and speed (106, 212 or 424 kbps) should be supplied.
- *
- * @note For every initial modulation type there is a different collection of
- * information returned (in nfc_target_info_t pointer pti) They all fit in the
- * data-type which is called nfc_target_info_t. This is a union which contains
- * the tag information that belongs to the according initial modulation type.
  */
 bool
 nfc_initiator_select_passive_target (nfc_device_t * pnd,
                                      const nfc_modulation_t nm,
                                      const byte_t * pbtInitData, const size_t szInitData,
-                                     nfc_target_info_t * pnti)
+                                     nfc_target_t * pnt)
 {
   byte_t  abtInit[MAX_FRAME_LEN];
   size_t  szInit;
@@ -326,7 +321,7 @@ nfc_initiator_select_passive_target (nfc_device_t * pnd,
     break;
   }
 
-  return pn53x_initiator_select_passive_target (pnd, nm, abtInit, szInit, pnti);
+  return pn53x_initiator_select_passive_target (pnd, nm, abtInit, szInit, pnt);
 }
 
 /**
@@ -335,8 +330,8 @@ nfc_initiator_select_passive_target (nfc_device_t * pnd,
  *
  * @param pnd \a nfc_device_t struct pointer that represent currently used device
  * @param nm desired modulation
- * @param[out] anti array of \a nfc_target_info_t that will be filled with targets info
- * @param szTargets size of \a anti (will be the max targets listed)
+ * @param[out] ant array of \a nfc_target_t that will be filled with targets info
+ * @param szTargets size of \a ant (will be the max targets listed)
  * @param[out] pszTargetFound pointer where target found counter will be stored
  *
  * The NFC device will try to find the available passive tags. Some NFC devices
@@ -345,19 +340,13 @@ nfc_initiator_select_passive_target (nfc_device_t * pnd,
  * communications. The chip needs to know with what kind of tag it is dealing
  * with, therefore the initial modulation and speed (106, 212 or 424 kbps)
  * should be supplied.
- *
- * @note For every initial modulation type there is a different collection of
- * information returned (in \a nfc_target_info_t array \e anti) They all fit in
- * the data-type which is called nfc_target_info_t. This is a union which
- * contains the tag information that belongs to the according initial
- * modulation type.
  */
 bool
 nfc_initiator_list_passive_targets (nfc_device_t * pnd,
                                     const nfc_modulation_t nm,
-                                    nfc_target_info_t anti[], const size_t szTargets, size_t * pszTargetFound)
+                                    nfc_target_t ant[], const size_t szTargets, size_t * pszTargetFound)
 {
-  nfc_target_info_t nti;
+  nfc_target_t nt;
   size_t  szTargetFound = 0;
   byte_t *pbtInitData = NULL;
   size_t  szInitDataLen = 0;
@@ -385,11 +374,11 @@ nfc_initiator_list_passive_targets (nfc_device_t * pnd,
     break;
   }
 
-  while (nfc_initiator_select_passive_target (pnd, nm, pbtInitData, szInitDataLen, &nti)) {
+  while (nfc_initiator_select_passive_target (pnd, nm, pbtInitData, szInitDataLen, &nt)) {
     nfc_initiator_deselect_target (pnd);
 
     if (szTargets > szTargetFound) {
-      memcpy (&(anti[szTargetFound]), &nti, sizeof (nfc_target_info_t));
+      memcpy (&(ant[szTargetFound]), &nt, sizeof (nfc_target_t));
     } else {
       break;
     }
@@ -436,7 +425,7 @@ nfc_initiator_poll_targets (nfc_device_t * pnd,
  * @param pnd \a nfc_device_t struct pointer that represent currently used device
  * @param ndm desired D.E.P. mode (\a NDM_ACTIVE or \a NDM_PASSIVE for active, respectively passive mode)
  * @param ndiInitiator pointer \a nfc_dep_info_t struct that contains \e NFCID3 and \e General \e Bytes to set to the initiator device (optionnal, can be \e NULL)
- * @param[out] pnti is a \a nfc_target_info_t struct pointer where target information will be put.
+ * @param[out] pnt is a \a nfc_target_t struct pointer where target information will be put.
  *
  * The NFC device will try to find an available D.E.P. target. The standards
  * (ISO18092 and ECMA-340) describe the modulation that can be used for reader
@@ -445,11 +434,11 @@ nfc_initiator_poll_targets (nfc_device_t * pnd,
  * @note \a nfc_dep_info_t will be returned when the target was acquired successfully.
  */
 bool
-nfc_initiator_select_dep_target (nfc_device_t * pnd, const nfc_dep_mode_t ndm, const nfc_dep_info_t * pndiInitiator, nfc_target_info_t * pnti)
+nfc_initiator_select_dep_target (nfc_device_t * pnd, const nfc_dep_mode_t ndm, const nfc_dep_info_t * pndiInitiator, nfc_target_t * pnt)
 {
   pnd->iLastError = 0;
 
-  return pn53x_initiator_select_dep_target (pnd, ndm, pndiInitiator, pnti);
+  return pn53x_initiator_select_dep_target (pnd, ndm, pndiInitiator, pnt);
 }
 
 /**

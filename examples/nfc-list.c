@@ -108,7 +108,7 @@ main (int argc, const char *argv[])
   }
 
   for (i = 0; i < szDeviceFound; i++) {
-    nfc_target_info_t anti[MAX_TARGET_COUNT];
+    nfc_target_t ant[MAX_TARGET_COUNT];
     pnd = nfc_connect (&(pnddDevices[i]));
 
     if (pnd == NULL) {
@@ -146,11 +146,11 @@ main (int argc, const char *argv[])
       .nmt = NMT_ISO14443A,
       .nbr = NBR_106,
     };
-    if (nfc_initiator_list_passive_targets (pnd, nm, anti, MAX_TARGET_COUNT, &szTargetFound)) {
+    if (nfc_initiator_list_passive_targets (pnd, nm, ant, MAX_TARGET_COUNT, &szTargetFound)) {
       size_t  n;
       printf ("%d ISO14443A passive target(s) was found%s\n", (int) szTargetFound, (szTargetFound == 0) ? ".\n" : ":");
       for (n = 0; n < szTargetFound; n++) {
-        print_nfc_iso14443a_info (anti[n].nai);
+        print_nfc_iso14443a_info (ant[n].nti.nai);
         printf ("\n");
       }
     }
@@ -158,23 +158,23 @@ main (int argc, const char *argv[])
     nm.nmt = NMT_FELICA;
     nm.nbr = NBR_212;
     // List Felica tags
-    if (nfc_initiator_list_passive_targets (pnd, nm, anti, MAX_TARGET_COUNT, &szTargetFound)) {
+    if (nfc_initiator_list_passive_targets (pnd, nm, ant, MAX_TARGET_COUNT, &szTargetFound)) {
       size_t  n;
       printf ("%d Felica (212 kbps) passive target(s) was found%s\n", (int) szTargetFound,
               (szTargetFound == 0) ? ".\n" : ":");
       for (n = 0; n < szTargetFound; n++) {
-        print_nfc_felica_info (anti[n].nfi);
+        print_nfc_felica_info (ant[n].nti.nfi);
         printf ("\n");
       }
     }
 
     nm.nbr = NBR_424;
-    if (nfc_initiator_list_passive_targets (pnd, nm, anti, MAX_TARGET_COUNT, &szTargetFound)) {
+    if (nfc_initiator_list_passive_targets (pnd, nm, ant, MAX_TARGET_COUNT, &szTargetFound)) {
       size_t  n;
       printf ("%d Felica (424 kbps) passive target(s) was found%s\n", (int) szTargetFound,
               (szTargetFound == 0) ? ".\n" : ":");
       for (n = 0; n < szTargetFound; n++) {
-        print_nfc_felica_info (anti[n].nfi);
+        print_nfc_felica_info (ant[n].nti.nfi);
         printf ("\n");
       }
     }
@@ -182,11 +182,11 @@ main (int argc, const char *argv[])
     nm.nmt = NMT_ISO14443B;
     nm.nbr = NBR_106;
     // List ISO14443B targets
-    if (nfc_initiator_list_passive_targets (pnd, nm, anti, MAX_TARGET_COUNT, &szTargetFound)) {
+    if (nfc_initiator_list_passive_targets (pnd, nm, ant, MAX_TARGET_COUNT, &szTargetFound)) {
       size_t  n;
       printf ("%d ISO14443B passive target(s) was found%s\n", (int) szTargetFound, (szTargetFound == 0) ? ".\n" : ":");
       for (n = 0; n < szTargetFound; n++) {
-        print_nfc_iso14443b_info (anti[n].nbi);
+        print_nfc_iso14443b_info (ant[n].nti.nbi);
         printf ("\n");
       }
     }
@@ -194,11 +194,11 @@ main (int argc, const char *argv[])
     nm.nmt = NMT_JEWEL;
     nm.nbr = NBR_106;
     // List Jewel targets
-    if (nfc_initiator_list_passive_targets(pnd, nm, anti, MAX_TARGET_COUNT, &szTargetFound )) {
+    if (nfc_initiator_list_passive_targets(pnd, nm, ant, MAX_TARGET_COUNT, &szTargetFound )) {
       size_t n;
       printf("%d Jewel passive target(s) was found%s\n", (int)szTargetFound, (szTargetFound==0)?".\n":":");
       for(n=0; n<szTargetFound; n++) {
-        print_nfc_jewel_info (anti[n].nji);
+        print_nfc_jewel_info (ant[n].nti.nji);
         printf("\n");
       }
     }
