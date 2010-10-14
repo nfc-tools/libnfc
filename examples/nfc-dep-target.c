@@ -2,7 +2,7 @@
  * Public platform independent Near Field Communication (NFC) library
  * 
  * Copyright (C) 2009, Roel Verdult
- * Copyright (C) 2009, Romuald Conty
+ * Copyright (C) 2010, Romuald Conty
  * 
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -67,7 +67,7 @@ main (int argc, const char *argv[])
 
   const nfc_target_t nt = {
     .nm.nmt = NMT_DEP,
-    .nm.nbr = NBR_UNDEFINED,
+    .nm.nbr = NBR_UNDEFINED, // Not used by nfc_target_init
     .nti.ndi.abtNFCID3 = { 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xff, 0x00, 0x00 },
     .nti.ndi.szGB = 4,
     .nti.ndi.abtGB = { 0x12, 0x34, 0x56, 0x78 },
@@ -85,8 +85,9 @@ main (int argc, const char *argv[])
   }
   printf ("Connected to NFC device: %s\n", pnd->acName);
 
-  printf ("NFC device will now act as this D.E.P. target:\n");
-  print_nfc_dep_info ( nt.nti.ndi );
+  printf ("NFC device will now act as: ");
+  print_nfc_target (nt);
+
   printf ("Waiting for initiator request...\n");
   if(!nfc_target_init (pnd, NTM_DEP_ONLY, nt, abtRx, &szRx)) {
     nfc_perror(pnd, "nfc_target_init");

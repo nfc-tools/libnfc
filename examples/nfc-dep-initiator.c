@@ -56,13 +56,14 @@ main (int argc, const char *argv[])
     printf("Unable to connect to NFC device.\n");
     return EXIT_FAILURE;
   }
+  printf ("Connected to NFC device: %s\n", pnd->acName);
 
   if (!nfc_initiator_init (pnd)) {
     nfc_perror(pnd, "nfc_initiator_init");
     return EXIT_FAILURE;
   }
 
-  if(!nfc_initiator_select_dep_target (pnd, NDM_PASSIVE, NBR_106, NULL, &nt)) {
+  if(!nfc_initiator_select_dep_target (pnd, NDM_PASSIVE, NBR_212, NULL, &nt)) {
     nfc_perror(pnd, "nfc_initiator_select_dep_target");
     return EXIT_FAILURE;
   }
