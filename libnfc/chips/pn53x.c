@@ -1271,7 +1271,7 @@ pn53x_TgInitAsTarget (nfc_device_t * pnd, nfc_target_mode_t ntm,
 {
   byte_t  abtRx[MAX_FRAME_LEN];
   size_t  szRx;
-  byte_t  abtCmd[sizeof (pncmd_target_init) + 48]; // 47 bytes max. for General Bytes and 1 for GB lenght
+  byte_t  abtCmd[sizeof (pncmd_target_init) + 48 + 49]; // 47 bytes max. for General Bytes and 1 for GB lenght, 48 bytes max. for Historical Bytes and 1 for HB lenght
   size_t  szOptionalBytes = 0;
 
   memcpy (abtCmd, pncmd_target_init, sizeof (pncmd_target_init));
