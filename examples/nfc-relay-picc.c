@@ -325,7 +325,7 @@ main (int argc, char *argv[])
     // Creates ATS and copy max 48 bytes of Tk:
     byte_t * pbtTk;
     size_t szTk;
-    pbtTk = iso14443a_locate_historical_bytes (ntEmulatedTarget.nti.nai.abtAts, ntEmulatedTarget.nti.nai.szAts, &szTk);
+    pbtTk = iso14443a_locate_historical_bytes (ntEmulatedTarget.nti.nai.abtAts, ntEmulatedTarget.nti.nai.szAtsLen, &szTk);
     szTk = (szTk > 48) ? 48 : szTk;
     byte_t pbtTkt[48];
     memcpy(pbtTkt, pbtTk, szTk);
