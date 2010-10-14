@@ -320,13 +320,21 @@ main (int argc, char *argv[])
     //             |  +-------- DR=2,4 DS=2,4 => supports 106, 212 & 424bps in both directions
     //             +----------- TA,TB,TC, FSCI=5 => FSC=64
     // It seems hazardous to tell we support NAD if the tag doesn't support NAD but I don't know how to disable it
-    // PC/SC pseudo-ATR = 3B 80 80 01 01
+    // PC/SC pseudo-ATR = 3B 80 80 01 01 if there is no historical bytes
+
+    // Creates ATS and copy max 48 bytes of Tk:
+    byte_t * pbtTk;
+    size_t szTk;
+    pbtTk = iso14443a_locate_historical_bytes (ntEmulatedTarget.nti.nai.abtAts, ntEmulatedTarget.nti.nai.szAts, &szTk);
+    szTk = (szTk > 48) ? 48 : szTk;
+    byte_t pbtTkt[48];
+    memcpy(pbtTkt, pbtTk, szTk);
     ntEmulatedTarget.nti.nai.abtAts[0] = 0x75;
     ntEmulatedTarget.nti.nai.abtAts[1] = 0x33;
     ntEmulatedTarget.nti.nai.abtAts[2] = 0x92;
     ntEmulatedTarget.nti.nai.abtAts[3] = 0x03;
-    ntEmulatedTarget.nti.nai.szAtsLen = 4;
-    //FIXME we could actually emulate also the historical bytes of the tag once libnfc API supports it...
+    ntEmulatedTarget.nti.nai.szAtsLen = 4 + szTk;
+    memcpy(&(ntEmulatedTarget.nti.nai.abtAts[4]), pbtTkt, szTk);
 
     printf("We will emulate:\n");
     print_nfc_iso14443a_info (ntEmulatedTarget.nti.nai);

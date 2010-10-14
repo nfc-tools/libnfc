@@ -1184,7 +1184,7 @@ pn53x_target_init (nfc_device_t * pnd, const nfc_target_mode_t ntm, nfc_target_t
       pbtMifareParams = abtMifareParams;
 
       // Historical Bytes
-      pbtHBt = iso14443a_extract_historical_bytes (pnt->nti.nai.abtAts, pnt->nti.nai.szAtsLen, &szHBt);
+      pbtHBt = iso14443a_locate_historical_bytes (pnt->nti.nai.abtAts, pnt->nti.nai.szAtsLen, &szHBt);
     }
     break;
 

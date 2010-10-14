@@ -206,7 +206,7 @@ typedef struct {
   size_t  szUidLen;
   byte_t  abtUid[10];
   size_t  szAtsLen;
-  byte_t  abtAts[36];
+  byte_t  abtAts[254]; // Maximal theoretical ATS is FSD-2, FSD=256 for FSDI=8 in RATS
 } nfc_iso14443a_info_t;
 
 /**
