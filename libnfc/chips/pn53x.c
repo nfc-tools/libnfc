@@ -875,33 +875,50 @@ pn53x_configure (nfc_device_t * pnd, const nfc_device_option_t ndo, const bool b
 }
 
 bool
-pn53x_initiator_select_dep_target(nfc_device_t * pnd, const nfc_dep_mode_t ndm,
+pn53x_initiator_select_dep_target(nfc_device_t * pnd,
+                                  const nfc_dep_mode_t ndm, const nfc_baud_rate_t nbr,
                                   const nfc_dep_info_t * pndiInitiator,
                                   nfc_target_t * pnt)
 {
+  const byte_t abtPassiveInitiatorData[5] = { 0x00, 0xff, 0xff, 0x00, 0x00 }; // Only for 212/424 kpbs: First 4 bytes shall be set like this according to NFCIP-1, last byte is TSN (Time Slot Number)
+  const byte_t * pbtPassiveInitiatorData = NULL;
+
+  switch (nbr) {
+    case NBR_212:
+    case NBR_424:
+      // Only use this predefined bytes array when we are at 212/424kbps
+      pbtPassiveInitiatorData = abtPassiveInitiatorData;
+      break;
+
+    default:
+      // Nothing to do
+      break;
+  }
+
   if (pndiInitiator) {
-    return pn53x_InJumpForDEP (pnd, ndm, NULL, 0, pndiInitiator->abtNFCID3, pndiInitiator->abtGB, pndiInitiator->szGB, pnt);
+    return pn53x_InJumpForDEP (pnd, ndm, nbr, pbtPassiveInitiatorData, pndiInitiator->abtNFCID3, pndiInitiator->abtGB, pndiInitiator->szGB, pnt);
   } else {
-    return pn53x_InJumpForDEP (pnd, ndm, NULL, 0, NULL, NULL, 0, pnt);
+    return pn53x_InJumpForDEP (pnd, ndm, nbr, pbtPassiveInitiatorData, NULL, NULL, 0, pnt);
   }
 }
 
 /**
  * @brief Wrapper for InJumpForDEP command
  * @param pmInitModulation desired initial modulation
- * @param pbtPassiveInitiatorData NFCID1 at 106kbps (see NFCIP-1: 11.2.1.26) or Polling Request Frame's payload at 212/424kbps (see NFCIP-1: 11.2.2.5)
+ * @param pbtPassiveInitiatorData NFCID1 (4 bytes) at 106kbps (optionnal, see NFCIP-1: 11.2.1.26) or Polling Request Frame's payload (5 bytes) at 212/424kbps (mandatory, see NFCIP-1: 11.2.2.5)
  * @param szPassiveInitiatorData size of pbtPassiveInitiatorData content
  * @param pbtNFCID3i NFCID3 of the initiator
- * @param pbtGB General Bytes
- * @param szGB count of General Bytes
+ * @param pbtGBi General Bytes of the initiator
+ * @param szGBi count of General Bytes
  * @param[out] pnt \a nfc_target_t which will be filled by this function
  */
 bool
 pn53x_InJumpForDEP (nfc_device_t * pnd,
                     const nfc_dep_mode_t ndm,
-                    const byte_t * pbtPassiveInitiatorData, const size_t szPassiveInitiatorData, 
+                    const nfc_baud_rate_t nbr,
+                    const byte_t * pbtPassiveInitiatorData,
                     const byte_t * pbtNFCID3i,
-                    const byte_t * pbtGB, const size_t szGB,
+                    const byte_t * pbtGBi, const size_t szGBi,
                     nfc_target_t * pnt)
 {
   byte_t  abtRx[MAX_FRAME_LEN];
@@ -911,16 +928,36 @@ pn53x_InJumpForDEP (nfc_device_t * pnd,
 
   memcpy (abtCmd, pncmd_initiator_jump_for_dep, sizeof (pncmd_initiator_jump_for_dep));
 
+  offset = 5; // 2 bytes for command, 1 byte for DEP mode (Active/Passive), 1 byte for baud rate, 1 byte for following parameters flag
   abtCmd[2] = (ndm == NDM_ACTIVE) ? 0x01 : 0x00;
 
   // FIXME Baud rate in D.E.P. mode is hard-wired as 106kbps
-  abtCmd[3] = 0x00;             /* baud rate = 106kbps */
+  switch (nbr) {
+    case NBR_106:
+      abtCmd[3] = 0x00; // baud rate is 106 kbps
+    break;
+    case NBR_212:
+      abtCmd[3] = 0x01; // baud rate is 212 kbps
+    break;
+    case NBR_424:
+      abtCmd[3] = 0x02; // baud rate is 424 kbps
+    break;
+  }
 
-  offset = 5;
   if (pbtPassiveInitiatorData && (ndm == NDM_PASSIVE)) {        /* can't have passive initiator data when using active mode */
-    abtCmd[4] |= 0x01;
-    memcpy (abtCmd + offset, pbtPassiveInitiatorData, szPassiveInitiatorData);
-    offset += szPassiveInitiatorData;
+    switch (nbr) {
+      case NBR_106:
+        abtCmd[4] |= 0x01;
+        memcpy (abtCmd + offset, pbtPassiveInitiatorData, 4);
+        offset += 4;
+      break;
+      case NBR_212:
+      case NBR_424:
+        abtCmd[4] |= 0x01;
+        memcpy (abtCmd + offset, pbtPassiveInitiatorData, 5);
+        offset += 5;
+      break;
+    }
   }
 
   if (pbtNFCID3i) {
@@ -929,13 +966,13 @@ pn53x_InJumpForDEP (nfc_device_t * pnd,
     offset += 10;
   }
 
-  if (szGB && pbtGB) {
+  if (szGBi && pbtGBi) {
     abtCmd[4] |= 0x04;
-    memcpy (abtCmd + offset, pbtGB, szGB);
-    offset += szGB;
+    memcpy (abtCmd + offset, pbtGBi, szGBi);
+    offset += szGBi;
   }
   // Try to find a target, call the transceive callback function of the current device
-  if (!pn53x_transceive (pnd, abtCmd, 5 + szPassiveInitiatorData + 10 + szGB, abtRx, &szRx))
+  if (!pn53x_transceive (pnd, abtCmd, offset, abtRx, &szRx))
     return false;
 
   // Make sure one target has been found, the PN53X returns 0x00 if none was available
@@ -945,7 +982,7 @@ pn53x_InJumpForDEP (nfc_device_t * pnd,
   // Is a target struct available
   if (pnt) {
     pnt->nm.nmt = NMT_DEP;
-    pnt->nm.nmt = NBR_UNDEFINED;
+    pnt->nm.nbr = nbr;
     memcpy (pnt->nti.ndi.abtNFCID3, abtRx + 2, 10);
     pnt->nti.ndi.btDID = abtRx[12];
     pnt->nti.ndi.btBS = abtRx[13];

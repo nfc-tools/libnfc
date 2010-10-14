@@ -434,11 +434,13 @@ nfc_initiator_poll_targets (nfc_device_t * pnd,
  * @note \a nfc_dep_info_t will be returned when the target was acquired successfully.
  */
 bool
-nfc_initiator_select_dep_target (nfc_device_t * pnd, const nfc_dep_mode_t ndm, const nfc_dep_info_t * pndiInitiator, nfc_target_t * pnt)
+nfc_initiator_select_dep_target (nfc_device_t * pnd, 
+                                 const nfc_dep_mode_t ndm, const nfc_baud_rate_t nbr,
+                                 const nfc_dep_info_t * pndiInitiator, nfc_target_t * pnt)
 {
   pnd->iLastError = 0;
 
-  return pn53x_initiator_select_dep_target (pnd, ndm, pndiInitiator, pnt);
+  return pn53x_initiator_select_dep_target (pnd, ndm, nbr, pndiInitiator, pnt);
 }
 
 /**
