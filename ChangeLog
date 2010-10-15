@@ -17,6 +17,14 @@ Improvments:
  - nfcip-target: add an hack to allow to use two devices on the same machine (for tests/debug purpose)
 
 Changes:
+ - API: nfc_target_info_t is not accessible anymore.  Use nfc_target_t's '.nti' if required;
+ - API: (old) nfc_modulation_t renamed pn53x_modulation_t (not accessible from API);
+ - API: nfc_target_type_t renamed pn53x_target_type_t (not accessible from API);
+ - API: New nfc_modulation_type_t (NMT_ISO14443A, NMT_ISO14443B, NMT_FELICA, NMT_JEWEL, NMT_DEP);
+ - API: New nfc_baud_rate_t (NBR_UNDEFINED, NBR_106, NBR_212, NBR_424);
+ - API: New nfc_modulation_t composed, aggregation of nfc_modulation_type_t (.nmt) and a nfc_baud_rate_t (.nbr);
+ - API: nfc_initiator_list_passive_targets() second arguments now expects a (new) nfc_modulation_t;
+ - API: New nfc_dep_mode_t type to handle ACTIVE/PASSIVE mode of DEP;
  - examples: add new example to emulate an NFC Forum tag type 4 (nfc-emulate-ndef)
 
 
