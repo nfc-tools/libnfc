@@ -109,40 +109,85 @@ print_nfc_iso14443a_info (const nfc_iso14443a_info_t nai)
   print_hex (nai.abtUid, nai.szUidLen);
   printf ("      SAK (SEL_RES): ");
   print_hex (&nai.btSak, 1);
-  if (nai.szAtsLen) {
-    printf ("          ATS (ATR): ");
-    print_hex (nai.abtAts, nai.szAtsLen);
-  }
-  if (nai.szAtsLen) {
-    // Decode ATS according to ISO/IEC 14443-4 (5.2 Answer to select)
-    printf ("                 T0: " );
-    size_t offset = 1;
-    if (nai.abtAts[0] & 0x10) { // TA
-      printf ("TA=%02x ", nai.abtAts[offset]);
-      offset++;
-    }
-    if (nai.abtAts[0] & 0x20) { // TB
-      printf ("TB=%02x ", nai.abtAts[offset]);
-      offset++;
-    }
-    if (nai.abtAts[0] & 0x40) { // TC
-      printf ("TC=%02x ", nai.abtAts[offset]);
-      offset++;
-    }
-    printf ("\n");
-    if (nai.szAtsLen > offset) {
-      // XXX More decoding can be done following ISO/IEC 7816-4 (8.1.1 Historical bytes)
-      printf ("   Historical bytes: " );
-      print_hex (nai.abtAts + offset, (nai.szAtsLen - offset));
-    }
-  }
   if ((nai.btSak & SAK_ISO14443_4_COMPLIANT) || (nai.btSak & SAK_ISO18092_COMPLIANT)) {
-    printf ("     Compliant with: ");
+    printf ("* Compliant with: ");
     if (nai.btSak & SAK_ISO14443_4_COMPLIANT)
       printf ("ISO/IEC 14443-4 ");
     if (nai.btSak & SAK_ISO18092_COMPLIANT)
       printf ("ISO/IEC 18092");
     printf ("\n");
+  }
+  if (nai.szAtsLen) {
+    printf ("                ATS: ");
+    print_hex (nai.abtAts, nai.szAtsLen);
+  }
+  if (nai.szAtsLen) {
+    // Decode ATS according to ISO/IEC 14443-4 (5.2 Answer to select)
+    const int iMaxFrameSizes[] = { 16, 24, 32, 40, 48, 64, 96, 128, 256 };
+    printf ("* Max Frame Size accepted by PICC: %d bytes\n", iMaxFrameSizes[nai.abtAts[0] & 0x0F]);
+
+    size_t offset = 1;
+    if (nai.abtAts[0] & 0x10) { // TA(1) present
+      byte_t TA = nai.abtAts[offset];
+      offset++;
+      printf ("* Bit Rate Capability:\n");
+      if (TA == 0) {
+        printf ("  * PICC supports only 106 kbits/s in both directions\n");
+      }
+      if (TA & 1<<7) {
+        printf ("  * Same bitrate in both directions mandatory\n");
+      }
+      if (TA & 1<<4) {
+        printf ("  * PICC to PCD, DS=2, bitrate 212 kbits/s supported\n");
+      }
+      if (TA & 1<<5) {
+        printf ("  * PICC to PCD, DS=4, bitrate 424 kbits/s supported\n");
+      }
+      if (TA & 1<<6) {
+        printf ("  * PICC to PCD, DS=8, bitrate 847 kbits/s supported\n");
+      }
+      if (TA & 1<<0) {
+        printf ("  * PCD to PICC, DR=2, bitrate 212 kbits/s supported\n");
+      }
+      if (TA & 1<<1) {
+        printf ("  * PCD to PICC, DR=4, bitrate 424 kbits/s supported\n");
+      }
+      if (TA & 1<<2) {
+        printf ("  * PCD to PICC, DR=8, bitrate 847 kbits/s supported\n");
+      }
+      if (TA & 1<<3) {
+        printf ("  * ERROR unknown value\n");
+      }
+    }
+    if (nai.abtAts[0] & 0x20) { // TB(1) present
+      byte_t TB= nai.abtAts[offset];
+      offset++;
+      printf ("* Frame Waiting Time: %.4g ms\n",256.0*16.0*(1<<((TB & 0xf0) >> 4))/13560.0);
+      if ((TB & 0x0f) == 0) {
+        printf ("* No Start-up Frame Guard Time required\n");
+      } else {
+        printf ("* Start-up Frame Guard Time: %.4g ms\n",256.0*16.0*(1<<(TB & 0x0f))/13560.0);
+      }
+    }
+    if (nai.abtAts[0] & 0x40) { // TC(1) present
+      byte_t TC = nai.abtAts[offset];
+      offset++;
+      if (TC & 0x1) {
+        printf("* Node ADdress supported\n");
+      } else {
+        printf("* Node ADdress not supported\n");
+      }
+      if (TC & 0x2) {
+        printf("* Card IDentifier supported\n");
+      } else {
+        printf("* Card IDentifier not supported\n");
+      }
+    }
+    if (nai.szAtsLen > offset) {
+      // XXX More decoding can be done following ISO/IEC 7816-4 (8.1.1 Historical bytes)
+      printf ("* Historical bytes Tk: " );
+      print_hex (nai.abtAts + offset, (nai.szAtsLen - offset));
+    }
   }
 }
 
@@ -158,10 +203,10 @@ print_nfc_felica_info (const nfc_felica_info_t nfi)
 void
 print_nfc_jewel_info (const nfc_jewel_info_t nji)
 {
+  printf ("    ATQA (SENS_RES): ");
+  print_hex (nji.btSensRes, 2);
   printf ("      4-LSB JEWELID: ");
   print_hex (nji.btId, 4);
-  printf ("           SENS_RES: ");
-  print_hex (nji.btSensRes, 2);
 }
 
 #define PI_ISO14443_4_SUPPORTED 0x01
@@ -177,43 +222,43 @@ print_nfc_iso14443b_info (const nfc_iso14443b_info_t nbi)
   print_hex (nbi.abtApplicationData, 4);
   printf ("      Protocol Info: ");
   print_hex (nbi.abtProtocolInfo, 3);
-  printf ("Bit Rate Capability:\n");
+  printf ("* Bit Rate Capability:\n");
   if (nbi.abtProtocolInfo[0] == 0) {
-    printf ("* PICC supports only 106 kbits/s in both directions\n");
+    printf (" * PICC supports only 106 kbits/s in both directions\n");
   }
   if (nbi.abtProtocolInfo[0] & 1<<7) {
-    printf ("* Same bitrate in both directions mandatory\n");
+    printf (" * Same bitrate in both directions mandatory\n");
   }
   if (nbi.abtProtocolInfo[0] & 1<<4) {
-    printf ("* PICC to PCD, 1etu=64/fc, bitrate 212 kbits/s supported\n");
+    printf (" * PICC to PCD, 1etu=64/fc, bitrate 212 kbits/s supported\n");
   }
   if (nbi.abtProtocolInfo[0] & 1<<5) {
-    printf ("* PICC to PCD, 1etu=32/fc, bitrate 424 kbits/s supported\n");
+    printf (" * PICC to PCD, 1etu=32/fc, bitrate 424 kbits/s supported\n");
   }
   if (nbi.abtProtocolInfo[0] & 1<<6) {
-    printf ("* PICC to PCD, 1etu=16/fc, bitrate 847 kbits/s supported\n");
+    printf (" * PICC to PCD, 1etu=16/fc, bitrate 847 kbits/s supported\n");
   }
   if (nbi.abtProtocolInfo[0] & 1<<0) {
-    printf ("* PCD to PICC, 1etu=64/fc, bitrate 212 kbits/s supported\n");
+    printf (" * PCD to PICC, 1etu=64/fc, bitrate 212 kbits/s supported\n");
   }
   if (nbi.abtProtocolInfo[0] & 1<<1) {
-    printf ("* PCD to PICC, 1etu=32/fc, bitrate 424 kbits/s supported\n");
+    printf (" * PCD to PICC, 1etu=32/fc, bitrate 424 kbits/s supported\n");
   }
   if (nbi.abtProtocolInfo[0] & 1<<2) {
-    printf ("* PCD to PICC, 1etu=16/fc, bitrate 847 kbits/s supported\n");
+    printf (" * PCD to PICC, 1etu=16/fc, bitrate 847 kbits/s supported\n");
   }
   if (nbi.abtProtocolInfo[0] & 1<<3) {
-    printf ("* ERROR unknown value\n");
+    printf (" * ERROR unknown value\n");
   }
   if( (nbi.abtProtocolInfo[1] & 0xf0) <= 0x80 ) {
-    printf ("Maximum frame sizes: %d bytes\n", iMaxFrameSizes[((nbi.abtProtocolInfo[1] & 0xf0) >> 4)]);
+    printf ("* Maximum frame sizes: %d bytes\n", iMaxFrameSizes[((nbi.abtProtocolInfo[1] & 0xf0) >> 4)]);
   }
   if((nbi.abtProtocolInfo[1] & 0x0f) == PI_ISO14443_4_SUPPORTED) {
-    printf ("Protocol types supported: ISO/IEC 14443-4\n");
+    printf ("* Protocol types supported: ISO/IEC 14443-4\n");
   }
-  printf ("Frame Waiting Time: %.4g ms\n",256.0*16.0*(1<<((nbi.abtProtocolInfo[2] & 0xf0) >> 4))/13560.0);
+  printf ("* Frame Waiting Time: %.4g ms\n",256.0*16.0*(1<<((nbi.abtProtocolInfo[2] & 0xf0) >> 4))/13560.0);
   if((nbi.abtProtocolInfo[2] & (PI_NAD_SUPPORTED|PI_CID_SUPPORTED)) != 0) {
-    printf ("Frame options supported: ");
+    printf ("* Frame options supported: ");
     if ((nbi.abtProtocolInfo[2] & PI_NAD_SUPPORTED) != 0) printf ("NAD ");
     if ((nbi.abtProtocolInfo[2] & PI_CID_SUPPORTED) != 0) printf ("CID ");
     printf("\n");
