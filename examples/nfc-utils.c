@@ -184,9 +184,31 @@ print_nfc_iso14443a_info (const nfc_iso14443a_info_t nai)
       }
     }
     if (nai.szAtsLen > offset) {
-      // XXX More decoding can be done following ISO/IEC 7816-4 (8.1.1 Historical bytes)
       printf ("* Historical bytes Tk: " );
       print_hex (nai.abtAts + offset, (nai.szAtsLen - offset));
+      byte_t CIB = nai.abtAts[offset];
+      offset++;
+      if (CIB != 0x00 && CIB != 0x10 && (CIB & 0xf0) != 0x80) {
+        printf("  * Proprietary format\n");
+      } else {
+        if (CIB == 0x00) {
+          printf("  * Tk after 0x00 consist of optional consecutive COMPACT-TLV data objects\n");
+          printf("    followed by a mandatory status indicator (the last three bytes, not in TLV)\n");
+          printf("    See ISO/IEC 7816-4 8.1.1.3 for more info\n");
+        }
+        if (CIB == 0x10) {
+          printf("  * DIR data reference: %02x\n", nai.abtAts[offset]);
+        }
+        if (CIB == 0x80) {
+          if (nai.szAtsLen == offset) {
+            printf("  * No COMPACT-TLV objects found, no status found\n");
+          } else {
+            printf("  * Tk after 0x80 consist of optional consecutive COMPACT-TLV data objects;\n");
+            printf("    the last data object may carry a status indicator of one, two or three bytes.\n");
+            printf("    See ISO/IEC 7816-4 8.1.1.3 for more info\n");
+          }
+        }
+      }
     }
   }
 }
