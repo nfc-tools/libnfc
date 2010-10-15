@@ -102,7 +102,7 @@ bool print_hex_fd4 (const byte_t * pbtData, const size_t szBytes, const char * p
   if (szBytes > MAX_FRAME_LEN) {
     return EXIT_FAILURE;
   }
-  if (fprintf (fd4, "#%s %04x: ", pchPrefix, szBytes)<0) {
+  if (fprintf (fd4, "#%s %04zx: ", pchPrefix, szBytes)<0) {
     return EXIT_FAILURE;
   }
 
