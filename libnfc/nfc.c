@@ -555,11 +555,11 @@ nfc_initiator_transceive_bits (nfc_device_t * pnd, const byte_t * pbtTx, const s
  * receive functions can be used.
  */
 bool
-nfc_target_init (nfc_device_t * pnd, const nfc_target_mode_t ntm, nfc_target_t * pnt, byte_t * pbtRx, size_t * pszRx)
+nfc_target_init (nfc_device_t * pnd, nfc_target_t * pnt, byte_t * pbtRx, size_t * pszRx)
 {
   pnd->iLastError = 0;
 
-  return pn53x_target_init (pnd, ntm, pnt, pbtRx, pszRx);
+  return pn53x_target_init (pnd, pnt, pbtRx, pszRx);
 }
 
 /**

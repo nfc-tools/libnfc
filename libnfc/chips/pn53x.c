@@ -828,6 +828,10 @@ pn53x_configure (nfc_device_t * pnd, const nfc_device_option_t ndo, const bool b
     break;
 
   case NDO_INFINITE_SELECT:
+    // TODO Made some research around this point: 
+    // timings could be tweak better than this, and maybe we can tweak timings
+    // to "gain" a sort-of hardware polling (ie. like PN532 does)
+    
     // Retry format: 0x00 means only 1 try, 0xff means infinite
     abtCmd[2] = RFCI_RETRY_SELECT;
     abtCmd[3] = (bEnable) ? 0xff : 0x00;        // MxRtyATR, default: active = 0xff, passive = 0x02
@@ -851,6 +855,8 @@ pn53x_configure (nfc_device_t * pnd, const nfc_device_option_t ndo, const bool b
     break;
 
   case NDO_AUTO_ISO14443_4:
+    // TODO Cache activated/disactivated options
+    pnd->bAutoIso14443_4 = bEnable;
     return pn53x_set_parameter(pnd, PARAM_AUTO_RATS, bEnable);
     break;
 
@@ -1107,43 +1113,43 @@ pn53x_initiator_transceive_bytes (nfc_device_t * pnd, const byte_t * pbtTx, cons
   return true;
 }
 
+#define SAK_ISO14443_4_COMPLIANT 0x20
 bool
-pn53x_target_init (nfc_device_t * pnd, const nfc_target_mode_t ntm, nfc_target_t * pnt, byte_t * pbtRx, size_t * pszRx)
+pn53x_target_init (nfc_device_t * pnd, nfc_target_t * pnt, byte_t * pbtRx, size_t * pszRx)
 {
   // Save the current configuration settings
   bool    bCrc = pnd->bCrc;
   bool    bPar = pnd->bPar;
 
-  // Configure the target corresponding to the requested mode
-  // XXX I (Romuald) don't think that a good thing to select NDO_EASY_FRAMING here, that's a user choice...
-  switch(ntm)
-  {
-    case NTM_NORMAL:
-    case NTM_PASSIVE_ONLY:
+  pn53x_target_mode_t ptm = PTM_NORMAL;
+  switch (pnt->nm.nmt) {
+    case NMT_ISO14443A:
+      ptm = PTM_PASSIVE_ONLY;
       pn53x_set_parameter(pnd, PARAM_AUTO_ATR_RES, false);
-      pn53x_configure(pnd, NDO_EASY_FRAMING, false);
-    break;
-
-    case NTM_DEP_ONLY:
-      // XXX Should we check that nt is a DEP ?
-      pn53x_set_parameter(pnd, PARAM_AUTO_ATR_RES, true);
-      pn53x_configure(pnd, NDO_EASY_FRAMING, true);
-    break;
-
-    case NTM_ISO14443_4_PICC_ONLY:
-      // XXX Should we check that nt is a ISO14443A ?
-      if(pnd->nc != NC_PN532) {
-        // This mode is not supported by pn531 neither pn533
-        pnd->iLastError = DENOTSUP;
-        return false;
+      if (pnd->nc == NC_PN532) { // We have a PN532
+        if ((pnt->nti.nai.btSak & SAK_ISO14443_4_COMPLIANT) && (pnd->bAutoIso14443_4)) { // We have a ISO14443-4 tag to emulate and NDO_AUTO_14443_4A option is enabled
+          ptm |= PTM_ISO14443_4_PICC_ONLY; // We add ISO14443-4 restriction
+          pn53x_set_parameter(pnd, PARAM_14443_4_PICC, true);
+        } else {
+          pn53x_set_parameter(pnd, PARAM_14443_4_PICC, false);
+        }
       }
-      pn53x_set_parameter(pnd, PARAM_14443_4_PICC, true);
-      pn53x_configure(pnd, NDO_EASY_FRAMING, true);
     break;
-
-    default:
-      // Unknown mode
+    case NMT_FELICA:
+      ptm = PTM_PASSIVE_ONLY;
+    break;
+    case NMT_DEP:
+      pn53x_set_parameter(pnd, PARAM_AUTO_ATR_RES, true);
+      ptm = PTM_DEP_ONLY;
+      if (pnt->nti.ndi.ndm = NDM_PASSIVE) {
+        ptm |= PTM_PASSIVE_ONLY; // We add passive mode restriction
+      }
+    break;
+    case NMT_ISO14443B:
+    case NMT_JEWEL:
+      pnd->iLastError = DENOTSUP;
       return false;
+    break;
   }
 
   // Make sure the CRC & parity are handled by the device, this is needed for target_init to work properly
@@ -1212,45 +1218,59 @@ pn53x_target_init (nfc_device_t * pnd, const nfc_target_mode_t ntm, nfc_target_t
     break;
   }
 
-  byte_t btActivatedMode;
-target_activation:
-  if(!pn53x_TgInitAsTarget(pnd, ntm, pbtMifareParams, pbtTkt, szTkt, pbtFeliCaParams, pbtNFCID3t, pbtGBt, szGBt, pbtRx, pszRx, &btActivatedMode)) {
-    return false;
-  }
+  bool targetActivated = false;
+  while (!targetActivated) {
+    nfc_modulation_t nm;
+    nfc_dep_mode_t ndm = NDM_UNDEFINED;
+    byte_t btActivatedMode;
 
-  nfc_modulation_t nm;
-  // Decode activated "mode"
-  switch(btActivatedMode & 0x70) { // Baud rate
-    case 0x00: // 106kbps
-      nm.nbr = NBR_106;
-    break;
-    case 0x10: // 212kbps
-      nm.nbr = NBR_212;
-    break;
-    case 0x20: // 424kbps
-      nm.nbr = NBR_424;
-    break;
-  };
-
-  if (btActivatedMode & 0x04) { // D.E.P.
-    nm.nmt = NMT_DEP;
-    if ((btActivatedMode & 0x03) == 0x01) { // Active mode
-      // XXX What to do ?
-    } else { // Passive mode
+    if(!pn53x_TgInitAsTarget(pnd, ptm, pbtMifareParams, pbtTkt, szTkt, pbtFeliCaParams, pbtNFCID3t, pbtGBt, szGBt, pbtRx, pszRx, &btActivatedMode)) {
+      return false;
     }
-  } else { // Not D.E.P.
-    if ((btActivatedMode & 0x03) == 0x00) { // MIFARE
-      nm.nmt = NMT_ISO14443A;
-    } else if ((btActivatedMode & 0x03) == 0x02) { // FeliCa
-      nm.nmt = NMT_FELICA;
+
+    // Decode activated "mode"
+    switch(btActivatedMode & 0x70) { // Baud rate
+      case 0x00: // 106kbps
+        nm.nbr = NBR_106;
+      break;
+      case 0x10: // 212kbps
+        nm.nbr = NBR_212;
+      break;
+      case 0x20: // 424kbps
+        nm.nbr = NBR_424;
+      break;
+    };
+  
+    if (btActivatedMode & 0x04) { // D.E.P.
+      nm.nmt = NMT_DEP;
+      if ((btActivatedMode & 0x03) == 0x01) { // Active mode
+        ndm = NDM_ACTIVE;
+      } else { // Passive mode
+        ndm = NDM_PASSIVE;
+      }
+    } else { // Not D.E.P.
+      if ((btActivatedMode & 0x03) == 0x00) { // MIFARE
+        nm.nmt = NMT_ISO14443A;
+      } else if ((btActivatedMode & 0x03) == 0x02) { // FeliCa
+        nm.nmt = NMT_FELICA;
+      }
+    }
+
+    if(pnt->nm.nmt == nm.nmt) { // Actual activation have the right modulation type
+      if ((pnt->nm.nbr == NBR_UNDEFINED) || (pnt->nm.nbr == nm.nbr)) { // Have the right baud rate (or undefined)
+        if ((pnt->nm.nmt != NMT_DEP) || (pnt->nti.ndi.ndm == NDM_UNDEFINED) || (pnt->nti.ndi.ndm == ndm)) { // Have the right DEP mode (or is not a DEP)
+          targetActivated = true;
+        }
+      }
+    }
+ 
+    if (targetActivated) {
+      pnt->nm.nbr = nm.nbr; // Update baud rate
+      if (pnt->nm.nmt == NMT_DEP) {
+        pnt->nti.ndi.ndm = ndm; // Update DEP mode
+      }
     }
   }
-
-  // XXX When using DEP, shouldn't we update target modulation ?
-  if(nm.nmt != pnt->nm.nmt) {
-    goto target_activation;
-  }
-  pnt->nm.nbr = nm.nbr;
 
   // Restore the CRC & parity setting to the original value (if needed)
   if (!bCrc)
@@ -1262,7 +1282,7 @@ target_activation:
 }
 
 bool
-pn53x_TgInitAsTarget (nfc_device_t * pnd, nfc_target_mode_t ntm, 
+pn53x_TgInitAsTarget (nfc_device_t * pnd, pn53x_target_mode_t ptm,
                       const byte_t * pbtMifareParams,
                       const byte_t * pbtTkt, size_t szTkt,
                       const byte_t * pbtFeliCaParams,
@@ -1280,7 +1300,7 @@ pn53x_TgInitAsTarget (nfc_device_t * pnd, nfc_target_mode_t ntm,
   memset (abtCmd + sizeof (pncmd_target_init), 0x00, sizeof (abtCmd) - sizeof (pncmd_target_init));
 
   // Store the target mode in the initialization params
-  abtCmd[2] = ntm;
+  abtCmd[2] = ptm;
 
   // MIFARE part
   if (pbtMifareParams) {

@@ -153,6 +153,21 @@ typedef enum {
   PTT_DEP_ACTIVE_424 = 0x82,
 } pn53x_target_type_t;
 
+/**
+ * @enum pn53x_target_mode_t
+ * @brief PN53x target mode enumeration
+ */
+typedef enum {
+  /** Configure the PN53x to accept all initiator mode */
+  PTM_NORMAL = 0x00,
+  /** Configure the PN53x to accept to be initialized only in passive mode */
+  PTM_PASSIVE_ONLY = 0x01,
+  /** Configure the PN53x to accept to be initialized only as DEP target */
+  PTM_DEP_ONLY = 0x02,
+  /** Configure the PN532 to accept to be initialized only as ISO/IEC14443-4 PICC */
+  PTM_ISO14443_4_PICC_ONLY = 0x04
+} pn53x_target_mode_t;
+
 bool	pn53x_init(nfc_device_t * pnd);
 bool    pn53x_transceive_check_ack_frame_callback (nfc_device_t * pnd, const byte_t * pbtRxFrame,
                                                    const size_t szRxFrameLen);
@@ -193,7 +208,7 @@ bool    pn53x_initiator_transceive_bits (nfc_device_t * pnd, const byte_t * pbtT
 bool    pn53x_initiator_transceive_bytes (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx,
                                           byte_t * pbtRx, size_t * pszRx);
 // NFC device as Target functions
-bool    pn53x_target_init (nfc_device_t * pnd, const nfc_target_mode_t ntm, nfc_target_t * pnt, byte_t * pbtRx, size_t * pszRx);
+bool    pn53x_target_init (nfc_device_t * pnd, nfc_target_t * pnt, byte_t * pbtRx, size_t * pszRx);
 bool    pn53x_target_receive_bits (nfc_device_t * pnd, byte_t * pbtRx, size_t * pszRxBits, byte_t * pbtRxPar);
 bool    pn53x_target_receive_bytes (nfc_device_t * pnd, byte_t * pbtRx, size_t * pszRx);
 bool    pn53x_target_send_bits (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxBits,
@@ -221,7 +236,7 @@ bool    pn53x_InJumpForDEP (nfc_device_t * pnd,
                             const byte_t * pbtNFCID3i,
                             const byte_t * pbtGB, const size_t szGB,
                             nfc_target_t * pnt);
-bool	pn53x_TgInitAsTarget (nfc_device_t * pnd, nfc_target_mode_t ntm,
+bool	pn53x_TgInitAsTarget (nfc_device_t * pnd, pn53x_target_mode_t ptm,
                               const byte_t * pbtMifareParams,
                               const byte_t * pbtTkt, size_t szTkt,
                               const byte_t * pbtFeliCaParams,

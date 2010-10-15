@@ -118,7 +118,7 @@ nfc_target_emulate_tag(nfc_device_t* pnd, nfc_target_t * pnt)
   byte_t abtTx[MAX_FRAME_LEN];
   bool loop = true;
 
-  if (!nfc_target_init (pnd, NTM_PASSIVE_ONLY, pnt, abtRx, &szRx)) {
+  if (!nfc_target_init (pnd, pnt, abtRx, &szRx)) {
     nfc_perror (pnd, "nfc_target_init");
     return false;
   }

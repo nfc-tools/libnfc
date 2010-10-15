@@ -89,7 +89,7 @@ main (int argc, const char *argv[])
   print_nfc_target (nt);
 
   printf ("Waiting for initiator request...\n");
-  if(!nfc_target_init (pnd, NTM_DEP_ONLY, &nt, abtRx, &szRx)) {
+  if(!nfc_target_init (pnd, &nt, abtRx, &szRx)) {
     nfc_perror(pnd, "nfc_target_init");
     return EXIT_FAILURE;
   }

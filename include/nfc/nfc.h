@@ -89,7 +89,7 @@ extern  "C" {
                                                  byte_t * pbtRxPar);
 
 /* NFC target: act as tag (i.e. MIFARE Classic) or NFC target device. */
-  NFC_EXPORT bool nfc_target_init (nfc_device_t * pnd, const nfc_target_mode_t ntm, nfc_target_t * pnt, byte_t * pbtRx, size_t * pszRx);
+  NFC_EXPORT bool nfc_target_init (nfc_device_t * pnd, nfc_target_t * pnt, byte_t * pbtRx, size_t * pszRx);
   NFC_EXPORT bool nfc_target_send_bytes (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx);
   NFC_EXPORT bool nfc_target_receive_bytes (nfc_device_t * pnd, byte_t * pbtRx, size_t * pszRx);
   NFC_EXPORT bool nfc_target_send_bits (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxBits,
