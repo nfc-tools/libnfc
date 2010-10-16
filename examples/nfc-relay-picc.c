@@ -73,8 +73,6 @@ static int waiting_time = 0;
 FILE * fd3;
 FILE * fd4;
 
-#define SYMBOL_PARAM_fISO14443_4_PICC   0x20
-
 void
 intr_hdlr (void)
 {
