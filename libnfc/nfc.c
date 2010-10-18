@@ -59,6 +59,15 @@ nfc_device_desc_t *nfc_pick_device (void);
  *
  * When it has successfully claimed a NFC device, memory is allocated to save the device information. It will return a pointer to a \a nfc_device_t struct.
  * This pointer should be supplied by every next functions of libnfc that should perform an action with this device.
+ *
+ * @note During this function, the device will be configured with default options:
+ * - Crc is handled by the device (NDO_HANDLE_CRC = true)
+ * - Parity is handled the device (NDO_HANDLE_PARITY = true)
+ * - Cryto1 cipher is disabled (NDO_ACTIVATE_CRYPTO1 = false)
+ * - Easy framing is enabled (NDO_EASY_FRAMING = true)
+ * - Auto-switching in ISO14443-4 mode is enabled (NDO_AUTO_ISO14443_4 = true)
+ * - Invalid frames are not accepted (NDO_ACCEPT_INVALID_FRAMES = false)
+ * - Multiple frames are not accepted (NDO_ACCEPT_MULTIPLE_FRAMES = false)
  */
 nfc_device_t *
 nfc_connect (nfc_device_desc_t * pndd)
@@ -114,7 +123,7 @@ nfc_connect (nfc_device_desc_t * pndd)
       if (!nfc_configure (pnd, NDO_HANDLE_PARITY, true))
         return NULL;
 
-      // Deactivate the CRYPTO1 chiper, it may could cause problems when still active
+      // Deactivate the CRYPTO1 cipher, it may could cause problems when still active
       if (!nfc_configure (pnd, NDO_ACTIVATE_CRYPTO1, false))
         return NULL;
 
@@ -358,8 +367,18 @@ nfc_initiator_list_passive_targets (nfc_device_t * pnd,
 
   pnd->iLastError = 0;
 
-  // Let the reader only try once to find a target
-  nfc_configure (pnd, NDO_INFINITE_SELECT, false);
+  // Drop the field for a while
+  if (!nfc_configure (pnd, NDO_ACTIVATE_FIELD, false)) {
+    return false;
+  }
+  // Let the reader only try once to find a tag
+  if (!nfc_configure (pnd, NDO_INFINITE_SELECT, false)) {
+    return false;
+  }
+  // Enable field so more power consuming cards can power themselves up
+  if (!nfc_configure (pnd, NDO_ACTIVATE_FIELD, true)) {
+    return false;
+  }
 
   switch (nm.nmt) {
     case NMT_ISO14443B: {
