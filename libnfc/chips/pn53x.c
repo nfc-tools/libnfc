@@ -173,7 +173,8 @@ pn53x_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, b
   // Call the tranceive callback function of the current device
   if (!pnd->pdc->transceive (pnd, pbtTx, szTx, pbtRx, pszRx))
     return false;
-  // XXX Should we put all these numbers behind a human-readable #define ?
+  // TODO Put all these hex-coded command behind a human-readable #define (1.6.x)
+  // Should be proceed while we will fix Issue 110 (Rework the way that pn53x commands are built)
   switch (pbtTx[1]) {
   case 0x16:                   // PowerDown
   case 0x40:                   // InDataExchange
@@ -563,7 +564,7 @@ pn53x_InListPassiveTarget (nfc_device_t * pnd,
 
   abtCmd[2] = szMaxTargets;     // MaxTg
 
-  // XXX Is there is a better way to do this ?
+  // XXX Is there is a better way to do handle supported modulations ?
   switch(pmInitModulation) {
     case PM_ISO14443A_106:
     case PM_FELICA_212:
@@ -571,7 +572,12 @@ pn53x_InListPassiveTarget (nfc_device_t * pnd,
       // all gone fine.
       break;
     case PM_ISO14443B_106:
-      // FIXME Some PN532 doesn't support type B !
+      if (!(pnd->btSupportByte & SUPPORT_ISO14443B)) {
+        // Eg. Some PN532 doesn't support type B!
+        pnd->iLastError = DENOTSUP;
+        return false;
+      }
+      break;
     case PM_JEWEL_106:
       if(pnd->nc == NC_PN531) {
         // These modulations are not supported by pn531
@@ -582,7 +588,7 @@ pn53x_InListPassiveTarget (nfc_device_t * pnd,
     case PM_ISO14443B_212:
     case PM_ISO14443B_424:
     case PM_ISO14443B_847:
-      if(pnd->nc != NC_PN533) {
+      if((pnd->nc != NC_PN533) || (!(pnd->btSupportByte & SUPPORT_ISO14443B))) {
         // These modulations are not supported by pn531 neither pn532
         pnd->iLastError = DENOTSUP;
         return false;
@@ -772,14 +778,18 @@ pn53x_get_firmware_version (nfc_device_t * pnd, char abtFirmwareText[18])
   switch (pnd->nc) {
   case NC_PN531:
     snprintf (abtFirmwareText, 18, "PN531 v%d.%d", abtFw[0], abtFw[1]);
+    pnd->btSupportByte = SUPPORT_ISO14443A | SUPPORT_ISO18092;
     break;
   case NC_PN532:
     snprintf (abtFirmwareText, 18, "PN532 v%d.%d (0x%02x)", abtFw[1], abtFw[2], abtFw[3]);
+    pnd->btSupportByte = abtFw[3];
     break;
   case NC_PN533:
     snprintf (abtFirmwareText, 18, "PN533 v%d.%d (0x%02x)", abtFw[1], abtFw[2], abtFw[3]);
+    pnd->btSupportByte = abtFw[3];
     break;
   }
+  // Be sure to have a null end of string
   abtFirmwareText[17] = '\0';
   return true;
 }

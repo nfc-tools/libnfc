@@ -76,6 +76,8 @@ typedef struct {
   uint8_t ui8TxBits;
 /** Register cache for SetParameters function. */
   uint8_t ui8Parameters;
+/** Supported modulation encoded in a byte */
+  byte_t  btSupportByte;
 /** Last error reported by the PCD / encountered by the PCD driver
  * MSB       LSB
  *  | 00 | 00 |

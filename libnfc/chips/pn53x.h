@@ -64,6 +64,11 @@
 #  define REG_CIU_BIT_FRAMING       0x633D
 #  define SYMBOL_TX_LAST_BITS       0x07
 
+// PN53X Support Byte flags
+#define SUPPORT_ISO14443A             0x01
+#define SUPPORT_ISO14443B             0x02
+#define SUPPORT_ISO18092              0x04
+
 // Internal parameters flags
 #  define PARAM_NONE                  0x00
 #  define PARAM_NAD_USED              0x01
