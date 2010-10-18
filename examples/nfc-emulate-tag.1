@@ -28,6 +28,12 @@ problems like CRC or parity errors.
 The OmniKey CardMan 5321 is known to be very large on timings and is a good
 choice if you want to experiment with this emulator with a tolerant reader.
 
+.SH IMPORTANT
+ACR122 devices (like touchatag, etc.) can be used by this example (with
+probably timing issue), but if something goes wrong, you will have to
+unplug/replug your device. This is not a
+.B libnfc's
+bug, this problem is due to ACR122's internal MCU in front of NFC chip (PN532).
 .SH BUGS
 Please report any bugs on the
 .B libnfc

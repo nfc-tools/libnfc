@@ -43,6 +43,12 @@ Nokia NFC 6212 and Pegoda readers are much too strict and won't be fooled.
 .IR UID
 8 hex digits format that represents desired UID (default is DEADBEEF).
 
+.SH IMPORTANT
+ACR122 devices (like touchatag, etc.) can be used by this example (with timing
+issues), but if something goes wrong, you will have to unplug/replug your
+device. This is not a
+.B libnfc's
+bug, this problem is due to ACR122's internal MCU in front of NFC chip (PN532).
 .SH BUGS
 Please report any bugs on the
 .B libnfc
