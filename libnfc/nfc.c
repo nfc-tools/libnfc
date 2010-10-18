@@ -109,10 +109,6 @@ nfc_connect (nfc_device_desc_t * pndd)
       // Great we have claimed a device
       pnd->pdc = &(drivers_callbacks_list[uiDriver]);
 
-      // FIXME Why do we do this ?
-      if (!pn53x_get_firmware_version (pnd))
-        return NULL;
-
       if (!pn53x_init (pnd))
         return NULL;
 

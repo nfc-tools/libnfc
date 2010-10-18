@@ -106,6 +106,16 @@ pn53x_init(nfc_device_t * pnd)
     return false;
   }
 
+  char abtFirmwareText[18];
+  if (!pn53x_get_firmware_version (pnd, abtFirmwareText)) {
+    return false;
+  }
+
+  // Add the firmware revision to the device name
+  char   *pcName;
+  pcName = strdup (pnd->acName);
+  snprintf (pnd->acName, DEVICE_NAME_LENGTH - 1, "%s - %s", pcName, abtFirmwareText);
+  free (pcName);
   return true;
 }
 
@@ -723,7 +733,7 @@ static struct sErrorMessage {
   DENACK, "Received NACK"}, {
   DEACKMISMATCH, "Expected ACK/NACK"}, {
   DEISERRFRAME, "Received an error frame"},
-    /* TODO: Move me in more generic code for libnfc 1.6 */
+    // TODO: Move me in more generic code for libnfc 1.6
   {
   DEINVAL, "Invalid argument"}, {
   DEIO, "Input/output error"}, {
@@ -748,31 +758,29 @@ pn53x_strerror (const nfc_device_t * pnd)
 }
 
 bool
-pn53x_get_firmware_version (nfc_device_t * pnd)
+pn53x_get_firmware_version (nfc_device_t * pnd, char abtFirmwareText[18])
 {
   byte_t  abtFw[4];
   size_t  szFwLen = sizeof (abtFw);
-  char   *pcName;
   // TODO Read more info here: there are modulation capabilities info to know if ISO14443B is supported
   if (!pn53x_transceive (pnd, pncmd_get_firmware_version, 2, abtFw, &szFwLen)) {
     // Failed to get firmware revision??, whatever...let's disconnect and clean up and return err
     pnd->pdc->disconnect (pnd);
     return false;
   }
-  // Add the firmware revision to the device name, PN531 gives 2 bytes info, but PN532 and PN533 gives 4
-  pcName = strdup (pnd->acName);
+  // Convert firmware info in text, PN531 gives 2 bytes info, but PN532 and PN533 gives 4
   switch (pnd->nc) {
   case NC_PN531:
-    snprintf (pnd->acName, DEVICE_NAME_LENGTH - 1, "%s - PN531 v%d.%d", pcName, abtFw[0], abtFw[1]);
+    snprintf (abtFirmwareText, 18, "PN531 v%d.%d", abtFw[0], abtFw[1]);
     break;
   case NC_PN532:
-    snprintf (pnd->acName, DEVICE_NAME_LENGTH - 1, "%s - PN532 v%d.%d (0x%02x)", pcName, abtFw[1], abtFw[2], abtFw[3]);
+    snprintf (abtFirmwareText, 18, "PN532 v%d.%d (0x%02x)", abtFw[1], abtFw[2], abtFw[3]);
     break;
   case NC_PN533:
-    snprintf (pnd->acName, DEVICE_NAME_LENGTH - 1, "%s - PN533 v%d.%d (0x%02x)", pcName, abtFw[1], abtFw[2], abtFw[3]);
+    snprintf (abtFirmwareText, 18, "PN533 v%d.%d (0x%02x)", abtFw[1], abtFw[2], abtFw[3]);
     break;
   }
-  free (pcName);
+  abtFirmwareText[17] = '\0';
   return true;
 }
 
