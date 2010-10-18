@@ -215,7 +215,7 @@ nfc_list_devices (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * ps
  * @brief Configure advanced NFC device settings
  * @return Returns \c true if action was successfully performed; otherwise returns \c false.
  * @param pnd \a nfc_device_t struct pointer that represent currently used device
- * @param ndo \a nfc_device_option_t struct that contains options to set to device
+ * @param ndo \a nfc_device_option_t struct that contains option to set to device
  * @param bEnable boolean to activate/disactivate the option
  *
  * Configures parameters and registers that control for example timing,
@@ -268,6 +268,11 @@ nfc_initiator_init (nfc_device_t * pnd)
  * @param nm desired modulation
  * @param pbtInitData optional initiator data used for Felica, ISO14443B, Topaz polling or to select a specific UID in ISO14443A.
  * @param szInitData length of initiator data \a pbtInitData.
+ * @note pbtInitData is used with different kind of data depending in modultation type:
+ * - for an ISO/IEC 14443 type A modulation, pbbInitData contains the UID you want to select;
+ * - for an ISO/IEC 14443 type B modulation, pbbInitData contains Application Family Identifier (AFI) (see ISO/IEC 14443-3);
+ * - for a FeliCa modulation, pbbInitData contains polling payload (see ISO/IEC 18092 11.2.2.5).
+ *
  * @param[out] pnt \a nfc_target_t struct pointer which will filled if available
  *
  * The NFC device will try to find one available passive tag or emulated tag. 
