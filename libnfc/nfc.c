@@ -273,7 +273,7 @@ nfc_initiator_init (nfc_device_t * pnd)
  * @param nm desired modulation
  * @param pbtInitData optional initiator data used for Felica, ISO14443B, Topaz polling or to select a specific UID in ISO14443A.
  * @param szInitData length of initiator data \a pbtInitData.
- * @note pbtInitData is used with different kind of data depending in modultation type:
+ * @note pbtInitData is used with different kind of data depending on modulation type:
  * - for an ISO/IEC 14443 type A modulation, pbbInitData contains the UID you want to select;
  * - for an ISO/IEC 14443 type B modulation, pbbInitData contains Application Family Identifier (AFI) (see ISO/IEC 14443-3);
  * - for a FeliCa modulation, pbbInitData contains polling payload (see ISO/IEC 18092 11.2.2.5).
