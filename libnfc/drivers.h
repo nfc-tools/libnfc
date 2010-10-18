@@ -82,7 +82,7 @@ static const struct driver_callbacks drivers_callbacks_list[] = {
 
 #  ifdef DEBUG
   /*
-   * FIXME: Helper macro for dumping drivers messages.
+   * TODO Move this helper macro for dumping drivers messages.
    * Here is not the best place for such a macro, however, I
    * can't see any convenient place ATM.
    */

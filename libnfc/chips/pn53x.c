@@ -128,7 +128,7 @@ pn53x_check_ack_frame_callback (nfc_device_t * pnd, const byte_t * pbtRxFrame, c
       return true;
     } else if (0 == memcmp (pbtRxFrame, pn53x_nack_frame, sizeof (pn53x_nack_frame))) {
       DBG ("%s", "PN53x NACKed");
-      // TODO: Try to recover
+      // TODO Try to recover when PN53x NACKs !
       // A counter could allow the command to be sent again (e.g. max 3 times)
       pnd->iLastError = DENACK;
       return false;
@@ -768,7 +768,6 @@ pn53x_get_firmware_version (nfc_device_t * pnd, char abtFirmwareText[18])
 {
   byte_t  abtFw[4];
   size_t  szFwLen = sizeof (abtFw);
-  // TODO Read more info here: there are modulation capabilities info to know if ISO14443B is supported
   if (!pn53x_transceive (pnd, pncmd_get_firmware_version, 2, abtFw, &szFwLen)) {
     // Failed to get firmware revision??, whatever...let's disconnect and clean up and return err
     pnd->pdc->disconnect (pnd);
