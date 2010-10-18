@@ -1,7 +1,8 @@
 /*-
  * Public platform independent Near Field Communication (NFC) library
  * 
- * Copyright (C) 2009, 2010, Roel Verdult, Romuald Conty
+ * Copyright (C) 2009, Roel Verdult, Romuald Conty
+ * Copyright (C) 2010, Roel Verdult, Romuald Conty, Romain Tartière
  * 
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -32,7 +33,6 @@
 #include <stdlib.h>
 
 #include <nfc/nfc.h>
-// FIXME: WTF are doing debug macros in this file?
 #include <nfc/nfc-messages.h>
 
 #include "pn53x.h"
@@ -109,9 +109,8 @@ pn53x_init(nfc_device_t * pnd)
   return true;
 }
 
-// XXX: Is this function correctly named ?
 bool
-pn53x_transceive_check_ack_frame_callback (nfc_device_t * pnd, const byte_t * pbtRxFrame, const size_t szRxFrameLen)
+pn53x_check_ack_frame_callback (nfc_device_t * pnd, const byte_t * pbtRxFrame, const size_t szRxFrameLen)
 {
   if (szRxFrameLen >= sizeof (pn53x_ack_frame)) {
     if (0 == memcmp (pbtRxFrame, pn53x_ack_frame, sizeof (pn53x_ack_frame))) {
@@ -135,7 +134,7 @@ pn53x_transceive_check_ack_frame_callback (nfc_device_t * pnd, const byte_t * pb
 }
 
 bool
-pn53x_transceive_check_error_frame_callback (nfc_device_t * pnd, const byte_t * pbtRxFrame, const size_t szRxFrameLen)
+pn53x_check_error_frame_callback (nfc_device_t * pnd, const byte_t * pbtRxFrame, const size_t szRxFrameLen)
 {
   if (szRxFrameLen >= sizeof (pn53x_error_frame)) {
     if (0 == memcmp (pbtRxFrame, pn53x_error_frame, sizeof (pn53x_error_frame))) {
@@ -757,7 +756,6 @@ pn53x_get_firmware_version (nfc_device_t * pnd)
   // TODO Read more info here: there are modulation capabilities info to know if ISO14443B is supported
   if (!pn53x_transceive (pnd, pncmd_get_firmware_version, 2, abtFw, &szFwLen)) {
     // Failed to get firmware revision??, whatever...let's disconnect and clean up and return err
-    DBG ("Failed to get firmware revision for: %s", pnd->acName);
     pnd->pdc->disconnect (pnd);
     return false;
   }

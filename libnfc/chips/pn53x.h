@@ -169,9 +169,9 @@ typedef enum {
 } pn53x_target_mode_t;
 
 bool	pn53x_init(nfc_device_t * pnd);
-bool    pn53x_transceive_check_ack_frame_callback (nfc_device_t * pnd, const byte_t * pbtRxFrame,
+bool    pn53x_check_ack_frame_callback (nfc_device_t * pnd, const byte_t * pbtRxFrame,
                                                    const size_t szRxFrameLen);
-bool    pn53x_transceive_check_error_frame_callback (nfc_device_t * pnd, const byte_t * pbtRxFrame,
+bool    pn53x_check_error_frame_callback (nfc_device_t * pnd, const byte_t * pbtRxFrame,
                                                      const size_t szRxFrameLen);
 bool    pn53x_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, byte_t * pbtRx,
                           size_t * pszRx);

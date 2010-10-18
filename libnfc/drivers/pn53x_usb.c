@@ -229,7 +229,7 @@ pn53x_usb_connect (const nfc_device_desc_t * pndd, const char *target_name, int 
         PRINT_HEX ("RX", abtRx, ret);
 #endif
         if (ret == 6) { // we got the ACK/NACK properly
-          if (!pn53x_transceive_check_ack_frame_callback (pnd, abtRx, ret)) {
+          if (!pn53x_check_ack_frame_callback (pnd, abtRx, ret)) {
             DBG ("usb_bulk_read failed getting ACK");
             usb_close (us.pudh);
             // we failed to use the specified device
@@ -312,7 +312,7 @@ pn53x_usb_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szT
 #endif
 
   ret = usb_bulk_write (pus->pudh, pus->uiEndPointOut, (char *) abtTx, szTx + 7, USB_TIMEOUT);
-  // XXX This little hack is a well know problem of libusb, see http://www.libusb.org/ticket/6 for more details
+  // HACK This little hack is a well know problem of USB, see http://www.libusb.org/ticket/6 for more details
   if ((ret % pus->wMaxPacketSize) == 0) {
     usb_bulk_write (pus->pudh, pus->uiEndPointOut, "\0", 0, USB_TIMEOUT);
   }
@@ -335,7 +335,7 @@ pn53x_usb_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szT
   PRINT_HEX ("RX", abtRx, ret);
 #endif
 
-  if (!pn53x_transceive_check_ack_frame_callback (pnd, abtRx, ret))
+  if (!pn53x_check_ack_frame_callback (pnd, abtRx, ret))
     return false;
 
   ret = usb_bulk_read (pus->pudh, pus->uiEndPointIn, (char *) abtRx, BUFFER_LENGTH, USB_TIMEOUT);
@@ -355,7 +355,7 @@ pn53x_usb_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szT
 #endif
   usb_bulk_write (pus->pudh, pus->uiEndPointOut, (char *) ack_frame, 6, USB_TIMEOUT);
 
-  if (!pn53x_transceive_check_error_frame_callback (pnd, abtRx, ret))
+  if (!pn53x_check_error_frame_callback (pnd, abtRx, ret))
     return false;
 
   // When the answer should be ignored, just return a succesful result

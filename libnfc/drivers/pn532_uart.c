@@ -232,7 +232,7 @@ pn532_uart_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t sz
 #endif
 
   // WARN: UART is a per byte reception, so you usually receive ACK and next frame the same time
-  if (!pn53x_transceive_check_ack_frame_callback (pnd, abtRxBuf, szRxBufLen))
+  if (!pn53x_check_ack_frame_callback (pnd, abtRxBuf, szRxBufLen))
     return false;
   szRxBufLen -= sizeof (ack_frame);
   memmove (abtRxBuf, abtRxBuf + sizeof (ack_frame), szRxBufLen);
@@ -258,7 +258,7 @@ pn532_uart_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t sz
     return false;
   }
 
-  if (!pn53x_transceive_check_error_frame_callback (pnd, abtRxBuf, szRxBufLen))
+  if (!pn53x_check_error_frame_callback (pnd, abtRxBuf, szRxBufLen))
     return false;
 
   // When the answer should be ignored, just return a successful result
