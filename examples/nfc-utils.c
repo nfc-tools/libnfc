@@ -399,10 +399,6 @@ print_nfc_iso14443a_info (const nfc_iso14443a_info_t nai, bool verbose)
         printf("* Mifare Plus (4-byte UID) 2K/4K SL3\n");
         found_possible_match = true;
       break;
-      case 0x000488:
-        printf("* Mifare Classic 1K Infineon\n");
-        found_possible_match = true;
-      break;
       case 0x004400:
         printf("* Mifare Ultralight\n");
         printf("* Mifare UltralightC\n");
@@ -435,6 +431,41 @@ print_nfc_iso14443a_info (const nfc_iso14443a_info_t nai, bool verbose)
       break;
       case 0x034420:
         printf("* Mifare DESFire / Desfire EV1\n");
+        found_possible_match = true;
+      break;
+    }
+
+    // Other matches not described in
+    // AN MIFARE Type Identification Procedure
+    // but seen in the field:
+    switch (atqasak) {
+      case 0x000488:
+        printf("* Mifare Classic 1K Infineon\n");
+        found_possible_match = true;
+      break;
+      case 0x000298:
+        printf("* Gemplus MPCOS\n");
+        found_possible_match = true;
+      break;
+      case 0x030428:
+        printf("* JCOP31\n");
+        found_possible_match = true;
+      break;
+      case 0x004820:
+        printf("* JCOP31 v2.4.1\n");
+        printf("* JCOP31 v2.2\n");
+        found_possible_match = true;
+      break;
+      case 0x000428:
+        printf("* JCOP31 v2.3.1\n");
+        found_possible_match = true;
+      break;
+      case 0x000238:
+        printf("* MFC 4K emulated by Nokia 6212 Classic\n");
+        found_possible_match = true;
+      break;
+      case 0x000838:
+        printf("* MFC 4K emulated by Nokia 6131 NFC\n");
         found_possible_match = true;
       break;
     }
