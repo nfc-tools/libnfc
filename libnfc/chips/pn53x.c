@@ -526,7 +526,7 @@ pn53x_initiator_poll_targets (nfc_device_t * pnd,
   pn53x_target_type_t apttTargetTypes[32];
   for (size_t n=0; n<szModulations; n++) {
     apttTargetTypes[szTargetTypes] = pn53x_nm_to_ptt(pnmModulations[n]);
-    if( apttTargetTypes[szTargetTypes] == PTT_MIFARE ) { // Hack to have ATR
+    if ((pnd->bAutoIso14443_4) && (apttTargetTypes[szTargetTypes] == PTT_MIFARE)) { // Hack to have ATS
       apttTargetTypes[szTargetTypes] = PTT_ISO14443_4A_106;
       szTargetTypes++;
       apttTargetTypes[szTargetTypes] = PTT_MIFARE;

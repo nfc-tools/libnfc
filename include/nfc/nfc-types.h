@@ -189,7 +189,9 @@ typedef enum {
   NDO_ACCEPT_MULTIPLE_FRAMES = 0x31,
 /** This option can be used to enable or disable the auto-switching mode to
  * ISO14443-4 is device is compliant.
- * In initiator mode, it means that NFC chip will send RATS automatically.
+ * In initiator mode, it means that NFC chip will send RATS automatically when
+ * select and it will automatically poll for ISO14443-4 card when ISO14443A is
+ * requested.
  * In target mode, with a NFC chip compiliant (ie. PN532), the chip will
  * emulate a 14443-4 PICC using hardware capability */
   NDO_AUTO_ISO14443_4 = 0x40,
