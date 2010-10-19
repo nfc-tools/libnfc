@@ -67,7 +67,7 @@ main (int argc, const char *argv[])
     nfc_perror(pnd, "nfc_initiator_select_dep_target");
     return EXIT_FAILURE;
   }
-  print_nfc_target (nt);
+  print_nfc_target (nt, false);
 
   printf ("Sending: %s\n", abtTx);
   if (!nfc_initiator_transceive_bytes (pnd, abtTx, sizeof(abtTx), abtRx, &szRx)) {

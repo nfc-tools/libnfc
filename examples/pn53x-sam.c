@@ -192,7 +192,7 @@ main (int argc, const char *argv[])
       }
 
       printf ("The following ISO14443A tag (SAM) was found:\n\n");
-      print_nfc_iso14443a_info (nt.nti.nai);
+      print_nfc_iso14443a_info (nt.nti.nai, true);
     }
     break;
 

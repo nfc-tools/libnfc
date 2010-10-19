@@ -86,7 +86,7 @@ main (int argc, const char *argv[])
   printf ("Connected to NFC device: %s\n", pnd->acName);
 
   printf ("NFC device will now act as: ");
-  print_nfc_target (nt);
+  print_nfc_target (nt, false);
 
   printf ("Waiting for initiator request...\n");
   if(!nfc_target_init (pnd, &nt, abtRx, &szRx)) {

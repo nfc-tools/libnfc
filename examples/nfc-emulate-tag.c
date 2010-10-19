@@ -206,7 +206,7 @@ main (int argc, char *argv[])
 */
 
   printf ("%s will emulate this ISO14443-A tag:\n", argv[0]);
-  print_nfc_iso14443a_info( nt.nti.nai );
+  print_nfc_iso14443a_info( nt.nti.nai, false );
 
   printf ("NFC device (configured as target) is now emulating the tag, please touch it with a second NFC device (initiator)\n");
   if (!nfc_target_emulate_tag (pnd, &nt)) {

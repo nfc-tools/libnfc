@@ -55,17 +55,14 @@ main (int argc, const char *argv[])
   size_t  szDeviceFound;
   size_t  szTargetFound;
   size_t  i;
+  bool verbose = false;
   nfc_device_desc_t *pnddDevices;
 
   // Display libnfc version
   acLibnfcVersion = nfc_version ();
   printf ("%s use libnfc %s\n", argv[0], acLibnfcVersion);
 
-  pnddDevices = parse_device_desc (argc, argv, &szDeviceFound);
-
-  if (argc > 1 && szDeviceFound == 0) {
-    errx (1, "usage: %s [--device driver:port:speed]", argv[0]);
-  }
+  pnddDevices = parse_args (argc, argv, &szDeviceFound, &verbose);
 #ifdef HAVE_LIBUSB
 #  ifdef DEBUG
   usb_set_debug (4);
@@ -126,9 +123,11 @@ main (int argc, const char *argv[])
     };
     if (nfc_initiator_list_passive_targets (pnd, nm, ant, MAX_TARGET_COUNT, &szTargetFound)) {
       size_t  n;
-      printf ("%d ISO14443A passive target(s) was found%s\n", (int) szTargetFound, (szTargetFound == 0) ? ".\n" : ":");
+      if (verbose || (szTargetFound > 0)) {
+        printf ("%d ISO14443A passive target(s) was found%s\n", (int) szTargetFound, (szTargetFound == 0) ? ".\n" : ":");
+      }
       for (n = 0; n < szTargetFound; n++) {
-        print_nfc_iso14443a_info (ant[n].nti.nai);
+        print_nfc_iso14443a_info (ant[n].nti.nai, verbose);
         printf ("\n");
       }
     }
@@ -138,10 +137,12 @@ main (int argc, const char *argv[])
     // List Felica tags
     if (nfc_initiator_list_passive_targets (pnd, nm, ant, MAX_TARGET_COUNT, &szTargetFound)) {
       size_t  n;
-      printf ("%d Felica (212 kbps) passive target(s) was found%s\n", (int) szTargetFound,
-              (szTargetFound == 0) ? ".\n" : ":");
+      if (verbose || (szTargetFound > 0)) {
+        printf ("%d Felica (212 kbps) passive target(s) was found%s\n", (int) szTargetFound,
+                (szTargetFound == 0) ? ".\n" : ":");
+      }
       for (n = 0; n < szTargetFound; n++) {
-        print_nfc_felica_info (ant[n].nti.nfi);
+        print_nfc_felica_info (ant[n].nti.nfi, verbose);
         printf ("\n");
       }
     }
@@ -149,10 +150,12 @@ main (int argc, const char *argv[])
     nm.nbr = NBR_424;
     if (nfc_initiator_list_passive_targets (pnd, nm, ant, MAX_TARGET_COUNT, &szTargetFound)) {
       size_t  n;
-      printf ("%d Felica (424 kbps) passive target(s) was found%s\n", (int) szTargetFound,
-              (szTargetFound == 0) ? ".\n" : ":");
+      if (verbose || (szTargetFound > 0)) {
+        printf ("%d Felica (424 kbps) passive target(s) was found%s\n", (int) szTargetFound,
+                (szTargetFound == 0) ? ".\n" : ":");
+      }
       for (n = 0; n < szTargetFound; n++) {
-        print_nfc_felica_info (ant[n].nti.nfi);
+        print_nfc_felica_info (ant[n].nti.nfi, verbose);
         printf ("\n");
       }
     }
@@ -162,9 +165,11 @@ main (int argc, const char *argv[])
     // List ISO14443B targets
     if (nfc_initiator_list_passive_targets (pnd, nm, ant, MAX_TARGET_COUNT, &szTargetFound)) {
       size_t  n;
-      printf ("%d ISO14443B passive target(s) was found%s\n", (int) szTargetFound, (szTargetFound == 0) ? ".\n" : ":");
+      if (verbose || (szTargetFound > 0)) {
+        printf ("%d ISO14443B passive target(s) was found%s\n", (int) szTargetFound, (szTargetFound == 0) ? ".\n" : ":");
+      }
       for (n = 0; n < szTargetFound; n++) {
-        print_nfc_iso14443b_info (ant[n].nti.nbi);
+        print_nfc_iso14443b_info (ant[n].nti.nbi, verbose);
         printf ("\n");
       }
     }
@@ -174,9 +179,11 @@ main (int argc, const char *argv[])
     // List Jewel targets
     if (nfc_initiator_list_passive_targets(pnd, nm, ant, MAX_TARGET_COUNT, &szTargetFound )) {
       size_t n;
-      printf("%d Jewel passive target(s) was found%s\n", (int)szTargetFound, (szTargetFound==0)?".\n":":");
+      if (verbose || (szTargetFound > 0)) {
+        printf("%d Jewel passive target(s) was found%s\n", (int)szTargetFound, (szTargetFound==0)?".\n":":");
+      }
       for(n=0; n<szTargetFound; n++) {
-        print_nfc_jewel_info (ant[n].nti.nji);
+        print_nfc_jewel_info (ant[n].nti.nji, verbose);
         printf("\n");
       }
     }

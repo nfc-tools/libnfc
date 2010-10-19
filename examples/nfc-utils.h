@@ -34,14 +34,14 @@ void    print_hex (const byte_t * pbtData, const size_t szLen);
 void    print_hex_bits (const byte_t * pbtData, const size_t szBits);
 void    print_hex_par (const byte_t * pbtData, const size_t szBits, const byte_t * pbtDataPar);
 
-void    print_nfc_iso14443a_info (const nfc_iso14443a_info_t nai);
-void    print_nfc_iso14443b_info (const nfc_iso14443b_info_t nbi);
-void    print_nfc_felica_info (const nfc_felica_info_t nfi);
-void    print_nfc_jewel_info (const nfc_jewel_info_t nji);
-void    print_nfc_dep_info (const nfc_dep_info_t ndi);
+void    print_nfc_iso14443a_info (const nfc_iso14443a_info_t nai, bool verbose);
+void    print_nfc_iso14443b_info (const nfc_iso14443b_info_t nbi, bool verbose);
+void    print_nfc_felica_info (const nfc_felica_info_t nfi, bool verbose);
+void    print_nfc_jewel_info (const nfc_jewel_info_t nji, bool verbose);
+void    print_nfc_dep_info (const nfc_dep_info_t ndi, bool verbose);
 
-void    print_nfc_target (const nfc_target_t nt);
+void    print_nfc_target (const nfc_target_t nt, bool verbose);
 
-nfc_device_desc_t *parse_device_desc (int argc, const char *argv[], size_t * szFound);
+nfc_device_desc_t *parse_args (int argc, const char *argv[], size_t * szFound, bool * verbose);
 
 #endif

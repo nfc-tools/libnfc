@@ -46,7 +46,10 @@ main (int argc, const char *argv[])
 {
   size_t  szFound;
   size_t  i;
+  bool verbose = false;
   nfc_device_desc_t *pnddDevices;
+
+  pnddDevices = parse_args (argc, argv, &szFound, &verbose);
 
   // Display libnfc version
   const char *acLibnfcVersion = nfc_version ();
@@ -57,9 +60,11 @@ main (int argc, const char *argv[])
 
   printf ("%s use libnfc %s\n", argv[0], acLibnfcVersion);
 
-  if (!(pnddDevices = malloc (MAX_DEVICE_COUNT * sizeof (*pnddDevices)))) {
-    fprintf (stderr, "malloc() failed\n");
-    return EXIT_FAILURE;
+  if (szFound == 0) {
+    if (!(pnddDevices = malloc (MAX_DEVICE_COUNT * sizeof (*pnddDevices)))) {
+      fprintf (stderr, "malloc() failed\n");
+      return EXIT_FAILURE;
+    }
   }
 
   nfc_list_devices (pnddDevices, MAX_DEVICE_COUNT, &szFound);
@@ -118,7 +123,7 @@ main (int argc, const char *argv[])
       printf ("%ld target(s) have been found.\n", (unsigned long) szTargetFound);
       for (n = 0; n < szTargetFound; n++) {
         printf ("T%d: ", n + 1);
-        print_nfc_target ( antTargets[n] );
+        print_nfc_target ( antTargets[n], verbose );
 
       }
     } else {
