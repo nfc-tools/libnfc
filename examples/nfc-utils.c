@@ -460,6 +460,14 @@ print_nfc_iso14443a_info (const nfc_iso14443a_info_t nai, bool verbose)
         printf("* JCOP31 v2.3.1\n");
         found_possible_match = true;
       break;
+      case 0x000453:
+        printf("* Fudan FM1208SH01\n");
+        found_possible_match = true;
+      break;
+      case 0x000820:
+        printf("* Fudan FM1208\n");
+        found_possible_match = true;
+      break;
       case 0x000238:
         printf("* MFC 4K emulated by Nokia 6212 Classic\n");
         found_possible_match = true;
