@@ -240,7 +240,7 @@ print_nfc_iso14443a_info (const nfc_iso14443a_info_t nai, bool verbose)
           offset++;
           if (L != (nai.szAtsLen - offset)) {
             printf("    * Warning: Type Identification Coding length (%i)", L);
-            printf(" not matching Tk length (%i)\n", (nai.szAtsLen - offset));
+            printf(" not matching Tk length (%zi)\n", (nai.szAtsLen - offset));
           }
           if ((nai.szAtsLen - offset - 2) > 0) { // Omit 2 CRC bytes
             byte_t CTC = nai.abtAts[offset];
@@ -651,6 +651,9 @@ str_nfc_baud_rate (const nfc_baud_rate_t nbr)
     break;
     case NBR_424:
       return "424 kbps";
+    break;
+    case NBR_847:
+      return "847 kbps";
     break;
   }
   return "";
