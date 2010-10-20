@@ -2,13 +2,15 @@ New in 1.4.0:
 
 API Changes
 
-  * Types  
+  * Types
     - New nfc_device_option value (enum): NDO_FORCE_ISO14443_A to force the
       chip to switch in ISO14443-A
-    - New nfc_dep_mode_t (enum) for DEP mode: active/passive (or undefined)
-    - New nfc_modulation_type_t (enum) that lists modulation types like ISO/IEC
-      14443A, Jewel, FeliCa, etc.
-    - New nfc_baud_rate_t (enum): list of baud rates (eg. NBR_106 for 106 kbps)
+    - New nfc_dep_mode_t (enum) for DEP mode:
+        NDM_UNDEFINED, NDM_PASSIVE, NDM_ACTIVE
+    - New nfc_modulation_type_t (enum) that lists modulation types:
+        NMT_ISO14443A, NMT_ISO14443B, NMT_FELICA, NMT_JEWEL, NMT_DEP
+    - New nfc_baud_rate_t (enum): list of baud rates:
+        NBR_UNDEFINED, NBR_106, NBR_212, NBR_424, NBR_847
     - nfc_target_type_t have been removed from API (use nfc_modulation_t
       instead)
 

@@ -2,45 +2,43 @@ Oct 20, 2010 - 1.4.0
 --------------------
 
 Fixes:
- - pn53x_usb: fix ZLP USB issue
- - pn53x_usb: fix toggle bit USB issue
- - acr122: fixes escape ioctl under Linux
+ - libnfc/pn53x_usb: fix ZLP USB issue
+ - libnfc/pn53x_usb: workaround for PN532 toggle bit USB bug
+ - libnfc/pn53x_usb: fix timeout problem in emulation mode
+ - libnfc/pn53x_usb,pn532_uart,arygon: more robust recovery from unstable states such as interrupted emulation modes
+ - libnfc/acr122: fix escape ioctl under Linux
  - libnfc: fix Felica listing
- - libnfc: ISO14443B targets data is now correctly stored
+ - libnfc: fix storage of ISO14443B targets data
  - libnfc: fix MacOS build
- - nfc-anticol: now works even after running another program that change the modulation
+ - examples/nfc-anticol: fix bug preventing to run nfc-anticol after some other programs
+ - examples/nfc-anticol: fix display of UID
+ - ... and many other minor fixes
 
-Improvments:
+Improvements:
  - libnfc: major emulation improvements: libnfc can now be used to emulate ISO/IEC 14443 type A tag (MIFARE, ISO14443-4), FeliCa and D.E.P. target
  - libnfc: documentation improvements
- - libnfc: decode select/initialization datas for almost all supported target types (ISO14443 A/B, Jewel/Topaz, Felica)
+ - libnfc: decode select/initialization datas for almost all supported target types (ISO14443 A/B, Jewel/Topaz, FeliCa)
  - libnfc: add ISO/IEC 14443B baud rates: 212, 424 and 847 kbps
- - libnfc: cache some chip registers
+ - libnfc: cache some chip registers for faster communication
  - libnfc: greatly improved D.E.P. support
- - examples: print_iso14443b_info() now displays many decoded information
- - examples: print_iso14443a_info() now displays many decoded information and show attempt to determine tag name (using verbose mode)
- - examples: new pn53x-tamashell, a PN53x TAMA communication demonstration shell (support scripting)
+ - examples/nfc-utils: print_iso14443b_info() now displays many decoded information in verbose mode
+ - examples/nfc-utils: print_iso14443a_info() now displays many decoded information and shows attempt to determine tag name in verbose mode
+ - examples/nfc-list: new option -v for verbose mode
+ - examples/nfc-list: now support for Jewel/Topaz too
+ - examples/nfc-poll: now poll using all supported modulations
+ - examples/nfc-dep-target: add hack to allow to use two devices on the same machine (for tests/debug purpose)
+ - examples/pn53x-tamashell: New PN53x TAMA communication demonstration shell (support scripting)
+ - examples/nfc-relay-picc: New tool to relay ISO14443-4 communications (even over network... Enjoy!)
+ - examples/nfc-emulate-forum-tag4: New example to emulate a NFC Forum tag type 4
+ - examples/nfc-emulate-tag: New example to emulate tags
  - examples: add missing man pages
- - examples: new nfc-relay-picc to relay ISO14443-4 communications (even over network... Enjoy!)
- - nfc-dep-target: add an hack to allow to use two devices on the same machine (for tests/debug purpose)
- - nfc-poll: now poll using all supported modulations
-
+ - ... and many other minor improvements
 
 Changes:
- - API: nfc_target_info_t is not accessible anymore.  Use nfc_target_t's '.nti' if required;
- - API: (old) nfc_modulation_t renamed pn53x_modulation_t (not accessible from API);
- - API: nfc_target_type_t renamed pn53x_target_type_t (not accessible from API);
- - API: new nfc_modulation_type_t (NMT_ISO14443A, NMT_ISO14443B, NMT_FELICA, NMT_JEWEL, NMT_DEP);
- - API: new nfc_baud_rate_t (NBR_UNDEFINED, NBR_106, NBR_212, NBR_424);
- - API: new nfc_modulation_t composed, aggregation of nfc_modulation_type_t (.nmt) and a nfc_baud_rate_t (.nbr);
- - API: nfc_initiator_list_passive_targets() second arguments now expects a (new) nfc_modulation_t;
- - API: new nfc_dep_mode_t type to handle ACTIVE/PASSIVE mode of DEP;
- - examples: add new example to emulate an NFC Forum tag type 4 (nfc-emulate-forum-tag4)
+ - API: Many changes, see NEWS file for more info how to migrate
  - examples: nfcip-* renamed to nfc-dep-*
  - examples: nfc-sam renamed to pn53x-sam
  - examples: nfc-emulate renamed to nfc-emulate-uid
-
-Note: a NEWS file is now provided to help libnfc users to upgrade their code from old version to new one
 
 
 Aug 31, 2010 - 1.3.9
