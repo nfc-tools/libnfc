@@ -46,6 +46,8 @@ static byte_t abtRx[MAX_FRAME_LEN];
 static size_t szRxBits;
 static size_t szRx;
 static byte_t abtUid[10];
+static byte_t abtAtqa[2];
+static byte_t abtSak;
 static size_t szUidLen = 4;
 static nfc_device_t *pnd;
 
@@ -63,7 +65,7 @@ transmit_bits (const byte_t * pbtTx, const size_t szTxBits)
 {
   // Show transmitted command
   if (!quiet_output) {
-    printf ("Sent bits: ");
+    printf ("Sent bits:     ");
     print_hex_bits (pbtTx, szTxBits);
   }
   // Transmit the bit frame command, we don't use the arbitrary parity feature
@@ -85,7 +87,7 @@ transmit_bytes (const byte_t * pbtTx, const size_t szTx)
 {
   // Show transmitted command
   if (!quiet_output) {
-    printf ("Sent bits: ");
+    printf ("Sent bits:     ");
     print_hex (pbtTx, szTx);
   }
   // Transmit the command bytes
@@ -187,19 +189,23 @@ main (int argc, char *argv[])
     nfc_disconnect (pnd);
     return 1;
   }
+  memcpy (abtAtqa, abtRx, 2);
+
   // Anti-collision
   transmit_bytes (abtSelectAll, 2);
 
-  // Save the UID
-  memcpy (abtUid, abtRx, 4);
   memcpy (abtSelectTag + 2, abtRx, 5);
   append_iso14443a_crc (abtSelectTag, 7);
-  transmit_bytes (abtSelectTag, 9);
 
   // Test if we are dealing with a 4 bytes uid
-  if (abtUid[0] != 0x88) {
+  if (abtRx[0] != 0x88) {
+    // Save the UID
+    memcpy (abtUid, abtRx, 4);
     szUidLen = 4;
   } else {
+    // Save the first 3 bytes of UID
+    memcpy (abtUid, abtRx+1, 3);
+    transmit_bytes (abtSelectTag, 9);
     // We have to do the anti-collision for cascade level 2
     abtSelectAll[0] = 0x95;
     abtSelectTag[0] = 0x95;
@@ -207,13 +213,14 @@ main (int argc, char *argv[])
     // Anti-collision
     transmit_bytes (abtSelectAll, 2);
 
-    // Save the UID
-    memcpy (abtUid + 4, abtRx, 4);
+    // Save the second part of UID
+    memcpy (abtUid + 3, abtRx, 4);
     memcpy (abtSelectTag + 2, abtRx, 5);
     append_iso14443a_crc (abtSelectTag, 7);
-    transmit_bytes (abtSelectTag, 9);
     szUidLen = 7;
   }
+  transmit_bytes (abtSelectTag, 9);
+  abtSak = abtRx[0];
 
   // Request ATS, this only applies to tags that support ISO 14443A-4
   if (abtRx[0] & SAK_FLAG_ATS_SUPPORTED)
@@ -223,10 +230,11 @@ main (int argc, char *argv[])
   transmit_bytes (abtHalt, 4);
 
   printf ("\nFound tag with UID: ");
+  printf ("%02x%02x%02x%02x", abtUid[0], abtUid[1], abtUid[2], abtUid[3]);
   if (szUidLen == 7) {
-    printf ("%02x%02x%02x", abtUid[6], abtUid[5], abtUid[4]);
+    printf ("%02x%02x%02x", abtUid[4], abtUid[5], abtUid[6]);
   }
-  printf ("%02x%02x%02x%02x\n", abtUid[3], abtUid[2], abtUid[1], abtUid[0]);
+  printf(" ATQA: %02x%02x SAK: %02x\n", abtAtqa[1], abtAtqa[0], abtSak);
 
   nfc_disconnect (pnd);
   return 0;
