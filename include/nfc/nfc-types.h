@@ -305,6 +305,7 @@ typedef enum {
   NBR_106,
   NBR_212,
   NBR_424,
+  NBR_847,
 } nfc_baud_rate_t;
 
 /**

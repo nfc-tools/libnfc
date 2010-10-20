@@ -1521,6 +1521,9 @@ pn53x_nm_to_pm(const nfc_modulation_t nm)
         case NBR_424:
           return PM_ISO14443B_424;
         break;
+        case NBR_847:
+          return PM_ISO14443B_847;
+        break;
         case NBR_UNDEFINED:
           // XXX What to do ?
         break;
