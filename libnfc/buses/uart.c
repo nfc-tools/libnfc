@@ -99,7 +99,7 @@ uart_open (const char *pcPortName)
     return INVALID_SERIAL_PORT;
   }
 
-  tcflush (sp->fd, TCIFLUSH);
+  tcflush (sp->fd, TCIOFLUSH);
   return sp;
 }
 

@@ -70,7 +70,7 @@
 #define SERIAL_DEFAULT_PORT_SPEED 9600
 
 // TODO Move this one level up for libnfc-1.6
-static const byte_t ack_frame[] = { 0x00, 0x00, 0xff, 0x00, 0xff, 0x00 };
+static const byte_t ack_frame[] = { DEV_ARYGON_PROTOCOL_TAMA, 0x00, 0x00, 0xff, 0x00, 0xff, 0x00 };
 
 void    arygon_ack (const nfc_device_spec_t nds);
 bool    arygon_check_communication (const nfc_device_spec_t nds);
@@ -172,9 +172,6 @@ arygon_connect (const nfc_device_desc_t * pndd)
   DBG ("Attempt to connect to: %s at %d bauds.", pndd->pcPort, pndd->uiSpeed);
   sp = uart_open (pndd->pcPort);
 
-  // Send ACK frame to cancel a previous command
-  arygon_ack ((nfc_device_spec_t) sp);
-
   if (sp == INVALID_SERIAL_PORT)
     ERR ("Invalid serial port: %s", pndd->pcPort);
   if (sp == CLAIMED_SERIAL_PORT)
@@ -183,6 +180,9 @@ arygon_connect (const nfc_device_desc_t * pndd)
     return NULL;
 
   uart_set_speed (sp, pndd->uiSpeed);
+
+  // Send ACK frame to cancel a previous command
+  arygon_ack ((nfc_device_spec_t) sp);
 
   DBG ("Successfully connected to: %s", pndd->pcPort);
 
