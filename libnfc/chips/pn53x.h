@@ -101,6 +101,8 @@
  * @brief NFC modulation
  */
 typedef enum {
+  /** Undefined modulation */
+  PM_UNDEFINED = -1,
 /** ISO14443-A (NXP MIFARE) http://en.wikipedia.org/wiki/MIFARE */
   PM_ISO14443A_106 = 0x00,
 /** JIS X 6319-4 (Sony Felica) http://en.wikipedia.org/wiki/FeliCa */
@@ -124,6 +126,8 @@ typedef enum {
  * @brief NFC target type enumeration
  */
 typedef enum {
+  /** Undefined target type */
+  PTT_UNDEFINED = -1,
   /** Generic passive 106 kbps (ISO/IEC14443-4A, mifare, DEP) */
   PTT_GENERIC_PASSIVE_106 = 0x00,
   /** Generic passive 212 kbps (FeliCa, DEP) */

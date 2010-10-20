@@ -497,7 +497,11 @@ pn53x_initiator_select_passive_target (nfc_device_t * pnd,
   size_t  szTargetsData;
   byte_t  abtTargetsData[MAX_FRAME_LEN];
 
-  pn53x_modulation_t pm = pn53x_nm_to_pm(nm);
+  const pn53x_modulation_t pm = pn53x_nm_to_pm(nm);
+  if (PM_UNDEFINED == pm) {
+    pnd->iLastError = DENOTSUP;
+    return false;
+  }
   if (!pn53x_InListPassiveTarget (pnd, pm, 1, pbtInitData, szInitData, abtTargetsData, &szTargetsData))
     return false;
 
@@ -525,8 +529,13 @@ pn53x_initiator_poll_targets (nfc_device_t * pnd,
   size_t szTargetTypes = 0;
   pn53x_target_type_t apttTargetTypes[32];
   for (size_t n=0; n<szModulations; n++) {
-    apttTargetTypes[szTargetTypes] = pn53x_nm_to_ptt(pnmModulations[n]);
-    if ((pnd->bAutoIso14443_4) && (apttTargetTypes[szTargetTypes] == PTT_MIFARE)) { // Hack to have ATS
+    const pn53x_target_type_t ptt = pn53x_nm_to_ptt(pnmModulations[n]);
+    if (PTT_UNDEFINED == ptt) {
+      pnd->iLastError = DENOTSUP;
+      return false;
+    }
+    apttTargetTypes[szTargetTypes] = ptt;
+    if ((pnd->bAutoIso14443_4) && (ptt == PTT_MIFARE)) { // Hack to have ATS
       apttTargetTypes[szTargetTypes] = PTT_ISO14443_4A_106;
       szTargetTypes++;
       apttTargetTypes[szTargetTypes] = PTT_MIFARE;
@@ -962,6 +971,12 @@ pn53x_InJumpForDEP (nfc_device_t * pnd,
     case NBR_424:
       abtCmd[3] = 0x02; // baud rate is 424 kbps
     break;
+    case NBR_847:
+    case NBR_UNDEFINED:
+      // XXX Maybe we should put a "syntax error" or sth like that
+      pnd->iLastError = DENOTSUP;
+      return false;
+    break;
   }
 
   if (pbtPassiveInitiatorData && (ndm == NDM_PASSIVE)) {        /* can't have passive initiator data when using active mode */
@@ -976,6 +991,12 @@ pn53x_InJumpForDEP (nfc_device_t * pnd,
         abtCmd[4] |= 0x01;
         memcpy (abtCmd + offset, pbtPassiveInitiatorData, 5);
         offset += 5;
+      break;
+      case NBR_847:
+      case NBR_UNDEFINED:
+        // XXX Maybe we should put a "syntax error" or sth like that
+        pnd->iLastError = DENOTSUP;
+        return false;
       break;
     }
   }
@@ -1156,7 +1177,7 @@ pn53x_target_init (nfc_device_t * pnd, nfc_target_t * pnt, byte_t * pbtRx, size_
     case NMT_DEP:
       pn53x_set_parameter(pnd, PARAM_AUTO_ATR_RES, true);
       ptm = PTM_DEP_ONLY;
-      if (pnt->nti.ndi.ndm = NDM_PASSIVE) {
+      if (pnt->nti.ndi.ndm == NDM_PASSIVE) {
         ptm |= PTM_PASSIVE_ONLY; // We add passive mode restriction
       }
     break;
@@ -1501,7 +1522,6 @@ pn53x_target_send_bytes (nfc_device_t * pnd, const byte_t * pbtTx, const size_t 
   return true;
 }
 
-// FIXME How to handle corner case ?
 const pn53x_modulation_t
 pn53x_nm_to_pm(const nfc_modulation_t nm)
 {
@@ -1525,7 +1545,7 @@ pn53x_nm_to_pm(const nfc_modulation_t nm)
           return PM_ISO14443B_847;
         break;
         case NBR_UNDEFINED:
-          // XXX What to do ?
+          // Nothing to do...
         break;
       }
     break;
@@ -1543,15 +1563,19 @@ pn53x_nm_to_pm(const nfc_modulation_t nm)
           return PM_FELICA_424;
         break;
         case NBR_106:
+        case NBR_847:
         case NBR_UNDEFINED:
-          // XXX What to do ?
+          // Nothing to do...
         break;
       }
     break;
+    case NMT_DEP:
+      // Nothing to do...
+    break;
   }
+  return PM_UNDEFINED;
 }
 
-// FIXME How to handle corner case ?
 const nfc_modulation_t
 pn53x_ptt_to_nm( const pn53x_target_type_t ptt )
 {
@@ -1559,6 +1583,7 @@ pn53x_ptt_to_nm( const pn53x_target_type_t ptt )
     case PTT_GENERIC_PASSIVE_106:
     case PTT_GENERIC_PASSIVE_212:
     case PTT_GENERIC_PASSIVE_424:
+    case PTT_UNDEFINED:
       // XXX This should not happend, how handle it cleanly ?
     break;
 
@@ -1598,7 +1623,6 @@ pn53x_ptt_to_nm( const pn53x_target_type_t ptt )
   }
 }
 
-// FIXME How to handle corner case ?
 const pn53x_target_type_t
 pn53x_nm_to_ptt(const nfc_modulation_t nm)
 {
@@ -1612,6 +1636,12 @@ pn53x_nm_to_ptt(const nfc_modulation_t nm)
       switch(nm.nbr) {
         case NBR_106:
           return PTT_ISO14443_4B_106;
+        break;
+        case NBR_UNDEFINED:
+        case NBR_212:
+        case NBR_424:
+        case NBR_847:
+          // Nothing to do...
         break;
       }
     break;
@@ -1628,8 +1658,18 @@ pn53x_nm_to_ptt(const nfc_modulation_t nm)
         case NBR_424:
           return PTT_FELICA_424;
         break;
+        case NBR_UNDEFINED:
+        case NBR_106:
+        case NBR_847:
+          // Nothing to do...
+        break;
       }
     break;
+
+    case NMT_DEP:
+      // Nothing to do...
+    break;
   }
+  return PTT_UNDEFINED;
 }
 
