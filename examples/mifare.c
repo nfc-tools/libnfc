@@ -24,6 +24,7 @@ nfc_initiator_mifare_cmd (nfc_device_t * pnd, const mifare_cmd mc, const uint8_t
   size_t  szRx;
   size_t  szParamLen;
   byte_t  abtCmd[265];
+  bool    bEasyFraming;
 
   // Make sure we are dealing with a active device
   if (!pnd->bActive)
@@ -67,12 +68,23 @@ nfc_initiator_mifare_cmd (nfc_device_t * pnd, const mifare_cmd mc, const uint8_t
   if (szParamLen)
     memcpy (abtCmd + 2, (byte_t *) pmp, szParamLen);
 
+  bEasyFraming = pnd->bEasyFraming;
+  if (!nfc_configure (pnd, NDO_EASY_FRAMING, true)) {
+    nfc_perror (pnd, "nfc_configure");
+    return false;
+  }
   // Fire the mifare command
   if (!nfc_initiator_transceive_bytes (pnd, abtCmd, 2 + szParamLen, abtRx, &szRx)) {
     if (pnd->iLastError != 0x14)
       nfc_perror (pnd, "nfc_initiator_transceive_bytes");
+    nfc_configure (pnd, NDO_EASY_FRAMING, bEasyFraming);
     return false;
   }
+  if (!nfc_configure (pnd, NDO_EASY_FRAMING, bEasyFraming)) {
+    nfc_perror (pnd, "nfc_configure");
+    return false;
+  }
+
   // When we have executed a read command, copy the received bytes into the param
   if (mc == MC_READ) {
     if (szRx == 16) {
