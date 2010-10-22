@@ -37,10 +37,6 @@
 #  include <strings.h>
 #endif
 
-#ifdef _WIN32
-#  define bzero(a, b) memset(a, 0x00, b)
-#endif
-
 #include "arygon.h"
 
 #include <nfc/nfc-messages.h>
@@ -70,16 +66,22 @@
 #define SERIAL_DEFAULT_PORT_SPEED 9600
 
 // TODO Move this one level up for libnfc-1.6
-static const byte_t ack_frame[] = { DEV_ARYGON_PROTOCOL_TAMA, 0x00, 0x00, 0xff, 0x00, 0xff, 0x00 };
+static const byte_t pn53x_ack_frame[] = { 0x00, 0x00, 0xff, 0x00, 0xff, 0x00 };
+// XXX It seems that sending arygon_ack_frame to cancel current command is not allowed by ARYGON µC (see arygon_ack())
+// static const byte_t arygon_ack_frame[] = { DEV_ARYGON_PROTOCOL_TAMA, 0x00, 0x00, 0xff, 0x00, 0xff, 0x00 };
 
-void    arygon_ack (const nfc_device_spec_t nds);
+static const byte_t arygon_error_none[] = "FF000000\x0d\x0a";
+static const byte_t arygon_error_incomplete_command[] = "FF0C0000\x0d\x0a";
+static const byte_t arygon_error_unknown_mode[] = "FF060000\x0d\x0a";
+
+// void    arygon_ack (const nfc_device_spec_t nds);
+bool    arygon_reset_tama (const nfc_device_spec_t nds);
 bool    arygon_check_communication (const nfc_device_spec_t nds);
 
 /**
  * @note ARYGON-ADRA (PN531): ???,n,8,1
  * @note ARYGON-ADRB (PN532): 9600,n,8,1
  * @note ARYGON-APDA (PN531): 9600,n,8,1
- * @note ARYGON-APDB1UA33N (PN532): 115200,n,8,1
  * @note ARYGON-APDB2UA33 (PN532 + ARYGON µC): 9600,n,8,1
  */
 nfc_device_desc_t *
@@ -131,10 +133,7 @@ arygon_list_devices (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *
     if ((sp != INVALID_SERIAL_PORT) && (sp != CLAIMED_SERIAL_PORT)) {
       uart_set_speed (sp, SERIAL_DEFAULT_PORT_SPEED);
 
-      // Send ACK frame to cancel a previous command
-      arygon_ack ((nfc_device_spec_t) sp);
-  
-      if (!arygon_check_communication ((nfc_device_spec_t) sp))
+      if (!arygon_reset_tama((nfc_device_spec_t) sp))
         continue;
       uart_close (sp);
 
@@ -180,9 +179,9 @@ arygon_connect (const nfc_device_desc_t * pndd)
     return NULL;
 
   uart_set_speed (sp, pndd->uiSpeed);
-
-  // Send ACK frame to cancel a previous command
-  arygon_ack ((nfc_device_spec_t) sp);
+  if (!arygon_reset_tama((nfc_device_spec_t) sp)) {
+    return NULL;
+  }
 
   DBG ("Successfully connected to: %s", pndd->pcPort);
 
@@ -240,7 +239,7 @@ arygon_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, 
     return false;
   }
 #ifdef DEBUG
-  bzero (abtRxBuf, sizeof (abtRxBuf));
+  memset (abtRxBuf, 0x00, sizeof (abtRxBuf));
 #endif
   res = uart_receive ((serial_port) pnd->nds, abtRxBuf, &szRxBufLen);
   if (res != 0) {
@@ -256,8 +255,8 @@ arygon_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, 
   if (!pn53x_check_ack_frame_callback (pnd, abtRxBuf, szRxBufLen))
     return false;
 
-  szRxBufLen -= sizeof (ack_frame);
-  memmove (abtRxBuf, abtRxBuf + sizeof (ack_frame), szRxBufLen);
+  szRxBufLen -= sizeof (pn53x_ack_frame);
+  memmove (abtRxBuf, abtRxBuf + sizeof (pn53x_ack_frame), szRxBufLen);
 
   if (szRxBufLen == 0) {
     szRxBufLen = BUFFER_LENGTH;
@@ -288,29 +287,85 @@ arygon_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, 
   return true;
 }
 
+bool
+arygon_reset_tama(const nfc_device_spec_t nds)
+{
+  const byte_t arygon_reset_tama[] = { DEV_ARYGON_PROTOCOL_ARYGON_ASCII, 'a', 'r' };
+  byte_t abtRx[BUFFER_LENGTH];
+  size_t szRx;
+  int res;
+
+  // Sometimes the first byte we send is not well-transmited (ie. a previously sent data on a wrong baud rate can put some junk in buffer)
+#ifdef DEBUG
+  PRINT_HEX ("TX", arygon_reset_tama, sizeof (arygon_reset_tama));
+#endif
+  uart_send ((serial_port) nds, arygon_reset_tama, sizeof (arygon_reset_tama));
+
+  // Two reply are possible from ARYGON device: arygon_error_none (ie. in case the byte is well-sent)
+  // or arygon_error_unknown_mode (ie. in case of the first byte was bad-transmitted)
+  res = uart_receive ((serial_port) nds, abtRx, &szRx);
+  if (res != 0) {
+    return false;
+  }
+#ifdef DEBUG
+  PRINT_HEX ("RX", abtRx, szRx);
+#endif
+  if ( 0 == memcmp (abtRx, arygon_error_unknown_mode, sizeof (arygon_error_unknown_mode) - 1)) {
+    // HACK Here we are... the first byte wasn't sent as expected, so we resend the same command
+#ifdef DEBUG
+      PRINT_HEX ("TX", arygon_reset_tama, sizeof (arygon_reset_tama));
+#endif
+      uart_send ((serial_port) nds, arygon_reset_tama, sizeof (arygon_reset_tama));
+      res = uart_receive ((serial_port) nds, abtRx, &szRx);
+      if (res != 0) {
+        return false;
+      }
+#ifdef DEBUG
+      PRINT_HEX ("RX", abtRx, szRx);
+#endif
+  }
+  if (0 != memcmp (abtRx, arygon_error_none, sizeof (arygon_error_none) - 1)) {
+    return false;
+  }
+
+  return true;
+}
+
+/*
 void
 arygon_ack (const nfc_device_spec_t nds)
 {
+  byte_t abtRx[BUFFER_LENGTH];
+  size_t szRx;
 #ifdef DEBUG
-  PRINT_HEX ("TX", ack_frame, sizeof (ack_frame));
+  PRINT_HEX ("TX", arygon_ack_frame, sizeof (arygon_ack_frame));
 #endif
-  uart_send ((serial_port) nds, ack_frame, sizeof (ack_frame));
+  uart_send ((serial_port) nds, arygon_ack_frame, sizeof (arygon_ack_frame));
+  uart_receive ((serial_port) nds, abtRx, &szRx);
+#ifdef DEBUG
+  PRINT_HEX ("RX", abtRx, szRx);
+#endif
+  // ARYGON device will send an arygon_error_incomplete_command when sending an
+  // ACK frame, and I (Romuald) don't know if the command is sent to PN or not
+  if (0 != memcmp (abtRx, arygon_error_incomplete_command, sizeof (arygon_error_incomplete_command) - 1)) {
+    return false;
+  }
 }
+*/
 
 bool
 arygon_check_communication (const nfc_device_spec_t nds)
 {
   byte_t  abtRx[BUFFER_LENGTH];
   size_t  szRx;
-  const byte_t attempted_result[] =
-    { 0x00, 0x00, 0xff, 0x00, 0xff, 0x00, 0x00, 0x00, 0xff, 0x09, 0xf7, 0xd5, 0x01, 0x00, 'l', 'i', 'b', 'n', 'f', 'c',
-0xbc, 0x00 };
+  const byte_t attempted_result[] = { 0x00, 0x00, 0xff, 0x00, 0xff, 0x00, // ACK
+    0x00, 0x00, 0xff, 0x09, 0xf7, 0xd5, 0x01, 0x00, 'l', 'i', 'b', 'n', 'f', 'c', 0xbc, 0x00 }; // Reply
   int     res;
 
   /** To be sure that PN532 is alive, we have put a "Diagnose" command to execute a "Communication Line Test" */
   const byte_t pncmd_communication_test[] =
-    { DEV_ARYGON_PROTOCOL_TAMA, 0x00, 0x00, 0xff, 0x09, 0xf7, 0xd4, 0x00, 0x00, 'l', 'i', 'b', 'n', 'f', 'c', 0xbe,
-0x00 };
+    { DEV_ARYGON_PROTOCOL_TAMA, // Header to passthrough front ARYGON µC (== directly talk to PN53x)
+      0x00, 0x00, 0xff, 0x09, 0xf7, 0xd4, 0x00, 0x00, 'l', 'i', 'b', 'n', 'f', 'c', 0xbe, 0x00 };
 
 #ifdef DEBUG
   PRINT_HEX ("TX", pncmd_communication_test, sizeof (pncmd_communication_test));

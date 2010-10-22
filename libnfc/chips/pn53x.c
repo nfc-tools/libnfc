@@ -170,7 +170,7 @@ pn53x_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, b
   }
 
   *pszRx = MAX_FRAME_LEN;
-  // Call the tranceive callback function of the current device
+  // Call the transceive callback function of the current device
   if (!pnd->pdc->transceive (pnd, pbtTx, szTx, pbtRx, pszRx))
     return false;
   // TODO Put all these hex-coded command behind a human-readable #define (1.6.x)

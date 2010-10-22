@@ -35,7 +35,7 @@ AC_PATH_PROG(PKG_CONFIG, pkg-config, [AC_MSG_ERROR([pkg-config not found.])])
 AC_HEADER_STDC
 AC_HEADER_STDBOOL
 AC_CHECK_HEADERS([fcntl.h limits.h stdio.h stdlib.h stdint.h stddef.h stdbool.h sys/ioctl.h sys/param.h sys/time.h termios.h])
-AC_CHECK_FUNCS([bzero memmove memset select strdup strerror strstr strtol usleep],
+AC_CHECK_FUNCS([memmove memset select strdup strerror strstr strtol usleep],
 	       [AC_DEFINE([_XOPEN_SOURCE], [600], [Enable POSIX extensions if present])])
 
 AC_DEFINE(_NETBSD_SOURCE, 1, [Define on NetBSD to activate all library features])
