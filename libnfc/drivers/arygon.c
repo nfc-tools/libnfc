@@ -76,6 +76,8 @@ static const byte_t arygon_error_unknown_mode[] = "FF060000\x0d\x0a";
 
 // void    arygon_ack (const nfc_device_spec_t nds);
 bool    arygon_reset_tama (const nfc_device_spec_t nds);
+void    arygon_firmware (const nfc_device_spec_t nds, char * str);
+
 bool    arygon_check_communication (const nfc_device_spec_t nds);
 
 /**
@@ -138,12 +140,12 @@ arygon_list_devices (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *
       uart_close (sp);
 
       // ARYGON reader is found
-      snprintf (pnddDevices[*pszDeviceFound].acDevice, DEVICE_NAME_LENGTH - 1, "%s (%s)", "ARYGON", pcPort);
+      strncpy (pnddDevices[*pszDeviceFound].acDevice, "ARYGON", DEVICE_NAME_LENGTH - 1);
       pnddDevices[*pszDeviceFound].acDevice[DEVICE_NAME_LENGTH - 1] = '\0';
       pnddDevices[*pszDeviceFound].pcDriver = ARYGON_DRIVER_NAME;
       pnddDevices[*pszDeviceFound].pcPort = strdup (pcPort);
       pnddDevices[*pszDeviceFound].uiSpeed = SERIAL_DEFAULT_PORT_SPEED;
-      DBG ("Device found: %s.", pnddDevices[*pszDeviceFound].acDevice);
+      DBG ("Device found: %s (%s)", pnddDevices[*pszDeviceFound].acDevice, pcPort);
       (*pszDeviceFound)++;
 
       // Test if we reach the maximum "wanted" devices
@@ -187,9 +189,10 @@ arygon_connect (const nfc_device_desc_t * pndd)
 
   // We have a connection
   pnd = malloc (sizeof (nfc_device_t));
-  strncpy (pnd->acName, pndd->acDevice, DEVICE_NAME_LENGTH - 1);
+  char acFirmware[10];
+  arygon_firmware((nfc_device_spec_t) sp, acFirmware);
+  snprintf (pnd->acName, DEVICE_NAME_LENGTH - 1, "%s %s (%s)", pndd->acDevice, acFirmware, pndd->pcPort);
   pnd->acName[DEVICE_NAME_LENGTH - 1] = '\0';
-
   pnd->nc = NC_PN532;
   pnd->nds = (nfc_device_spec_t) sp;
   pnd->bActive = true;
@@ -287,19 +290,49 @@ arygon_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, 
   return true;
 }
 
-bool
-arygon_reset_tama(const nfc_device_spec_t nds)
+void
+arygon_firmware (const nfc_device_spec_t nds, char * str)
 {
-  const byte_t arygon_reset_tama[] = { DEV_ARYGON_PROTOCOL_ARYGON_ASCII, 'a', 'r' };
+  const byte_t arygon_firmware_version_cmd[] = { DEV_ARYGON_PROTOCOL_ARYGON_ASCII, 'a', 'v' }; 
+  byte_t abtRx[BUFFER_LENGTH];
+  size_t szRx;
+  int res;
+
+#ifdef DEBUG
+  PRINT_HEX ("TX", arygon_firmware_version_cmd, sizeof (arygon_firmware_version_cmd));
+#endif
+  uart_send ((serial_port) nds, arygon_firmware_version_cmd, sizeof (arygon_firmware_version_cmd));
+
+  res = uart_receive ((serial_port) nds, abtRx, &szRx);
+  if (res != 0) {
+    return;
+  }
+#ifdef DEBUG
+  PRINT_HEX ("RX", abtRx, szRx);
+#endif
+  if ( 0 == memcmp (abtRx, arygon_error_none, 6)) {
+    byte_t * p = abtRx + 6;
+    unsigned int szData;
+    sscanf (p, "%02x%s", &szData, p);
+    memcpy (str, p, szData);
+    p += szData;
+    *p = '\0';
+  }
+}
+
+bool
+arygon_reset_tama (const nfc_device_spec_t nds)
+{
+  const byte_t arygon_reset_tama_cmd[] = { DEV_ARYGON_PROTOCOL_ARYGON_ASCII, 'a', 'r' };
   byte_t abtRx[BUFFER_LENGTH];
   size_t szRx;
   int res;
 
   // Sometimes the first byte we send is not well-transmited (ie. a previously sent data on a wrong baud rate can put some junk in buffer)
 #ifdef DEBUG
-  PRINT_HEX ("TX", arygon_reset_tama, sizeof (arygon_reset_tama));
+  PRINT_HEX ("TX", arygon_reset_tama_cmd, sizeof (arygon_reset_tama_cmd));
 #endif
-  uart_send ((serial_port) nds, arygon_reset_tama, sizeof (arygon_reset_tama));
+  uart_send ((serial_port) nds, arygon_reset_tama_cmd, sizeof (arygon_reset_tama_cmd));
 
   // Two reply are possible from ARYGON device: arygon_error_none (ie. in case the byte is well-sent)
   // or arygon_error_unknown_mode (ie. in case of the first byte was bad-transmitted)
@@ -313,9 +346,9 @@ arygon_reset_tama(const nfc_device_spec_t nds)
   if ( 0 == memcmp (abtRx, arygon_error_unknown_mode, sizeof (arygon_error_unknown_mode) - 1)) {
     // HACK Here we are... the first byte wasn't sent as expected, so we resend the same command
 #ifdef DEBUG
-      PRINT_HEX ("TX", arygon_reset_tama, sizeof (arygon_reset_tama));
+      PRINT_HEX ("TX", arygon_reset_tama_cmd, sizeof (arygon_reset_tama_cmd));
 #endif
-      uart_send ((serial_port) nds, arygon_reset_tama, sizeof (arygon_reset_tama));
+      uart_send ((serial_port) nds, arygon_reset_tama_cmd, sizeof (arygon_reset_tama_cmd));
       res = uart_receive ((serial_port) nds, abtRx, &szRx);
       if (res != 0) {
         return false;
