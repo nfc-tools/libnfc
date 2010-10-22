@@ -109,7 +109,7 @@ void
 uart_set_speed (serial_port sp, const uint32_t uiPortSpeed)
 {
   long int iTimeout = UART_TIMEOUT(uiPortSpeed/9); // 8,n,1 => 9bits => ~ bauds/9
-  DBG ("Serial port speed requested to be set to %d bauds (%d µs).", uiPortSpeed, iTimeout);
+  DBG ("Serial port speed requested to be set to %d bauds (%ld µs).", uiPortSpeed, iTimeout);
   const serial_port_unix *spu = (serial_port_unix *) sp;
 
   // Portability note: on some systems, B9600 != 9600 so we have to do
@@ -243,7 +243,7 @@ uart_receive (serial_port sp, byte_t * pbtRx, size_t * pszRx)
     if (res == 0) {
       if (*pszRx == 0) {
         // Error, we received no data
-        DBG ("RX time-out (%d us), buffer empty.", default_timeout.tv_usec);
+        DBG ("RX time-out (%ld µs), buffer empty.", default_timeout.tv_usec);
         return DETIMEOUT;
       } else {
         // We received some data, but nothing more is available
