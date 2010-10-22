@@ -52,7 +52,7 @@ typedef struct {
 } serial_port_unix;
 
 // timeval struct that define timeout delay for serial port
-const struct timeval timeout = {
+static struct timeval default_timeout = {
   .tv_sec = 0,                  // 0 second
   .tv_usec = 60000              // 60 ms
 };
@@ -99,14 +99,17 @@ uart_open (const char *pcPortName)
     return INVALID_SERIAL_PORT;
   }
 
-  tcflush (sp->fd, TCIOFLUSH);
+  tcflush (sp->fd, TCIFLUSH);
   return sp;
 }
 
+// TODO Remove PN53x related timeout
+#define UART_TIMEOUT(X) ((X * 7) + 15000)     // 1-byte duration (µs) * 6+1 bytes (ACK + 1 other chance) + 15 ms (PN532 Tmax to reply ACK)
 void
 uart_set_speed (serial_port sp, const uint32_t uiPortSpeed)
 {
-  DBG ("Serial port speed requested to be set to %d bauds.", uiPortSpeed);
+  long int iTimeout = UART_TIMEOUT(uiPortSpeed/9); // 8,n,1 => 9bits => ~ bauds/9
+  DBG ("Serial port speed requested to be set to %d bauds (%d µs).", uiPortSpeed, iTimeout);
   const serial_port_unix *spu = (serial_port_unix *) sp;
 
   // Portability note: on some systems, B9600 != 9600 so we have to do
@@ -145,7 +148,10 @@ uart_set_speed (serial_port sp, const uint32_t uiPortSpeed)
   default:
     ERR ("Unable to set serial port speed to %d bauds. Speed value must be one of those defined in termios(3).",
          uiPortSpeed);
+    return;
   };
+  // Set default timeout
+  default_timeout.tv_usec = iTimeout;
 
   // Set port speed (Input and Output)
   cfsetispeed ((struct termios *) &(spu->tiNew), stPortSpeed);
@@ -225,7 +231,7 @@ uart_receive (serial_port sp, byte_t * pbtRx, size_t * pszRx)
     // Reset file descriptor
     FD_ZERO (&rfds);
     FD_SET (((serial_port_unix *) sp)->fd, &rfds);
-    tv = timeout;
+    tv = default_timeout;
     res = select (((serial_port_unix *) sp)->fd + 1, &rfds, NULL, NULL, &tv);
 
     // Read error
@@ -237,7 +243,7 @@ uart_receive (serial_port sp, byte_t * pbtRx, size_t * pszRx)
     if (res == 0) {
       if (*pszRx == 0) {
         // Error, we received no data
-        DBG ("%s", "RX time-out, buffer empty.");
+        DBG ("RX time-out (%d us), buffer empty.", default_timeout.tv_usec);
         return DETIMEOUT;
       } else {
         // We received some data, but nothing more is available
@@ -281,7 +287,7 @@ uart_send (serial_port sp, const byte_t * pbtTx, const size_t szTx)
     // Reset file descriptor
     FD_ZERO (&rfds);
     FD_SET (((serial_port_unix *) sp)->fd, &rfds);
-    tv = timeout;
+    tv = default_timeout;
     res = select (((serial_port_unix *) sp)->fd + 1, NULL, &rfds, NULL, &tv);
 
     // Write error
