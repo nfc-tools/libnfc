@@ -48,7 +48,7 @@ static size_t szRx;
 static byte_t abtUid[10];
 static byte_t abtAtqa[2];
 static byte_t abtSak;
-static size_t szUidLen = 4;
+static size_t szCL = 1;//Always start with Cascade Level 1 (CL1)
 static nfc_device_t *pnd;
 
 bool    quiet_output = false;
@@ -194,33 +194,64 @@ main (int argc, char *argv[])
   // Anti-collision
   transmit_bytes (abtSelectAll, 2);
 
-  memcpy (abtSelectTag + 2, abtRx, 5);
-  append_iso14443a_crc (abtSelectTag, 7);
-
-  // Test if we are dealing with a 4 bytes uid
+  // Test if we are dealing with a 4 bytes uid(CL1)
   if (abtRx[0] != 0x88) {
     // Save the UID
     memcpy (abtUid, abtRx, 4);
-    szUidLen = 4;
   } else {
     // Save the first 3 bytes of UID
     memcpy (abtUid, abtRx+1, 3);
-    transmit_bytes (abtSelectTag, 9);
+    szCL = 2;//or more
+  }
+
+  //Prepare and send CL1 Select-Command
+  memcpy (abtSelectTag + 2, abtRx, 5);
+  append_iso14443a_crc (abtSelectTag, 7);
+  transmit_bytes (abtSelectTag, 9);
+  abtSak = abtRx[0];
+
+  if(szCL == 2) {
     // We have to do the anti-collision for cascade level 2
+
+    // Prepare CL2 commands
     abtSelectAll[0] = 0x95;
     abtSelectTag[0] = 0x95;
 
     // Anti-collision
     transmit_bytes (abtSelectAll, 2);
 
-    // Save the second part of UID
-    memcpy (abtUid + 3, abtRx, 4);
+    if(abtRx[0] != 0x88) {
+      // Save the second part of UID
+      memcpy (abtUid + 3, abtRx, 4);
+    } else {
+      memcpy (abtUid + 3, abtRx + 1, 3);
+      szCL = 3;
+    }
+    
+    // Selection   
     memcpy (abtSelectTag + 2, abtRx, 5);
     append_iso14443a_crc (abtSelectTag, 7);
-    szUidLen = 7;
+    transmit_bytes (abtSelectTag, 9);
+    abtSak = abtRx[0];
+
+    if ( szCL == 3) {
+      // Do last CL
+      
+      // Save the last part of UID
+      memcpy (abtUid + 6, abtRx, 4);
+
+      // Prepare and send CL3 AC-Command
+      abtSelectAll[0] = 0x97;
+      transmit_bytes (abtSelectAll, 2);
+
+      // Prepare and send final Select-Command
+      abtSelectTag[0] = 0x97;
+      memcpy (abtSelectTag + 2, abtRx, 5);
+      append_iso14443a_crc (abtSelectTag, 7);
+      transmit_bytes (abtSelectTag, 9);     
+      abtSak = abtRx[0];
+    }
   }
-  transmit_bytes (abtSelectTag, 9);
-  abtSak = abtRx[0];
 
   // Request ATS, this only applies to tags that support ISO 14443A-4
   if (abtRx[0] & SAK_FLAG_ATS_SUPPORTED)
@@ -229,12 +260,16 @@ main (int argc, char *argv[])
   // Done, halt the tag now
   transmit_bytes (abtHalt, 4);
 
-  printf ("\nFound tag with UID: ");
+  printf ("\nFound tag with\n UID: ");
   printf ("%02x%02x%02x%02x", abtUid[0], abtUid[1], abtUid[2], abtUid[3]);
-  if (szUidLen == 7) {
+  if (szCL > 1) {
     printf ("%02x%02x%02x", abtUid[4], abtUid[5], abtUid[6]);
+    if (szCL > 2) {
+      printf("%02x%02x%02x", abtUid[7], abtUid[8], abtUid[9]);
+    }
   }
-  printf(" ATQA: %02x%02x SAK: %02x\n", abtAtqa[1], abtAtqa[0], abtSak);
+  printf("\n");
+  printf("ATQA: %02x%02x\n SAK: %02x\n", abtAtqa[1], abtAtqa[0], abtSak);
 
   nfc_disconnect (pnd);
   return 0;
