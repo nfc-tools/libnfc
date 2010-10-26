@@ -1,15 +1,15 @@
-Oct 20, 2010 - 1.4.0
+Oct 26, 2010 - 1.4.0
 --------------------
 
 Fixes:
- - libnfc/pn53x_usb: fix ZLP USB issue
- - libnfc/pn53x_usb: workaround for PN532 toggle bit USB bug
- - libnfc/pn53x_usb: fix timeout problem in emulation mode
- - libnfc/pn53x_usb,pn532_uart,arygon: more robust recovery from unstable states such as interrupted emulation modes
- - libnfc/acr122: fix escape ioctl under Linux
  - libnfc: fix Felica listing
  - libnfc: fix storage of ISO14443B targets data
  - libnfc: fix MacOS build
+ - drivers/pn53x_usb: fix ZLP USB issue
+ - drivers/pn53x_usb: workaround for PN532 toggle bit USB bug
+ - drivers/pn53x_usb: fix timeout problem in emulation mode
+ - drivers/pn53x_usb,pn532_uart,arygon: more robust recovery from unstable states such as interrupted emulation modes
+ - drivers/acr122: fix escape ioctl under Linux
  - examples/nfc-anticol: fix bug preventing to run nfc-anticol after some other programs
  - examples/nfc-anticol: fix display of UID
  - ... and many other minor fixes
@@ -21,6 +21,9 @@ Improvements:
  - libnfc: add ISO/IEC 14443B baud rates: 212, 424 and 847 kbps
  - libnfc: cache some chip registers for faster communication
  - libnfc: greatly improved D.E.P. support
+ - buses/uart: adjust UART's timeouts from baud rate: faster communication at high speed and more reliable at low speed (affect pn532_uart and arygon drivers)
+ - examples/nfc-anticol: adds support for CL3
+ - examples/nfc-anticol: cascade based on SAK rather than CT, better for educational purpose
  - examples/nfc-utils: print_iso14443b_info() now displays many decoded information in verbose mode
  - examples/nfc-utils: print_iso14443a_info() now displays many decoded information and shows attempt to determine tag name in verbose mode
  - examples/nfc-list: new option -v for verbose mode
