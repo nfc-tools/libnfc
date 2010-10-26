@@ -57,8 +57,8 @@ bool    quiet_output = false;
 byte_t  abtReqa[1] = { 0x26 };
 byte_t  abtSelectAll[2] = { 0x93, 0x20 };
 byte_t  abtSelectTag[9] = { 0x93, 0x70, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-byte_t  abtRats[4] = { 0xe0, 0x50, 0xbc, 0xa5 };
-byte_t  abtHalt[4] = { 0x50, 0x00, 0x57, 0xcd };
+byte_t  abtRats[4] = { 0xe0, 0x50, 0x00, 0x00 };
+byte_t  abtHalt[4] = { 0x50, 0x00, 0x00, 0x00 };
 #define CASCADE_BIT 0x04
 
 static  bool
@@ -275,10 +275,13 @@ main (int argc, char *argv[])
   }
 
   // Request ATS, this only applies to tags that support ISO 14443A-4
-  if (abtRx[0] & SAK_FLAG_ATS_SUPPORTED)
+  if (abtRx[0] & SAK_FLAG_ATS_SUPPORTED) {
+    append_iso14443a_crc(abtRats, 2);
     transmit_bytes (abtRats, 4);
+  }
 
   // Done, halt the tag now
+  append_iso14443a_crc(abtHalt, 2);
   transmit_bytes (abtHalt, 4);
 
   printf ("\nFound tag with\n UID: ");
