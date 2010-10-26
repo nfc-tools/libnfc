@@ -22,8 +22,20 @@ Description: Near Field Communication library (development files)
  devices are, theorically, all hardware based on the NXP PN531, PN532 or PN533 NFC 
  controller chip.
 
+Package: libnfc-bin
+Architecture: any
+Depends: libnfc0
+Description: Near Field Communication binaries
+ Some binaries are provided with libnfc useful for developement (nfc-list, nfc-mfclassic, nfc-mfultralight, etc.).
+
 Package: libnfc-examples
 Architecture: any
 Depends: libnfc0
 Description: Near Field Communication examples
- Some examples are provided with libnfc to show basics functions (nfc-list, nfc-anticol, etc.).
+ Some examples are provided with libnfc for debugging and/or educational purpose (nfc-anticol, nfc-emulate, etc.).
+
+Package: libnfc-pn53x-examples
+Architecture: any
+Depends: libnfc0
+Description: Near Field Communication examples for PN53x chips only
+ Some PN53x-only examples are provided with libnfc for debugging and/or educational purpose (pn53x-sam, pn53x-tamashell, etc.).

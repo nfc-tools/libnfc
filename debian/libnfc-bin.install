@@ -1,0 +1,6 @@
+debian/tmp/usr/bin/nfc-list
+debian/tmp/usr/bin/nfc-mfclassic
+debian/tmp/usr/bin/nfc-mfultralight
+debian/tmp/usr/share/man/man1/nfc-list.1
+debian/tmp/usr/share/man/man1/nfc-mfclassic.1
+debian/tmp/usr/share/man/man1/nfc-mfultralight.1
