@@ -162,14 +162,13 @@ main (int argc, char *argv[])
       print_usage (argv);
       return EXIT_SUCCESS;
     } else if (0 == strcmp (argv[arg], "-q")) {
-      INFO ("%s", "Quiet mode.");
       quiet_output = true;
     } else if (0 == strcmp (argv[arg], "-t")) {
-      INFO ("%s", "Target mode only.");
+      printf ("INFO: %s\n", "Target mode only.");
       initiator_only_mode = false;
       target_only_mode = true;
     } else if (0 == strcmp (argv[arg], "-i")) {
-      INFO ("%s", "Initiator mode only.");
+      printf ("INFO: %s\n", "Initiator mode only.");
       initiator_only_mode = true;
       target_only_mode = false;
     } else if (0 == strcmp (argv[arg], "-n")) {
@@ -178,7 +177,7 @@ main (int argc, char *argv[])
         print_usage (argv);
         return EXIT_FAILURE;
       }
-      INFO ("Waiting time: %i secs.", waiting_time);
+      printf ("Waiting time: %i secs.\n", waiting_time);
     } else {
       ERR ("%s is not supported option.", argv[arg]);
       print_usage (argv);

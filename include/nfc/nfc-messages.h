@@ -17,10 +17,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  * 
  * 
- * @file messages.h
- * @brief
+ * @file nfc-messages.h
+ * @brief Printing macros
  */
-
+// TODO remove this file from installed headers.
 #ifndef _LIBNFC_MESSAGES_H_
 #  define _LIBNFC_MESSAGES_H_
 
@@ -39,7 +39,6 @@
 #    define DBG(...) {}
 #  endif
 
-#  define INFO(...) warnx ("INFO: " __VA_ARGS__ )
 #  define WARN(...) warnx ("WARNING: " __VA_ARGS__ )
 #  define ERR(...)  warnx ("ERROR: " __VA_ARGS__ )
 

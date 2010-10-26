@@ -124,7 +124,6 @@ main (int argc, char *argv[])
       print_usage (argv);
       exit(EXIT_SUCCESS);
     } else if (0 == strcmp (argv[arg], "-q")) {
-      INFO ("%s", "Quiet mode.");
       quiet_output = true;
     } else {
       ERR ("%s is not supported option.", argv[arg]);

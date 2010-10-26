@@ -101,7 +101,7 @@ main (int argc, const char *argv[])
   }
 
   if (szDeviceFound == 0) {
-    INFO ("%s", "No device found.");
+    printf ("No NFC device found.\n");
   }
 
   for (i = 0; i < szDeviceFound; i++) {

@@ -65,7 +65,7 @@ main (int argc, const char *argv[])
   nfc_list_devices (pnddDevices, MAX_DEVICE_COUNT, &szFound);
 
   if (szFound == 0) {
-    INFO ("%s", "No device found.");
+    printf ("No NFC device found.\n");
   }
 
   for (i = 0; i < szFound; i++) {
