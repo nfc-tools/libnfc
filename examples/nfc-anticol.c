@@ -204,7 +204,7 @@ main (int argc, char *argv[])
 
   //Prepare and send CL1 Select-Command
   memcpy (abtSelectTag + 2, abtRx, 5);
-  append_iso14443a_crc (abtSelectTag, 7);
+  iso14443a_crc_append (abtSelectTag, 7);
   transmit_bytes (abtSelectTag, 9);
   abtSak = abtRx[0];
 
@@ -237,7 +237,7 @@ main (int argc, char *argv[])
     // Selection
     abtSelectTag[0] = 0x95;
     memcpy (abtSelectTag + 2, abtRx, 5);
-    append_iso14443a_crc (abtSelectTag, 7);
+    iso14443a_crc_append (abtSelectTag, 7);
     transmit_bytes (abtSelectTag, 9);
     abtSak = abtRx[0];
 
@@ -268,7 +268,7 @@ main (int argc, char *argv[])
       // Prepare and send final Select-Command
       abtSelectTag[0] = 0x97;
       memcpy (abtSelectTag + 2, abtRx, 5);
-      append_iso14443a_crc (abtSelectTag, 7);
+      iso14443a_crc_append (abtSelectTag, 7);
       transmit_bytes (abtSelectTag, 9);
       abtSak = abtRx[0];
     }
@@ -276,12 +276,12 @@ main (int argc, char *argv[])
 
   // Request ATS, this only applies to tags that support ISO 14443A-4
   if (abtRx[0] & SAK_FLAG_ATS_SUPPORTED) {
-    append_iso14443a_crc(abtRats, 2);
+    iso14443a_crc_append(abtRats, 2);
     transmit_bytes (abtRats, 4);
   }
 
   // Done, halt the tag now
-  append_iso14443a_crc(abtHalt, 2);
+  iso14443a_crc_append(abtHalt, 2);
   transmit_bytes (abtHalt, 4);
 
   printf ("\nFound tag with\n UID: ");

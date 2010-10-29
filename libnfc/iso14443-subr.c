@@ -48,7 +48,7 @@ iso14443a_crc (byte_t * pbtData, size_t szLen, byte_t * pbtCrc)
 }
 
 void
-append_iso14443a_crc (byte_t * pbtData, size_t szLen)
+iso14443a_crc_append (byte_t * pbtData, size_t szLen)
 {
   iso14443a_crc (pbtData, szLen, pbtData + szLen);
 }

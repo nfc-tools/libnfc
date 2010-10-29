@@ -55,6 +55,7 @@ API Changes
       see API documentation
     - nfc_target_init() have an additional argument: nfc_target_t to describe
       the wanted target
+    - append_iso14443a_crc() was renamed to iso14443a_crc_append()
     - New iso14443a_locate_historical_bytes() to locate historical bytes in ATS
 
 
