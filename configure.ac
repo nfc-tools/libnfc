@@ -29,7 +29,10 @@ case "$host" in
    ;;
 esac
 
-AC_PATH_PROG(PKG_CONFIG, pkg-config, [AC_MSG_ERROR([pkg-config not found.])])
+AC_PATH_PROG(PKG_CONFIG, pkg-config)
+if test x"$PKG_CONFIG" = x""; then
+    AC_MSG_ERROR([pkg-config not found.])
+fi
 
 # Checks for header files.
 AC_HEADER_STDC
