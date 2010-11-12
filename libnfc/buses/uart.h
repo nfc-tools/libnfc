@@ -68,7 +68,7 @@
   // XXX: Not tested
 #    define DEFAULT_SERIAL_PORTS { "/dev/cuau0", "/dev/cuau1", "/dev/cuau2", "/dev/cuau3", NULL }
 #  elif defined (__linux__)
-#    define DEFAULT_SERIAL_PORTS { "/dev/ttyUSB0", "/dev/ttyUSB1", "/dev/ttyUSB2", "/dev/ttyUSB3", "/dev/tty0", "/dev/tty1", "/dev/tty2", "/dev/tty3", NULL }
+#    define DEFAULT_SERIAL_PORTS { "/dev/ttyUSB0", "/dev/ttyUSB1", "/dev/ttyUSB2", "/dev/ttyUSB3", "/dev/ttyS0", "/dev/ttyS1", "/dev/ttyS2", "/dev/ttyS3", NULL }
 #  else
 #    error "Can't determine serial string for your system"
 #  endif
