@@ -45,11 +45,13 @@ pn533_usb_pick_device (void)
 
     if (!pn533_usb_list_devices (pndd, 1, &szN)) {
       DBG ("%s", "pn533_usb_list_devices failed");
+      free (pndd);
       return NULL;
     }
 
     if (szN == 0) {
       DBG ("%s", "No device found");
+      free (pndd);
       return NULL;
     }
   }

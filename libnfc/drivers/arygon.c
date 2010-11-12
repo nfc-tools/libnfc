@@ -96,11 +96,13 @@ arygon_pick_device (void)
 
     if (!arygon_list_devices (pndd, 1, &szN)) {
       DBG ("%s", "arygon_list_devices failed");
+      free (pndd);
       return NULL;
     }
 
     if (szN == 0) {
       DBG ("%s", "No device found");
+      free (pndd);
       return NULL;
     }
   }
