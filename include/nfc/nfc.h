@@ -110,6 +110,36 @@ extern  "C" {
   NFC_EXPORT byte_t * iso14443a_locate_historical_bytes (byte_t * pbtAts, size_t szAts, size_t * pszTk);
   NFC_EXPORT const char *nfc_version (void);
 
+/* PN53x specific errors */
+// TODO: Be not PN53x-specific here
+#define ETIMEOUT	0x01
+#define ECRC		0x02
+#define EPARITY		0x03
+#define EBITCOUNT	0x04
+#define EFRAMING	0x05
+#define EBITCOLL	0x06
+#define ESMALLBUF	0x07
+#define EBUFOVF		0x09
+#define ERFTIMEOUT	0x0a
+#define ERFPROTO	0x0b
+#define EOVHEAT		0x0d
+#define EINBUFOVF	0x0e
+#define EINVPARAM	0x10
+#define EDEPUNKCMD	0x12
+#define EINVRXFRAM	0x13
+#define EMFAUTH		0x14
+#define ENSECNOTSUPP	0x18	// PN533
+#define EBCC		0x23
+#define EDEPINVSTATE	0x25
+#define EOPNOTALL	0x26
+#define ECMD		0x27
+#define ETGREL		0x29
+#define ECID		0x2a
+#define ECDISCARDED	0x2b
+#define ENFCID3		0x2c
+#define EOVCURRENT	0x2d
+#define ENAD		0x2e
+
 /* Common device-level errors */
 #  define DEIO            0x1000/* Input/output error */
 #  define DEINVAL         0x2000/* Invalid argument */

@@ -176,22 +176,22 @@ pn53x_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, b
   // TODO Put all these hex-coded command behind a human-readable #define (1.6.x)
   // Should be proceed while we will fix Issue 110 (Rework the way that pn53x commands are built)
   switch (pbtTx[1]) {
-  case 0x16:                   // PowerDown
-  case 0x40:                   // InDataExchange
-  case 0x42:                   // InCommunicateThru
-  case 0x44:                   // InDeselect
-  case 0x46:                   // InJumpForPSL
-  case 0x4e:                   // InPSL
-  case 0x50:                   // InATR
-  case 0x52:                   // InRelease
-  case 0x54:                   // InSelect
-  case 0x56:                   // InJumpForDEP
-  case 0x86:                   // TgGetData
-  case 0x88:                   // TgGetInitiatorCommand
-  case 0x8e:                   // TgSetData
-  case 0x90:                   // TgResponseToInitiator
-  case 0x92:                   // TgSetGeneralBytes
-  case 0x94:                   // TgSetMetaData
+    case 0x16:                   // PowerDown
+    case 0x40:                   // InDataExchange
+    case 0x42:                   // InCommunicateThru
+    case 0x44:                   // InDeselect
+    case 0x46:                   // InJumpForPSL
+    case 0x4e:                   // InPSL
+    case 0x50:                   // InATR
+    case 0x52:                   // InRelease
+    case 0x54:                   // InSelect
+    case 0x56:                   // InJumpForDEP
+    case 0x86:                   // TgGetData
+    case 0x88:                   // TgGetInitiatorCommand
+    case 0x8e:                   // TgSetData
+    case 0x90:                   // TgResponseToInitiator
+    case 0x92:                   // TgSetGeneralBytes
+    case 0x94:                   // TgSetMetaData
     pnd->iLastError = pbtRx[0] & 0x3f;
     break;
   default:
@@ -709,51 +709,50 @@ static struct sErrorMessage {
   const char *pcErrorMsg;
 } sErrorMessages[] = {
   /* Chip-level errors */
-  {
-  0x00, "Success"}, {
-  0x01, "Timeout"}, {
-  0x02, "CRC Error"}, {
-  0x03, "Parity Error"}, {
-  0x04, "Erroneous Bit Count"}, {
-  0x05, "Framing Error"}, {
-  0x06, "Bit-collision"}, {
-  0x07, "Buffer Too Small"}, {
-  0x09, "Buffer Overflow"}, {
-  0x0a, "Timeout"}, {
-  0x0b, "Protocol Error"}, {
-  0x0d, "Overheating"}, {
-  0x0e, "Internal Buffer overflow."}, {
-  0x10, "Invalid Parameter"},
+  { 0x00, "Success" },
+  { ETIMEOUT, "Timeout" },			// Time Out, the target has not answered
+  { ECRC,     "CRC Error" },			// A CRC error has been detected by the CIU
+  { EPARITY,  "Parity Error" },			// A Parity error has been detected by the CIU
+  { EBITCOUNT, "Erroneous Bit Count" },		// During an anti-collision/select operation (ISO/IEC14443-3 Type A and ISO/IEC18092 106 kbps passive mode), an erroneous Bit Count has been detected
+  { EFRAMING, "Framing Error" },		// Framing error during MIFARE operation
+  { EBITCOLL, "Bit-collision" },		// An abnormal bit-collision has been detected during bit wise anti-collision at 106 kbps
+  { ESMALLBUF, "Communication Buffer Too Small" },	// Communication buffer size insufficient
+  { EBUFOVF, "Buffer Overflow" },		// RF Buffer overflow has been detected by the CIU (bit BufferOvfl of the register CIU_Error)
+  { ERFTIMEOUT, "RF Timeout" },			// In active communication mode, the RF field has not been switched on in time by the counterpart (as defined in NFCIP-1 standard)
+  { ERFPROTO, "RF Protocol Error" },		// RF Protocol error (see PN53x manual)
+  { EOVHEAT, "Chip Overheating" },		// Temperature error: the internal temperature sensor has detected overheating, and therefore has automatically switched off the antenna drivers
+  { EINBUFOVF, "Internal Buffer overflow."},	// Internal buffer overflow
+  { EINVPARAM, "Invalid Parameter"},		// Invalid parameter (range, format, …)
     /* DEP Errors */
-  {
-  0x12, "Unknown DEP Command"}, {
-  0x13, "Invalid Parameter"},
+  { EDEPUNKCMD, "Unknown DEP Command" },
     /* MIFARE */
-  {
-  0x14, "Authentication Error"},
+  { EMFAUTH, "Mifare Authentication Error" },
     /*  */
-  {
-  0x23, "Wrong ISO/IEC14443-3 Check Byte"}, {
-  0x25, "Invalid State"}, {
-  0x26, "Operation Not Allowed"}, {
-  0x27, "Command Not Acceptable"}, {
-  0x29, "Target Released"}, {
-  0x2a, "Card ID Mismatch"}, {
-  0x2B, "Card Discarded"}, {
-  0x2C, "NFCID3 Mismatch"}, {
-  0x2D, "Over Current"}, {
-  0x2E, "NAD Missing in DEP Frame"},
+  { EINVRXFRAM, "Invalid Received Frame" },	// DEP Protocol, Mifare or ISO/IEC14443-4: The data format does not match to the specification.
+  { ENSECNOTSUPP, "NFC Secure not supported" },	// Target or Initiator does not support NFC Secure
+  { EBCC, "Wrong UID Check Byte (BCC)" },	// ISO/IEC14443-3: UID Check byte is wrong
+  { EDEPINVSTATE, "Invalid DEP State" },	// DEP Protocol: Invalid device state, the system is in a state which does not allow the operation
+  { EOPNOTALL, "Operation Not Allowed" },	// Operation not allowed in this configuration (host controller interface)
+  { ECMD, "Command Not Acceptable" },		// Command is not acceptable due to the current context
+  { ETGREL, "Target Released" },		// Target have been released by initiator
+    // FIXME: Errors can be grouped (DEP-related, MIFARE-related, ISO14443B-related, etc.)
+    // Purposal: Use prefix/suffix to identify them
+  { ECID, "Card ID Mismatch" },			// ISO14443 type B: Card ID mismatch, meaning that the expected card has been exchanged with another one.
+  { ECDISCARDED, "Card Discarded" },		// ISO/IEC14443 type B: the card previously activated has disappeared.
+  { ENFCID3, "NFCID3 Mismatch" },
+  { EOVCURRENT, "Over Current"  },
+  { ENAD, "NAD Missing in DEP Frame" },
     /* Driver-level error */
-  {
-  DENACK, "Received NACK"}, {
-  DEACKMISMATCH, "Expected ACK/NACK"}, {
-  DEISERRFRAME, "Received an error frame"},
+  { DENACK, "Received NACK" },
+  { DEACKMISMATCH, "Expected ACK/NACK" },
+  { DEISERRFRAME, "Received an error frame" },
     // TODO: Move me in more generic code for libnfc 1.6
-  {
-  DEINVAL, "Invalid argument"}, {
-  DEIO, "Input/output error"}, {
-  DETIMEOUT, "Operation timed-out"}, {
-  DENOTSUP, "Operation not supported"}
+    // FIXME: Driver-errors and Device-errors have the same prefix (DE*)
+    // eg. DENACK means Driver Error NACK while DEIO means Device Error I/O
+  { DEINVAL, "Invalid argument" },
+  { DEIO, "Input/output error" },
+  { DETIMEOUT, "Operation timed-out" },
+  { DENOTSUP, "Operation not supported" }
 };
 
 const char *
