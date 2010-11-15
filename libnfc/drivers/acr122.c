@@ -70,9 +70,10 @@
 #define ACR122_RESPONSE_LEN 268
 
 const char *supported_devices[] = {
-  "ACS ACR122",
-  "ACS ACR 38U-CCID",
-  "    CCID USB",
+  "ACS ACR122",         // ACR122U & Touchatag, last version
+  "ACS ACR 38U-CCID",   // Touchatag, early version
+  "ACS ACR38U-CCID",    // Touchatag, early version, under MacOSX
+  "    CCID USB",       // ??
   NULL
 };
 
