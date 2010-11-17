@@ -35,9 +35,7 @@
 #include <nfc/nfc.h>
 
 #ifdef _WIN32
-#  include <windows.h>
-
-#  define snprintf sprintf_s
+#  include "../contrib/windows.h"
 #endif
 
 #include "chips.h"

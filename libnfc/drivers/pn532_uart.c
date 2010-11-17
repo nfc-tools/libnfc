@@ -102,8 +102,6 @@ pn532_uart_list_devices (nfc_device_desc_t pnddDevices[], size_t szDevices, size
       bool    bComOk;
       // Serial port claimed but we need to check if a PN532_UART is connected.
       uart_set_speed (sp, SERIAL_DEFAULT_PORT_SPEED);
-      // Send ACK frame to cancel a previous command
-      pn532_uart_ack ((nfc_device_spec_t) sp);
       // PN532 could be powered down, we need to wake it up before line testing.
       pn532_uart_wakeup ((nfc_device_spec_t) sp);
       // Check communication using "Diagnose" command, with "Communication test" (0x00)
@@ -156,8 +154,6 @@ pn532_uart_connect (const nfc_device_desc_t * pndd)
 
   uart_set_speed (sp, pndd->uiSpeed);
 
-  // Send ACK frame to cancel a previous command
-  pn532_uart_ack ((nfc_device_spec_t) sp);
   // PN532 could be powered down, we need to wake it up before line testing.
   pn532_uart_wakeup ((nfc_device_spec_t) sp);
   // Check communication using "Diagnose" command, with "Communication test" (0x00)
@@ -292,13 +288,14 @@ void
 pn532_uart_wakeup (const nfc_device_spec_t nds)
 {
   byte_t  abtRx[BUFFER_LENGTH];
-  size_t  szRx;
+  size_t  szRx = BUFFER_LENGTH;
   /** PN532C106 wakeup. */
   /** High Speed Unit (HSU) wake up consist to send 0x55 and wait a "long" delay for PN532 being wakeup. */
   /** After the preamble we request the PN532C106 chip to switch to "normal" mode (SAM is not used) */
-  const byte_t pncmd_pn532c106_wakeup_preamble[] =
-    { 0x55, 0x55, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0x03, 0xfd, 0xd4, 0x14, 0x01, 0x17, 0x00, 0x00, 0xff, 0x03, 0xfd,
-0xd4, 0x14, 0x01, 0x17, 0x00 };
+  const byte_t pncmd_pn532c106_wakeup_preamble[] = 
+    { 0x55, 0x55, 0x00, 0x00, 0x00, 
+      0x00, 0x00, 0xff, 0x03, 0xfd, 0xd4, 0x14, 0x01, 0x17,  // XXX: WTF this command is sent twice?
+      0x00, 0x00, 0xff, 0x03, 0xfd, 0xd4, 0x14, 0x01, 0x17, 0x00 };
 #ifdef DEBUG
   PRINT_HEX ("TX", pncmd_pn532c106_wakeup_preamble, sizeof (pncmd_pn532c106_wakeup_preamble));
 #endif
@@ -307,6 +304,8 @@ pn532_uart_wakeup (const nfc_device_spec_t nds)
 #ifdef DEBUG
     PRINT_HEX ("RX", abtRx, szRx);
 #endif
+  } else {
+    ERR ("Unable to wakeup the PN532.");
   }
 }
 
@@ -314,7 +313,7 @@ bool
 pn532_uart_check_communication (const nfc_device_spec_t nds, bool * success)
 {
   byte_t  abtRx[BUFFER_LENGTH];
-  size_t  szRx;
+  size_t  szRx = BUFFER_LENGTH;
   const byte_t attempted_result[] =
     { 0x00, 0x00, 0xff, 0x00, 0xff, 0x00, 0x00, 0x00, 0xff, 0x09, 0xf7, 0xD5, 0x01, 0x00, 'l', 'i', 'b', 'n', 'f', 'c',
 0xbc, 0x00 };

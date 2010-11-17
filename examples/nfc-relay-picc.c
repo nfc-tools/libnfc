@@ -51,6 +51,7 @@
 #  define SUSP_TIME 1           // secs.
 #else
 // Needed by Sleep() under Windows
+#  include "../contrib/windows.h"
 #  include <winbase.h>
 #  define sleep Sleep
 #  define SUSP_TIME 1000        // msecs.

@@ -3,9 +3,14 @@
 
 #include <stdlib.h>
 
-#define warnx(...) fprintf (stderr, __VA_ARGS__)
+#define warnx(...) do { \
+	fprintf (stderr, __VA_ARGS__); \
+	fprintf (stderr, "\n"); \
+} while (0)
+
 #define errx(code, ...) do { \
 	fprintf (stderr, __VA_ARGS__); \
+	fprintf (stderr, "\n"); \
 	exit (code); \
 } while (0)
 

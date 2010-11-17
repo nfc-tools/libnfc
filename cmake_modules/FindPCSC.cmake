@@ -1,41 +1,37 @@
-# This CMake script wants to use PC/SC functionality, therefore it looks 
-# for PC/SC include files and libraries. 
+# - Try to find the PC/SC smart card  library
+# Once done this will define
 #
-# Operating Systems Supported:
-# - Unix (requires pkg-config)
-#   Tested with Ubuntu 9.04 and Fedora 11
-# - Windows (requires MSVC)
-#   Tested with Windows XP
-#
-# This should work for both 32 bit and 64 bit systems.
+#  PCSC_FOUND - system has the PC/SC library
+#  PCSC_INCLUDE_DIRS - the PC/SC include directory
+#  PCSC_LIBRARIES - The libraries needed to use PC/SC
 #
 # Author: F. Kooman <fkooman@tuxed.net>
+# Version: 20101019
 #
 
-IF(MSVC)
-  # Windows with Microsoft Visual C++
-  FIND_PATH(PCSC_INCLUDE_DIRS WinSCard.h "$ENV{INCLUDE}")
-  FIND_LIBRARY(PCSC_LIBRARIES NAMES WinSCard PATHS "$ENV{LIB}")
-ELSE(MSVC)
-  # If not MS Visual Studio we use PkgConfig
-  FIND_PACKAGE (PkgConfig)
-  IF(PKG_CONFIG_FOUND)
-    PKG_CHECK_MODULES(PCSC REQUIRED libpcsclite)
-  ELSE(PKG_CONFIG_FOUND)
-    MESSAGE(FATAL_ERROR "Could not find PkgConfig")
-  ENDIF(PKG_CONFIG_FOUND)
-ENDIF(MSVC)
+FIND_PACKAGE (PkgConfig)
+IF(PKG_CONFIG_FOUND)
+    # Will find PC/SC library on Linux/BSDs using PkgConfig
+    PKG_CHECK_MODULES(PCSC libpcsclite)
+#   PKG_CHECK_MODULES(PCSC QUIET libpcsclite)   # IF CMake >= 2.8.2?
+ENDIF(PKG_CONFIG_FOUND)
 
-IF(PCSC_INCLUDE_DIRS AND PCSC_LIBRARIES)
-   SET(PCSC_FOUND TRUE)
-ENDIF(PCSC_INCLUDE_DIRS AND PCSC_LIBRARIES)
+IF(NOT PCSC_FOUND)
+   # Will find PC/SC headers both on Mac and Windows
+   FIND_PATH(PCSC_INCLUDE_DIRS WinSCard.h)
+   # PCSC library is for Mac, WinSCard library is for Windows
+   FIND_LIBRARY(PCSC_LIBRARIES NAMES PCSC WinSCard)
+   
+   IF(MINGW)
+     # MinGW32 with PCSC framework use Microsoft SDK's WinSCard.h
+     SET(PCSC_INCLUDE_DIRS)
+     SET(PCSC_INCLUDE_DIRS "$ENV{ProgramFiles}/Microsoft SDKs/Windows/v7.0/Include")
+   ENDIF(MINGW)
+ENDIF(NOT PCSC_FOUND)
 
-IF(PCSC_FOUND)
-  IF(NOT PCSC_FIND_QUIETLY)
-    MESSAGE(STATUS "Found PCSC: ${PCSC_LIBRARIES}")
-  ENDIF(NOT PCSC_FIND_QUIETLY)
-ELSE(PCSC_FOUND)
-  IF(PCSC_FIND_REQUIRED)
-    MESSAGE(FATAL_ERROR "Could not find PCSC")
-  ENDIF(PCSC_FIND_REQUIRED)
-ENDIF(PCSC_FOUND)
+INCLUDE(FindPackageHandleStandardArgs)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(PCSC DEFAULT_MSG
+  PCSC_LIBRARIES
+  PCSC_INCLUDE_DIRS
+)
+MARK_AS_ADVANCED(PCSC_INCLUDE_DIRS PCSC_LIBRARIES)

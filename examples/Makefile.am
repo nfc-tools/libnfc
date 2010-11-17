@@ -12,8 +12,12 @@ bin_PROGRAMS = \
 		nfc-relay \
 		nfc-relay-picc \
 		pn53x-diagnose \
-		pn53x-sam \
+		pn53x-sam
+
+if POSIX_ONLY_EXAMPLES_ENABLED
+bin_PROGRAMS += \
 		pn53x-tamashell
+endif
 
 # set the include path found by configure
 INCLUDES= $(all_includes) $(LIBNFC_CFLAGS)

@@ -104,11 +104,13 @@ uart_open (const char *pcPortName)
 }
 
 // TODO Remove PN53x related timeout
-#define UART_TIMEOUT(X) ((X * 7) + 15000)     // 1-byte duration (µs) * 6+1 bytes (ACK + 1 other chance) + 15 ms (PN532 Tmax to reply ACK)
+#define UART_TIMEOUT(X) ((X * 7) + 15000)		// where X is 1-byte duration (µs): X * 6+1 bytes (PN53x's ACK + 1 other chance) + 15 ms (PN532 Tmax to reply ACK)
+// UART_SPEED_T0_TIME(X) convert baud rate to interval between 2 bytes (in us)
+#define UART_SPEED_T0_TIME(X) ((1000000 * 9)/ X)	// 8,n,1 => 9 bits => data rate ~= bauds/9 (bytes/s); ex: 8N1@9600 ~= 1066 bytes/s
 void
 uart_set_speed (serial_port sp, const uint32_t uiPortSpeed)
 {
-  long int iTimeout = UART_TIMEOUT(uiPortSpeed/9); // 8,n,1 => 9bits => ~ bauds/9
+  long int iTimeout = UART_TIMEOUT(UART_SPEED_T0_TIME(uiPortSpeed)); 
   DBG ("Serial port speed requested to be set to %d bauds (%ld µs).", uiPortSpeed, iTimeout);
   const serial_port_unix *spu = (serial_port_unix *) sp;
 
@@ -351,11 +353,11 @@ uart_open (const char *pcPortName)
     return INVALID_SERIAL_PORT;
   }
 
-  sp->ct.ReadIntervalTimeout = 0;
+  sp->ct.ReadIntervalTimeout = 30;
   sp->ct.ReadTotalTimeoutMultiplier = 0;
   sp->ct.ReadTotalTimeoutConstant = 30;
-  sp->ct.WriteTotalTimeoutMultiplier = 0;
-  sp->ct.WriteTotalTimeoutConstant = 30;
+  sp->ct.WriteTotalTimeoutMultiplier = 30;
+  sp->ct.WriteTotalTimeoutConstant = 0;
 
   if (!SetCommTimeouts (sp->hPort, &sp->ct)) {
     uart_close (sp);
@@ -376,6 +378,7 @@ uart_close (const serial_port sp)
   free (sp);
 }
 
+// TODO Remove PN53x related timeout
 void
 uart_set_speed (serial_port sp, const uint32_t uiPortSpeed)
 {
@@ -393,16 +396,32 @@ uart_set_speed (serial_port sp, const uint32_t uiPortSpeed)
   case 460800:
     break;
   default:
-    ERR
-      ("Unable to set serial port speed to %d bauds. Speed value must be one of these constants: 9600 (default), 19200, 38400, 57600, 115200, 230400 or 460800.",
-       uiPortSpeed);
+    ERR("Unable to set serial port speed to %d bauds. Speed value must be one of these constants: 9600 (default), 19200, 38400, 57600, 115200, 230400 or 460800.", uiPortSpeed);
+    return;
   };
-
   spw = (serial_port_windows *) sp;
+
+  // Set timeouts
+  //printf ("UART_SPEED_T0_TIME (%d) = %d\n", uiPortSpeed, UART_SPEED_T0_TIME(uiPortSpeed));
+  int iTimeout = 200;
+  spw->ct.ReadIntervalTimeout = 2;
+  spw->ct.ReadTotalTimeoutMultiplier = 0;
+  spw->ct.ReadTotalTimeoutConstant = iTimeout;
+  spw->ct.WriteTotalTimeoutMultiplier = iTimeout;
+  spw->ct.WriteTotalTimeoutConstant = 0;
+
+  if (!SetCommTimeouts (spw->hPort, &spw->ct)) {
+    ERR ("Unable to apply new timeout settings.");
+    return;
+  }
+
+  // Set baud rate
   spw->dcb.BaudRate = uiPortSpeed;
   if (!SetCommState (spw->hPort, &spw->dcb)) {
     ERR ("Unable to apply new speed settings.");
+    return;
   }
+  PurgeComm (spw->hPort, PURGE_RXABORT | PURGE_RXCLEAR);
 }
 
 uint32_t
@@ -418,7 +437,7 @@ uart_get_speed (const serial_port sp)
 int
 uart_receive (serial_port sp, byte_t * pbtRx, size_t * pszRx)
 {
-  if (!ReadFile (((serial_port_windows *) sp)->hPort, pbtRx, *pszRx, (LPDWORD) pszRx, NULL)) {
+  if (!ReadFile (((serial_port_windows *) sp)->hPort, pbtRx, (DWORD)(*pszRx), (LPDWORD) pszRx, NULL)) {
     return DEIO;
   }
   if (!*pszRx)

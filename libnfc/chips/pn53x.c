@@ -39,10 +39,7 @@
 #include "../mirror-subr.h"
 
 #ifdef _WIN32
-#  include <windows.h>
-
-#  define strdup _strdup
-#  define snprintf sprintf_s
+#  include "../../contrib/windows.h"
 #endif
 
 #define MAX(a,b) (((a) > (b)) ? (a) : (b))

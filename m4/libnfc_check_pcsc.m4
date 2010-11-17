@@ -22,6 +22,11 @@ AC_DEFUN([LIBNFC_CHECK_PCSC],
           AC_MSG_RESULT(yes: darwin PC/SC framework)
         fi
       ;;
+      *mingw*)
+        dnl FIXME Find a way to cross-compile for Windows
+        HAVE_PCSC=0
+        AC_MSG_RESULT(no: Windows PC/SC framework)
+      ;;
       *)
         if test x"$HAVE_PCSC" = "x0" ; then
           AC_MSG_ERROR([libpcsclite is mandatory.])

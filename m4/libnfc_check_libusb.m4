@@ -6,15 +6,30 @@ AC_DEFUN([LIBNFC_CHECK_LIBUSB],
 [
   if test x"$libusb_required" = "xyes"; then
     HAVE_LIBUSB=0
-  
+
+    AC_ARG_WITH([libusb-win32],
+        [AS_HELP_STRING([--with-libusb-win32], [use libusb-win32 from the following location])],
+        [LIBUSB_WIN32_DIR=$withval],
+        [LIBUSBWIN32_DIR=""])
+
+    # --with-libusb-win32 directory have been set
+    if test "x$LIBUSB_WIN32_DIR" != "x"; then
+      AC_MSG_NOTICE(["use libusb-win32 from $LIBUSB_WIN32_DIR"])
+      libusb_CFLAGS="-I$LIBUSB_WIN32_DIR/include"
+      libusb_LIBS="-L$LIBUSB_WIN32_DIR/lib/gcc -lusb"
+      HAVE_LIBUSB=1
+    fi
+
     # Search using pkg-config
-    if test x"$PKG_CONFIG" != "x"; then
-      PKG_CHECK_MODULES([libusb], [libusb], [HAVE_LIBUSB=1], [HAVE_LIBUSB=0])
-      if test x"$HAVE_LIBUSB" = "x1"; then
-        if test x"$PKG_CONFIG_REQUIRES" != x""; then
-          PKG_CONFIG_REQUIRES="$PKG_CONFIG_REQUIRES,"
+    if test x"$HAVE_LIBUSB" = "x0"; then  
+      if test x"$PKG_CONFIG" != "x"; then
+        PKG_CHECK_MODULES([libusb], [libusb], [HAVE_LIBUSB=1], [HAVE_LIBUSB=0])
+        if test x"$HAVE_LIBUSB" = "x1"; then
+          if test x"$PKG_CONFIG_REQUIRES" != x""; then
+            PKG_CONFIG_REQUIRES="$PKG_CONFIG_REQUIRES,"
+          fi
+          PKG_CONFIG_REQUIRES="$PKG_CONFIG_REQUIRES libusb"
         fi
-        PKG_CONFIG_REQUIRES="$PKG_CONFIG_REQUIRES libusb"
       fi
     fi
 

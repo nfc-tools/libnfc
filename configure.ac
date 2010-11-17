@@ -20,14 +20,22 @@ AC_LANG_C
 AC_PROG_CC
 AC_PROG_MAKE_SET
 
+WITH_POSIX_ONLY_EXAMPLES=1
 # Libtool
 AC_PROG_LIBTOOL
 case "$host" in
-   *-pc-linux-gnu)
-     AC_MSG_RESULT([Fixing libtool for -rpath problems.])
-     sed -i -r 's/(hardcode_into_libs)=.*$/\1=no/' libtool
+  *-pc-linux-gnu)
+    AC_MSG_RESULT([Fixing libtool for -rpath problems.])
+    sed -i -r 's/(hardcode_into_libs)=.*$/\1=no/' libtool
+  ;;
+  *-pc-mingw32msvc)
+    WITH_POSIX_ONLY_EXAMPLES=0
+    AC_MSG_RESULT([Disable extended examples due to target Windows system.])
+    # Undefine __STRICT_ANSI__ to allow to use strdup, putenv, etc. without warnings
+    CFLAGS="$CFLAGS -U__STRICT_ANSI__"
    ;;
 esac
+AM_CONDITIONAL(POSIX_ONLY_EXAMPLES_ENABLED, [test "$WITH_POSIX_ONLY_EXAMPLES" = "1"])
 
 AC_PATH_PROG(PKG_CONFIG, pkg-config)
 if test x"$PKG_CONFIG" = x""; then
@@ -44,7 +52,9 @@ AC_CHECK_FUNCS([memmove memset select strdup strerror strstr strtol usleep],
 AC_DEFINE(_NETBSD_SOURCE, 1, [Define on NetBSD to activate all library features])
 AC_DEFINE(_DARWIN_C_SOURCE, 1, [Define on Darwin to activate all library features])
 
-AC_FUNC_MALLOC
+# XXX malloc function should be tested
+# but it produces some error while cross-compiling with MinGW
+# AC_FUNC_MALLOC
 
 # Checks for types
 AC_TYPE_SIZE_T

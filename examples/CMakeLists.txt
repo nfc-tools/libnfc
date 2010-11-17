@@ -20,8 +20,8 @@ ENDFOREACH(source)
 TARGET_LINK_LIBRARIES(nfc-mfclassic mifare)
 TARGET_LINK_LIBRARIES(nfc-mfultralight mifare)
 
-IF(NOT MSVC)
+IF(NOT WIN32)
   # Manuals for the examples
   FILE(GLOB manuals "${CMAKE_CURRENT_SOURCE_DIR}/*.1")
   INSTALL(FILES ${manuals} DESTINATION ${SHARE_INSTALL_PREFIX}/man/man1 COMPONENT manuals)
-ENDIF(NOT MSVC)
+ENDIF(NOT WIN32)
