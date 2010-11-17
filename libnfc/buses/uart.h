@@ -43,22 +43,15 @@
 #    include <sys/stat.h>
 #    include <limits.h>
 #    include <sys/time.h>
-
-  // unistd.h is needed for usleep() fct.
 #    include <unistd.h>
 #    define delay_ms( X ) usleep( X * 1000 )
 #  else
-#    include <windows.h>
-
-#    define snprintf _snprintf
-#    define strdup _strdup
+#    include "contrib/windows.h"
 #    define delay_ms( X ) Sleep( X )
 #  endif
 
 // Path to the serial port is OS-dependant.
 // Try to guess what we should use.
-//
-// XXX: Some review from users cross-compiling is welcome!
 #  if defined (_WIN32)
 #    define DEFAULT_SERIAL_PORTS { "COM1", "COM2", "COM3", "COM4", NULL }
 #  elif defined(__APPLE__)
