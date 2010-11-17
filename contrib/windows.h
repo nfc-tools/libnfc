@@ -30,6 +30,7 @@
 #    define snprintf(S, n, F, ...) sprintf(S, F, __VA_ARGS__)
 #  else
 #    define snprintf sprintf_s
+#    define strdup _strdup
 #  endif
 
 #endif
