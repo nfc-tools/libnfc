@@ -48,3 +48,6 @@ indent:
 	    $(INDENT) $(INDENT_ARGS) "$$f" || exit 1; \
 	done
 endif
+
+DISTCHECK_CONFIGURE_FLAGS="--with-drivers=all"
+
