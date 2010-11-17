@@ -1,15 +1,18 @@
-Oct 26, 2010 - 1.4.0
+Nov 17, 2010 - 1.4.0
 --------------------
 
 Fixes:
  - libnfc: fix Felica listing
  - libnfc: fix storage of ISO14443B targets data
  - libnfc: fix MacOS build
+ - libnfc: fix some errors string (ie. well-known "Invalid Parameter")
+ - libnfc: fix memory leak while using *_pick()
  - drivers/pn53x_usb: fix ZLP USB issue
  - drivers/pn53x_usb: workaround for PN532 toggle bit USB bug
  - drivers/pn53x_usb: fix timeout problem in emulation mode
  - drivers/pn53x_usb,pn532_uart,arygon: more robust recovery from unstable states such as interrupted emulation modes
  - drivers/acr122: fix escape ioctl under Linux
+ - buses/uart: fix UART default serial ports under Linux.
  - examples/nfc-anticol: fix bug preventing to run nfc-anticol after some other programs
  - examples/nfc-anticol: fix display of UID
  - ... and many other minor fixes
@@ -22,8 +25,10 @@ Improvements:
  - libnfc: cache some chip registers for faster communication
  - libnfc: greatly improved D.E.P. support
  - buses/uart: adjust UART's timeouts from baud rate: faster communication at high speed and more reliable at low speed (affect pn532_uart and arygon drivers)
+ - drivers/arygon: retrieve ARYGON µC firmware version
  - examples/nfc-anticol: adds support for CL3
  - examples/nfc-anticol: cascade based on SAK rather than CT, better for educational purpose
+ - examples/nfc-anticol: Computes CRC rather than hardcoded one.
  - examples/nfc-utils: print_iso14443b_info() now displays many decoded information in verbose mode
  - examples/nfc-utils: print_iso14443a_info() now displays many decoded information and shows attempt to determine tag name in verbose mode
  - examples/nfc-list: new option -v for verbose mode
@@ -39,9 +44,11 @@ Improvements:
 
 Changes:
  - API: Many changes, see NEWS file for more info how to migrate
+ - buses/uart: split UART implementations: one file for POSIX and another one for Windows
  - examples: nfcip-* renamed to nfc-dep-*
  - examples: nfc-sam renamed to pn53x-sam
  - examples: nfc-emulate renamed to nfc-emulate-uid
+ - examples: change examples license for the sake of consistency: LGPL covers library, re-usable examples code is now under BSD license.
 
 
 Aug 31, 2010 - 1.3.9
