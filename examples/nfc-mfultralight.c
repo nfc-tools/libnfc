@@ -50,7 +50,6 @@
 #include <nfc/nfc-messages.h>
 
 #include "mifare.h"
-#include "nfc-utils.h"
 
 static nfc_device_t *pnd;
 static nfc_target_t nt;
@@ -244,9 +243,13 @@ main (int argc, const char *argv[])
     nfc_disconnect (pnd);
     return EXIT_FAILURE;
   }
-  // Get the info from the current tag (UID is stored little-endian)
-  pbtUID = nt.nti.nai.abtUid;
-  printf ("Found MIFARE Ultralight card with UID: %02x%02x%02x%02x\n", pbtUID[3], pbtUID[2], pbtUID[1], pbtUID[0]);
+  // Get the info from the current tag
+  printf ("Found MIFARE Ultralight card with UID: ");
+  size_t  szPos;
+  for (szPos = 0; szPos < nt.nti.nai.szUidLen; szPos++) {
+    printf ("%02x", nt.nti.nai.abtUid[szPos]);
+  }
+  printf("\n");
 
   if (bReadAction) {
     if (read_card ()) {
