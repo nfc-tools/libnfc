@@ -1,24 +1,95 @@
-------------------------------------------------------------------------
-Public platform independent Near Field Communication (NFC) library
-Copyright (C) 2009, Roel Verdult
- 
-------------------------------------------------------------------------
-Welcome to the developers community of libnfc.
+*-
+* Public platform independent Near Field Communication (NFC) library
+* Copyright (C) 2009, Roel Verdult
+* Copyright (C) 2010, Romain Tartière, Romuald Conty
+-*
 
-Since it is hard to keep all information up to date
-we decided to only maintain the online documentation.
-Please visit the official website for more info:
-http://www.libnfc.org
+General Information
+===================
 
-If you have questions, remarks, bug-reports, we encourage you to
-post this in the developers community: 
+libnfc is a library which allows userspace application access to NFC devices.
+
+The official web site is:
+  http://www.libnfc.org/
+
+The official forum site is:
+  http://www.libnfc.org/community/
+
+The official development site is:
+  http://libnfc.googlecode.com/
+
+Installation
+============
+
+See the file 'INSTALL'
+
+How to report bugs
+==================
+
+To report a bug, visit http://code.google.com/p/libnfc/issues/list and fill
+out a bug report form.
+
+If you have questions, remarks, we encourage you to post this in the developers
+community: 
 http://www.libnfc.org/community
 
-------------------------------------------------------------------------
-Proprietary Notes:
+Please make sure to include:
 
-FeliCa is s registered trademark of the Sony Corporation. MIFARE is a 
-trademark of NXP Semiconductors. Jewel Topaz is a trademark of Innovision
-Research & Technology. All other trademarks are the property of their 
-respective owners.
+* The version of libnfc
+
+* Information about your system. For instance:
+
+   - What operating system and version
+   - For Linux, what version of the C library
+
+  And anything else you think is relevant.
+
+* How to reproduce the bug. 
+
+  Please include a short test program that exhibits the behavior. 
+  As a last resort, you can also provide a pointer to a larger piece 
+  of software that can be downloaded.
+
+* If the bug was a crash, the exact text that was printed out
+  when the crash occured.
+
+* Further information such as stack traces may be useful, but
+  is not necessary.
+
+Patches
+=======
+
+Patches can be sent to posted to http://code.google.com/p/libnfc/issues/list or
+can be sent directly to libnfc's developers: http://www.libnfc.org/contact
+
+If the patch fixes a bug, it is usually a good idea to include
+all the information described in "How to Report Bugs".
+
+Building
+========
+
+It should be as simple as running these two commands:
+
+./configure
+make
+
+Troubleshooting
+===============
+
+Using a ACR122 device (and ACR122 only, not touchatag) with libnfc needs some
+PCSC-lite configuration:
+* Allow CCID Exchange command;
+* And if your device have a bogus firmware you could allow PCSC to use bogus devices.
+
+To do this, /etc/libccid_Info.plist and locate "<key>ifdDriverOptions</key>",
+turn "<string>0x0000</string>" value into 0x0001 to allow CCID exchange or
+0x0005 to allow CCID exchange and bogus devices.
+
+Proprietary Notes
+=================
+
+FeliCa is s registered trademark of the Sony Corporation.
+MIFARE is a trademark of NXP Semiconductors.
+Jewel Topaz is a trademark of Innovision Research & Technology.
+All other trademarks are the property of their respective owners.
 
