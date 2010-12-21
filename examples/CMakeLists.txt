@@ -1,4 +1,4 @@
-SET(EXAMPLES-SOURCES nfc-list nfc-mfclassic nfc-mfultralight nfcip-initiator nfcip-target nfc-anticol nfc-emulate nfc-relay nfc-sam)
+SET(EXAMPLES-SOURCES nfc-anticol nfc-dep-initiator nfc-dep-target nfc-emulate-forum-tag4 nfc-emulate-tag nfc-emulate-uid nfc-list nfc-mfclassic nfc-mfultralight nfc-poll nfc-relay nfc-relay-picc pn53x-diagnose pn53x-sam pn53x-tamashell)
 
 # XXX: Examples should not use private API!
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/../libnfc)

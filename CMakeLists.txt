@@ -58,10 +58,10 @@ IF(NOT DEFINED SHARE_INSTALL_PREFIX)
 ENDIF(NOT DEFINED SHARE_INSTALL_PREFIX)
 
 # Additonnal GCC flags
-IF(CMAKE_COMPILER_IS_GNU_CC)
+IF(CMAKE_COMPILER_IS_GNUCC)
   # Make sure we will not miss some warnings ;)
   ADD_DEFINITIONS(-Wall -pedantic -std=c99)
-ENDIF(CMAKE_COMPILER_IS_GNU_CC)
+ENDIF(CMAKE_COMPILER_IS_GNUCC)
 
 # Workarounds for libusb in C99
 ADD_DEFINITIONS(-Du_int8_t=uint8_t -Du_int16_t=uint16_t)
