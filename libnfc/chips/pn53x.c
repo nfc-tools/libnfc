@@ -194,7 +194,13 @@ pn53x_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, b
   default:
     pnd->iLastError = 0;
   }
-
+  if (pnd->nc == NC_PN533) {
+    if ((pbtTx[1] == 0x06) // ReadRegister
+      || (pbtTx[1] == 0x08)) { // WriteRegister
+      // PN533 prepends its answer by a status byte
+      pnd->iLastError = pbtRx[0] & 0x3f;
+    }
+  }
   return (0 == pnd->iLastError);
 }
 
@@ -207,14 +213,18 @@ pn53x_get_reg (nfc_device_t * pnd, uint16_t ui16Reg, uint8_t * ui8Value)
 
   abtCmd[2] = ui16Reg >> 8;
   abtCmd[3] = ui16Reg & 0xff;
-  if (pn53x_transceive (pnd, abtCmd, sizeof (pncmd_get_register), ui8Value, &szValueLen)) {
+
+  byte_t  abtRegValue[2];
+  if (pn53x_transceive (pnd, abtCmd, sizeof (pncmd_get_register), abtRegValue, &szValueLen)) {
     if (pnd->nc == NC_PN533) {
-       // PN533 prepends its answer by a status byte
-       if (ui8Value[0] == 0) {
-         ui8Value[0] = ui8Value[1];
-       } else {
-         return false;
-       }
+      // PN533 prepends its answer by a status byte
+      if (abtRegValue[0] == 0) { // 0x00 
+        *ui8Value = abtRegValue[1];
+      } else {
+        return false;
+      }
+    } else {
+      *ui8Value = abtRegValue[0];
     }
     return true;
   }
