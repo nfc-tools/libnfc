@@ -159,7 +159,6 @@ int
 main (int argc, const char *argv[])
 {
   bool    bReadAction;
-  byte_t *pbtUID;
   FILE   *pfDump;
 
   if (argc < 3) {
