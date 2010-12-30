@@ -32,11 +32,11 @@ typedef struct {
   term_info tiNew;              // Terminal info during the transaction
 } serial_port_unix;
 
-// timeval struct that define timeout delay for serial port
-static struct timeval default_timeout = {
-  .tv_sec = 0,                  // 0 second
-  .tv_usec = 60000              // 60 ms
-};
+// timeval struct that define timeout delay for serial port:
+//  first is constant and currently related to PN53x response delay
+static const unsigned long int uiTimeoutStatic = 15000; // 15 ms to allow device to respond
+//  second is a per-byte timeout (sets when setting baudrate)
+static unsigned long int uiTimeoutPerByte = 0;
 
 // Work-around to claim uart interface using the c_iflag (software input processing) from the termios struct
 #  define CCLAIMED 0x80000000
@@ -84,15 +84,25 @@ uart_open (const char *pcPortName)
   return sp;
 }
 
-// TODO Remove PN53x related timeout
-#define UART_TIMEOUT(X) ((X * 7) + 15000)		// where X is 1-byte duration (µs): X * 6+1 bytes (PN53x's ACK + 1 other chance) + 15 ms (PN532 Tmax to reply ACK)
-// UART_SPEED_T0_TIME(X) convert baud rate to interval between 2 bytes (in us)
-#define UART_SPEED_T0_TIME(X) ((1000000 * 9)/ X)	// 8,n,1 => 9 bits => data rate ~= bauds/9 (bytes/s); ex: 8N1@9600 ~= 1066 bytes/s
+/**
+ * @note This define convert a Baud rate in a per-byte duration (in µs)
+ * Bauds are "symbols per second", so each symbol is bit here.
+ * We want to convert Bd to bytes/s in first time,
+ * 1 serial-transmitted byte is (in 8N1):
+ * - 1 start bit,
+ * - 8 data bits,
+ * - 1 stop bit.
+ *
+ * In 8N1 mode, byte-rate = baud-rate / 10
+ */
+#define UART_BAUDRATE_T0_BYTE_DURATION(X) ((1000000 * 10)/ X)
+
 void
 uart_set_speed (serial_port sp, const uint32_t uiPortSpeed)
 {
-  long int iTimeout = UART_TIMEOUT(UART_SPEED_T0_TIME(uiPortSpeed)); 
-  DBG ("Serial port speed requested to be set to %d bauds (%ld µs).", uiPortSpeed, iTimeout);
+  // Set per-byte timeout
+  uiTimeoutPerByte = UART_BAUDRATE_T0_BYTE_DURATION(uiPortSpeed);
+  DBG ("Serial port speed requested to be set to %d bauds (%lu µs).", uiPortSpeed, uiTimeoutPerByte);
   const serial_port_unix *spu = (serial_port_unix *) sp;
 
   // Portability note: on some systems, B9600 != 9600 so we have to do
@@ -133,8 +143,6 @@ uart_set_speed (serial_port sp, const uint32_t uiPortSpeed)
          uiPortSpeed);
     return;
   };
-  // Set default timeout
-  default_timeout.tv_usec = iTimeout;
 
   // Set port speed (Input and Output)
   cfsetispeed ((struct termios *) &(spu->tiNew), stPortSpeed);
@@ -205,16 +213,21 @@ uart_receive (serial_port sp, byte_t * pbtRx, size_t * pszRx)
   int     res;
   int     byteCount;
   fd_set  rfds;
-  struct timeval tv;
+
+  int     iExpectedByteCount = (int)*pszRx;
+  struct timeval tvTimeout = {
+    .tv_sec = 0,
+    .tv_usec = uiTimeoutStatic + (uiTimeoutPerByte * iExpectedByteCount),
+  };
+  struct timeval tv = tvTimeout;
 
   // Reset the output count  
   *pszRx = 0;
-
   do {
+    DBG( "Expecting %d bytes (in %lu µs)", iExpectedByteCount, tv.tv_usec );
     // Reset file descriptor
     FD_ZERO (&rfds);
     FD_SET (((serial_port_unix *) sp)->fd, &rfds);
-    tv = default_timeout;
     res = select (((serial_port_unix *) sp)->fd + 1, &rfds, NULL, NULL, &tv);
 
     // Read error
@@ -226,7 +239,7 @@ uart_receive (serial_port sp, byte_t * pbtRx, size_t * pszRx)
     if (res == 0) {
       if (*pszRx == 0) {
         // Error, we received no data
-        DBG ("RX time-out (%ld µs), buffer empty.", default_timeout.tv_usec);
+        DBG ("RX time-out (%lu µs), buffer empty.", tvTimeout.tv_usec);
         return DETIMEOUT;
       } else {
         // We received some data, but nothing more is available
@@ -240,6 +253,7 @@ uart_receive (serial_port sp, byte_t * pbtRx, size_t * pszRx)
     }
     // There is something available, read the data
     res = read (((serial_port_unix *) sp)->fd, pbtRx + (*pszRx), byteCount);
+    iExpectedByteCount -= byteCount;
 
     // Stop if the OS has some troubles reading the data
     if (res <= 0) {
@@ -247,8 +261,9 @@ uart_receive (serial_port sp, byte_t * pbtRx, size_t * pszRx)
     }
 
     *pszRx += res;
-
-  } while (byteCount);
+    DBG( "Remaining %d bytes (%lu µs remains in tv)", iExpectedByteCount, tv.tv_usec );
+    tv.tv_usec = uiTimeoutPerByte * (iExpectedByteCount>16?16:iExpectedByteCount) ;
+  } while (byteCount && (iExpectedByteCount > 0));
 
   return 0;
 }
@@ -265,12 +280,13 @@ uart_send (serial_port sp, const byte_t * pbtTx, const size_t szTx)
   size_t  szPos = 0;
   fd_set  rfds;
   struct timeval tv;
+  const struct timeval tvDefault = { .tv_sec = 0, .tv_usec = 20000 };
 
   while (szPos < szTx) {
     // Reset file descriptor
     FD_ZERO (&rfds);
     FD_SET (((serial_port_unix *) sp)->fd, &rfds);
-    tv = default_timeout;
+    tv = tvDefault;
     res = select (((serial_port_unix *) sp)->fd + 1, NULL, &rfds, NULL, &tv);
 
     // Write error
