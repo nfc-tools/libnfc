@@ -104,30 +104,37 @@ static  bool
 write_card (void)
 {
   uint32_t uiBlock = 0;
-  int     page = 0x4;
   bool    bFailure = false;
   uint32_t uiWritenPages = 0;
+  uint32_t uiSkippedPages;
 
   char    buffer[BUFSIZ];
   bool    write_otp;
+  bool    write_lock;
 
   printf ("Write OTP bytes ? [yN] ");
   fgets (buffer, BUFSIZ, stdin);
   write_otp = ((buffer[0] == 'y') || (buffer[0] == 'Y'));
+  printf ("Write Lock bytes ? [yN] ");
+  fgets (buffer, BUFSIZ, stdin);
+  write_lock = ((buffer[0] == 'y') || (buffer[0] == 'Y'));
 
-  /* We need to skip 3 first pages. */
   printf ("Writing %d pages |", uiBlocks + 1);
-  printf ("sss");
+  /* We need to skip 2 first pages. */
+  printf ("ss");
+  uiSkippedPages = 2;
 
-  if (write_otp) {
-    page = 0x3;
-  } else {
-    /* If user don't want to write OTP, we skip 1 page more. */
-    printf ("s");
-    page = 0x4;
-  }
-
-  for (; page <= 0xF; page++) {
+  for (int page = 0x2; page <= 0xF; page++) {
+    if ((page==0x2) && (!write_lock)) {
+      printf ("s");
+      uiSkippedPages++;
+      continue;
+    }
+    if ((page==0x3) && (!write_otp)) {
+      printf ("s");
+      uiSkippedPages++;
+      continue;
+    }
     // Show if the readout went well
     if (bFailure) {
       // When a failure occured we need to redo the anti-collision
@@ -149,8 +156,7 @@ write_card (void)
     print_success_or_failure (bFailure, &uiWritenPages);
   }
   printf ("|\n");
-  printf ("Done, %d of %d pages written (%d first pages are skipped).\n", uiWritenPages, uiBlocks + 1,
-          write_otp ? 3 : 4);
+  printf ("Done, %d of %d pages written (%d pages skipped).\n", uiWritenPages, uiBlocks + 1, uiSkippedPages);
 
   return true;
 }
