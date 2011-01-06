@@ -221,8 +221,6 @@ uart_receive (serial_port sp, byte_t * pbtRx, size_t * pszRx)
     .tv_usec = uiTimeoutStatic + (uiTimeoutPerByte * iExpectedByteCount),
   };
   struct timeval tv = tvTimeout;
-  DBG("Expected bytes count: %d", iExpectedByteCount);
-  //  if(iExpectedByteCount>250) { abort(); };
 
   // Reset the output count  
   *pszRx = 0;
@@ -241,7 +239,7 @@ uart_receive (serial_port sp, byte_t * pbtRx, size_t * pszRx)
     if (res == 0) {
       if (*pszRx == 0) {
         // Error, we received no data
-        DBG ("RX time-out (%lu µs), buffer empty.", tvTimeout.tv_usec);
+        // DBG ("RX time-out (%lu µs), buffer empty.", tvTimeout.tv_usec);
         return DETIMEOUT;
       } else {
         // We received some data, but nothing more is available
@@ -263,11 +261,9 @@ uart_receive (serial_port sp, byte_t * pbtRx, size_t * pszRx)
     }
 
     *pszRx += res;
-    tv.tv_usec = uiTimeoutPerByte * MIN( iExpectedByteCount, 16 );
-    DBG("Timeout reloaded at: %d µs", tv.tv_usec);
+    tv.tv_usec = uiTimeoutPerByte * MIN( iExpectedByteCount, 16 ); // Reload timeout with a low value to prevent from waiting too long on slow devices (16x is enought to took at least 1 byte)
+    // DBG("Timeout reloaded at: %d µs", tv.tv_usec);
   } while (byteCount && (iExpectedByteCount > 0));
-
-  DBG("Remaining expected bytes count: %d", iExpectedByteCount);
 
   return 0;
 }
