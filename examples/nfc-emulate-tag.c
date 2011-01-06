@@ -52,7 +52,8 @@
 #include <nfc/nfc-messages.h>
 #include "nfc-utils.h"
 
-#define MAX_FRAME_LEN 264
+#define MAX_FRAME_LEN (264)
+#define SAK_ISO14443_4_COMPLIANT 0x20
 
 static byte_t abtRx[MAX_FRAME_LEN];
 static size_t szRx;
@@ -216,8 +217,10 @@ main (int argc, char *argv[])
 */
 
   printf ("%s will emulate this ISO14443-A tag:\n", argv[0]);
-  print_nfc_iso14443a_info( nt.nti.nai, false );
+  print_nfc_iso14443a_info (nt.nti.nai, true);
 
+  // Switch off NDO_EASY_FRAMING if target is not ISO14443-4
+  nfc_configure (pnd, NDO_EASY_FRAMING, (nt.nti.nai.btSak & SAK_ISO14443_4_COMPLIANT));
   printf ("NFC device (configured as target) is now emulating the tag, please touch it with a second NFC device (initiator)\n");
   if (!nfc_target_emulate_tag (pnd, &nt)) {
     nfc_perror (pnd, "nfc_target_emulate_tag");
