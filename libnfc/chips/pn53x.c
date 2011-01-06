@@ -689,7 +689,7 @@ pn53x_InAutoPoll (nfc_device_t * pnd,
   }
 
   szRx = PN53x_EXTENDED_FRAME_MAX_LEN;
-  res = pnd->pdc->transceive (pnd, pbtTxInAutoPoll, szTxInAutoPoll, abtRx, &szRx);
+  res = pn53x_transceive (pnd, pbtTxInAutoPoll, szTxInAutoPoll, abtRx, &szRx);
 
   if ((szRx == 0) || (res == false)) {
     return false;
