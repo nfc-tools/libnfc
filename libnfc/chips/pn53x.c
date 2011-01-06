@@ -1061,7 +1061,7 @@ pn53x_initiator_transceive_bits (nfc_device_t * pnd, const byte_t * pbtTx, const
                                  const byte_t * pbtTxPar, byte_t * pbtRx, size_t * pszRxBits, byte_t * pbtRxPar)
 {
   byte_t  abtRx[PN53x_EXTENDED_FRAME_MAX_LEN];
-  size_t  szRx;
+  size_t  szRx = PN53x_EXTENDED_FRAME_MAX_LEN;
   size_t  szFrameBits = 0;
   size_t  szFrameBytes = 0;
   uint8_t ui8rcc;
@@ -1126,8 +1126,8 @@ pn53x_initiator_transceive_bytes (nfc_device_t * pnd, const byte_t * pbtTx, cons
                                   size_t * pszRx)
 {
   byte_t  abtRx[PN53x_EXTENDED_FRAME_MAX_LEN];
-  size_t  szExtraTxLen,
-          szRx;
+  size_t  szRx = PN53x_EXTENDED_FRAME_MAX_LEN;
+  size_t  szExtraTxLen;
   byte_t  abtCmd[sizeof (pncmd_initiator_exchange_raw_data)];
 
   // We can not just send bytes without parity if while the PN53X expects we handled them
