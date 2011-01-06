@@ -24,6 +24,7 @@
  */
 
 #  include <sys/select.h>
+#  include <sys/param.h>
 #  include <termios.h>
 typedef struct termios term_info;
 typedef struct {
@@ -224,7 +225,6 @@ uart_receive (serial_port sp, byte_t * pbtRx, size_t * pszRx)
   // Reset the output count  
   *pszRx = 0;
   do {
-    DBG( "Expecting %d bytes (in %lu µs)", iExpectedByteCount, tv.tv_usec );
     // Reset file descriptor
     FD_ZERO (&rfds);
     FD_SET (((serial_port_unix *) sp)->fd, &rfds);
@@ -239,7 +239,7 @@ uart_receive (serial_port sp, byte_t * pbtRx, size_t * pszRx)
     if (res == 0) {
       if (*pszRx == 0) {
         // Error, we received no data
-        DBG ("RX time-out (%lu µs), buffer empty.", tvTimeout.tv_usec);
+        // DBG ("RX time-out (%lu µs), buffer empty.", tvTimeout.tv_usec);
         return DETIMEOUT;
       } else {
         // We received some data, but nothing more is available
@@ -261,8 +261,8 @@ uart_receive (serial_port sp, byte_t * pbtRx, size_t * pszRx)
     }
 
     *pszRx += res;
-    DBG( "Remaining %d bytes (%lu µs remains in tv)", iExpectedByteCount, tv.tv_usec );
-    tv.tv_usec = uiTimeoutPerByte * (iExpectedByteCount>16?16:iExpectedByteCount) ;
+    tv.tv_usec = uiTimeoutPerByte * MIN( iExpectedByteCount, 16 ); // Reload timeout with a low value to prevent from waiting too long on slow devices (16x is enought to took at least 1 byte)
+    // DBG("Timeout reloaded at: %d µs", tv.tv_usec);
   } while (byteCount && (iExpectedByteCount > 0));
 
   return 0;
