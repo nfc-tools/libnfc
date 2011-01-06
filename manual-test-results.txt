@@ -4,6 +4,7 @@
 r736, nfc-anticol, ACS ACR122U PICC Interface 00 00 / ACR122U102 - PN532 v1.4, DESfire, OK
 r736, nfc-anticol, ACS ACR122U PICC Interface 00 00 / ACR122U102 - PN532 v1.4, MFC, OK
 r736, nfc-anticol, ACS ACR122U PICC Interface 00 00 / ACR122U102 - PN532 v1.4, UL, OK
+r846, nfc-anticol, ARYGON 00V5.1 (/dev/ttyUSB0) - PN532 v1.4 (APDB2UA33), MFC, OK
 r736, nfc-anticol, SCM Micro / SCL3711-NFC&RW - PN533 v2.7, DESfire, OK
 r736, nfc-anticol, SCM Micro / SCL3711-NFC&RW - PN533 v2.7, MFC, OK
 r736, nfc-anticol, SCM Micro / SCL3711-NFC&RW - PN533 v2.7, UL, OK
@@ -30,6 +31,7 @@ r736, nfc-list, ACS ACR122U PICC Interface 00 00 / ACR122U102 - PN532 v1.4, topa
 r736, nfc-list, ACS ACR122U PICC Interface 00 00 / ACR122U102 - PN532 v1.4, typeB Calypso, OK
 r736, nfc-list, ACS ACR122U PICC Interface 00 00 / ACR122U102 - PN532 v1.4, ULC, OK
 r736, nfc-list, ACS ACR 38U-CCID 00 00 / ACR122U102 - PN532 v1.4, DESFire, OK
+r846, nfc-list, ARYGON 00V5.1 (/dev/ttyUSB0) - PN532 v1.4 (APDB2UA33), MFC, OK
 r736, nfc-list, SCM Micro / SCL3711-NFC&RW - PN533 v2.7, 2 DESfire, OK
 r736, nfc-list, SCM Micro / SCL3711-NFC&RW - PN533 v2.7, 2 UL, OK
 r736, nfc-list, SCM Micro / SCL3711-NFC&RW - PN533 v2.7, DESFire, OK
@@ -39,6 +41,7 @@ r736, nfc-list, SCM Micro / SCL3711-NFC&RW - PN533 v2.7, topaz, OK
 r736, nfc-list, SCM Micro / SCL3711-NFC&RW - PN533 v2.7, typeB Calypso, OK
 r736, nfc-list, SCM Micro / SCL3711-NFC&RW - PN533 v2.7, ULC, OK
 r736, nfc-mfclassic r a foo, ACS ACR122U PICC Interface 00 00 / ACR122U102 - PN532 v1.4, MFC, OK
+r846, nfc-mfclassic r a foo, ARYGON 00V5.1 (/dev/ttyUSB0) - PN532 v1.4 (APDB2UA33), MFC, OK
 r736, nfc-mfclassic r a foo, SCM Micro / SCL3711-NFC&RW - PN533 v2.7, MFC, OK
 r736, nfc-mfultralight r foo, ACS ACR122U PICC Interface 00 00 / ACR122U102 - PN532 v1.4, UL, OK
 r736, nfc-mfultralight r foo, SCM Micro / SCL3711-NFC&RW - PN533 v2.7, UL, OK
@@ -49,8 +52,12 @@ r739, nfc-poll, ACS ACR122U PICC Interface 00 00 / ACR122U102 - PN532 v1.4, MFC,
 r739, nfc-poll, ACS ACR122U PICC Interface 00 00 / ACR122U102 - PN532 v1.4, topaz, OK
 r739, nfc-poll, ACS ACR122U PICC Interface 00 00 / ACR122U102 - PN532 v1.4, typeB Calypso, OK
 r739, nfc-poll, ACS ACR122U PICC Interface 00 00 / ACR122U102 - PN532 v1.4, ULC, OK
+r846, nfc-poll, ARYGON 00V5.1 (/dev/ttyUSB0) - PN532 v1.4 (APDB2UA33), MFC, FAIL
+r849, nfc-poll, ARYGON 00V5.1 (/dev/ttyUSB0) - PN532 v1.4 (APDB2UA33), MFC, OK
 r736, pn53x-diagnose, ACS ACR122U PICC Interface 00 00 / ACR122U102 - PN532 v1.4, N/A, OK
 r736, pn53x-diagnose, ACS ACR 38U-CCID 00 00 / ACR122U102 - PN532 v1.4, N/A, OK
+r846, pn53x-diagnose, ARYGON 00V5.1 (/dev/ttyUSB0) - PN532 v1.4 (APDB2UA33), N/A, FAIL
+r849, pn53x-diagnose, ARYGON 00V5.1 (/dev/ttyUSB0) - PN532 v1.4 (APDB2UA33), N/A, OK
 r736, pn53x-diagnose, SCM Micro / SCL3711-NFC&RW - PN533 v2.7, N/A, OK
 r744, pn53x-sam (mode 1), Philips / PN531 - PN531 v4.2 + SAM, CardMan 5321, OK
 r736, pn53x-tamashell < pn53x-tamashell-scripts/UltraLightRead.cmd, ACS ACR122U PICC Interface 00 00 / ACR122U102 - PN532 v1.4, ultralight, OK
