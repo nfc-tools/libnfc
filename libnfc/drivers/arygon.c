@@ -203,15 +203,17 @@ arygon_disconnect (nfc_device_t * pnd)
 }
 
 #define TX_BUFFER_LENGTH (300)
-#define RX_BUFFER_LENGTH (PN53x_EXTENDED_FRAME_MAX_LEN + PN53x_EXTENDED_FRAME_OVERHEAD)
+#define RX_BUFFER_LENGTH (PN53x_EXTENDED_FRAME_MAX_LEN + PN53x_EXTENDED_FRAME_OVERHEAD + sizeof(pn53x_ack_frame))
 bool
 arygon_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, byte_t * pbtRx, size_t * pszRx)
 {
   byte_t  abtTxBuf[TX_BUFFER_LENGTH] = { DEV_ARYGON_PROTOCOL_TAMA, 0x00, 0x00, 0xff };     // Every packet must start with "0x32 0x00 0x00 0xff"
   byte_t  abtRxBuf[RX_BUFFER_LENGTH];
-  size_t  szRxBufLen = MIN(RX_BUFFER_LENGTH, *pszRx);
+  size_t  szRxBufLen;
+  size_t  szReplyMaxLen = MIN(RX_BUFFER_LENGTH, *pszRx);
   size_t  szPos;
   int     res;
+
   // Packet length = data length (len) + checksum (1) + end of stream marker (1)
   abtTxBuf[4] = szTx;
   // Packet length checksum
@@ -240,6 +242,7 @@ arygon_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, 
 #ifdef DEBUG
   memset (abtRxBuf, 0x00, sizeof (abtRxBuf));
 #endif
+  szRxBufLen = szReplyMaxLen;
   res = uart_receive ((serial_port) pnd->nds, abtRxBuf, &szRxBufLen);
   if (res != 0) {
     ERR ("%s", "Unable to receive data. (RX)");
@@ -256,11 +259,12 @@ arygon_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, 
 
   szRxBufLen -= sizeof (pn53x_ack_frame);
   memmove (abtRxBuf, abtRxBuf + sizeof (pn53x_ack_frame), szRxBufLen);
+  szReplyMaxLen -= sizeof (pn53x_ack_frame);
 
   if (szRxBufLen == 0) {
-    szRxBufLen = RX_BUFFER_LENGTH;
     do {
       delay_ms (10);
+      szRxBufLen = szReplyMaxLen;
       res = uart_receive ((serial_port) pnd->nds, abtRxBuf, &szRxBufLen);
     } while (res != 0);
 #ifdef DEBUG
