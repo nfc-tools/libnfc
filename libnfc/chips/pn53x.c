@@ -70,8 +70,8 @@ const byte_t pncmd_target_init[2] = { 0xD4, 0x8C };
 //Example of default values for PN532 or PN533:
 //const byte_t pncmd_target_init[39] = { 0xD4, 0x8C, 0x00, 0x08, 0x00, 0x12, 0x34, 0x56, 0x40, 0x01, 0xFE, 0xa2, 0xa3, 0xa4, 0xa5, 0xa6, 0xa7, 0xc0, 0xc1, 0xc2, 0xc3, 0xc4, 0xc5, 0xc6, 0xc7, 0xFF, 0xFF, 0xAA, 0x99, 0x88, 0x77, 0x66, 0x55, 0x44, 0x33, 0x22, 0x11, 0x00, 0x00 };
 const byte_t pncmd_target_virtual_card[4] = { 0xD4, 0x14 };
-const byte_t pncmd_target_receive[2] = { 0xD4, 0x88 };
-const byte_t pncmd_target_send[264] = { 0xD4, 0x90 };
+const byte_t pncmd_target_get_initiator_command[2] = { 0xD4, 0x88 };
+const byte_t pncmd_target_response_to_initiator[264] = { 0xD4, 0x90 };
 const byte_t pncmd_target_get_status[2] = { 0xD4, 0x8A };
 
 static const byte_t pn53x_ack_frame[] = { 0x00, 0x00, 0xff, 0x00, 0xff, 0x00 };
@@ -1418,7 +1418,7 @@ pn53x_target_receive_bits (nfc_device_t * pnd, byte_t * pbtRx, size_t * pszRxBit
   uint8_t ui8Bits;
 
   // Try to gather a received frame from the reader
-  if (!pn53x_transceive (pnd, pncmd_target_receive, 2, abtRx, &szRx))
+  if (!pn53x_transceive (pnd, pncmd_target_get_initiator_command, 2, abtRx, &szRx))
     return false;
 
   // Get the last bit-count that is stored in the received byte 
@@ -1454,7 +1454,7 @@ pn53x_target_receive_bytes (nfc_device_t * pnd, byte_t * pbtRx, size_t * pszRx)
   if (pnd->bEasyFraming) {
     pbtTx = pncmd_target_get_data;
   } else {
-    pbtTx = pncmd_target_receive;
+    pbtTx = pncmd_target_get_initiator_command;
   }
 
   // Try to gather a received frame from the reader
@@ -1477,9 +1477,9 @@ pn53x_target_send_bits (nfc_device_t * pnd, const byte_t * pbtTx, const size_t s
   size_t  szFrameBits = 0;
   size_t  szFrameBytes = 0;
   uint8_t ui8Bits = 0;
-  byte_t  abtCmd[sizeof (pncmd_target_send)];
+  byte_t  abtCmd[sizeof (pncmd_target_response_to_initiator)];
 
-  memcpy (abtCmd, pncmd_target_send, sizeof (pncmd_target_send));
+  memcpy (abtCmd, pncmd_target_response_to_initiator, sizeof (pncmd_target_response_to_initiator));
 
   // Check if we should prepare the parity bits ourself
   if (!pnd->bPar) {
@@ -1514,7 +1514,7 @@ pn53x_target_send_bits (nfc_device_t * pnd, const byte_t * pbtTx, const size_t s
 bool
 pn53x_target_send_bytes (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx)
 {
-  byte_t  abtCmd[MAX (sizeof (pncmd_target_send), sizeof (pncmd_target_set_data))];
+  byte_t  abtCmd[MAX (sizeof (pncmd_target_response_to_initiator), sizeof (pncmd_target_set_data))];
 
 
   // We can not just send bytes without parity if while the PN53X expects we handled them
@@ -1524,7 +1524,7 @@ pn53x_target_send_bytes (nfc_device_t * pnd, const byte_t * pbtTx, const size_t 
   if (pnd->bEasyFraming) {
     memcpy (abtCmd, pncmd_target_set_data, sizeof (pncmd_target_set_data));
   } else {
-    memcpy (abtCmd, pncmd_target_send, sizeof (pncmd_target_send));
+    memcpy (abtCmd, pncmd_target_response_to_initiator, sizeof (pncmd_target_response_to_initiator));
   }
 
   // Copy the data into the command frame
