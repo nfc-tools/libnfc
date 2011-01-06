@@ -27,7 +27,10 @@
 
 #  include <nfc/nfc-types.h>
 
-#  define MAX_FRAME_LEN       264
+#  define PN53x_NORMAL_FRAME_MAX_LEN		255
+#  define PN53x_NORMAL_FRAME_OVERHEAD		7
+#  define PN53x_EXTENDED_FRAME_MAX_LEN		264
+#  define PN53x_EXTENDED_FRAME_OVERHEAD		10
 
 // Registers and symbols masks used to covers parts within a register
 #  define REG_CIU_TX_MODE           0x6302

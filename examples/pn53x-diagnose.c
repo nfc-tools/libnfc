@@ -54,7 +54,7 @@ main (int argc, const char *argv[])
   const char *acLibnfcVersion;
   bool    result;
 
-  byte_t  abtRx[MAX_FRAME_LEN];
+  byte_t  abtRx[PN53x_EXTENDED_FRAME_MAX_LEN];
   size_t  szRx;
   const byte_t pncmd_diagnose_communication_line_test[] = { 0xD4, 0x00, 0x00, 0x06, 'l', 'i', 'b', 'n', 'f', 'c' };
   const byte_t pncmd_diagnose_rom_test[] = { 0xD4, 0x00, 0x01 };

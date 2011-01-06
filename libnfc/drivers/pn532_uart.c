@@ -39,8 +39,6 @@
 // Bus
 #include "uart.h"
 
-#define BUFFER_LENGTH 256
-
 #define SERIAL_DEFAULT_PORT_SPEED 115200
 
 // TODO Move this one level up for libnfc-1.6
@@ -183,20 +181,22 @@ pn532_uart_disconnect (nfc_device_t * pnd)
   free (pnd);
 }
 
+#define TX_BUFFER_LEN (256)
+#define RX_BUFFER_LEN (PN53x_EXTENDED_FRAME_MAX_LEN + PN53x_EXTENDED_FRAME_OVERHEAD)
 bool
 pn532_uart_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, byte_t * pbtRx,
                        size_t * pszRx)
 {
-  byte_t  abtTxBuf[BUFFER_LENGTH] = { 0x00, 0x00, 0xff };       // Every packet must start with "00 00 ff"
-  byte_t  abtRxBuf[BUFFER_LENGTH];
-  size_t  szRxBufLen = BUFFER_LENGTH;
+  byte_t  abtTxBuf[TX_BUFFER_LEN] = { 0x00, 0x00, 0xff };       // Every packet must start with "00 00 ff"
+  byte_t  abtRxBuf[RX_BUFFER_LEN];
+  size_t  szRxBufLen = MIN( RX_BUFFER_LEN, *pbtRx );
   size_t  szPos;
   int     res;
 
   // Packet length = data length (len) + checksum (1) + end of stream marker (1)
   abtTxBuf[3] = szTx;
   // Packet length checksum
-  abtTxBuf[4] = BUFFER_LENGTH - abtTxBuf[3];
+  abtTxBuf[4] = 256 - abtTxBuf[3];
   // Copy the PN53X command into the packet buffer
   memmove (abtTxBuf + 5, pbtTx, szTx);
 
@@ -236,7 +236,7 @@ pn532_uart_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t sz
   memmove (abtRxBuf, abtRxBuf + sizeof (ack_frame), szRxBufLen);
 
   if (szRxBufLen == 0) {
-    szRxBufLen = BUFFER_LENGTH;
+    szRxBufLen = RX_BUFFER_LEN;
     do {
       delay_ms (10);
       res = uart_receive ((serial_port) pnd->nds, abtRxBuf, &szRxBufLen);
@@ -284,18 +284,19 @@ pn532_uart_ack (const nfc_device_spec_t nds)
   uart_send ((serial_port) nds, ack_frame, sizeof (ack_frame));
 }
 
+#define PN53X_RX_OVERHEAD 6
 void
 pn532_uart_wakeup (const nfc_device_spec_t nds)
 {
-  byte_t  abtRx[BUFFER_LENGTH];
-  size_t  szRx = BUFFER_LENGTH;
+  byte_t  abtRx[RX_BUFFER_LEN];
+  size_t  szRx = PN53x_NORMAL_FRAME_OVERHEAD + 2;
   /** PN532C106 wakeup. */
   /** High Speed Unit (HSU) wake up consist to send 0x55 and wait a "long" delay for PN532 being wakeup. */
   /** After the preamble we request the PN532C106 chip to switch to "normal" mode (SAM is not used) */
   const byte_t pncmd_pn532c106_wakeup_preamble[] = 
     { 0x55, 0x55, 0x00, 0x00, 0x00, 
-      0x00, 0x00, 0xff, 0x03, 0xfd, 0xd4, 0x14, 0x01, 0x17,  // XXX: WTF this command is sent twice?
-      0x00, 0x00, 0xff, 0x03, 0xfd, 0xd4, 0x14, 0x01, 0x17, 0x00 };
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+      0x00, 0x00, 0xff, 0x03, 0xfd, 0xd4, 0x14, 0x01, 0x17, 0x00 }; // Here we send a SAMConfiguration command (Normal mode, the SAM is not used; this is the default mode)
 #ifdef DEBUG
   PRINT_HEX ("TX", pncmd_pn532c106_wakeup_preamble, sizeof (pncmd_pn532c106_wakeup_preamble));
 #endif
@@ -312,11 +313,11 @@ pn532_uart_wakeup (const nfc_device_spec_t nds)
 bool
 pn532_uart_check_communication (const nfc_device_spec_t nds, bool * success)
 {
-  byte_t  abtRx[BUFFER_LENGTH];
-  size_t  szRx = BUFFER_LENGTH;
+  byte_t  abtRx[RX_BUFFER_LEN];
   const byte_t attempted_result[] =
     { 0x00, 0x00, 0xff, 0x00, 0xff, 0x00, 0x00, 0x00, 0xff, 0x09, 0xf7, 0xD5, 0x01, 0x00, 'l', 'i', 'b', 'n', 'f', 'c',
 0xbc, 0x00 };
+  size_t  szRx = sizeof(attempted_result);
   int     res;
 
   /** To be sure that PN532 is alive, we have put a "Diagnose" command to execute a "Communication Line Test" */

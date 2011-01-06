@@ -44,7 +44,7 @@
 // Bus
 #include "uart.h"
 
-#define BUFFER_LENGTH 256
+#include <sys/param.h>
 
 /** @def DEV_ARYGON_PROTOCOL_ARYGON_ASCII
  * @brief High level language in ASCII format. (Common µC commands and Mifare® commands) 
@@ -80,12 +80,6 @@ void    arygon_firmware (const nfc_device_spec_t nds, char * str);
 
 bool    arygon_check_communication (const nfc_device_spec_t nds);
 
-/**
- * @note ARYGON-ADRA (PN531): ???,n,8,1
- * @note ARYGON-ADRB (PN532): 9600,n,8,1
- * @note ARYGON-APDA (PN531): 9600,n,8,1
- * @note ARYGON-APDB2UA33 (PN532 + ARYGON µC): 9600,n,8,1
- */
 nfc_device_desc_t *
 arygon_pick_device (void)
 {
@@ -106,7 +100,6 @@ arygon_pick_device (void)
       return NULL;
     }
   }
-
   return pndd;
 }
 
@@ -209,19 +202,20 @@ arygon_disconnect (nfc_device_t * pnd)
   free (pnd);
 }
 
+#define TX_BUFFER_LENGTH (300)
+#define RX_BUFFER_LENGTH (PN53x_EXTENDED_FRAME_MAX_LEN + PN53x_EXTENDED_FRAME_OVERHEAD)
 bool
 arygon_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, byte_t * pbtRx, size_t * pszRx)
 {
-  byte_t  abtTxBuf[BUFFER_LENGTH] = { DEV_ARYGON_PROTOCOL_TAMA, 0x00, 0x00, 0xff };     // Every packet must start with "00 00 ff"
-  byte_t  abtRxBuf[BUFFER_LENGTH];
-  size_t  szRxBufLen = BUFFER_LENGTH;
+  byte_t  abtTxBuf[TX_BUFFER_LENGTH] = { DEV_ARYGON_PROTOCOL_TAMA, 0x00, 0x00, 0xff };     // Every packet must start with "0x32 0x00 0x00 0xff"
+  byte_t  abtRxBuf[RX_BUFFER_LENGTH];
+  size_t  szRxBufLen = MIN(RX_BUFFER_LENGTH, *pszRx);
   size_t  szPos;
   int     res;
-
   // Packet length = data length (len) + checksum (1) + end of stream marker (1)
   abtTxBuf[4] = szTx;
   // Packet length checksum
-  abtTxBuf[5] = BUFFER_LENGTH - abtTxBuf[4];
+  abtTxBuf[5] = 256 - abtTxBuf[4];
   // Copy the PN53X command into the packet buffer
   memmove (abtTxBuf + 6, pbtTx, szTx);
 
@@ -264,7 +258,7 @@ arygon_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, 
   memmove (abtRxBuf, abtRxBuf + sizeof (pn53x_ack_frame), szRxBufLen);
 
   if (szRxBufLen == 0) {
-    szRxBufLen = BUFFER_LENGTH;
+    szRxBufLen = RX_BUFFER_LENGTH;
     do {
       delay_ms (10);
       res = uart_receive ((serial_port) pnd->nds, abtRxBuf, &szRxBufLen);
@@ -296,8 +290,8 @@ void
 arygon_firmware (const nfc_device_spec_t nds, char * str)
 {
   const byte_t arygon_firmware_version_cmd[] = { DEV_ARYGON_PROTOCOL_ARYGON_ASCII, 'a', 'v' }; 
-  byte_t abtRx[BUFFER_LENGTH];
-  size_t szRx = BUFFER_LENGTH;
+  byte_t abtRx[RX_BUFFER_LENGTH];
+  size_t szRx = 16;
   int res;
 
 #ifdef DEBUG
@@ -326,8 +320,8 @@ bool
 arygon_reset_tama (const nfc_device_spec_t nds)
 {
   const byte_t arygon_reset_tama_cmd[] = { DEV_ARYGON_PROTOCOL_ARYGON_ASCII, 'a', 'r' };
-  byte_t abtRx[BUFFER_LENGTH];
-  size_t szRx = BUFFER_LENGTH;
+  byte_t abtRx[RX_BUFFER_LENGTH];
+  size_t szRx = 10; // Attempted response is 10 bytes long
   int res;
 
   // Sometimes the first byte we send is not well-transmited (ie. a previously sent data on a wrong baud rate can put some junk in buffer)
@@ -392,7 +386,7 @@ arygon_ack (const nfc_device_spec_t nds)
 bool
 arygon_check_communication (const nfc_device_spec_t nds)
 {
-  byte_t  abtRx[BUFFER_LENGTH];
+  byte_t  abtRx[RX_BUFFER_LENGTH];
   size_t  szRx;
   const byte_t attempted_result[] = { 0x00, 0x00, 0xff, 0x00, 0xff, 0x00, // ACK
     0x00, 0x00, 0xff, 0x09, 0xf7, 0xd5, 0x01, 0x00, 'l', 'i', 'b', 'n', 'f', 'c', 0xbc, 0x00 }; // Reply
