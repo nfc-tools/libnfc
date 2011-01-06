@@ -666,9 +666,9 @@ pn53x_InAutoPoll (nfc_device_t * pnd,
                   const byte_t btPollNr, const byte_t btPeriod, nfc_target_t * pntTargets, size_t * pszTargetFound)
 {
   size_t  szTxInAutoPoll,
-          n,
-          szRx;
+          n;
   byte_t  abtRx[PN53x_EXTENDED_FRAME_MAX_LEN];
+  size_t  szRx = PN53x_EXTENDED_FRAME_MAX_LEN;
   bool    res;
   byte_t *pbtTxInAutoPoll;
 
