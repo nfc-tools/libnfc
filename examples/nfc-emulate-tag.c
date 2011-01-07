@@ -181,6 +181,14 @@ main (int argc, char *argv[])
 
   printf ("Connected to NFC device: %s\n", pnd->acName);
 
+  // Notes for ISO14443-A emulated tags:
+  // * Only short UIDs are supported
+  //   If your UID is longer it will be truncated
+  //   Therefore e.g. an UltraLight can only have short UID, which is
+  //   typically badly handled by readers who still try to send their "0x95"
+  // * First byte of UID will be masked by 0x08 by the PN53x firmware
+  //   as security countermeasure against real UID emulation
+
   // Example of a Mifare Classic Mini
   // Note that crypto1 is not implemented in this example
   nfc_target_t nt = {
