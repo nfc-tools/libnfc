@@ -9,7 +9,7 @@ TESTS_ENVIRONMENT = NO_MAKE=yes CUTTER="$(CUTTER)"
 
 noinst_LTLIBRARIES = \
 		     test_access_storm.la \
-		     test_register_access.la
+		     test_register_access.la \
 		     test_register_endianness.la
 
 AM_LDFLAGS = -module -rpath $(libdir) -avoid-version -no-undefined
