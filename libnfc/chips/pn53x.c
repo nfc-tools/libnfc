@@ -759,7 +759,9 @@ static struct sErrorMessage {
   { ENFCID3, "NFCID3 Mismatch" },
   { EOVCURRENT, "Over Current"  },
   { ENAD, "NAD Missing in DEP Frame" },
-    /* Driver-level error */
+    /* Software level errors */
+  { ETGUIDNOTSUP, "Target UID not supported" }, // In target mode, PN53x only support 4 bytes UID and the first byte must start with 0x08
+    /* Driver-level errors */
   { DENACK, "Received NACK" },
   { DEACKMISMATCH, "Expected ACK/NACK" },
   { DEISERRFRAME, "Received an error frame" },
@@ -1177,9 +1179,14 @@ pn53x_target_init (nfc_device_t * pnd, nfc_target_t * pnt, byte_t * pbtRx, size_
   switch (pnt->nm.nmt) {
     case NMT_ISO14443A:
       ptm = PTM_PASSIVE_ONLY;
+      if ((pnt->nti.nai.abtUid[0] != 0x08) || (pnt->nti.nai.szUidLen != 4)) {
+        pnd->iLastError = ETGUIDNOTSUP;
+        return false;
+      }
       pn53x_set_parameter(pnd, PARAM_AUTO_ATR_RES, false);
       if (pnd->nc == NC_PN532) { // We have a PN532
-        if ((pnt->nti.nai.btSak & SAK_ISO14443_4_COMPLIANT) && (pnd->bAutoIso14443_4)) { // We have a ISO14443-4 tag to emulate and NDO_AUTO_14443_4A option is enabled
+        if ((pnt->nti.nai.btSak & SAK_ISO14443_4_COMPLIANT) && (pnd->bAutoIso14443_4)) { 
+          // We have a ISO14443-4 tag to emulate and NDO_AUTO_14443_4A option is enabled
           ptm |= PTM_ISO14443_4_PICC_ONLY; // We add ISO14443-4 restriction
           pn53x_set_parameter(pnd, PARAM_14443_4_PICC, true);
         } else {

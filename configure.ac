@@ -147,18 +147,18 @@ CFLAGS="$CFLAGS -std=c99"
 CFLAGS="$CFLAGS -Du_int8_t=uint8_t -Du_int16_t=uint16_t"
 
 AC_CONFIG_FILES([
+		Doxyfile
 		Makefile
+		cmake_modules/Makefile
+		examples/Makefile
 		include/Makefile
 		include/nfc/Makefile
-		libnfc/chips/Makefile
-		libnfc/buses/Makefile
-		libnfc/drivers/Makefile
-		libnfc/Makefile
-		examples/Makefile
-		cmake_modules/Makefile
-		test/Makefile
 		libnfc.pc
-		Doxyfile
+		libnfc/Makefile
+		libnfc/buses/Makefile
+		libnfc/chips/Makefile
+		libnfc/drivers/Makefile
+		test/Makefile
 		])
 
 AC_OUTPUT

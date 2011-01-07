@@ -128,7 +128,7 @@ extern  "C" {
 #define EDEPUNKCMD	0x12
 #define EINVRXFRAM	0x13
 #define EMFAUTH		0x14
-#define ENSECNOTSUPP	0x18	// PN533
+#define ENSECNOTSUPP	0x18	// PN533 only
 #define EBCC		0x23
 #define EDEPINVSTATE	0x25
 #define EOPNOTALL	0x26
@@ -140,10 +140,13 @@ extern  "C" {
 #define EOVCURRENT	0x2d
 #define ENAD		0x2e
 
+/* Software level errors */
+#define ETGUIDNOTSUP    0x0100  /* Target UID not supported */
+
 /* Common device-level errors */
-#  define DEIO            0x1000/* Input/output error */
-#  define DEINVAL         0x2000/* Invalid argument */
-#  define DETIMEOUT       0x3000/* Operation timeout */
+#define DEIO            0x1000  /* Input/output error */
+#define DEINVAL         0x2000  /* Invalid argument */
+#define DETIMEOUT       0x3000  /* Operation timeout */
 
 #  ifdef __cplusplus
 }
