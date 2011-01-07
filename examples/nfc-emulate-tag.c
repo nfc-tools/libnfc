@@ -84,6 +84,18 @@ target_io( nfc_target_t * pnt, const byte_t * pbtInput, const size_t szInput, by
   }
   if(szInput) {
     switch(pbtInput[0]) {
+      case 0x30: // Mifare read
+        // block address is in pbtInput[1]
+        *pszOutput = 15;
+        strcpy(pbtOutput, "You read block ");
+        pbtOutput[15] = pbtInput[1];
+        break;
+      case 0x50: // Deselect / HALT
+        if (!quiet_output) {
+          printf("Target halted me. Bye!\n");
+        }
+        loop = false;
+        break;
       case 0x60: // Mifare authA
       case 0x61: // Mifare authB
         // Let's give back a very random nonce...
