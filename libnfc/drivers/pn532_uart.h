@@ -25,7 +25,7 @@
 #  define __NFC_DRIVER_PN532_UART_H__
 
 #  include <nfc/nfc-types.h>
-
+#  include <sys/param.h>
 #  define PN532_UART_DRIVER_NAME "PN532_UART"
 
 // Functions used by developer to handle connection to this device

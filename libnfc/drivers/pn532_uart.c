@@ -189,7 +189,7 @@ pn532_uart_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t sz
 {
   byte_t  abtTxBuf[TX_BUFFER_LEN] = { 0x00, 0x00, 0xff };       // Every packet must start with "00 00 ff"
   byte_t  abtRxBuf[RX_BUFFER_LEN];
-  size_t  szRxBufLen = MIN( RX_BUFFER_LEN, *pbtRx );
+  size_t  szRxBufLen = MIN( RX_BUFFER_LEN, *pszRx );
   size_t  szPos;
   int     res;
 
