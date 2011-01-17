@@ -1,3 +1,5 @@
+SUBDIRS = pn53x-tamashell-scripts
+
 bin_PROGRAMS = \
 		nfc-anticol \
 		nfc-dep-initiator \

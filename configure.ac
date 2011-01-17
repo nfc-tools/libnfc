@@ -151,6 +151,7 @@ AC_CONFIG_FILES([
 		Makefile
 		cmake_modules/Makefile
 		examples/Makefile
+		examples/pn53x-tamashell-scripts/Makefile
 		include/Makefile
 		include/nfc/Makefile
 		libnfc.pc
