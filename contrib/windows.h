@@ -28,6 +28,8 @@
 #  include <windows.h>
 #  if defined (__MINGW32__)
 #    define snprintf(S, n, F, ...) sprintf(S, F, __VA_ARGS__)
+#    define MAX(a,b) max(a,b)
+#    define MIN(a,b) min(a,b)
 #  else
 #    define snprintf sprintf_s
 #    define strdup _strdup
