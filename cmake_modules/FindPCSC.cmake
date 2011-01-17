@@ -20,13 +20,7 @@ IF(NOT PCSC_FOUND)
    # Will find PC/SC headers both on Mac and Windows
    FIND_PATH(PCSC_INCLUDE_DIRS WinSCard.h)
    # PCSC library is for Mac, WinSCard library is for Windows
-   FIND_LIBRARY(PCSC_LIBRARIES NAMES PCSC WinSCard)
-   
-   IF(MINGW)
-     # MinGW32 with PCSC framework use Microsoft SDK's WinSCard.h
-     SET(PCSC_INCLUDE_DIRS)
-     SET(PCSC_INCLUDE_DIRS "$ENV{ProgramFiles}/Microsoft SDKs/Windows/v7.0/Include")
-   ENDIF(MINGW)
+   FIND_LIBRARY(PCSC_LIBRARIES NAMES PCSC libwinscard)
 ENDIF(NOT PCSC_FOUND)
 
 INCLUDE(FindPackageHandleStandardArgs)

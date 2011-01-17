@@ -22,7 +22,7 @@ INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/incl
 
 # Win32
 IF(WIN32)
-  INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/contrib/win32 ${CMAKE_CURRENT_SOURCE_DIR}/contrib/win32/stdint)
+  INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/contrib/win32)
 ENDIF(WIN32)
 
 # make it easy to locate CMake modules for finding libraries
@@ -65,6 +65,13 @@ ENDIF(CMAKE_COMPILER_IS_GNUCC)
 
 # Workarounds for libusb in C99
 ADD_DEFINITIONS(-Du_int8_t=uint8_t -Du_int16_t=uint16_t)
+
+IF(MINGW)
+  # force MinGW-w64 in 32bit mode
+  ADD_DEFINITIONS(-m32)
+  SET(CMAKE_SHARED_LINKER_FLAGS -m32)
+  SET(CMAKE_EXE_LINKER_FLAGS -m32)
+ENDIF(MINGW)
 
 IF(NOT WIN32)
   # Set some pkg-config variables
