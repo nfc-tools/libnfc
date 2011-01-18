@@ -261,7 +261,8 @@ uart_receive (serial_port sp, byte_t * pbtRx, size_t * pszRx)
     }
 
     *pszRx += res;
-    tv.tv_usec = uiTimeoutPerByte * MIN( iExpectedByteCount, 16 ); // Reload timeout with a low value to prevent from waiting too long on slow devices (16x is enought to took at least 1 byte)
+    // Reload timeout with a low value to prevent from waiting too long on slow devices (16x is enought to took at least 1 byte)
+    tv.tv_usec = uiTimeoutStatic + uiTimeoutPerByte * MIN( iExpectedByteCount, 16 ); 
     // DBG("Timeout reloaded at: %d µs", tv.tv_usec);
   } while (byteCount && (iExpectedByteCount > 0));
 
@@ -279,14 +280,16 @@ uart_send (serial_port sp, const byte_t * pbtTx, const size_t szTx)
   int32_t res;
   size_t  szPos = 0;
   fd_set  rfds;
-  struct timeval tv;
-  const struct timeval tvDefault = { .tv_sec = 0, .tv_usec = 20000 };
+  struct timeval tvTimeout = {
+    .tv_sec = 0,
+    .tv_usec = uiTimeoutStatic + (uiTimeoutPerByte * szTx),
+  };
+  struct timeval tv = tvTimeout;
 
   while (szPos < szTx) {
     // Reset file descriptor
     FD_ZERO (&rfds);
     FD_SET (((serial_port_unix *) sp)->fd, &rfds);
-    tv = tvDefault;
     res = select (((serial_port_unix *) sp)->fd + 1, NULL, &rfds, NULL, &tv);
 
     // Write error
@@ -308,6 +311,9 @@ uart_send (serial_port sp, const byte_t * pbtTx, const size_t szTx)
     }
 
     szPos += res;
+
+    // Reload timeout with a low value to prevent from waiting too long on slow devices (16x is enought to took at least 1 byte)
+    tv.tv_usec = uiTimeoutStatic + uiTimeoutPerByte * MIN( szTx - szPos, 16 ); 
   }
   return 0;
 }
