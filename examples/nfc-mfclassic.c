@@ -494,6 +494,10 @@ main (int argc, const char *argv[])
         printf ("Writing data to file: %s ...", argv[3]);
         fflush (stdout);
         pfDump = fopen (argv[3], "wb");
+	if (pfDump == NULL) {
+	    printf ("Could not open dump file: %s\n", argv[3]);
+	    exit (EXIT_FAILURE);
+	}
         if (fwrite (&mtDump, 1, sizeof (mtDump), pfDump) != sizeof (mtDump)) {
           printf ("\nCould not write to file: %s\n", argv[3]);
           exit (EXIT_FAILURE);
@@ -536,6 +540,10 @@ main (int argc, const char *argv[])
 
       printf ("Writing data to file: %s\n", pcPayload);
       pfPayload = fopen (pcPayload, "wb");
+      if (pfPayload == NULL) {
+        printf ("Could not open file %s for writting.\n", pcPayload);
+        exit (EXIT_FAILURE);
+      }
       if (fwrite (abPayload, 1, sizeof (abPayload), pfPayload) != sizeof (abPayload)) {
         printf ("Could not write to file: %s\n", pcPayload);
         exit (EXIT_FAILURE);
