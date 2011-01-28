@@ -247,9 +247,9 @@ pn532_uart_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t sz
   }
 
 #ifdef DEBUG
-  PRINT_HEX ("TX", ack_frame, 6);
+  PRINT_HEX ("TX", ack_frame, sizeof(ack_frame));
 #endif
-  res = uart_send ((serial_port) pnd->nds, ack_frame, 6);
+  res = uart_send ((serial_port) pnd->nds, ack_frame, sizeof(ack_frame));
   if (res != 0) {
     ERR ("%s", "Unable to transmit data. (TX)");
     pnd->iLastError = res;
