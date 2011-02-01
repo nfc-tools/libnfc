@@ -63,8 +63,10 @@ bool
 pn533_usb_list_devices (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * pszDeviceFound)
 {
   // array of {vendor,product} pairs for USB devices
-  usb_candidate_t candidates[] = { {0x04CC, 0x2533}
-  , {0x04E6, 0x5591}
+  usb_candidate_t candidates[] = { 
+    { 0x04CC, 0x2533 }, // NXP - PN533
+    { 0x04E6, 0x5591 }, // SCM Micro - SCL3711-NFC&RW
+    { 0x1FD3, 0x0608 }  // ASK - LoGO
   };
 
   return pn53x_usb_list_devices (&pnddDevices[0], szDevices, pszDeviceFound, &candidates[0],
@@ -76,3 +78,18 @@ pn533_usb_connect (const nfc_device_desc_t * pndd)
 {
   return pn53x_usb_connect (pndd, pndd->acDevice, NC_PN533);
 }
+
+void
+pn533_usb_init (nfc_device_t * pnd)
+{
+    usb_spec_t* pus = (usb_spec_t*) pnd->nds;
+    DBG ("pus->uc.idVendor == 0x%04x, pus->uc.idProduct == 0x%04x", pus->uc.idVendor, pus->uc.idProduct);
+    if ((pus->uc.idVendor == 0x1FD3) && (pus->uc.idProduct == 0x0608)) { // ASK - LoGO
+      DBG ("ASK LoGO initialization.");
+      pn53x_set_reg (pnd, 0x6106, 0xFF, 0x1B);
+      pn53x_set_reg (pnd, 0x6306, 0xFF, 0x14);
+      pn53x_set_reg (pnd, 0xFFFD, 0xFF, 0x37);
+      pn53x_set_reg (pnd, 0xFFB0, 0xFF, 0x3B);
+    }
+}
+

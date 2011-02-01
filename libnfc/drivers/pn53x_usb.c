@@ -172,14 +172,14 @@ pn53x_usb_connect (const nfc_device_desc_t * pndd, const char *target_name, int 
 
   for (bus = usb_get_busses (); bus; bus = bus->next) {
     for (dev = bus->devices; dev; dev = dev->next, uiBusIndex--) {
-      // DBG("Checking device %04x:%04x",dev->descriptor.idVendor,dev->descriptor.idProduct);
+      DBG ("Checking device %04x:%04x", dev->descriptor.idVendor, dev->descriptor.idProduct);
       if (uiBusIndex == 0) {
         // Open the USB device
         us.pudh = usb_open (dev);
 
         get_end_points (dev, &us);
         if (usb_set_configuration (us.pudh, 1) < 0) {
-          DBG ("%s", "Setting config failed");
+          ERR ("Unable to set USB configuration, please check USB permissions for device %04x:%04x", dev->descriptor.idVendor, dev->descriptor.idProduct);
           usb_close (us.pudh);
           // we failed to use the specified device
           return NULL;
@@ -191,6 +191,9 @@ pn53x_usb_connect (const nfc_device_desc_t * pndd, const char *target_name, int 
           // we failed to use the specified device
           return NULL;
         }
+        // Copy VendorId and ProductId
+        us.uc.idVendor = dev->descriptor.idVendor;
+        us.uc.idProduct = dev->descriptor.idProduct;
         // Allocate memory for the device info and specification, fill it and return the info
         pus = malloc (sizeof (usb_spec_t));
         *pus = us;

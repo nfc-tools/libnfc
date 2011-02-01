@@ -28,6 +28,7 @@
 
 // Functions used by developer to handle connection to this device
 nfc_device_t *pn533_usb_connect (const nfc_device_desc_t * pndd);
+void    pn533_usb_init (nfc_device_t * pnd);
 bool    pn533_usb_list_devices (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * pszDeviceFound);
 nfc_device_desc_t *pn533_usb_pick_device (void);
 

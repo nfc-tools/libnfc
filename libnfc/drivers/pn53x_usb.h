@@ -24,21 +24,23 @@
 #include <usb.h>
 
 typedef struct {
+  uint16_t idVendor;
+  uint16_t idProduct;
+} usb_candidate_t;
+
+typedef struct {
   usb_dev_handle *pudh;
+  usb_candidate_t uc;
   uint32_t uiEndPointIn;
   uint32_t uiEndPointOut;
   uint32_t wMaxPacketSize;
 } usb_spec_t;
 
-typedef struct {
-  uint16_t idVendor;
-  uint16_t idProduct;
-} usb_candidate_t;
-
-nfc_device_t *pn53x_usb_connect (const nfc_device_desc_t * pndd, const char *target_name, int target_chip);
 void    get_end_points (struct usb_device *dev, usb_spec_t * pus);
-void    pn53x_usb_disconnect (nfc_device_t * pnd);
-bool    pn53x_usb_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, byte_t * pbtRx,
-                              size_t * pszRx);
+
 bool    pn53x_usb_list_devices (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * pszDeviceFound,
                                 usb_candidate_t candidates[], int num_candidates, char *target_name);
+nfc_device_t *pn53x_usb_connect (const nfc_device_desc_t * pndd, const char *target_name, int target_chip);
+bool    pn53x_usb_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, byte_t * pbtRx,
+                              size_t * pszRx);
+void    pn53x_usb_disconnect (nfc_device_t * pnd);

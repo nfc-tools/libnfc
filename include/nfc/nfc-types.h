@@ -133,6 +133,8 @@ struct driver_callbacks {
   bool (*list_devices) (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * pszDeviceFound);
   /** Connect callback */
   nfc_device_t *(*connect) (const nfc_device_desc_t * pndd);
+  /** Init callback */
+  void (*init) (nfc_device_t * pnd);
   /** Transceive callback */
   bool (*transceive) (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, byte_t * pbtRx, size_t * pszRx);
   /** Disconnect callback */

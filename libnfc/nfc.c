@@ -107,8 +107,13 @@ nfc_connect (nfc_device_desc_t * pndd)
       // Great we have claimed a device
       pnd->pdc = &(drivers_callbacks_list[uiDriver]);
 
+      // TODO: Put this pn53x related in driver_init()
       if (!pn53x_init (pnd))
         return NULL;
+
+      if (pnd->pdc->init) {
+        pnd->pdc->init (pnd);
+      }
 
       // Set default configuration options
       // Make sure we reset the CRC and parity to chip handling.
