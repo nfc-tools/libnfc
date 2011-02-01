@@ -6,7 +6,7 @@ INCLUDES = $(all_includes) $(LIBNFC_CFLAGS)
 noinst_HEADERS =  chips.h buses.h drivers.h mirror-subr.h
 lib_LTLIBRARIES = libnfc.la
 libnfc_la_SOURCES = nfc.c iso14443-subr.c mirror-subr.c
-libnfc_la_LDFLAGS = -no-undefined -version-info=0:0:0
+libnfc_la_LDFLAGS = -no-undefined -version-info=1:0:1
 libnfc_la_CFLAGS = @DRIVERS_CFLAGS@
 libnfc_la_LIBADD = \
 	$(top_builddir)/libnfc/chips/libnfcchips.la \

@@ -1,3 +1,12 @@
+New in 1.4.1:
+
+API Changes
+
+  * Types
+    - New error: ETGUIDNOTSUP raised when UID is not 4 bytes long or does not start with 0x08 (Security restriction present in the NXP PN53x chips)
+
+
+
 New in 1.4.0:
 
 API Changes

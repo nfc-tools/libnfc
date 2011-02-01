@@ -1,3 +1,26 @@
+Feb 1, 2010 - 1.4.1
+-------------------
+
+Fixes:
+ - libnfc: fix missing pn53x-tamashell-scripts in generated tarball. (Thanks to usermeister)
+ - buses/uart: improved UART communication on POSIX systems: slower devices can be detected and high speed devices works better
+ - buses/uart: serial autoprobe now skips invalid devices but checks all ports in the list
+ - drivers/pn53x_usb: prevent from stack corruption when using PN533-based device and add errors handling for ReadRegister and WriteRegister
+ - drivers/arygon: fix polling on ARYGON devices
+ - examples/nfc-emulate-tag: switch off easy framing when we are not emulating a ISO14443-4 target
+ - examples/nfc-mfclassic: fix crash when file cannot be opened for writing
+ - examples/nfc-mfultralight: fix 7 bytes UID display
+
+Improvements:
+ - libnfc: add a "troubleshooting" section in README to document ACR122 problems with pcsclite.
+ - libnfc: inform user if target UID can not be emulated
+ - example/nfc-mfultralight: handle lock page writing
+ - examples/nfc-emulate-tag: handle HALT & READ
+ - tests: add register access test
+
+Experimental: Windows platform support (Thanks to Glenn Ergeerts)
+
+
 Nov 17, 2010 - 1.4.0
 --------------------
 
