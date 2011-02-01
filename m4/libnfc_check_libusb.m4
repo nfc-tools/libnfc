@@ -10,7 +10,7 @@ AC_DEFUN([LIBNFC_CHECK_LIBUSB],
     AC_ARG_WITH([libusb-win32],
         [AS_HELP_STRING([--with-libusb-win32], [use libusb-win32 from the following location])],
         [LIBUSB_WIN32_DIR=$withval],
-        [LIBUSBWIN32_DIR=""])
+        [LIBUSB_WIN32_DIR=""])
 
     # --with-libusb-win32 directory have been set
     if test "x$LIBUSB_WIN32_DIR" != "x"; then
