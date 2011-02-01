@@ -250,11 +250,15 @@ pn53x_set_reg (nfc_device_t * pnd, uint16_t ui16Reg, uint8_t ui8SymbolMask, uint
 
   abtCmd[2] = ui16Reg >> 8;
   abtCmd[3] = ui16Reg & 0xff;
-  if (!pn53x_get_reg (pnd, ui16Reg, &ui8Current))
-    return false;
-
-  abtCmd[4] = ui8Value | (ui8Current & (~ui8SymbolMask));
-  return (abtCmd[4] != ui8Current) ? pn53x_transceive (pnd, abtCmd, sizeof (pncmd_set_register), NULL, NULL) : true;
+  if (ui8SymbolMask != 0xff) {
+    if (!pn53x_get_reg (pnd, ui16Reg, &ui8Current))
+      return false;
+    abtCmd[4] = ui8Value | (ui8Current & (~ui8SymbolMask));
+    return (abtCmd[4] != ui8Current) ? pn53x_transceive (pnd, abtCmd, sizeof (pncmd_set_register), NULL, NULL) : true;
+  } else {
+    abtCmd[4] = ui8Value;
+    return pn53x_transceive (pnd, abtCmd, sizeof (pncmd_set_register), NULL, NULL);
+  }
 }
 
 bool
