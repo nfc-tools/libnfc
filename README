@@ -95,6 +95,9 @@ turn "<string>0x0000</string>" value into 0x0001 to allow CCID exchange or
 0x0005 to allow CCID exchange and bogus devices (cf previous remark) and
 restart pcscd daemon.
 
+Warning: if you use ACS CCID drivers (acsccid), configuration file is located
+in something like: /usr/lib/pcsc/drivers/ifd-acsccid.bundle/Contents/Info.plist
+
 SCL3711:
 --------
 Libnfc cannot be used concurrently with the PCSC proprietary driver of SCL3711.
