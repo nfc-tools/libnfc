@@ -149,6 +149,8 @@ CFLAGS="$CFLAGS -Du_int8_t=uint8_t -Du_int16_t=uint16_t"
 AC_CONFIG_FILES([
 		Doxyfile
 		Makefile
+		contrib/Makefile
+		contrib/win32/Makefile
 		cmake_modules/Makefile
 		examples/Makefile
 		examples/pn53x-tamashell-scripts/Makefile

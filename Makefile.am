@@ -2,7 +2,7 @@ ACLOCAL_AMFLAGS = -I m4
 
 AM_CFLAGS = $(LIBNFC_CFLAGS)
 
-SUBDIRS = libnfc examples include cmake_modules test
+SUBDIRS = libnfc examples include contrib cmake_modules test
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libnfc.pc
