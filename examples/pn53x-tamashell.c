@@ -36,15 +36,12 @@
 #  include "config.h"
 #endif // HAVE_CONFIG_H
 
-#if defined(HAVE_READLINE)
-#  include <stdio.h>
-#  include <readline/readline.h>
-#  include <readline/history.h>
-#else
 #  define _GNU_SOURCE // for getline on system with glibc < 2.10
 #  define _POSIX_C_SOURCE 200809L // for getline on system with glibc >= 2.10
 #  include <stdio.h>
-   extern FILE* stdin;
+#if defined(HAVE_READLINE)
+#  include <readline/readline.h>
+#  include <readline/history.h>
 #endif //HAVE_READLINE
 
 #include <stdlib.h>
@@ -68,6 +65,15 @@ int main(int argc, const char* argv[])
   byte_t abtTx[MAX_FRAME_LEN] = { 0xD4 };
   size_t szRx;
   size_t szTx;
+  extern FILE* stdin;
+  FILE* input = NULL;
+
+  if (argc >= 2) {
+    if((input=fopen(argv[1], "r"))==NULL) {
+      ERR ("%s", "Cannot open file.");
+      return EXIT_FAILURE;
+    }
+  }
 
   // Try to open the NFC reader
   pnd = nfc_connect(NULL);
@@ -78,7 +84,6 @@ int main(int argc, const char* argv[])
   }
 
   printf ("Connected to NFC reader: %s\n", pnd->acName);
-
   nfc_initiator_init(pnd);
 
   char * cmd;
@@ -86,27 +91,35 @@ int main(int argc, const char* argv[])
   while(1) {
     int offset=0;
 #if defined(HAVE_READLINE)
-    cmd=readline(prompt);
-    // NULL if ctrl-d
-    if (cmd==NULL) {
-      printf("Bye!\n");
-      break;
+    if (input==NULL) { // means we use stdin
+      cmd=readline(prompt);
+      // NULL if ctrl-d
+      if (cmd==NULL) {
+        printf("Bye!\n");
+        break;
+      }
+      add_history(cmd);
+    } else {
+#endif //HAVE_READLINE
+      cmd = NULL;
+      printf("%s", prompt);
+      fflush(0);
+      size_t n;
+      int s;
+      if (input != NULL) {
+        s = getline(&cmd, &n, input);
+      } else {
+        s = getline(&cmd, &n, stdin);
+      }
+      if (s <= 0) {
+        printf("Bye!\n");
+        free(cmd);
+        break;
+      }
+      // FIXME print only if read from redirected stdin (i.e. script)
+      printf("%s", cmd);
+#if defined(HAVE_READLINE)
     }
-    add_history(cmd);
-#else
-    cmd = NULL;
-    printf("%s", prompt);
-    fflush(0);
-    size_t n;
-    extern FILE* stdin;
-    int s = getline(&cmd, &n, stdin);
-    if (s <= 0) {
-      printf("Bye!\n");
-      free(cmd);
-      break;
-    }
-    // FIXME print only if read from redirected stdin (i.e. script)
-    printf("%s", cmd);
 #endif //HAVE_READLINE
     if (cmd[0]=='q') {
       printf("Bye!\n");
@@ -151,6 +164,9 @@ int main(int argc, const char* argv[])
     free(cmd);
   }
 
+  if (input != NULL) {
+    fclose(input);
+  }
   nfc_disconnect(pnd);
   return 1;
 }
