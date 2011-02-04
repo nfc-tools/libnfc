@@ -146,12 +146,13 @@ main (int argc, char *argv[])
     .nm.nmt = NMT_ISO14443A,
     .nm.nbr = NBR_UNDEFINED,
     .nti.nai.abtAtqa = { 0x04, 0x00 },
-    .nti.nai.abtUid = { 0xde, 0xad, 0xbe, 0xef },
+    .nti.nai.abtUid = { 0x08, 0xad, 0xbe, 0xef },
     .nti.nai.btSak = 0x20,
     .nti.nai.szUidLen = 4,
     .nti.nai.szAtsLen = 0,
   };
   if (!nfc_target_init (pnd, &nt, abtRecv, &szRecvBits)) {
+    nfc_perror (pnd, "nfc_target_init");
     ERR ("Could not come out of auto-emulation, no command was received");
     exit(EXIT_FAILURE);
   }
