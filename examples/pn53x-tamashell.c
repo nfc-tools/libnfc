@@ -107,10 +107,11 @@ int main(int argc, const char* argv[])
       size_t n;
       int s;
       if (input != NULL) {
-        s = getline(&cmd, &n, input);
+        fgets(cmd, n, input);
       } else {
-        s = getline(&cmd, &n, stdin);
+        fgets(cmd, n, stdin);
       }
+      s = strlen(cmd);
       if (s <= 0) {
         printf("Bye!\n");
         free(cmd);
