@@ -358,7 +358,7 @@ main (int argc, const char *argv[])
   FILE   *pfDump = NULL;
   const char *command = argv[1];
 
-  if (argc < 2) {
+  if (argc < 3) {
     print_usage (argv[0]);
     exit (EXIT_FAILURE);
   }
