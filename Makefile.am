@@ -7,7 +7,15 @@ SUBDIRS = libnfc examples include contrib cmake_modules test
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libnfc.pc
 
-EXTRA_DIST = Doxyfile pn53x.conf pn53x.rules CMakeLists.txt config.h.cmake LICENSE
+EXTRA_DIST = \
+	CMakeLists.txt \
+	Doxyfile \
+	LICENSE \
+	README-Windows.txt \
+	config.h.cmake \
+	pn53x.conf \
+	pn53x.rules
+
 CLEANFILES = Doxygen.log
 
 if DOC_ENABLED
