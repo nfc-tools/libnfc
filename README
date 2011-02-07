@@ -18,6 +18,8 @@ The official forum site is:
 The official development site is:
   http://libnfc.googlecode.com/
 
+Important note: this file covers POSIX systems, for Windows please read README-Windows.txt
+
 Installation
 ============
 
