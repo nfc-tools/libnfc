@@ -1287,6 +1287,8 @@ pn53x_target_init (nfc_device_t * pnd, nfc_target_t * pnt, byte_t * pbtRx, size_
     nfc_dep_mode_t ndm = NDM_UNDEFINED;
     byte_t btActivatedMode;
 
+    nm.nbr = NBR_UNDEFINED;
+
     if(!pn53x_TgInitAsTarget(pnd, ptm, pbtMifareParams, pbtTkt, szTkt, pbtFeliCaParams, pbtNFCID3t, pbtGBt, szGBt, pbtRx, pszRx, &btActivatedMode)) {
       return false;
     }
@@ -1648,6 +1650,8 @@ pn53x_ptt_to_nm( const pn53x_target_type_t ptt )
       return (const nfc_modulation_t){ .nmt = NMT_DEP, .nbr = NBR_424 };
     break;
   }
+  // We should never be here, this line silent compilation warning
+  return (const nfc_modulation_t){ .nmt = NMT_ISO14443A, .nbr = NBR_106 };
 }
 
 const pn53x_target_type_t

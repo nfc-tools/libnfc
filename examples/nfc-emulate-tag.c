@@ -87,7 +87,7 @@ target_io( nfc_target_t * pnt, const byte_t * pbtInput, const size_t szInput, by
       case 0x30: // Mifare read
         // block address is in pbtInput[1]
         *pszOutput = 15;
-        strcpy(pbtOutput, "You read block ");
+        strcpy((char*)pbtOutput, "You read block ");
         pbtOutput[15] = pbtInput[1];
         break;
       case 0x50: // Deselect / HALT

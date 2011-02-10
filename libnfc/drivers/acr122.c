@@ -358,11 +358,9 @@ acr122_firmware (const nfc_device_spec_t nds)
     uiResult = SCardTransmit (pas->hCard, &(pas->ioCard), abtGetFw, sizeof (abtGetFw), NULL, (byte_t *) abtFw, (void *) &szFwLen);
   }
 
-#ifdef DEBUG
   if (uiResult != SCARD_S_SUCCESS) {
-    printf ("No ACR122 firmware received, Error: %08x\n", uiResult);
+    ERR ("No ACR122 firmware received, Error: %08x", uiResult);
   }
-#endif
 
   return abtFw;
 }

@@ -113,10 +113,14 @@ write_card (void)
   bool    write_lock;
 
   printf ("Write OTP bytes ? [yN] ");
-  fgets (buffer, BUFSIZ, stdin);
+  if (!fgets (buffer, BUFSIZ, stdin)) {
+    ERR ("Unable to read standard input.");
+  }
   write_otp = ((buffer[0] == 'y') || (buffer[0] == 'Y'));
   printf ("Write Lock bytes ? [yN] ");
-  fgets (buffer, BUFSIZ, stdin);
+  if (!fgets (buffer, BUFSIZ, stdin)) {
+    ERR ("Unable to read standard input.");
+  }
   write_lock = ((buffer[0] == 'y') || (buffer[0] == 'Y'));
 
   printf ("Writing %d pages |", uiBlocks + 1);
