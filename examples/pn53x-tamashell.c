@@ -101,18 +101,17 @@ int main(int argc, const char* argv[])
       add_history(cmd);
     } else {
 #endif //HAVE_READLINE
-      cmd = NULL;
+      size_t n = 255;
+      char * ret = NULL;
+      cmd = malloc(n);
       printf("%s", prompt);
       fflush(0);
-      size_t n;
-      int s;
       if (input != NULL) {
-        fgets(cmd, n, input);
+        ret = fgets(cmd, n, input);
       } else {
-        fgets(cmd, n, stdin);
+        ret = fgets(cmd, n, stdin);
       }
-      s = strlen(cmd);
-      if (s <= 0) {
+      if (ret == NULL || strlen(cmd) <= 0) {
         printf("Bye!\n");
         free(cmd);
         break;
