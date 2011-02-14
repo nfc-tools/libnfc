@@ -252,7 +252,7 @@ uart_receive (serial_port sp, byte_t * pbtRx, size_t * pszRx)
       return DEIO;
     }
     // There is something available, read the data
-    res = read (((serial_port_unix *) sp)->fd, pbtRx + (*pszRx), byteCount);
+    res = read (((serial_port_unix *) sp)->fd, pbtRx + (*pszRx), MIN(byteCount, iExpectedByteCount));
     iExpectedByteCount -= byteCount;
 
     // Stop if the OS has some troubles reading the data
