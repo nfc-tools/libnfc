@@ -262,7 +262,7 @@ uart_receive (serial_port sp, byte_t * pbtRx, size_t * pszRx)
 
     *pszRx += res;
     // Reload timeout with a low value to prevent from waiting too long on slow devices (16x is enought to took at least 1 byte)
-    tv.tv_usec = uiTimeoutStatic + uiTimeoutPerByte * MIN( iExpectedByteCount, 16 ); 
+    tv.tv_usec = uiTimeoutPerByte * MIN( iExpectedByteCount, 16 ); 
     // DBG("Timeout reloaded at: %d µs", tv.tv_usec);
   } while (byteCount && (iExpectedByteCount > 0));
 
