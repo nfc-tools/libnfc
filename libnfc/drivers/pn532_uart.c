@@ -284,6 +284,24 @@ pn532_uart_ack (const nfc_device_spec_t nds)
   uart_send ((serial_port) nds, ack_frame, sizeof (ack_frame));
 }
 
+bool
+pn532_uart_wait_for_ack(const nfc_device_spec_t nds)
+{
+  byte_t  abtRx[RX_BUFFER_LEN];
+  size_t  szRx = sizeof(ack_frame);
+  if (0 == uart_receive ((serial_port) nds, abtRx, &szRx)) {
+#ifdef DEBUG           
+    PRINT_HEX ("RX", abtRx, szRx);
+#endif
+  } else {
+    ERR ("No ACK.");
+    return false;
+  }
+  if (0 != memcmp (ack_frame, abtRx, szRx))
+    return false;
+  return true;
+}
+
 #define PN53X_RX_OVERHEAD 6
 void
 pn532_uart_wakeup (const nfc_device_spec_t nds)
@@ -301,6 +319,9 @@ pn532_uart_wakeup (const nfc_device_spec_t nds)
   PRINT_HEX ("TX", pncmd_pn532c106_wakeup_preamble, sizeof (pncmd_pn532c106_wakeup_preamble));
 #endif
   uart_send ((serial_port) nds, pncmd_pn532c106_wakeup_preamble, sizeof (pncmd_pn532c106_wakeup_preamble));
+
+  pn532_uart_wait_for_ack(nds);
+
   if (0 == uart_receive ((serial_port) nds, abtRx, &szRx)) {
 #ifdef DEBUG
     PRINT_HEX ("RX", abtRx, szRx);
