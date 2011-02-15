@@ -216,6 +216,7 @@ uart_receive (serial_port sp, byte_t * pbtRx, size_t * pszRx)
   fd_set  rfds;
 
   int     iExpectedByteCount = (int)*pszRx;
+  DBG ("iExpectedByteCount == %d", iExpectedByteCount);
   struct timeval tvTimeout = {
     .tv_sec = 0,
     .tv_usec = uiTimeoutStatic + (uiTimeoutPerByte * iExpectedByteCount),
@@ -253,7 +254,7 @@ uart_receive (serial_port sp, byte_t * pbtRx, size_t * pszRx)
     }
     // There is something available, read the data
     res = read (((serial_port_unix *) sp)->fd, pbtRx + (*pszRx), MIN(byteCount, iExpectedByteCount));
-    iExpectedByteCount -= byteCount;
+    iExpectedByteCount -= MIN (byteCount, iExpectedByteCount);
 
     // Stop if the OS has some troubles reading the data
     if (res <= 0) {
@@ -265,7 +266,7 @@ uart_receive (serial_port sp, byte_t * pbtRx, size_t * pszRx)
     tv.tv_usec = uiTimeoutPerByte * MIN( iExpectedByteCount, 16 ); 
     // DBG("Timeout reloaded at: %d µs", tv.tv_usec);
   } while (byteCount && (iExpectedByteCount > 0));
-
+  DBG ("byteCount == %d, iExpectedByteCount == %d", byteCount, iExpectedByteCount);
   return 0;
 }
 
