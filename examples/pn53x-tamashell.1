@@ -15,6 +15,14 @@ TAMA commands and responses prefixes (0xD4/0xD5), CRC and any framing above are 
 You can use the shell interactively (with readline support) or you
 can write your own script file consisting in commands and
 comments (anything that starts with ";", "#" or "//").
+Spaces are ignored and can be used for readability.
+
+Shebang is supported, simply start your script with:
+ #!/usr/bin/env \fBpn53x-tamashell\fP
+
+.SH COMMANDS
+
+\fIp N\fP to introduce a pause of N seconds.
 
 \fIq\fP or \fICtrl-d\fP to quit.
 
@@ -35,7 +43,7 @@ GetFirmware command is D4 02, so one has just to send the command "02":
 
 Same thing, with a script:
 
- $ cat << EOF | \fBpn53x-tamashell\fP
+ $ \fBpn53x-tamashell\fP << EOF
  // This is a comment
  02 // GetFirmware
  40 // Command with missing arguments

@@ -126,6 +126,20 @@ int main(int argc, const char* argv[])
       free(cmd);
       break;
     }
+    if (cmd[0]=='p') {
+      int s=0;
+      offset++;
+      while (isspace(cmd[offset])) {
+        offset++;
+      }
+      sscanf(cmd+offset, "%u", &s);
+      printf("Pause for %i secs\n", s);
+      if (s>0) {
+          sleep(s);
+      }
+      free(cmd);
+      continue;
+    }
     szTx = 0;
     for(int i = 0; i<MAX_FRAME_LEN-10; i++) {
       int size;
