@@ -1,3 +1,25 @@
+Feb 21, 2010 - 1.4.2
+--------------------
+
+Fixes:
+ - libnfc: fgets instead of getline, bring MacOSX / BSD without glibc alive
+ - libnfc: add missing CMake files to generated tarball needed by windows users (Thanks to Glenn)
+ - drivers/pn532_uart: fix pn532 wakeup response handling
+ - buses/uart: prevent from retrieving more than buffer length (potential buffer overflow)
+ - buses/uart: intent to speed up interface
+ - nfc-emulate-uid: use a correct UID
+ - nfc-mfclassic: fixes a segfault when using only 1 argument
+
+Improvements:
+ - libnfc: silent some compilation warnings
+ - drivers/pn533_usb: support new device: ASK / LoGO. (Thanks to ASK for sending one sample)
+ - chips/pn53x: set register directly if mask cover whole value.
+ - pn53x-tamashell: accepts script as arg, this makes shebang possible
+ - pn53x-tamashell: add pause command & doc
+ - documentation: add a README-Windows.txt file
+ - documentation: add more pcsc-lite related instruction in README
+
+
 Feb 1, 2010 - 1.4.1
 -------------------
 
