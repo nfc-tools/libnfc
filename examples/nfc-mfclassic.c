@@ -477,15 +477,15 @@ main (int argc, const char *argv[])
 
       // Compare if key dump UID is the same as the current tag UID
       if (memcmp (nt.nti.nai.abtUid, pbtUID, 4) != 0) {
-        printf ("Expected MIFARE Classic %ck card with UID: %02x%02x%02x%02x\n", b4K ? '4' : '1', pbtUID[3], pbtUID[2],
-                pbtUID[1], pbtUID[0]);
+        printf ("Expected MIFARE Classic %ck card with UID: %02x%02x%02x%02x\n", b4K ? '4' : '1', pbtUID[0], pbtUID[1],
+                pbtUID[2], pbtUID[3]);
       }
     }
     // Get the info from the current tag
     pbtUID = nt.nti.nai.abtUid;
     b4K = (nt.nti.nai.abtAtqa[1] == 0x02);
-    printf ("Found MIFARE Classic %ck card with UID: %02x%02x%02x%02x\n", b4K ? '4' : '1', pbtUID[3], pbtUID[2],
-            pbtUID[1], pbtUID[0]);
+    printf ("Found MIFARE Classic %ck card with UID: %02x%02x%02x%02x\n", b4K ? '4' : '1', pbtUID[0], pbtUID[1],
+            pbtUID[2], pbtUID[3]);
 
     uiBlocks = (b4K) ? 0xff : 0x3f;
 
