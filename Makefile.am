@@ -16,17 +16,19 @@ EXTRA_DIST = \
 	pn53x.conf \
 	pn53x.rules
 
-CLEANFILES = Doxygen.log
+CLEANFILES = Doxygen.log coverage.info
 
-if DOC_ENABLED
-clean-local:
+clean-local: clean-local-doc clean-local-coverage
+
+.PHONY: clean-local-coverage clean-local-doc doc
+clean-local-coverage:
+	-rm -rf coverage
+
+clean-local-doc:
 	rm -rf doc
 
 doc : Doxyfile
 	@DOXYGEN@ $(builddir)/Doxyfile
-
-.PHONY: doc
-endif
 
 if HAS_INDENT
 INDENT_ARGS = --blank-before-sizeof \
