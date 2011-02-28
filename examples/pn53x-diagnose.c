@@ -88,19 +88,19 @@ main (int argc, const char *argv[])
 
     printf ("NFC device [%s] connected.\n", pnd->acName);
 
-    result = pn53x_transceive (pnd, pncmd_diagnose_communication_line_test, sizeof (pncmd_diagnose_communication_line_test), abtRx, &szRx);
+    result = pn53x_transceive (pnd, pncmd_diagnose_communication_line_test, sizeof (pncmd_diagnose_communication_line_test), abtRx, &szRx, false);
     if (result) {
       result = (memcmp (pncmd_diagnose_communication_line_test + 2, abtRx, sizeof (pncmd_diagnose_communication_line_test) - 2) == 0);
     }
     printf (" Communication line test: %s\n", result ? "OK" : "Failed");
 
-    result = pn53x_transceive (pnd, pncmd_diagnose_rom_test, sizeof (pncmd_diagnose_rom_test), abtRx, &szRx);
+    result = pn53x_transceive (pnd, pncmd_diagnose_rom_test, sizeof (pncmd_diagnose_rom_test), abtRx, &szRx, false);
     if (result) {
       result = ((szRx == 1) && (abtRx[0] == 0x00));
     }
     printf (" ROM test: %s\n", result ? "OK" : "Failed");
 
-    result = pn53x_transceive (pnd, pncmd_diagnose_ram_test, sizeof (pncmd_diagnose_ram_test), abtRx, &szRx);
+    result = pn53x_transceive (pnd, pncmd_diagnose_ram_test, sizeof (pncmd_diagnose_ram_test), abtRx, &szRx, false);
     if (result) {
       result = ((szRx == 1) && (abtRx[0] == 0x00));
     }

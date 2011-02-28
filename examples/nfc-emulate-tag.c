@@ -171,6 +171,7 @@ nfc_target_emulate_tag(nfc_device_t* pnd, nfc_target_t * pnt)
 int
 main (int argc, char *argv[])
 {
+  (void) argc;
   const char *acLibnfcVersion;
 
 #ifdef WIN32
@@ -204,13 +205,19 @@ main (int argc, char *argv[])
   // Example of a Mifare Classic Mini
   // Note that crypto1 is not implemented in this example
   nfc_target_t nt = {
-    .nm.nmt = NMT_ISO14443A,
-    .nm.nbr = NBR_UNDEFINED,
-    .nti.nai.abtAtqa = { 0x00, 0x04 },
-    .nti.nai.abtUid = { 0x08, 0xab, 0xcd, 0xef },
-    .nti.nai.btSak = 0x09,
-    .nti.nai.szUidLen = 4,
-    .nti.nai.szAtsLen = 0,
+    .nm = {
+      .nmt = NMT_ISO14443A,
+      .nbr = NBR_UNDEFINED,
+    },
+    .nti = {
+      .nai = {
+        .abtAtqa = { 0x00, 0x04 },
+        .abtUid = { 0x08, 0xab, 0xcd, 0xef },
+        .btSak = 0x09,
+        .szUidLen = 4,
+        .szAtsLen = 0,
+      },
+    },
   };
 /*
   // Example of a FeliCa

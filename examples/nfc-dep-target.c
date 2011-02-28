@@ -76,17 +76,23 @@ main (int argc, const char *argv[])
   }
 
   nfc_target_t nt = {
-    .nm.nmt = NMT_DEP,
-    .nm.nbr = NBR_UNDEFINED, // Will be updated by nfc_target_init
-    .nti.ndi.abtNFCID3 = { 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xff, 0x00, 0x00 },
-    .nti.ndi.szGB = 4,
-    .nti.ndi.abtGB = { 0x12, 0x34, 0x56, 0x78 },
-    /* These bytes are not used by nfc_target_init: the chip will provide them automatically to the initiator */
-    .nti.ndi.btDID = 0x00,
-    .nti.ndi.btBS = 0x00,
-    .nti.ndi.btBR = 0x00,
-    .nti.ndi.btTO = 0x00,
-    .nti.ndi.btPP = 0x01,
+    .nm = {
+      .nmt = NMT_DEP,
+      .nbr = NBR_UNDEFINED
+    },
+    .nti = {
+      .ndi = {
+        .abtNFCID3 = { 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xff, 0x00, 0x00 },
+        .szGB = 4,
+        .abtGB = { 0x12, 0x34, 0x56, 0x78 },
+        /* These bytes are not used by nfc_target_init: the chip will provide them automatically to the initiator */
+        .btDID = 0x00,
+        .btBS = 0x00,
+        .btBR = 0x00,
+        .btTO = 0x00,
+        .btPP = 0x01,
+      },
+    },
   };
 
   if (!pnd) {

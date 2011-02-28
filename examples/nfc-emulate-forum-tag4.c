@@ -108,7 +108,7 @@ bool receive_bytes (void)
 }
 
 int
-main (int argc, char *argv[])
+main (void)
 {
   // Try to open the NFC reader
   pnd = nfc_connect (NULL);
@@ -122,13 +122,19 @@ main (int argc, char *argv[])
   printf ("Emulating NDEF tag now, please touch it with a second NFC device\n");
 
   nfc_target_t nt = {
-    .nm.nmt = NMT_ISO14443A,
-    .nm.nbr = NBR_UNDEFINED, // Will be updated by nfc_target_init()
-    .nti.nai.abtAtqa = { 0x00, 0x04 },
-    .nti.nai.abtUid = { 0x08, 0x00, 0xb0, 0x0b },
-    .nti.nai.btSak = 0x20,
-    .nti.nai.szUidLen = 4,
-    .nti.nai.szAtsLen = 0,
+    .nm = {
+      .nmt = NMT_ISO14443A,
+      .nbr = NBR_UNDEFINED, // Will be updated by nfc_target_init()
+    },
+    .nti = {
+      .nai = {
+        .abtAtqa = { 0x00, 0x04 },
+        .abtUid = { 0x08, 0x00, 0xb0, 0x0b },
+        .btSak = 0x20,
+        .szUidLen = 4,
+        .szAtsLen = 0,
+      },
+    },
   };
 
   if (!nfc_target_init (pnd, &nt, abtRx, &szRx)) {

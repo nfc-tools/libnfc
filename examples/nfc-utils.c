@@ -532,6 +532,7 @@ print_nfc_iso14443a_info (const nfc_iso14443a_info_t nai, bool verbose)
 void
 print_nfc_felica_info (const nfc_felica_info_t nfi, bool verbose)
 {
+  (void) verbose;
   printf ("        ID (NFCID2): ");
   print_hex (nfi.abtId, 8);
   printf ("    Parameter (PAD): ");
@@ -541,6 +542,7 @@ print_nfc_felica_info (const nfc_felica_info_t nfi, bool verbose)
 void
 print_nfc_jewel_info (const nfc_jewel_info_t nji, bool verbose)
 {
+  (void) verbose;
   printf ("    ATQA (SENS_RES): ");
   print_hex (nji.btSensRes, 2);
   printf ("      4-LSB JEWELID: ");
@@ -608,6 +610,7 @@ print_nfc_iso14443b_info (const nfc_iso14443b_info_t nbi, bool verbose)
 void
 print_nfc_dep_info (const nfc_dep_info_t ndi, bool verbose)
 {
+  (void) verbose;
   printf ("       NFCID3: ");
   print_hex (ndi.abtNFCID3, 10);
   printf ("           BS: %02x\n", ndi.btBS);

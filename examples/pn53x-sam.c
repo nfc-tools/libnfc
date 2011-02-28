@@ -93,7 +93,7 @@ sam_connection (nfc_device_t * pnd, int mode)
     break;
   }
 
-  if (!pn53x_transceive (pnd, pncmd_sam_config, szCmd, abtRx, &szRx)) {
+  if (!pn53x_transceive (pnd, pncmd_sam_config, szCmd, abtRx, &szRx, false)) {
     nfc_perror(pnd, "pn53x_transceive");
     ERR ("%s %d", "Unable to execute SAMConfiguration command with mode byte:", mode);
     return false;
@@ -213,13 +213,19 @@ main (int argc, const char *argv[])
       size_t  szRx;
 
       nfc_target_t nt = {
-        .nm.nmt = NMT_ISO14443A,
-        .nm.nbr = NBR_UNDEFINED,
-        .nti.nai.abtAtqa = { 0x04, 0x00 },
-        .nti.nai.abtUid = { 0x08, 0xad, 0xbe, 0xef },
-        .nti.nai.btSak = 0x20,
-        .nti.nai.szUidLen = 4,
-        .nti.nai.szAtsLen = 0,
+        .nm = {
+          .nmt = NMT_ISO14443A,
+          .nbr = NBR_UNDEFINED,
+        },
+        .nti = {
+          .nai = {
+            .abtAtqa = { 0x04, 0x00 },
+            .abtUid = { 0x08, 0xad, 0xbe, 0xef },
+            .btSak = 0x20,
+            .szUidLen = 4,
+            .szAtsLen = 0,
+          },
+        },
       };
       printf ("Now both, NFC device (configured as target) and SAM are readables from an external NFC initiator.\n");
       printf ("Please note that NFC device (configured as target) stay in target mode until it receive RATS, ATR_REQ or proprietary command.\n");

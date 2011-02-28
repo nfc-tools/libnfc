@@ -132,7 +132,7 @@ int main(int argc, const char* argv[])
       while (isspace(cmd[offset])) {
         offset++;
       }
-      sscanf(cmd+offset, "%u", &s);
+      sscanf(cmd+offset, "%d", &s);
       printf("Pause for %i secs\n", s);
       if (s>0) {
           sleep(s);
@@ -167,7 +167,7 @@ int main(int argc, const char* argv[])
     printf("Tx: ");
     print_hex((byte_t*)abtTx+1,szTx-1);
 
-    if (!pn53x_transceive (pnd, abtTx, szTx, abtRx, &szRx)) {
+    if (!pn53x_transceive (pnd, abtTx, szTx, abtRx, &szRx, false)) {
       free(cmd);
       nfc_perror (pnd, "Rx");
       continue;

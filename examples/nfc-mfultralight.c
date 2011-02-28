@@ -29,7 +29,7 @@
  */
 
 /**
- * @file nfc-mfultool.c
+ * @file nfc-mfultralight.c
  * @brief MIFARE Ultralight dump/restore tool
  */
 

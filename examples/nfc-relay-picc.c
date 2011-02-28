@@ -292,8 +292,10 @@ main (int argc, char *argv[])
   }
   if (!initiator_only_mode) {
     nfc_target_t ntEmulatedTarget = {
-      .nm.nmt = NMT_ISO14443A,
-      .nm.nbr = NBR_106,
+      .nm = {
+        .nmt = NMT_ISO14443A,
+        .nbr = NBR_106,
+      },
     };
     if (target_only_mode) {
       size_t foo;

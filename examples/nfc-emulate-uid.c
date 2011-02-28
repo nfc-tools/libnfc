@@ -143,13 +143,19 @@ main (int argc, char *argv[])
 
   // Note: We have to build a "fake" nfc_target_t in order to do exactly the same that was done before the new nfc_target_init() was introduced.
   nfc_target_t nt = {
-    .nm.nmt = NMT_ISO14443A,
-    .nm.nbr = NBR_UNDEFINED,
-    .nti.nai.abtAtqa = { 0x04, 0x00 },
-    .nti.nai.abtUid = { 0x08, 0xad, 0xbe, 0xef },
-    .nti.nai.btSak = 0x20,
-    .nti.nai.szUidLen = 4,
-    .nti.nai.szAtsLen = 0,
+    .nm = {
+      .nmt = NMT_ISO14443A,
+      .nbr = NBR_UNDEFINED,
+    },
+    .nti = {
+      .nai = {
+        .abtAtqa = { 0x04, 0x00 },
+        .abtUid = { 0x08, 0xad, 0xbe, 0xef },
+        .btSak = 0x20,
+        .szUidLen = 4,
+        .szAtsLen = 0,
+      },
+    },
   };
   if (!nfc_target_init (pnd, &nt, abtRecv, &szRecvBits)) {
     nfc_perror (pnd, "nfc_target_init");

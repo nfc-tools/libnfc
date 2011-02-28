@@ -137,13 +137,19 @@ main (int argc, char *argv[])
   printf ("[+] For example, send a RATS command or use the \"nfc-anticol\" tool\n");
 
   nfc_target_t nt = {
-    .nm.nmt = NMT_ISO14443A,
-    .nm.nbr = NBR_UNDEFINED,
-    .nti.nai.abtAtqa = { 0x04, 0x00 },
-    .nti.nai.abtUid = { 0xde, 0xad, 0xbe, 0xef },
-    .nti.nai.btSak = 0x20,
-    .nti.nai.szUidLen = 4,
-    .nti.nai.szAtsLen = 0,
+    .nm = {
+      .nmt = NMT_ISO14443A,
+      .nbr = NBR_UNDEFINED,
+    },
+    .nti = {
+      .nai = {
+        .abtAtqa = { 0x04, 0x00 },
+        .abtUid = { 0xde, 0xad, 0xbe, 0xef },
+        .btSak = 0x20,
+        .szUidLen = 4,
+        .szAtsLen = 0,
+      },
+    },
   };
 
   if (!nfc_target_init (pndTag, &nt, abtReaderRx, &szReaderRxBits)) {
