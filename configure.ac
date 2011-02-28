@@ -77,7 +77,7 @@ AC_MSG_RESULT($enable_debug)
  
 if test x"$enable_debug" = "xyes"
 then
-  CFLAGS="$CFLAGS -g -Wall -DDEBUG -pedantic -O0 -ggdb"
+  CFLAGS="$CFLAGS -g -DDEBUG -O0 -ggdb"
 fi
 
 # Handle --with-drivers option
@@ -139,6 +139,9 @@ fi
 AM_CONDITIONAL([WITH_CUTTER], [test "$ac_cv_use_cutter" != "no"])
 
 AC_CHECK_READLINE
+
+# Help us to write great code ;-)
+CFLAGS="$CFLAGS -Wall -pedantic -Wextra"
 
 # Defines and C flags
 CFLAGS="$CFLAGS -std=c99"
