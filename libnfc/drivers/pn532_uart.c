@@ -1,7 +1,8 @@
 /*-
  * Public platform independent Near Field Communication (NFC) library
  * 
- * Copyright (C) 2009, Roel Verdult
+ * Copyright (C) 2010, Roel Verdult, Romuald Conty
+ * Copyright (C) 2011, Romuald Conty, Romain Tartière
  * 
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -22,11 +23,13 @@
  * @brief PN532 driver using UART bus (UART, RS232, etc.)
  */
 
+/* vim: set ts=2 sw=2 et: */
+
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif // HAVE_CONFIG_H
 
-#include "../drivers.h"
+#include "libnfc/drivers.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -36,44 +39,26 @@
 #include <nfc/nfc.h>
 #include <nfc/nfc-messages.h>
 
-// Bus
 #include "uart.h"
+#include "libnfc/nfc-internal.h"
+#include "libnfc/chips/pn53x.h"
+#include "libnfc/chips/pn53x-internal.h"
 
 #define SERIAL_DEFAULT_PORT_SPEED 115200
 
 // TODO Move this one level up for libnfc-1.6
 static const byte_t ack_frame[] = { 0x00, 0x00, 0xff, 0x00, 0xff, 0x00 };
 
-void    pn532_uart_ack (const nfc_device_spec_t nds);
-void    pn532_uart_wakeup (const nfc_device_spec_t nds);
-bool    pn532_uart_check_communication (const nfc_device_spec_t nds, bool * success);
+void    pn532_uart_ack (nfc_device_t * pnd);
+// void    pn532_uart_wakeup (const nfc_device_spec_t nds);
+bool    pn532_uart_check_communication (nfc_device_t *pnd);
 
-nfc_device_desc_t *
-pn532_uart_pick_device (void)
-{
-  nfc_device_desc_t *pndd;
-
-  if ((pndd = malloc (sizeof (*pndd)))) {
-    size_t  szN;
-
-    if (!pn532_uart_list_devices (pndd, 1, &szN)) {
-      DBG ("%s", "pn532_uart_list_devices failed");
-      free (pndd);
-      return NULL;
-    }
-
-    if (szN == 0) {
-      DBG ("%s", "No device found");
-      free (pndd);
-      return NULL;
-    }
-  }
-
-  return pndd;
-}
-
+struct pn532_uart_data {
+  serial_port port;
+};
+  
 bool
-pn532_uart_list_devices (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * pszDeviceFound)
+pn532_uart_probe (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * pszDeviceFound)
 {
   /** @note: Due to UART bus we can't know if its really a pn532 without
   * sending some PN53x commands. But using this way to probe devices, we can
@@ -88,7 +73,7 @@ pn532_uart_list_devices (nfc_device_desc_t pnddDevices[], size_t szDevices, size
   *pszDeviceFound = 0;
 
   serial_port sp;
-  const char *pcPorts[] = DEFAULT_SERIAL_PORTS;
+  char **pcPorts = uart_list_ports ();
   const char *pcPort;
   int     iDevice = 0;
 
@@ -97,15 +82,24 @@ pn532_uart_list_devices (nfc_device_desc_t pnddDevices[], size_t szDevices, size
     DBG ("Trying to find PN532 device on serial port: %s at %d bauds.", pcPort, SERIAL_DEFAULT_PORT_SPEED);
 
     if ((sp != INVALID_SERIAL_PORT) && (sp != CLAIMED_SERIAL_PORT)) {
-      bool    bComOk;
       // Serial port claimed but we need to check if a PN532_UART is connected.
       uart_set_speed (sp, SERIAL_DEFAULT_PORT_SPEED);
+
+      nfc_device_t nd;
+      nd.driver = &pn532_uart_driver;
+      nd.driver_data = malloc(sizeof(struct pn532_uart_data));
+      ((struct pn532_uart_data*)(nd.driver_data))->port = sp;
+      nd.chip_data = malloc(sizeof(struct pn53x_data));
+      ((struct pn53x_data*)(nd.chip_data))->type = PN532;
+      ((struct pn53x_data*)(nd.chip_data))->state = SLEEP;
+
       // PN532 could be powered down, we need to wake it up before line testing.
-      pn532_uart_wakeup ((nfc_device_spec_t) sp);
+      // TODO pn532_uart_wakeup ((nfc_device_spec_t) sp);
       // Check communication using "Diagnose" command, with "Communication test" (0x00)
-      if (!pn532_uart_check_communication ((nfc_device_spec_t) sp, &bComOk))
-        continue;
-      if (!bComOk)
+      bool res = pn532_uart_check_communication (&nd);
+      free(nd.driver_data);
+      free(nd.chip_data);
+      if(!res)
         continue;
       uart_close (sp);
 
@@ -129,6 +123,7 @@ pn532_uart_list_devices (nfc_device_desc_t pnddDevices[], size_t szDevices, size
 #  endif
        /* DEBUG */
   }
+  free (pcPorts);
 #endif /* SERIAL_AUTOPROBE_ENABLED */
   return true;
 }
@@ -138,7 +133,6 @@ pn532_uart_connect (const nfc_device_desc_t * pndd)
 {
   serial_port sp;
   nfc_device_t *pnd = NULL;
-  bool    bComOk;
 
   DBG ("Attempt to connect to: %s at %d bauds.", pndd->pcPort, pndd->uiSpeed);
   sp = uart_open (pndd->pcPort);
@@ -152,24 +146,23 @@ pn532_uart_connect (const nfc_device_desc_t * pndd)
 
   uart_set_speed (sp, pndd->uiSpeed);
 
-  // PN532 could be powered down, we need to wake it up before line testing.
-  pn532_uart_wakeup ((nfc_device_spec_t) sp);
-  // Check communication using "Diagnose" command, with "Communication test" (0x00)
-  if (!pn532_uart_check_communication ((nfc_device_spec_t) sp, &bComOk))
-    return NULL;
-  if (!bComOk)
-    return NULL;
-
-  DBG ("Successfully connected to: %s", pndd->pcPort);
-
   // We have a connection
   pnd = malloc (sizeof (nfc_device_t));
   strncpy (pnd->acName, pndd->acDevice, DEVICE_NAME_LENGTH - 1);
   pnd->acName[DEVICE_NAME_LENGTH - 1] = '\0';
 
-  pnd->nc = NC_PN532;
-  pnd->nds = (nfc_device_spec_t) sp;
-  pnd->bActive = true;
+  pnd->driver_data = malloc(sizeof(struct pn532_uart_data));
+  ((struct pn532_uart_data*)(pnd->driver_data))->port = sp;
+  pnd->chip_data = malloc(sizeof(struct pn53x_data));
+  ((struct pn53x_data*)(pnd->chip_data))->type = PN532;
+  ((struct pn53x_data*)(pnd->chip_data))->state = SLEEP;
+  pnd->driver = &pn532_uart_driver;
+
+  // Check communication using "Diagnose" command, with "Communication test" (0x00)
+  if (!pn532_uart_check_communication (pnd))
+    return NULL;
+
+  DBG ("Successfully connected to: %s", pndd->pcPort);
 
   return pnd;
 }
@@ -177,196 +170,220 @@ pn532_uart_connect (const nfc_device_desc_t * pndd)
 void
 pn532_uart_disconnect (nfc_device_t * pnd)
 {
-  uart_close ((serial_port) pnd->nds);
+  uart_close (((struct pn532_uart_data*)(pnd->driver_data))->port);
+  free (pnd->driver_data);
+  free (pnd->chip_data);
   free (pnd);
 }
 
-#define TX_BUFFER_LEN (256)
-#define RX_BUFFER_LEN (PN53x_EXTENDED_FRAME_MAX_LEN + PN53x_EXTENDED_FRAME_OVERHEAD)
+#define PN532_BUFFER_LEN (PN53x_EXTENDED_FRAME__DATA_MAX_LEN + PN53x_EXTENDED_FRAME__OVERHEAD)
 bool
-pn532_uart_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, byte_t * pbtRx,
-                       size_t * pszRx)
+pn532_uart_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szData)
 {
-  byte_t  abtTxBuf[TX_BUFFER_LEN] = { 0x00, 0x00, 0xff };       // Every packet must start with "00 00 ff"
-  byte_t  abtRxBuf[RX_BUFFER_LEN];
-  size_t  szRxBufLen = MIN( RX_BUFFER_LEN, *pszRx );
-  size_t  szPos;
-  int     res;
-
-  // Packet length = data length (len) + checksum (1) + end of stream marker (1)
-  abtTxBuf[3] = szTx;
-  // Packet length checksum
-  abtTxBuf[4] = 256 - abtTxBuf[3];
-  // Copy the PN53X command into the packet buffer
-  memmove (abtTxBuf + 5, pbtTx, szTx);
-
-  // Calculate data payload checksum
-  abtTxBuf[szTx + 5] = 0;
-  for (szPos = 0; szPos < szTx; szPos++) {
-    abtTxBuf[szTx + 5] -= abtTxBuf[szPos + 5];
+  DBG ("state: %d (SLEEP: %d, NORMAL: %d, EXECUTE: %d)", ((struct pn53x_data*)(pnd->chip_data))->state, SLEEP, NORMAL, EXECUTE);
+  if (((struct pn53x_data*)(pnd->chip_data))->state == SLEEP) {
+//  if (1) {
+    /** PN532C106 wakeup. */
+    /** High Speed Unit (HSU) wake up consist to send 0x55 and wait a "long" delay for PN532 being wakeup. */
+    const byte_t pn532_wakeup_preamble[] = { 0x55, 0x55, 0x00, 0x00, 0x00 };
+//, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+    uart_send (((struct pn532_uart_data*)(pnd->driver_data))->port, pn532_wakeup_preamble, sizeof (pn532_wakeup_preamble));
+    ((struct pn53x_data*)(pnd->chip_data))->state = NORMAL; // PN532 should now be awake
+    // According to PN532 application note, C106 appendix: to go out Low Vbat mode and enter in normal mode we need to send a SAMConfiguration command
+    if (!pn53x_SAMConfiguration (pnd, 0x01)) {
+      return false;
+    }
   }
 
-  // End of stream marker
-  abtTxBuf[szTx + 6] = 0;
+  byte_t  abtTxBuf[PN532_BUFFER_LEN] = { 0x00, 0x00, 0xff };       // Every packet must start with "00 00 ff"
 
-#ifdef DEBUG
-  PRINT_HEX ("TX", abtTxBuf, szTx + 7);
-#endif
-  res = uart_send ((serial_port) pnd->nds, abtTxBuf, szTx + 7);
+  pnd->iLastCommand = pbtData[0];
+  size_t szFrame = 0;
+
+  if (szData <= PN53x_NORMAL_FRAME__DATA_MAX_LEN) {
+    // LEN - Packet length = data length (len) + checksum (1) + end of stream marker (1)
+    abtTxBuf[3] = szData + 1;
+    // LCS - Packet length checksum
+    abtTxBuf[4] = 256 - (szData + 1);
+    // TFI
+    abtTxBuf[5] = 0xD4;
+    // DATA - Copy the PN53X command into the packet buffer
+    memcpy (abtTxBuf + 6, pbtData, szData);
+
+    // DCS - Calculate data payload checksum
+    byte_t btDCS = (256 - 0xD4);
+    for (size_t szPos = 0; szPos < szData; szPos++) {
+      btDCS -= pbtData[szPos];
+    }
+    abtTxBuf[6 + szData] = btDCS;
+
+    // 0x00 - End of stream marker
+    abtTxBuf[szData + 7] = 0x00;
+
+    szFrame = szData + PN53x_NORMAL_FRAME__OVERHEAD;
+  } else {
+    // FIXME: Build extended frame
+    abort();
+  }
+
+  int res = uart_send (((struct pn532_uart_data*)(pnd->driver_data))->port, abtTxBuf, szFrame);
   if (res != 0) {
     ERR ("%s", "Unable to transmit data. (TX)");
     pnd->iLastError = res;
     return false;
   }
 
-  res = uart_receive ((serial_port) pnd->nds, abtRxBuf, &szRxBufLen);
+  byte_t abtRxBuf[6];
+  res = uart_receive (((struct pn532_uart_data*)(pnd->driver_data))->port, abtRxBuf, 6);
+  if (res != 0) {
+    ERR ("%s", "Unable to read ACK");
+    pnd->iLastError = res;
+    return false;
+  }
+
+  if (pn53x_check_ack_frame_callback (pnd, abtRxBuf, sizeof(abtRxBuf))) {
+    ((struct pn53x_data*)(pnd->chip_data))->state = EXECUTE;
+  } else {
+    return false;
+  }
+  return true;
+}
+
+int
+pn532_uart_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen)
+{
+  byte_t  abtRxBuf[5];
+  size_t len;
+
+  int res = uart_receive (((struct pn532_uart_data*)(pnd->driver_data))->port, abtRxBuf, 5);
   if (res != 0) {
     ERR ("%s", "Unable to receive data. (RX)");
     pnd->iLastError = res;
-    return false;
-  }
-#ifdef DEBUG
-  PRINT_HEX ("RX", abtRxBuf, szRxBufLen);
-#endif
-
-  // WARN: UART is a per byte reception, so you usually receive ACK and next frame the same time
-  if (!pn53x_check_ack_frame_callback (pnd, abtRxBuf, szRxBufLen))
-    return false;
-  szRxBufLen -= sizeof (ack_frame);
-  memmove (abtRxBuf, abtRxBuf + sizeof (ack_frame), szRxBufLen);
-
-  if (szRxBufLen == 0) {
-    szRxBufLen = RX_BUFFER_LEN;
-    do {
-      delay_ms (10);
-      res = uart_receive ((serial_port) pnd->nds, abtRxBuf, &szRxBufLen);
-    } while (res != 0);
-#ifdef DEBUG
-    PRINT_HEX ("RX", abtRxBuf, szRxBufLen);
-#endif
+    return -1;
   }
 
-#ifdef DEBUG
-  PRINT_HEX ("TX", ack_frame, sizeof(ack_frame));
-#endif
-  res = uart_send ((serial_port) pnd->nds, ack_frame, sizeof(ack_frame));
-  if (res != 0) {
-    ERR ("%s", "Unable to transmit data. (TX)");
-    pnd->iLastError = res;
-    return false;
+  const byte_t pn53x_preamble[3] = { 0x00, 0x00, 0xff };
+  if (0 != (memcmp (abtRxBuf, pn53x_preamble, 3))) {
+    ERR ("%s", "Frame preamble+start code mismatch");
+    pnd->iLastError = DEIO;
+    return -1;
   }
 
-  if (!pn53x_check_error_frame_callback (pnd, abtRxBuf, szRxBufLen))
-    return false;
-
-  // When the answer should be ignored, just return a successful result
-  if (pbtRx == NULL || pszRx == NULL)
-    return true;
-
-  // Only succeed when the result is at least 00 00 FF xx Fx Dx xx .. .. .. xx 00 (x = variable)
-  if (szRxBufLen < 9) {
-    pnd->iLastError = DEINVAL;
-    return false;
-  }
-  // Remove the preceding and appending bytes 00 00 ff 00 ff 00 00 00 FF xx Fx .. .. .. xx 00 (x = variable)
-  *pszRx = szRxBufLen - 9;
-  memcpy (pbtRx, abtRxBuf + 7, *pszRx);
-
-  return true;
-}
-
-void
-pn532_uart_ack (const nfc_device_spec_t nds)
-{
-#ifdef DEBUG
-  PRINT_HEX ("TX", ack_frame, sizeof (ack_frame));
-#endif
-  uart_send ((serial_port) nds, ack_frame, sizeof (ack_frame));
-}
-
-bool
-pn532_uart_wait_for_ack(const nfc_device_spec_t nds)
-{
-  byte_t  abtRx[RX_BUFFER_LEN];
-  size_t  szRx = sizeof(ack_frame);
-  if (0 == uart_receive ((serial_port) nds, abtRx, &szRx)) {
-#ifdef DEBUG           
-    PRINT_HEX ("RX", abtRx, szRx);
-#endif
+  if ((0x01 == abtRxBuf[3]) && (0xff == abtRxBuf[4])) {
+    // Error frame
+    uart_receive (((struct pn532_uart_data*)(pnd->driver_data))->port, abtRxBuf, 3);
+    ERR ("%s", "Application level error detected");
+    pnd->iLastError = DEISERRFRAME;
+    return -1;
+  } else if ((0xff == abtRxBuf[3]) && (0xff == abtRxBuf[4])) {
+    // Extended frame
+    // FIXME: Code this
+    abort ();
   } else {
-    ERR ("No ACK.");
-    return false;
-  }
-  if (0 != memcmp (ack_frame, abtRx, szRx))
-    return false;
-  return true;
-}
+    // Normal frame
+    if (256 != (abtRxBuf[3] + abtRxBuf[4])) {
+      // TODO: Retry
+      ERR ("%s", "Length checksum mismatch");
+      pnd->iLastError = DEIO;
+      return -1;
+    }
 
-#define PN53X_RX_OVERHEAD 6
-void
-pn532_uart_wakeup (const nfc_device_spec_t nds)
-{
-  byte_t  abtRx[RX_BUFFER_LEN];
-  size_t  szRx = PN53x_NORMAL_FRAME_OVERHEAD + 2;
-  /** PN532C106 wakeup. */
-  /** High Speed Unit (HSU) wake up consist to send 0x55 and wait a "long" delay for PN532 being wakeup. */
-  /** After the preamble we request the PN532C106 chip to switch to "normal" mode (SAM is not used) */
-  const byte_t pncmd_pn532c106_wakeup_preamble[] = 
-    { 0x55, 0x55, 0x00, 0x00, 0x00, 
-      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-      0x00, 0x00, 0xff, 0x03, 0xfd, 0xd4, 0x14, 0x01, 0x17, 0x00 }; // Here we send a SAMConfiguration command (Normal mode, the SAM is not used; this is the default mode)
-#ifdef DEBUG
-  PRINT_HEX ("TX", pncmd_pn532c106_wakeup_preamble, sizeof (pncmd_pn532c106_wakeup_preamble));
-#endif
-  uart_send ((serial_port) nds, pncmd_pn532c106_wakeup_preamble, sizeof (pncmd_pn532c106_wakeup_preamble));
-
-  pn532_uart_wait_for_ack(nds);
-
-  if (0 == uart_receive ((serial_port) nds, abtRx, &szRx)) {
-#ifdef DEBUG
-    PRINT_HEX ("RX", abtRx, szRx);
-#endif
-  } else {
-    ERR ("Unable to wakeup the PN532.");
-  }
-}
-
-bool
-pn532_uart_check_communication (const nfc_device_spec_t nds, bool * success)
-{
-  byte_t  abtRx[RX_BUFFER_LEN];
-  const byte_t attempted_result[] =
-    { 0x00, 0x00, 0xff, 0x00, 0xff, 0x00, 0x00, 0x00, 0xff, 0x09, 0xf7, 0xD5, 0x01, 0x00, 'l', 'i', 'b', 'n', 'f', 'c',
-0xbc, 0x00 };
-  size_t  szRx = sizeof(attempted_result);
-  int     res;
-
-  /** To be sure that PN532 is alive, we have put a "Diagnose" command to execute a "Communication Line Test" */
-  const byte_t pncmd_communication_test[] =
-    { 0x00, 0x00, 0xff, 0x09, 0xf7, 0xd4, 0x00, 0x00, 'l', 'i', 'b', 'n', 'f', 'c', 0xbe, 0x00 };
-
-  *success = false;
-
-#ifdef DEBUG
-  PRINT_HEX ("TX", pncmd_communication_test, sizeof (pncmd_communication_test));
-#endif
-  res = uart_send ((serial_port) nds, pncmd_communication_test, sizeof (pncmd_communication_test));
-  if (res != 0) {
-    ERR ("%s", "Unable to transmit data. (TX)");
-    return false;
+    // abtRxBuf[3] (LEN) include TFI + (CC+1)
+    len = abtRxBuf[3] - 2;
   }
 
-  res = uart_receive ((serial_port) nds, abtRx, &szRx);
+  if (len > szDataLen) {
+    ERR ("Unable to receive data: buffer too small. (szDataLen: %zu, len: %zu)", szDataLen, len);
+    pnd->iLastError = DEIO;
+    return -1;
+  }
+
+  // TFI + PD0 (CC+1)
+  res = uart_receive (((struct pn532_uart_data*)(pnd->driver_data))->port, abtRxBuf, 2);
   if (res != 0) {
     ERR ("%s", "Unable to receive data. (RX)");
-    return false;
+    pnd->iLastError = res;
+    return -1;
   }
-#ifdef DEBUG
-  PRINT_HEX ("RX", abtRx, szRx);
-#endif
 
-  if (0 == memcmp (abtRx, attempted_result, sizeof (attempted_result)))
-    *success = true;
+  if (abtRxBuf[0] != 0xD5) {
+    ERR ("%s", "TFI Mismatch");
+    pnd->iLastError = DEIO;
+    return -1;
+  }
 
-  return true;
+  if (abtRxBuf[1] != pnd->iLastCommand + 1) {
+    ERR ("%s", "Command Code verification failed");
+    pnd->iLastError = DEIO;
+    return -1;
+  }
+
+  if (len) {
+    res = uart_receive (((struct pn532_uart_data*)(pnd->driver_data))->port, pbtData, len);
+    if (res != 0) {
+      ERR ("%s", "Unable to receive data. (RX)");
+      pnd->iLastError = res;
+      return -1;
+    }
+  }
+
+  res = uart_receive (((struct pn532_uart_data*)(pnd->driver_data))->port, abtRxBuf, 2);
+  if (res != 0) {
+    ERR ("%s", "Unable to receive data. (RX)");
+    pnd->iLastError = res;
+    return -1;
+  }
+
+  byte_t btDCS = (256 - 0xD5);
+  btDCS -= pnd->iLastCommand + 1;
+  for (size_t szPos = 0; szPos < len; szPos++) {
+    btDCS -= pbtData[szPos];
+  }
+
+  if (btDCS != abtRxBuf[0]) {
+    ERR ("%s", "Data checksum mismatch");
+    pnd->iLastError = DEIO;
+    return -1;
+  }
+
+  if (0x00 != abtRxBuf[1]) {
+    ERR ("%s", "Frame postamble mismatch");
+    pnd->iLastError = DEIO;
+    return -1;
+  }
+  ((struct pn53x_data*)(pnd->chip_data))->state = NORMAL;
+  return len;
 }
+
+void
+pn532_uart_ack (nfc_device_t * pnd)
+{
+  uart_send (((struct pn532_uart_data*)(pnd->driver_data))->port, ack_frame, sizeof (ack_frame));
+}
+
+bool
+pn532_uart_check_communication (nfc_device_t *pnd)
+{
+  const byte_t abtMsg[] = { Diagnose, 0x00, 'l', 'i', 'b', 'n', 'f', 'c' };
+  if (!pn532_uart_send (pnd, abtMsg, sizeof (abtMsg)))
+    return false;
+
+  const byte_t abtExpectedRes[] = { 0x00, 'l', 'i', 'b', 'n', 'f', 'c' };
+
+  byte_t abtRes[sizeof(abtExpectedRes)];
+  int res;
+  if ((res = pn532_uart_receive (pnd, abtRes, sizeof(abtRes))) < 0)
+    return false;
+
+  return ((sizeof(abtRes) == res) && (0 == memcmp (abtRes, abtExpectedRes, sizeof(abtExpectedRes))));
+}
+
+const struct nfc_driver_t pn532_uart_driver = {
+  .name       = PN532_UART_DRIVER_NAME,
+  .probe      = pn532_uart_probe,
+  .connect    = pn532_uart_connect,
+  .send       = pn532_uart_send,
+  .receive    = pn532_uart_receive,
+  .disconnect = pn532_uart_disconnect,
+  .strerror   = pn53x_strerror,
+};

@@ -1,7 +1,8 @@
 /**
  * Public platform independent Near Field Communication (NFC) library
  * 
- * Copyright (C) 2009, Roel Verdult
+ * Copyright (C) 2010, Roel Verdult, Romuald Conty
+ * Copyright (C) 2011, Romuald Conty, Romain Tartière
  * 
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -30,13 +31,15 @@
 
 // Functions used by developer to handle connection to this device
 nfc_device_desc_t *pn532_uart_pick_device (void);
-bool    pn532_uart_list_devices (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * pszDeviceFound);
+bool    pn532_uart_probe (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * pszDeviceFound);
 
 nfc_device_t *pn532_uart_connect (const nfc_device_desc_t * pndd);
 void    pn532_uart_disconnect (nfc_device_t * pnd);
 
 // Callback function used by libnfc to transmit commands to the PN53X chip
-bool    pn532_uart_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, byte_t * pbtRx,
-                               size_t * pszRx);
+bool    pn532_uart_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szData);
+int     pn532_uart_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen);
+
+extern const struct nfc_driver_t pn532_uart_driver;
 
 #endif // ! __NFC_DRIVER_PN532_UART_H__

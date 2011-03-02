@@ -119,7 +119,7 @@ arygon_list_devices (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *
   *pszDeviceFound = 0;
 
   serial_port sp;
-  const char *pcPorts[] = DEFAULT_SERIAL_PORTS;
+  char **pcPorts = uart_list_ports ();
   const char *pcPort;
   int     iDevice = 0;
 
@@ -155,6 +155,7 @@ arygon_list_devices (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *
 #  endif
        /* DEBUG */
   }
+  free (pcPorts);
 #endif /* SERIAL_AUTOPROBE_ENABLED */
   return true;
 }

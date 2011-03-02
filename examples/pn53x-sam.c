@@ -93,7 +93,7 @@ sam_connection (nfc_device_t * pnd, int mode)
     break;
   }
 
-  if (!pn53x_transceive (pnd, pncmd_sam_config, szCmd, abtRx, &szRx)) {
+  if (!pn53x_transceive (pnd, pncmd_sam_config, szCmd, abtRx, &szRx, false)) {
     nfc_perror(pnd, "pn53x_transceive");
     ERR ("%s %d", "Unable to execute SAMConfiguration command with mode byte:", mode);
     return false;

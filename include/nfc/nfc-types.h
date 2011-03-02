@@ -3,6 +3,7 @@
  * 
  * Copyright (C) 2009, Roel Verdult
  * Copyright (C) 2010, Romain Tartière, Romuald Conty
+ * Copyright (C) 2011, Romain Tartière, Romuald Conty
  * 
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -16,8 +17,9 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
- * 
- * 
+ */
+
+/** 
  * @file nfc-types.h
  * @brief Define NFC types
  */
@@ -25,12 +27,6 @@
 #ifndef __NFC_TYPES_H__
 #  define __NFC_TYPES_H__
 
-/**
- * @file types.h
- * @brief libnfc-defined types
- *
- * Define libnfc specific types: typedef, enum, struct, etc.
- */
 #  include <stddef.h>
 #  include <stdint.h>
 #  include <stdbool.h>
@@ -38,32 +34,19 @@
 
 typedef uint8_t byte_t;
 
-typedef enum {
-  NC_PN531 = 0x10,
-  NC_PN532 = 0x20,
-  NC_PN533 = 0x30,
-} nfc_chip_t;
-
-struct driver_callbacks;        // Prototype the callback struct
-
-typedef void *nfc_device_spec_t;        // Device connection specification
-
 #  define DEVICE_NAME_LENGTH  256
 /**
  * @struct nfc_device_t
  * @brief NFC device information
  */
 typedef struct {
-/** Callback functions for handling device specific wrapping */
-  const struct driver_callbacks *pdc;
+/** Driver's functions for handling device specific wrapping */
+  const struct nfc_driver_t *driver;
+  void* driver_data;
+  void* chip_data;
+
 /** Device name string, including device wrapper firmware */
   char    acName[DEVICE_NAME_LENGTH];
-/** PN53X chip type, this is useful for some "bug" work-arounds */
-  nfc_chip_t nc;
-/** Pointer to the device connection specification */
-  nfc_device_spec_t nds;
-/** This represents if the PN53X device was initialized succesful */
-  bool    bActive;
 /** Is the crc automaticly added, checked and removed from the frames */
   bool    bCrc;
 /** Does the PN53x chip handles parity bits, all parities are handled as data */
@@ -87,8 +70,10 @@ typedef struct {
  *    +----------- Driver-level general error (common to all drivers)
  */
   int     iLastError;
+/** Last sent command */
+  int     iLastCommand;
 } nfc_device_t;
-
+// TODO: Move chip's specifics in a chips structure (e.g. iLastCommand, ui8Parameters, ui8TxBits)
 
 /**
  * @struct nfc_device_desc_t
@@ -116,29 +101,6 @@ typedef struct {
 struct chip_callbacks {
     /** Error lookup */
   const char *(*strerror) (const nfc_device_t * pnd);
-};
-
-/**
- * @struct driver_callbacks
- * @brief Generic structure to handle NFC device functions.
- */
-struct driver_callbacks {
-  /** Driver name */
-  const char *acDriver;
-  /** Chip specific callback functions */
-  const struct chip_callbacks *pcc;
-  /** Pick devices callback */
-  nfc_device_desc_t *(*pick_device) (void);
-  /** List devices callback */
-  bool (*list_devices) (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * pszDeviceFound);
-  /** Connect callback */
-  nfc_device_t *(*connect) (const nfc_device_desc_t * pndd);
-  /** Init callback */
-  void (*init) (nfc_device_t * pnd);
-  /** Transceive callback */
-  bool (*transceive) (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, byte_t * pbtRx, size_t * pszRx);
-  /** Disconnect callback */
-  void    (*disconnect) (nfc_device_t * pnd);
 };
 
 // Compiler directive, set struct alignment to 1 byte_t for compatibility

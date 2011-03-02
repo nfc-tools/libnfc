@@ -3,6 +3,7 @@
  * 
  * Copyright (C) 2009, Roel Verdult, Romuald Conty
  * Copyright (C) 2010, Roel Verdult, Romuald Conty, Romain Tartière
+ * Copyright (C) 2011, Romuald Conty, Romain Tartière
  * 
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -23,6 +24,8 @@
  * @brief NFC library implementation
  */
 
+/* vim:set ts=2 sw=2 et: */
+
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif // HAVE_CONFIG_H
@@ -40,10 +43,18 @@
 
 #include "chips.h"
 #include "drivers.h"
+#include "nfc-internal.h"
 
 #include <nfc/nfc-messages.h>
 
 nfc_device_desc_t *nfc_pick_device (void);
+
+const struct nfc_driver_t *nfc_drivers[] = {
+#  if defined (DRIVER_PN532_UART_ENABLED)
+  &pn532_uart_driver,
+#  endif /* DRIVER_PN532_UART_ENABLED */
+  NULL
+};
 
 /**
  * @brief Connect to a NFC device
@@ -71,49 +82,31 @@ nfc_device_t *
 nfc_connect (nfc_device_desc_t * pndd)
 {
   nfc_device_t *pnd = NULL;
-  uint32_t uiDriver;
+
+  if (pndd == NULL)
+      pndd = nfc_pick_device ();
+
+  if (pndd == NULL)
+      return NULL;
 
   // Search through the device list for an available device
-  for (uiDriver = 0; uiDriver < sizeof (drivers_callbacks_list) / sizeof (drivers_callbacks_list[0]); uiDriver++) {
-    if (pndd == NULL) {
-      // No device description specified: try to automatically claim a device
-      if (drivers_callbacks_list[uiDriver].pick_device != NULL) {
-        DBG ("Autodetecting available devices using %s driver.", drivers_callbacks_list[uiDriver].acDriver);
-        pndd = drivers_callbacks_list[uiDriver].pick_device ();
-
-        if (pndd != NULL) {
-          DBG ("Auto-connecting to %s using %s driver", pndd->acDevice, drivers_callbacks_list[uiDriver].acDriver);
-          pnd = drivers_callbacks_list[uiDriver].connect (pndd);
-          if (pnd == NULL) {
-            DBG ("No device available using %s driver", drivers_callbacks_list[uiDriver].acDriver);
-            pndd = NULL;
-          }
-
-          free (pndd);
-        }
-      }
+  const struct nfc_driver_t *ndr;
+  const struct nfc_driver_t **pndr = nfc_drivers;
+  while ((ndr = *pndr)) {
+    // Specific device is requested: using device description pndd
+    if (0 != strcmp (ndr->name, pndd->pcDriver)) {
+      continue;
     } else {
-      // Specific device is requested: using device description pndd
-      if (0 != strcmp (drivers_callbacks_list[uiDriver].acDriver, pndd->pcDriver)) {
-        continue;
-      } else {
-        pnd = drivers_callbacks_list[uiDriver].connect (pndd);
-      }
+      pnd = ndr->connect (pndd);
     }
 
     // Test if the connection was successful
     if (pnd != NULL) {
       DBG ("[%s] has been claimed.", pnd->acName);
-      // Great we have claimed a device
-      pnd->pdc = &(drivers_callbacks_list[uiDriver]);
 
       // TODO: Put this pn53x related in driver_init()
       if (!pn53x_init (pnd))
         return NULL;
-
-      if (pnd->pdc->init) {
-        pnd->pdc->init (pnd);
-      }
 
       // Set default configuration options
       // Make sure we reset the CRC and parity to chip handling.
@@ -144,8 +137,9 @@ nfc_connect (nfc_device_desc_t * pndd)
 
       return pnd;
     } else {
-      DBG ("No device found using driver: %s", drivers_callbacks_list[uiDriver].acDriver);
+      DBG ("No device found using driver: %s", ndr->name);
     }
+    pndr++;
   }
   // Too bad, no reader is ready to be claimed
   return NULL;
@@ -166,7 +160,7 @@ nfc_disconnect (nfc_device_t * pnd)
     // Disable RF field to avoid heating
     nfc_configure (pnd, NDO_ACTIVATE_FIELD, false);
     // Disconnect, clean up and release the device 
-    pnd->pdc->disconnect (pnd);
+    pnd->driver->disconnect (pnd);
   }
 }
 
@@ -177,17 +171,31 @@ nfc_disconnect (nfc_device_t * pnd)
 nfc_device_desc_t *
 nfc_pick_device (void)
 {
-  uint32_t uiDriver;
-  nfc_device_desc_t *nddRes;
+  const struct nfc_driver_t *ndr;
+  const struct nfc_driver_t **pndr = nfc_drivers;
+  while ((ndr = *pndr)) {
+    nfc_device_desc_t *pndd;
 
-  for (uiDriver = 0; uiDriver < sizeof (drivers_callbacks_list) / sizeof (drivers_callbacks_list[0]); uiDriver++) {
-    if (drivers_callbacks_list[uiDriver].pick_device != NULL) {
-      nddRes = drivers_callbacks_list[uiDriver].pick_device ();
-      if (nddRes != NULL)
-        return nddRes;
+    if ((pndd = malloc (sizeof (*pndd)))) {
+      size_t  szN;
+
+      if (!ndr->probe (pndd, 1, &szN)) {
+        DBG ("%s probe failed", ndr->name);
+        free (pndd);
+        return NULL;
+      }
+
+      if (szN == 0) {
+        DBG ("No %s device found", ndr->name);
+        free (pndd);
+      } else {
+        return pndd;
+      }
     }
+    pndr++;
   }
 
+  DBG ("%s", "No device found with any driver :-(");
   return NULL;
 }
 
@@ -200,22 +208,19 @@ nfc_pick_device (void)
 void
 nfc_list_devices (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * pszDeviceFound)
 {
-  uint32_t uiDriver;
   size_t  szN;
 
   *pszDeviceFound = 0;
 
-  for (uiDriver = 0; uiDriver < sizeof (drivers_callbacks_list) / sizeof (drivers_callbacks_list[0]); uiDriver++) {
-    if (drivers_callbacks_list[uiDriver].list_devices != NULL) {
-      szN = 0;
-      if (drivers_callbacks_list[uiDriver].list_devices
-          (pnddDevices + (*pszDeviceFound), szDevices - (*pszDeviceFound), &szN)) {
-        *pszDeviceFound += szN;
-        DBG ("%ld device(s) found using %s driver", (unsigned long) szN, drivers_callbacks_list[uiDriver].acDriver);
-      }
-    } else {
-      DBG ("No listing function avaible for %s driver", drivers_callbacks_list[uiDriver].acDriver);
+  const struct nfc_driver_t *ndr;
+  const struct nfc_driver_t **pndr = nfc_drivers;
+  while ((ndr = *pndr)) {
+    szN = 0;
+    if (ndr->probe (pnddDevices + (*pszDeviceFound), szDevices - (*pszDeviceFound), &szN)) {
+      *pszDeviceFound += szN;
+      DBG ("%ld device(s) found using %s driver", (unsigned long) szN, ndr->name);
     }
+    pndr++;
   }
 }
 
@@ -253,16 +258,12 @@ nfc_initiator_init (nfc_device_t * pnd)
 {
   pnd->iLastError = 0;
 
-  // Make sure we are dealing with a active device
-  if (!pnd->bActive)
-    return false;
-
   // Set the PN53X to force 100% ASK Modified miller decoding (default for 14443A cards)
-  if (!pn53x_set_reg (pnd, REG_CIU_TX_AUTO, SYMBOL_FORCE_100_ASK, 0x40))
+  if (!pn53x_write_register (pnd, REG_CIU_TX_AUTO, SYMBOL_FORCE_100_ASK, 0x40))
     return false;
 
   // Configure the PN53X to be an Initiator or Reader/Writer
-  if (!pn53x_set_reg (pnd, REG_CIU_CONTROL, SYMBOL_INITIATOR, 0x10))
+  if (!pn53x_write_register (pnd, REG_CIU_CONTROL, SYMBOL_INITIATOR, 0x10))
     return false;
 
   return true;
@@ -294,14 +295,11 @@ nfc_initiator_select_passive_target (nfc_device_t * pnd,
                                      const byte_t * pbtInitData, const size_t szInitData,
                                      nfc_target_t * pnt)
 {
-  byte_t  abtInit[MAX_FRAME_LEN];
+  byte_t  abtInit[MAX(12, szInitData)];
   size_t  szInit;
 
   pnd->iLastError = 0;
 
-  // Make sure we are dealing with a active device
-  if (!pnd->bActive)
-    return false;
   // TODO Put this in a function: this part is defined by ISO14443-3 (UID and Cascade levels)
   switch (nm.nmt) {
   case NMT_ISO14443A:
@@ -662,7 +660,7 @@ nfc_target_receive_bits (nfc_device_t * pnd, byte_t * pbtRx, size_t * pszRxBits,
 const char *
 nfc_strerror (const nfc_device_t * pnd)
 {
-  return pnd->pdc->pcc->strerror (pnd);
+  return pnd->driver->strerror (pnd);
 }
 
 /**

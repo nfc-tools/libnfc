@@ -5,7 +5,7 @@
 #define MAX_DEVICE_COUNT 1
 #define MAX_TARGET_COUNT 1
 
-bool pn53x_get_reg(nfc_device_t* pnd, uint16_t ui16Reg, uint8_t* ui8Value);
+#include "libnfc/chips/pn53x.h"
 
 void
 test_register_endianness (void)
@@ -26,11 +26,11 @@ test_register_endianness (void)
     uint8_t value;
 
     /* Read valid XRAM memory */
-    res = pn53x_get_reg (device, 0xF0FF, &value);
+    res = pn53x_read_register (device, 0xF0FF, &value);
     cut_assert_true (res, cut_message ("read register 0xF0FF"));
 
     /* Read invalid SFR register */
-    res = pn53x_get_reg (device, 0xFFF0, &value);
+    res = pn53x_read_register (device, 0xFFF0, &value);
     cut_assert_false (res, cut_message ("read register 0xFFF0"));
 
     nfc_disconnect (device);

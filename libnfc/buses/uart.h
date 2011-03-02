@@ -1,7 +1,9 @@
 /*-
  * Public platform independent Near Field Communication (NFC) library
  * 
- * Copyright (C) 2009, 2010, Roel Verdult, Romuald Conty
+ * Copyright (C) 2009, Roel Verdult, Romuald Conty
+ * Copyright (C) 2010, Roel Verdult, Romuald Conty
+ * Copyright (C) 2011, Romuald Conty, Romain Tartière
  * 
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -54,17 +56,7 @@
 // Try to guess what we should use.
 #  if defined (_WIN32)
 #    define DEFAULT_SERIAL_PORTS { "COM1", "COM2", "COM3", "COM4", NULL }
-#  elif defined(__APPLE__)
-  // XXX: find UART connection string for PN53X device on Mac OS X when multiples devices are used
-#    define DEFAULT_SERIAL_PORTS { "/dev/tty.SLAB_USBtoUART", NULL }
-#  elif defined (__FreeBSD__) || defined (__OpenBSD__)
-  // XXX: Not tested
-#    define DEFAULT_SERIAL_PORTS { "/dev/cuau0", "/dev/cuau1", "/dev/cuau2", "/dev/cuau3", NULL }
-#  elif defined (__linux__)
-#    define DEFAULT_SERIAL_PORTS { "/dev/ttyUSB0", "/dev/ttyUSB1", "/dev/ttyUSB2", "/dev/ttyUSB3", "/dev/ttyS0", "/dev/ttyS1", "/dev/ttyS2", "/dev/ttyS3", NULL }
-#  else
-#    error "Can't determine serial string for your system"
-#  endif
+# endif
 
 // Define shortcut to types to make code more readable
 typedef void *serial_port;
@@ -77,7 +69,9 @@ void    uart_close (const serial_port sp);
 void    uart_set_speed (serial_port sp, const uint32_t uiPortSpeed);
 uint32_t uart_get_speed (const serial_port sp);
 
-int     uart_receive (serial_port sp, byte_t * pbtRx, size_t * pszRx);
+int     uart_receive (serial_port sp, byte_t * pbtRx, const size_t szRx);
 int     uart_send (serial_port sp, const byte_t * pbtTx, const size_t szTx);
+
+char  **uart_list_ports (void);
 
 #endif // __NFC_BUS_UART_H__

@@ -1,7 +1,9 @@
 /*-
  * Public platform independent Near Field Communication (NFC) library
  * 
- * Copyright (C) 2009, 2010, Roel Verdult, Romuald Conty
+ * Copyright (C) 2009, Roel Verdult, Romuald Conty
+ * Copyright (C) 2010, Roel Verdult, Romuald Conty, Romain Tartière
+ * Copyright (C) 2011, Romuald Conty, Romain Tartière
  * 
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -26,11 +28,6 @@
 #  define __NFC_CHIPS_PN53X_H__
 
 #  include <nfc/nfc-types.h>
-
-#  define PN53x_NORMAL_FRAME_MAX_LEN		255
-#  define PN53x_NORMAL_FRAME_OVERHEAD		7
-#  define PN53x_EXTENDED_FRAME_MAX_LEN		264
-#  define PN53x_EXTENDED_FRAME_OVERHEAD		10
 
 // Registers and symbols masks used to covers parts within a register
 #  define REG_CIU_TX_MODE           0x6302
@@ -97,6 +94,24 @@
 #  define DEACKMISMATCH   0x0200/* Unexpected data */
 #  define DEISERRFRAME    0x0300/* Error frame */
 #  define DENOTSUP        0x0400/* Not supported */
+
+typedef enum {
+  PN531 = 0x01,
+  PN532 = 0x02,
+  PN533 = 0x04
+} pn53x_type;
+
+typedef enum {
+  SLEEP = 0x00,   // Need to be wake up to process commands
+  NORMAL = 0x01,  // Ready to process command
+  EXECUTE = 0x02, // Need to cancel the running command to process new one
+} pn53x_state;
+
+struct pn53x_data {
+  pn53x_type type;
+  pn53x_state state;
+};
+
 
 /* PN53x specific types */
 /**
@@ -185,18 +200,17 @@ bool    pn53x_check_ack_frame_callback (nfc_device_t * pnd, const byte_t * pbtRx
                                                    const size_t szRxFrameLen);
 bool    pn53x_check_error_frame_callback (nfc_device_t * pnd, const byte_t * pbtRxFrame,
                                                      const size_t szRxFrameLen);
-bool    pn53x_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, byte_t * pbtRx,
-                          size_t * pszRx);
-bool    pn53x_get_reg (nfc_device_t * pnd, uint16_t ui16Reg, uint8_t * ui8Value);
-bool    pn53x_set_reg (nfc_device_t * pnd, uint16_t ui16Reg, uint8_t ui8SymbolMask, uint8_t ui8Value);
-bool    pn53x_set_parameter (nfc_device_t * pnd, const uint8_t ui8Value, const bool bEnable);
+bool    pn53x_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, byte_t * pbtRx, size_t *pszRx, bool toto);
+bool    pn53x_read_register (nfc_device_t * pnd, uint16_t ui16Reg, uint8_t * ui8Value);
+bool    pn53x_write_register (nfc_device_t * pnd, uint16_t ui16Reg, uint8_t ui8SymbolMask, uint8_t ui8Value);
+bool    pn53x_set_parameters (nfc_device_t * pnd, const uint8_t ui8Value, const bool bEnable);
 bool    pn53x_set_tx_bits (nfc_device_t * pnd, const uint8_t ui8Bits);
 bool    pn53x_wrap_frame (const byte_t * pbtTx, const size_t szTxBits, const byte_t * pbtTxPar, byte_t * pbtFrame,
                           size_t * pszFrameBits);
 bool    pn53x_unwrap_frame (const byte_t * pbtFrame, const size_t szFrameBits, byte_t * pbtRx, size_t * pszRxBits,
                             byte_t * pbtRxPar);
 bool    pn53x_decode_target_data (const byte_t * pbtRawData, size_t szRawData,
-                                  nfc_chip_t nc, nfc_modulation_type_t nmt,
+                                  pn53x_type chip_type, nfc_modulation_type_t nmt,
                                   nfc_target_info_t * pnti);
 bool    pn53x_get_firmware_version (nfc_device_t * pnd, char abtFirmwareText[18]);
 bool    pn53x_configure (nfc_device_t * pnd, const nfc_device_option_t ndo, const bool bEnable);
@@ -234,6 +248,7 @@ static const struct chip_callbacks pn53x_callbacks_list = {
 
 // C wrappers for PN53x commands
 bool    pn53x_SetParameters (nfc_device_t * pnd, const uint8_t ui8Value);
+bool    pn53x_SAMConfiguration (nfc_device_t * pnd, const uint8_t ui8Mode);
 bool    pn53x_InListPassiveTarget (nfc_device_t * pnd, const pn53x_modulation_t pmInitModulation,
                                    const byte_t szMaxTargets, const byte_t * pbtInitiatorData,
                                    const size_t szInitiatorDataLen, byte_t * pbtTargetsData, size_t * pszTargetsData);

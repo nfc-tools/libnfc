@@ -40,9 +40,9 @@
 
 #include "nfc-utils.h"
 #include "chips/pn53x.h"
+#include "chips/pn53x-internal.h"
 
 #define MAX_DEVICE_COUNT 16
-
 
 int
 main (int argc, const char *argv[])
@@ -54,7 +54,7 @@ main (int argc, const char *argv[])
   const char *acLibnfcVersion;
   bool    result;
 
-  byte_t  abtRx[PN53x_EXTENDED_FRAME_MAX_LEN];
+  byte_t  abtRx[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
   size_t  szRx;
   const byte_t pncmd_diagnose_communication_line_test[] = { 0xD4, 0x00, 0x00, 0x06, 'l', 'i', 'b', 'n', 'f', 'c' };
   const byte_t pncmd_diagnose_rom_test[] = { 0xD4, 0x00, 0x01 };
@@ -88,19 +88,19 @@ main (int argc, const char *argv[])
 
     printf ("NFC device [%s] connected.\n", pnd->acName);
 
-    result = pn53x_transceive (pnd, pncmd_diagnose_communication_line_test, sizeof (pncmd_diagnose_communication_line_test), abtRx, &szRx);
+    result = pn53x_transceive (pnd, pncmd_diagnose_communication_line_test, sizeof (pncmd_diagnose_communication_line_test), abtRx, &szRx, false);
     if (result) {
       result = (memcmp (pncmd_diagnose_communication_line_test + 2, abtRx, sizeof (pncmd_diagnose_communication_line_test) - 2) == 0);
     }
     printf (" Communication line test: %s\n", result ? "OK" : "Failed");
 
-    result = pn53x_transceive (pnd, pncmd_diagnose_rom_test, sizeof (pncmd_diagnose_rom_test), abtRx, &szRx);
+    result = pn53x_transceive (pnd, pncmd_diagnose_rom_test, sizeof (pncmd_diagnose_rom_test), abtRx, &szRx, false);
     if (result) {
       result = ((szRx == 1) && (abtRx[0] == 0x00));
     }
     printf (" ROM test: %s\n", result ? "OK" : "Failed");
 
-    result = pn53x_transceive (pnd, pncmd_diagnose_ram_test, sizeof (pncmd_diagnose_ram_test), abtRx, &szRx);
+    result = pn53x_transceive (pnd, pncmd_diagnose_ram_test, sizeof (pncmd_diagnose_ram_test), abtRx, &szRx, false);
     if (result) {
       result = ((szRx == 1) && (abtRx[0] == 0x00));
     }

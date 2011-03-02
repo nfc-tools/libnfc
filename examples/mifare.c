@@ -56,10 +56,6 @@ nfc_initiator_mifare_cmd (nfc_device_t * pnd, const mifare_cmd mc, const uint8_t
   byte_t  abtCmd[265];
   bool    bEasyFraming;
 
-  // Make sure we are dealing with a active device
-  if (!pnd->bActive)
-    return false;
-
   abtCmd[0] = mc;               // The MIFARE Classic command
   abtCmd[1] = ui8Block;         // The block address (1K=0x00..0x39, 4K=0x00..0xff)
 

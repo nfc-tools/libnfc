@@ -2,6 +2,8 @@
  * Public platform independent Near Field Communication (NFC) library
  * 
  * Copyright (C) 2009, 2010, Roel Verdult, Romuald Conty
+ * Copyright (C) 2010, Roel Verdult, Romuald Conty
+ * Copyright (C) 2011, Romuald Conty, Romain Tartière
  * 
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -23,21 +25,35 @@
  * @brief POSIX UART driver
  */
 
+/* vim: set ts=2 sw=2 et: */
+
+#  include <sys/types.h>
 #  include <sys/select.h>
 #  include <sys/param.h>
+#  include <ctype.h>
 #  include <termios.h>
+#  include <stdio.h>
+#  include <dirent.h>
+
+#  include "nfc-internal.h"
+
+#  if defined(__APPLE__)
+  // FIXME: find UART connection string for PN53X device on Mac OS X when multiples devices are used
+char *serial_ports_device_radix[] = { "tty.SLAB_USBtoUART", NULL };
+#  elif defined (__FreeBSD__) || defined (__OpenBSD__)
+char *serial_ports_device_radix[] = { "cuaU", "cuau", NULL };
+#  elif defined (__linux__)
+char *serial_ports_device_radix[] = { "ttyUSB", "ttyS", NULL };
+#  else
+#    error "Can't determine serial string for your system"
+#  endif
+
 typedef struct termios term_info;
 typedef struct {
   int     fd;                   // Serial port file descriptor
   term_info tiOld;              // Terminal info before using the port
   term_info tiNew;              // Terminal info during the transaction
 } serial_port_unix;
-
-// timeval struct that define timeout delay for serial port:
-//  first is constant and currently related to PN53x response delay
-static const unsigned long int uiTimeoutStatic = 15000; // 15 ms to allow device to respond
-//  second is a per-byte timeout (sets when setting baudrate)
-static unsigned long int uiTimeoutPerByte = 0;
 
 // Work-around to claim uart interface using the c_iflag (software input processing) from the termios struct
 #  define CCLAIMED 0x80000000
@@ -85,25 +101,10 @@ uart_open (const char *pcPortName)
   return sp;
 }
 
-/**
- * @note This define convert a Baud rate in a per-byte duration (in µs)
- * Bauds are "symbols per second", so each symbol is bit here.
- * We want to convert Bd to bytes/s in first time,
- * 1 serial-transmitted byte is (in 8N1):
- * - 1 start bit,
- * - 8 data bits,
- * - 1 stop bit.
- *
- * In 8N1 mode, byte-rate = baud-rate / 10
- */
-#define UART_BAUDRATE_T0_BYTE_DURATION(X) ((1000000 * 10)/ X)
-
 void
 uart_set_speed (serial_port sp, const uint32_t uiPortSpeed)
 {
-  // Set per-byte timeout
-  uiTimeoutPerByte = UART_BAUDRATE_T0_BYTE_DURATION(uiPortSpeed);
-  DBG ("Serial port speed requested to be set to %d bauds (%lu µs).", uiPortSpeed, uiTimeoutPerByte);
+  DBG ("Serial port speed requested to be set to %d bauds.", uiPortSpeed);
   const serial_port_unix *spu = (serial_port_unix *) sp;
 
   // Portability note: on some systems, B9600 != 9600 so we have to do
@@ -203,28 +204,26 @@ uart_close (const serial_port sp)
   free (sp);
 }
 
+static const struct timeval tvTimeout = {
+  .tv_sec = 1,
+  .tv_usec = 0
+};
+
 /**
  * @brief Receive data from UART and copy data to \a pbtRx
  *
  * @return 0 on success, otherwise driver error code
  */
 int
-uart_receive (serial_port sp, byte_t * pbtRx, size_t * pszRx)
+uart_receive (serial_port sp, byte_t * pbtRx, const size_t szRx)
 {
-  int     res;
-  int     byteCount;
-  fd_set  rfds;
 
-  int     iExpectedByteCount = (int)*pszRx;
-  DBG ("iExpectedByteCount == %d", iExpectedByteCount);
-  struct timeval tvTimeout = {
-    .tv_sec = 0,
-    .tv_usec = uiTimeoutStatic + (uiTimeoutPerByte * iExpectedByteCount),
-  };
   struct timeval tv = tvTimeout;
-
-  // Reset the output count  
-  *pszRx = 0;
+  int received_bytes_count = 0;
+  int available_bytes_count = 0;
+  const int expected_bytes_count = (int)szRx;
+  int res;
+  fd_set rfds;
   do {
     // Reset file descriptor
     FD_ZERO (&rfds);
@@ -238,35 +237,25 @@ uart_receive (serial_port sp, byte_t * pbtRx, size_t * pszRx)
     }
     // Read time-out
     if (res == 0) {
-      if (*pszRx == 0) {
-        // Error, we received no data
-        // DBG ("RX time-out (%lu µs), buffer empty.", tvTimeout.tv_usec);
-        return DETIMEOUT;
-      } else {
-        // We received some data, but nothing more is available
-        return 0;
-      }
+      DBG ("Timeout!");
+      return DETIMEOUT;
     }
     // Retrieve the count of the incoming bytes
-    res = ioctl (((serial_port_unix *) sp)->fd, FIONREAD, &byteCount);
-    if (res < 0) {
+    res = ioctl (((serial_port_unix *) sp)->fd, FIONREAD, &available_bytes_count);
+    if (res != 0) {
       return DEIO;
     }
     // There is something available, read the data
-    res = read (((serial_port_unix *) sp)->fd, pbtRx + (*pszRx), MIN(byteCount, iExpectedByteCount));
-    iExpectedByteCount -= MIN (byteCount, iExpectedByteCount);
-
+    // DBG ("expected bytes: %zu, received bytes: %d, available bytes: %d", szRx, received_bytes_count, available_bytes_count);
+    res = read (((serial_port_unix *) sp)->fd, pbtRx + received_bytes_count, MIN(available_bytes_count, (expected_bytes_count - received_bytes_count)));
     // Stop if the OS has some troubles reading the data
     if (res <= 0) {
       return DEIO;
     }
+    received_bytes_count += res;
 
-    *pszRx += res;
-    // Reload timeout with a low value to prevent from waiting too long on slow devices (16x is enought to took at least 1 byte)
-    tv.tv_usec = uiTimeoutPerByte * MIN( iExpectedByteCount, 16 ); 
-    // DBG("Timeout reloaded at: %d µs", tv.tv_usec);
-  } while (byteCount && (iExpectedByteCount > 0));
-  DBG ("byteCount == %d, iExpectedByteCount == %d", byteCount, iExpectedByteCount);
+  } while (expected_bytes_count > received_bytes_count);
+  PRINT_HEX ("RX", pbtRx, szRx);
   return 0;
 }
 
@@ -278,13 +267,16 @@ uart_receive (serial_port sp, byte_t * pbtRx, size_t * pszRx)
 int
 uart_send (serial_port sp, const byte_t * pbtTx, const size_t szTx)
 {
+  PRINT_HEX ("TX", pbtTx, szTx);
+#if 0
+  if ((int) szTx == write (((serial_port_unix *) sp)->fd, pbtTx, szTx))
+    return 0;
+  else
+    return DEIO;
+#endif
   int32_t res;
   size_t  szPos = 0;
   fd_set  rfds;
-  struct timeval tvTimeout = {
-    .tv_sec = 0,
-    .tv_usec = uiTimeoutStatic + (uiTimeoutPerByte * szTx),
-  };
   struct timeval tv = tvTimeout;
 
   while (szPos < szTx) {
@@ -312,10 +304,45 @@ uart_send (serial_port sp, const byte_t * pbtTx, const size_t szTx)
     }
 
     szPos += res;
-
-    // Reload timeout with a low value to prevent from waiting too long on slow devices (16x is enought to took at least 1 byte)
-    tv.tv_usec = uiTimeoutStatic + uiTimeoutPerByte * MIN( szTx - szPos, 16 ); 
   }
   return 0;
 }
 
+char **
+uart_list_ports (void)
+{
+    char **res = malloc (sizeof (char *));
+    size_t szRes = 1;
+
+    res[0] = NULL;
+
+    DIR *pdDir = opendir("/dev");
+    struct dirent *pdDirEnt;
+    while ((pdDirEnt = readdir(pdDir)) != NULL) {
+	if (!isdigit (pdDirEnt->d_name[strlen (pdDirEnt->d_name) - 1]))
+	    continue;
+
+	char **p = serial_ports_device_radix;
+	while (*p) {
+	    if (!strncmp(pdDirEnt->d_name, *p, strlen (*p))) {
+		char **res2 = realloc (res, (szRes+1) * sizeof (char *));
+		if (!res2)
+		    goto oom;
+		
+		res = res2;
+		if (!(res[szRes-1] = malloc (6 + strlen (pdDirEnt->d_name))))
+		    goto oom;
+
+		sprintf (res[szRes-1], "/dev/%s", pdDirEnt->d_name);
+		
+		szRes++;
+		res[szRes-1] = NULL;
+	    }
+	    p++;
+	}
+    }
+oom:
+    closedir (pdDir);
+
+    return res;
+}
