@@ -55,7 +55,7 @@ main (int argc, const char *argv[])
   bool    result;
 
   byte_t  abtRx[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
-  size_t  szRx;
+  size_t  szRx = sizeof(abtRx);
   const byte_t pncmd_diagnose_communication_line_test[] = { 0xD4, 0x00, 0x00, 0x06, 'l', 'i', 'b', 'n', 'f', 'c' };
   const byte_t pncmd_diagnose_rom_test[] = { 0xD4, 0x00, 0x01 };
   const byte_t pncmd_diagnose_ram_test[] = { 0xD4, 0x00, 0x02 };

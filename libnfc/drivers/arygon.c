@@ -371,7 +371,7 @@ void
 arygon_ack (const nfc_device_spec_t nds)
 {
   byte_t abtRx[BUFFER_LENGTH];
-  size_t szRx;
+  size_t szRx = sizeof(abtRx);
 #ifdef DEBUG
   PRINT_HEX ("TX", arygon_ack_frame, sizeof (arygon_ack_frame));
 #endif
@@ -392,7 +392,7 @@ bool
 arygon_check_communication (const nfc_device_spec_t nds)
 {
   byte_t  abtRx[RX_BUFFER_LENGTH];
-  size_t  szRx;
+  size_t  szRx = sizeof(abtRx);
   const byte_t attempted_result[] = { 0x00, 0x00, 0xff, 0x00, 0xff, 0x00, // ACK
     0x00, 0x00, 0xff, 0x09, 0xf7, 0xd5, 0x01, 0x00, 'l', 'i', 'b', 'n', 'f', 'c', 0xbc, 0x00 }; // Reply
   int     res;

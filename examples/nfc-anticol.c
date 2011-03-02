@@ -54,7 +54,7 @@
 
 static byte_t abtRx[MAX_FRAME_LEN];
 static size_t szRxBits;
-static size_t szRx;
+static size_t szRx = sizeof(abtRx);
 static byte_t abtRawUid[12];
 static byte_t abtAtqa[2];
 static byte_t abtSak;

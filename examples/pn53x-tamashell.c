@@ -63,7 +63,7 @@ int main(int argc, const char* argv[])
   nfc_device_t* pnd;
   byte_t abtRx[MAX_FRAME_LEN];
   byte_t abtTx[MAX_FRAME_LEN] = { 0xD4 };
-  size_t szRx;
+  size_t szRx = sizeof(abtRx);
   size_t szTx;
   extern FILE* stdin;
   FILE* input = NULL;

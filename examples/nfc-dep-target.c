@@ -50,7 +50,7 @@ int
 main (int argc, const char *argv[])
 {
   byte_t  abtRx[MAX_FRAME_LEN];
-  size_t  szRx;
+  size_t  szRx = sizeof(abtRx);
   size_t  szDeviceFound;
   byte_t  abtTx[] = "Hello Mars!";
   nfc_device_t *pnd;

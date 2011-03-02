@@ -51,7 +51,7 @@ bool
 nfc_initiator_mifare_cmd (nfc_device_t * pnd, const mifare_cmd mc, const uint8_t ui8Block, mifare_param * pmp)
 {
   byte_t  abtRx[265];
-  size_t  szRx;
+  size_t  szRx = sizeof(abtRx);
   size_t  szParamLen;
   byte_t  abtCmd[265];
   bool    bEasyFraming;

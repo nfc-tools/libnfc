@@ -53,7 +53,7 @@ main (int argc, const char *argv[])
   nfc_device_t *pnd;
   nfc_target_t nt;
   byte_t  abtRx[MAX_FRAME_LEN];
-  size_t  szRx;
+  size_t  szRx = sizeof(abtRx);
   byte_t  abtTx[] = "Hello World!";
 
   if (argc > 1) {

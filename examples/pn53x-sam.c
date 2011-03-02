@@ -74,7 +74,7 @@ sam_connection (nfc_device_t * pnd, int mode)
   size_t  szCmd = 0;
 
   byte_t  abtRx[MAX_FRAME_LEN];
-  size_t  szRx;
+  size_t  szRx = sizeof(abtRx);
 
   pncmd_sam_config[2] = mode;
 
@@ -210,7 +210,7 @@ main (int argc, const char *argv[])
   case DUAL_CARD_MODE:
     {
       byte_t  abtRx[MAX_FRAME_LEN];
-      size_t  szRx;
+      size_t  szRx = sizeof(abtRx);
 
       nfc_target_t nt = {
         .nm = {

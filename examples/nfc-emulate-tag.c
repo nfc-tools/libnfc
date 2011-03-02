@@ -56,7 +56,7 @@
 #define SAK_ISO14443_4_COMPLIANT 0x20
 
 static byte_t abtRx[MAX_FRAME_LEN];
-static size_t szRx;
+static size_t szRx = sizeof(abtRx);
 static nfc_device_t *pnd;
 static bool quiet_output = false;
 static bool init_mfc_auth = false;
