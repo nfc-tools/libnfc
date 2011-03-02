@@ -62,6 +62,12 @@ pn53x_target_type_t pn53x_nm_to_ptt (const nfc_modulation_t nm);
 bool
 pn53x_init(nfc_device_t * pnd)
 {
+  // GetFirmwareVersion command is used to set PN53x chips type (PN531, PN532 or PN533)
+  char abtFirmwareText[18];
+  if (!pn53x_get_firmware_version (pnd, abtFirmwareText)) {
+    return false;
+  }
+
   // CRC handling is enabled by default
   pnd->bCrc = true;
   // Parity handling is enabled by default
@@ -76,11 +82,6 @@ pn53x_init(nfc_device_t * pnd)
   // We can't read these parameters, so we set a default config by using the SetParameters wrapper
   // Note: pn53x_SetParameters() will save the sent value in pnd->ui8Parameters cache
   if(!pn53x_SetParameters(pnd, PARAM_AUTO_ATR_RES | PARAM_AUTO_RATS)) {
-    return false;
-  }
-
-  char abtFirmwareText[18];
-  if (!pn53x_get_firmware_version (pnd, abtFirmwareText)) {
     return false;
   }
 
@@ -762,7 +763,22 @@ pn53x_get_firmware_version (nfc_device_t * pnd, char abtFirmwareText[18])
   if (!pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), abtFw, &szFwLen, false)) {
     // Failed to get firmware revision??, whatever...let's disconnect and clean up and return err
     // FIXME: Wtf?
-    // pnd->pdc->disconnect (pnd);
+    return false;
+  }
+  // Determine which version of chip it is: PN531 will return only 2 bytes, while others return 4 bytes and have the first to tell the version IC
+  if (szFwLen == 2) {
+    ((struct pn53x_data*)(pnd->chip_data))->type = PN531;
+  } else if (szFwLen == 4) {
+    if (abtFw[0] == 0x32) { // PN532 version IC
+      ((struct pn53x_data*)(pnd->chip_data))->type = PN532;
+    } else if (abtFw[0] == 0x33)  { // PN532 version IC
+      ((struct pn53x_data*)(pnd->chip_data))->type = PN533;
+    } else {
+      // Unknown version IC
+      return false;
+    }
+  } else {
+    // Unknown chip
     return false;
   }
   // Convert firmware info in text, PN531 gives 2 bytes info, but PN532 and PN533 gives 4

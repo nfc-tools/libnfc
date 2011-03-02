@@ -189,7 +189,6 @@ arygon_connect (const nfc_device_desc_t * pndd)
   arygon_firmware((nfc_device_spec_t) sp, acFirmware);
   snprintf (pnd->acName, DEVICE_NAME_LENGTH - 1, "%s %s (%s)", pndd->acDevice, acFirmware, pndd->pcPort);
   pnd->acName[DEVICE_NAME_LENGTH - 1] = '\0';
-  pnd->nc = NC_PN532;
   pnd->nds = (nfc_device_spec_t) sp;
   pnd->bActive = true;
 
