@@ -48,7 +48,7 @@
 // TODO Move this one level up for libnfc-1.6
 static const byte_t ack_frame[] = { 0x00, 0x00, 0xff, 0x00, 0xff, 0x00 };
 
-void    pn532_uart_ack (nfc_device_t * pnd);
+int     pn532_uart_ack (nfc_device_t * pnd);
 // void    pn532_uart_wakeup (const nfc_device_spec_t nds);
 
 struct pn532_uart_data {
@@ -223,8 +223,24 @@ pn532_uart_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen
 {
   byte_t  abtRxBuf[5];
   size_t len;
+  int abort_fd = 0;
 
-  int res = uart_receive (((struct pn532_uart_data*)(pnd->driver_data))->port, abtRxBuf, 5, 0);
+  switch (pnd->iLastCommand) {
+  case InAutoPoll:
+  case TgInitAsTarget:
+  case TgGetData:
+    abort_fd = pnd->iAbortFds[1];
+    break;
+  default:
+    break;
+  }
+
+  int res = uart_receive (((struct pn532_uart_data*)(pnd->driver_data))->port, abtRxBuf, 5, abort_fd);
+
+  if (abort_fd && (DEABORT == res)) {
+    return pn532_uart_ack (pnd);
+  }
+
   if (res != 0) {
     ERR ("%s", "Unable to receive data. (RX)");
     pnd->iLastError = res;
@@ -324,10 +340,11 @@ pn532_uart_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen
   return len;
 }
 
-void
+int
 pn532_uart_ack (nfc_device_t * pnd)
 {
-  uart_send (((struct pn532_uart_data*)(pnd->driver_data))->port, ack_frame, sizeof (ack_frame));
+  ((struct pn53x_data*)(pnd->chip_data))->state = NORMAL;
+  return (0 == uart_send (((struct pn532_uart_data*)(pnd->driver_data))->port, ack_frame, sizeof (ack_frame))) ? 0 : -1;
 }
 
 const struct nfc_driver_t pn532_uart_driver = {

@@ -195,7 +195,7 @@ typedef enum {
   PTM_ISO14443_4_PICC_ONLY = 0x04
 } pn53x_target_mode_t;
 
-bool	pn53x_init(nfc_device_t * pnd);
+bool    pn53x_init(nfc_device_t * pnd);
 bool    pn53x_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, byte_t * pbtRx, size_t *pszRx);
 bool    pn53x_read_register (nfc_device_t * pnd, uint16_t ui16Reg, uint8_t * ui8Value);
 bool    pn53x_write_register (nfc_device_t * pnd, uint16_t ui16Reg, uint8_t ui8SymbolMask, uint8_t ui8Value);
