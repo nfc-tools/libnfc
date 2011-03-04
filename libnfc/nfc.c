@@ -99,6 +99,7 @@ nfc_connect (nfc_device_desc_t * pndd)
   while ((ndr = *pndr)) {
     // Specific device is requested: using device description pndd
     if (0 != strcmp (ndr->name, pndd->pcDriver)) {
+      pndr++;
       continue;
     } else {
       pnd = ndr->connect (pndd);
