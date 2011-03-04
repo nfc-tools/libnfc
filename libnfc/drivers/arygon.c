@@ -168,13 +168,13 @@ arygon_connect (const nfc_device_desc_t * pndd)
   // We have a connection
   pnd = malloc (sizeof (nfc_device_t));
   strncpy (pnd->acName, pndd->acDevice, DEVICE_NAME_LENGTH - 1);
-  pnd->acName[DEVICE_NAME_LENGTH - 1] = '\0';
 
   pnd->driver_data = malloc(sizeof(struct arygon_data));
   ((struct arygon_data*)(pnd->driver_data))->port = sp;
   pnd->chip_data = malloc(sizeof(struct pn53x_data));
-  ((struct pn53x_data*)(pnd->chip_data))->type = PN532;
-  ((struct pn53x_data*)(pnd->chip_data))->state = SLEEP;
+
+  // The PN53x chip connected to ARYGON MCU doesn't seems to be in SLEEP mode
+  ((struct pn53x_data*)(pnd->chip_data))->state = NORMAL;
   pnd->driver = &arygon_driver;
 
   // Check communication using "Reset TAMA" command
