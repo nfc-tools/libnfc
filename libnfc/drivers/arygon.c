@@ -2,6 +2,8 @@
  * Public platform independent Near Field Communication (NFC) library
  * 
  * Copyright (C) 2009, Roel Verdult
+ * Copyright (C) 2010, Romuald Conty
+ * Copyright (C) 2011, Romain Tartière, Romuald Conty
  * 
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -24,27 +26,25 @@
  * This driver can handle ARYGON readers that use UART as bus.
  * UART connection can be direct (host<->arygon_uc) or could be provided by internal USB to serial interface (e.g. host<->ftdi_chip<->arygon_uc)
  */
-
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif // HAVE_CONFIG_H
 
-#include "../drivers.h"
+#include "arygon.h"
 
 #include <stdio.h>
 #include <string.h>
-#ifdef HAVE_STRINGS_H
-#  include <strings.h>
-#endif
+#include <sys/param.h>
+#include <string.h>
 
-#include "arygon.h"
-
+#include <nfc/nfc.h>
 #include <nfc/nfc-messages.h>
 
-// Bus
+#include "libnfc/drivers.h"
+#include "libnfc/nfc-internal.h"
+#include "libnfc/chips/pn53x.h"
+#include "libnfc/chips/pn53x-internal.h"
 #include "uart.h"
-
-#include <sys/param.h>
 
 /** @def DEV_ARYGON_PROTOCOL_ARYGON_ASCII
  * @brief High level language in ASCII format. (Common µC commands and Mifare® commands) 
@@ -63,10 +63,12 @@
  */
 #define DEV_ARYGON_PROTOCOL_TAMA_WAB            '3'
 
-#define SERIAL_DEFAULT_PORT_SPEED 9600
+#define ARYGON_SERIAL_DEFAULT_PORT_SPEED 9600
 
-// TODO Move this one level up for libnfc-1.6
-static const byte_t pn53x_ack_frame[] = { 0x00, 0x00, 0xff, 0x00, 0xff, 0x00 };
+struct arygon_data {
+  serial_port port;
+};
+
 // XXX It seems that sending arygon_ack_frame to cancel current command is not allowed by ARYGON µC (see arygon_ack())
 // static const byte_t arygon_ack_frame[] = { DEV_ARYGON_PROTOCOL_TAMA, 0x00, 0x00, 0xff, 0x00, 0xff, 0x00 };
 
@@ -75,39 +77,15 @@ static const byte_t arygon_error_incomplete_command[] = "FF0C0000\x0d\x0a";
 static const byte_t arygon_error_unknown_mode[] = "FF060000\x0d\x0a";
 
 // void    arygon_ack (const nfc_device_spec_t nds);
-bool    arygon_reset_tama (const nfc_device_spec_t nds);
-void    arygon_firmware (const nfc_device_spec_t nds, char * str);
-
-bool    arygon_check_communication (const nfc_device_spec_t nds);
-
-nfc_device_desc_t *
-arygon_pick_device (void)
-{
-  nfc_device_desc_t *pndd;
-
-  if ((pndd = malloc (sizeof (*pndd)))) {
-    size_t  szN;
-
-    if (!arygon_list_devices (pndd, 1, &szN)) {
-      DBG ("%s", "arygon_list_devices failed");
-      free (pndd);
-      return NULL;
-    }
-
-    if (szN == 0) {
-      DBG ("%s", "No device found");
-      free (pndd);
-      return NULL;
-    }
-  }
-  return pndd;
-}
+bool    arygon_reset_tama (nfc_device_t * pnd);
+void    arygon_firmware (nfc_device_t * pnd, char * str);
+bool    arygon_check_communication (nfc_device_t * pnd);
 
 bool
-arygon_list_devices (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * pszDeviceFound)
+arygon_probe (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * pszDeviceFound)
 {
-  /** @note: Due to UART bus we can't know if its really a pn532 without
-  * sending some PN53x commands. But using this way to probe devices, we can
+  /** @note: Due to UART bus we can't know if its really an ARYGON without
+  * sending some commands. But using this way to probe devices, we can
   * have serious problem with other device on this bus */
 #ifndef SERIAL_AUTOPROBE_ENABLED
   (void) pnddDevices;
@@ -125,22 +103,31 @@ arygon_list_devices (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t *
 
   while ((pcPort = pcPorts[iDevice++])) {
     sp = uart_open (pcPort);
-    DBG ("Trying to find ARYGON device on serial port: %s at %d bauds.", pcPort, SERIAL_DEFAULT_PORT_SPEED);
+    DBG ("Trying to find ARYGON device on serial port: %s at %d bauds.", pcPort, ARYGON_SERIAL_DEFAULT_PORT_SPEED);
 
     if ((sp != INVALID_SERIAL_PORT) && (sp != CLAIMED_SERIAL_PORT)) {
-      uart_set_speed (sp, SERIAL_DEFAULT_PORT_SPEED);
+      uart_set_speed (sp, ARYGON_SERIAL_DEFAULT_PORT_SPEED);
 
-      if (!arygon_reset_tama((nfc_device_spec_t) sp))
-        continue;
+      nfc_device_t nd;
+      nd.driver = &arygon_driver;
+      nd.driver_data = malloc(sizeof(struct arygon_data));
+      ((struct arygon_data*)(nd.driver_data))->port = sp;
+      nd.chip_data = malloc(sizeof(struct pn53x_data));
+      ((struct pn53x_data*)(nd.chip_data))->type = PN532;
+      ((struct pn53x_data*)(nd.chip_data))->state = NORMAL;
+
+      bool res = arygon_reset_tama(&nd);
+      free(nd.driver_data);
+      free(nd.chip_data);
       uart_close (sp);
+      if(!res)
+        continue;
 
       // ARYGON reader is found
-      strncpy (pnddDevices[*pszDeviceFound].acDevice, "ARYGON", DEVICE_NAME_LENGTH - 1);
-      pnddDevices[*pszDeviceFound].acDevice[DEVICE_NAME_LENGTH - 1] = '\0';
+      snprintf (pnddDevices[*pszDeviceFound].acDevice, DEVICE_NAME_LENGTH - 1, "%s (%s)", "PN532", pcPort);
       pnddDevices[*pszDeviceFound].pcDriver = ARYGON_DRIVER_NAME;
       pnddDevices[*pszDeviceFound].pcPort = strdup (pcPort);
-      pnddDevices[*pszDeviceFound].uiSpeed = SERIAL_DEFAULT_PORT_SPEED;
-      DBG ("Device found: %s (%s)", pnddDevices[*pszDeviceFound].acDevice, pcPort);
+      pnddDevices[*pszDeviceFound].uiSpeed = ARYGON_SERIAL_DEFAULT_PORT_SPEED;
       (*pszDeviceFound)++;
 
       // Test if we reach the maximum "wanted" devices
@@ -177,140 +164,202 @@ arygon_connect (const nfc_device_desc_t * pndd)
     return NULL;
 
   uart_set_speed (sp, pndd->uiSpeed);
-  if (!arygon_reset_tama((nfc_device_spec_t) sp)) {
-    return NULL;
-  }
-
-  DBG ("Successfully connected to: %s", pndd->pcPort);
 
   // We have a connection
   pnd = malloc (sizeof (nfc_device_t));
-  char acFirmware[10];
-  arygon_firmware((nfc_device_spec_t) sp, acFirmware);
-  snprintf (pnd->acName, DEVICE_NAME_LENGTH - 1, "%s %s (%s)", pndd->acDevice, acFirmware, pndd->pcPort);
+  strncpy (pnd->acName, pndd->acDevice, DEVICE_NAME_LENGTH - 1);
   pnd->acName[DEVICE_NAME_LENGTH - 1] = '\0';
-  pnd->nds = (nfc_device_spec_t) sp;
-  pnd->bActive = true;
 
+  pnd->driver_data = malloc(sizeof(struct arygon_data));
+  ((struct arygon_data*)(pnd->driver_data))->port = sp;
+  pnd->chip_data = malloc(sizeof(struct pn53x_data));
+  ((struct pn53x_data*)(pnd->chip_data))->type = PN532;
+  ((struct pn53x_data*)(pnd->chip_data))->state = SLEEP;
+  pnd->driver = &arygon_driver;
+
+  // Check communication using "Reset TAMA" command
+  if (!arygon_reset_tama(pnd)) {
+    free(pnd->driver_data);
+    free(pnd->chip_data);
+    free(pnd);
+    return NULL;
+  }
+
+  pn53x_init(pnd);
   return pnd;
 }
 
 void
 arygon_disconnect (nfc_device_t * pnd)
 {
-  uart_close ((serial_port) pnd->nds);
+  uart_close (((struct arygon_data*)(pnd->driver_data))->port);
+  free(pnd->driver_data);
+  free(pnd->chip_data);
   free (pnd);
 }
 
-#define TX_BUFFER_LENGTH (300)
-#define RX_BUFFER_LENGTH (PN53x_EXTENDED_FRAME_MAX_LEN + PN53x_EXTENDED_FRAME_OVERHEAD + sizeof(pn53x_ack_frame))
+#define ARYGON_TX_BUFFER_LEN (PN53x_EXTENDED_FRAME__DATA_MAX_LEN + PN53x_EXTENDED_FRAME__OVERHEAD + 1)
+#define ARYGON_RX_BUFFER_LEN (PN53x_EXTENDED_FRAME__DATA_MAX_LEN + PN53x_EXTENDED_FRAME__OVERHEAD)
 bool
-arygon_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, byte_t * pbtRx, size_t * pszRx)
+arygon_tama_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szData)
 {
-  byte_t  abtTxBuf[TX_BUFFER_LENGTH] = { DEV_ARYGON_PROTOCOL_TAMA, 0x00, 0x00, 0xff };     // Every packet must start with "0x32 0x00 0x00 0xff"
-  byte_t  abtRxBuf[RX_BUFFER_LENGTH];
-  size_t  szRxBufLen;
-  size_t  szReplyMaxLen = MIN(RX_BUFFER_LENGTH, *pszRx);
-  size_t  szPos;
-  int     res;
+  byte_t abtFrame[ARYGON_TX_BUFFER_LEN] = { DEV_ARYGON_PROTOCOL_TAMA, 0x00, 0x00, 0xff };     // Every packet must start with "0x32 0x00 0x00 0xff"
 
-  // Packet length = data length (len) + checksum (1) + end of stream marker (1)
-  abtTxBuf[4] = szTx;
-  // Packet length checksum
-  abtTxBuf[5] = 256 - abtTxBuf[4];
-  // Copy the PN53X command into the packet buffer
-  memmove (abtTxBuf + 6, pbtTx, szTx);
+  pnd->iLastCommand = pbtData[0];
+  size_t szFrame = 0;
+  pn53x_build_frame (abtFrame + 1, &szFrame, pbtData, szData);
 
-  // Calculate data payload checksum
-  abtTxBuf[szTx + 6] = 0;
-  for (szPos = 0; szPos < szTx; szPos++) {
-    abtTxBuf[szTx + 6] -= abtTxBuf[szPos + 6];
-  }
-
-  // End of stream marker
-  abtTxBuf[szTx + 7] = 0;
-
-#ifdef DEBUG
-  PRINT_HEX ("TX", abtTxBuf, szTx + 8);
-#endif
-  res = uart_send ((serial_port) pnd->nds, abtTxBuf, szTx + 8);
+  int res = uart_send (((struct arygon_data*)(pnd->driver_data))->port, abtFrame, szFrame + 1);
   if (res != 0) {
     ERR ("%s", "Unable to transmit data. (TX)");
     pnd->iLastError = res;
     return false;
   }
-#ifdef DEBUG
-  memset (abtRxBuf, 0x00, sizeof (abtRxBuf));
-#endif
-  szRxBufLen = szReplyMaxLen;
-  res = uart_receive ((serial_port) pnd->nds, abtRxBuf, &szRxBufLen);
+
+  byte_t abtRxBuf[6];
+  res = uart_receive (((struct arygon_data*)(pnd->driver_data))->port, abtRxBuf, 6);
   if (res != 0) {
-    ERR ("%s", "Unable to receive data. (RX)");
+    ERR ("%s", "Unable to read ACK");
     pnd->iLastError = res;
     return false;
   }
-#ifdef DEBUG
-  PRINT_HEX ("RX", abtRxBuf, szRxBufLen);
-#endif
 
-  // WARN: UART is a per byte reception, so you usually receive ACK and next frame the same time
-  if (!pn53x_check_ack_frame_callback (pnd, abtRxBuf, szRxBufLen))
+  if (pn53x_check_ack_frame (pnd, abtRxBuf, sizeof(abtRxBuf))) {
+    ((struct pn53x_data*)(pnd->chip_data))->state = EXECUTE;
+  } else if (0 == memcmp(arygon_error_unknown_mode, abtRxBuf, sizeof(abtRxBuf))) {
+    ERR( "Bad frame format." );
     return false;
-
-  szRxBufLen -= sizeof (pn53x_ack_frame);
-  memmove (abtRxBuf, abtRxBuf + sizeof (pn53x_ack_frame), szRxBufLen);
-  szReplyMaxLen -= sizeof (pn53x_ack_frame);
-
-  if (szRxBufLen == 0) {
-    do {
-      delay_ms (10);
-      szRxBufLen = szReplyMaxLen;
-      res = uart_receive ((serial_port) pnd->nds, abtRxBuf, &szRxBufLen);
-    } while (res != 0);
-#ifdef DEBUG
-    PRINT_HEX ("RX", abtRxBuf, szRxBufLen);
-#endif
+  } else {
+    return false;
   }
-
-  if (!pn53x_check_error_frame_callback (pnd, abtRxBuf, szRxBufLen))
-    return false;
-
-  // When the answer should be ignored, just return a successful result
-  if (pbtRx == NULL || pszRx == NULL)
-    return true;
-
-  // Only succeed when the result is at least 00 00 FF xx Fx Dx xx .. .. .. xx 00 (x = variable)
-  if (szRxBufLen < 9)
-    return false;
-
-  // Remove the preceding and appending bytes 00 00 ff 00 ff 00 00 00 FF xx Fx .. .. .. xx 00 (x = variable)
-  *pszRx = szRxBufLen - 9;
-  memcpy (pbtRx, abtRxBuf + 7, *pszRx);
-
   return true;
 }
 
+int
+arygon_tama_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen)
+{
+  byte_t  abtRxBuf[5];
+  size_t len;
+
+  int res = uart_receive (((struct arygon_data*)(pnd->driver_data))->port, abtRxBuf, 5);
+  if (res != 0) {
+    ERR ("%s", "Unable to receive data. (RX)");
+    pnd->iLastError = res;
+    return -1;
+  }
+
+  const byte_t pn53x_preamble[3] = { 0x00, 0x00, 0xff };
+  if (0 != (memcmp (abtRxBuf, pn53x_preamble, 3))) {
+    ERR ("%s", "Frame preamble+start code mismatch");
+    pnd->iLastError = DEIO;
+    return -1;
+  }
+
+  if ((0x01 == abtRxBuf[3]) && (0xff == abtRxBuf[4])) {
+    // Error frame
+    uart_receive (((struct arygon_data*)(pnd->driver_data))->port, abtRxBuf, 3);
+    ERR ("%s", "Application level error detected");
+    pnd->iLastError = DEISERRFRAME;
+    return -1;
+  } else if ((0xff == abtRxBuf[3]) && (0xff == abtRxBuf[4])) {
+    // Extended frame
+    // FIXME: Code this
+    abort ();
+  } else {
+    // Normal frame
+    if (256 != (abtRxBuf[3] + abtRxBuf[4])) {
+      // TODO: Retry
+      ERR ("%s", "Length checksum mismatch");
+      pnd->iLastError = DEIO;
+      return -1;
+    }
+
+    // abtRxBuf[3] (LEN) include TFI + (CC+1)
+    len = abtRxBuf[3] - 2;
+  }
+
+  if (len > szDataLen) {
+    ERR ("Unable to receive data: buffer too small. (szDataLen: %zu, len: %zu)", szDataLen, len);
+    pnd->iLastError = DEIO;
+    return -1;
+  }
+
+  // TFI + PD0 (CC+1)
+  res = uart_receive (((struct arygon_data*)(pnd->driver_data))->port, abtRxBuf, 2);
+  if (res != 0) {
+    ERR ("%s", "Unable to receive data. (RX)");
+    pnd->iLastError = res;
+    return -1;
+  }
+
+  if (abtRxBuf[0] != 0xD5) {
+    ERR ("%s", "TFI Mismatch");
+    pnd->iLastError = DEIO;
+    return -1;
+  }
+
+  if (abtRxBuf[1] != pnd->iLastCommand + 1) {
+    ERR ("%s", "Command Code verification failed");
+    pnd->iLastError = DEIO;
+    return -1;
+  }
+
+  if (len) {
+    res = uart_receive (((struct arygon_data*)(pnd->driver_data))->port, pbtData, len);
+    if (res != 0) {
+      ERR ("%s", "Unable to receive data. (RX)");
+      pnd->iLastError = res;
+      return -1;
+    }
+  }
+
+  res = uart_receive (((struct arygon_data*)(pnd->driver_data))->port, abtRxBuf, 2);
+  if (res != 0) {
+    ERR ("%s", "Unable to receive data. (RX)");
+    pnd->iLastError = res;
+    return -1;
+  }
+
+  byte_t btDCS = (256 - 0xD5);
+  btDCS -= pnd->iLastCommand + 1;
+  for (size_t szPos = 0; szPos < len; szPos++) {
+    btDCS -= pbtData[szPos];
+  }
+
+  if (btDCS != abtRxBuf[0]) {
+    ERR ("%s", "Data checksum mismatch");
+    pnd->iLastError = DEIO;
+    return -1;
+  }
+
+  if (0x00 != abtRxBuf[1]) {
+    ERR ("%s", "Frame postamble mismatch");
+    pnd->iLastError = DEIO;
+    return -1;
+  }
+  ((struct pn53x_data*)(pnd->chip_data))->state = NORMAL;
+  return len;
+}
+
 void
-arygon_firmware (const nfc_device_spec_t nds, char * str)
+arygon_firmware (nfc_device_t * pnd, char * str)
 {
   const byte_t arygon_firmware_version_cmd[] = { DEV_ARYGON_PROTOCOL_ARYGON_ASCII, 'a', 'v' }; 
-  byte_t abtRx[RX_BUFFER_LENGTH];
-  size_t szRx = 16;
-  int res;
+  byte_t abtRx[16];
+  size_t szRx = sizeof(abtRx);
 
-#ifdef DEBUG
-  PRINT_HEX ("TX", arygon_firmware_version_cmd, sizeof (arygon_firmware_version_cmd));
-#endif
-  uart_send ((serial_port) nds, arygon_firmware_version_cmd, sizeof (arygon_firmware_version_cmd));
 
-  res = uart_receive ((serial_port) nds, abtRx, &szRx);
+  int res = uart_send (((struct arygon_data*)(pnd->driver_data))->port, arygon_firmware_version_cmd, sizeof (arygon_firmware_version_cmd));
+  if (res != 0) {
+    DBG ("Unable to send ARYGON firmware command.");
+    return;
+  }
+  res = uart_receive (((struct arygon_data*)(pnd->driver_data))->port, abtRx, szRx);
   if (res != 0) {
     DBG ("Unable to retrieve ARYGON firmware version.");
     return;
   }
-#ifdef DEBUG
-  PRINT_HEX ("RX", abtRx, szRx);
-#endif
+
   if ( 0 == memcmp (abtRx, arygon_error_none, 6)) {
     byte_t * p = abtRx + 6;
     unsigned int szData;
@@ -321,43 +370,32 @@ arygon_firmware (const nfc_device_spec_t nds, char * str)
 }
 
 bool
-arygon_reset_tama (const nfc_device_spec_t nds)
+arygon_reset_tama (nfc_device_t * pnd)
 {
   const byte_t arygon_reset_tama_cmd[] = { DEV_ARYGON_PROTOCOL_ARYGON_ASCII, 'a', 'r' };
-  byte_t abtRx[RX_BUFFER_LENGTH];
-  size_t szRx = 10; // Attempted response is 10 bytes long
+  byte_t abtRx[10]; // Attempted response is 10 bytes long
+  size_t szRx = sizeof(abtRx);
   int res;
 
-  // Sometimes the first byte we send is not well-transmited (ie. a previously sent data on a wrong baud rate can put some junk in buffer)
-#ifdef DEBUG
-  PRINT_HEX ("TX", arygon_reset_tama_cmd, sizeof (arygon_reset_tama_cmd));
-#endif
-  uart_send ((serial_port) nds, arygon_reset_tama_cmd, sizeof (arygon_reset_tama_cmd));
+  uart_send (((struct arygon_data*)(pnd->driver_data))->port, arygon_reset_tama_cmd, sizeof (arygon_reset_tama_cmd));
 
   // Two reply are possible from ARYGON device: arygon_error_none (ie. in case the byte is well-sent)
   // or arygon_error_unknown_mode (ie. in case of the first byte was bad-transmitted)
-  res = uart_receive ((serial_port) nds, abtRx, &szRx);
+  res = uart_receive (((struct arygon_data*)(pnd->driver_data))->port, abtRx, szRx);
   if (res != 0) {
     DBG ("No reply to 'reset TAMA' command.");
     return false;
   }
-#ifdef DEBUG
-  PRINT_HEX ("RX", abtRx, szRx);
-#endif
-  if ( 0 == memcmp (abtRx, arygon_error_unknown_mode, sizeof (arygon_error_unknown_mode) - 1)) {
+#if 0
+  if ( 0 == memcmp (abtRx, arygon_error_unknown_mode, sizeof (arygon_error_unknown_mode))) {
     // HACK Here we are... the first byte wasn't sent as expected, so we resend the same command
-#ifdef DEBUG
-      PRINT_HEX ("TX", arygon_reset_tama_cmd, sizeof (arygon_reset_tama_cmd));
-#endif
       uart_send ((serial_port) nds, arygon_reset_tama_cmd, sizeof (arygon_reset_tama_cmd));
       res = uart_receive ((serial_port) nds, abtRx, &szRx);
       if (res != 0) {
         return false;
       }
-#ifdef DEBUG
-      PRINT_HEX ("RX", abtRx, szRx);
-#endif
   }
+#endif
   if (0 != memcmp (abtRx, arygon_error_none, sizeof (arygon_error_none) - 1)) {
     return false;
   }
@@ -387,41 +425,14 @@ arygon_ack (const nfc_device_spec_t nds)
 }
 */
 
-bool
-arygon_check_communication (const nfc_device_spec_t nds)
-{
-  byte_t  abtRx[RX_BUFFER_LENGTH];
-  size_t  szRx = sizeof(abtRx);
-  const byte_t attempted_result[] = { 0x00, 0x00, 0xff, 0x00, 0xff, 0x00, // ACK
-    0x00, 0x00, 0xff, 0x09, 0xf7, 0xd5, 0x01, 0x00, 'l', 'i', 'b', 'n', 'f', 'c', 0xbc, 0x00 }; // Reply
-  int     res;
 
-  /** To be sure that PN532 is alive, we have put a "Diagnose" command to execute a "Communication Line Test" */
-  const byte_t pncmd_communication_test[] =
-    { DEV_ARYGON_PROTOCOL_TAMA, // Header to passthrough front ARYGON µC (== directly talk to PN53x)
-      0x00, 0x00, 0xff, 0x09, 0xf7, 0xd4, 0x00, 0x00, 'l', 'i', 'b', 'n', 'f', 'c', 0xbe, 0x00 };
+const struct nfc_driver_t arygon_driver = {
+  .name       = ARYGON_DRIVER_NAME,
+  .probe      = arygon_probe,
+  .connect    = arygon_connect,
+  .send       = arygon_tama_send,
+  .receive    = arygon_tama_receive,
+  .disconnect = arygon_disconnect,
+  .strerror   = pn53x_strerror,
+};
 
-#ifdef DEBUG
-  PRINT_HEX ("TX", pncmd_communication_test, sizeof (pncmd_communication_test));
-#endif
-  res = uart_send ((serial_port) nds, pncmd_communication_test, sizeof (pncmd_communication_test));
-  if (res != 0) {
-    ERR ("%s", "Unable to transmit data. (TX)");
-    return false;
-  }
-
-  res = uart_receive ((serial_port) nds, abtRx, &szRx);
-  if (res != 0) {
-    ERR ("%s", "Unable to receive data. (RX)");
-    return false;
-  }
-#ifdef DEBUG
-  PRINT_HEX ("RX", abtRx, szRx);
-#endif
-
-  if (0 != memcmp (abtRx, attempted_result, sizeof (attempted_result))) {
-    DBG ("%s", "Communication test failed, result doesn't match to attempted one.");
-    return false;
-  }
-  return true;
-}

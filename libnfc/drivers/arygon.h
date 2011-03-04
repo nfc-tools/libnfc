@@ -2,6 +2,8 @@
  * Public platform independent Near Field Communication (NFC) library
  * 
  * Copyright (C) 2009, Roel Verdult
+ * Copyright (C) 2010, Romuald Conty
+ * Copyright (C) 2011, Romuald Conty, Romain Tartière
  * 
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -28,15 +30,13 @@
 
 #  define ARYGON_DRIVER_NAME "ARYGON"
 
-// Functions used by developer to handle connection to this device
-nfc_device_desc_t *arygon_pick_device (void);
-bool    arygon_list_devices (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * pszDeviceFound);
+bool    arygon_probe (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * pszDeviceFound);
 
 nfc_device_t *arygon_connect (const nfc_device_desc_t * pndd);
 void    arygon_disconnect (nfc_device_t * pnd);
+bool    arygon_tama_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szData);
+int     arygon_tama_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szData);
 
-// Callback function used by libnfc to transmit commands to the PN53X chip
-bool    arygon_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, byte_t * pbtRx,
-                           size_t * pszRx);
+extern const struct nfc_driver_t arygon_driver;
 
 #endif // ! __NFC_DRIVER_ARYGON_H__

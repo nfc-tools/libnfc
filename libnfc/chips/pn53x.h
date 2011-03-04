@@ -196,10 +196,6 @@ typedef enum {
 } pn53x_target_mode_t;
 
 bool	pn53x_init(nfc_device_t * pnd);
-bool    pn53x_check_ack_frame_callback (nfc_device_t * pnd, const byte_t * pbtRxFrame,
-                                                   const size_t szRxFrameLen);
-bool    pn53x_check_error_frame_callback (nfc_device_t * pnd, const byte_t * pbtRxFrame,
-                                                     const size_t szRxFrameLen);
 bool    pn53x_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, byte_t * pbtRx, size_t *pszRx);
 bool    pn53x_read_register (nfc_device_t * pnd, uint16_t ui16Reg, uint8_t * ui8Value);
 bool    pn53x_write_register (nfc_device_t * pnd, uint16_t ui16Reg, uint8_t ui8SymbolMask, uint8_t ui8Value);
@@ -270,5 +266,9 @@ bool	pn53x_TgInitAsTarget (nfc_device_t * pnd, pn53x_target_mode_t ptm,
                               const byte_t * pbtNFCID3t, const byte_t * pbtGB, const size_t szGB,
                               byte_t * pbtRx, size_t * pszRx, byte_t * pbtModeByte);
 
+// Misc
+bool    pn53x_check_ack_frame (nfc_device_t * pnd, const byte_t * pbtRxFrame, const size_t szRxFrameLen);
+bool    pn53x_check_error_frame (nfc_device_t * pnd, const byte_t * pbtRxFrame, const size_t szRxFrameLen);
+void    pn53x_build_frame(byte_t * pbtFrame, size_t * pszFrame, const byte_t * pbtData, const size_t szData);
 
 #endif // __NFC_CHIPS_PN53X_H__

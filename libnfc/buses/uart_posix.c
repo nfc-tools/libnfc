@@ -217,7 +217,6 @@ static const struct timeval tvTimeout = {
 int
 uart_receive (serial_port sp, byte_t * pbtRx, const size_t szRx)
 {
-
   struct timeval tv = tvTimeout;
   int received_bytes_count = 0;
   int available_bytes_count = 0;

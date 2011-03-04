@@ -46,6 +46,7 @@
 #include "nfc-internal.h"
 
 #include <nfc/nfc-messages.h>
+#include <sys/param.h>
 
 nfc_device_desc_t *nfc_pick_device (void);
 
@@ -53,6 +54,9 @@ const struct nfc_driver_t *nfc_drivers[] = {
 #  if defined (DRIVER_PN532_UART_ENABLED)
   &pn532_uart_driver,
 #  endif /* DRIVER_PN532_UART_ENABLED */
+#  if defined (DRIVER_ARYGON_ENABLED)
+  &arygon_driver,
+#  endif /* DRIVER_ARYGON_ENABLED */
   NULL
 };
 

@@ -94,17 +94,12 @@ pn53x_init(nfc_device_t * pnd)
 }
 
 bool
-pn53x_check_ack_frame_callback (nfc_device_t * pnd, const byte_t * pbtRxFrame, const size_t szRxFrameLen)
+pn53x_check_ack_frame (nfc_device_t * pnd, const byte_t * pbtRxFrame, const size_t szRxFrameLen)
 {
   if (szRxFrameLen >= sizeof (pn53x_ack_frame)) {
     if (0 == memcmp (pbtRxFrame, pn53x_ack_frame, sizeof (pn53x_ack_frame))) {
       // DBG ("%s", "PN53x ACKed");
       return true;
-    } else if (0 == memcmp (pbtRxFrame, pn53x_nack_frame, sizeof (pn53x_nack_frame))) {
-      DBG ("%s", "PN53x NACKed");
-      // TODO Double check in user manual if no PN53x replies NACK then remove this
-      pnd->iLastError = DENACK;
-      return false;
     }
   }
   pnd->iLastError = DEACKMISMATCH;
@@ -117,7 +112,7 @@ pn53x_check_ack_frame_callback (nfc_device_t * pnd, const byte_t * pbtRxFrame, c
 }
 
 bool
-pn53x_check_error_frame_callback (nfc_device_t * pnd, const byte_t * pbtRxFrame, const size_t szRxFrameLen)
+pn53x_check_error_frame (nfc_device_t * pnd, const byte_t * pbtRxFrame, const size_t szRxFrameLen)
 {
   if (szRxFrameLen >= sizeof (pn53x_error_frame)) {
     if (0 == memcmp (pbtRxFrame, pn53x_error_frame, sizeof (pn53x_error_frame))) {
@@ -361,6 +356,36 @@ pn53x_unwrap_frame (const byte_t * pbtFrame, const size_t szFrameBits, byte_t * 
     }
     // Every 8 data bytes we lose one frame byte to the parities
     pbtFramePos++;
+  }
+}
+
+void
+pn53x_build_frame(byte_t * pbtFrame, size_t * pszFrame, const byte_t * pbtData, const size_t szData)
+{
+  if (szData <= PN53x_NORMAL_FRAME__DATA_MAX_LEN) {
+    // LEN - Packet length = data length (len) + checksum (1) + end of stream marker (1)
+    pbtFrame[3] = szData + 1;
+    // LCS - Packet length checksum
+    pbtFrame[4] = 256 - (szData + 1);
+    // TFI
+    pbtFrame[5] = 0xD4;
+    // DATA - Copy the PN53X command into the packet buffer
+    memcpy (pbtFrame + 6, pbtData, szData);
+
+    // DCS - Calculate data payload checksum
+    byte_t btDCS = (256 - 0xD4);
+    for (size_t szPos = 0; szPos < szData; szPos++) {
+      btDCS -= pbtData[szPos];
+    }
+    pbtFrame[6 + szData] = btDCS;
+
+    // 0x00 - End of stream marker
+    pbtFrame[szData + 7] = 0x00;
+
+    (*pszFrame) = szData + PN53x_NORMAL_FRAME__OVERHEAD;
+  } else {
+    // FIXME: Build extended frame
+    abort();
   }
 }
 
