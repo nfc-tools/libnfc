@@ -104,10 +104,6 @@ pn53x_check_ack_frame (nfc_device_t * pnd, const byte_t * pbtRxFrame, const size
   }
   pnd->iLastError = DEACKMISMATCH;
   ERR ("%s", "Unexpected PN53x reply!");
-#if defined(DEBUG)
-  // coredump so that we can have a backtrace about how this code was reached.
-  abort ();
-#endif
   return false;
 }
 
