@@ -2,6 +2,7 @@
  * Public platform independent Near Field Communication (NFC) library examples
  * 
  * Copyright (C) 2010, Romuald Conty
+ * Copyright (C) 2011, Romain Tartiere, Romuald Conty
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -37,6 +38,7 @@
 #endif // HAVE_CONFIG_H
 
 #include <err.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stddef.h>
 #include <stdlib.h>
@@ -49,7 +51,16 @@
 
 #define MAX_DEVICE_COUNT 16
 
-static nfc_device_t *pnd;
+static nfc_device_t *pnd = NULL;
+
+void stop_polling (int sig)
+{
+  (void) sig;
+  if (pnd)
+    nfc_abort_command (pnd);
+  else
+    exit (EXIT_FAILURE);
+}
 
 int
 main (int argc, const char *argv[])
@@ -58,6 +69,8 @@ main (int argc, const char *argv[])
   size_t  i;
   bool verbose = false;
   nfc_device_desc_t *pnddDevices;
+
+  signal (SIGINT, stop_polling);
 
   pnddDevices = parse_args (argc, argv, &szFound, &verbose);
 

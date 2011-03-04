@@ -72,6 +72,7 @@ typedef struct {
   int     iLastError;
 /** Last sent command */
   int     iLastCommand;
+  int     iAbortFds[2];
 } nfc_device_t;
 // TODO: Move chip's specifics in a chips structure (e.g. iLastCommand, ui8Parameters, ui8TxBits)
 

@@ -31,9 +31,10 @@
 #  include <sys/select.h>
 #  include <sys/param.h>
 #  include <ctype.h>
-#  include <termios.h>
-#  include <stdio.h>
 #  include <dirent.h>
+#  include <errno.h>
+#  include <stdio.h>
+#  include <termios.h>
 
 #  include "nfc-internal.h"
 
@@ -215,19 +216,33 @@ static const struct timeval tvTimeout = {
  * @return 0 on success, otherwise driver error code
  */
 int
-uart_receive (serial_port sp, byte_t * pbtRx, const size_t szRx)
+uart_receive (serial_port sp, byte_t * pbtRx, const size_t szRx, int iAbortFd)
 {
   struct timeval tv = tvTimeout;
+  struct timeval *ptv = &tv;
   int received_bytes_count = 0;
   int available_bytes_count = 0;
   const int expected_bytes_count = (int)szRx;
   int res;
   fd_set rfds;
   do {
+select:
     // Reset file descriptor
     FD_ZERO (&rfds);
     FD_SET (((serial_port_unix *) sp)->fd, &rfds);
-    res = select (((serial_port_unix *) sp)->fd + 1, &rfds, NULL, NULL, &tv);
+
+    if (iAbortFd) {
+      FD_SET (iAbortFd, &rfds);
+      ptv = NULL;
+    }
+
+    res = select (MAX(((serial_port_unix *) sp)->fd, iAbortFd) + 1, &rfds, NULL, NULL, ptv);
+
+    if ((res < 0) && (EINTR == errno)) {
+      // The system call was interupted by a signal and a signal handler was
+      // run.  Restart the interupted system call.
+      goto select;
+    }
 
     // Read error
     if (res < 0) {
@@ -239,6 +254,14 @@ uart_receive (serial_port sp, byte_t * pbtRx, const size_t szRx)
       DBG ("Timeout!");
       return DETIMEOUT;
     }
+
+    if (FD_ISSET (iAbortFd, &rfds)) {
+      // Abort requested
+      DBG ("Abort!");
+      close (iAbortFd);
+      return DEABORT;
+    }
+
     // Retrieve the count of the incoming bytes
     res = ioctl (((serial_port_unix *) sp)->fd, FIONREAD, &available_bytes_count);
     if (res != 0) {

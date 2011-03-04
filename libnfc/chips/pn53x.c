@@ -755,6 +755,7 @@ static struct sErrorMessage {
   { DEINVAL, "Invalid argument" },
   { DEIO, "Input/output error" },
   { DETIMEOUT, "Operation timed-out" },
+  { DEABORT, "Operation aborted" },
   { DENOTSUP, "Operation not supported" }
 };
 
@@ -1686,3 +1687,16 @@ pn53x_nm_to_ptt(const nfc_modulation_t nm)
   return PTT_UNDEFINED;
 }
 
+bool
+pn53x_check_communication (nfc_device_t *pnd)
+{
+  const byte_t abtCmd[] = { Diagnose, 0x00, 'l', 'i', 'b', 'n', 'f', 'c' };
+  const byte_t abtExpectedRx[] = { 0x00, 'l', 'i', 'b', 'n', 'f', 'c' };
+  byte_t abtRx[sizeof(abtExpectedRx)];
+  size_t szRx = sizeof (abtRx);
+
+  if (!pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), abtRx, &szRx))
+    return false;
+
+  return ((sizeof(abtExpectedRx) == szRx) && (0 == memcmp (abtRx, abtExpectedRx, sizeof(abtExpectedRx))));
+}

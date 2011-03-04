@@ -50,7 +50,6 @@ static const byte_t ack_frame[] = { 0x00, 0x00, 0xff, 0x00, 0xff, 0x00 };
 
 void    pn532_uart_ack (nfc_device_t * pnd);
 // void    pn532_uart_wakeup (const nfc_device_spec_t nds);
-bool    pn532_uart_check_communication (nfc_device_t *pnd);
 
 struct pn532_uart_data {
   serial_port port;
@@ -95,7 +94,7 @@ pn532_uart_probe (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * ps
       // PN532 could be powered down, we need to wake it up before line testing.
       // TODO pn532_uart_wakeup ((nfc_device_spec_t) sp);
       // Check communication using "Diagnose" command, with "Communication test" (0x00)
-      bool res = pn532_uart_check_communication (&nd);
+      bool res = pn53x_check_communication (&nd);
       free(nd.driver_data);
       free(nd.chip_data);
       uart_close (sp);
@@ -156,7 +155,7 @@ pn532_uart_connect (const nfc_device_desc_t * pndd)
   pnd->driver = &pn532_uart_driver;
 
   // Check communication using "Diagnose" command, with "Communication test" (0x00)
-  if (!pn532_uart_check_communication (pnd)) {
+  if (!pn53x_check_communication (pnd)) {
     pn532_uart_disconnect(pnd);
     return NULL;
   }
@@ -204,7 +203,7 @@ pn532_uart_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szData
   }
 
   byte_t abtRxBuf[6];
-  res = uart_receive (((struct pn532_uart_data*)(pnd->driver_data))->port, abtRxBuf, 6);
+  res = uart_receive (((struct pn532_uart_data*)(pnd->driver_data))->port, abtRxBuf, 6, 0);
   if (res != 0) {
     ERR ("%s", "Unable to read ACK");
     pnd->iLastError = res;
@@ -225,7 +224,7 @@ pn532_uart_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen
   byte_t  abtRxBuf[5];
   size_t len;
 
-  int res = uart_receive (((struct pn532_uart_data*)(pnd->driver_data))->port, abtRxBuf, 5);
+  int res = uart_receive (((struct pn532_uart_data*)(pnd->driver_data))->port, abtRxBuf, 5, 0);
   if (res != 0) {
     ERR ("%s", "Unable to receive data. (RX)");
     pnd->iLastError = res;
@@ -241,7 +240,7 @@ pn532_uart_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen
 
   if ((0x01 == abtRxBuf[3]) && (0xff == abtRxBuf[4])) {
     // Error frame
-    uart_receive (((struct pn532_uart_data*)(pnd->driver_data))->port, abtRxBuf, 3);
+    uart_receive (((struct pn532_uart_data*)(pnd->driver_data))->port, abtRxBuf, 3, 0);
     ERR ("%s", "Application level error detected");
     pnd->iLastError = DEISERRFRAME;
     return -1;
@@ -269,7 +268,7 @@ pn532_uart_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen
   }
 
   // TFI + PD0 (CC+1)
-  res = uart_receive (((struct pn532_uart_data*)(pnd->driver_data))->port, abtRxBuf, 2);
+  res = uart_receive (((struct pn532_uart_data*)(pnd->driver_data))->port, abtRxBuf, 2, 0);
   if (res != 0) {
     ERR ("%s", "Unable to receive data. (RX)");
     pnd->iLastError = res;
@@ -289,7 +288,7 @@ pn532_uart_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen
   }
 
   if (len) {
-    res = uart_receive (((struct pn532_uart_data*)(pnd->driver_data))->port, pbtData, len);
+    res = uart_receive (((struct pn532_uart_data*)(pnd->driver_data))->port, pbtData, len, 0);
     if (res != 0) {
       ERR ("%s", "Unable to receive data. (RX)");
       pnd->iLastError = res;
@@ -297,7 +296,7 @@ pn532_uart_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen
     }
   }
 
-  res = uart_receive (((struct pn532_uart_data*)(pnd->driver_data))->port, abtRxBuf, 2);
+  res = uart_receive (((struct pn532_uart_data*)(pnd->driver_data))->port, abtRxBuf, 2, 0);
   if (res != 0) {
     ERR ("%s", "Unable to receive data. (RX)");
     pnd->iLastError = res;
@@ -329,23 +328,6 @@ void
 pn532_uart_ack (nfc_device_t * pnd)
 {
   uart_send (((struct pn532_uart_data*)(pnd->driver_data))->port, ack_frame, sizeof (ack_frame));
-}
-
-bool
-pn532_uart_check_communication (nfc_device_t *pnd)
-{
-  const byte_t abtMsg[] = { Diagnose, 0x00, 'l', 'i', 'b', 'n', 'f', 'c' };
-  if (!pn532_uart_send (pnd, abtMsg, sizeof (abtMsg)))
-    return false;
-
-  const byte_t abtExpectedRes[] = { 0x00, 'l', 'i', 'b', 'n', 'f', 'c' };
-
-  byte_t abtRes[sizeof(abtExpectedRes)];
-  int res;
-  if ((res = pn532_uart_receive (pnd, abtRes, sizeof(abtRes))) < 0)
-    return false;
-
-  return ((sizeof(abtRes) == res) && (0 == memcmp (abtRes, abtExpectedRes, sizeof(abtExpectedRes))));
 }
 
 const struct nfc_driver_t pn532_uart_driver = {

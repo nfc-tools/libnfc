@@ -63,6 +63,7 @@ extern  "C" {
 /* NFC Device/Hardware manipulation */
   NFC_EXPORT nfc_device_t *nfc_connect (nfc_device_desc_t * pndd);
   NFC_EXPORT void nfc_disconnect (nfc_device_t * pnd);
+  NFC_EXPORT void nfc_abort_command (nfc_device_t * pnd);
   NFC_EXPORT void nfc_list_devices (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * pszDeviceFound);
   NFC_EXPORT bool nfc_configure (nfc_device_t * pnd, const nfc_device_option_t ndo, const bool bEnable);
 
@@ -147,6 +148,7 @@ extern  "C" {
 #define DEIO            0x1000  /* Input/output error */
 #define DEINVAL         0x2000  /* Invalid argument */
 #define DETIMEOUT       0x3000  /* Operation timeout */
+#define DEABORT         0x4000  /* Operation aborted */
 
 #  ifdef __cplusplus
 }

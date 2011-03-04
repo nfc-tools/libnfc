@@ -210,6 +210,7 @@ bool    pn53x_decode_target_data (const byte_t * pbtRawData, size_t szRawData,
                                   nfc_target_info_t * pnti);
 bool    pn53x_get_firmware_version (nfc_device_t * pnd, char abtFirmwareText[18]);
 bool    pn53x_configure (nfc_device_t * pnd, const nfc_device_option_t ndo, const bool bEnable);
+bool    pn53x_check_communication (nfc_device_t *pnd);
 
 // NFC device as Initiator functions
 bool    pn53x_initiator_select_passive_target (nfc_device_t * pnd,
