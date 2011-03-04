@@ -109,10 +109,6 @@ nfc_connect (nfc_device_desc_t * pndd)
     if (pnd != NULL) {
       DBG ("[%s] has been claimed.", pnd->acName);
 
-      // TODO: Put this pn53x related in driver_init()
-      if (!pn53x_init (pnd))
-        return NULL;
-
       // Set default configuration options
       // Make sure we reset the CRC and parity to chip handling.
       if (!nfc_configure (pnd, NDO_HANDLE_CRC, true))
