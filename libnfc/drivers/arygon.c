@@ -124,7 +124,7 @@ arygon_probe (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * pszDev
         continue;
 
       // ARYGON reader is found
-      snprintf (pnddDevices[*pszDeviceFound].acDevice, DEVICE_NAME_LENGTH - 1, "%s (%s)", "PN532", pcPort);
+      snprintf (pnddDevices[*pszDeviceFound].acDevice, DEVICE_NAME_LENGTH - 1, "%s (%s)", "Arygon", pcPort);
       pnddDevices[*pszDeviceFound].pcDriver = ARYGON_DRIVER_NAME;
       pnddDevices[*pszDeviceFound].pcPort = strdup (pcPort);
       pnddDevices[*pszDeviceFound].uiSpeed = ARYGON_SERIAL_DEFAULT_PORT_SPEED;
