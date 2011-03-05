@@ -86,7 +86,7 @@ main (int argc, const char *argv[])
   if (szFound == 0) {
     if (!(pnddDevices = malloc (MAX_DEVICE_COUNT * sizeof (*pnddDevices)))) {
       fprintf (stderr, "malloc() failed\n");
-      return EXIT_FAILURE;
+      exit (EXIT_FAILURE);
     }
   }
 
@@ -117,7 +117,7 @@ main (int argc, const char *argv[])
 
     if (pnd == NULL) {
       ERR ("%s", "Unable to connect to NFC device.");
-      return 1;
+      exit (EXIT_FAILURE);
     }
     nfc_initiator_init (pnd);
 
@@ -158,5 +158,5 @@ main (int argc, const char *argv[])
   }
 
   free (pnddDevices);
-  return 0;
+  exit (EXIT_SUCCESS);
 }
