@@ -44,7 +44,6 @@
  * @brief Print a message of standard output only in DEBUG mode
  */
 #ifdef DEBUG
-//   #define DBG(x, args...) printf("DBG %s:%d: " x "\n", __FILE__, __LINE__,## args )
 #  define DBG(...) do { \
     warnx ("DBG %s:%d", __FILE__, __LINE__); \
     warnx ("    " __VA_ARGS__ ); \
@@ -57,6 +56,7 @@
  * @macro WARN
  * @brief Print a warn message
  */
+#ifdef DEBUG
 #  define WARN(...) do { \
     warnx ("WARNING %s:%d", __FILE__, __LINE__); \
     warnx ("    " __VA_ARGS__ ); \
@@ -69,6 +69,7 @@
  * @macro ERR
  * @brief Print a error message
  */
+#ifdef DEBUG
 #  define ERR(...) do { \
     warnx ("ERROR %s:%d", __FILE__, __LINE__); \
     warnx ("    " __VA_ARGS__ ); \
