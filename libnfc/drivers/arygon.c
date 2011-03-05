@@ -243,6 +243,11 @@ arygon_abort (nfc_device_t *pnd)
 {
   ((struct pn53x_data*)(pnd->chip_data))->state = NORMAL;
 
+  // Send a valid TAMA packet to wakup the PN53x (we will not have an answer, according to Arygon manual)
+  byte_t dummy[] = { 0x32, 0x00, 0x00, 0xff, 0x09, 0xf7, 0xd4, 0x00, 0x00, 0x6c, 0x69, 0x62, 0x6e, 0x66, 0x63, 0xbe, 0x00 };
+
+  uart_send (((struct arygon_data*)(pnd->driver_data))->port, dummy, sizeof (dummy));
+
   // Using Arygon device we can't send ACK frame to abort the running command
   return (pn53x_check_communication (pnd)) ? 0 : -1;
 }
