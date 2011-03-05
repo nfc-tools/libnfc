@@ -19,15 +19,13 @@
  * 
  * 
  * @file pn532_uart.h
- * @brief
+ * @brief Driver for PN532 connected in UART (HSU)
  */
 
 #ifndef __NFC_DRIVER_PN532_UART_H__
 #  define __NFC_DRIVER_PN532_UART_H__
 
 #  include <nfc/nfc-types.h>
-#  include <sys/param.h>
-#  define PN532_UART_DRIVER_NAME "PN532_UART"
 
 bool    pn532_uart_probe (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * pszDeviceFound);
 

@@ -42,13 +42,16 @@
 #include "libnfc/chips/pn53x-internal.h"
 #include "uart.h"
 
-#define SERIAL_DEFAULT_PORT_SPEED 115200
+#define PN532_UART_DEFAULT_SPEED 115200
+#define PN532_UART_DRIVER_NAME "PN532_UART"
 
 // TODO Move this one level up for libnfc-1.6
 static const byte_t ack_frame[] = { 0x00, 0x00, 0xff, 0x00, 0xff, 0x00 };
 
 int     pn532_uart_ack (nfc_device_t * pnd);
 // void    pn532_uart_wakeup (const nfc_device_spec_t nds);
+
+const struct pn53x_io pn532_uart_io;
 
 struct pn532_uart_data {
   serial_port port;
@@ -76,11 +79,11 @@ pn532_uart_probe (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * ps
 
   while ((pcPort = pcPorts[iDevice++])) {
     sp = uart_open (pcPort);
-    DBG ("Trying to find PN532 device on serial port: %s at %d bauds.", pcPort, SERIAL_DEFAULT_PORT_SPEED);
+    DBG ("Trying to find PN532 device on serial port: %s at %d bauds.", pcPort, PN532_UART_DEFAULT_SPEED);
 
     if ((sp != INVALID_SERIAL_PORT) && (sp != CLAIMED_SERIAL_PORT)) {
       // Serial port claimed but we need to check if a PN532_UART is connected.
-      uart_set_speed (sp, SERIAL_DEFAULT_PORT_SPEED);
+      uart_set_speed (sp, PN532_UART_DEFAULT_SPEED);
 
       nfc_device_t nd;
       nd.driver = &pn532_uart_driver;
@@ -89,6 +92,8 @@ pn532_uart_probe (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * ps
       nd.chip_data = malloc(sizeof(struct pn53x_data));
       ((struct pn53x_data*)(nd.chip_data))->type = PN532;
       ((struct pn53x_data*)(nd.chip_data))->state = SLEEP;
+      ((struct pn53x_data*)(nd.chip_data))->io = &pn532_uart_io;
+
 
       // PN532 could be powered down, we need to wake it up before line testing.
       // TODO pn532_uart_wakeup ((nfc_device_spec_t) sp);
@@ -103,7 +108,7 @@ pn532_uart_probe (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * ps
       snprintf (pnddDevices[*pszDeviceFound].acDevice, DEVICE_NAME_LENGTH - 1, "%s (%s)", "PN532", pcPort);
       pnddDevices[*pszDeviceFound].pcDriver = PN532_UART_DRIVER_NAME;
       pnddDevices[*pszDeviceFound].pcPort = strdup (pcPort);
-      pnddDevices[*pszDeviceFound].uiSpeed = SERIAL_DEFAULT_PORT_SPEED;
+      pnddDevices[*pszDeviceFound].uiSpeed = PN532_UART_DEFAULT_SPEED;
       (*pszDeviceFound)++;
 
       // Test if we reach the maximum "wanted" devices
@@ -151,6 +156,7 @@ pn532_uart_connect (const nfc_device_desc_t * pndd)
   pnd->chip_data = malloc(sizeof(struct pn53x_data));
   ((struct pn53x_data*)(pnd->chip_data))->type = PN532;
   ((struct pn53x_data*)(pnd->chip_data))->state = SLEEP;
+  ((struct pn53x_data*)(pnd->chip_data))->io = &pn532_uart_io;
   pnd->driver = &pn532_uart_driver;
 
   // Check communication using "Diagnose" command, with "Communication test" (0x00)
@@ -346,12 +352,32 @@ pn532_uart_ack (nfc_device_t * pnd)
   return (0 == uart_send (((struct pn532_uart_data*)(pnd->driver_data))->port, ack_frame, sizeof (ack_frame))) ? 0 : -1;
 }
 
+const struct pn53x_io pn532_uart_io = {
+  .send       = pn532_uart_send,
+  .receive    = pn532_uart_receive,
+};
+
 const struct nfc_driver_t pn532_uart_driver = {
   .name       = PN532_UART_DRIVER_NAME,
   .probe      = pn532_uart_probe,
   .connect    = pn532_uart_connect,
-  .send       = pn532_uart_send,
-  .receive    = pn532_uart_receive,
   .disconnect = pn532_uart_disconnect,
   .strerror   = pn53x_strerror,
+
+  .initiator_init                   = pn53x_initiator_init,
+  .initiator_select_passive_target  = pn53x_initiator_select_passive_target,
+  .initiator_poll_targets           = pn53x_initiator_poll_targets,
+  .initiator_select_dep_target      = pn53x_initiator_select_dep_target,
+  .initiator_deselect_target        = pn53x_initiator_deselect_target,
+  .initiator_transceive_bytes       = pn53x_initiator_transceive_bytes,
+  .initiator_transceive_bits        = pn53x_initiator_transceive_bits,
+
+  .target_init           = pn53x_target_init,
+  .target_send_bytes     = pn53x_target_send_bytes,
+  .target_receive_bytes  = pn53x_target_receive_bytes,
+  .target_send_bits      = pn53x_target_send_bits,
+  .target_receive_bits   = pn53x_target_receive_bits,
+
+  .configure  = pn53x_configure,
 };
+
