@@ -1416,6 +1416,10 @@ pn53x_TgInitAsTarget (nfc_device_t * pnd, pn53x_target_mode_t ptm,
   if (!pn53x_transceive (pnd, abtCmd, 36 + szOptionalBytes, abtRx, &szRx))
     return false;
 
+  if (szRx == 0) {
+    return false; // transceive was aborted
+  }
+
   // Note: the first byte is skip: 
   //       its the "mode" byte which contains baudrate, DEP and Framing type (Mifare, active or FeliCa) datas.
   if(pbtModeByte) {
