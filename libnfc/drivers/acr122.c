@@ -32,7 +32,7 @@
 #include <string.h>
 
 #include "acr122.h"
-#include "../drivers.h"
+#include "libnfc/drivers.h"
 
 // Bus
 #include <winscard.h>
@@ -54,7 +54,6 @@
 #endif
 
 #include <nfc/nfc.h>
-#include <nfc/nfc-messages.h>
 
 #define SCARD_OPERATION_SUCCESS	0x61
 #define SCARD_OPERATION_ERROR	0x63

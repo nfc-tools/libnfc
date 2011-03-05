@@ -40,14 +40,12 @@
 #include <nfc/nfc.h>
 
 #ifdef _WIN32
-#  include "../contrib/windows.h"
+#  include "contrib/windows.h"
 #endif
 
-#include "chips.h"
 #include "drivers.h"
 #include "nfc-internal.h"
 
-#include <nfc/nfc-messages.h>
 #include <sys/param.h>
 
 nfc_device_desc_t *nfc_pick_device (void);
@@ -246,9 +244,7 @@ nfc_list_devices (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * ps
 bool
 nfc_configure (nfc_device_t * pnd, const nfc_device_option_t ndo, const bool bEnable)
 {
-  pnd->iLastError = 0;
-
-  return pn53x_configure (pnd, ndo, bEnable);
+  HAL (configure, pnd, ndo, bEnable);
 }
 
 /**
@@ -263,17 +259,7 @@ nfc_configure (nfc_device_t * pnd, const nfc_device_option_t ndo, const bool bEn
 bool
 nfc_initiator_init (nfc_device_t * pnd)
 {
-  pnd->iLastError = 0;
-
-  // Set the PN53X to force 100% ASK Modified miller decoding (default for 14443A cards)
-  if (!pn53x_write_register (pnd, REG_CIU_TX_AUTO, SYMBOL_FORCE_100_ASK, 0x40))
-    return false;
-
-  // Configure the PN53X to be an Initiator or Reader/Writer
-  if (!pn53x_write_register (pnd, REG_CIU_CONTROL, SYMBOL_INITIATOR, 0x10))
-    return false;
-
-  return true;
+  HAL (initiator_init, pnd);
 }
 
 /**
@@ -304,8 +290,6 @@ nfc_initiator_select_passive_target (nfc_device_t * pnd,
 {
   byte_t  abtInit[MAX(12, szInitData)];
   size_t  szInit;
-
-  pnd->iLastError = 0;
 
   // TODO Put this in a function: this part is defined by ISO14443-3 (UID and Cascade levels)
   switch (nm.nmt) {
@@ -339,7 +323,7 @@ nfc_initiator_select_passive_target (nfc_device_t * pnd,
     break;
   }
 
-  return pn53x_initiator_select_passive_target (pnd, nm, abtInit, szInit, pnt);
+  HAL (initiator_select_passive_target, pnd, nm, abtInit, szInit, pnt);
 }
 
 /**
@@ -440,9 +424,7 @@ nfc_initiator_poll_targets (nfc_device_t * pnd,
                             const byte_t btPollNr, const byte_t btPeriod,
                             nfc_target_t * pntTargets, size_t * pszTargetFound)
 {
-  pnd->iLastError = 0;
-
-  return pn53x_initiator_poll_targets (pnd, pnmModulations, szModulations, btPollNr, btPeriod, pntTargets, pszTargetFound);
+  HAL (initiator_poll_targets, pnd, pnmModulations, szModulations, btPollNr, btPeriod, pntTargets, pszTargetFound);
 }
 
 
@@ -466,9 +448,7 @@ nfc_initiator_select_dep_target (nfc_device_t * pnd,
                                  const nfc_dep_mode_t ndm, const nfc_baud_rate_t nbr,
                                  const nfc_dep_info_t * pndiInitiator, nfc_target_t * pnt)
 {
-  pnd->iLastError = 0;
-
-  return pn53x_initiator_select_dep_target (pnd, ndm, nbr, pndiInitiator, pnt);
+  HAL (initiator_select_dep_target, pnd, ndm, nbr, pndiInitiator, pnt);
 }
 
 /**
@@ -486,9 +466,7 @@ nfc_initiator_select_dep_target (nfc_device_t * pnd,
 bool
 nfc_initiator_deselect_target (nfc_device_t * pnd)
 {
-  pnd->iLastError = 0;
-
-  return (pn53x_InDeselect (pnd, 0));   // 0 mean deselect all selected targets
+  HAL (initiator_deselect_target, pnd);
 }
 
 /**
@@ -511,9 +489,7 @@ bool
 nfc_initiator_transceive_bytes (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, byte_t * pbtRx,
                                 size_t * pszRx)
 {
-  pnd->iLastError = 0;
-
-  return pn53x_initiator_transceive_bytes (pnd, pbtTx, szTx, pbtRx, pszRx);
+  HAL (initiator_transceive_bytes, pnd, pbtTx, szTx, pbtRx, pszRx)
 }
 
 /**
@@ -555,9 +531,7 @@ bool
 nfc_initiator_transceive_bits (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxBits, const byte_t * pbtTxPar,
                                byte_t * pbtRx, size_t * pszRxBits, byte_t * pbtRxPar)
 {
-  pnd->iLastError = 0;
-
-  return pn53x_initiator_transceive_bits (pnd, pbtTx, szTxBits, pbtTxPar, pbtRx, pszRxBits, pbtRxPar);
+  HAL (initiator_transceive_bits, pnd, pbtTx, szTxBits, pbtTxPar, pbtRx, pszRxBits, pbtRxPar);
 }
 
 /**
@@ -585,9 +559,7 @@ nfc_initiator_transceive_bits (nfc_device_t * pnd, const byte_t * pbtTx, const s
 bool
 nfc_target_init (nfc_device_t * pnd, nfc_target_t * pnt, byte_t * pbtRx, size_t * pszRx)
 {
-  pnd->iLastError = 0;
-
-  return pn53x_target_init (pnd, pnt, pbtRx, pszRx);
+  HAL (target_init, pnd, pnt, pbtRx, pszRx);
 }
 
 void
@@ -613,9 +585,7 @@ nfc_abort_command (nfc_device_t * pnd)
 bool
 nfc_target_send_bytes (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx)
 {
-  pnd->iLastError = 0;
-
-  return pn53x_target_send_bytes (pnd, pbtTx, szTx);
+  HAL (target_send_bytes, pnd, pbtTx, szTx);
 }
 
 /**
@@ -630,9 +600,7 @@ nfc_target_send_bytes (nfc_device_t * pnd, const byte_t * pbtTx, const size_t sz
 bool
 nfc_target_receive_bytes (nfc_device_t * pnd, byte_t * pbtRx, size_t * pszRx)
 {
-  pnd->iLastError = 0;
-
-  return pn53x_target_receive_bytes (pnd, pbtRx, pszRx);
+  HAL (target_receive_bytes, pnd, pbtRx, pszRx);
 }
 
 /**
@@ -645,9 +613,7 @@ nfc_target_receive_bytes (nfc_device_t * pnd, byte_t * pbtRx, size_t * pszRx)
 bool
 nfc_target_send_bits (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxBits, const byte_t * pbtTxPar)
 {
-  pnd->iLastError = 0;
-
-  return pn53x_target_send_bits (pnd, pbtTx, szTxBits, pbtTxPar);
+  HAL (target_send_bits, pnd, pbtTx, szTxBits, pbtTxPar);
 }
 
 /**
@@ -664,9 +630,7 @@ nfc_target_send_bits (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szT
 bool
 nfc_target_receive_bits (nfc_device_t * pnd, byte_t * pbtRx, size_t * pszRxBits, byte_t * pbtRxPar)
 {
-  pnd->iLastError = 0;
-
-  return pn53x_target_receive_bits (pnd, pbtRx, pszRxBits, pbtRxPar);
+  HAL (target_receive_bits, pnd, pbtRx, pszRxBits, pbtRxPar);
 }
 
 /**

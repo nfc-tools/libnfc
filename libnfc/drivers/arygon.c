@@ -38,7 +38,6 @@
 #include <string.h>
 
 #include <nfc/nfc.h>
-#include <nfc/nfc-messages.h>
 
 #include "libnfc/drivers.h"
 #include "libnfc/nfc-internal.h"
@@ -174,6 +173,7 @@ arygon_connect (const nfc_device_desc_t * pndd)
 
   // The PN53x chip connected to ARYGON MCU doesn't seems to be in SLEEP mode
   ((struct pn53x_data*)(pnd->chip_data))->state = NORMAL;
+  ((struct pn53x_data*)(pnd->chip_data))->io = &arygon_tama_io;
   pnd->driver = &arygon_driver;
 
   // Check communication using "Reset TAMA" command
@@ -449,14 +449,32 @@ arygon_ack (const nfc_device_spec_t nds)
 }
 */
 
+const struct pn53x_io arygon_tama_io = {
+  .send       = arygon_tama_send,
+  .receive    = arygon_tama_receive,
+};
 
 const struct nfc_driver_t arygon_driver = {
   .name       = ARYGON_DRIVER_NAME,
   .probe      = arygon_probe,
   .connect    = arygon_connect,
-  .send       = arygon_tama_send,
-  .receive    = arygon_tama_receive,
   .disconnect = arygon_disconnect,
   .strerror   = pn53x_strerror,
+
+  .initiator_init = pn53x_initiator_init,
+  .initiator_select_passive_target = pn53x_initiator_select_passive_target,
+  .initiator_poll_targets = pn53x_initiator_poll_targets,
+  .initiator_select_dep_target = pn53x_initiator_select_dep_target,
+  .initiator_deselect_target = pn53x_initiator_deselect_target,
+  .initiator_transceive_bytes = pn53x_initiator_transceive_bytes,
+  .initiator_transceive_bits = pn53x_initiator_transceive_bits,
+
+  .target_init = pn53x_target_init,
+  .target_send_bytes = pn53x_target_send_bytes,
+  .target_receive_bytes = pn53x_target_receive_bytes,
+  .target_send_bits = pn53x_target_send_bits,
+  .target_receive_bits = pn53x_target_receive_bits,
+
+  .configure = pn53x_configure,
 };
 

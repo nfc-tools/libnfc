@@ -3,7 +3,7 @@ SUBDIRS = chips buses drivers .
 # set the include path found by configure
 INCLUDES = $(all_includes) $(LIBNFC_CFLAGS)
 
-noinst_HEADERS = chips.h buses.h drivers.h mirror-subr.h nfc-internal.h
+noinst_HEADERS = drivers.h mirror-subr.h nfc-internal.h
 lib_LTLIBRARIES = libnfc.la
 libnfc_la_SOURCES = nfc.c iso14443-subr.c mirror-subr.c
 libnfc_la_LDFLAGS = -no-undefined -version-info 1:0:0

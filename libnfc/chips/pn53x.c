@@ -20,9 +20,11 @@
  */
 
 /**
- * @file pn53x.h
+ * @file pn53x.c
  * @brief PN531, PN532 and PN533 common functions
  */
+
+/* vim:set ts=2 sw=2 et: */
 
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
@@ -34,7 +36,6 @@
 #include <stdlib.h>
 
 #include <nfc/nfc.h>
-#include <nfc/nfc-messages.h>
 
 #include "pn53x.h"
 #include "pn53x-internal.h"
@@ -46,6 +47,8 @@
 #endif
 
 #include <sys/param.h>
+
+// TODO: reorder functions according to header
 
 // TODO: Count max bytes for InJumpForDEP reply
 const byte_t pncmd_initiator_jump_for_dep[68] = { 0xD4, 0x56 };
@@ -134,9 +137,9 @@ pn53x_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, b
   }
 
   // Call the send/receice callback functions of the current driver
-  if (!pnd->driver->send (pnd, pbtTx, szTx))
+  if (!((struct pn53x_data*)(pnd->chip_data))->io->send (pnd, pbtTx, szTx))
     return false;
-  int res = pnd->driver->receive (pnd, pbtRx, *pszRx);
+  int res = ((struct pn53x_data*)(pnd->chip_data))->io->receive (pnd, pbtRx, *pszRx);
   if (res < 0) {
     return false;
   }
@@ -491,6 +494,19 @@ pn53x_decode_target_data (const byte_t * pbtRawData, size_t szRawData, pn53x_typ
 }
 
 bool
+pn53x_initiator_init (nfc_device_t * pnd)
+{
+  // Set the PN53X to force 100% ASK Modified miller decoding (default for 14443A cards)
+  if (!pn53x_write_register (pnd, REG_CIU_TX_AUTO, SYMBOL_FORCE_100_ASK, 0x40))
+    return false;
+
+  // Configure the PN53X to be an Initiator or Reader/Writer
+  if (!pn53x_write_register (pnd, REG_CIU_CONTROL, SYMBOL_INITIATOR, 0x10))
+    return false;
+  return true;
+}
+
+bool
 pn53x_initiator_select_passive_target (nfc_device_t * pnd,
                                        const nfc_modulation_t nm,
                                        const byte_t * pbtInitData, const size_t szInitData,
@@ -548,6 +564,11 @@ pn53x_initiator_poll_targets (nfc_device_t * pnd,
   return pn53x_InAutoPoll (pnd, apttTargetTypes, szTargetTypes, btPollNr, btPeriod, pntTargets, pszTargetFound);
 }
 
+bool
+pn53x_initiator_deselect_target (nfc_device_t * pnd)
+{
+  return (pn53x_InDeselect (pnd, 0));   // 0 mean deselect all selected targets
+}
 
 /**
  * @brief C wrapper to InListPassiveTarget command

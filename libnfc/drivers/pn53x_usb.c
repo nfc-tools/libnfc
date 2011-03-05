@@ -36,11 +36,10 @@ Thanks to d18c7db and Okko for example code
 #include <usb.h>
 #include <string.h>
 
-#include "../drivers.h"
-#include "../chips/pn53x.h"
+#include "libnfc/drivers.h"
+#include "libnfc/chips/pn53x.h"
 
 #include <nfc/nfc.h>
-#include <nfc/nfc-messages.h>
 
 #define BUFFER_LENGTH 256
 #define USB_TIMEOUT   0

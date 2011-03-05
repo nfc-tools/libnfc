@@ -38,5 +38,6 @@ bool    arygon_tama_send (nfc_device_t * pnd, const byte_t * pbtData, const size
 int     arygon_tama_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szData);
 
 extern const struct nfc_driver_t arygon_driver;
+extern const struct pn53x_io arygon_tama_io;
 
 #endif // ! __NFC_DRIVER_ARYGON_H__

@@ -35,7 +35,6 @@
 #include <string.h>
 
 #include <nfc/nfc.h>
-#include <nfc/nfc-messages.h>
 
 #include "libnfc/drivers.h"
 #include "libnfc/nfc-internal.h"

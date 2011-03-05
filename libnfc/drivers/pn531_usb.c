@@ -32,8 +32,7 @@ Thanks to d18c7db and Okko for example code
 
 #include <stdlib.h>
 
-#include "../drivers.h"
-#include <nfc/nfc-messages.h>
+#include "libnfc/drivers.h"
 
 nfc_device_desc_t *
 pn531_usb_pick_device (void)

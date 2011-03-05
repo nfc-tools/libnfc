@@ -93,7 +93,6 @@
 #  define DENACK          0x0100/* NACK */
 #  define DEACKMISMATCH   0x0200/* Unexpected data */
 #  define DEISERRFRAME    0x0300/* Error frame */
-#  define DENOTSUP        0x0400/* Not supported */
 
 typedef enum {
   PN531 = 0x01,
@@ -107,11 +106,16 @@ typedef enum {
   EXECUTE = 0x02, // Need to cancel the running command to process new one
 } pn53x_state;
 
+struct pn53x_io {
+  bool (*send)(nfc_device_t * pnd, const byte_t * pbtData, const size_t szData);
+  int (*receive)(nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen);
+};
+
 struct pn53x_data {
   pn53x_type type;
   pn53x_state state;
+  const struct pn53x_io * io;
 };
-
 
 /* PN53x specific types */
 /**
@@ -197,8 +201,7 @@ typedef enum {
 
 bool    pn53x_init(nfc_device_t * pnd);
 bool    pn53x_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, byte_t * pbtRx, size_t *pszRx);
-bool    pn53x_read_register (nfc_device_t * pnd, uint16_t ui16Reg, uint8_t * ui8Value);
-bool    pn53x_write_register (nfc_device_t * pnd, uint16_t ui16Reg, uint8_t ui8SymbolMask, uint8_t ui8Value);
+
 bool    pn53x_set_parameters (nfc_device_t * pnd, const uint8_t ui8Value, const bool bEnable);
 bool    pn53x_set_tx_bits (nfc_device_t * pnd, const uint8_t ui8Bits);
 bool    pn53x_wrap_frame (const byte_t * pbtTx, const size_t szTxBits, const byte_t * pbtTxPar, byte_t * pbtFrame,
@@ -208,11 +211,14 @@ bool    pn53x_unwrap_frame (const byte_t * pbtFrame, const size_t szFrameBits, b
 bool    pn53x_decode_target_data (const byte_t * pbtRawData, size_t szRawData,
                                   pn53x_type chip_type, nfc_modulation_type_t nmt,
                                   nfc_target_info_t * pnti);
+bool    pn53x_read_register (nfc_device_t * pnd, uint16_t ui16Reg, uint8_t * ui8Value);
+bool    pn53x_write_register (nfc_device_t * pnd, uint16_t ui16Reg, uint8_t ui8SymbolMask, uint8_t ui8Value);
 bool    pn53x_get_firmware_version (nfc_device_t * pnd, char abtFirmwareText[18]);
 bool    pn53x_configure (nfc_device_t * pnd, const nfc_device_option_t ndo, const bool bEnable);
 bool    pn53x_check_communication (nfc_device_t *pnd);
 
 // NFC device as Initiator functions
+bool    pn53x_initiator_init (nfc_device_t * pnd);
 bool    pn53x_initiator_select_passive_target (nfc_device_t * pnd,
                                                const nfc_modulation_t nm,
                                                const byte_t * pbtInitData, const size_t szInitData,
@@ -230,6 +236,8 @@ bool    pn53x_initiator_transceive_bits (nfc_device_t * pnd, const byte_t * pbtT
                                          byte_t * pbtRxPar);
 bool    pn53x_initiator_transceive_bytes (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx,
                                           byte_t * pbtRx, size_t * pszRx);
+bool    pn53x_initiator_deselect_target (nfc_device_t * pnd);
+
 // NFC device as Target functions
 bool    pn53x_target_init (nfc_device_t * pnd, nfc_target_t * pnt, byte_t * pbtRx, size_t * pszRx);
 bool    pn53x_target_receive_bits (nfc_device_t * pnd, byte_t * pbtRx, size_t * pszRxBits, byte_t * pbtRxPar);
