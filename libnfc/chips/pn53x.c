@@ -675,9 +675,9 @@ pn53x_InAutoPoll (nfc_device_t * pnd,
   size_t  szRx = sizeof(abtRx);
   bool res = pn53x_transceive (pnd, abtCmd, szTxInAutoPoll, abtRx, &szRx);
 
-  if ((szRx == 0) || (res == false)) {
+  if (res == false) {
     return false;
-  } else {
+  } else if (szRx > 0) {
     *pszTargetFound = abtRx[0];
     if (*pszTargetFound) {
       uint8_t ln;
