@@ -48,6 +48,7 @@
 
 #include <nfc/nfc.h>
 
+#include "nfc-utils.h"
 #include "mifare.h"
 
 static nfc_device_t *pnd;
