@@ -20,7 +20,7 @@
  * 
  * 
  * @file arygon.h
- * @brief
+ * @brief Driver for PN53x-equipped ARYGON device connected using UART
  */
 
 #ifndef __NFC_DRIVER_ARYGON_H__
@@ -28,16 +28,14 @@
 
 #  include <nfc/nfc-types.h>
 
-#  define ARYGON_DRIVER_NAME "ARYGON"
-
 bool    arygon_probe (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * pszDeviceFound);
 
 nfc_device_t *arygon_connect (const nfc_device_desc_t * pndd);
 void    arygon_disconnect (nfc_device_t * pnd);
+
 bool    arygon_tama_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szData);
 int     arygon_tama_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szData);
 
 extern const struct nfc_driver_t arygon_driver;
-extern const struct pn53x_io arygon_tama_io;
 
 #endif // ! __NFC_DRIVER_ARYGON_H__

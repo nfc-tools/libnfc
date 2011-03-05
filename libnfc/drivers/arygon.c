@@ -62,7 +62,10 @@
  */
 #define DEV_ARYGON_PROTOCOL_TAMA_WAB            '3'
 
-#define ARYGON_SERIAL_DEFAULT_PORT_SPEED 9600
+#define ARYGON_DEFAULT_SPEED 9600
+#define ARYGON_DRIVER_NAME "ARYGON"
+
+const struct pn53x_io arygon_tama_io;
 
 struct arygon_data {
   serial_port port;
@@ -101,10 +104,10 @@ arygon_probe (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * pszDev
 
   while ((pcPort = pcPorts[iDevice++])) {
     sp = uart_open (pcPort);
-    DBG ("Trying to find ARYGON device on serial port: %s at %d bauds.", pcPort, ARYGON_SERIAL_DEFAULT_PORT_SPEED);
+    DBG ("Trying to find ARYGON device on serial port: %s at %d bauds.", pcPort, ARYGON_DEFAULT_SPEED);
 
     if ((sp != INVALID_SERIAL_PORT) && (sp != CLAIMED_SERIAL_PORT)) {
-      uart_set_speed (sp, ARYGON_SERIAL_DEFAULT_PORT_SPEED);
+      uart_set_speed (sp, ARYGON_DEFAULT_SPEED);
 
       nfc_device_t nd;
       nd.driver = &arygon_driver;
@@ -113,6 +116,7 @@ arygon_probe (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * pszDev
       nd.chip_data = malloc(sizeof(struct pn53x_data));
       ((struct pn53x_data*)(nd.chip_data))->type = PN532;
       ((struct pn53x_data*)(nd.chip_data))->state = NORMAL;
+      ((struct pn53x_data*)(nd.chip_data))->io = &arygon_tama_io;
 
       bool res = arygon_reset_tama(&nd);
       free(nd.driver_data);
@@ -125,7 +129,7 @@ arygon_probe (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * pszDev
       snprintf (pnddDevices[*pszDeviceFound].acDevice, DEVICE_NAME_LENGTH - 1, "%s (%s)", "Arygon", pcPort);
       pnddDevices[*pszDeviceFound].pcDriver = ARYGON_DRIVER_NAME;
       pnddDevices[*pszDeviceFound].pcPort = strdup (pcPort);
-      pnddDevices[*pszDeviceFound].uiSpeed = ARYGON_SERIAL_DEFAULT_PORT_SPEED;
+      pnddDevices[*pszDeviceFound].uiSpeed = ARYGON_DEFAULT_SPEED;
       (*pszDeviceFound)++;
 
       // Test if we reach the maximum "wanted" devices
@@ -427,28 +431,6 @@ arygon_reset_tama (nfc_device_t * pnd)
   return true;
 }
 
-/*
-void
-arygon_ack (const nfc_device_spec_t nds)
-{
-  byte_t abtRx[BUFFER_LENGTH];
-  size_t szRx = sizeof(abtRx);
-#ifdef DEBUG
-  PRINT_HEX ("TX", arygon_ack_frame, sizeof (arygon_ack_frame));
-#endif
-  uart_send ((serial_port) nds, arygon_ack_frame, sizeof (arygon_ack_frame));
-  uart_receive ((serial_port) nds, abtRx, &szRx, 0);
-#ifdef DEBUG
-  PRINT_HEX ("RX", abtRx, szRx);
-#endif
-  // ARYGON device will send an arygon_error_incomplete_command when sending an
-  // ACK frame, and I (Romuald) don't know if the command is sent to PN or not
-  if (0 != memcmp (abtRx, arygon_error_incomplete_command, sizeof (arygon_error_incomplete_command) - 1)) {
-    return false;
-  }
-}
-*/
-
 const struct pn53x_io arygon_tama_io = {
   .send       = arygon_tama_send,
   .receive    = arygon_tama_receive,
@@ -461,20 +443,20 @@ const struct nfc_driver_t arygon_driver = {
   .disconnect = arygon_disconnect,
   .strerror   = pn53x_strerror,
 
-  .initiator_init = pn53x_initiator_init,
-  .initiator_select_passive_target = pn53x_initiator_select_passive_target,
-  .initiator_poll_targets = pn53x_initiator_poll_targets,
-  .initiator_select_dep_target = pn53x_initiator_select_dep_target,
-  .initiator_deselect_target = pn53x_initiator_deselect_target,
-  .initiator_transceive_bytes = pn53x_initiator_transceive_bytes,
-  .initiator_transceive_bits = pn53x_initiator_transceive_bits,
+  .initiator_init                   = pn53x_initiator_init,
+  .initiator_select_passive_target  = pn53x_initiator_select_passive_target,
+  .initiator_poll_targets           = pn53x_initiator_poll_targets,
+  .initiator_select_dep_target      = pn53x_initiator_select_dep_target,
+  .initiator_deselect_target        = pn53x_initiator_deselect_target,
+  .initiator_transceive_bytes       = pn53x_initiator_transceive_bytes,
+  .initiator_transceive_bits        = pn53x_initiator_transceive_bits,
 
-  .target_init = pn53x_target_init,
-  .target_send_bytes = pn53x_target_send_bytes,
-  .target_receive_bytes = pn53x_target_receive_bytes,
-  .target_send_bits = pn53x_target_send_bits,
-  .target_receive_bits = pn53x_target_receive_bits,
+  .target_init           = pn53x_target_init,
+  .target_send_bytes     = pn53x_target_send_bytes,
+  .target_receive_bytes  = pn53x_target_receive_bytes,
+  .target_send_bits      = pn53x_target_send_bits,
+  .target_receive_bits   = pn53x_target_receive_bits,
 
-  .configure = pn53x_configure,
+  .configure  = pn53x_configure,
 };
 
