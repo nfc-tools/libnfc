@@ -5,7 +5,7 @@
 #define MAX_DEVICE_COUNT 1
 #define MAX_TARGET_COUNT 1
 
-#include "libnfc/chips/pn53x.h"
+#include "chips/pn53x.h"
 
 void
 test_register_endianness (void)

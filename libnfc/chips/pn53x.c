@@ -39,8 +39,9 @@
 
 #include "pn53x.h"
 #include "pn53x-internal.h"
-#include "libnfc/mirror-subr.h"
-#include "libnfc/nfc-internal.h"
+
+#include "mirror-subr.h"
+#include "nfc-internal.h"
 
 #ifdef _WIN32
 #  include "contrib/windows.h"

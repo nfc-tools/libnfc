@@ -32,17 +32,9 @@
 #    include "drivers/acr122.h"
 #  endif /* DRIVER_ACR122_ENABLED */
 
-#  if defined (DRIVER_PN531_USB_ENABLED) || defined (DRIVER_PN533_USB_ENABLED)
+#  if defined (DRIVER_PN53X_USB_ENABLED)
 #    include "drivers/pn53x_usb.h"
-#  endif /* DRIVER_PN531_USB_ENABLED || DRIVER_PN533_USB_ENABLED */
-
-#  if defined (DRIVER_PN531_USB_ENABLED)
-#    include "drivers/pn531_usb.h"
-#  endif /* DRIVER_PN531_USB_ENABLED */
-
-#  if defined (DRIVER_PN533_USB_ENABLED)
-#    include "drivers/pn533_usb.h"
-#  endif /* DRIVER_PN533_USB_ENABLED */
+#  endif /* DRIVER_PN53X_USB_ENABLED */
 
 #  if defined (DRIVER_ARYGON_ENABLED)
 #    include "drivers/arygon.h"

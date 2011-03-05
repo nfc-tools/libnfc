@@ -30,7 +30,7 @@
 #include "uart.h"
 
 #include <nfc/nfc.h>
-#include "libnfc/nfc-internal.h"
+#include "nfc-internal.h"
 
 // Test if we are dealing with unix operating systems
 #ifndef _WIN32

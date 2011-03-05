@@ -51,6 +51,9 @@
 nfc_device_desc_t *nfc_pick_device (void);
 
 const struct nfc_driver_t *nfc_drivers[] = {
+#  if defined (DRIVER_PN53X_USB_ENABLED)
+  &pn53x_usb_driver,
+#  endif /* DRIVER_PN53X_USB_ENABLED */
 #  if defined (DRIVER_PN532_UART_ENABLED)
   &pn532_uart_driver,
 #  endif /* DRIVER_PN532_UART_ENABLED */
