@@ -47,11 +47,9 @@
 #include <stdint.h>
 #include <string.h>
 #include <signal.h>
-//#include <stddef.h>
 
 #include <nfc/nfc.h>
 
-#include <nfc/nfc-messages.h>
 #include "nfc-utils.h"
 
 #ifndef _WIN32

@@ -36,7 +36,6 @@
 #include <string.h>
 
 #include <nfc/nfc.h>
-#include <nfc/nfc-messages.h>
 
 #include "nfc-utils.h"
 #include "chips/pn53x.h"

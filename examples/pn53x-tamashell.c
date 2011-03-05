@@ -50,7 +50,6 @@
 #include <unistd.h>
 
 #include <nfc/nfc.h>
-#include <nfc/nfc-messages.h>
 
 #include "nfc-utils.h"
 

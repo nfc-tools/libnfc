@@ -4,7 +4,8 @@
 
 #include <stdlib.h>
 #include <nfc/nfc.h>
-#include <nfc/nfc-messages.h>
+
+#include "nfc-utils.h"
 
 int
 main (int argc, const char *argv[])

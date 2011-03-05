@@ -47,7 +47,6 @@
 #include <ctype.h>
 
 #include <nfc/nfc.h>
-#include <nfc/nfc-messages.h>
 
 #include "mifare.h"
 
