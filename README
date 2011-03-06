@@ -20,6 +20,22 @@ The official development site is:
 
 Important note: this file covers POSIX systems, for Windows please read README-Windows.txt
 
+Requirements
+============
+
+Some NFC drivers depends on third party software:
+
+* pn53x_usb:
+
+   - libusb-0.1 http://libusb.sf.net
+
+* acr122:
+
+   - pcsc-lite http://pcsclite.alioth.debian.org/
+
+The regression test suite depend on the cutter framework:
+http://cutter.sf.net
+
 Installation
 ============
 
