@@ -89,9 +89,9 @@ target_io( nfc_target_t * pnt, const byte_t * pbtInput, const size_t szInput, by
         strcpy((char*)pbtOutput, "You read block ");
         pbtOutput[15] = pbtInput[1];
         break;
-      case 0x50: // Deselect / HALT
+      case 0x50: // HLTA (ISO14443-3)
         if (!quiet_output) {
-          printf("Target halted me. Bye!\n");
+          printf("Initiator HLTA me. Bye!\n");
         }
         loop = false;
         break;
@@ -104,7 +104,7 @@ target_io( nfc_target_t * pnt, const byte_t * pbtInput, const size_t szInput, by
         // Next commands will be without CRC
         init_mfc_auth = true;
         break;
-      case 0xe0: // RATS
+      case 0xe0: // RATS (ISO14443-4)
         // Send ATS
         *pszOutput = pnt->nti.nai.szAtsLen + 1;
         pbtOutput[0] = pnt->nti.nai.szAtsLen + 1; // ISO14443-4 says that ATS contains ATS_Lenght as first byte
@@ -114,7 +114,7 @@ target_io( nfc_target_t * pnt, const byte_t * pbtInput, const size_t szInput, by
         break;
       case 0xc2: // S-block DESELECT
         if (!quiet_output) {
-          printf("Target released me. Bye!\n");
+          printf("Initiator DESELECT me. Bye!\n");
         }
         loop = false;
         break;
@@ -188,7 +188,7 @@ main (int argc, char *argv[])
 
   if (pnd == NULL) {
     ERR("Unable to connect to NFC device");
-    return EXIT_FAILURE;
+    exit (EXIT_FAILURE);
   }
 
   printf ("Connected to NFC device: %s\n", pnd->acName);
@@ -250,7 +250,7 @@ main (int argc, char *argv[])
   printf ("NFC device (configured as target) is now emulating the tag, please touch it with a second NFC device (initiator)\n");
   if (!nfc_target_emulate_tag (pnd, &nt)) {
     nfc_perror (pnd, "nfc_target_emulate_tag");
-    return EXIT_FAILURE;
+    exit (EXIT_FAILURE);
   }
 
   nfc_disconnect(pnd);
