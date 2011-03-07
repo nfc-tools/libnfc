@@ -520,10 +520,37 @@ pn53x_usb_initiator_init (nfc_device_t *pnd)
 
   if (ASK_LOGO == DRIVER_DATA (pnd)->model) {
     DBG ("ASK LoGO initialization.");
-    pn53x_write_register (pnd, 0x6106, 0xFF, 0x1B);
-    pn53x_write_register (pnd, 0x6306, 0xFF, 0x14);
-    pn53x_write_register (pnd, 0xFFFD, 0xFF, 0x37);
-    pn53x_write_register (pnd, 0xFFB0, 0xFF, 0x3B);
+    /* Internal registers */
+    /* Disable 100mA current limit, Power on Secure IC (SVDD) */
+    pn53x_write_register (pnd, REG_CONTROL_SWITCH_RNG, 0xFF, SYMBOL_CURLIMOFF | SYMBOL_SIC_SWITCH_EN | SYMBOL_RANDOM_DATAREADY);
+    /* Select the signal to be output on SIGOUT: Modulation signal (envelope) from the internal coder */
+    pn53x_write_register (pnd, REG_CIU_TXSEL, 0xFF, 0x14);
+
+    /* SFR Registers */
+    /* Setup push-pulls for pins from P30 to P35 */
+    pn53x_write_register (pnd, SFR_P3CFGB, 0xFF, 0x37);
+
+/*
+On ASK LoGO hardware:
+  LEDs port bits definition: 
+   * LED 1: bit 2 (P32)
+   * LED 2: bit 1 (P31)
+   * LED 3: bit 0 or 3 (depending of hardware revision) (P30 or P33)
+   * LED 4: bit 5 (P35)
+  Notes: 
+   * Set logical 0 to switch LED on; logical 1 to switch LED off. 
+   * Bit 4 should be maintained at 1 to keep RF field on.
+
+  Progressive field activation:
+   The ASK LoGO hardware can progressively power-up the antenna.
+   To use this feature we have to switch on the field by switching on
+   the field on PN533 (RFConfiguration) then set P34 to '1', and cut-off the 
+   field by switching off the field on PN533 then set P34 to '0'.
+*/
+
+    /* Set P30, P31, P33, P34, P35 to logic 1 and P32 to 0 logic */
+    /* ie. Switch LED1 on */
+    pn53x_write_register (pnd, SFR_P3, 0xFF, 0x3B);
   }
 
   return true;

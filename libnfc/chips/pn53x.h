@@ -64,6 +64,16 @@
 #  define REG_CIU_BIT_FRAMING       0x633D
 #  define SYMBOL_TX_LAST_BITS       0x07
 
+#  define REG_CONTROL_SWITCH_RNG    0x6106
+#  define SYMBOL_CURLIMOFF          0x08     /* When set to 1, the 100 mA current limitations is desactivated. */
+#  define SYMBOL_SIC_SWITCH_EN      0x10     /* When set to logic 1, the SVDD switch is enabled and the SVDD output delivers power to secure IC and internal pads (SIGIN, SIGOUT and P34). */
+#  define SYMBOL_RANDOM_DATAREADY   0x02     /* When set to logic 1, a new random number is available. */
+
+#  define REG_CIU_TXSEL             0x6306
+
+#  define SFR_P3CFGB                0xFFFD
+#  define SFR_P3                    0xFFB0
+
 // PN53X Support Byte flags
 #define SUPPORT_ISO14443A             0x01
 #define SUPPORT_ISO14443B             0x02
