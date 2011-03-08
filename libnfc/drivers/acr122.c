@@ -283,7 +283,7 @@ acr122_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szData)
      * This state is generaly reached when the ACR122 has no target in it's
      * field.
      */
-    if (SCardControl (DRIVER_DATA (pnd)->hCard, IOCTL_CCID_ESCAPE_SCARD_CTL_CODE, abtTxBuf, szTxBuf, DRIVER_DATA (pnd)->abtRx, ACR122_RESPONSE_LEN, (void *) &dwRxLen) != SCARD_S_SUCCESS) {
+    if (SCardControl (DRIVER_DATA (pnd)->hCard, IOCTL_CCID_ESCAPE_SCARD_CTL_CODE, abtTxBuf, szTxBuf, DRIVER_DATA (pnd)->abtRx, ACR122_RESPONSE_LEN, &dwRxLen) != SCARD_S_SUCCESS) {
       pnd->iLastError = DEIO;
       return false;
     }
@@ -366,12 +366,12 @@ acr122_firmware (nfc_device_t *pnd)
   uint32_t uiResult;
 
   static char abtFw[11];
-  size_t  szFwLen = sizeof (abtFw);
-  memset (abtFw, 0x00, szFwLen);
+  DWORD dwFwLen = sizeof (abtFw);
+  memset (abtFw, 0x00, sizeof (abtFw));
   if (DRIVER_DATA (pnd)->ioCard.dwProtocol == SCARD_PROTOCOL_UNDEFINED) {
-    uiResult = SCardControl (DRIVER_DATA (pnd)->hCard, IOCTL_CCID_ESCAPE_SCARD_CTL_CODE, abtGetFw, sizeof (abtGetFw), abtFw, szFwLen-1, (void *) &szFwLen);
+    uiResult = SCardControl (DRIVER_DATA (pnd)->hCard, IOCTL_CCID_ESCAPE_SCARD_CTL_CODE, abtGetFw, sizeof (abtGetFw), (byte_t *) abtFw, dwFwLen-1, &dwFwLen);
   } else {
-    uiResult = SCardTransmit (DRIVER_DATA (pnd)->hCard, &(DRIVER_DATA (pnd)->ioCard), abtGetFw, sizeof (abtGetFw), NULL, (byte_t *) abtFw, (void *) &szFwLen);
+    uiResult = SCardTransmit (DRIVER_DATA (pnd)->hCard, &(DRIVER_DATA (pnd)->ioCard), abtGetFw, sizeof (abtGetFw), NULL, (byte_t *) abtFw, &dwFwLen);
   }
 
   if (uiResult != SCARD_S_SUCCESS) {
@@ -381,23 +381,21 @@ acr122_firmware (nfc_device_t *pnd)
   return abtFw;
 }
 
+#if 0
 bool
 acr122_led_red (nfc_device_t *pnd, bool bOn)
 {
   byte_t  abtLed[9] = { 0xFF, 0x00, 0x40, 0x05, 0x04, 0x00, 0x00, 0x00, 0x00 };
   byte_t  abtBuf[2];
-  size_t  szBufLen = sizeof (abtBuf);
+  DWORD dwBufLen = sizeof (abtBuf);
   (void) bOn;
   if (DRIVER_DATA (pnd)->ioCard.dwProtocol == SCARD_PROTOCOL_UNDEFINED) {
-    return (SCardControl
-            (DRIVER_DATA (pnd)->hCard, IOCTL_CCID_ESCAPE_SCARD_CTL_CODE, abtLed, sizeof (abtLed), abtBuf, szBufLen,
-             (void *) &szBufLen) == SCARD_S_SUCCESS);
+    return (SCardControl (DRIVER_DATA (pnd)->hCard, IOCTL_CCID_ESCAPE_SCARD_CTL_CODE, abtLed, sizeof (abtLed), abtBuf, dwBufLen, &dwBufLen) == SCARD_S_SUCCESS);
   } else {
-    return (SCardTransmit
-            (DRIVER_DATA (pnd)->hCard, &(DRIVER_DATA (pnd)->ioCard), abtLed, sizeof (abtLed), NULL, (byte_t *) abtBuf,
-             (void *) &szBufLen) == SCARD_S_SUCCESS);
+    return (SCardTransmit (DRIVER_DATA (pnd)->hCard, &(DRIVER_DATA (pnd)->ioCard), abtLed, sizeof (abtLed), NULL, abtBuf, &dwBufLen) == SCARD_S_SUCCESS);
   }
 }
+#endif
 
 const struct pn53x_io acr122_io = {
   .send    = acr122_send,
