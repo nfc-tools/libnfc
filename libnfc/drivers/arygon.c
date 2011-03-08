@@ -71,14 +71,10 @@ struct arygon_data {
   serial_port port;
 };
 
-// XXX It seems that sending arygon_ack_frame to cancel current command is not allowed by ARYGON µC (see arygon_ack())
-// static const byte_t arygon_ack_frame[] = { DEV_ARYGON_PROTOCOL_TAMA, 0x00, 0x00, 0xff, 0x00, 0xff, 0x00 };
-
 static const byte_t arygon_error_none[] = "FF000000\x0d\x0a";
 static const byte_t arygon_error_incomplete_command[] = "FF0C0000\x0d\x0a";
 static const byte_t arygon_error_unknown_mode[] = "FF060000\x0d\x0a";
 
-// void    arygon_ack (const nfc_device_spec_t nds);
 bool    arygon_reset_tama (nfc_device_t * pnd);
 void    arygon_firmware (nfc_device_t * pnd, char * str);
 
@@ -419,16 +415,7 @@ arygon_reset_tama (nfc_device_t * pnd)
     DBG ("No reply to 'reset TAMA' command.");
     return false;
   }
-#if 0
-  if ( 0 == memcmp (abtRx, arygon_error_unknown_mode, sizeof (arygon_error_unknown_mode))) {
-    // HACK Here we are... the first byte wasn't sent as expected, so we resend the same command
-      uart_send ((serial_port) nds, arygon_reset_tama_cmd, sizeof (arygon_reset_tama_cmd));
-      res = uart_receive ((serial_port) nds, abtRx, &szRx, 0);
-      if (res != 0) {
-        return false;
-      }
-  }
-#endif
+
   if (0 != memcmp (abtRx, arygon_error_none, sizeof (arygon_error_none) - 1)) {
     return false;
   }
