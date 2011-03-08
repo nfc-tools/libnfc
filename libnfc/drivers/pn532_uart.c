@@ -57,6 +57,9 @@ struct pn532_uart_data {
   serial_port port;
 };
   
+#define CHIP_DATA(pnd) ((struct pn53x_data*)(pnd->chip_data))
+#define DRIVER_DATA(pnd) ((struct pn532_uart_data*)(pnd->driver_data))
+
 bool
 pn532_uart_probe (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * pszDeviceFound)
 {
@@ -152,11 +155,11 @@ pn532_uart_connect (const nfc_device_desc_t * pndd)
   pnd->acName[DEVICE_NAME_LENGTH - 1] = '\0';
 
   pnd->driver_data = malloc(sizeof(struct pn532_uart_data));
-  ((struct pn532_uart_data*)(pnd->driver_data))->port = sp;
+  DRIVER_DATA(pnd)->port = sp;
   pnd->chip_data = malloc(sizeof(struct pn53x_data));
-  ((struct pn53x_data*)(pnd->chip_data))->type = PN532;
-  ((struct pn53x_data*)(pnd->chip_data))->state = SLEEP;
-  ((struct pn53x_data*)(pnd->chip_data))->io = &pn532_uart_io;
+  CHIP_DATA(pnd)->type = PN532;
+  CHIP_DATA(pnd)->state = SLEEP;
+  CHIP_DATA(pnd)->io = &pn532_uart_io;
   pnd->driver = &pn532_uart_driver;
 
   // Check communication using "Diagnose" command, with "Communication test" (0x00)
@@ -172,7 +175,7 @@ pn532_uart_connect (const nfc_device_desc_t * pndd)
 void
 pn532_uart_disconnect (nfc_device_t * pnd)
 {
-  uart_close (((struct pn532_uart_data*)(pnd->driver_data))->port);
+  uart_close (DRIVER_DATA(pnd)->port);
   free (pnd->driver_data);
   free (pnd->chip_data);
   free (pnd);
@@ -182,12 +185,12 @@ pn532_uart_disconnect (nfc_device_t * pnd)
 bool
 pn532_uart_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szData)
 {
-  if (((struct pn53x_data*)(pnd->chip_data))->state == SLEEP) {
+  if (CHIP_DATA(pnd)->state == SLEEP) {
     /** PN532C106 wakeup. */
     /** High Speed Unit (HSU) wake up consist to send 0x55 and wait a "long" delay for PN532 being wakeup. */
     const byte_t pn532_wakeup_preamble[] = { 0x55, 0x55, 0x00, 0x00, 0x00 };
-    uart_send (((struct pn532_uart_data*)(pnd->driver_data))->port, pn532_wakeup_preamble, sizeof (pn532_wakeup_preamble));
-    ((struct pn53x_data*)(pnd->chip_data))->state = NORMAL; // PN532 should now be awake
+    uart_send (DRIVER_DATA(pnd)->port, pn532_wakeup_preamble, sizeof (pn532_wakeup_preamble));
+    CHIP_DATA(pnd)->state = NORMAL; // PN532 should now be awake
     // According to PN532 application note, C106 appendix: to go out Low Vbat mode and enter in normal mode we need to send a SAMConfiguration command
     if (!pn53x_SAMConfiguration (pnd, 0x01)) {
       return false;
@@ -200,7 +203,7 @@ pn532_uart_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szData
 
   pn53x_build_frame (abtFrame, &szFrame, pbtData, szData);
 
-  int res = uart_send (((struct pn532_uart_data*)(pnd->driver_data))->port, abtFrame, szFrame);
+  int res = uart_send (DRIVER_DATA(pnd)->port, abtFrame, szFrame);
   if (res != 0) {
     ERR ("%s", "Unable to transmit data. (TX)");
     pnd->iLastError = res;
@@ -208,7 +211,7 @@ pn532_uart_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szData
   }
 
   byte_t abtRxBuf[6];
-  res = uart_receive (((struct pn532_uart_data*)(pnd->driver_data))->port, abtRxBuf, 6, 0);
+  res = uart_receive (DRIVER_DATA(pnd)->port, abtRxBuf, 6, 0);
   if (res != 0) {
     ERR ("%s", "Unable to read ACK");
     pnd->iLastError = res;
@@ -216,7 +219,7 @@ pn532_uart_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szData
   }
 
   if (pn53x_check_ack_frame (pnd, abtRxBuf, sizeof(abtRxBuf))) {
-    ((struct pn53x_data*)(pnd->chip_data))->state = EXECUTE;
+    CHIP_DATA(pnd)->state = EXECUTE;
   } else {
     return false;
   }
@@ -240,7 +243,7 @@ pn532_uart_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen
     break;
   }
 
-  int res = uart_receive (((struct pn532_uart_data*)(pnd->driver_data))->port, abtRxBuf, 5, abort_fd);
+  int res = uart_receive (DRIVER_DATA(pnd)->port, abtRxBuf, 5, abort_fd);
 
   if (abort_fd && (DEABORT == res)) {
     return pn532_uart_ack (pnd);
@@ -261,7 +264,7 @@ pn532_uart_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen
 
   if ((0x01 == abtRxBuf[3]) && (0xff == abtRxBuf[4])) {
     // Error frame
-    uart_receive (((struct pn532_uart_data*)(pnd->driver_data))->port, abtRxBuf, 3, 0);
+    uart_receive (DRIVER_DATA(pnd)->port, abtRxBuf, 3, 0);
     ERR ("%s", "Application level error detected");
     pnd->iLastError = DEISERRFRAME;
     return -1;
@@ -289,7 +292,7 @@ pn532_uart_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen
   }
 
   // TFI + PD0 (CC+1)
-  res = uart_receive (((struct pn532_uart_data*)(pnd->driver_data))->port, abtRxBuf, 2, 0);
+  res = uart_receive (DRIVER_DATA(pnd)->port, abtRxBuf, 2, 0);
   if (res != 0) {
     ERR ("%s", "Unable to receive data. (RX)");
     pnd->iLastError = res;
@@ -309,7 +312,7 @@ pn532_uart_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen
   }
 
   if (len) {
-    res = uart_receive (((struct pn532_uart_data*)(pnd->driver_data))->port, pbtData, len, 0);
+    res = uart_receive (DRIVER_DATA(pnd)->port, pbtData, len, 0);
     if (res != 0) {
       ERR ("%s", "Unable to receive data. (RX)");
       pnd->iLastError = res;
@@ -317,7 +320,7 @@ pn532_uart_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen
     }
   }
 
-  res = uart_receive (((struct pn532_uart_data*)(pnd->driver_data))->port, abtRxBuf, 2, 0);
+  res = uart_receive (DRIVER_DATA(pnd)->port, abtRxBuf, 2, 0);
   if (res != 0) {
     ERR ("%s", "Unable to receive data. (RX)");
     pnd->iLastError = res;
@@ -341,15 +344,15 @@ pn532_uart_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen
     pnd->iLastError = DEIO;
     return -1;
   }
-  ((struct pn53x_data*)(pnd->chip_data))->state = NORMAL;
+  CHIP_DATA(pnd)->state = NORMAL;
   return len;
 }
 
 int
 pn532_uart_ack (nfc_device_t * pnd)
 {
-  ((struct pn53x_data*)(pnd->chip_data))->state = NORMAL;
-  return (0 == uart_send (((struct pn532_uart_data*)(pnd->driver_data))->port, ack_frame, sizeof (ack_frame))) ? 0 : -1;
+  CHIP_DATA(pnd)->state = NORMAL;
+  return (0 == uart_send (DRIVER_DATA(pnd)->port, ack_frame, sizeof (ack_frame))) ? 0 : -1;
 }
 
 const struct pn53x_io pn532_uart_io = {
