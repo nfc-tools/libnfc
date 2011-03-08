@@ -42,7 +42,6 @@
 
 #  define ACR122_DRIVER_NAME "ACR122"
 
-// XXX: Some review from users cross-compiling is welcome!
 #if defined (_WIN32)
 #  define IOCTL_CCID_ESCAPE_SCARD_CTL_CODE SCARD_CTL_CODE(3500)
 #elif defined(__APPLE__)
@@ -227,6 +226,8 @@ acr122_connect (const nfc_device_desc_t * pndd)
     CHIP_DATA (pnd)->state = NORMAL;
     CHIP_DATA (pnd)->io = &acr122_io;
     pnd->driver = &acr122_driver;
+
+    pn53x_init (pnd);
 
     return pnd;
   }
