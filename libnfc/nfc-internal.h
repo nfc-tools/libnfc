@@ -25,6 +25,8 @@
 #ifndef __NFC_INTERNAL_H__
 #  define __NFC_INTERNAL_H__
 
+#  include <nfc/nfc-types.h>
+#  include <stdbool.h>
 #  include <err.h>
 
 // TODO: Put generic errors here
@@ -121,5 +123,9 @@ struct nfc_driver_t {
 
   bool (*configure) (nfc_device_t * pnd, const nfc_device_option_t ndo, const bool bEnable);
 };
+
+nfc_device_t  *nfc_device_new (void);
+void           nfc_device_free (nfc_device_t *nfc_device);
+
 
 #endif // __NFC_INTERNAL_H__

@@ -194,7 +194,7 @@ nfc_device_t *
 acr122_connect (const nfc_device_desc_t * pndd)
 {
   char   *pcFirmware;
-  nfc_device_t *pnd = malloc (sizeof (*pnd));
+  nfc_device_t *pnd = nfc_device_new ();
   pnd->driver_data = malloc (sizeof (struct acr122_data));
   pnd->chip_data = malloc (sizeof (struct pn53x_data));
 
@@ -233,9 +233,7 @@ acr122_connect (const nfc_device_desc_t * pndd)
   }
 
 error:
-  free (pnd->driver_data);
-  free (pnd->chip_data);
-  free (pnd);
+  nfc_device_free (pnd);
 
   return NULL;
 }
@@ -246,9 +244,7 @@ acr122_disconnect (nfc_device_t * pnd)
   SCardDisconnect (DRIVER_DATA (pnd)->hCard, SCARD_LEAVE_CARD);
   acr122_free_scardcontext ();
 
-  free (pnd->driver_data);
-  free (pnd->chip_data);
-  free (pnd);
+  nfc_device_free (pnd);
 }
 
 bool

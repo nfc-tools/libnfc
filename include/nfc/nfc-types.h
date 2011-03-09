@@ -55,10 +55,6 @@ typedef struct {
   bool    bEasyFraming;
 /** Should the PN53x chip switch automatically in ISO14443-4 when ISO14443 */
   bool    bAutoIso14443_4;
-/** Register cache for REG_CIU_BIT_FRAMING, SYMBOL_TX_LAST_BITS: The last TX bits setting, we need to reset this if it does not apply anymore */
-  uint8_t ui8TxBits;
-/** Register cache for SetParameters function. */
-  uint8_t ui8Parameters;
 /** Supported modulation encoded in a byte */
   byte_t  btSupportByte;
 /** Last error reported by the PCD / encountered by the PCD driver
@@ -70,11 +66,8 @@ typedef struct {
  *    +----------- Driver-level general error (common to all drivers)
  */
   int     iLastError;
-/** Last sent command */
-  int     iLastCommand;
   int     iAbortFds[2];
 } nfc_device_t;
-// TODO: Move chip's specifics in a chips structure (e.g. iLastCommand, ui8Parameters, ui8TxBits)
 
 /**
  * @struct nfc_device_desc_t

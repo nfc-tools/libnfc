@@ -49,6 +49,8 @@
 
 #include <sys/param.h>
 
+#define CHIP_DATA(pnd) ((struct pn53x_data*)(pnd->chip_data))
+
 // TODO: reorder functions according to header
 
 // TODO: Count max bytes for InJumpForDEP reply
@@ -78,7 +80,7 @@ pn53x_init(nfc_device_t * pnd)
   pnd->bPar = true;
 
   // Reset the ending transmission bits register, it is unknown what the last tranmission used there
-  pnd->ui8TxBits = 0;
+  CHIP_DATA (pnd)->ui8TxBits = 0;
   if (!pn53x_write_register (pnd, REG_CIU_BIT_FRAMING, SYMBOL_TX_LAST_BITS, 0x00)) {
     return false;
   }
@@ -144,6 +146,9 @@ pn53x_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, b
   if (res < 0) {
     return false;
   }
+
+  if (pnd->iLastError)
+    return false;
 
   *pszRx = (size_t) res;
 
@@ -221,8 +226,8 @@ pn53x_write_register (nfc_device_t * pnd, const uint16_t ui16Reg, const uint8_t 
 bool
 pn53x_set_parameters (nfc_device_t * pnd, const uint8_t ui8Parameter, const bool bEnable)
 {
-  uint8_t ui8Value = (bEnable) ? (pnd->ui8Parameters | ui8Parameter) : (pnd->ui8Parameters & ~(ui8Parameter));
-  if (ui8Value != pnd->ui8Parameters) {
+  uint8_t ui8Value = (bEnable) ? (CHIP_DATA (pnd)->ui8Parameters | ui8Parameter) : (CHIP_DATA (pnd)->ui8Parameters & ~(ui8Parameter));
+  if (ui8Value != CHIP_DATA (pnd)->ui8Parameters) {
     return pn53x_SetParameters(pnd, ui8Value);
   }
   return true;
@@ -237,7 +242,7 @@ pn53x_SetParameters (nfc_device_t * pnd, const uint8_t ui8Value)
     return false;
   }
   // We save last parameters in register cache
-  pnd->ui8Parameters = ui8Value;
+  CHIP_DATA (pnd)->ui8Parameters = ui8Value;
   return true;
 }
 
@@ -245,13 +250,13 @@ bool
 pn53x_set_tx_bits (nfc_device_t * pnd, const uint8_t ui8Bits)
 {
   // Test if we need to update the transmission bits register setting
-  if (pnd->ui8TxBits != ui8Bits) {
+  if (CHIP_DATA (pnd)->ui8TxBits != ui8Bits) {
     // Set the amount of transmission bits in the PN53X chip register
     if (!pn53x_write_register (pnd, REG_CIU_BIT_FRAMING, SYMBOL_TX_LAST_BITS, ui8Bits))
       return false;
 
     // Store the new setting
-    ((nfc_device_t *) pnd)->ui8TxBits = ui8Bits;
+    CHIP_DATA (pnd)->ui8TxBits = ui8Bits;
   }
   return true;
 }
@@ -1416,10 +1421,6 @@ pn53x_TgInitAsTarget (nfc_device_t * pnd, pn53x_target_mode_t ptm,
   if (!pn53x_transceive (pnd, abtCmd, 36 + szOptionalBytes, abtRx, &szRx))
     return false;
 
-  if (szRx == 0) {
-    return false; // transceive was aborted
-  }
-
   // Note: the first byte is skip: 
   //       its the "mode" byte which contains baudrate, DEP and Framing type (Mifare, active or FeliCa) datas.
   if(pbtModeByte) {
@@ -1474,7 +1475,9 @@ pn53x_target_receive_bytes (nfc_device_t * pnd, byte_t * pbtRx, size_t * pszRx)
 {
   byte_t  abtCmd[1];
 
-  if (pnd->bEasyFraming) {
+  // FIXME In DEP mode we MUST use TgGetData but we don't known the current mode.
+  // DEP mode && EasyFramming || EasyFramming && ISO14443-4 && PN532
+  if (pnd->bEasyFraming && (CHIP_DATA(pnd)->type == PN532)) {
     abtCmd[0] = TgGetData;
   } else {
     abtCmd[0] = TgGetInitiatorCommand;
@@ -1488,6 +1491,8 @@ pn53x_target_receive_bytes (nfc_device_t * pnd, byte_t * pbtRx, size_t * pszRx)
 
   // Save the received byte count
   *pszRx = szRx - 1;
+
+  // FIXME szRx can be 0
 
   // Copy the received bytes
   memcpy (pbtRx, abtRx + 1, *pszRx);
@@ -1543,7 +1548,7 @@ pn53x_target_send_bytes (nfc_device_t * pnd, const byte_t * pbtTx, const size_t 
   if (!pnd->bPar)
     return false;
 
-  if (pnd->bEasyFraming) {
+  if (pnd->bEasyFraming && (CHIP_DATA(pnd)->type == PN532)) {
     abtCmd[0] = TgSetData;
   } else {
     abtCmd[0] = TgResponseToInitiator;

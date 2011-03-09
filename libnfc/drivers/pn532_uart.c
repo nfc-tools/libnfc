@@ -88,25 +88,26 @@ pn532_uart_probe (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * ps
       // Serial port claimed but we need to check if a PN532_UART is connected.
       uart_set_speed (sp, PN532_UART_DEFAULT_SPEED);
 
-      nfc_device_t nd;
-      nd.driver = &pn532_uart_driver;
-      nd.driver_data = malloc(sizeof(struct pn532_uart_data));
-      ((struct pn532_uart_data*)(nd.driver_data))->port = sp;
-      nd.chip_data = malloc(sizeof(struct pn53x_data));
-      ((struct pn53x_data*)(nd.chip_data))->type = PN532;
-      ((struct pn53x_data*)(nd.chip_data))->state = SLEEP;
-      ((struct pn53x_data*)(nd.chip_data))->io = &pn532_uart_io;
+      nfc_device_t *pnd = nfc_device_new ();
+      pnd->iLastError = 0;
+      pnd->driver = &pn532_uart_driver;
+      pnd->driver_data = malloc(sizeof(struct pn532_uart_data));
+      DRIVER_DATA (pnd)->port = sp;
+      pnd->chip_data = malloc(sizeof(struct pn53x_data));
+      CHIP_DATA (pnd)->type = PN532;
+      CHIP_DATA (pnd)->state = SLEEP;
+      CHIP_DATA (pnd)->io = &pn532_uart_io;
 
-
-      // PN532 could be powered down, we need to wake it up before line testing.
-      // TODO pn532_uart_wakeup ((nfc_device_spec_t) sp);
       // Check communication using "Diagnose" command, with "Communication test" (0x00)
-      bool res = pn53x_check_communication (&nd);
-      free(nd.driver_data);
-      free(nd.chip_data);
+      bool res = pn53x_check_communication (pnd);
+      if(!res) {
+        nfc_perror (pnd, "pn53x_check_communication");
+      }
+      nfc_device_free (pnd);
       uart_close (sp);
-      if(!res)
+      if(!res) {
         continue;
+      }
 
       snprintf (pnddDevices[*pszDeviceFound].acDevice, DEVICE_NAME_LENGTH - 1, "%s (%s)", "PN532", pcPort);
       pnddDevices[*pszDeviceFound].pcDriver = PN532_UART_DRIVER_NAME;
@@ -164,6 +165,7 @@ pn532_uart_connect (const nfc_device_desc_t * pndd)
 
   // Check communication using "Diagnose" command, with "Communication test" (0x00)
   if (!pn53x_check_communication (pnd)) {
+    nfc_perror (pnd, "pn53x_check_communication");
     pn532_uart_disconnect(pnd);
     return NULL;
   }
@@ -176,9 +178,7 @@ void
 pn532_uart_disconnect (nfc_device_t * pnd)
 {
   uart_close (DRIVER_DATA(pnd)->port);
-  free (pnd->driver_data);
-  free (pnd->chip_data);
-  free (pnd);
+  nfc_device_free (pnd);
 }
 
 #define PN532_BUFFER_LEN (PN53x_EXTENDED_FRAME__DATA_MAX_LEN + PN53x_EXTENDED_FRAME__OVERHEAD)
@@ -198,7 +198,7 @@ pn532_uart_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szData
   }
 
   byte_t  abtFrame[PN532_BUFFER_LEN] = { 0x00, 0x00, 0xff };       // Every packet must start with "00 00 ff"
-  pnd->iLastCommand = pbtData[0];
+  CHIP_DATA (pnd)->ui8LastCommand = pbtData[0];
   size_t szFrame = 0;
 
   pn53x_build_frame (abtFrame, &szFrame, pbtData, szData);
@@ -233,7 +233,7 @@ pn532_uart_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen
   size_t len;
   int abort_fd = 0;
 
-  switch (pnd->iLastCommand) {
+  switch (CHIP_DATA (pnd)->ui8LastCommand) {
   case InAutoPoll:
   case TgInitAsTarget:
   case TgGetData:
@@ -305,7 +305,7 @@ pn532_uart_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen
     return -1;
   }
 
-  if (abtRxBuf[1] != pnd->iLastCommand + 1) {
+  if (abtRxBuf[1] != CHIP_DATA (pnd)->ui8LastCommand + 1) {
     ERR ("%s", "Command Code verification failed");
     pnd->iLastError = DEIO;
     return -1;
@@ -328,7 +328,7 @@ pn532_uart_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen
   }
 
   byte_t btDCS = (256 - 0xD5);
-  btDCS -= pnd->iLastCommand + 1;
+  btDCS -= CHIP_DATA (pnd)->ui8LastCommand + 1;
   for (size_t szPos = 0; szPos < len; szPos++) {
     btDCS -= pbtData[szPos];
   }

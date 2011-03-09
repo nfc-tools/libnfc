@@ -125,6 +125,12 @@ struct pn53x_data {
   pn53x_type type;
   pn53x_state state;
   const struct pn53x_io * io;
+/** Register cache for REG_CIU_BIT_FRAMING, SYMBOL_TX_LAST_BITS: The last TX bits setting, we need to reset this if it does not apply anymore */
+  uint8_t ui8TxBits;
+/** Register cache for SetParameters function. */
+  uint8_t ui8Parameters;
+/** Last sent command */
+  uint8_t ui8LastCommand;
 };
 
 /* PN53x specific types */

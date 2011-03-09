@@ -21,7 +21,7 @@
 
 /**
  * @file pn53x_usb.c
- * @brief Driver common routines for PN53x chips using USB
+ * @brief Driver for PN53x using USB
  */
 
 #ifdef HAVE_CONFIG_H
@@ -32,6 +32,8 @@
 Thanks to d18c7db and Okko for example code
 */
 
+#include <sys/select.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <usb.h>
@@ -72,9 +74,18 @@ bool pn53x_usb_get_usb_device_name (struct usb_device *dev, usb_dev_handle *udev
 int
 pn53x_usb_bulk_read (struct pn53x_usb_data *data, byte_t abtRx[], const size_t szRx)
 {
-  int ret = usb_bulk_read (data->pudh, data->uiEndPointIn, (char *) abtRx, szRx, USB_TIMEOUT);
-  PRINT_HEX ("RX", abtRx, ret);
-  return ret;
+  int res = usb_bulk_read (data->pudh, data->uiEndPointIn, (char *) abtRx, szRx, USB_TIMEOUT);
+  PRINT_HEX ("RX", abtRx, res);
+  return res;
+}
+int
+
+pn53x_usb_bulk_read_ex (struct pn53x_usb_data *data, byte_t abtRx[], const size_t szRx, int timeout)
+{
+  int res = usb_bulk_read (data->pudh, data->uiEndPointIn, (char *) abtRx, szRx, timeout);
+  if (res > 0)
+      PRINT_HEX ("RX", abtRx, res);
+  return res;
 }
 
 int
@@ -267,7 +278,7 @@ pn53x_usb_connect (const nfc_device_desc_t *pndd)
         }
         data.model = pn53x_usb_get_device_model (dev->descriptor.idVendor, dev->descriptor.idProduct);
         // Allocate memory for the device info and specification, fill it and return the info
-        pnd = malloc (sizeof (nfc_device_t));
+        pnd = nfc_device_new ();
         pn53x_usb_get_usb_device_name (dev, data.pudh, pnd->acName, sizeof (pnd->acName));
 
         pnd->driver_data = malloc(sizeof(struct pn53x_usb_data));
@@ -283,46 +294,10 @@ pn53x_usb_connect (const nfc_device_desc_t *pndd)
 
         // HACK2: Then send a GetFirmware command to resync USB toggle bit between host & device
         // in case host used set_configuration and expects the device to have reset its toggle bit, which PN53x doesn't do
-#if 1
         if (!pn53x_init (pnd)) {
           usb_close (data.pudh);
           goto error;
         }
-#else
-        byte_t  abtTx[] = { 0x00, 0x00, 0xff, 0x02, 0xfe, 0xd4, 0x02, 0x2a, 0x00 };
-        byte_t  abtRx[BUFFER_LENGTH];
-        int ret;
-
-        ret = pn53x_usb_bulk_write (data, abtTx, sizeof(abtTx));
-        if (ret < 0) {
-          DBG ("usb_bulk_write failed with error %d", ret);
-          usb_close (data.pudh);
-          // we failed to use the specified device
-          goto error;
-        }
-        ret = pn53x_usb_bulk_read (data, (char *) abtRx, s);
-        if (ret < 0) {
-          DBG ("usb_bulk_read failed with error %d", ret);
-          usb_close (us.pudh);
-          // we failed to use the specified device
-          goto error;
-        }
-        if (ret == 6) { // we got the ACK/NACK properly
-          if (!pn53x_check_ack_frame (pnd, abtRx, ret)) {
-            DBG ("pn53x_check_ack_frame failed");
-            usb_close (us.pudh);
-            // we failed to use the specified device
-            goto error;
-          }
-          ret = pn53x_usb_bulk_read (data, (char *) abtRx, BUFFER_LENGTH);
-          if (ret < 0) {
-            DBG ("usb_bulk_read failed with error %d", ret);
-            usb_close (us.pudh);
-            // we failed to use the specified device
-            goto error;
-          }
-        }
-#endif
         return pnd;
       }
     }
@@ -332,9 +307,7 @@ pn53x_usb_connect (const nfc_device_desc_t *pndd)
 
 error:
   // Free allocated structure on error.
-  free(pnd->driver_data);
-  free(pnd->chip_data);
-  free(pnd);
+  nfc_device_free (pnd);
   return NULL;
 }
 
@@ -352,9 +325,7 @@ pn53x_usb_disconnect (nfc_device_t * pnd)
   if ((res = usb_close (DRIVER_DATA (pnd)->pudh)) < 0) {
     ERR ("usb_close failed (%i)", res);
   }
-  free(pnd->driver_data);
-  free(pnd->chip_data);
-  free(pnd);
+  nfc_device_free (pnd);
 }
 
 #define PN53X_USB_BUFFER_LEN (PN53x_EXTENDED_FRAME__DATA_MAX_LEN + PN53x_EXTENDED_FRAME__OVERHEAD)
@@ -363,7 +334,7 @@ bool
 pn53x_usb_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szData)
 {
   byte_t  abtFrame[PN53X_USB_BUFFER_LEN] = { 0x00, 0x00, 0xff };  // Every packet must start with "00 00 ff"
-  pnd->iLastCommand = pbtData[0];
+  CHIP_DATA (pnd)->ui8LastCommand = pbtData[0];
   size_t szFrame = 0;
 
   pn53x_build_frame (abtFrame, &szFrame, pbtData, szData);
@@ -406,7 +377,7 @@ pn53x_usb_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen)
   off_t offset = 0;
   int abort_fd = 0;
 
-  switch (pnd->iLastCommand) {
+  switch (CHIP_DATA (pnd)->ui8LastCommand) {
   case InAutoPoll:
   case TgInitAsTarget:
   case TgGetData:
@@ -417,7 +388,35 @@ pn53x_usb_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen)
   }
 
   byte_t  abtRxBuf[PN53X_USB_BUFFER_LEN];
-  int res = pn53x_usb_bulk_read (DRIVER_DATA (pnd), abtRxBuf, sizeof (abtRxBuf));
+  int res;
+
+read:
+  res = pn53x_usb_bulk_read_ex (DRIVER_DATA (pnd), abtRxBuf, sizeof (abtRxBuf), 250);
+
+  if (res == -ETIMEDOUT) {
+    struct timeval tv = {
+      .tv_sec  = 0,
+      .tv_usec = 0,
+    };
+
+    fd_set readfds;
+    FD_ZERO(&readfds);
+    FD_SET(abort_fd, &readfds);
+    switch (select (abort_fd + 1, &readfds, NULL, NULL, &tv)) {
+    case -1:
+      // An error occured
+      return false;
+      break;
+    case 0:
+      // Timeout
+      goto read;
+      break;
+    case 1:
+      return (pn53x_usb_ack (pnd) >= 0) ? true : false;
+      break;
+    }
+  }
+
   if (res < 0) {
     DBG ("usb_bulk_read failed with error %d", res);
     pnd->iLastError = DEIO;
@@ -474,7 +473,7 @@ pn53x_usb_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen)
   }
   offset += 1;
 
-  if (abtRxBuf[offset] != pnd->iLastCommand + 1) {
+  if (abtRxBuf[offset] != CHIP_DATA (pnd)->ui8LastCommand + 1) {
     ERR ("%s", "Command Code verification failed");
     pnd->iLastError = DEIO;
     return -1;
@@ -485,7 +484,7 @@ pn53x_usb_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen)
   offset += len;
 
   byte_t btDCS = (256 - 0xD5);
-  btDCS -= pnd->iLastCommand + 1;
+  btDCS -= CHIP_DATA (pnd)->ui8LastCommand + 1;
   for (size_t szPos = 0; szPos < len; szPos++) {
     btDCS -= pbtData[szPos];
   }
