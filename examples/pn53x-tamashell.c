@@ -61,7 +61,7 @@ int main(int argc, const char* argv[])
 {
   nfc_device_t* pnd;
   byte_t abtRx[MAX_FRAME_LEN];
-  byte_t abtTx[MAX_FRAME_LEN] = { 0xD4 };
+  byte_t abtTx[MAX_FRAME_LEN];
   size_t szRx = sizeof(abtRx);
   size_t szTx;
   extern FILE* stdin;
@@ -150,7 +150,7 @@ int main(int argc, const char* argv[])
       if (size<1) {
         break;
       }
-      abtTx[i+1] = byte;
+      abtTx[i] = byte;
       szTx++;
       if (cmd[offset+1] == 0) { // if last hex was only 1 symbol
         break;
@@ -164,7 +164,7 @@ int main(int argc, const char* argv[])
     }
     szTx++;
     printf("Tx: ");
-    print_hex((byte_t*)abtTx+1,szTx-1);
+    print_hex((byte_t*)abtTx,szTx-1);
 
     if (!pn53x_transceive (pnd, abtTx, szTx, abtRx, &szRx)) {
       free(cmd);
