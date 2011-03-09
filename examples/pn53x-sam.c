@@ -69,18 +69,18 @@
 bool
 sam_connection (nfc_device_t * pnd, int mode)
 {
-  byte_t  pncmd_sam_config[] = { 0xD4, 0x14, 0x00, 0x00 };
+  byte_t  pncmd_sam_config[] = { 0x14, 0x00, 0x00 };
   size_t  szCmd = 0;
 
   byte_t  abtRx[MAX_FRAME_LEN];
   size_t  szRx = sizeof(abtRx);
 
-  pncmd_sam_config[2] = mode;
+  pncmd_sam_config[1] = mode;
 
   switch (mode) {
   case VIRTUAL_CARD_MODE:
     {
-      // Only the VIRTUAL_CARD_MODE requires 4 bytes.
+      // Only the VIRTUAL_CARD_MODE requires 3 bytes.
       szCmd = sizeof (pncmd_sam_config);
     }
     break;
