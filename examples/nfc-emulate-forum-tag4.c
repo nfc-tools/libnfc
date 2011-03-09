@@ -54,6 +54,9 @@
 #  include "config.h"
 #endif // HAVE_CONFIG_H
 
+#include <sys/endian.h>
+
+#include <errno.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -73,6 +76,207 @@ static nfc_device_t *pnd;
 static bool quiet_output = false;
 
 #define SYMBOL_PARAM_fISO14443_4_PICC   0x20
+
+struct nfc_emulator;
+
+struct nfc_emulator {
+  nfc_target_t *target;
+  void *data;
+  int (*io) (struct nfc_emulator *emulator, const byte_t *data_in, const size_t data_in_len, byte_t *data_out, const size_t data_out_len);
+};
+
+typedef enum { NONE, CC_FILE, NDEF_FILE } file;
+
+struct nfcforum_tag4 {
+  uint8_t *ndef_file;
+  size_t   ndef_file_len;
+  file     current_file;
+};
+
+uint8_t nfcforum_capability_container[] = {
+  0x00, 0x0F, /* CCLEN 15 bytes */
+  0x10,       /* Mapping version 1.0 */
+  0x00, 0xFF, /* MLe Maximum R-ADPU data size */
+  0x00, 0xFF, /* MLc Maximum C-ADPU data size */
+  0x04,       /* T field of the NDEF File-Control TLV */
+  0x06,       /* L field of the NDEF File-Control TLV */
+              /* V field of the NDEF File-Control TLV */
+  0xE1, 0x04, /* File identifier */
+  0x00, 0xFE, /* Maximum NDEF Size */
+  0x00,       /* NDEF file read access condition */
+  /* TODO Add write support */
+  0xFF,       /* NDEF file write access condition */
+};
+
+uint8_t nfcforum_capability_container_2_0[] = {
+  0x00, 0x0F, /* CCLEN 15 bytes */
+  0x20,       /* Mapping version 2.0 */
+  0x00, 0xFF, /* MLe Maximum R-ADPU data size */
+  0x00, 0xFF, /* MLc Maximum C-ADPU data size */
+  0x04,       /* T field of the NDEF File-Control TLV */
+  0x06,       /* L field of the NDEF File-Control TLV */
+              /* V field of the NDEF File-Control TLV */
+  0xE1, 0x04, /* File identifier */
+  0x00, 0xFE, /* Maximum NDEF Size */
+  0x00,       /* NDEF file read access condition */
+  /* TODO Add write support */
+  0xFF,       /* NDEF file write access condition */
+};
+
+
+/* C-ADPU offsets */
+#define CLA  0
+#define INS  1
+#define P1   2
+#define P2   3
+#define LC   4
+#define DATA 5
+
+#define ISO144434A_RATS 0xE0
+
+int
+nfcforum_tag4_io (struct nfc_emulator *emulator, const byte_t *data_in, const size_t data_in_len, byte_t *data_out, const size_t data_out_len)
+{
+  (void) emulator;
+  (void) data_out_len;
+  int res = 0;
+
+  struct nfcforum_tag4 *data = (struct nfcforum_tag4 *)(emulator->data);
+
+  // Show transmitted command
+  if (!quiet_output) {
+    printf ("    In: ");
+    print_hex (data_in, data_in_len);
+  }
+
+  /*
+   * The PN532 already handle RATS
+   */
+  if ((data_in_len == 2) && (data_in[0] == ISO144434A_RATS))
+      return res;
+
+  if(data_in_len >= 4) {
+    if (data_in[CLA] != 0x00)
+      return -ENOTSUP;
+
+#define ISO7816_SELECT         0xA4
+#define ISO7816_READ_BINARY    0xB0
+#define ISO7816_UPDATE_BINARY  0xD6
+
+    switch(data_in[INS]) {
+    case ISO7816_SELECT:
+
+      switch (data_in[P1]) {
+      case 0x00: /* Select by ID */
+        if ((data_in[P2] | 0x0C) != 0x0C)
+          return -ENOTSUP;
+
+        const uint8_t ndef_capability_container[] = { 0xE1, 0x03 };
+        const uint8_t ndef_file[] = { 0xE1, 0x04 };
+        if ((data_in[LC] == sizeof (ndef_capability_container)) && (0 == memcmp (ndef_capability_container, data_in + DATA, data_in[LC]))) {
+          memcpy (data_out, "\x90\x00", res = 2);
+          data->current_file = CC_FILE;
+        } else if ((data_in[LC] == sizeof (ndef_file)) && (0 == memcmp (ndef_file, data_in + DATA, data_in[LC]))) {
+          memcpy (data_out, "\x90\x00", res = 2);
+          data->current_file = NDEF_FILE;
+        } else {
+          memcpy (data_out, "\x6a\x00", res = 2);
+          data->current_file = NONE;
+        }
+
+        break;
+      case 0x04: /* Select by name */
+        if (data_in[P2] != 0x00)
+          return -ENOTSUP;
+
+        const uint8_t ndef_tag_application_name[] = { 0xD2, 0x76, 0x00, 0x00, 0x85, 0x01, 0x00 };
+        if ((data_in[LC] == sizeof (ndef_tag_application_name)) && (0 == memcmp (ndef_tag_application_name, data_in + DATA, data_in[LC])))
+          memcpy (data_out, "\x90\x00", res = 2);
+        else
+          memcpy (data_out, "\x6a\x82", res = 2);
+
+        break;
+      default:
+        return -ENOTSUP;
+      }
+
+
+      break;
+    case ISO7816_READ_BINARY:
+      if (data_in[LC] + 2 > data_out_len) {
+        return -ENOSPC;
+      }
+      switch (data->current_file) {
+      case NONE:
+        memcpy (data_out, "\x6a\x82", res = 2);
+        break;
+      case CC_FILE:
+        memcpy (data_out, nfcforum_capability_container + (data_in[P1] << 8) + data_in[P2], data_in[LC]);
+        memcpy (data_out + data_in[LC], "\x90\x00", 2);
+        res = data_in[LC] + 2;
+        break;
+      case NDEF_FILE:
+        memcpy (data_out, data->ndef_file + (data_in[P1] << 8) + data_in[P2], data_in[LC]);
+        memcpy (data_out + data_in[LC], "\x90\x00", 2);
+        res = data_in[LC] + 2;
+        break;
+      }
+      break;
+
+    case ISO7816_UPDATE_BINARY:
+      return -ENOTSUP;
+      break;
+    default: // Unknown
+      if (!quiet_output) {
+        printf("Unknown frame, emulated target abort.\n");
+      }
+      res = -ENOTSUP;
+    }
+  } else {
+    res = -ENOTSUP;
+  }
+
+  // Show transmitted command
+  if (!quiet_output) {
+    printf ("    Out: ");
+    if (res < 0)
+      printf ("No data (returning with an error %d)\n", res);
+    else
+      print_hex (data_out, res);
+  }
+  return res;
+}
+
+
+bool
+nfc_emulate_target (nfc_device_t* pnd, struct nfc_emulator *emulator)
+{
+  size_t szRx;
+  byte_t abtTx[MAX_FRAME_LEN];
+  int res = 0;
+
+  if (!nfc_target_init (pnd, emulator->target, abtRx, &szRx)) {
+    nfc_perror (pnd, "nfc_target_init");
+    return false;
+  }
+
+  while (res >= 0) {
+    res = emulator->io (emulator, abtRx, szRx, abtTx, sizeof (abtTx));
+    if (res > 0) {
+      if (!nfc_target_send_bytes(pnd, abtTx, res)) {
+        nfc_perror (pnd, "nfc_target_send_bytes");
+        return false;
+      }
+    }
+    if (res >= 0) {
+      if (!nfc_target_receive_bytes(pnd, abtRx, &szRx)) {
+        nfc_perror (pnd, "nfc_target_receive_bytes");
+        return false;
+      }
+    }
+  }
+  return true;
+}
 
 void stop_emulation (int sig)
 {
@@ -143,64 +347,33 @@ main (void)
         .abtUid = { 0x08, 0x00, 0xb0, 0x0b },
         .szUidLen = 4,
         .btSak = 0x20,
-	.abtAts = { 0x75, 0x33, 0x92, 0x03 }, /* Not used by PN532 */
+        .abtAts = { 0x75, 0x33, 0x92, 0x03 }, /* Not used by PN532 */
         .szAtsLen = 4,
       },
     },
   };
 
-  print_nfc_iso14443a_info (nt.nti.nai, true);
-  if (!nfc_target_init (pnd, &nt, abtRx, &szRx)) {
-    if (pnd->iLastError == DEABORT) {
-      errx (EXIT_SUCCESS, "Operation canceled by keystroke.");
-    }
-    nfc_perror (pnd, "nfc_target_init");
-    ERR("Could not come out of auto-emulation, no command was received");
-    exit (EXIT_FAILURE);
-  }
+  uint8_t ndef_file[] = {
+    0x00, 33,
+    0xd1, 0x02, 0x1c, 0x53, 0x70, 0x91, 0x01, 0x09, 0x54, 0x02,
+    0x65, 0x6e, 0x4c, 0x69, 0x62, 0x6e, 0x66, 0x63, 0x51, 0x01,
+    0x0b, 0x55, 0x03, 0x6c, 0x69, 0x62, 0x6e, 0x66, 0x63, 0x2e,
+    0x6f, 0x72, 0x67
+  };
 
-  if (!quiet_output) {
-    printf ("Received data: ");
-    print_hex (abtRx, szRx);
-  }
+  struct nfcforum_tag4 nfcforum_tag4_data = {
+    .ndef_file = ndef_file,
+    .ndef_file_len = sizeof (ndef_file),
+    .current_file = NONE,
+  };
 
-//Receiving data: e0  40
-//= RATS, FSD=48
-//Actually PN532 already sent back the ATS so nothing to send now
-  receive_bytes();
-//Receiving data: 00  a4  04  00  06  e1  03  e1  03  e1  03
-//= App Select by name "e103e103e103"
-  send_bytes((const byte_t*)"\x6a\x87",2);
-  receive_bytes();
-//Receiving data: 00  a4  04  00  06  e1  03  e1  03  e1  03
-//= App Select by name "e103e103e103"
-  send_bytes((const byte_t*)"\x6a\x87",2);
-  receive_bytes();
-//Receiving data: 00  a4  04  00  07  d2  76  00  00  85  01  00
-//= App Select by name "D2760000850100"
-  send_bytes((const byte_t*)"\x90\x00",2);
-  receive_bytes();
-//Receiving data: 00  a4  00  00  02  e1  03
-//= Select CC
-  send_bytes((const byte_t*)"\x90\x00",2);
-  receive_bytes();
-//Receiving data: 00  b0  00  00  0f
-//= ReadBinary CC
-//We send CC + OK
-  send_bytes((const byte_t*)"\x00\x0f\x10\x00\x3b\x00\x34\x04\x06\xe1\x04\x0e\xe0\x00\x00\x90\x00",17);
-  receive_bytes();
-//Receiving data: 00  a4  00  00  02  e1  04
-//= Select NDEF
-  send_bytes((const byte_t*)"\x90\x00",2);
-  receive_bytes();
-//Receiving data: 00  b0  00  00  02
-//=  Read first 2 NDEF bytes
-//Sent NDEF Length=0x21
-  send_bytes((const byte_t*)"\x00\x21\x90\x00",4);
-  receive_bytes();
-//Receiving data: 00  b0  00  02  21
-//= Read remaining of NDEF file
-  send_bytes((const byte_t*)"\xd1\x02\x1c\x53\x70\x91\x01\x09\x54\x02\x65\x6e\x4c\x69\x62\x6e\x66\x63\x51\x01\x0b\x55\x03\x6c\x69\x62\x6e\x66\x63\x2e\x6f\x72\x67\x90\x00",35);
+  struct nfc_emulator emulator = {
+    .target = &nt,
+    .io   = nfcforum_tag4_io,
+    .data = &nfcforum_tag4_data,
+  };
+
+  nfc_emulate_target (pnd, &emulator);
 
   nfc_disconnect(pnd);
   exit (EXIT_SUCCESS);
