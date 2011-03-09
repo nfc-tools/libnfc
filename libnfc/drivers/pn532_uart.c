@@ -243,15 +243,15 @@ pn532_uart_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen
     break;
   }
 
-  int res = uart_receive (DRIVER_DATA(pnd)->port, abtRxBuf, 5, abort_fd);
+  pnd->iLastError = uart_receive (DRIVER_DATA(pnd)->port, abtRxBuf, 5, abort_fd);
 
-  if (abort_fd && (DEABORT == res)) {
-    return pn532_uart_ack (pnd);
+  if (abort_fd && (DEABORT == pnd->iLastError)) {
+    pn532_uart_ack (pnd);
+    return -1;
   }
 
-  if (res != 0) {
+  if (pnd->iLastError != 0) {
     ERR ("%s", "Unable to receive data. (RX)");
-    pnd->iLastError = res;
     return -1;
   }
 
@@ -292,10 +292,9 @@ pn532_uart_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen
   }
 
   // TFI + PD0 (CC+1)
-  res = uart_receive (DRIVER_DATA(pnd)->port, abtRxBuf, 2, 0);
-  if (res != 0) {
+  pnd->iLastError = uart_receive (DRIVER_DATA(pnd)->port, abtRxBuf, 2, 0);
+  if (pnd->iLastError != 0) {
     ERR ("%s", "Unable to receive data. (RX)");
-    pnd->iLastError = res;
     return -1;
   }
 
@@ -312,18 +311,16 @@ pn532_uart_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen
   }
 
   if (len) {
-    res = uart_receive (DRIVER_DATA(pnd)->port, pbtData, len, 0);
-    if (res != 0) {
+    pnd->iLastError = uart_receive (DRIVER_DATA(pnd)->port, pbtData, len, 0);
+    if (pnd->iLastError != 0) {
       ERR ("%s", "Unable to receive data. (RX)");
-      pnd->iLastError = res;
       return -1;
     }
   }
 
-  res = uart_receive (DRIVER_DATA(pnd)->port, abtRxBuf, 2, 0);
-  if (res != 0) {
+  pnd->iLastError = uart_receive (DRIVER_DATA(pnd)->port, abtRxBuf, 2, 0);
+  if (pnd->iLastError != 0) {
     ERR ("%s", "Unable to receive data. (RX)");
-    pnd->iLastError = res;
     return -1;
   }
 

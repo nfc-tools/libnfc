@@ -263,15 +263,18 @@ arygon_tama_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLe
     break;
   }
 
-  int res = uart_receive (DRIVER_DATA (pnd)->port, abtRxBuf, 5, abort_fd);
+  pnd->iLastError = uart_receive (DRIVER_DATA (pnd)->port, abtRxBuf, 5, abort_fd);
 
-  if (abort_fd && (DEABORT == res)) {
-    return arygon_abort (pnd);
+  if (abort_fd && (DEABORT == pnd->iLastError)) {
+    arygon_abort (pnd);
+
+    /* iLastError got reset by arygon_abort() */
+    pnd->iLastError = DEABORT;
+    return -1;
   }
 
-  if (res != 0) {
+  if (pnd->iLastError != 0) {
     ERR ("%s", "Unable to receive data. (RX)");
-    pnd->iLastError = res;
     return -1;
   }
 
@@ -312,10 +315,9 @@ arygon_tama_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLe
   }
 
   // TFI + PD0 (CC+1)
-  res = uart_receive (DRIVER_DATA (pnd)->port, abtRxBuf, 2, 0);
-  if (res != 0) {
+  pnd->iLastError = uart_receive (DRIVER_DATA (pnd)->port, abtRxBuf, 2, 0);
+  if (pnd->iLastError != 0) {
     ERR ("%s", "Unable to receive data. (RX)");
-    pnd->iLastError = res;
     return -1;
   }
 
@@ -332,18 +334,16 @@ arygon_tama_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLe
   }
 
   if (len) {
-    res = uart_receive (DRIVER_DATA (pnd)->port, pbtData, len, 0);
-    if (res != 0) {
+    pnd->iLastError = uart_receive (DRIVER_DATA (pnd)->port, pbtData, len, 0);
+    if (pnd->iLastError != 0) {
       ERR ("%s", "Unable to receive data. (RX)");
-      pnd->iLastError = res;
       return -1;
     }
   }
 
-  res = uart_receive (DRIVER_DATA (pnd)->port, abtRxBuf, 2, 0);
-  if (res != 0) {
+  pnd->iLastError = uart_receive (DRIVER_DATA (pnd)->port, abtRxBuf, 2, 0);
+  if (pnd->iLastError != 0) {
     ERR ("%s", "Unable to receive data. (RX)");
-    pnd->iLastError = res;
     return -1;
   }
 

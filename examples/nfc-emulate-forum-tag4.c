@@ -124,7 +124,7 @@ main (void)
 
   if (pnd == NULL) {
     ERR("Unable to connect to NFC device");
-    return EXIT_FAILURE;
+    exit (EXIT_FAILURE);
   }
 
   signal (SIGINT, stop_emulation);
@@ -152,11 +152,11 @@ main (void)
   print_nfc_iso14443a_info (nt.nti.nai, true);
   if (!nfc_target_init (pnd, &nt, abtRx, &szRx)) {
     if (pnd->iLastError == DEABORT) {
-      errx (EXIT_SUCCESS, "Operation canceld by keystroke.");
+      errx (EXIT_SUCCESS, "Operation canceled by keystroke.");
     }
     nfc_perror (pnd, "nfc_target_init");
     ERR("Could not come out of auto-emulation, no command was received");
-    return EXIT_FAILURE;
+    exit (EXIT_FAILURE);
   }
 
   if (!quiet_output) {
