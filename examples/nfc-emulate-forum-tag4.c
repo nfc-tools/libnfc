@@ -54,6 +54,7 @@
 #  include "config.h"
 #endif // HAVE_CONFIG_H
 
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stddef.h>
@@ -72,6 +73,15 @@ static nfc_device_t *pnd;
 static bool quiet_output = false;
 
 #define SYMBOL_PARAM_fISO14443_4_PICC   0x20
+
+void stop_emulation (int sig)
+{
+  (void) sig;
+  if (pnd)
+    nfc_abort_command (pnd);
+  else
+    exit (EXIT_FAILURE);
+}
 
 bool send_bytes (const byte_t * pbtTx, const size_t szTx)
 {
@@ -117,6 +127,8 @@ main (void)
     return EXIT_FAILURE;
   }
 
+  signal (SIGINT, stop_emulation);
+
   printf ("Connected to NFC device: %s\n", pnd->acName);
   printf ("Emulating NDEF tag now, please touch it with a second NFC device\n");
 
@@ -129,14 +141,19 @@ main (void)
       .nai = {
         .abtAtqa = { 0x00, 0x04 },
         .abtUid = { 0x08, 0x00, 0xb0, 0x0b },
-        .btSak = 0x20,
         .szUidLen = 4,
-        .szAtsLen = 0,
+        .btSak = 0x20,
+	.abtAts = { 0x75, 0x33, 0x92, 0x03 }, /* Not used by PN532 */
+        .szAtsLen = 4,
       },
     },
   };
 
+  print_nfc_iso14443a_info (nt.nti.nai, true);
   if (!nfc_target_init (pnd, &nt, abtRx, &szRx)) {
+    if (pnd->iLastError == DEABORT) {
+      errx (EXIT_SUCCESS, "Operation canceld by keystroke.");
+    }
     nfc_perror (pnd, "nfc_target_init");
     ERR("Could not come out of auto-emulation, no command was received");
     return EXIT_FAILURE;
