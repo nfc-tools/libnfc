@@ -27,16 +27,23 @@
 
 /* vim: set ts=2 sw=2 et: */
 
-#  include <sys/types.h>
-#  include <sys/select.h>
-#  include <sys/param.h>
-#  include <ctype.h>
-#  include <dirent.h>
-#  include <errno.h>
-#  include <stdio.h>
-#  include <termios.h>
+#include <sys/ioctl.h>
+#include <sys/param.h>
+#include <sys/select.h>
+#include <sys/stat.h>
+#include <sys/time.h>
+#include <sys/types.h>
+#include <sys/types.h>
+#include <ctype.h>
+#include <dirent.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <limits.h>
+#include <stdio.h>
+#include <termios.h>
+#include <unistd.h>
 
-#  include "nfc-internal.h"
+#include "nfc-internal.h"
 
 #  if defined(__APPLE__)
   // FIXME: find UART connection string for PN53X device on Mac OS X when multiples devices are used

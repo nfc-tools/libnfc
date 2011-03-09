@@ -19,9 +19,13 @@
  */
 
 /**
- * @file uart.c
+ * @file uart_win32.c
  * @brief Windows UART driver
  */
+
+// Handle platform specific includes
+#include "contrib/windows.h"
+#define delay_ms( X ) Sleep( X )
 
 typedef struct {
   HANDLE  hPort;                // Serial port handle
@@ -140,14 +144,14 @@ uart_get_speed (const serial_port sp)
 }
 
 int
-uart_receive (serial_port sp, byte_t * pbtRx, size_t * pszRx)
+uart_receive (serial_port sp, byte_t * pbtRx, const size_t szRx, int iAbortFd)
 {
-  if (!ReadFile (((serial_port_windows *) sp)->hPort, pbtRx, (DWORD)(*pszRx), (LPDWORD) pszRx, NULL)) {
+  // TODO: Implement abort mecanism (using iAbortFd)
+  DWORD dwRxLen = szRx;
+  if (!ReadFile (((serial_port_windows *) sp)->hPort, pbtRx, dwRxLen, &dwRxLen, NULL)) {
     return DEIO;
   }
-  if (!*pszRx)
-    return DEIO;
-  return 0;
+  return (dwRwLen == (DWORD) szRx) ? 0 : DEIO;
 }
 
 int
@@ -162,3 +166,15 @@ uart_send (serial_port sp, const byte_t * pbtTx, const size_t szTx)
   return 0;
 }
 
+// Path to the serial port is OS-dependant.
+// Try to guess what we should use.
+#define DEFAULT_SERIAL_PORTS { "COM1", "COM2", "COM3", "COM4", NULL }
+char **
+uart_list_ports (void)
+{
+  // TODO: Wrote an automatic detection of Windows serial ports
+
+  // FIXME: Construct an dynamic allocated array of char* that contains default serial ports.
+  const char ** availablePorts = DEFAULT_SERIAL_PORTS;
+  return availablePorts;
+}

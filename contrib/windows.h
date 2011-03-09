@@ -2,6 +2,7 @@
  * Public platform independent Near Field Communication (NFC) library
  * 
  * Copyright (C) 2010, Romuald Conty
+ * Copyright (C) 2011, Glenn Ergeerts
  * 
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -30,6 +31,7 @@
 #    define snprintf(S, n, F, ...) sprintf(S, F, __VA_ARGS__)
 #    define MAX(a,b) max(a,b)
 #    define MIN(a,b) min(a,b)
+#    define pipe(fds) _pipe(fds, 5000, _O_BINARY)
 #  else
 #    define snprintf sprintf_s
 #    define strdup _strdup

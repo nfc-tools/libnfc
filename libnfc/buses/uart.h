@@ -35,29 +35,6 @@
 
 #  include <nfc/nfc-types.h>
 
-// Handle platform specific includes
-#  ifndef _WIN32
-#    include <termios.h>
-#    include <sys/ioctl.h>
-#    include <unistd.h>
-#    include <fcntl.h>
-#    include <sys/types.h>
-#    include <sys/stat.h>
-#    include <limits.h>
-#    include <sys/time.h>
-#    include <unistd.h>
-#    define delay_ms( X ) usleep( X * 1000 )
-#  else
-#    include "contrib/windows.h"
-#    define delay_ms( X ) Sleep( X )
-#  endif
-
-// Path to the serial port is OS-dependant.
-// Try to guess what we should use.
-#  if defined (_WIN32)
-#    define DEFAULT_SERIAL_PORTS { "COM1", "COM2", "COM3", "COM4", NULL }
-# endif
-
 // Define shortcut to types to make code more readable
 typedef void *serial_port;
 #  define INVALID_SERIAL_PORT (void*)(~1)
