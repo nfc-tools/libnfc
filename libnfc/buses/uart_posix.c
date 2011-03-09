@@ -297,44 +297,10 @@ int
 uart_send (serial_port sp, const byte_t * pbtTx, const size_t szTx)
 {
   PRINT_HEX ("TX", pbtTx, szTx);
-#if 0
   if ((int) szTx == write (((serial_port_unix *) sp)->fd, pbtTx, szTx))
     return 0;
   else
     return DEIO;
-#endif
-  int32_t res;
-  size_t  szPos = 0;
-  fd_set  rfds;
-  struct timeval tv = tvTimeout;
-
-  while (szPos < szTx) {
-    // Reset file descriptor
-    FD_ZERO (&rfds);
-    FD_SET (((serial_port_unix *) sp)->fd, &rfds);
-    res = select (((serial_port_unix *) sp)->fd + 1, NULL, &rfds, NULL, &tv);
-
-    // Write error
-    if (res < 0) {
-      DBG ("%s", "TX error.");
-      return DEIO;
-    }
-    // Write time-out
-    if (res == 0) {
-      DBG ("%s", "TX time-out.");
-      return DETIMEOUT;
-    }
-    // Send away the bytes
-    res = write (((serial_port_unix *) sp)->fd, pbtTx + szPos, szTx - szPos);
-
-    // Stop if the OS has some troubles sending the data
-    if (res <= 0) {
-      return DEIO;
-    }
-
-    szPos += res;
-  }
-  return 0;
 }
 
 char **
