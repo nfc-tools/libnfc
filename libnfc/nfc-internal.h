@@ -41,7 +41,7 @@
     size_t __szPos; \
     printf(" %s: ", pcTag); \
     for (__szPos=0; __szPos < (size_t)(szBytes); __szPos++) { \
-      printf("%02x  ",pbtData[__szPos]); \
+      printf("%02x  ",((uint8_t *)(pbtData))[__szPos]); \
     } \
     printf("\n"); \
   } while (0);
