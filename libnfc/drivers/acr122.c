@@ -185,9 +185,7 @@ acr122_probe (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * pszDev
   }
   acr122_free_scardcontext ();
 
-  if (*pszDeviceFound)
-    return true;
-  return false;
+  return true;
 }
 
 nfc_device_t *

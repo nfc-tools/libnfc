@@ -191,9 +191,8 @@ nfc_pick_device (void)
       size_t  szN;
 
       if (!ndr->probe (pndd, 1, &szN)) {
-        DBG ("%s probe failed", ndr->name);
-        free (pndd);
-        return NULL;
+        ERR ("%s probe failed", ndr->name);
+	szN = 0;
       }
 
       if (szN == 0) {

@@ -206,9 +206,8 @@ pn53x_usb_probe (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * psz
       }
     }
   }
-  if (*pszDeviceFound)
-    return true;
-  return false;
+
+  return true;
 }
 
 bool
