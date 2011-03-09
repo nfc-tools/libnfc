@@ -54,8 +54,6 @@
 #  include "config.h"
 #endif // HAVE_CONFIG_H
 
-#include <sys/endian.h>
-
 #include <errno.h>
 #include <signal.h>
 #include <stdio.h>
