@@ -165,6 +165,7 @@ int main(int argc, const char* argv[])
     printf("Tx: ");
     print_hex((byte_t*)abtTx,szTx);
 
+    szRx = sizeof(abtRx);
     if (!pn53x_transceive (pnd, abtTx, szTx, abtRx, &szRx)) {
       free(cmd);
       nfc_perror (pnd, "Rx");
