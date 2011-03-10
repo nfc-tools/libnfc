@@ -162,9 +162,8 @@ int main(int argc, const char* argv[])
       free(cmd);
       continue;
     }
-    szTx++;
     printf("Tx: ");
-    print_hex((byte_t*)abtTx,szTx-1);
+    print_hex((byte_t*)abtTx,szTx);
 
     if (!pn53x_transceive (pnd, abtTx, szTx, abtRx, &szRx)) {
       free(cmd);
