@@ -37,22 +37,13 @@
 //   its internal handling of ISO14443-4 specificities.
 // - Thanks to this internal handling & injection of WTX frames,
 //   this example works on readers very strict on timing
-// - This example expects a hardcoded list of commands and
-//   more precisely the commands sent by a Nokia NFC when
-//   discovering a NFC-Forum tag type4:
-//   * Anticoll & RATS
-//   * App Select by name "e103e103e103"
-//   * App Select by name "e103e103e103"
-//   * App Select by name "D2760000850100"
-//   * Select CC
-//   * ReadBinary CC
-//   * Select NDEF
-//   * Read first 2 NDEF bytes
-//   * Read remaining of NDEF file
 
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif // HAVE_CONFIG_H
+
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #include <errno.h>
 #include <signal.h>
@@ -318,22 +309,57 @@ bool receive_bytes (void)
   return true;
 }
 
-int
-main (void)
+size_t
+ndef_message_load (char *filename, struct nfcforum_tag4 *tag_data)
 {
-  // Try to open the NFC reader
-  pnd = nfc_connect (NULL);
+  struct stat sb;
+  if (stat (filename, &sb) < 0)
+    return 0;
 
-  if (pnd == NULL) {
-    ERR("Unable to connect to NFC device");
-    exit (EXIT_FAILURE);
+  /* Check file size */
+  if (sb.st_size > 0xFFFF) {
+    errx (EXIT_FAILURE, "file size too large '%s'", filename);
   }
 
-  signal (SIGINT, stop_emulation);
+  if (!(tag_data->ndef_file = malloc (sb.st_size + 2)))
+    err (EXIT_FAILURE, "malloc");
 
-  printf ("Connected to NFC device: %s\n", pnd->acName);
-  printf ("Emulating NDEF tag now, please touch it with a second NFC device\n");
+  tag_data->ndef_file_len = sb.st_size + 2;
 
+  tag_data->ndef_file[0] = (uint8_t)(sb.st_size >> 8);
+  tag_data->ndef_file[1] = (uint8_t)(sb.st_size);
+
+  FILE *F;
+  if (!(F = fopen (filename, "r")))
+    err (EXIT_FAILURE, "fopen (%s, \"r\")", filename);
+
+  if (1 != fread (tag_data->ndef_file + 2, sb.st_size, 1, F))
+    err (EXIT_FAILURE, "Can't read from %s", filename);
+
+  fclose (F);
+  return sb.st_size;
+}
+
+size_t
+ndef_message_save (char *filename, struct nfcforum_tag4 *tag_data)
+{
+  FILE *F;
+  if (!(F= fopen (filename, "w")))
+    return 0;
+
+  if (1 != fwrite (tag_data->ndef_file + 2, tag_data->ndef_file_len - 2, 1, F)) {
+    fclose (F);
+    return 0;
+  }
+
+  fclose (F);
+
+  return tag_data->ndef_file_len - 2;
+}
+
+int
+main (int argc, char *argv[])
+{
   nfc_target_t nt = {
     .nm = {
       .nmt = NMT_ISO14443A,
@@ -371,8 +397,35 @@ main (void)
     .data = &nfcforum_tag4_data,
   };
 
+  // If some file is provided load it
+  if (argc == 2) {
+    if (!ndef_message_load (argv[1], &nfcforum_tag4_data)) {
+      err (EXIT_FAILURE, "Can't load NDEF file '%s'", argv[1]);
+    }
+  }
+
+  // Try to open the NFC reader
+  pnd = nfc_connect (NULL);
+
+  if (pnd == NULL) {
+    ERR("Unable to connect to NFC device");
+    exit (EXIT_FAILURE);
+  }
+
+  signal (SIGINT, stop_emulation);
+
+  printf ("Connected to NFC device: %s\n", pnd->acName);
+  printf ("Emulating NDEF tag now, please touch it with a second NFC device\n");
+
   nfc_emulate_target (pnd, &emulator);
 
   nfc_disconnect(pnd);
+
+  if (argc == 2) {
+    if (!(ndef_message_save (argv[1], &nfcforum_tag4_data))) {
+      err (EXIT_FAILURE, "Can't load NDEF file '%s'", argv[1]);
+    }
+  }
+
   exit (EXIT_SUCCESS);
 }
