@@ -85,33 +85,16 @@ struct nfcforum_tag4 {
 uint8_t nfcforum_capability_container[] = {
   0x00, 0x0F, /* CCLEN 15 bytes */
   0x10,       /* Mapping version 1.0 */
-  0x00, 0xFF, /* MLe Maximum R-ADPU data size */
-  0x00, 0xFF, /* MLc Maximum C-ADPU data size */
+  0x00, 0x2F, /* MLe Maximum R-ADPU data size */
+  0x00, 0x2F, /* MLc Maximum C-ADPU data size */
   0x04,       /* T field of the NDEF File-Control TLV */
   0x06,       /* L field of the NDEF File-Control TLV */
               /* V field of the NDEF File-Control TLV */
   0xE1, 0x04, /* File identifier */
-  0x00, 0xFE, /* Maximum NDEF Size */
+  0xFF, 0xFE, /* Maximum NDEF Size */
   0x00,       /* NDEF file read access condition */
-  /* TODO Add write support */
-  0xFF,       /* NDEF file write access condition */
+  0x00,       /* NDEF file write access condition */
 };
-
-uint8_t nfcforum_capability_container_2_0[] = {
-  0x00, 0x0F, /* CCLEN 15 bytes */
-  0x20,       /* Mapping version 2.0 */
-  0x00, 0xFF, /* MLe Maximum R-ADPU data size */
-  0x00, 0xFF, /* MLc Maximum C-ADPU data size */
-  0x04,       /* T field of the NDEF File-Control TLV */
-  0x06,       /* L field of the NDEF File-Control TLV */
-              /* V field of the NDEF File-Control TLV */
-  0xE1, 0x04, /* File identifier */
-  0x00, 0xFE, /* Maximum NDEF Size */
-  0x00,       /* NDEF file read access condition */
-  /* TODO Add write support */
-  0xFF,       /* NDEF file write access condition */
-};
-
 
 /* C-ADPU offsets */
 #define CLA  0
@@ -213,7 +196,11 @@ nfcforum_tag4_io (struct nfc_emulator *emulator, const byte_t *data_in, const si
       break;
 
     case ISO7816_UPDATE_BINARY:
-      return -ENOTSUP;
+      memcpy (data->ndef_file + (data_in[P1] << 8) + data_in[P2], data_in + DATA, data_in[LC]);
+      if ((data_in[P1] << 8) + data_in[P2] == 0) {
+        data->ndef_file_len = (data->ndef_file[0] << 8) + data->ndef_file[1] + 2;
+      }
+      memcpy (data_out, "\x90\x00", res = 2);
       break;
     default: // Unknown
       if (!quiet_output) {
@@ -321,9 +308,6 @@ ndef_message_load (char *filename, struct nfcforum_tag4 *tag_data)
     errx (EXIT_FAILURE, "file size too large '%s'", filename);
   }
 
-  if (!(tag_data->ndef_file = malloc (sb.st_size + 2)))
-    err (EXIT_FAILURE, "malloc");
-
   tag_data->ndef_file_len = sb.st_size + 2;
 
   tag_data->ndef_file[0] = (uint8_t)(sb.st_size >> 8);
@@ -345,16 +329,21 @@ ndef_message_save (char *filename, struct nfcforum_tag4 *tag_data)
 {
   FILE *F;
   if (!(F= fopen (filename, "w")))
-    return 0;
+    err (EXIT_FAILURE, "fopen (%s, w)", filename);
 
   if (1 != fwrite (tag_data->ndef_file + 2, tag_data->ndef_file_len - 2, 1, F)) {
-    fclose (F);
-    return 0;
+    err (EXIT_FAILURE, "fwrite (%lu)", tag_data->ndef_file_len -2);
   }
 
   fclose (F);
 
   return tag_data->ndef_file_len - 2;
+}
+
+void
+usage (char *progname)
+{
+  fprintf (stderr, "usage: %s [infile [outfile]]\n", progname);
 }
 
 int
@@ -377,7 +366,7 @@ main (int argc, char *argv[])
     },
   };
 
-  uint8_t ndef_file[] = {
+  uint8_t ndef_file[0xfffe] = {
     0x00, 33,
     0xd1, 0x02, 0x1c, 0x53, 0x70, 0x91, 0x01, 0x09, 0x54, 0x02,
     0x65, 0x6e, 0x4c, 0x69, 0x62, 0x6e, 0x66, 0x63, 0x51, 0x01,
@@ -387,7 +376,7 @@ main (int argc, char *argv[])
 
   struct nfcforum_tag4 nfcforum_tag4_data = {
     .ndef_file = ndef_file,
-    .ndef_file_len = sizeof (ndef_file),
+    .ndef_file_len = ndef_file[1] + 2,
     .current_file = NONE,
   };
 
@@ -397,8 +386,13 @@ main (int argc, char *argv[])
     .data = &nfcforum_tag4_data,
   };
 
+  if (argc > 3) {
+    usage (argv[0]);
+    exit (EXIT_FAILURE);
+  }
+
   // If some file is provided load it
-  if (argc == 2) {
+  if (argc >= 2) {
     if (!ndef_message_load (argv[1], &nfcforum_tag4_data)) {
       err (EXIT_FAILURE, "Can't load NDEF file '%s'", argv[1]);
     }
@@ -421,9 +415,9 @@ main (int argc, char *argv[])
 
   nfc_disconnect(pnd);
 
-  if (argc == 2) {
-    if (!(ndef_message_save (argv[1], &nfcforum_tag4_data))) {
-      err (EXIT_FAILURE, "Can't load NDEF file '%s'", argv[1]);
+  if (argc == 3) {
+    if (!(ndef_message_save (argv[2], &nfcforum_tag4_data))) {
+      err (EXIT_FAILURE, "Can't save NDEF file '%s'", argv[2]);
     }
   }
 
