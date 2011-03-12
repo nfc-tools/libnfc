@@ -1,40 +1,58 @@
-.TH NFC-EMULATE-FORUM-TAG4 1 "October 8, 2010"
-.SH NAME
-nfc-emulate-forum-tag4 \- NFC Forum tag type 4 emulation command line demonstration tool
-.SH SYNOPSIS
-.B nfc-emulate-forum-tag4
-.SH DESCRIPTION
-.B nfc-emulate-forum-tag4
+.Dd March 12, 2011
+.Dt NFC-EMULATE-FORUM-TAG4 1
+.Os
+.Sh NAME
+.Nm nfc-emulate-forum-tag4
+.Nd NFC Forum tag type 4 emulation command line demonstration tool
+.Sh SYNOPSIS
+.Nm
+.Op infile Op outfile
+.Sh DESCRIPTION
+.Nm 
 is a demonstration tool that emulates a NFC Forum tag type 4 with NDEF content.
-
-Currently, this tool only works with a Nokia 6212 Classic phone as initiator
-and a PN532-equipped NFC device as target.
-
+.Pp
+.Ar infile
+is the file which contains NDEF message you want to share with the NFC-Forum
+compiliant initiator device (e.g. Nokia 6212 Classic)
+.Pp
+If you want to save a shared content by the initiator device, we have to give 
+.Ar outfile
+argument to point where the NDEF message will be saved.
+.Pp
 This example uses the hardware capability of PN532 to handle ISO/IEC 14443-4
 low-level frames like RATS/ATS, WTX, etc.
-
-At the moment, only the Nokia 6212 Classic can be used with this example
-because it's based on a pre-established communication plan and the tool sends
-blindly the expected replies to the initiator without having interpreted the queries.
-
-.SH IMPORTANT
+.Pp
+All devices compiliant with NFC-Forum Tag Type 4 (Version 1.0) can be used with
+this example in read-write mode.
+.Pp
+If no argument is given, a default NDEF file is available.
+.Sh IMPLEMENTATION NOTES
+You can specify the same 
+.Ar infile
+and 
+.Ar outfile
+.Sh IMPORTANT
+Only PN532 equipped devices can use this example. (e.g. PN532 breakout board)
+.Pp
 ACR122 devices (like touchatag, etc.) can be used by this example, but if
 something goes wrong, you will have to unplug/replug your device.
 This is not a
-.B libnfc's
+.Em libnfc's
 bug, this problem is due to ACR122's internal MCU in front of NFC chip (PN532).
-.SH BUGS
+.Sh BUGS
 Please report any bugs on the
-.B libnfc
+.Em libnfc
 forum at
-.BR http://www.libnfc.org/community/ "."
-.SH LICENCE
-.B libnfc
+.Em http://www.libnfc.org/community/ "."
+.Sh LICENCE
+.Em libnfc
 and
-.B libnfc-examples
+.Em libnfc-examples
 are covered by the GNU Lesser General Public License (LGPL), version 3.
-.SH AUTHORS
-Roel Verdult <roel@libnfc.org>
-.PP
+.Sh AUTHORS
+.An Roel Verdult Aq roel@libnfc.org
+.An Romain Tartière Aq romain@libnfc.org
+.An Romuald Conty Aq romuald@libnfc.org
+.Pp
 This manual page was written by Romuald Conty <romuald@libnfc.org>.
 It is licensed under the terms of the GNU GPL (version 2 or later).
