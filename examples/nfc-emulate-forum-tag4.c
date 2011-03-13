@@ -55,25 +55,15 @@
 #include <string.h>
 
 #include <nfc/nfc.h>
+#include <nfc/nfc-emulation.h>
 
 #include "nfc-utils.h"
 
-#define MAX_FRAME_LEN 264
 
-static byte_t abtRx[MAX_FRAME_LEN];
-static size_t szRx = sizeof(abtRx);
 static nfc_device_t *pnd;
 static bool quiet_output = false;
 
 #define SYMBOL_PARAM_fISO14443_4_PICC   0x20
-
-struct nfc_emulator;
-
-struct nfc_emulator {
-  nfc_target_t *target;
-  void *data;
-  int (*io) (struct nfc_emulator *emulator, const byte_t *data_in, const size_t data_in_len, byte_t *data_out, const size_t data_out_len);
-};
 
 typedef enum { NONE, CC_FILE, NDEF_FILE } file;
 
@@ -110,11 +100,9 @@ uint8_t nfcforum_capability_container[] = {
 int
 nfcforum_tag4_io (struct nfc_emulator *emulator, const byte_t *data_in, const size_t data_in_len, byte_t *data_out, const size_t data_out_len)
 {
-  (void) emulator;
-  (void) data_out_len;
   int res = 0;
 
-  struct nfcforum_tag4 *data = (struct nfcforum_tag4 *)(emulator->data);
+  struct nfcforum_tag4 *data = (struct nfcforum_tag4 *)(emulator->user_data);
 
   // Show transmitted command
   if (!quiet_output) {
@@ -176,7 +164,7 @@ nfcforum_tag4_io (struct nfc_emulator *emulator, const byte_t *data_in, const si
 
       break;
     case ISO7816_READ_BINARY:
-      if (data_in[LC] + 2 > data_out_len) {
+      if ((size_t)(data_in[LC] + 2) > data_out_len) {
         return -ENOSPC;
       }
       switch (data->current_file) {
@@ -224,37 +212,6 @@ nfcforum_tag4_io (struct nfc_emulator *emulator, const byte_t *data_in, const si
   return res;
 }
 
-
-bool
-nfc_emulate_target (nfc_device_t* pnd, struct nfc_emulator *emulator)
-{
-  size_t szRx;
-  byte_t abtTx[MAX_FRAME_LEN];
-  int res = 0;
-
-  if (!nfc_target_init (pnd, emulator->target, abtRx, &szRx)) {
-    nfc_perror (pnd, "nfc_target_init");
-    return false;
-  }
-
-  while (res >= 0) {
-    res = emulator->io (emulator, abtRx, szRx, abtTx, sizeof (abtTx));
-    if (res > 0) {
-      if (!nfc_target_send_bytes(pnd, abtTx, res)) {
-        nfc_perror (pnd, "nfc_target_send_bytes");
-        return false;
-      }
-    }
-    if (res >= 0) {
-      if (!nfc_target_receive_bytes(pnd, abtRx, &szRx)) {
-        nfc_perror (pnd, "nfc_target_receive_bytes");
-        return false;
-      }
-    }
-  }
-  return true;
-}
-
 void stop_emulation (int sig)
 {
   (void) sig;
@@ -262,39 +219,6 @@ void stop_emulation (int sig)
     nfc_abort_command (pnd);
   else
     exit (EXIT_FAILURE);
-}
-
-bool send_bytes (const byte_t * pbtTx, const size_t szTx)
-{
-  // Show transmitted command
-  if (!quiet_output) {
-    printf ("Sent data: ");
-    print_hex (pbtTx, szTx);
-  }
-
-  // Transmit the command bytes
-  if (!nfc_target_send_bytes(pnd, pbtTx, szTx)) {
-    nfc_perror (pnd, "nfc_target_send_bytes");
-    exit(EXIT_FAILURE);
-  }
-  // Succesful transfer
-  return true;
-}
-
-bool receive_bytes (void)
-{
-  if (!nfc_target_receive_bytes(pnd,abtRx,&szRx)) {
-    nfc_perror (pnd, "nfc_target_receive_bytes");
-    exit(EXIT_FAILURE);
-  }
-
-  // Show received answer
-  if (!quiet_output) {
-    printf ("Received data: ");
-    print_hex (abtRx, szRx);
-  }
-  // Succesful transfer
-  return true;
 }
 
 size_t
@@ -381,10 +305,14 @@ main (int argc, char *argv[])
     .current_file = NONE,
   };
 
+  struct nfc_emulation_state_machine state_machine = {
+    .io   = nfcforum_tag4_io,
+  };
+
   struct nfc_emulator emulator = {
     .target = &nt,
-    .io   = nfcforum_tag4_io,
-    .data = &nfcforum_tag4_data,
+    .state_machine = &state_machine,
+    .user_data = &nfcforum_tag4_data,
   };
 
   if (argc > 3) {
