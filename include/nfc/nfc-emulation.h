@@ -34,7 +34,7 @@ struct nfc_emulator {
 
 struct nfc_emulation_state_machine {
   int (*io)(struct nfc_emulator *emulator, const byte_t *data_in, const size_t data_in_len, byte_t *data_out, const size_t data_out_len);
-  void *state_machine_data;
+  void *data;
 };
 
 int    nfc_emulate_target (nfc_device_t* pnd, struct nfc_emulator *emulator);

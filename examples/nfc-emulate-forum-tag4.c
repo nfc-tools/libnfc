@@ -67,9 +67,12 @@ static bool quiet_output = false;
 
 typedef enum { NONE, CC_FILE, NDEF_FILE } file;
 
-struct nfcforum_tag4 {
+struct nfcforum_tag4_ndef_data {
   uint8_t *ndef_file;
   size_t   ndef_file_len;
+};
+
+struct nfcforum_tag4_state_machine_data {
   file     current_file;
 };
 
@@ -102,7 +105,8 @@ nfcforum_tag4_io (struct nfc_emulator *emulator, const byte_t *data_in, const si
 {
   int res = 0;
 
-  struct nfcforum_tag4 *data = (struct nfcforum_tag4 *)(emulator->user_data);
+  struct nfcforum_tag4_ndef_data *ndef_data = (struct nfcforum_tag4_ndef_data *)(emulator->user_data);
+  struct nfcforum_tag4_state_machine_data *state_machine_data = (struct nfcforum_tag4_state_machine_data *)(emulator->state_machine->data);
 
   // Show transmitted command
   if (!quiet_output) {
@@ -136,13 +140,13 @@ nfcforum_tag4_io (struct nfc_emulator *emulator, const byte_t *data_in, const si
         const uint8_t ndef_file[] = { 0xE1, 0x04 };
         if ((data_in[LC] == sizeof (ndef_capability_container)) && (0 == memcmp (ndef_capability_container, data_in + DATA, data_in[LC]))) {
           memcpy (data_out, "\x90\x00", res = 2);
-          data->current_file = CC_FILE;
+          state_machine_data->current_file = CC_FILE;
         } else if ((data_in[LC] == sizeof (ndef_file)) && (0 == memcmp (ndef_file, data_in + DATA, data_in[LC]))) {
           memcpy (data_out, "\x90\x00", res = 2);
-          data->current_file = NDEF_FILE;
+          state_machine_data->current_file = NDEF_FILE;
         } else {
           memcpy (data_out, "\x6a\x00", res = 2);
-          data->current_file = NONE;
+          state_machine_data->current_file = NONE;
         }
 
         break;
@@ -167,7 +171,7 @@ nfcforum_tag4_io (struct nfc_emulator *emulator, const byte_t *data_in, const si
       if ((size_t)(data_in[LC] + 2) > data_out_len) {
         return -ENOSPC;
       }
-      switch (data->current_file) {
+      switch (state_machine_data->current_file) {
       case NONE:
         memcpy (data_out, "\x6a\x82", res = 2);
         break;
@@ -177,7 +181,7 @@ nfcforum_tag4_io (struct nfc_emulator *emulator, const byte_t *data_in, const si
         res = data_in[LC] + 2;
         break;
       case NDEF_FILE:
-        memcpy (data_out, data->ndef_file + (data_in[P1] << 8) + data_in[P2], data_in[LC]);
+        memcpy (data_out, ndef_data->ndef_file + (data_in[P1] << 8) + data_in[P2], data_in[LC]);
         memcpy (data_out + data_in[LC], "\x90\x00", 2);
         res = data_in[LC] + 2;
         break;
@@ -185,9 +189,9 @@ nfcforum_tag4_io (struct nfc_emulator *emulator, const byte_t *data_in, const si
       break;
 
     case ISO7816_UPDATE_BINARY:
-      memcpy (data->ndef_file + (data_in[P1] << 8) + data_in[P2], data_in + DATA, data_in[LC]);
+      memcpy (ndef_data->ndef_file + (data_in[P1] << 8) + data_in[P2], data_in + DATA, data_in[LC]);
       if ((data_in[P1] << 8) + data_in[P2] == 0) {
-        data->ndef_file_len = (data->ndef_file[0] << 8) + data->ndef_file[1] + 2;
+        ndef_data->ndef_file_len = (ndef_data->ndef_file[0] << 8) + ndef_data->ndef_file[1] + 2;
       }
       memcpy (data_out, "\x90\x00", res = 2);
       break;
@@ -222,7 +226,7 @@ void stop_emulation (int sig)
 }
 
 size_t
-ndef_message_load (char *filename, struct nfcforum_tag4 *tag_data)
+ndef_message_load (char *filename, struct nfcforum_tag4_ndef_data *tag_data)
 {
   struct stat sb;
   if (stat (filename, &sb) < 0)
@@ -250,7 +254,7 @@ ndef_message_load (char *filename, struct nfcforum_tag4 *tag_data)
 }
 
 size_t
-ndef_message_save (char *filename, struct nfcforum_tag4 *tag_data)
+ndef_message_save (char *filename, struct nfcforum_tag4_ndef_data *tag_data)
 {
   FILE *F;
   if (!(F= fopen (filename, "w")))
@@ -299,14 +303,18 @@ main (int argc, char *argv[])
     0x6f, 0x72, 0x67
   };
 
-  struct nfcforum_tag4 nfcforum_tag4_data = {
+  struct nfcforum_tag4_ndef_data nfcforum_tag4_data = {
     .ndef_file = ndef_file,
     .ndef_file_len = ndef_file[1] + 2,
+  };
+
+  struct nfcforum_tag4_state_machine_data state_machine_data = {
     .current_file = NONE,
   };
 
   struct nfc_emulation_state_machine state_machine = {
     .io   = nfcforum_tag4_io,
+    .data = &state_machine_data,
   };
 
   struct nfc_emulator emulator = {
