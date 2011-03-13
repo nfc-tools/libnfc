@@ -411,7 +411,9 @@ read:
       goto read;
       break;
     case 1:
-      return (pn53x_usb_ack (pnd) >= 0) ? true : false;
+      pn53x_usb_ack (pnd);
+      pnd->iLastError = DEABORT;
+      return -1;
       break;
     }
   }
