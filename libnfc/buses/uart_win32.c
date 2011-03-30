@@ -87,7 +87,6 @@ uart_close (const serial_port sp)
   free (sp);
 }
 
-// TODO Remove PN53x related timeout
 void
 uart_set_speed (serial_port sp, const uint32_t uiPortSpeed)
 {
@@ -111,7 +110,6 @@ uart_set_speed (serial_port sp, const uint32_t uiPortSpeed)
   spw = (serial_port_windows *) sp;
 
   // Set timeouts
-  //printf ("UART_SPEED_T0_TIME (%d) = %d\n", uiPortSpeed, UART_SPEED_T0_TIME(uiPortSpeed));
   int iTimeout = 200;
   spw->ct.ReadIntervalTimeout = 2;
   spw->ct.ReadTotalTimeoutMultiplier = 0;
@@ -168,13 +166,19 @@ uart_send (serial_port sp, const byte_t * pbtTx, const size_t szTx)
 
 // Path to the serial port is OS-dependant.
 // Try to guess what we should use.
-#define DEFAULT_SERIAL_PORTS { "COM1", "COM2", "COM3", "COM4", NULL }
+#define NUM_SERIAL_PORTS 8
 char **
 uart_list_ports (void)
 {
   // TODO: Wrote an automatic detection of Windows serial ports
 
-  // FIXME: Construct an dynamic allocated array of char* that contains default serial ports.
-  const char ** availablePorts = DEFAULT_SERIAL_PORTS;
+  char ** availablePorts = malloc((1 + NUM_SERIAL_PORTS) * sizeof(char*));
+  int i;
+  for (i = 0; i < NUM_SERIAL_PORTS; i++) {
+    availablePorts[i] = (char*)malloc(10);
+    sprintf(availablePorts[i], "COM%d", i+1);
+  }
+  availablePorts[i] = NULL;
+
   return availablePorts;
 }
