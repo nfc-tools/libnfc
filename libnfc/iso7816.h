@@ -17,6 +17,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
 
+ /**
+ * @file iso7816.h
+ * @brief Defines some macros extracted for ISO/IEC 7816-4
+ */
+
 #ifndef __LIBNFC_ISO7816_H__
 #define __LIBNFC_ISO7816_H__
 

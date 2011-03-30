@@ -17,6 +17,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
 
+ /**
+ * @file nfc-emulate.c
+ * @brief Provide a small API to ease emulation in libnfc
+ */
+
 #include <nfc/nfc.h>
 #include <nfc/nfc-emulation.h>
 
