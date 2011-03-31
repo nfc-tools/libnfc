@@ -21,6 +21,7 @@
 #define __NFC_EMULATION_H__
 
 #include <sys/types.h>
+#include <nfc/nfc.h>
 
 struct nfc_emulator;
 struct nfc_emulation_state_machine;
@@ -37,6 +38,6 @@ struct nfc_emulation_state_machine {
   void *data;
 };
 
-int    nfc_emulate_target (nfc_device_t* pnd, struct nfc_emulator *emulator);
+NFC_EXPORT int    nfc_emulate_target (nfc_device_t* pnd, struct nfc_emulator *emulator);
 
 #endif /* __NFC_EMULATION_H__ */

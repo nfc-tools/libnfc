@@ -149,7 +149,7 @@ uart_receive (serial_port sp, byte_t * pbtRx, const size_t szRx, int iAbortFd)
   if (!ReadFile (((serial_port_windows *) sp)->hPort, pbtRx, dwRxLen, &dwRxLen, NULL)) {
     return DEIO;
   }
-  return (dwRwLen == (DWORD) szRx) ? 0 : DEIO;
+  return (dwRxLen == (DWORD) szRx) ? 0 : DEIO;
 }
 
 int

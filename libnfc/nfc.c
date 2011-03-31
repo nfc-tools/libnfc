@@ -39,10 +39,6 @@
 
 #include <nfc/nfc.h>
 
-#ifdef _WIN32
-#  include "contrib/windows.h"
-#endif
-
 #include "drivers.h"
 #include "nfc-internal.h"
 

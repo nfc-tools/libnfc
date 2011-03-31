@@ -43,10 +43,6 @@
 #include "mirror-subr.h"
 #include "nfc-internal.h"
 
-#ifdef _WIN32
-#  include "contrib/windows.h"
-#endif
-
 #include <sys/param.h>
 
 #define CHIP_DATA(pnd) ((struct pn53x_data*)(pnd->chip_data))

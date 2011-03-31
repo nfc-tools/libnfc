@@ -52,6 +52,7 @@
 
 #include "nfc-utils.h"
 
+// TODO Move this Windows conditional code in contrib/win32/ or contrib/windows.h
 #ifndef _WIN32
 // Needed by sleep() under Unix
 #  include <unistd.h>
@@ -59,7 +60,6 @@
 #  define SUSP_TIME 1           // secs.
 #else
 // Needed by Sleep() under Windows
-#  include "../contrib/windows.h"
 #  include <winbase.h>
 #  define sleep Sleep
 #  define SUSP_TIME 1000        // msecs.
