@@ -2,7 +2,7 @@ ACLOCAL_AMFLAGS = -I m4
 
 AM_CFLAGS = $(LIBNFC_CFLAGS)
 
-SUBDIRS = libnfc examples include contrib cmake_modules test
+SUBDIRS = libnfc examples include contrib cmake test
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libnfc.pc
@@ -12,7 +12,6 @@ EXTRA_DIST = \
 	Doxyfile \
 	LICENSE \
 	README-Windows.txt \
-	config.h.cmake \
 	pn53x.conf \
 	pn53x.rules
 

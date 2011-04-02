@@ -155,7 +155,9 @@ AC_CONFIG_FILES([
 		Makefile
 		contrib/Makefile
 		contrib/win32/Makefile
-		cmake_modules/Makefile
+		contrib/win32/sys/Makefile
+		cmake/Makefile
+		cmake/modules/Makefile
 		examples/Makefile
 		examples/pn53x-tamashell-scripts/Makefile
 		include/Makefile
