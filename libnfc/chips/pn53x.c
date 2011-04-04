@@ -203,13 +203,13 @@ pn53x_read_register (nfc_device_t * pnd, uint16_t ui16Reg, uint8_t * ui8Value)
 bool
 pn53x_write_register (nfc_device_t * pnd, const uint16_t ui16Reg, const uint8_t ui8SymbolMask, const uint8_t ui8Value)
 {
-  uint8_t ui8Current;
   byte_t  abtCmd[] = { WriteRegister, ui16Reg >> 8, ui16Reg & 0xff, 0x00 };
 
   if (ui8SymbolMask != 0xff) {
+    uint8_t ui8Current;
     if (!pn53x_read_register (pnd, ui16Reg, &ui8Current))
       return false;
-    abtCmd[3] = ui8Value | (ui8Current & (~ui8SymbolMask));
+    abtCmd[3] = ((ui8Value & ui8SymbolMask) | (ui8Current & (~ui8SymbolMask)));
     return (abtCmd[3] != ui8Current) ? pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, NULL) : true;
   } else {
     abtCmd[3] = ui8Value;
