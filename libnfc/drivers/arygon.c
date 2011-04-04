@@ -174,13 +174,8 @@ arygon_connect (const nfc_device_desc_t * pndd)
   // The PN53x chip connected to ARYGON MCU doesn't seems to be in SLEEP mode
   CHIP_DATA (pnd)->state = NORMAL;
   CHIP_DATA (pnd)->io = &arygon_tama_io;
-  // Timer stops only after 5 bits are received => 5*128 cycles
-  // When sent ...ZY (cmd ends with logical 0):
-  // 46: empirical tuning
-  CHIP_DATA (pnd)->timer_correction_zy = 46 - (5 * 128);
-  // When sent ...YY (cmd ends with logical 1):
-  // a ...ZY signal finishes 64us later than a ...YY signal
-  CHIP_DATA (pnd)->timer_correction_yy = CHIP_DATA (pnd)->timer_correction_zy + 64;
+  // empirical tuning
+  CHIP_DATA (pnd)->timer_correction = 46;
   pnd->driver = &arygon_driver;
 
   // Check communication using "Reset TAMA" command

@@ -1075,6 +1075,56 @@ pn53x_InJumpForDEP (nfc_device_t * pnd,
   return true;
 }
 
+void __pn53x_init_timer(nfc_device_t * pnd)
+{
+  uint16_t prescaler = 0;
+  uint16_t reloadval = 0xFFFF;
+  // Initialize timer
+  pn53x_write_register (pnd, REG_CIU_TMODE, 0xFF, SYMBOL_TAUTO | ((prescaler >> 8) & SYMBOL_TPRESCALERHI));
+  pn53x_write_register (pnd, REG_CIU_TPRESCALER, 0xFF, (prescaler & SYMBOL_TPRESCALERLO));
+  pn53x_write_register (pnd, REG_CIU_TRELOADVALHI, 0xFF, (reloadval >> 8) & 0xFF);
+  pn53x_write_register (pnd, REG_CIU_TRELOADVALLO, 0xFF, reloadval & 0xFF);
+}
+
+uint16_t __pn53x_get_timer(nfc_device_t * pnd, const uint8_t last_cmd_byte)
+{
+  uint8_t parity;
+  uint8_t counter_hi, counter_lo;
+  uint16_t counter, cycles;
+  // Read timer
+  pn53x_read_register (pnd, REG_CIU_TCOUNTERVALHI, &counter_hi);
+  pn53x_read_register (pnd, REG_CIU_TCOUNTERVALLO, &counter_lo);
+  counter = counter_hi;
+  counter = (counter << 8) + counter_lo;
+  if (counter == 0) {
+    // counter saturated
+    cycles = 0xFFFF;
+  } else {
+    cycles = 0xFFFF - counter + 1;
+    // Correction depending on PN53x Rx detection handling:
+    // timer stops after 5 (or 2 for PN531) bits are received
+    if(CHIP_DATA(pnd)->type == PN531) {
+      cycles -= (2 * 128);
+    } else {
+      cycles -= (5 * 128);
+    }
+    // Correction depending on last parity bit sent
+    parity = (last_cmd_byte >> 7) ^ ((last_cmd_byte >> 6) & 1) ^
+             ((last_cmd_byte >> 5) & 1) ^ ((last_cmd_byte >> 4) & 1) ^
+             ((last_cmd_byte >> 3) & 1) ^ ((last_cmd_byte >> 2) & 1) ^
+             ((last_cmd_byte >> 1) & 1) ^ (last_cmd_byte & 1);
+    parity = parity ? 0:1;
+    // When sent ...YY (cmd ends with logical 1, so when last parity bit is 1):
+    if (parity) {
+      // it finishes 64us sooner than a ...ZY signal
+      cycles += 64;
+    }
+    // Correction depending on device design
+    cycles += CHIP_DATA(pnd)->timer_correction;
+  }
+  return cycles;
+}
+
 bool
 pn53x_initiator_transceive_bits (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxBits,
                                  const byte_t * pbtTxPar, byte_t * pbtRx, size_t * pszRxBits, byte_t * pbtRxPar)
@@ -1143,11 +1193,7 @@ pn53x_initiator_transceive_bits_timed (nfc_device_t * pnd, const byte_t * pbtTx,
                                  const byte_t * pbtTxPar, byte_t * pbtRx, size_t * pszRxBits, byte_t * pbtRxPar, uint16_t * cycles)
 {
   unsigned int i;
-  uint8_t sz, parity;
-  uint16_t prescaler = 0;
-  uint16_t reloadval = 0xFFFF;
-  uint8_t counter_hi, counter_lo;
-  uint16_t counter;
+  uint8_t sz;
 
   // We can not just send bytes without parity while the PN53X expects we handled them
   if (!pnd->bPar)
@@ -1161,11 +1207,7 @@ pn53x_initiator_transceive_bits_timed (nfc_device_t * pnd, const byte_t * pbtTx,
   if (pnd->bCrc)
     return false;
 
-  // Initialize timer
-  pn53x_write_register (pnd, REG_CIU_TMODE, 0xFF, SYMBOL_TAUTO | ((prescaler >> 8) & SYMBOL_TPRESCALERHI));
-  pn53x_write_register (pnd, REG_CIU_TPRESCALER, 0xFF, (prescaler & SYMBOL_TPRESCALERLO));
-  pn53x_write_register (pnd, REG_CIU_TRELOADVALHI, 0xFF, (reloadval >> 8) & 0xFF);
-  pn53x_write_register (pnd, REG_CIU_TRELOADVALLO, 0xFF, reloadval & 0xFF);
+  __pn53x_init_timer(pnd);
 
   // Once timer is started, we cannot use Tama commands anymore.
   // E.g. on SCL3711 timer settings are reset by 0x42 InCommunicateThru command to:
@@ -1187,30 +1229,10 @@ pn53x_initiator_transceive_bits_timed (nfc_device_t * pnd, const byte_t * pbtTx,
     pn53x_read_register (pnd, REG_CIU_FIFODATA, &(pbtRx[i]));
   }
 
-  // Read timer
-  pn53x_read_register (pnd, REG_CIU_TCOUNTERVALHI, &counter_hi);
-  pn53x_read_register (pnd, REG_CIU_TCOUNTERVALLO, &counter_lo);
-  counter = counter_hi;
-  counter = (counter << 8) + counter_lo;
-  if (counter == 0) {
-    // counter saturated
-    *cycles = 0xFFFF;
-  } else {
-    *cycles = 0xFFFF - counter + 1;
-    // Correction, depending on last parity bit sent
-    sz = pbtTx[szTxBits / 8];
-    parity = (sz >> 7) ^ ((sz >> 6) & 1) ^ ((sz >> 5) & 1) ^ ((sz >> 4) & 1) ^ ((sz >> 3) & 1) ^ ((sz >> 2) & 1) ^ ((sz >> 1) & 1) ^ (sz & 1);
-    parity = parity ? 0:1;
-    if (parity) {
-      *cycles += CHIP_DATA(pnd)->timer_correction_yy;
-    } else {
-      *cycles += CHIP_DATA(pnd)->timer_correction_zy;
-    }
-  }
+  // Recv corrected timer value
+  *cycles = __pn53x_get_timer (pnd, pbtTx[szTxBits / 8]);
 
   return true;
-
-
 }
 
 bool
@@ -1262,11 +1284,7 @@ pn53x_initiator_transceive_bytes_timed (nfc_device_t * pnd, const byte_t * pbtTx
                                   size_t * pszRx, uint16_t * cycles)
 {
   unsigned int i;
-  uint8_t sz, parity;
-  uint16_t prescaler = 0;
-  uint16_t reloadval = 0xFFFF;
-  uint8_t counter_hi, counter_lo;
-  uint16_t counter;
+  uint8_t sz;
 
   // We can not just send bytes without parity while the PN53X expects we handled them
   if (!pnd->bPar)
@@ -1280,11 +1298,7 @@ pn53x_initiator_transceive_bytes_timed (nfc_device_t * pnd, const byte_t * pbtTx
   if (pnd->bCrc)
     return false;
 
-  // Initialize timer
-  pn53x_write_register (pnd, REG_CIU_TMODE, 0xFF, SYMBOL_TAUTO | ((prescaler >> 8) & SYMBOL_TPRESCALERHI));
-  pn53x_write_register (pnd, REG_CIU_TPRESCALER, 0xFF, (prescaler & SYMBOL_TPRESCALERLO));
-  pn53x_write_register (pnd, REG_CIU_TRELOADVALHI, 0xFF, (reloadval >> 8) & 0xFF);
-  pn53x_write_register (pnd, REG_CIU_TRELOADVALLO, 0xFF, reloadval & 0xFF);
+  __pn53x_init_timer(pnd);
 
   // Once timer is started, we cannot use Tama commands anymore.
   // E.g. on SCL3711 timer settings are reset by 0x42 InCommunicateThru command to:
@@ -1306,26 +1320,8 @@ pn53x_initiator_transceive_bytes_timed (nfc_device_t * pnd, const byte_t * pbtTx
     pn53x_read_register (pnd, REG_CIU_FIFODATA, &(pbtRx[i]));
   }
 
-  // Read timer
-  pn53x_read_register (pnd, REG_CIU_TCOUNTERVALHI, &counter_hi);
-  pn53x_read_register (pnd, REG_CIU_TCOUNTERVALLO, &counter_lo);
-  counter = counter_hi;
-  counter = (counter << 8) + counter_lo;
-  if (counter == 0) {
-    // counter saturated
-    *cycles = 0xFFFF;
-  } else {
-    *cycles = 0xFFFF - counter + 1;
-    // Correction, depending on last parity bit sent
-    sz = pbtTx[szTx -1];
-    parity = (sz >> 7) ^ ((sz >> 6) & 1) ^ ((sz >> 5) & 1) ^ ((sz >> 4) & 1) ^ ((sz >> 3) & 1) ^ ((sz >> 2) & 1) ^ ((sz >> 1) & 1) ^ (sz & 1);
-    parity = parity ? 0:1;
-    if (parity) {
-      *cycles += CHIP_DATA(pnd)->timer_correction_yy;
-    } else {
-      *cycles += CHIP_DATA(pnd)->timer_correction_zy;
-    }
-  }
+  // Recv corrected timer value
+  *cycles = __pn53x_get_timer (pnd, pbtTx[szTx -1]);
 
   return true;
 }

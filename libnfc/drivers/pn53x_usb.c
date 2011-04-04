@@ -288,27 +288,19 @@ pn53x_usb_connect (const nfc_device_desc_t *pndd)
         CHIP_DATA (pnd)->io = &pn53x_usb_io;
 
         switch (DRIVER_DATA (pnd)->model) {
+          // empirical tuning
           case ASK_LOGO:
-            // Timer stops only after 5 bits are received => 5*128 cycles
-            // When sent ...ZY (cmd ends with logical 0):
-            // 50: empirical tuning
-            CHIP_DATA (pnd)->timer_correction_zy = 50 - (5 * 128);
-            // When sent ...YY (cmd ends with logical 1):
-            // a ...ZY signal finishes 64us later than a ...YY signal
-            CHIP_DATA (pnd)->timer_correction_yy = CHIP_DATA (pnd)->timer_correction_zy + 64;
+            CHIP_DATA (pnd)->timer_correction = 50;
             break;
           case SCM_SCL3711:
           case NXP_PN533:
-            CHIP_DATA (pnd)->timer_correction_zy = 46 - (5 * 128);
-            CHIP_DATA (pnd)->timer_correction_yy = CHIP_DATA (pnd)->timer_correction_zy + 64;
+            CHIP_DATA (pnd)->timer_correction = 46;
             break;
           case NXP_PN531:
-            CHIP_DATA (pnd)->timer_correction_zy = 50 - (2 * 128);
-            CHIP_DATA (pnd)->timer_correction_yy = CHIP_DATA (pnd)->timer_correction_zy + 64;
+            CHIP_DATA (pnd)->timer_correction = 50;
             break;
           case SONY_PN531:
-            CHIP_DATA (pnd)->timer_correction_zy = 54 - (2 * 128);
-            CHIP_DATA (pnd)->timer_correction_yy = CHIP_DATA (pnd)->timer_correction_zy + 64;
+            CHIP_DATA (pnd)->timer_correction = 54;
             break;
           default:
             break;

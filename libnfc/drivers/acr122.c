@@ -222,15 +222,9 @@ acr122_connect (const nfc_device_desc_t * pndd)
 
     CHIP_DATA (pnd)->state = NORMAL;
     CHIP_DATA (pnd)->io = &acr122_io;
-
-    // Timer stops only after 5 bits are received => 5*128 cycles
-    // When sent ...ZY (cmd ends with logical 0):
     // 50: empirical tuning on Touchatag
     // 46: empirical tuning on ACR122U
-    CHIP_DATA (pnd)->timer_correction_zy = 50 - (5 * 128);
-    // When sent ...YY (cmd ends with logical 1):
-    // a ...ZY signal finishes 64us later than a ...YY signal
-    CHIP_DATA (pnd)->timer_correction_yy = CHIP_DATA (pnd)->timer_correction_zy + 64;
+    CHIP_DATA (pnd)->timer_correction = 50;
 
     pnd->driver = &acr122_driver;
 

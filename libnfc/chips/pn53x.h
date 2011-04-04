@@ -157,10 +157,8 @@ struct pn53x_data {
   uint8_t ui8Parameters;
 /** Last sent command */
   uint8_t ui8LastCommand;
-/** Interframe correction for commands ending with logic "1" */
-  int16_t timer_correction_yy;
-/** Interframe correction for commands ending with logic "0" */
-  int16_t timer_correction_zy;
+/** Interframe timer correction */
+  int16_t timer_correction;
 };
 
 #define CHIP_DATA(pnd) ((struct pn53x_data*)(pnd->chip_data))

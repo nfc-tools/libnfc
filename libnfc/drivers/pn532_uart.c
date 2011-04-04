@@ -160,13 +160,8 @@ pn532_uart_connect (const nfc_device_desc_t * pndd)
   CHIP_DATA(pnd)->type = PN532;
   CHIP_DATA(pnd)->state = SLEEP;
   CHIP_DATA(pnd)->io = &pn532_uart_io;
-  // Timer stops only after 5 bits are received => 5*128 cycles
-  // When sent ...ZY (cmd ends with logical 0):
-  // 48: empirical tuning
-  CHIP_DATA (pnd)->timer_correction_zy = 48 - (5 * 128);
-  // When sent ...YY (cmd ends with logical 1):
-  // a ...ZY signal finishes 64us later than a ...YY signal
-  CHIP_DATA (pnd)->timer_correction_yy = CHIP_DATA (pnd)->timer_correction_zy + 64;
+  // empirical tuning
+  CHIP_DATA(pnd)->timer_correction = 48;
   pnd->driver = &pn532_uart_driver;
 
   // Check communication using "Diagnose" command, with "Communication test" (0x00)
