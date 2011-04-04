@@ -133,6 +133,8 @@ struct pn53x_data {
   uint8_t ui8LastCommand;
 };
 
+#define CHIP_DATA(pnd) ((struct pn53x_data*)(pnd->chip_data))
+
 /* PN53x specific types */
 /**
  * @enum pn53x_modulation_t

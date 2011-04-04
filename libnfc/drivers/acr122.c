@@ -91,7 +91,6 @@ struct acr122_data {
   size_t  szRx;
 };
 
-#define CHIP_DATA(pnd) ((struct pn53x_data*)(pnd->chip_data))
 #define DRIVER_DATA(pnd) ((struct acr122_data*)(pnd->driver_data))
 
 static SCARDCONTEXT _SCardContext;

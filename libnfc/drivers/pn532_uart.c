@@ -57,7 +57,6 @@ struct pn532_uart_data {
   serial_port port;
 };
   
-#define CHIP_DATA(pnd) ((struct pn53x_data*)(pnd->chip_data))
 #define DRIVER_DATA(pnd) ((struct pn532_uart_data*)(pnd->driver_data))
 
 bool

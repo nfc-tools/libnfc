@@ -66,7 +66,6 @@
 #define ARYGON_DRIVER_NAME "ARYGON"
 
 #define DRIVER_DATA(pnd) ((struct arygon_data*)(pnd->driver_data))
-#define CHIP_DATA(pnd)   ((struct pn53x_data*)(pnd->chip_data))
 
 const struct pn53x_io arygon_tama_io;
 

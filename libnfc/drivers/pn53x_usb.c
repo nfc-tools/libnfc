@@ -49,7 +49,6 @@ Thanks to d18c7db and Okko for example code
 #define PN53X_USB_DRIVER_NAME "PN53x USB"
 #define USB_TIMEOUT   0
 
-#define CHIP_DATA(pnd) ((struct pn53x_data*)(pnd->chip_data))
 #define DRIVER_DATA(pnd) ((struct pn53x_usb_data*)(pnd->driver_data))
 
 typedef enum {
@@ -361,7 +360,7 @@ pn53x_usb_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szData)
   }
 
   if (pn53x_check_ack_frame (pnd, abtRxBuf, res)) {
-    ((struct pn53x_data*)(pnd->chip_data))->state = EXECUTE;
+    CHIP_DATA(pnd)->state = EXECUTE;
   } else {
     return false;
   }

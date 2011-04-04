@@ -45,8 +45,6 @@
 
 #include <sys/param.h>
 
-#define CHIP_DATA(pnd) ((struct pn53x_data*)(pnd->chip_data))
-
 // TODO: reorder functions according to header
 
 // TODO: Count max bytes for InJumpForDEP reply
@@ -136,9 +134,9 @@ pn53x_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, b
   }
 
   // Call the send/receice callback functions of the current driver
-  if (!((struct pn53x_data*)(pnd->chip_data))->io->send (pnd, pbtTx, szTx))
+  if (!CHIP_DATA(pnd)->io->send (pnd, pbtTx, szTx))
     return false;
-  int res = ((struct pn53x_data*)(pnd->chip_data))->io->receive (pnd, pbtRx, *pszRx);
+  int res = CHIP_DATA(pnd)->io->receive (pnd, pbtRx, *pszRx);
   if (res < 0) {
     return false;
   }
@@ -170,7 +168,7 @@ pn53x_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, b
   default:
     pnd->iLastError = 0;
   }
-  if (((struct pn53x_data*)(pnd->chip_data))->type == PN533) {
+  if (CHIP_DATA(pnd)->type == PN533) {
     if ((pbtTx[0] == ReadRegister) || (pbtTx[0] == WriteRegister)) {
       // PN533 prepends its answer by a status byte
       pnd->iLastError = pbtRx[0] & 0x3f;
@@ -187,7 +185,7 @@ pn53x_read_register (nfc_device_t * pnd, uint16_t ui16Reg, uint8_t * ui8Value)
   byte_t  abtRegValue[2];
   size_t  szRegValue = sizeof (abtRegValue);
   if (pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), abtRegValue, &szRegValue)) {
-    if (((struct pn53x_data*)(pnd->chip_data))->type == PN533) {
+    if (CHIP_DATA(pnd)->type == PN533) {
       // PN533 prepends its answer by a status byte
       if (abtRegValue[0] == 0x00) {
         *ui8Value = abtRegValue[1];
@@ -533,7 +531,7 @@ pn53x_initiator_select_passive_target (nfc_device_t * pnd,
   if (pnt) {
     pnt->nm = nm;
     // Fill the tag info struct with the values corresponding to this init modulation
-    if (!pn53x_decode_target_data (abtTargetsData + 1, szTargetsData - 1, ((struct pn53x_data*)(pnd->chip_data))->type, nm.nmt, &(pnt->nti))) {
+    if (!pn53x_decode_target_data (abtTargetsData + 1, szTargetsData - 1, CHIP_DATA(pnd)->type, nm.nmt, &(pnt->nti))) {
       return false;
     }
   }
@@ -611,7 +609,7 @@ pn53x_InListPassiveTarget (nfc_device_t * pnd,
       }
       break;
     case PM_JEWEL_106:
-      if(((struct pn53x_data*)(pnd->chip_data))->type == PN531) {
+      if(CHIP_DATA(pnd)->type == PN531) {
         // These modulations are not supported by pn531
         pnd->iLastError = DENOTSUP;
         return false;
@@ -620,7 +618,7 @@ pn53x_InListPassiveTarget (nfc_device_t * pnd,
     case PM_ISO14443B_212:
     case PM_ISO14443B_424:
     case PM_ISO14443B_847:
-      if((((struct pn53x_data*)(pnd->chip_data))->type != PN533) || (!(pnd->btSupportByte & SUPPORT_ISO14443B))) {
+      if((CHIP_DATA(pnd)->type != PN533) || (!(pnd->btSupportByte & SUPPORT_ISO14443B))) {
         // These modulations are not supported by pn531 neither pn532
         pnd->iLastError = DENOTSUP;
         return false;
@@ -681,7 +679,7 @@ pn53x_InAutoPoll (nfc_device_t * pnd,
                   const pn53x_target_type_t * ppttTargetTypes, const size_t szTargetTypes,
                   const byte_t btPollNr, const byte_t btPeriod, nfc_target_t * pntTargets, size_t * pszTargetFound)
 {
-  if (((struct pn53x_data*)(pnd->chip_data))->type != PN532) {
+  if (CHIP_DATA(pnd)->type != PN532) {
     // This function is not supported by pn531 neither pn533
     pnd->iLastError = DENOTSUP;
     return false;
@@ -711,7 +709,7 @@ pn53x_InAutoPoll (nfc_device_t * pnd,
       pntTargets[0].nm = pn53x_ptt_to_nm(ptt);
       // AutoPollTargetData length
       ln = *(pbt++);
-      pn53x_decode_target_data (pbt, ln, ((struct pn53x_data*)(pnd->chip_data))->type, pntTargets[0].nm.nmt, &(pntTargets[0].nti));
+      pn53x_decode_target_data (pbt, ln, CHIP_DATA(pnd)->type, pntTargets[0].nm.nmt, &(pntTargets[0].nti));
       pbt += ln;
 
       if (abtRx[0] > 1) {
@@ -721,7 +719,7 @@ pn53x_InAutoPoll (nfc_device_t * pnd,
         pntTargets[1].nm = pn53x_ptt_to_nm(ptt);
         // AutoPollTargetData length
         ln = *(pbt++);
-        pn53x_decode_target_data (pbt, ln, ((struct pn53x_data*)(pnd->chip_data))->type, pntTargets[1].nm.nmt, &(pntTargets[1].nti));
+        pn53x_decode_target_data (pbt, ln, CHIP_DATA(pnd)->type, pntTargets[1].nm.nmt, &(pntTargets[1].nti));
       }
     }
   }
@@ -811,12 +809,12 @@ pn53x_get_firmware_version (nfc_device_t * pnd, char abtFirmwareText[18])
   }
   // Determine which version of chip it is: PN531 will return only 2 bytes, while others return 4 bytes and have the first to tell the version IC
   if (szFwLen == 2) {
-    ((struct pn53x_data*)(pnd->chip_data))->type = PN531;
+    CHIP_DATA(pnd)->type = PN531;
   } else if (szFwLen == 4) {
     if (abtFw[0] == 0x32) { // PN532 version IC
-      ((struct pn53x_data*)(pnd->chip_data))->type = PN532;
+      CHIP_DATA(pnd)->type = PN532;
     } else if (abtFw[0] == 0x33)  { // PN532 version IC
-      ((struct pn53x_data*)(pnd->chip_data))->type = PN533;
+      CHIP_DATA(pnd)->type = PN533;
     } else {
       // Unknown version IC
       return false;
@@ -826,7 +824,7 @@ pn53x_get_firmware_version (nfc_device_t * pnd, char abtFirmwareText[18])
     return false;
   }
   // Convert firmware info in text, PN531 gives 2 bytes info, but PN532 and PN533 gives 4
-  switch (((struct pn53x_data*)(pnd->chip_data))->type) {
+  switch (CHIP_DATA(pnd)->type) {
   case PN531:
     snprintf (abtFirmwareText, 18, "PN531 v%d.%d", abtFw[0], abtFw[1]);
     pnd->btSupportByte = SUPPORT_ISO14443A | SUPPORT_ISO18092;
@@ -1201,7 +1199,7 @@ pn53x_target_init (nfc_device_t * pnd, nfc_target_t * pnt, byte_t * pbtRx, size_
         return false;
       }
       pn53x_set_parameters (pnd, PARAM_AUTO_ATR_RES, false);
-      if (((struct pn53x_data*)(pnd->chip_data))->type == PN532) { // We have a PN532
+      if (CHIP_DATA(pnd)->type == PN532) { // We have a PN532
         if ((pnt->nti.nai.btSak & SAK_ISO14443_4_COMPLIANT) && (pnd->bAutoIso14443_4)) { 
           // We have a ISO14443-4 tag to emulate and NDO_AUTO_14443_4A option is enabled
           ptm |= PTM_ISO14443_4_PICC_ONLY; // We add ISO14443-4 restriction
@@ -1390,7 +1388,7 @@ pn53x_TgInitAsTarget (nfc_device_t * pnd, pn53x_target_mode_t ptm,
     memcpy(abtCmd+26, pbtNFCID3t, 10);
   }
   // General Bytes (ISO/IEC 18092)
-  if (((struct pn53x_data*)(pnd->chip_data))->type == PN531) {
+  if (CHIP_DATA(pnd)->type == PN531) {
     if (szGBt) {
       memcpy (abtCmd+36, pbtGBt, szGBt);
       szOptionalBytes = szGBt;
@@ -1403,7 +1401,7 @@ pn53x_TgInitAsTarget (nfc_device_t * pnd, pn53x_target_mode_t ptm,
     szOptionalBytes = szGBt + 1;
   }
   // Historical bytes (ISO/IEC 14443-4)
-  if (((struct pn53x_data*)(pnd->chip_data))->type != PN531) { // PN531 does not handle Historical Bytes
+  if (CHIP_DATA(pnd)->type != PN531) { // PN531 does not handle Historical Bytes
     abtCmd[36+szOptionalBytes] = (byte_t)(szTkt);
     if (szTkt) {
       memcpy (abtCmd+37+szOptionalBytes, pbtTkt, szTkt);
