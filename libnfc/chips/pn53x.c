@@ -1195,15 +1195,14 @@ pn53x_initiator_transceive_bits_timed (nfc_device_t * pnd, const byte_t * pbtTx,
   unsigned int i;
   uint8_t sz;
 
-  // We can not just send bytes without parity while the PN53X expects we handled them
+  // Sorry, no arbitrary parity bits support for now
   if (!pnd->bPar)
     return false;
   // Sorry, no easy framing support
-  // TODO: to be changed once we'll provide easy framing support from libnfc itself...
   if (pnd->bEasyFraming)
     return false;
   // Sorry, no CRC support
-  // TODO: to be changed once we'll provide easy CRC support from libnfc itself...
+  // TODO but it probably doesn't make sense for (szTxBits % 8 != 0) ...
   if (pnd->bCrc)
     return false;
 
@@ -1293,10 +1292,6 @@ pn53x_initiator_transceive_bytes_timed (nfc_device_t * pnd, const byte_t * pbtTx
   // TODO: to be changed once we'll provide easy framing support from libnfc itself...
   if (pnd->bEasyFraming)
     return false;
-  // Sorry, no CRC support
-  // TODO: to be changed once we'll provide easy CRC support from libnfc itself...
-  if (pnd->bCrc)
-    return false;
 
   __pn53x_init_timer(pnd);
 
@@ -1321,8 +1316,17 @@ pn53x_initiator_transceive_bytes_timed (nfc_device_t * pnd, const byte_t * pbtTx
   }
 
   // Recv corrected timer value
-  *cycles = __pn53x_get_timer (pnd, pbtTx[szTx -1]);
-
+  if (pnd->bCrc) {
+    // We've to compute CRC ourselves to know last byte actually sent
+    uint8_t * pbtTxRaw;
+    pbtTxRaw = (uint8_t *) malloc(szTx+2);
+    memcpy (pbtTxRaw, pbtTx, szTx);
+    iso14443a_crc_append (pbtTxRaw, szTx);
+    *cycles = __pn53x_get_timer (pnd, pbtTxRaw[szTx +1]);
+    free(pbtTxRaw);
+  } else {
+    *cycles = __pn53x_get_timer (pnd, pbtTx[szTx -1]);
+  }
   return true;
 }
 

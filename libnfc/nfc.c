@@ -541,11 +541,10 @@ nfc_initiator_transceive_bits (nfc_device_t * pnd, const byte_t * pbtTx, const s
  *
  * This function is similar to nfc_initiator_transceive_bytes() with the following differences:
  * - A precise cycles counter will indicate the number of cycles between emission & reception of frames.
- * - It only supports mode with \a NDO_EASY_FRAMING option disabled and CRC must be handled manually.
+ * - It only supports mode with \a NDO_EASY_FRAMING option disabled.
  * - Overall communication with the host is heavier and slower.
  *
  * @warning The configuration option \a NDO_EASY_FRAMING must be set to \c false.
- * @warning The configuration option \a NDO_HANDLE_CRC must be set to \c false.
  * @warning The configuration option \a NDO_HANDLE_PARITY must be set to \c true (the default value).
  */
 bool
