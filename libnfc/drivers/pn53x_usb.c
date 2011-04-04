@@ -54,6 +54,7 @@ Thanks to d18c7db and Okko for example code
 typedef enum {
   UNKNOWN,
   NXP_PN531,
+  SONY_PN531,
   NXP_PN533,
   ASK_LOGO,
   SCM_SCL3711
@@ -105,7 +106,7 @@ const struct pn53x_usb_supported_device pn53x_usb_supported_devices[] = {
   { 0x04CC, 0x0531, NXP_PN531,   "Philips / PN531" },
   { 0x04CC, 0x2533, NXP_PN533,   "NXP / PN533" },
   { 0x04E6, 0x5591, SCM_SCL3711, "SCM Micro / SCL3711-NFC&RW" },
-  { 0x054c, 0x0193, NXP_PN531,   "Sony / PN531" },
+  { 0x054c, 0x0193, SONY_PN531,   "Sony / PN531" },
   { 0x1FD3, 0x0608, ASK_LOGO,    "ASK / LoGO" }
 };
 
@@ -285,6 +286,33 @@ pn53x_usb_connect (const nfc_device_desc_t *pndd)
 
         CHIP_DATA (pnd)->state = NORMAL;
         CHIP_DATA (pnd)->io = &pn53x_usb_io;
+
+        switch (DRIVER_DATA (pnd)->model) {
+          case ASK_LOGO:
+            // Timer stops only after 5 bits are received => 5*128 cycles
+            // When sent ...ZY (cmd ends with logical 0):
+            // 50: empirical tuning
+            CHIP_DATA (pnd)->timer_correction_zy = 50 - (5 * 128);
+            // When sent ...YY (cmd ends with logical 1):
+            // a ...ZY signal finishes 64us later than a ...YY signal
+            CHIP_DATA (pnd)->timer_correction_yy = CHIP_DATA (pnd)->timer_correction_zy + 64;
+            break;
+          case SCM_SCL3711:
+          case NXP_PN533:
+            CHIP_DATA (pnd)->timer_correction_zy = 46 - (5 * 128);
+            CHIP_DATA (pnd)->timer_correction_yy = CHIP_DATA (pnd)->timer_correction_zy + 64;
+            break;
+          case NXP_PN531:
+            CHIP_DATA (pnd)->timer_correction_zy = 50 - (2 * 128);
+            CHIP_DATA (pnd)->timer_correction_yy = CHIP_DATA (pnd)->timer_correction_zy + 64;
+            break;
+          case SONY_PN531:
+            CHIP_DATA (pnd)->timer_correction_zy = 54 - (2 * 128);
+            CHIP_DATA (pnd)->timer_correction_yy = CHIP_DATA (pnd)->timer_correction_zy + 64;
+            break;
+          default:
+            break;
+        }
         pnd->driver = &pn53x_usb_driver;
 
         // HACK1: Send first an ACK as Abort command, to reset chip before talking to it:
@@ -591,6 +619,8 @@ const struct nfc_driver_t pn53x_usb_driver = {
   .initiator_deselect_target        = pn53x_initiator_deselect_target,
   .initiator_transceive_bytes       = pn53x_initiator_transceive_bytes,
   .initiator_transceive_bits        = pn53x_initiator_transceive_bits,
+  .initiator_transceive_bytes_timed = pn53x_initiator_transceive_bytes_timed,
+  .initiator_transceive_bits_timed  = pn53x_initiator_transceive_bits_timed,
 
   .target_init           = pn53x_target_init,
   .target_send_bytes     = pn53x_target_send_bytes,

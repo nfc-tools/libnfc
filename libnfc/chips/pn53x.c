@@ -1139,6 +1139,81 @@ pn53x_initiator_transceive_bits (nfc_device_t * pnd, const byte_t * pbtTx, const
 }
 
 bool
+pn53x_initiator_transceive_bits_timed (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxBits,
+                                 const byte_t * pbtTxPar, byte_t * pbtRx, size_t * pszRxBits, byte_t * pbtRxPar, uint16_t * cycles)
+{
+  unsigned int i;
+  uint8_t sz, parity;
+  uint16_t prescaler = 0;
+  uint16_t reloadval = 0xFFFF;
+  uint8_t counter_hi, counter_lo;
+  uint16_t counter;
+
+  // We can not just send bytes without parity while the PN53X expects we handled them
+  if (!pnd->bPar)
+    return false;
+  // Sorry, no easy framing support
+  // TODO: to be changed once we'll provide easy framing support from libnfc itself...
+  if (pnd->bEasyFraming)
+    return false;
+  // Sorry, no CRC support
+  // TODO: to be changed once we'll provide easy CRC support from libnfc itself...
+  if (pnd->bCrc)
+    return false;
+
+  // Initialize timer
+  pn53x_write_register (pnd, REG_CIU_TMODE, 0xFF, SYMBOL_TAUTO | ((prescaler >> 8) & SYMBOL_TPRESCALERHI));
+  pn53x_write_register (pnd, REG_CIU_TPRESCALER, 0xFF, (prescaler & SYMBOL_TPRESCALERLO));
+  pn53x_write_register (pnd, REG_CIU_TRELOADVALHI, 0xFF, (reloadval >> 8) & 0xFF);
+  pn53x_write_register (pnd, REG_CIU_TRELOADVALLO, 0xFF, reloadval & 0xFF);
+
+  // Once timer is started, we cannot use Tama commands anymore.
+  // E.g. on SCL3711 timer settings are reset by 0x42 InCommunicateThru command to:
+  //  631a=82 631b=a5 631c=02 631d=00
+  // Prepare FIFO
+  pn53x_write_register (pnd, REG_CIU_COMMAND, 0xFF, SYMBOL_COMMAND & SYMBOL_COMMAND_TRANSCEIVE);
+  pn53x_write_register (pnd, REG_CIU_FIFOLEVEL, 0xFF, SYMBOL_FLUSH_BUFFER);
+  for (i=0; i< ((szTxBits / 8) + 1); i++) {
+        pn53x_write_register (pnd, REG_CIU_FIFODATA, 0xFF, pbtTx[i]);
+  }
+
+  // Send data
+  pn53x_write_register (pnd, REG_CIU_BIT_FRAMING, 0xFF, SYMBOL_START_SEND | ((szTxBits % 8) & SYMBOL_TX_LAST_BITS));
+
+  // Recv data
+  pn53x_read_register (pnd, REG_CIU_FIFOLEVEL, &sz);
+  *pszRxBits = (sz & SYMBOL_FIFO_LEVEL) * 8;
+  for (i=0; i< sz; i++) {
+    pn53x_read_register (pnd, REG_CIU_FIFODATA, &(pbtRx[i]));
+  }
+
+  // Read timer
+  pn53x_read_register (pnd, REG_CIU_TCOUNTERVALHI, &counter_hi);
+  pn53x_read_register (pnd, REG_CIU_TCOUNTERVALLO, &counter_lo);
+  counter = counter_hi;
+  counter = (counter << 8) + counter_lo;
+  if (counter == 0) {
+    // counter saturated
+    *cycles = 0xFFFF;
+  } else {
+    *cycles = 0xFFFF - counter + 1;
+    // Correction, depending on last parity bit sent
+    sz = pbtTx[szTxBits / 8];
+    parity = (sz >> 7) ^ ((sz >> 6) & 1) ^ ((sz >> 5) & 1) ^ ((sz >> 4) & 1) ^ ((sz >> 3) & 1) ^ ((sz >> 2) & 1) ^ ((sz >> 1) & 1) ^ (sz & 1);
+    parity = parity ? 0:1;
+    if (parity) {
+      *cycles += CHIP_DATA(pnd)->timer_correction_yy;
+    } else {
+      *cycles += CHIP_DATA(pnd)->timer_correction_zy;
+    }
+  }
+
+  return true;
+
+
+}
+
+bool
 pn53x_initiator_transceive_bytes (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, byte_t * pbtRx,
                                   size_t * pszRx)
 {
@@ -1181,6 +1256,80 @@ pn53x_initiator_transceive_bytes (nfc_device_t * pnd, const byte_t * pbtTx, cons
   // Everything went successful
   return true;
 }
+
+bool
+pn53x_initiator_transceive_bytes_timed (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, byte_t * pbtRx,
+                                  size_t * pszRx, uint16_t * cycles)
+{
+  unsigned int i;
+  uint8_t sz, parity;
+  uint16_t prescaler = 0;
+  uint16_t reloadval = 0xFFFF;
+  uint8_t counter_hi, counter_lo;
+  uint16_t counter;
+
+  // We can not just send bytes without parity while the PN53X expects we handled them
+  if (!pnd->bPar)
+    return false;
+  // Sorry, no easy framing support
+  // TODO: to be changed once we'll provide easy framing support from libnfc itself...
+  if (pnd->bEasyFraming)
+    return false;
+  // Sorry, no CRC support
+  // TODO: to be changed once we'll provide easy CRC support from libnfc itself...
+  if (pnd->bCrc)
+    return false;
+
+  // Initialize timer
+  pn53x_write_register (pnd, REG_CIU_TMODE, 0xFF, SYMBOL_TAUTO | ((prescaler >> 8) & SYMBOL_TPRESCALERHI));
+  pn53x_write_register (pnd, REG_CIU_TPRESCALER, 0xFF, (prescaler & SYMBOL_TPRESCALERLO));
+  pn53x_write_register (pnd, REG_CIU_TRELOADVALHI, 0xFF, (reloadval >> 8) & 0xFF);
+  pn53x_write_register (pnd, REG_CIU_TRELOADVALLO, 0xFF, reloadval & 0xFF);
+
+  // Once timer is started, we cannot use Tama commands anymore.
+  // E.g. on SCL3711 timer settings are reset by 0x42 InCommunicateThru command to:
+  //  631a=82 631b=a5 631c=02 631d=00
+  // Prepare FIFO
+  pn53x_write_register (pnd, REG_CIU_COMMAND, 0xFF, SYMBOL_COMMAND & SYMBOL_COMMAND_TRANSCEIVE);
+  pn53x_write_register (pnd, REG_CIU_FIFOLEVEL, 0xFF, SYMBOL_FLUSH_BUFFER);
+  for (i=0; i< szTx; i++) {
+        pn53x_write_register (pnd, REG_CIU_FIFODATA, 0xFF, pbtTx[i]);
+  }
+
+  // Send data
+  pn53x_write_register (pnd, REG_CIU_BIT_FRAMING, 0xFF, SYMBOL_START_SEND);
+
+  // Recv data
+  pn53x_read_register (pnd, REG_CIU_FIFOLEVEL, &sz);
+  *pszRx = sz & SYMBOL_FIFO_LEVEL;
+  for (i=0; i< sz; i++) {
+    pn53x_read_register (pnd, REG_CIU_FIFODATA, &(pbtRx[i]));
+  }
+
+  // Read timer
+  pn53x_read_register (pnd, REG_CIU_TCOUNTERVALHI, &counter_hi);
+  pn53x_read_register (pnd, REG_CIU_TCOUNTERVALLO, &counter_lo);
+  counter = counter_hi;
+  counter = (counter << 8) + counter_lo;
+  if (counter == 0) {
+    // counter saturated
+    *cycles = 0xFFFF;
+  } else {
+    *cycles = 0xFFFF - counter + 1;
+    // Correction, depending on last parity bit sent
+    sz = pbtTx[szTx -1];
+    parity = (sz >> 7) ^ ((sz >> 6) & 1) ^ ((sz >> 5) & 1) ^ ((sz >> 4) & 1) ^ ((sz >> 3) & 1) ^ ((sz >> 2) & 1) ^ ((sz >> 1) & 1) ^ (sz & 1);
+    parity = parity ? 0:1;
+    if (parity) {
+      *cycles += CHIP_DATA(pnd)->timer_correction_yy;
+    } else {
+      *cycles += CHIP_DATA(pnd)->timer_correction_zy;
+    }
+  }
+
+  return true;
+}
+
 
 #define SAK_ISO14443_4_COMPLIANT 0x20
 bool

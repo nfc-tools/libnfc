@@ -536,6 +536,46 @@ nfc_initiator_transceive_bits (nfc_device_t * pnd, const byte_t * pbtTx, const s
 }
 
 /**
+ * @brief Send data to target then retrieve data from target
+ * @return Returns \c true if action was successfully performed; otherwise returns \c false.
+ *
+ * This function is similar to nfc_initiator_transceive_bytes() with the following differences:
+ * - A precise cycles counter will indicate the number of cycles between emission & reception of frames.
+ * - It only supports mode with \a NDO_EASY_FRAMING option disabled and CRC must be handled manually.
+ * - Overall communication with the host is heavier and slower.
+ *
+ * @warning The configuration option \a NDO_EASY_FRAMING must be set to \c false.
+ * @warning The configuration option \a NDO_HANDLE_CRC must be set to \c false.
+ * @warning The configuration option \a NDO_HANDLE_PARITY must be set to \c true (the default value).
+ */
+bool
+nfc_initiator_transceive_bytes_timed (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, byte_t * pbtRx,
+                                size_t * pszRx, uint16_t * cycles)
+{
+  HAL (initiator_transceive_bytes_timed, pnd, pbtTx, szTx, pbtRx, pszRx, cycles)
+}
+
+/**
+ * @brief Transceive raw bit-frames to a target
+ * @return Returns \c true if action was successfully performed; otherwise returns \c false.
+ *
+ * This function is similar to nfc_initiator_transceive_bits() with the following differences:
+ * - A precise cycles counter will indicate the number of cycles between emission & reception of frames.
+ * - It only supports mode with \a NDO_EASY_FRAMING option disabled and CRC must be handled manually.
+ * - Overall communication with the host is heavier and slower.
+ *
+ * @warning The configuration option \a NDO_EASY_FRAMING must be set to \c false.
+ * @warning The configuration option \a NDO_HANDLE_CRC must be set to \c false.
+ * @warning The configuration option \a NDO_HANDLE_PARITY must be set to \c true (the default value).
+ */
+bool
+nfc_initiator_transceive_bits_timed (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxBits, const byte_t * pbtTxPar,
+                               byte_t * pbtRx, size_t * pszRxBits, byte_t * pbtRxPar, uint16_t * cycles)
+{
+  HAL (initiator_transceive_bits_timed, pnd, pbtTx, szTxBits, pbtTxPar, pbtRx, pszRxBits, pbtRxPar, cycles);
+}
+
+/**
  * @brief Initialize NFC device as an emulated tag
  * @return Returns \c true if action was successfully performed; otherwise returns \c false.
  *

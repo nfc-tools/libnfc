@@ -39,6 +39,11 @@
 //   11 : ISO/IEC 14443B
 #  define SYMBOL_TX_FRAMING         0x03
 
+#  define REG_CONTROL_SWITCH_RNG    0x6106
+#  define SYMBOL_CURLIMOFF          0x08     /* When set to 1, the 100 mA current limitations is desactivated. */
+#  define SYMBOL_SIC_SWITCH_EN      0x10     /* When set to logic 1, the SVDD switch is enabled and the SVDD output delivers power to secure IC and internal pads (SIGIN, SIGOUT and P34). */
+#  define SYMBOL_RANDOM_DATAREADY   0x02     /* When set to logic 1, a new random number is available. */
+
 #  define REG_CIU_RX_MODE           0x6303
 #  define SYMBOL_RX_CRC_ENABLE      0x80
 #  define SYMBOL_RX_NO_ERROR        0x08
@@ -51,29 +56,50 @@
 #  define SYMBOL_AUTO_WAKE_UP       0x20
 #  define SYMBOL_INITIAL_RF_ON      0x04
 
+#  define REG_CIU_TXSEL             0x6306
+
 #  define REG_CIU_MANUAL_RCV        0x630D
 #  define SYMBOL_PARITY_DISABLE     0x10
 
+#  define REG_CIU_TMODE             0x631A
+#  define SYMBOL_TAUTO              0x80
+#  define SYMBOL_TPRESCALERHI       0x0F
+
+#  define REG_CIU_TPRESCALER        0x631B
+#  define SYMBOL_TPRESCALERLO       0xFF
+
+#  define REG_CIU_TRELOADVALHI      0x631C
+
+#  define REG_CIU_TRELOADVALLO      0x631D
+
+#  define REG_CIU_TCOUNTERVALHI     0x631E
+
+#  define REG_CIU_TCOUNTERVALLO     0x631F
+
+#  define REG_CIU_COMMAND           0x6331
+#  define SYMBOL_COMMAND            0x0F
+#  define SYMBOL_COMMAND_TRANSCEIVE 0xC
+
 #  define REG_CIU_STATUS2           0x6338
 #  define SYMBOL_MF_CRYPTO1_ON      0x08
+
+#  define REG_CIU_FIFODATA          0x6339
+
+#  define REG_CIU_FIFOLEVEL         0x633A
+#  define SYMBOL_FLUSH_BUFFER       0x80
+#  define SYMBOL_FIFO_LEVEL         0x7F
 
 #  define REG_CIU_CONTROL           0x633C
 #  define SYMBOL_INITIATOR          0x10
 #  define SYMBOL_RX_LAST_BITS       0x07
 
 #  define REG_CIU_BIT_FRAMING       0x633D
+#  define SYMBOL_START_SEND         0x80
+#  define SYMBOL_RX_ALIGN           0x70
 #  define SYMBOL_TX_LAST_BITS       0x07
-
-#  define REG_CONTROL_SWITCH_RNG    0x6106
-#  define SYMBOL_CURLIMOFF          0x08     /* When set to 1, the 100 mA current limitations is desactivated. */
-#  define SYMBOL_SIC_SWITCH_EN      0x10     /* When set to logic 1, the SVDD switch is enabled and the SVDD output delivers power to secure IC and internal pads (SIGIN, SIGOUT and P34). */
-#  define SYMBOL_RANDOM_DATAREADY   0x02     /* When set to logic 1, a new random number is available. */
-
-#  define REG_CIU_TXSEL             0x6306
 
 #  define SFR_P3CFGB                0xFFFD
 #  define SFR_P3                    0xFFB0
-
 // PN53X Support Byte flags
 #define SUPPORT_ISO14443A             0x01
 #define SUPPORT_ISO14443B             0x02
@@ -131,6 +157,10 @@ struct pn53x_data {
   uint8_t ui8Parameters;
 /** Last sent command */
   uint8_t ui8LastCommand;
+/** Interframe correction for commands ending with logic "1" */
+  int16_t timer_correction_yy;
+/** Interframe correction for commands ending with logic "0" */
+  int16_t timer_correction_zy;
 };
 
 #define CHIP_DATA(pnd) ((struct pn53x_data*)(pnd->chip_data))
@@ -254,6 +284,11 @@ bool    pn53x_initiator_transceive_bits (nfc_device_t * pnd, const byte_t * pbtT
                                          byte_t * pbtRxPar);
 bool    pn53x_initiator_transceive_bytes (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx,
                                           byte_t * pbtRx, size_t * pszRx);
+bool    pn53x_initiator_transceive_bits_timed (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxBits,
+                                         const byte_t * pbtTxPar, byte_t * pbtRx, size_t * pszRxBits,
+                                         byte_t * pbtRxPar, uint16_t * cycles);
+bool    pn53x_initiator_transceive_bytes_timed (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx,
+                                          byte_t * pbtRx, size_t * pszRx, uint16_t * cycles);
 bool    pn53x_initiator_deselect_target (nfc_device_t * pnd);
 
 // NFC device as Target functions
