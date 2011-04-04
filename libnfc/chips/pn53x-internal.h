@@ -187,4 +187,13 @@ static const pn53x_command pn53x_commands[] = {
   PNCMD( TgGetTargetStatus, PN531|PN532|PN533 ),
 };
 
+#define _BV( X ) (1 << X)
+
+#define P30 0
+#define P31 1
+#define P32 2
+#define P33 3
+#define P34 4
+#define P35 5
+
 #endif /* __PN53X_INTERNAL_H__ */

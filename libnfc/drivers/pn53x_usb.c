@@ -547,11 +547,28 @@ On ASK LoGO hardware:
    field by switching off the field on PN533 then set P34 to '0'.
 */
 
-    /* Set P30, P31, P33, P34, P35 to logic 1 and P32 to 0 logic */
-    /* ie. Switch LED1 on */
-    pn53x_write_register (pnd, SFR_P3, 0xFF, 0x3B);
+    /* Set P30, P31, P33, P35 to logic 1 and P32, P34 to 0 logic */
+    /* ie. Switch LED1 on and turn off progressive field */
+    pn53x_write_register (pnd, SFR_P3, 0xFF, _BV (P30) | _BV (P31) | _BV (P33) | _BV (P35));
   }
 
+  return true;
+}
+
+bool
+pn53x_usb_configure (nfc_device_t * pnd, const nfc_device_option_t ndo, const bool bEnable)
+{
+  if (!pn53x_configure (pnd, ndo, bEnable))
+    return false;
+
+  if (ASK_LOGO == DRIVER_DATA (pnd)->model) {
+    if (NDO_ACTIVATE_FIELD == ndo) {
+      // Switch on/off progressive field according to ACTIVATE_FIELD option
+      DBG ("Switch progressive field %s", bEnable ? "On" : "Off");
+      if (!pn53x_write_register (pnd, SFR_P3, _BV (P34), bEnable ? 0xff : 0x00))
+        return false;
+    }
+  }
   return true;
 }
 
@@ -581,5 +598,5 @@ const struct nfc_driver_t pn53x_usb_driver = {
   .target_send_bits      = pn53x_target_send_bits,
   .target_receive_bits   = pn53x_target_receive_bits,
 
-  .configure  = pn53x_configure,
+  .configure  = pn53x_usb_configure,
 };
