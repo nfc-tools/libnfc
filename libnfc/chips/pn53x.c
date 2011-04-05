@@ -1196,15 +1196,21 @@ pn53x_initiator_transceive_bits_timed (nfc_device_t * pnd, const byte_t * pbtTx,
   uint8_t sz;
 
   // Sorry, no arbitrary parity bits support for now
-  if (!pnd->bPar)
+  if (!pnd->bPar) {
+    pnd->iLastError = DENOTSUP;
     return false;
+  }
   // Sorry, no easy framing support
-  if (pnd->bEasyFraming)
+  if (pnd->bEasyFraming) {
+    pnd->iLastError = DENOTSUP;
     return false;
+  }
   // Sorry, no CRC support
   // TODO but it probably doesn't make sense for (szTxBits % 8 != 0) ...
-  if (pnd->bCrc)
+  if (pnd->bCrc) {
+    pnd->iLastError = DENOTSUP;
     return false;
+  }
 
   __pn53x_init_timer(pnd);
 
@@ -1242,8 +1248,10 @@ pn53x_initiator_transceive_bytes (nfc_device_t * pnd, const byte_t * pbtTx, cons
   byte_t  abtCmd[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
 
   // We can not just send bytes without parity if while the PN53X expects we handled them
-  if (!pnd->bPar)
+  if (!pnd->bPar) {
+    pnd->iLastError = DENOTSUP;
     return false;
+  }
 
   // Copy the data into the command frame
   if (pnd->bEasyFraming) {
@@ -1286,12 +1294,16 @@ pn53x_initiator_transceive_bytes_timed (nfc_device_t * pnd, const byte_t * pbtTx
   uint8_t sz;
 
   // We can not just send bytes without parity while the PN53X expects we handled them
-  if (!pnd->bPar)
+  if (!pnd->bPar) {
+    pnd->iLastError = DENOTSUP;
     return false;
+  }
   // Sorry, no easy framing support
   // TODO: to be changed once we'll provide easy framing support from libnfc itself...
-  if (pnd->bEasyFraming)
+  if (pnd->bEasyFraming) {
+    pnd->iLastError = DENOTSUP;
     return false;
+  }
 
   __pn53x_init_timer(pnd);
 
