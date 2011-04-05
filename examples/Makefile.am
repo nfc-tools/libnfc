@@ -47,7 +47,8 @@ nfc_mfultralight_SOURCES = nfc-mfultralight.c mifare.c mifare.h
 nfc_mfultralight_LDADD = $(top_builddir)/libnfc/libnfc.la
 
 nfc_mfclassic_SOURCES = nfc-mfclassic.c mifare.c mifare.h
-nfc_mfclassic_LDADD = $(top_builddir)/libnfc/libnfc.la
+nfc_mfclassic_LDADD = $(top_builddir)/libnfc/libnfc.la \
+		    libnfcutils.la
 
 nfc_relay_SOURCES = nfc-relay.c
 nfc_relay_LDADD = $(top_builddir)/libnfc/libnfc.la \

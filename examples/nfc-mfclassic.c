@@ -329,6 +329,7 @@ typedef enum {
   ACTION_READ,
   ACTION_WRITE,
   ACTION_EXTRACT,
+  ACTION_FINGERPRINT,
   ACTION_USAGE
 } action_t;
 
@@ -346,6 +347,9 @@ print_usage (const char *pcProgramName)
   printf ("  x             - Extract payload (data blocks) from MFD\n");
   printf ("  <dump.mfd>    - MiFare Dump (MFD) that contains wanted payload\n");
   printf ("  <payload.bin> - Binary file where payload will be extracted\n");
+  printf ("Or: ");
+  printf ("%s f\n", pcProgramName);
+  printf ("  f             - Fingerprinting of the Mifare Classic card type\n");
 }
 
 int
@@ -356,23 +360,38 @@ main (int argc, const char *argv[])
   byte_t *pbtUID;
   FILE   *pfKeys = NULL;
   FILE   *pfDump = NULL;
-  const char *command = argv[1];
 
-  if (argc < 3) {
+  if (argc < 2) {
     print_usage (argv[0]);
     exit (EXIT_FAILURE);
   }
+  const char *command = argv[1];
 
   if (strcmp (command, "r") == 0) {
+    if (argc < 4) {
+      print_usage (argv[0]);
+      exit (EXIT_FAILURE);
+    }
     atAction = ACTION_READ;
     bUseKeyA = tolower ((int) ((unsigned char) *(argv[2]))) == 'a';
     bUseKeyFile = (argc > 4);
   } else if (strcmp (command, "w") == 0) {
+    if (argc < 4) {
+      print_usage (argv[0]);
+      exit (EXIT_FAILURE);
+    }
     atAction = ACTION_WRITE;
     bUseKeyA = tolower ((int) ((unsigned char) *(argv[2]))) == 'a';
     bUseKeyFile = (argc > 4);
   } else if (strcmp (command, "x") == 0) {
+    if (argc < 4) {
+      print_usage (argv[0]);
+      exit (EXIT_FAILURE);
+    }
     atAction = ACTION_EXTRACT;
+  } else if (strcmp (command, "f") == 0) {
+    atAction = ACTION_FINGERPRINT;
+    bUseKeyFile = false;
   }
 
   switch (atAction) {
@@ -382,11 +401,6 @@ main (int argc, const char *argv[])
     break;
   case ACTION_READ:
   case ACTION_WRITE:
-    if (argc < 4) {
-      print_usage (argv[0]);
-      exit (EXIT_FAILURE);
-    }
-
     if (bUseKeyFile) {
       pfKeys = fopen (argv[4], "rb");
       if (pfKeys == NULL) {
@@ -420,6 +434,8 @@ main (int argc, const char *argv[])
     }
     // printf("Successfully opened required files\n");
 
+  // yes indeed we don't break here but code goes on next section...
+  case ACTION_FINGERPRINT:
     // Try to open the NFC reader
     pnd = nfc_connect (NULL);
     if (pnd == NULL) {
@@ -484,8 +500,8 @@ main (int argc, const char *argv[])
     // Get the info from the current tag
     pbtUID = nt.nti.nai.abtUid;
     b4K = (nt.nti.nai.abtAtqa[1] == 0x02);
-    printf ("Found MIFARE Classic %ck card with UID: %02x%02x%02x%02x\n", b4K ? '4' : '1', pbtUID[0], pbtUID[1],
-            pbtUID[2], pbtUID[3]);
+    printf ("Found MIFARE Classic %ck card:\n", b4K ? '4' : '1');
+    print_nfc_iso14443a_info (nt.nti.nai, false);
 
     uiBlocks = (b4K) ? 0xff : 0x3f;
 
@@ -505,8 +521,63 @@ main (int argc, const char *argv[])
         printf ("Done.\n");
         fclose (pfDump);
       }
-    } else {
+    } else if (atAction == ACTION_WRITE) {
       write_card ();
+    } else if (atAction == ACTION_FINGERPRINT) {
+      printf ("Fingerprinting based on timings...\n");
+      uint16_t cycles;
+      float diffc;
+      if (!nfc_configure (pnd, NDO_HANDLE_CRC, false)) {
+        nfc_disconnect (pnd);
+        break;
+      }
+      if (!nfc_configure (pnd, NDO_EASY_FRAMING, false)) {
+        nfc_disconnect (pnd);
+        break;
+      }
+      byte_t abtTx[4] = {0x60, 0x00};
+      size_t szTx = sizeof(abtTx);
+      iso14443a_crc_append(abtTx, 2);
+      byte_t abtRx[4];
+      size_t szRx = sizeof(abtRx);
+      if (!nfc_initiator_transceive_bytes_timed (pnd, abtTx, szTx, abtRx, &szRx, &cycles)) {
+        nfc_disconnect (pnd);
+        break;
+      }
+      if (szRx != 4) {
+        nfc_disconnect (pnd);
+        break;
+      }
+      diffc = cycles;
+      printf ("* Response to AuthA0 received in %.2f usecs ( %.0f / %2.2fMHz )\n", diffc / 13.56, diffc, 13.56);
+      struct mfc_candidate {
+        uint16_t autha0_cycles;
+        char *name;
+      };
+      const struct mfc_candidate mfc_candidates[] = {
+        { 1624,   "Fudan clone" },
+        { 2008,   "Regular Mifare Classic" },
+        { 4568,   "Mifare Classic 7-byte UID" },
+        //{ 4568,   "Mifare Plus SL1 eng. sample" },
+        { 4696,   "Mifare Classic 7-byte UID" },
+        { 4824,   "Mifare Plus SL1" },
+      };
+      int min_delta_cycles = 0xFFFF;
+      char * name = "";
+      for (size_t n = 0; n < sizeof (mfc_candidates) / sizeof (struct mfc_candidate); n++) {
+        int delta_cycles = cycles - mfc_candidates[n].autha0_cycles;
+        if (delta_cycles < 0)
+          delta_cycles = - delta_cycles;
+        if (delta_cycles < min_delta_cycles) {
+          min_delta_cycles = delta_cycles;
+          name = mfc_candidates[n].name;
+        }
+      }
+      if (min_delta_cycles <= 8) {
+        printf(" ** Perfect match: %s\n", name);
+      } else {
+        printf(" ** Best match: %s, with diff of %i/%i (%.2f%%)\n", name, min_delta_cycles, cycles, ((float) min_delta_cycles * 100)/cycles);
+      }
     }
 
     nfc_disconnect (pnd);
