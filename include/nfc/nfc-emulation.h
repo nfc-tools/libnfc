@@ -23,6 +23,10 @@
 #include <sys/types.h>
 #include <nfc/nfc.h>
 
+#ifdef __cplusplus
+extern  "C" {
+#endif /* __cplusplus */
+
 struct nfc_emulator;
 struct nfc_emulation_state_machine;
 
@@ -39,5 +43,10 @@ struct nfc_emulation_state_machine {
 };
 
 NFC_EXPORT int    nfc_emulate_target (nfc_device_t* pnd, struct nfc_emulator *emulator);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
+
 
 #endif /* __NFC_EMULATION_H__ */
