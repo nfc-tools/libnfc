@@ -47,7 +47,20 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include <unistd.h>
+#include <time.h>
+
+#ifndef _WIN32
+// Needed by sleep() under Unix
+#  include <unistd.h>
+#  define sleep usleep
+#  define SUSP_TIME 1000           // usecs.
+#else
+// Needed by Sleep() under Windows
+#  include <winbase.h>
+#  define sleep Sleep
+#  define SUSP_TIME 1        // msecs.
+#endif
+
 
 #include <nfc/nfc.h>
 
@@ -132,9 +145,9 @@ int main(int argc, const char* argv[])
         offset++;
       }
       sscanf(cmd+offset, "%d", &s);
-      printf("Pause for %i secs\n", s);
+      printf("Pause for %i msecs\n", s);
       if (s>0) {
-          sleep(s);
+          sleep(s * SUSP_TIME);
       }
       free(cmd);
       continue;
