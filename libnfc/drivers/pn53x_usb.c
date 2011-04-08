@@ -583,13 +583,23 @@ pn53x_usb_configure (nfc_device_t * pnd, const nfc_device_option_t ndo, const bo
   if (!pn53x_configure (pnd, ndo, bEnable))
     return false;
 
-  if (ASK_LOGO == DRIVER_DATA (pnd)->model) {
-    if (NDO_ACTIVATE_FIELD == ndo) {
-      // Switch on/off progressive field according to ACTIVATE_FIELD option
-      DBG ("Switch progressive field %s", bEnable ? "On" : "Off");
-      if (!pn53x_write_register (pnd, SFR_P3, _BV(P31) | _BV (P34), bEnable ? _BV (P34) : _BV (P31)))
-        return false;
-    }
+  switch (DRIVER_DATA (pnd)->model) {
+    case ASK_LOGO:
+      if (NDO_ACTIVATE_FIELD == ndo) {
+        // Switch on/off progressive field according to ACTIVATE_FIELD option
+        DBG ("Switch progressive field %s", bEnable ? "On" : "Off");
+        if (!pn53x_write_register (pnd, SFR_P3, _BV(P31) | _BV (P34), bEnable ? _BV (P34) : _BV (P31)))
+          return false;
+      }
+      break;
+    case SCM_SCL3711:
+      if (NDO_ACTIVATE_FIELD == ndo) {
+        if (!pn53x_write_register (pnd, SFR_P3, _BV (P32), bEnable ? 0 : _BV (P32)))
+          return false;
+      }
+      break;
+    default:
+      break;
   }
   return true;
 }
