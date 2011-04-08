@@ -338,6 +338,12 @@ pn53x_usb_disconnect (nfc_device_t * pnd)
 
   pn53x_usb_ack (pnd);
 
+  if (DRIVER_DATA (pnd)->model == ASK_LOGO) {
+    /* Set P30, P31, P32, P33, P35 to logic 1 and P34 to 0 logic */
+    /* ie. Switch all LEDs off and turn off progressive field */
+    pn53x_write_register (pnd, SFR_P3, 0xFF, _BV (P30) | _BV (P31) | _BV (P32) | _BV (P33) | _BV (P35));
+  }
+
   if ((res = usb_release_interface (DRIVER_DATA (pnd)->pudh, 0)) < 0) {
     ERR ("usb_release_interface failed (%i)", res);
   }
