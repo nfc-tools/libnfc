@@ -70,6 +70,7 @@ struct pn53x_usb_data {
 
 const struct pn53x_io pn53x_usb_io;
 bool pn53x_usb_get_usb_device_name (struct usb_device *dev, usb_dev_handle *udev, char *buffer, size_t len);
+bool pn53x_usb_init (nfc_device_t *pnd);
 
 int
 pn53x_usb_bulk_read (struct pn53x_usb_data *data, byte_t abtRx[], const size_t szRx)
@@ -312,10 +313,11 @@ pn53x_usb_connect (const nfc_device_desc_t *pndd)
 
         // HACK2: Then send a GetFirmware command to resync USB toggle bit between host & device
         // in case host used set_configuration and expects the device to have reset its toggle bit, which PN53x doesn't do
-        if (!pn53x_init (pnd)) {
+        if (!pn53x_usb_init (pnd)) {
           usb_close (data.pudh);
           goto error;
         }
+
         return pnd;
       }
     }
@@ -532,9 +534,9 @@ pn53x_usb_ack (nfc_device_t * pnd)
 }
 
 bool
-pn53x_usb_initiator_init (nfc_device_t *pnd)
+pn53x_usb_init (nfc_device_t *pnd)
 {
-  if (!pn53x_initiator_init (pnd))
+  if (!pn53x_init (pnd))
     return false;
 
   if (ASK_LOGO == DRIVER_DATA (pnd)->model) {
@@ -585,7 +587,7 @@ pn53x_usb_configure (nfc_device_t * pnd, const nfc_device_option_t ndo, const bo
     if (NDO_ACTIVATE_FIELD == ndo) {
       // Switch on/off progressive field according to ACTIVATE_FIELD option
       DBG ("Switch progressive field %s", bEnable ? "On" : "Off");
-      if (!pn53x_write_register (pnd, SFR_P3, _BV (P34), bEnable ? 0xff : 0x00))
+      if (!pn53x_write_register (pnd, SFR_P3, _BV(P31) | _BV (P34), bEnable ? _BV (P34) : _BV (P31)))
         return false;
     }
   }
@@ -604,7 +606,7 @@ const struct nfc_driver_t pn53x_usb_driver = {
   .disconnect = pn53x_usb_disconnect,
   .strerror   = pn53x_strerror,
 
-  .initiator_init                   = pn53x_usb_initiator_init,
+  .initiator_init                   = pn53x_initiator_init,
   .initiator_select_passive_target  = pn53x_initiator_select_passive_target,
   .initiator_poll_targets           = pn53x_initiator_poll_targets,
   .initiator_select_dep_target      = pn53x_initiator_select_dep_target,
