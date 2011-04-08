@@ -4,8 +4,8 @@
 # Operating Systems Supported:
 # - Unix (requires pkg-config)
 #   Tested with Ubuntu 9.04 and Fedora 11
-# - Windows (requires MSVC)
-#   Tested with Windows XP
+# - Windows (requires MinGW)
+#   Tested with Windows XP/Windows 7
 #
 # This should work for both 32 bit and 64 bit systems.
 #
@@ -26,20 +26,9 @@ ENDIF(CMAKE_SYSTEM_NAME MATCHES FreeBSD)
 
 IF(NOT LIBUSB_FOUND)
 IF(WIN32)
-  # Windows with Microsoft Visual C++
   FIND_PATH(LIBUSB_INCLUDE_DIRS usb.h "$ENV{ProgramFiles}/LibUSB-Win32/include" NO_SYSTEM_ENVIRONMENT_PATH)
-  IF(MSVC)
-    IF(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x64")
-      # on x64 (win64)
-      FIND_LIBRARY(LIBUSB_LIBRARIES NAMES libusb PATHS "$ENV{ProgramFiles}/LibUSB-Win32/lib/msvc_x64")
-    ELSE(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x64")
-      # on x86 (win32)
-      FIND_LIBRARY(LIBUSB_LIBRARIES NAMES libusb PATHS "$ENV{ProgramFiles}/LibUSB-Win32/lib/msvc")
-    ENDIF(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x64")
-  ENDIF(MSVC)
-  IF(MINGW)
-    FIND_LIBRARY(LIBUSB_LIBRARIES NAMES libusb PATHS "$ENV{ProgramFiles}/LibUSB-Win32/lib/gcc")
-  ENDIF(MINGW)
+  FIND_LIBRARY(LIBUSB_LIBRARIES NAMES libusb PATHS "$ENV{ProgramFiles}/LibUSB-Win32/lib/gcc")
+  SET(LIBUSB_DLL "$ENV{ProgramFiles}/LibUSB-Win32/bin/x86/libusb0_x86.dll")
 ELSE(WIN32)
   # If not under Windows we use PkgConfig
   FIND_PACKAGE (PkgConfig)
