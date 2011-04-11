@@ -556,12 +556,14 @@ main (int argc, const char *argv[])
       };
       const struct mfc_candidate mfc_candidates[] = {
         { 1624,   "Fudan clone" },
-        { 1752,   "JCOP41 V2.2.1 or Nokia 6131" },
+        { 1752,   "Emulation on JCOP41 V2.2.1 or Nokia 6131" },
         { 2008,   "Regular Mifare Classic" },
-        { 4568,   "7-byte UID Mifare Classic or MFP SL1" },
-        { 4696,   "7-byte UID Mifare Classic or MFP SL1" },
+        { 3544,   "Emulation on P5CD144 EvalOS" },
+        { 4316,   "Emulation on JCOP31 V2.4.1 J3A080" },
+        { 4568,   "7-byte UID (Mifare Classic or MFP SL1)" },
+        { 4696,   "7-byte UID (Mifare Classic or MFP SL1)" },
         { 4824,   "Mifare Plus SL1" },
-        { 5850,   "JCOP31 V2.4.1 J3A080" },
+        { 5850,   "Emulation on JCOP31 V2.4.1 J3A080" },
       };
       int min_delta_cycles = 0xFFFF;
       char * name = "";
