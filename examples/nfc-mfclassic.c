@@ -555,7 +555,6 @@ main (int argc, const char *argv[])
         char *name;
       };
       const struct mfc_candidate mfc_candidates[] = {
-        { 1624,   "Fudan clone" },
         { 1752,   "Emulation on JCOP41 V2.2.1 or Nokia 6131" },
         { 2008,   "Regular Mifare Classic" },
         { 3544,   "Emulation on P5CD144 EvalOS" },
