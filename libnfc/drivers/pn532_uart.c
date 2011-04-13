@@ -202,7 +202,10 @@ pn532_uart_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szData
   CHIP_DATA (pnd)->ui8LastCommand = pbtData[0];
   size_t szFrame = 0;
 
-  pn53x_build_frame (abtFrame, &szFrame, pbtData, szData);
+  if (!pn53x_build_frame (abtFrame, &szFrame, pbtData, szData)) {
+    pnd->iLastError = DEINVAL;
+    return false;
+  }
 
   int res = uart_send (DRIVER_DATA(pnd)->port, abtFrame, szFrame);
   if (res != 0) {
@@ -271,8 +274,16 @@ pn532_uart_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen
     return -1;
   } else if ((0xff == abtRxBuf[3]) && (0xff == abtRxBuf[4])) {
     // Extended frame
-    // FIXME: Code this
-    abort ();
+    pnd->iLastError = uart_receive (DRIVER_DATA(pnd)->port, abtRxBuf, 3, 0);
+
+    // (abtRxBuf[0] << 8) + abtRxBuf[1] (LEN) include TFI + (CC+1)
+    len = (abtRxBuf[0] << 8) + abtRxBuf[1] - 2;
+    if (((abtRxBuf[0] + abtRxBuf[1] + abtRxBuf[2]) % 256) != 0) {
+      // TODO: Retry
+      ERR ("%s", "Length checksum mismatch");
+      pnd->iLastError = DEIO;
+      return -1;
+    }
   } else {
     // Normal frame
     if (256 != (abtRxBuf[3] + abtRxBuf[4])) {

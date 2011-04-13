@@ -329,6 +329,6 @@ bool	pn53x_TgInitAsTarget (nfc_device_t * pnd, pn53x_target_mode_t ptm,
 // Misc
 bool    pn53x_check_ack_frame (nfc_device_t * pnd, const byte_t * pbtRxFrame, const size_t szRxFrameLen);
 bool    pn53x_check_error_frame (nfc_device_t * pnd, const byte_t * pbtRxFrame, const size_t szRxFrameLen);
-void    pn53x_build_frame(byte_t * pbtFrame, size_t * pszFrame, const byte_t * pbtData, const size_t szData);
+bool    pn53x_build_frame (byte_t * pbtFrame, size_t * pszFrame, const byte_t * pbtData, const size_t szData);
 
 #endif // __NFC_CHIPS_PN53X_H__

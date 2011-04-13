@@ -358,8 +358,14 @@ pn53x_unwrap_frame (const byte_t * pbtFrame, const size_t szFrameBits, byte_t * 
   }
 }
 
-void
-pn53x_build_frame(byte_t * pbtFrame, size_t * pszFrame, const byte_t * pbtData, const size_t szData)
+/**
+ * @brief Build a PN53x frame
+ * 
+ * @param pbtData payload (bytes array) of the frame, will become PD0, ..., PDn in PN53x frame
+ * @note The first byte of pbtData is the Command Code (CC)
+ */
+bool
+pn53x_build_frame (byte_t * pbtFrame, size_t * pszFrame, const byte_t * pbtData, const size_t szData)
 {
   if (szData <= PN53x_NORMAL_FRAME__DATA_MAX_LEN) {
     // LEN - Packet length = data length (len) + checksum (1) + end of stream marker (1)
@@ -382,10 +388,37 @@ pn53x_build_frame(byte_t * pbtFrame, size_t * pszFrame, const byte_t * pbtData, 
     pbtFrame[szData + 7] = 0x00;
 
     (*pszFrame) = szData + PN53x_NORMAL_FRAME__OVERHEAD;
+  } else if (szData <= PN53x_EXTENDED_FRAME__DATA_MAX_LEN) {
+    // Extended frame marker
+    pbtFrame[3] = 0xff;
+    pbtFrame[4] = 0xff;
+    // LENm
+    pbtFrame[5] = (szData + 1) >> 8;
+    // LENl
+    pbtFrame[6] = (szData + 1) & 0xff;
+    // LCS
+    pbtFrame[7] = 256 - ((pbtFrame[5] + pbtFrame[6]) & 0xff);
+    // TFI
+    pbtFrame[8] = 0xD4;
+    // DATA - Copy the PN53X command into the packet buffer
+    memcpy (pbtFrame + 9, pbtData, szData);
+
+    // DCS - Calculate data payload checksum
+    byte_t btDCS = (256 - 0xD4);
+    for (size_t szPos = 0; szPos < szData; szPos++) {
+      btDCS -= pbtData[szPos];
+    }
+    pbtFrame[9 + szData] = btDCS;
+
+    // 0x00 - End of stream marker
+    pbtFrame[szData + 10] = 0x00;
+
+    (*pszFrame) = szData + PN53x_EXTENDED_FRAME__OVERHEAD;
   } else {
-    // FIXME: Build extended frame
-    abort();
+    ERR ("We can't send more than %d bytes in a raw (requested: %zd)", PN53x_EXTENDED_FRAME__DATA_MAX_LEN, szData);
+    return false;
   }
+  return true;
 }
 
 bool
