@@ -195,7 +195,7 @@ arygon_disconnect (nfc_device_t * pnd)
   nfc_device_free (pnd);
 }
 
-#define ARYGON_TX_BUFFER_LEN (PN53x_EXTENDED_FRAME__DATA_MAX_LEN + PN53x_EXTENDED_FRAME__OVERHEAD + 1)
+#define ARYGON_TX_BUFFER_LEN (PN53x_NORMAL_FRAME__DATA_MAX_LEN + PN53x_NORMAL_FRAME__OVERHEAD + 1)
 #define ARYGON_RX_BUFFER_LEN (PN53x_EXTENDED_FRAME__DATA_MAX_LEN + PN53x_EXTENDED_FRAME__OVERHEAD)
 bool
 arygon_tama_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szData)
@@ -204,7 +204,16 @@ arygon_tama_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szDat
 
   CHIP_DATA (pnd)->ui8LastCommand = pbtData[0];
   size_t szFrame = 0;
-  pn53x_build_frame (abtFrame + 1, &szFrame, pbtData, szData);
+  if (szData > PN53x_NORMAL_FRAME__DATA_MAX_LEN) {
+    // ARYGON Reader with PN532 equipped does not support extended frame (bug in ARYGON firmware?)
+    pnd->iLastError = DEINVAL;
+    return false;
+  }
+
+  if (!pn53x_build_frame (abtFrame + 1, &szFrame, pbtData, szData)) {
+    pnd->iLastError = DEINVAL;
+    return false;
+  }
 
   int res = uart_send (DRIVER_DATA (pnd)->port, abtFrame, szFrame + 1);
   if (res != 0) {
