@@ -184,6 +184,13 @@ arygon_connect (const nfc_device_desc_t * pndd)
     return NULL;
   }
 
+  char arygon_firmware_version[10];
+  arygon_firmware (pnd, arygon_firmware_version);
+  char   *pcName;
+  pcName = strdup (pnd->acName);
+  snprintf (pnd->acName, sizeof (pnd->acName), "%s %s", pcName, arygon_firmware_version);
+  free (pcName);
+
   pn53x_init(pnd);
   return pnd;
 }
@@ -234,6 +241,9 @@ arygon_tama_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szDat
     CHIP_DATA (pnd)->state = EXECUTE;
   } else if (0 == memcmp(arygon_error_unknown_mode, abtRxBuf, sizeof(abtRxBuf))) {
     ERR( "Bad frame format." );
+    // We have already read 6 bytes and arygon_error_unknown_mode is 10 bytes long
+    // so we have to read 4 remaining bytes to be synchronized at the next receiving pass.
+    uart_receive (DRIVER_DATA (pnd)->port, abtRxBuf, 4, 0);
     return false;
   } else {
     return false;
