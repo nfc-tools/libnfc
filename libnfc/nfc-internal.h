@@ -39,11 +39,11 @@
 #  ifdef DEBUG
 #    define PRINT_HEX(pcTag, pbtData, szBytes) do { \
     size_t __szPos; \
-    printf(" %s: ", pcTag); \
+    fprintf(stderr, " %s: ", pcTag); \
     for (__szPos=0; __szPos < (size_t)(szBytes); __szPos++) { \
-      printf("%02x  ",((uint8_t *)(pbtData))[__szPos]); \
+      fprintf(stderr, "%02x  ",((uint8_t *)(pbtData))[__szPos]); \
     } \
-    printf("\n"); \
+    fprintf(stderr, "\n"); \
   } while (0);
 #  else
 #    define PRINT_HEX(pcTag, pbtData, szBytes) do { \
