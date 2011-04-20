@@ -28,7 +28,7 @@ IF(NOT LIBUSB_FOUND)
 IF(WIN32)
   FIND_PATH(LIBUSB_INCLUDE_DIRS usb.h "$ENV{ProgramFiles}/LibUSB-Win32/include" NO_SYSTEM_ENVIRONMENT_PATH)
   FIND_LIBRARY(LIBUSB_LIBRARIES NAMES libusb PATHS "$ENV{ProgramFiles}/LibUSB-Win32/lib/gcc")
-  SET(LIBUSB_DLL "$ENV{ProgramFiles}/LibUSB-Win32/bin/x86/libusb0_x86.dll")
+  SET(LIBUSB_LIBRARY_DIR "$ENV{ProgramFiles}/LibUSB-Win32/bin/x86/")
 ELSE(WIN32)
   # If not under Windows we use PkgConfig
   FIND_PACKAGE (PkgConfig)
