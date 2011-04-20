@@ -100,12 +100,13 @@ uart_open (const char *pcPortName)
   sp->tiNew.c_cc[VMIN] = 0;     // block until n bytes are received
   sp->tiNew.c_cc[VTIME] = 0;    // block until a timer expires (n * 100 mSec.)
 
+  // This line seems to produce absolutely no effect on my system (GNU/Linux 2.6.35)
+  tcflush (sp->fd, TCIFLUSH);
+
   if (tcsetattr (sp->fd, TCSANOW, &sp->tiNew) == -1) {
     uart_close (sp);
     return INVALID_SERIAL_PORT;
   }
-
-  tcflush (sp->fd, TCIFLUSH);
   return sp;
 }
 
