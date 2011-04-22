@@ -213,6 +213,7 @@ arygon_tama_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szDat
   size_t szFrame = 0;
   if (szData > PN53x_NORMAL_FRAME__DATA_MAX_LEN) {
     // ARYGON Reader with PN532 equipped does not support extended frame (bug in ARYGON firmware?)
+    DBG ("ARYGON device does not support more than %d bytes as payload (requested: %zd)", PN53x_NORMAL_FRAME__DATA_MAX_LEN, szData);
     pnd->iLastError = DEINVAL;
     return false;
   }
