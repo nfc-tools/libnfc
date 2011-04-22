@@ -79,8 +79,12 @@ struct nfcforum_tag4_state_machine_data {
 uint8_t nfcforum_capability_container[] = {
   0x00, 0x0F, /* CCLEN 15 bytes */
   0x10,       /* Mapping version 1.0 */
-  0x00, 0x2F, /* MLe Maximum R-ADPU data size */
-  0x00, 0x2F, /* MLc Maximum C-ADPU data size */
+  0x00, 0x54, /* MLe Maximum R-ADPU data size */
+// Notes: 
+//  - I (Romuald) don't know why Nokia 6212 Classic refuses the NDEF message if MLe is more than 0xFD (any suggests are welcome);
+//  - ARYGON devices doesn't support extended frame sending, consequently these devices can't sent more than 0xFE bytes as APDU, so 0xFB APDU data bytes.
+//  - I (Romuald) don't know why ARYGON device doesn't ACK when MLe > 0x54 (ARYGON frame lenght = 0xC2 (192 bytes))
+  0x00, 0xFF, /* MLc Maximum C-ADPU data size */
   0x04,       /* T field of the NDEF File-Control TLV */
   0x06,       /* L field of the NDEF File-Control TLV */
               /* V field of the NDEF File-Control TLV */
