@@ -112,7 +112,7 @@ arygon_probe (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * pszDev
       pnd->driver_data = malloc(sizeof(struct arygon_data));
       DRIVER_DATA (pnd)->port = sp;
       pnd->chip_data = malloc(sizeof(struct pn53x_data));
-      CHIP_DATA (pnd)->state = NORMAL;
+      CHIP_DATA (pnd)->power_mode = NORMAL;
       CHIP_DATA (pnd)->io = &arygon_tama_io;
 
       bool res = arygon_reset_tama (pnd);
@@ -172,7 +172,7 @@ arygon_connect (const nfc_device_desc_t * pndd)
   pnd->chip_data = malloc(sizeof(struct pn53x_data));
 
   // The PN53x chip connected to ARYGON MCU doesn't seems to be in SLEEP mode
-  CHIP_DATA (pnd)->state = NORMAL;
+  CHIP_DATA (pnd)->power_mode = NORMAL;
   CHIP_DATA (pnd)->io = &arygon_tama_io;
   // empirical tuning
   CHIP_DATA (pnd)->timer_correction = 46;
@@ -239,7 +239,7 @@ arygon_tama_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szDat
   }
 
   if (pn53x_check_ack_frame (pnd, abtRxBuf, sizeof(abtRxBuf))) {
-    CHIP_DATA (pnd)->state = EXECUTE;
+    // The PN53x is running the sent command
   } else if (0 == memcmp(arygon_error_unknown_mode, abtRxBuf, sizeof(abtRxBuf))) {
     ERR( "Bad frame format." );
     // We have already read 6 bytes and arygon_error_unknown_mode is 10 bytes long
@@ -255,8 +255,6 @@ arygon_tama_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szDat
 int
 arygon_abort (nfc_device_t *pnd)
 {
-  CHIP_DATA (pnd)->state = NORMAL;
-
   // Send a valid TAMA packet to wakup the PN53x (we will not have an answer, according to Arygon manual)
   byte_t dummy[] = { 0x32, 0x00, 0x00, 0xff, 0x09, 0xf7, 0xd4, 0x00, 0x00, 0x6c, 0x69, 0x62, 0x6e, 0x66, 0x63, 0xbe, 0x00 };
 
@@ -384,7 +382,7 @@ arygon_tama_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLe
     pnd->iLastError = DEIO;
     return -1;
   }
-  CHIP_DATA (pnd)->state = NORMAL;
+  // The PN53x command is done and we successfully received the reply
   return len;
 }
 

@@ -136,6 +136,12 @@ pn53x_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, b
   // Call the send/receice callback functions of the current driver
   if (!CHIP_DATA(pnd)->io->send (pnd, pbtTx, szTx))
     return false;
+
+  // Handle power mode for PN532
+  if ((CHIP_DATA(pnd)->type == PN532) && (TgInitAsTarget == pbtTx[0])) { // PN532 automatically goes into PowerDown mode when TgInitAsTarget command will be sent
+    CHIP_DATA(pnd)->power_mode = POWERDOWN;
+  }
+
   int res = CHIP_DATA(pnd)->io->receive (pnd, pbtRx, *pszRx);
   if (res < 0) {
     return false;
@@ -143,6 +149,10 @@ pn53x_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, b
 
   if (pnd->iLastError)
     return false;
+
+  if ((CHIP_DATA(pnd)->type == PN532) && (TgInitAsTarget == pbtTx[0])) { // PN532 automatically wakeup on external RF field
+      CHIP_DATA(pnd)->power_mode = NORMAL; // When TgInitAsTarget reply that means an external RF have waken up the chip
+  }
 
   *pszRx = (size_t) res;
 
@@ -677,6 +687,15 @@ pn53x_InDeselect (nfc_device_t * pnd, const uint8_t ui8Target)
 
   return (pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, NULL));
 }
+
+/*
+typedef enum {
+  NORMAL = 0x01,
+  VIRTUAL_CARD = 0x02,
+  WIRED_MODE = 0x03,
+  DUAL_CARD = 0x04
+} pn532_sam_mode;
+*/
 
 bool
 pn53x_SAMConfiguration (nfc_device_t * pnd, const uint8_t ui8Mode)

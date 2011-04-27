@@ -220,7 +220,7 @@ acr122_connect (const nfc_device_desc_t * pndd)
     // Done, we found the reader we are looking for
     snprintf (pnd->acName, sizeof (pnd->acName), "%s / %s", pndd->acDevice, pcFirmware);
 
-    CHIP_DATA (pnd)->state = NORMAL;
+    CHIP_DATA (pnd)->power_mode = NORMAL;
     CHIP_DATA (pnd)->io = &acr122_io;
     // 50: empirical tuning on Touchatag
     // 46: empirical tuning on ACR122U

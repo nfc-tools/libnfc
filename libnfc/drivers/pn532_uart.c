@@ -49,7 +49,7 @@
 static const byte_t ack_frame[] = { 0x00, 0x00, 0xff, 0x00, 0xff, 0x00 };
 
 int     pn532_uart_ack (nfc_device_t * pnd);
-// void    pn532_uart_wakeup (const nfc_device_spec_t nds);
+int     pn532_uart_wakeup (nfc_device_t * pnd);
 
 const struct pn53x_io pn532_uart_io;
 
@@ -94,7 +94,7 @@ pn532_uart_probe (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * ps
       DRIVER_DATA (pnd)->port = sp;
       pnd->chip_data = malloc(sizeof(struct pn53x_data));
       CHIP_DATA (pnd)->type = PN532;
-      CHIP_DATA (pnd)->state = SLEEP;
+      CHIP_DATA (pnd)->power_mode = LOWVBAT;
       CHIP_DATA (pnd)->io = &pn532_uart_io;
 
       // Check communication using "Diagnose" command, with "Communication test" (0x00)
@@ -158,7 +158,7 @@ pn532_uart_connect (const nfc_device_desc_t * pndd)
   DRIVER_DATA(pnd)->port = sp;
   pnd->chip_data = malloc(sizeof(struct pn53x_data));
   CHIP_DATA(pnd)->type = PN532;
-  CHIP_DATA(pnd)->state = SLEEP;
+  CHIP_DATA(pnd)->power_mode = LOWVBAT;
   CHIP_DATA(pnd)->io = &pn532_uart_io;
   // empirical tuning
   CHIP_DATA(pnd)->timer_correction = 48;
@@ -182,21 +182,42 @@ pn532_uart_disconnect (nfc_device_t * pnd)
   nfc_device_free (pnd);
 }
 
+int
+pn532_uart_wakeup (nfc_device_t * pnd)
+{
+  /* High Speed Unit (HSU) wake up consist to send 0x55 and wait a "long" delay for PN532 being wakeup. */
+  const byte_t pn532_wakeup_preamble[] = { 0x55, 0x55, 0x00, 0x00, 0x00 };
+  int res = uart_send (DRIVER_DATA(pnd)->port, pn532_wakeup_preamble, sizeof (pn532_wakeup_preamble));
+  CHIP_DATA(pnd)->power_mode = NORMAL; // PN532 should now be awake
+  return res;
+}
+
 #define PN532_BUFFER_LEN (PN53x_EXTENDED_FRAME__DATA_MAX_LEN + PN53x_EXTENDED_FRAME__OVERHEAD)
 bool
 pn532_uart_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szData)
 {
-  if (CHIP_DATA(pnd)->state == SLEEP) {
-    /** PN532C106 wakeup. */
-    /** High Speed Unit (HSU) wake up consist to send 0x55 and wait a "long" delay for PN532 being wakeup. */
-    const byte_t pn532_wakeup_preamble[] = { 0x55, 0x55, 0x00, 0x00, 0x00 };
-    uart_send (DRIVER_DATA(pnd)->port, pn532_wakeup_preamble, sizeof (pn532_wakeup_preamble));
-    CHIP_DATA(pnd)->state = NORMAL; // PN532 should now be awake
-    // According to PN532 application note, C106 appendix: to go out Low Vbat mode and enter in normal mode we need to send a SAMConfiguration command
-    if (!pn53x_SAMConfiguration (pnd, 0x01)) {
-      return false;
+  switch (CHIP_DATA(pnd)->power_mode) {
+    case LOWVBAT: {
+      /** PN532C106 wakeup. */
+      if (-1 == pn532_uart_wakeup(pnd)) {
+        return false;
+      }
+      // According to PN532 application note, C106 appendix: to go out Low Vbat mode and enter in normal mode we need to send a SAMConfiguration command
+      if (!pn53x_SAMConfiguration (pnd, 0x01)) {
+        return false;
+      }
     }
-  }
+    break;
+    case POWERDOWN: {
+      if (-1 == pn532_uart_wakeup(pnd)) {
+        return false;
+      }
+    }
+    break;
+    case NORMAL:
+      // Nothing to do :)
+    break;
+  };
 
   byte_t  abtFrame[PN532_BUFFER_LEN] = { 0x00, 0x00, 0xff };       // Every packet must start with "00 00 ff"
   CHIP_DATA (pnd)->ui8LastCommand = pbtData[0];
@@ -223,7 +244,7 @@ pn532_uart_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szData
   }
 
   if (pn53x_check_ack_frame (pnd, abtRxBuf, sizeof(abtRxBuf))) {
-    CHIP_DATA(pnd)->state = EXECUTE;
+    // The PN53x is running the sent command
   } else {
     return false;
   }
@@ -353,14 +374,18 @@ pn532_uart_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen
     pnd->iLastError = DEIO;
     return -1;
   }
-  CHIP_DATA(pnd)->state = NORMAL;
+  // The PN53x command is done and we successfully received the reply
   return len;
 }
 
 int
 pn532_uart_ack (nfc_device_t * pnd)
 {
-  CHIP_DATA(pnd)->state = NORMAL;
+  if (POWERDOWN == CHIP_DATA(pnd)->power_mode) {
+    if (-1 == pn532_uart_wakeup(pnd)) {
+      return -1;
+    }
+  }
   return (0 == uart_send (DRIVER_DATA(pnd)->port, ack_frame, sizeof (ack_frame))) ? 0 : -1;
 }
 

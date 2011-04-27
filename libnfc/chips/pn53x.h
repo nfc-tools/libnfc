@@ -137,10 +137,10 @@ typedef enum {
 } pn53x_type;
 
 typedef enum {
-  SLEEP = 0x00,   // Need to be wake up to process commands
-  NORMAL = 0x01,  // Ready to process command
-  EXECUTE = 0x02, // Need to cancel the running command to process new one
-} pn53x_state;
+  NORMAL,	// In that case, there is no power saved but the PN53x reacts as fast as possible on the host controller interface.
+  POWERDOWN,	// Only on PN532, need to be wake up to process commands with a long preamble
+  LOWVBAT	// Only on PN532, need to be wake up to process commands with a long preamble and SAMConfiguration command
+} pn53x_power_mode;
 
 struct pn53x_io {
   bool (*send)(nfc_device_t * pnd, const byte_t * pbtData, const size_t szData);
@@ -149,7 +149,7 @@ struct pn53x_io {
 
 struct pn53x_data {
   pn53x_type type;
-  pn53x_state state;
+  pn53x_power_mode power_mode;
   const struct pn53x_io * io;
 /** Register cache for REG_CIU_BIT_FRAMING, SYMBOL_TX_LAST_BITS: The last TX bits setting, we need to reset this if it does not apply anymore */
   uint8_t ui8TxBits;

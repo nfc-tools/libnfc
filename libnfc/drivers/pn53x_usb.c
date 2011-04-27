@@ -285,7 +285,7 @@ pn53x_usb_connect (const nfc_device_desc_t *pndd)
         *DRIVER_DATA (pnd) = data;
         pnd->chip_data = malloc(sizeof(struct pn53x_data));
 
-        CHIP_DATA (pnd)->state = NORMAL;
+        CHIP_DATA (pnd)->power_mode = NORMAL;
         CHIP_DATA (pnd)->io = &pn53x_usb_io;
 
         switch (DRIVER_DATA (pnd)->model) {
@@ -388,7 +388,7 @@ pn53x_usb_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szData)
   }
 
   if (pn53x_check_ack_frame (pnd, abtRxBuf, res)) {
-    CHIP_DATA(pnd)->state = EXECUTE;
+    // The PN53x is running the sent command
   } else {
     return false;
   }
@@ -529,7 +529,7 @@ read:
     pnd->iLastError = DEIO;
     return -1;
   }
-  CHIP_DATA (pnd)->state = NORMAL;
+  // The PN53x command is done and we successfully received the reply
   return len;
 }
 
