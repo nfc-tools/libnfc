@@ -404,8 +404,8 @@ pn53x_usb_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen)
   int abort_fd = 0;
 
   switch (CHIP_DATA (pnd)->ui8LastCommand) {
-  case InAutoPoll:
   case TgInitAsTarget:
+  case InJumpForDEP:
   case TgGetData:
     abort_fd = pnd->iAbortFds[1];
     break;
@@ -452,8 +452,6 @@ read:
     pn53x_usb_ack(pnd);
     return false;
   }
-
-  pn53x_usb_ack (pnd);
 
   const byte_t pn53x_preamble[3] = { 0x00, 0x00, 0xff };
   if (0 != (memcmp (abtRxBuf, pn53x_preamble, 3))) {
