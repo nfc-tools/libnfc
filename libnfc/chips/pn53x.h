@@ -150,6 +150,7 @@ struct pn53x_io {
 struct pn53x_data {
   pn53x_type type;
   pn53x_power_mode power_mode;
+  nfc_target_t* current_target;
   const struct pn53x_io * io;
 /** Register cache for REG_CIU_BIT_FRAMING, SYMBOL_TX_LAST_BITS: The last TX bits setting, we need to reset this if it does not apply anymore */
   uint8_t ui8TxBits;

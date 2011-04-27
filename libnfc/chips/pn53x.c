@@ -68,6 +68,9 @@ pn53x_init(nfc_device_t * pnd)
     return false;
   }
 
+  // Set current target to NULL
+  CHIP_DATA (pnd)->current_target = NULL;
+
   // CRC handling is enabled by default
   pnd->bCrc = true;
   // Parity handling is enabled by default
@@ -1244,6 +1247,9 @@ bool
 pn53x_initiator_transceive_bits_timed (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxBits,
                                  const byte_t * pbtTxPar, byte_t * pbtRx, size_t * pszRxBits, byte_t * pbtRxPar, uint16_t * cycles)
 {
+  // TODO Do something with these bytes...
+  (void) pbtTxPar;
+  (void) pbtRxPar;
   unsigned int i;
   uint8_t sz;
 
@@ -1559,6 +1565,12 @@ pn53x_target_init (nfc_device_t * pnd, nfc_target_t * pnt, byte_t * pbtRx, size_
       if (pnt->nm.nmt == NMT_DEP) {
         pnt->nti.ndi.ndm = ndm; // Update DEP mode
       }
+      // Keep the current nfc_target for further commands
+      if (CHIP_DATA (pnd)->current_target) {
+        free (CHIP_DATA (pnd)->current_target);
+      }
+      CHIP_DATA (pnd)->current_target = malloc (sizeof(nfc_target_t));
+      memcpy (CHIP_DATA (pnd)->current_target, pnt, sizeof(nfc_target_t));
     }
   }
 
@@ -1682,10 +1694,17 @@ pn53x_target_receive_bytes (nfc_device_t * pnd, byte_t * pbtRx, size_t * pszRx)
 {
   byte_t  abtCmd[1];
 
-  // FIXME In DEP mode we MUST use TgGetData but we don't known the current mode.
-  // DEP mode && EasyFramming || EasyFramming && ISO14443-4 && PN532
-  if (pnd->bEasyFraming && (CHIP_DATA(pnd)->type == PN532)) {
-    abtCmd[0] = TgGetData;
+  if (pnd->bEasyFraming) {
+    if ((CHIP_DATA (pnd)->current_target->nm.nmt == NMT_DEP) || // If DEP mode
+      ((CHIP_DATA(pnd)->type == PN532) && (pnd->bAutoIso14443_4) && 
+        (CHIP_DATA (pnd)->current_target->nm.nmt == NMT_ISO14443A) && (CHIP_DATA (pnd)->current_target->nti.nai.btSak & SAK_ISO14443_4_COMPLIANT)) // If ISO14443-4 PICC emulation
+    ) {
+      abtCmd[0] = TgGetData;
+    } else {
+      // TODO Support EasyFraming for other cases by software
+      pnd->iLastError = DENOTSUP;
+      return false;
+    }
   } else {
     abtCmd[0] = TgGetInitiatorCommand;
   }
@@ -1755,8 +1774,17 @@ pn53x_target_send_bytes (nfc_device_t * pnd, const byte_t * pbtTx, const size_t 
   if (!pnd->bPar)
     return false;
 
-  if (pnd->bEasyFraming && (CHIP_DATA(pnd)->type == PN532)) {
-    abtCmd[0] = TgSetData;
+  if (pnd->bEasyFraming) {
+    if ((CHIP_DATA (pnd)->current_target->nm.nmt == NMT_DEP) || // If DEP mode
+      ((CHIP_DATA(pnd)->type == PN532) && (pnd->bAutoIso14443_4) && 
+        (CHIP_DATA (pnd)->current_target->nm.nmt == NMT_ISO14443A) && (CHIP_DATA (pnd)->current_target->nti.nai.btSak & SAK_ISO14443_4_COMPLIANT)) // If ISO14443-4 PICC emulation
+    ) {
+      abtCmd[0] = TgSetData;
+    } else {
+      // TODO Support EasyFraming for other cases by software
+      pnd->iLastError = DENOTSUP;
+      return false;
+    }
   } else {
     abtCmd[0] = TgResponseToInitiator;
   }
