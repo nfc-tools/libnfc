@@ -275,6 +275,7 @@ arygon_tama_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLe
   case InAutoPoll:
   case TgInitAsTarget:
   case TgGetData:
+  case InJumpForDEP:
     abort_fd = pnd->iAbortFds[1];
     break;
   default:
