@@ -40,6 +40,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <signal.h>
 
 #include <nfc/nfc.h>
 
@@ -47,10 +48,20 @@
 
 #define MAX_FRAME_LEN 264
 
+static nfc_device_t *pnd;
+
+void stop_dep_communication (int sig)
+{
+  (void) sig;
+  if (pnd)
+    nfc_abort_command (pnd);
+  else
+    exit (EXIT_FAILURE);
+}
+
 int
 main (int argc, const char *argv[])
 {
-  nfc_device_t *pnd;
   nfc_target_t nt;
   byte_t  abtRx[MAX_FRAME_LEN];
   size_t  szRx = sizeof(abtRx);
@@ -67,6 +78,8 @@ main (int argc, const char *argv[])
     return EXIT_FAILURE;
   }
   printf ("Connected to NFC device: %s\n", pnd->acName);
+
+  signal (SIGINT, stop_dep_communication);
 
   if (!nfc_initiator_init (pnd)) {
     nfc_perror(pnd, "nfc_initiator_init");
