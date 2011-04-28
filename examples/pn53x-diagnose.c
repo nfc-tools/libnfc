@@ -55,9 +55,9 @@ main (int argc, const char *argv[])
 
   byte_t  abtRx[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
   size_t  szRx = sizeof(abtRx);
-  const byte_t pncmd_diagnose_communication_line_test[] = { 0xD4, 0x00, 0x00, 0x06, 'l', 'i', 'b', 'n', 'f', 'c' };
-  const byte_t pncmd_diagnose_rom_test[] = { 0xD4, 0x00, 0x01 };
-  const byte_t pncmd_diagnose_ram_test[] = { 0xD4, 0x00, 0x02 };
+  const byte_t pncmd_diagnose_communication_line_test[] = { Diagnose, 0x00, 0x06, 'l', 'i', 'b', 'n', 'f', 'c' };
+  const byte_t pncmd_diagnose_rom_test[] = { Diagnose, 0x01 };
+  const byte_t pncmd_diagnose_ram_test[] = { Diagnose, 0x02 };
 
   if (argc > 1) {
     errx (1, "usage: %s", argv[0]);
@@ -90,18 +90,24 @@ main (int argc, const char *argv[])
     result = pn53x_transceive (pnd, pncmd_diagnose_communication_line_test, sizeof (pncmd_diagnose_communication_line_test), abtRx, &szRx);
     if (result) {
       result = (memcmp (pncmd_diagnose_communication_line_test + 2, abtRx, sizeof (pncmd_diagnose_communication_line_test) - 2) == 0);
+    } else {
+      nfc_perror (pnd, "pn53x_transceive");
     }
     printf (" Communication line test: %s\n", result ? "OK" : "Failed");
 
     result = pn53x_transceive (pnd, pncmd_diagnose_rom_test, sizeof (pncmd_diagnose_rom_test), abtRx, &szRx);
     if (result) {
       result = ((szRx == 1) && (abtRx[0] == 0x00));
+    } else {
+      nfc_perror (pnd, "pn53x_transceive");
     }
     printf (" ROM test: %s\n", result ? "OK" : "Failed");
 
     result = pn53x_transceive (pnd, pncmd_diagnose_ram_test, sizeof (pncmd_diagnose_ram_test), abtRx, &szRx);
     if (result) {
       result = ((szRx == 1) && (abtRx[0] == 0x00));
+    } else {
+      nfc_perror (pnd, "pn53x_transceive");
     }
     printf (" RAM test: %s\n", result ? "OK" : "Failed");
   }
