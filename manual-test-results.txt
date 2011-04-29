@@ -8,6 +8,10 @@ r846, nfc-anticol, ARYGON 00V5.1 (/dev/ttyUSB0) - PN532 v1.4 (APDB2UA33), MFC, O
 r736, nfc-anticol, SCM Micro / SCL3711-NFC&RW - PN533 v2.7, DESfire, OK
 r736, nfc-anticol, SCM Micro / SCL3711-NFC&RW - PN533 v2.7, MFC, OK
 r736, nfc-anticol, SCM Micro / SCL3711-NFC&RW - PN533 v2.7, UL, OK
+r1013, nfc-anticol, ASK / LoGO - PN533 v2.7, DESfire, OK
+r1013, nfc-anticol, ASK / LoGO - PN533 v2.7, MFC, OK
+r1013, nfc-anticol, ASK / LoGO - PN533 v2.7, UL, OK
+r1013, nfc-anticol, ASK / LoGO - PN533 v2.7, ULC, OK
 r736, nfc-dep-initiator, SCM Micro / SCL3711-NFC&RW - PN533 v2.7, ACS ACR 38U-CCID 00 00 / ACR122U102 - PN532 v1.4, OK
 r736, nfc-dep-target, ACS ACR 38U-CCID 00 00 / ACR122U102 - PN532 v1.4, SCM Micro / SCL3711-NFC&RW - PN533 v2.7, OK
 r736, nfc-emulate-forum-tag4, ACS ACR122U PICC Interface 00 00 / ACR122U102 - PN532 v1.4, ctrl-c & use, FAIL
@@ -40,11 +44,17 @@ r736, nfc-list, SCM Micro / SCL3711-NFC&RW - PN533 v2.7, MFC, OK
 r736, nfc-list, SCM Micro / SCL3711-NFC&RW - PN533 v2.7, topaz, OK
 r736, nfc-list, SCM Micro / SCL3711-NFC&RW - PN533 v2.7, typeB Calypso, OK
 r736, nfc-list, SCM Micro / SCL3711-NFC&RW - PN533 v2.7, ULC, OK
+r1013, nfc-list, ASK / LoGO - PN533 v2.7, DESfire, OK
+r1013, nfc-list, ASK / LoGO - PN533 v2.7, MFC, OK
+r1013, nfc-list, ASK / LoGO - PN533 v2.7, UL, OK
+r1013, nfc-list, ASK / LoGO - PN533 v2.7, ULC, OK 
 r736, nfc-mfclassic r a foo, ACS ACR122U PICC Interface 00 00 / ACR122U102 - PN532 v1.4, MFC, OK
 r846, nfc-mfclassic r a foo, ARYGON 00V5.1 (/dev/ttyUSB0) - PN532 v1.4 (APDB2UA33), MFC, OK
 r736, nfc-mfclassic r a foo, SCM Micro / SCL3711-NFC&RW - PN533 v2.7, MFC, OK
+r1013, nfc-mfclassic r a foo, ASK / LoGO - PN533 v2.7, MFC, OK
 r736, nfc-mfultralight r foo, ACS ACR122U PICC Interface 00 00 / ACR122U102 - PN532 v1.4, UL, OK
 r736, nfc-mfultralight r foo, SCM Micro / SCL3711-NFC&RW - PN533 v2.7, UL, OK
+r1013, nfc-mfultralight r foo, SCM Micro / SCL3711-NFC&RW - PN533 v2.7, UL, OK
 r739, nfc-poll, ACS ACR122U PICC Interface 00 00 / ACR122U102 - PN532 v1.4, 2 DESfire, OK
 r739, nfc-poll, ACS ACR122U PICC Interface 00 00 / ACR122U102 - PN532 v1.4, 2 UL, OK
 r739, nfc-poll, ACS ACR122U PICC Interface 00 00 / ACR122U102 - PN532 v1.4, JCOP, OK
@@ -59,6 +69,22 @@ r736, pn53x-diagnose, ACS ACR 38U-CCID 00 00 / ACR122U102 - PN532 v1.4, N/A, OK
 r846, pn53x-diagnose, ARYGON 00V5.1 (/dev/ttyUSB0) - PN532 v1.4 (APDB2UA33), N/A, FAIL
 r849, pn53x-diagnose, ARYGON 00V5.1 (/dev/ttyUSB0) - PN532 v1.4 (APDB2UA33), N/A, OK
 r736, pn53x-diagnose, SCM Micro / SCL3711-NFC&RW - PN533 v2.7, N/A, OK
+r891, pn53x-diagnose, ACS ACR 38U-CCID 00 00 / ACR122U102 - PN532 v1.4, N/A, OK
+r891, pn53x-diagnose, SCM Micro / SCL3711-NFC&RW - PN533 v2.7, N/A, OK
+r891, pn53x-diagnose, ASK / LoGO - PN533 v2.7, N/A, OK
+r1013, pn53x-diagnose, ACS ACR 38U-CCID 00 00 / ACR122U102 - PN532 v1.4, N/A, FAIL
+r1013, pn53x-diagnose, SCM Micro / SCL3711-NFC&RW - PN533 v2.7, N/A, FAIL
+r1013, pn53x-diagnose, NXP / PN533 - PN533 v2.7, N/A, FAIL
+r1013, pn53x-diagnose, ASK / LoGO - PN533 v2.7, N/A, FAIL
+r1015 pn53x-diagnose, ASK / LoGO - PN533 v2.7, N/A, OK
+r1015 pn53x-diagnose, ACS ACR 38U-CCID 00 00 / ACR122U102 - PN532 v1.4, N/A, OK
+r1015, pn53x-diagnose, NXP / PN533 - PN533 v2.7, N/A, OK
+r1015, pn53x-diagnose, SCM Micro / SCL3711-NFC&RW - PN533 v2.7, N/A, OK
 r744, pn53x-sam (mode 1), Philips / PN531 - PN531 v4.2 + SAM, CardMan 5321, OK
 r736, pn53x-tamashell < pn53x-tamashell-scripts/UltraLightRead.cmd, ACS ACR122U PICC Interface 00 00 / ACR122U102 - PN532 v1.4, ultralight, OK
 r736, pn53x-tamashell < pn53x-tamashell-scripts/UltraLightRead.cmd, SCM Micro / SCL3711-NFC&RW - PN533 v2.7, UL, OK
+r1013, pn53x-tamashell < pn53x-tamashell-scripts/UltraLightRead.cmd, ACS ACR 38U-CCID 00 00 / ACR122U102 - PN532 v1.4,UL, OK
+r1013, pn53x-tamashell < pn53x-tamashell-scripts/UltraLightRead.cmd, SCM Micro / SCL3711-NFC&RW - PN533 v2.7, UL, OK
+r1013, pn53x-tamashell < pn53x-tamashell-scripts/UltraLightRead.cmd, NXP / PN533 - PN533 v2.7, UL, OK
+r1013, pn53x-tamashell < pn53x-tamashell-scripts/UltraLightRead.cmd, ASK / LoGO - PN533 v2.7, UL, FAIL
+
