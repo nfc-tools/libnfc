@@ -15,7 +15,7 @@ libnfc_la_SOURCES = \
 		    nfc.c \
 		    nfc-device.c \
 		    nfc-emulation.c
-libnfc_la_LDFLAGS = -no-undefined -version-info 1:0:0
+libnfc_la_LDFLAGS = -no-undefined -version-info 2:0:0
 libnfc_la_CFLAGS = @DRIVERS_CFLAGS@
 libnfc_la_LIBADD = \
 	$(top_builddir)/libnfc/chips/libnfcchips.la \

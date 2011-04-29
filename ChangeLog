@@ -1,4 +1,71 @@
-Feb 21, 2010 - 1.4.2
+-------------------------------
+Apr nn, 2011 - 1.5.0 (unstable)
+-------------------------------
+
+Fixes:
+ - libnfc: silent warnings with more strict CFLAGS
+ - libnfc: update devd(8) rules file for FreeBSD
+ - libnfc: make libnfc compile under Windows
+ - libnfc: fix nfc_pick_device() when called from nfc_connect with NULL nfc_device_desc_t parameter (Fixes Issue 156)
+ - chips/pn53x: fix a bug when value is larger than mask when using WriteRegister
+ - chips/pn53x: adapt MaxRetries to avoid issue with 2 tags on PN531
+ - examples/nfc-mfclassic: UID was shown reverse-ordered. (Fixes Issue 146)
+
+Improvements:
+ - libnfc: use a new way to handle drivers, introduce a real HAL
+ - libnfc: use absolute include path instead of relative ones
+ - libnfc: move some nfc_device_t members in a better place
+ - libnfc: improve nfc_driver_t struct to embedded HAL API
+ - libnfc: nfc_device_t now embeddeds driver data and chip data pointers (useful to be more generic)
+ - libnfc: use more readable variables instead of strange coding convention
+ - libnfc: move PRINT_HEX macro into nfc-internal.h
+ - libnfc: introduce an abort mecanism
+ - libnfc: suppress any PN53x references in nfc.c
+ - libnfc: nfc-mfclassic and nfc-mfcultralight examples are now compiled under Windows
+ - chips/pn53x: use the powerful C99 writing to construct PN53x commands
+ - chips/pn53x: remove almost all memcpy()
+ - chips/pn53x: WriteRegister, ReadRegister and SetParameters command wrappers are correctly named
+ - chips/pn53x: introduce chip state (SLEEP, NORMAL or EXECUTE)
+ - chips/pn53x: add SAMConfiguration command wrapper (need to be improved)
+ - chips/pn53x: remove almost all const arrays
+ - chips/pn53x: use human readable defines for commands instead of hex values
+ - chips/pn53x: in debug mode, the PN53x command is shown in human-readable string, awesome isn't it? ;-)
+ - chips/pn53x: try to determine IC version instead of hardcode it.
+ - chips/pn53x: new fonction to build frames instead of build them in each driver
+ - chips/pn53x: enable aborting blocking commands (e.g. TgInitAsTarget) and refactor *_check_communication() as pn53x_check_communication().
+ - chips/pn53x: add timed versions of transceive_bytes/bits, allow to detect emulated/non-emulated tags and more...
+ - chips/pn53x: support CRC auto-handling in ...transceive_bytes_timed
+ - drivers/pn53x_usb: ASK LoGO: enable progressive field feature.
+ - drivers/pn532_uart: major improvement of UART handling
+ - drivers/pn532_uart: check PN53x frames when received
+ - drivers/pn53x_usb: enhance ASK LoGO dedicated code
+ - drivers/pn53x_usb: add LEDs support for ASK LoGO and SCL3711
+ - drivers/pn532_uart: implement extended frame send/receive for PN532_UART driver.
+ - drivers/arygon: use the new way to drive UART (its far more stable)
+ - drivers/arygon: do not hard code PN532 chip type: pn53x_init() determine it and ARYGON device seems to not need to be waken up.
+ - drivers/arygon: reject too heavy payload (ARYGON does not support PN53x extended frame even with PN532 equipped device)
+ - drivers/pn532_uart & arygon: now runs almost twice faster than the previous stable release
+ - buses/uart: receive() is now based on expected bytes instead of calculated timeouts..
+ - buses/uart: simplify uart_send() on POSIX systems.
+ - examples/nfc-emulate-tag: minor comments improvements.
+ - examples: remove nfc-message.h usage from examples.
+ - examples/nfc-emulate-forum-tag4: fully reworked example: it now support all NFC-Forum device in read and write mode
+ - examples/pn53x-tamashell: add an example for LoGO LEDs
+ - examples/pn53x-tamashell: add a script to read Mobib card.
+ - examples/pn53x-tamashell: add a script to read Navigo card.
+
+Changes:
+ - libnfc: merge macros from nfc-messages.h into nfc-internal.h
+ - libnfc: remove useless files: nfc-messages.h, buses.h and chips.h
+ - API: new nfc_emulate_target() that ease target emulation for developer
+ - macros: show PRINT_HEX result on stderr in debug mode (that helps to sync with debug msg which are printed on standard error output.)
+ - drivers: split transceive() into send() and receive() to be able to handle more cases (differed replies, abort commands, etc) later
+ - drivers: use a const structure of functions instead of -dirty- callbacks array
+ - drivers/pn53x_usb: pn531_usb and pn533_usb drivers are now merged and use the pn53x IC version autodetection
+ - buses/uart: use a smart way to determine available ports on POSIX systems (tested on Linux and FreeBSD)
+
+--------------------
+Feb 21, 2011 - 1.4.2
 --------------------
 
 Fixes:
@@ -20,7 +87,7 @@ Improvements:
  - documentation: add more pcsc-lite related instruction in README
 
 
-Feb 1, 2010 - 1.4.1
+Feb 1, 2011 - 1.4.1
 -------------------
 
 Fixes:

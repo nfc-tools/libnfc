@@ -76,8 +76,8 @@ r1013, pn53x-diagnose, ACS ACR 38U-CCID 00 00 / ACR122U102 - PN532 v1.4, N/A, FA
 r1013, pn53x-diagnose, SCM Micro / SCL3711-NFC&RW - PN533 v2.7, N/A, FAIL
 r1013, pn53x-diagnose, NXP / PN533 - PN533 v2.7, N/A, FAIL
 r1013, pn53x-diagnose, ASK / LoGO - PN533 v2.7, N/A, FAIL
-r1015 pn53x-diagnose, ASK / LoGO - PN533 v2.7, N/A, OK
-r1015 pn53x-diagnose, ACS ACR 38U-CCID 00 00 / ACR122U102 - PN532 v1.4, N/A, OK
+r1015, pn53x-diagnose, ASK / LoGO - PN533 v2.7, N/A, OK
+r1015, pn53x-diagnose, ACS ACR 38U-CCID 00 00 / ACR122U102 - PN532 v1.4, N/A, OK
 r1015, pn53x-diagnose, NXP / PN533 - PN533 v2.7, N/A, OK
 r1015, pn53x-diagnose, SCM Micro / SCL3711-NFC&RW - PN533 v2.7, N/A, OK
 r744, pn53x-sam (mode 1), Philips / PN531 - PN531 v4.2 + SAM, CardMan 5321, OK

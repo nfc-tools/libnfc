@@ -1,9 +1,60 @@
+New in 1.5.0:
+
+Installed files
+  - nfc-message.h have been removed, internal macros are not part of API.
+  - New nfc-emulation.h file offers a middle level API to handle emulation (see
+    nfc-emulate-forum-tag4 example)
+
+API Changes
+
+  * Types
+    - New error: DEABORT raised when operation is aborted by user (using
+      nfc_abort_command())
+    - nfc_chip_t type removed from public API (have been renamed to pn53x_type
+      in chips/pn53x)
+    - nfc_device_spec_t removed, each driver can use his own way to keep a
+      connection pointer
+
+  * Structures
+    - nfc_device_t now have a nfc_driver_t struct pointer (named .driver) and
+      void pointer (.driver_data) to handle device specific wrapping
+    - nfc_device_t now have a void pointer (.chip_data) to keep some chip
+      specific data
+    - nfc_device_t now have an file descriptor array to manage to abort request
+    - nfc_device_t does have .nc member (nfc_chip_t) anymore (different chips
+      handling in now in chip level)
+    - nfc_device_t does have .nds member (nfc_device_spec_t) anymore, each
+      driver handle its communication using driver_data pointer
+    - nfc_device_t does have .bActive member (bool) anymore, this variable was
+      almost not used and was not efficient
+    - nfc_device_t does have chip's register caches anymore, this is handle in
+      chip level (using chip_data pointer)
+    - driver_callbacks structure have been removed from public API
+    - New nfc_emulator structure used by the new emulation API (see
+      nfc_emulate_target())
+    - New nfc_emulation_state_machine structure used by the new emulation API,
+      it handles an I/O function and data pointer to create a software based
+      state-machine.
+
+  * Functions
+    - New nfc_abort_command() function to abort current running command.
+    - New nfc_initiator_transceive_bits_timed() and
+      nfc_initiator_transceive_bytes_timed() to transceive bits/bytes and
+      measure the time to have a reply
+    - New nfc_emulate_target() function to start a target emulation using an
+      nfc_emulator structure (it contains a custom state-machine
+      (nfc_emulation_state_machine struct) and a custom target (nfc_target_t)
+      (see nfc-emulate-forum-tag4 to have a look on how-to use it)
+
+
+
 New in 1.4.1:
 
 API Changes
 
   * Types
-    - New error: ETGUIDNOTSUP raised when UID is not 4 bytes long or does not start with 0x08 (Security restriction present in the NXP PN53x chips)
+    - New error: ETGUIDNOTSUP raised when UID is not 4 bytes long or does not
+      start with 0x08 (Security restriction present in the NXP PN53x chips)
 
 
 
