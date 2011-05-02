@@ -1372,7 +1372,7 @@ pn53x_initiator_transceive_bytes_timed (nfc_device_t * pnd, const byte_t * pbtTx
   pn53x_write_register (pnd, REG_CIU_COMMAND, 0xFF, SYMBOL_COMMAND & SYMBOL_COMMAND_TRANSCEIVE);
   pn53x_write_register (pnd, REG_CIU_FIFOLEVEL, 0xFF, SYMBOL_FLUSH_BUFFER);
   for (i=0; i< szTx; i++) {
-        pn53x_write_register (pnd, REG_CIU_FIFODATA, 0xFF, pbtTx[i]);
+    pn53x_write_register (pnd, REG_CIU_FIFODATA, 0xFF, pbtTx[i]);
   }
 
   // Send data
@@ -1380,8 +1380,8 @@ pn53x_initiator_transceive_bytes_timed (nfc_device_t * pnd, const byte_t * pbtTx
 
   // Recv data
   pn53x_read_register (pnd, REG_CIU_FIFOLEVEL, &sz);
-  *pszRx = sz & SYMBOL_FIFO_LEVEL;
-  for (i=0; i< sz; i++) {
+  *pszRx = (size_t)(sz);
+  for (i=0; i<sz; i++) {
     pn53x_read_register (pnd, REG_CIU_FIFODATA, &(pbtRx[i]));
   }
 
