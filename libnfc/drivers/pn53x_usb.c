@@ -582,6 +582,31 @@ On ASK LoGO hardware:
 }
 
 bool
+pn53x_usb_initiator_select_passive_target (nfc_device_t * pnd,
+                                       const nfc_modulation_t nm,
+                                       const byte_t * pbtInitData, const size_t szInitData,
+                                       nfc_target_t * pnt)
+{
+  if (nm.nmt == NMT_ISO14443B) {
+    if (DRIVER_DATA (pnd)->model == ASK_LOGO) {
+      /* Switch RF field off, progressive field off and LED2 off */
+      byte_t  abtCmd[] = { RFConfiguration, RFCI_FIELD, 0x00 };
+      if (!pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, NULL))
+        return false;
+      if (!pn53x_write_register (pnd, SFR_P3, _BV(P34) | _BV(P31), _BV(P31)))
+        return false;
+      /* Switch RF field on, progressive field on and LED2 on */
+      abtCmd[2] = 0x01;
+      if (!pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, NULL))
+        return false;
+      if (!pn53x_write_register (pnd, SFR_P3, _BV(P34) | _BV(P31), _BV(P34)))
+        return false;
+    }
+  }
+  return (pn53x_initiator_select_passive_target (pnd, nm, pbtInitData, szInitData, pnt));
+}
+
+bool
 pn53x_usb_configure (nfc_device_t * pnd, const nfc_device_option_t ndo, const bool bEnable)
 {
   if (!pn53x_configure (pnd, ndo, bEnable))
@@ -590,11 +615,8 @@ pn53x_usb_configure (nfc_device_t * pnd, const nfc_device_option_t ndo, const bo
   switch (DRIVER_DATA (pnd)->model) {
     case ASK_LOGO:
       if (NDO_ACTIVATE_FIELD == ndo) {
-        // Switch on/off progressive field
-        // and switch on/off LED2
-        // according to ACTIVATE_FIELD option
-        DBG ("Switch progressive field %s", bEnable ? "On" : "Off");
-        if (!pn53x_write_register (pnd, SFR_P3, _BV(P31) | _BV (P34), bEnable ? _BV (P34) : _BV (P31)))
+        /* Switch on/off LED2 according to ACTIVATE_FIELD option */
+        if (!pn53x_write_register (pnd, SFR_P3, _BV(P31), bEnable ? 0 : _BV (P31)))
           return false;
       }
       break;
@@ -624,7 +646,7 @@ const struct nfc_driver_t pn53x_usb_driver = {
   .strerror   = pn53x_strerror,
 
   .initiator_init                   = pn53x_initiator_init,
-  .initiator_select_passive_target  = pn53x_initiator_select_passive_target,
+  .initiator_select_passive_target  = pn53x_usb_initiator_select_passive_target,
   .initiator_poll_targets           = pn53x_initiator_poll_targets,
   .initiator_select_dep_target      = pn53x_initiator_select_dep_target,
   .initiator_deselect_target        = pn53x_initiator_deselect_target,
