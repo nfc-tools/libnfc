@@ -1380,7 +1380,7 @@ pn53x_SetParameters (nfc_device_t * pnd, const uint8_t ui8Value)
 }
 
 /*
- t *ypedef enum {
+ typedef enum {
      NORMAL = 0x01,
      VIRTUAL_CARD = 0x02,
      WIRED_MODE = 0x03,
