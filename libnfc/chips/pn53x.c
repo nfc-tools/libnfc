@@ -45,8 +45,6 @@
 
 #include <sys/param.h>
 
-// TODO: reorder functions according to header
-
 // TODO: Count max bytes for InJumpForDEP reply
 const byte_t pncmd_initiator_jump_for_dep[68] = { 0xD4, 0x56 };
 
@@ -97,33 +95,6 @@ pn53x_init(nfc_device_t * pnd)
 }
 
 bool
-pn53x_check_ack_frame (nfc_device_t * pnd, const byte_t * pbtRxFrame, const size_t szRxFrameLen)
-{
-  if (szRxFrameLen >= sizeof (pn53x_ack_frame)) {
-    if (0 == memcmp (pbtRxFrame, pn53x_ack_frame, sizeof (pn53x_ack_frame))) {
-      // DBG ("%s", "PN53x ACKed");
-      return true;
-    }
-  }
-  pnd->iLastError = DEACKMISMATCH;
-  ERR ("%s", "Unexpected PN53x reply!");
-  return false;
-}
-
-bool
-pn53x_check_error_frame (nfc_device_t * pnd, const byte_t * pbtRxFrame, const size_t szRxFrameLen)
-{
-  if (szRxFrameLen >= sizeof (pn53x_error_frame)) {
-    if (0 == memcmp (pbtRxFrame, pn53x_error_frame, sizeof (pn53x_error_frame))) {
-      DBG ("%s", "PN53x sent an error frame");
-      pnd->iLastError = DEISERRFRAME;
-      return false;
-    }
-  }
-  return true;
-}
-
-bool
 pn53x_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, byte_t * pbtRx, size_t *pszRx)
 {
   PNCMD_DBG (pbtTx[0]);
@@ -154,32 +125,32 @@ pn53x_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, b
     return false;
 
   if ((CHIP_DATA(pnd)->type == PN532) && (TgInitAsTarget == pbtTx[0])) { // PN532 automatically wakeup on external RF field
-      CHIP_DATA(pnd)->power_mode = NORMAL; // When TgInitAsTarget reply that means an external RF have waken up the chip
+    CHIP_DATA(pnd)->power_mode = NORMAL; // When TgInitAsTarget reply that means an external RF have waken up the chip
   }
 
   *pszRx = (size_t) res;
 
   switch (pbtTx[0]) {
-  case PowerDown:
-  case InDataExchange:
-  case InCommunicateThru:
-  case InDeselect:
-  case InJumpForPSL:
-  case InPSL:
-  case InATR:
-  case InRelease:
-  case InSelect:
-  case InJumpForDEP:
-  case TgGetData:
-  case TgGetInitiatorCommand:
-  case TgSetData:
-  case TgResponseToInitiator:
-  case TgSetGeneralBytes:
-  case TgSetMetaData:
-    pnd->iLastError = pbtRx[0] & 0x3f;
-    break;
-  default:
-    pnd->iLastError = 0;
+    case PowerDown:
+    case InDataExchange:
+    case InCommunicateThru:
+    case InDeselect:
+    case InJumpForPSL:
+    case InPSL:
+    case InATR:
+    case InRelease:
+    case InSelect:
+    case InJumpForDEP:
+    case TgGetData:
+    case TgGetInitiatorCommand:
+    case TgSetData:
+    case TgResponseToInitiator:
+    case TgSetGeneralBytes:
+    case TgSetMetaData:
+      pnd->iLastError = pbtRx[0] & 0x3f;
+      break;
+    default:
+      pnd->iLastError = 0;
   }
   if (CHIP_DATA(pnd)->type == PN533) {
     if ((pbtTx[0] == ReadRegister) || (pbtTx[0] == WriteRegister)) {
@@ -191,65 +162,12 @@ pn53x_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, b
 }
 
 bool
-pn53x_read_register (nfc_device_t * pnd, uint16_t ui16Reg, uint8_t * ui8Value)
-{
-  byte_t  abtCmd[] = { ReadRegister, ui16Reg >> 8, ui16Reg & 0xff };
-
-  byte_t  abtRegValue[2];
-  size_t  szRegValue = sizeof (abtRegValue);
-  if (pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), abtRegValue, &szRegValue)) {
-    if (CHIP_DATA(pnd)->type == PN533) {
-      // PN533 prepends its answer by a status byte
-      if (abtRegValue[0] == 0x00) {
-        *ui8Value = abtRegValue[1];
-      } else {
-        return false;
-      }
-    } else {
-      *ui8Value = abtRegValue[0];
-    }
-    return true;
-  }
-  return false;
-}
-
-bool
-pn53x_write_register (nfc_device_t * pnd, const uint16_t ui16Reg, const uint8_t ui8SymbolMask, const uint8_t ui8Value)
-{
-  byte_t  abtCmd[] = { WriteRegister, ui16Reg >> 8, ui16Reg & 0xff, 0x00 };
-
-  if (ui8SymbolMask != 0xff) {
-    uint8_t ui8Current;
-    if (!pn53x_read_register (pnd, ui16Reg, &ui8Current))
-      return false;
-    abtCmd[3] = ((ui8Value & ui8SymbolMask) | (ui8Current & (~ui8SymbolMask)));
-    return (abtCmd[3] != ui8Current) ? pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, NULL) : true;
-  } else {
-    abtCmd[3] = ui8Value;
-    return pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, NULL);
-  }
-}
-
-bool
 pn53x_set_parameters (nfc_device_t * pnd, const uint8_t ui8Parameter, const bool bEnable)
 {
   uint8_t ui8Value = (bEnable) ? (CHIP_DATA (pnd)->ui8Parameters | ui8Parameter) : (CHIP_DATA (pnd)->ui8Parameters & ~(ui8Parameter));
   if (ui8Value != CHIP_DATA (pnd)->ui8Parameters) {
     return pn53x_SetParameters(pnd, ui8Value);
   }
-  return true;
-}
-
-bool
-pn53x_SetParameters (nfc_device_t * pnd, const uint8_t ui8Value)
-{
-  byte_t  abtCmd[] = { SetParameters, ui8Value };
-
-  if(!pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, NULL)) {
-    return false;
-  }
-  // We save last parameters in register cache
-  CHIP_DATA (pnd)->ui8Parameters = ui8Value;
   return true;
 }
 
@@ -269,7 +187,7 @@ pn53x_set_tx_bits (nfc_device_t * pnd, const uint8_t ui8Bits)
 }
 
 bool
-pn53x_wrap_frame (const byte_t * pbtTx, const size_t szTxBits, const byte_t * pbtTxPar, 
+pn53x_wrap_frame (const byte_t * pbtTx, const size_t szTxBits, const byte_t * pbtTxPar,
                   byte_t * pbtFrame, size_t * pszFrameBits)
 {
   byte_t  btFrame;
@@ -371,69 +289,6 @@ pn53x_unwrap_frame (const byte_t * pbtFrame, const size_t szFrameBits, byte_t * 
   }
 }
 
-/**
- * @brief Build a PN53x frame
- * 
- * @param pbtData payload (bytes array) of the frame, will become PD0, ..., PDn in PN53x frame
- * @note The first byte of pbtData is the Command Code (CC)
- */
-bool
-pn53x_build_frame (byte_t * pbtFrame, size_t * pszFrame, const byte_t * pbtData, const size_t szData)
-{
-  if (szData <= PN53x_NORMAL_FRAME__DATA_MAX_LEN) {
-    // LEN - Packet length = data length (len) + checksum (1) + end of stream marker (1)
-    pbtFrame[3] = szData + 1;
-    // LCS - Packet length checksum
-    pbtFrame[4] = 256 - (szData + 1);
-    // TFI
-    pbtFrame[5] = 0xD4;
-    // DATA - Copy the PN53X command into the packet buffer
-    memcpy (pbtFrame + 6, pbtData, szData);
-
-    // DCS - Calculate data payload checksum
-    byte_t btDCS = (256 - 0xD4);
-    for (size_t szPos = 0; szPos < szData; szPos++) {
-      btDCS -= pbtData[szPos];
-    }
-    pbtFrame[6 + szData] = btDCS;
-
-    // 0x00 - End of stream marker
-    pbtFrame[szData + 7] = 0x00;
-
-    (*pszFrame) = szData + PN53x_NORMAL_FRAME__OVERHEAD;
-  } else if (szData <= PN53x_EXTENDED_FRAME__DATA_MAX_LEN) {
-    // Extended frame marker
-    pbtFrame[3] = 0xff;
-    pbtFrame[4] = 0xff;
-    // LENm
-    pbtFrame[5] = (szData + 1) >> 8;
-    // LENl
-    pbtFrame[6] = (szData + 1) & 0xff;
-    // LCS
-    pbtFrame[7] = 256 - ((pbtFrame[5] + pbtFrame[6]) & 0xff);
-    // TFI
-    pbtFrame[8] = 0xD4;
-    // DATA - Copy the PN53X command into the packet buffer
-    memcpy (pbtFrame + 9, pbtData, szData);
-
-    // DCS - Calculate data payload checksum
-    byte_t btDCS = (256 - 0xD4);
-    for (size_t szPos = 0; szPos < szData; szPos++) {
-      btDCS -= pbtData[szPos];
-    }
-    pbtFrame[9 + szData] = btDCS;
-
-    // 0x00 - End of stream marker
-    pbtFrame[szData + 10] = 0x00;
-
-    (*pszFrame) = szData + PN53x_EXTENDED_FRAME__OVERHEAD;
-  } else {
-    ERR ("We can't send more than %d bytes in a raw (requested: %zd)", PN53x_EXTENDED_FRAME__DATA_MAX_LEN, szData);
-    return false;
-  }
-  return true;
-}
-
 bool
 pn53x_decode_target_data (const byte_t * pbtRawData, size_t szRawData, pn53x_type type, nfc_modulation_type_t nmt,
                           nfc_target_info_t * pnti)
@@ -441,102 +296,301 @@ pn53x_decode_target_data (const byte_t * pbtRawData, size_t szRawData, pn53x_typ
   uint8_t szAttribRes;
 
   switch (nmt) {
-  case NMT_ISO14443A:
-    // We skip the first byte: its the target number (Tg)
-    pbtRawData++;
+    case NMT_ISO14443A:
+      // We skip the first byte: its the target number (Tg)
+      pbtRawData++;
 
-    // Somehow they switched the lower and upper ATQA bytes around for the PN531 chipset
-    if (type == PN531) {
-      pnti->nai.abtAtqa[1] = *(pbtRawData++);
-      pnti->nai.abtAtqa[0] = *(pbtRawData++);
-    } else {
-      pnti->nai.abtAtqa[0] = *(pbtRawData++);
-      pnti->nai.abtAtqa[1] = *(pbtRawData++);
-    }
-    pnti->nai.btSak = *(pbtRawData++);
-    // Copy the NFCID1
-    pnti->nai.szUidLen = *(pbtRawData++);
-    memcpy (pnti->nai.abtUid, pbtRawData, pnti->nai.szUidLen);
-    pbtRawData += pnti->nai.szUidLen;
+      // Somehow they switched the lower and upper ATQA bytes around for the PN531 chipset
+      if (type == PN531) {
+        pnti->nai.abtAtqa[1] = *(pbtRawData++);
+        pnti->nai.abtAtqa[0] = *(pbtRawData++);
+      } else {
+        pnti->nai.abtAtqa[0] = *(pbtRawData++);
+        pnti->nai.abtAtqa[1] = *(pbtRawData++);
+      }
+      pnti->nai.btSak = *(pbtRawData++);
+      // Copy the NFCID1
+      pnti->nai.szUidLen = *(pbtRawData++);
+      memcpy (pnti->nai.abtUid, pbtRawData, pnti->nai.szUidLen);
+      pbtRawData += pnti->nai.szUidLen;
 
-    // Did we received an optional ATS (Smardcard ATR)
-    if (szRawData > (pnti->nai.szUidLen + 5)) {
-      pnti->nai.szAtsLen = ((*(pbtRawData++)) - 1);     // In pbtRawData, ATS Length byte is counted in ATS Frame.
-      memcpy (pnti->nai.abtAts, pbtRawData, pnti->nai.szAtsLen);
-    } else {
-      pnti->nai.szAtsLen = 0;
-    }
+      // Did we received an optional ATS (Smardcard ATR)
+      if (szRawData > (pnti->nai.szUidLen + 5)) {
+        pnti->nai.szAtsLen = ((*(pbtRawData++)) - 1);     // In pbtRawData, ATS Length byte is counted in ATS Frame.
+        memcpy (pnti->nai.abtAts, pbtRawData, pnti->nai.szAtsLen);
+      } else {
+        pnti->nai.szAtsLen = 0;
+      }
 
-    // Strip CT (Cascade Tag) to retrieve and store the _real_ UID
-    // (e.g. 0x8801020304050607 is in fact 0x01020304050607)
-    if ((pnti->nai.szUidLen == 8) && (pnti->nai.abtUid[0] == 0x88)) {
-      pnti->nai.szUidLen = 7;
-      memmove (pnti->nai.abtUid, pnti->nai.abtUid + 1, 7);
-    } else if ((pnti->nai.szUidLen == 12) && (pnti->nai.abtUid[0] == 0x88) && (pnti->nai.abtUid[4] == 0x88)) {
-      pnti->nai.szUidLen = 10;
-      memmove (pnti->nai.abtUid, pnti->nai.abtUid + 1, 3);
-      memmove (pnti->nai.abtUid + 3, pnti->nai.abtUid + 5, 7);
-    }
-    break;
+      // Strip CT (Cascade Tag) to retrieve and store the _real_ UID
+      // (e.g. 0x8801020304050607 is in fact 0x01020304050607)
+      if ((pnti->nai.szUidLen == 8) && (pnti->nai.abtUid[0] == 0x88)) {
+        pnti->nai.szUidLen = 7;
+        memmove (pnti->nai.abtUid, pnti->nai.abtUid + 1, 7);
+      } else if ((pnti->nai.szUidLen == 12) && (pnti->nai.abtUid[0] == 0x88) && (pnti->nai.abtUid[4] == 0x88)) {
+        pnti->nai.szUidLen = 10;
+        memmove (pnti->nai.abtUid, pnti->nai.abtUid + 1, 3);
+        memmove (pnti->nai.abtUid + 3, pnti->nai.abtUid + 5, 7);
+      }
+      break;
 
-  case NMT_ISO14443B:
-    // We skip the first byte: its the target number (Tg)
-    pbtRawData++;
+    case NMT_ISO14443B:
+      // We skip the first byte: its the target number (Tg)
+      pbtRawData++;
 
-    // Now we are in ATQB, we skip the first ATQB byte always equal to 0x50
-    pbtRawData++;
-    
-    // Store the PUPI (Pseudo-Unique PICC Identifier)
-    memcpy (pnti->nbi.abtPupi, pbtRawData, 4);
-    pbtRawData += 4;
+      // Now we are in ATQB, we skip the first ATQB byte always equal to 0x50
+      pbtRawData++;
 
-    // Store the Application Data
-    memcpy (pnti->nbi.abtApplicationData, pbtRawData, 4);
-    pbtRawData += 4;
+      // Store the PUPI (Pseudo-Unique PICC Identifier)
+      memcpy (pnti->nbi.abtPupi, pbtRawData, 4);
+      pbtRawData += 4;
 
-    // Store the Protocol Info
-    memcpy (pnti->nbi.abtProtocolInfo, pbtRawData, 3);
-    pbtRawData += 3;
+      // Store the Application Data
+      memcpy (pnti->nbi.abtApplicationData, pbtRawData, 4);
+      pbtRawData += 4;
 
-    // We leave the ATQB field, we now enter in Card IDentifier
-    szAttribRes = *(pbtRawData++);
-    if (szAttribRes) {
-      pnti->nbi.ui8CardIdentifier = *(pbtRawData++);
-    }
-    break;
+      // Store the Protocol Info
+      memcpy (pnti->nbi.abtProtocolInfo, pbtRawData, 3);
+      pbtRawData += 3;
 
-  case NMT_FELICA:
-    // We skip the first byte: its the target number (Tg)
-    pbtRawData++;
+      // We leave the ATQB field, we now enter in Card IDentifier
+      szAttribRes = *(pbtRawData++);
+      if (szAttribRes) {
+        pnti->nbi.ui8CardIdentifier = *(pbtRawData++);
+      }
+      break;
 
-    // Store the mandatory info
-    pnti->nfi.szLen = *(pbtRawData++);
-    pnti->nfi.btResCode = *(pbtRawData++);
-    // Copy the NFCID2t
-    memcpy (pnti->nfi.abtId, pbtRawData, 8);
-    pbtRawData += 8;
-    // Copy the felica padding
-    memcpy (pnti->nfi.abtPad, pbtRawData, 8);
-    pbtRawData += 8;
-    // Test if the System code (SYST_CODE) is available
-    if (pnti->nfi.szLen > 18) {
-      memcpy (pnti->nfi.abtSysCode, pbtRawData, 2);
-    }
-    break;
-  case NMT_JEWEL:
-    // We skip the first byte: its the target number (Tg)
-    pbtRawData++;
+    case NMT_FELICA:
+      // We skip the first byte: its the target number (Tg)
+      pbtRawData++;
 
-    // Store the mandatory info
-    memcpy (pnti->nji.btSensRes, pbtRawData, 2);
-    pbtRawData += 2;
-    memcpy (pnti->nji.btId, pbtRawData, 4);
-    break;
-  default:
-    return false;
-    break;
+      // Store the mandatory info
+      pnti->nfi.szLen = *(pbtRawData++);
+      pnti->nfi.btResCode = *(pbtRawData++);
+      // Copy the NFCID2t
+      memcpy (pnti->nfi.abtId, pbtRawData, 8);
+      pbtRawData += 8;
+      // Copy the felica padding
+      memcpy (pnti->nfi.abtPad, pbtRawData, 8);
+      pbtRawData += 8;
+      // Test if the System code (SYST_CODE) is available
+      if (pnti->nfi.szLen > 18) {
+        memcpy (pnti->nfi.abtSysCode, pbtRawData, 2);
+      }
+      break;
+    case NMT_JEWEL:
+      // We skip the first byte: its the target number (Tg)
+      pbtRawData++;
+
+      // Store the mandatory info
+      memcpy (pnti->nji.btSensRes, pbtRawData, 2);
+      pbtRawData += 2;
+      memcpy (pnti->nji.btId, pbtRawData, 4);
+      break;
+    default:
+      return false;
+      break;
   }
   return true;
+}
+
+bool
+pn53x_read_register (nfc_device_t * pnd, uint16_t ui16Reg, uint8_t * ui8Value)
+{
+  byte_t  abtCmd[] = { ReadRegister, ui16Reg >> 8, ui16Reg & 0xff };
+
+  byte_t  abtRegValue[2];
+  size_t  szRegValue = sizeof (abtRegValue);
+  if (pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), abtRegValue, &szRegValue)) {
+    if (CHIP_DATA(pnd)->type == PN533) {
+      // PN533 prepends its answer by a status byte
+      if (abtRegValue[0] == 0x00) {
+        *ui8Value = abtRegValue[1];
+      } else {
+        return false;
+      }
+    } else {
+      *ui8Value = abtRegValue[0];
+    }
+    return true;
+  }
+  return false;
+}
+
+bool
+pn53x_write_register (nfc_device_t * pnd, const uint16_t ui16Reg, const uint8_t ui8SymbolMask, const uint8_t ui8Value)
+{
+  byte_t  abtCmd[] = { WriteRegister, ui16Reg >> 8, ui16Reg & 0xff, 0x00 };
+
+  if (ui8SymbolMask != 0xff) {
+    uint8_t ui8Current;
+    if (!pn53x_read_register (pnd, ui16Reg, &ui8Current))
+      return false;
+    abtCmd[3] = ((ui8Value & ui8SymbolMask) | (ui8Current & (~ui8SymbolMask)));
+    return (abtCmd[3] != ui8Current) ? pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, NULL) : true;
+  } else {
+    abtCmd[3] = ui8Value;
+    return pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, NULL);
+  }
+}
+
+bool
+pn53x_get_firmware_version (nfc_device_t * pnd, char abtFirmwareText[18])
+{
+  const byte_t abtCmd[] = { GetFirmwareVersion };
+  byte_t  abtFw[4];
+  size_t  szFwLen = sizeof (abtFw);
+  if (!pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), abtFw, &szFwLen)) {
+    // Failed to get firmware revision??, whatever...let's disconnect and clean up and return err
+    // FIXME: Wtf?
+    return false;
+  }
+  // Determine which version of chip it is: PN531 will return only 2 bytes, while others return 4 bytes and have the first to tell the version IC
+  if (szFwLen == 2) {
+    CHIP_DATA(pnd)->type = PN531;
+  } else if (szFwLen == 4) {
+    if (abtFw[0] == 0x32) { // PN532 version IC
+      CHIP_DATA(pnd)->type = PN532;
+    } else if (abtFw[0] == 0x33)  { // PN532 version IC
+      CHIP_DATA(pnd)->type = PN533;
+    } else {
+      // Unknown version IC
+      return false;
+    }
+  } else {
+    // Unknown chip
+    return false;
+  }
+  // Convert firmware info in text, PN531 gives 2 bytes info, but PN532 and PN533 gives 4
+  switch (CHIP_DATA(pnd)->type) {
+    case PN531:
+      snprintf (abtFirmwareText, 18, "PN531 v%d.%d", abtFw[0], abtFw[1]);
+      pnd->btSupportByte = SUPPORT_ISO14443A | SUPPORT_ISO18092;
+      break;
+    case PN532:
+      snprintf (abtFirmwareText, 18, "PN532 v%d.%d (0x%02x)", abtFw[1], abtFw[2], abtFw[3]);
+      pnd->btSupportByte = abtFw[3];
+      break;
+    case PN533:
+      snprintf (abtFirmwareText, 18, "PN533 v%d.%d (0x%02x)", abtFw[1], abtFw[2], abtFw[3]);
+      pnd->btSupportByte = abtFw[3];
+      break;
+  }
+  return true;
+}
+
+bool
+pn53x_configure (nfc_device_t * pnd, const nfc_device_option_t ndo, const bool bEnable)
+{
+  byte_t  btValue;
+
+  switch (ndo) {
+    case NDO_HANDLE_CRC:
+      // Enable or disable automatic receiving/sending of CRC bytes
+      // TX and RX are both represented by the symbol 0x80
+      btValue = (bEnable) ? 0x80 : 0x00;
+      if (!pn53x_write_register (pnd, REG_CIU_TX_MODE, SYMBOL_TX_CRC_ENABLE, btValue))
+        return false;
+      if (!pn53x_write_register (pnd, REG_CIU_RX_MODE, SYMBOL_RX_CRC_ENABLE, btValue))
+        return false;
+      pnd->bCrc = bEnable;
+      break;
+
+    case NDO_HANDLE_PARITY:
+      // Handle parity bit by PN53X chip or parse it as data bit
+      btValue = (bEnable) ? 0x00 : SYMBOL_PARITY_DISABLE;
+      if (!pn53x_write_register (pnd, REG_CIU_MANUAL_RCV, SYMBOL_PARITY_DISABLE, btValue))
+        return false;
+      pnd->bPar = bEnable;
+      break;
+
+    case NDO_EASY_FRAMING:
+      pnd->bEasyFraming = bEnable;
+      break;
+
+    case NDO_ACTIVATE_FIELD:
+    {
+      byte_t  abtCmd[] = { RFConfiguration, RFCI_FIELD, (bEnable) ? 0x01 : 0x00 };
+      if (!pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, NULL))
+        return false;
+    }
+    break;
+
+    case NDO_ACTIVATE_CRYPTO1:
+      btValue = (bEnable) ? SYMBOL_MF_CRYPTO1_ON : 0x00;
+      if (!pn53x_write_register (pnd, REG_CIU_STATUS2, SYMBOL_MF_CRYPTO1_ON, btValue))
+        return false;
+      break;
+
+    case NDO_INFINITE_SELECT:
+    {
+      // TODO Made some research around this point:
+      // timings could be tweak better than this, and maybe we can tweak timings
+      // to "gain" a sort-of hardware polling (ie. like PN532 does)
+      // Retry format: 0x00 means only 1 try, 0xff means infinite
+      byte_t  abtCmd[] = {
+        RFConfiguration,
+        RFCI_RETRY_SELECT,
+        (bEnable) ? 0xff : 0x00,        // MxRtyATR, default: active = 0xff, passive = 0x02
+        (bEnable) ? 0xff : 0x00,        // MxRtyPSL, default: 0x01
+        (bEnable) ? 0xff : 0x02         // MxRtyPassiveActivation, default: 0xff (0x00 leads to problems with PN531)
+      };
+      if (!pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, NULL))
+        return false;
+    }
+    break;
+
+    case NDO_ACCEPT_INVALID_FRAMES:
+      btValue = (bEnable) ? SYMBOL_RX_NO_ERROR : 0x00;
+      if (!pn53x_write_register (pnd, REG_CIU_RX_MODE, SYMBOL_RX_NO_ERROR, btValue))
+        return false;
+      break;
+
+    case NDO_ACCEPT_MULTIPLE_FRAMES:
+      btValue = (bEnable) ? SYMBOL_RX_MULTIPLE : 0x00;
+      if (!pn53x_write_register (pnd, REG_CIU_RX_MODE, SYMBOL_RX_MULTIPLE, btValue))
+        return false;
+      return true;
+      break;
+
+    case NDO_AUTO_ISO14443_4:
+      // TODO Cache activated/disactivated options
+      pnd->bAutoIso14443_4 = bEnable;
+      return pn53x_set_parameters (pnd, PARAM_AUTO_RATS, bEnable);
+      break;
+
+    case NDO_FORCE_ISO14443_A:
+      if(!bEnable) {
+        // Nothing to do
+        return true;
+      }
+      // Force pn53x to be in ISO14443-A mode
+      if (!pn53x_write_register (pnd, REG_CIU_TX_MODE, SYMBOL_TX_FRAMING, 0x00)) {
+        return false;
+      }
+      if (!pn53x_write_register (pnd, REG_CIU_RX_MODE, SYMBOL_RX_FRAMING, 0x00)) {
+        return false;
+      }
+      return true;
+      break;
+  }
+
+  // When we reach this, the configuration is completed and succesful
+  return true;
+}
+
+bool
+pn53x_check_communication (nfc_device_t *pnd)
+{
+  const byte_t abtCmd[] = { Diagnose, 0x00, 'l', 'i', 'b', 'n', 'f', 'c' };
+  const byte_t abtExpectedRx[] = { 0x00, 'l', 'i', 'b', 'n', 'f', 'c' };
+  byte_t abtRx[sizeof(abtExpectedRx)];
+  size_t szRx = sizeof (abtRx);
+
+  if (!pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), abtRx, &szRx))
+    return false;
+
+  return ((sizeof(abtExpectedRx) == szRx) && (0 == memcmp (abtRx, abtExpectedRx, sizeof(abtExpectedRx))));
 }
 
 bool
@@ -611,9 +665,748 @@ pn53x_initiator_poll_targets (nfc_device_t * pnd,
 }
 
 bool
+pn53x_initiator_select_dep_target(nfc_device_t * pnd,
+                                  const nfc_dep_mode_t ndm, const nfc_baud_rate_t nbr,
+                                  const nfc_dep_info_t * pndiInitiator,
+                                  nfc_target_t * pnt)
+{
+  const byte_t abtPassiveInitiatorData[] = { 0x00, 0xff, 0xff, 0x00, 0x00 }; // Only for 212/424 kpbs: First 4 bytes shall be set like this according to NFCIP-1, last byte is TSN (Time Slot Number)
+  const byte_t * pbtPassiveInitiatorData = NULL;
+
+  switch (nbr) {
+    case NBR_212:
+    case NBR_424:
+      // Only use this predefined bytes array when we are at 212/424kbps
+      pbtPassiveInitiatorData = abtPassiveInitiatorData;
+      break;
+
+    default:
+      // Nothing to do
+      break;
+  }
+
+  if (pndiInitiator) {
+    return pn53x_InJumpForDEP (pnd, ndm, nbr, pbtPassiveInitiatorData, pndiInitiator->abtNFCID3, pndiInitiator->abtGB, pndiInitiator->szGB, pnt);
+  } else {
+    return pn53x_InJumpForDEP (pnd, ndm, nbr, pbtPassiveInitiatorData, NULL, NULL, 0, pnt);
+  }
+}
+
+bool
+pn53x_initiator_transceive_bits (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxBits,
+                                 const byte_t * pbtTxPar, byte_t * pbtRx, size_t * pszRxBits, byte_t * pbtRxPar)
+{
+  size_t  szFrameBits = 0;
+  size_t  szFrameBytes = 0;
+  uint8_t ui8rcc;
+  uint8_t ui8Bits = 0;
+  byte_t  abtCmd[PN53x_EXTENDED_FRAME__DATA_MAX_LEN] = { InCommunicateThru };
+
+  // Check if we should prepare the parity bits ourself
+  if (!pnd->bPar) {
+    // Convert data with parity to a frame
+    pn53x_wrap_frame (pbtTx, szTxBits, pbtTxPar, abtCmd + 1, &szFrameBits);
+  } else {
+    szFrameBits = szTxBits;
+  }
+
+  // Retrieve the leading bits
+  ui8Bits = szFrameBits % 8;
+
+  // Get the amount of frame bytes + optional (1 byte if there are leading bits)
+  szFrameBytes = (szFrameBits / 8) + ((ui8Bits == 0) ? 0 : 1);
+
+  // When the parity is handled before us, we just copy the data
+  if (pnd->bPar)
+    memcpy (abtCmd + 1, pbtTx, szFrameBytes);
+
+  // Set the amount of transmission bits in the PN53X chip register
+  if (!pn53x_set_tx_bits (pnd, ui8Bits))
+    return false;
+
+  // Send the frame to the PN53X chip and get the answer
+  // We have to give the amount of bytes + (the command byte 0x42)
+  byte_t  abtRx[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
+  size_t  szRx = sizeof(abtRx);
+  if (!pn53x_transceive (pnd, abtCmd, szFrameBytes + 1, abtRx, &szRx))
+    return false;
+
+  // Get the last bit-count that is stored in the received byte
+  if (!pn53x_read_register (pnd, REG_CIU_CONTROL, &ui8rcc))
+    return false;
+  ui8Bits = ui8rcc & SYMBOL_RX_LAST_BITS;
+
+  // Recover the real frame length in bits
+  szFrameBits = ((szRx - 1 - ((ui8Bits == 0) ? 0 : 1)) * 8) + ui8Bits;
+
+  // Ignore the status byte from the PN53X here, it was checked earlier in pn53x_transceive()
+  // Check if we should recover the parity bits ourself
+  if (!pnd->bPar) {
+    // Unwrap the response frame
+    pn53x_unwrap_frame (abtRx + 1, szFrameBits, pbtRx, pszRxBits, pbtRxPar);
+  } else {
+    // Save the received bits
+    *pszRxBits = szFrameBits;
+    // Copy the received bytes
+    memcpy (pbtRx, abtRx + 1, szRx - 1);
+  }
+
+  // Everything went successful
+  return true;
+}
+
+bool
+pn53x_initiator_transceive_bytes (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, byte_t * pbtRx,
+                                  size_t * pszRx)
+{
+  size_t  szExtraTxLen;
+  byte_t  abtCmd[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
+
+  // We can not just send bytes without parity if while the PN53X expects we handled them
+  if (!pnd->bPar) {
+    pnd->iLastError = DENOTSUP;
+    return false;
+  }
+
+  // Copy the data into the command frame
+  if (pnd->bEasyFraming) {
+    abtCmd[0] = InDataExchange;
+    abtCmd[1] = 1;              /* target number */
+    memcpy (abtCmd + 2, pbtTx, szTx);
+    szExtraTxLen = 2;
+  } else {
+    abtCmd[0] = InCommunicateThru;
+    memcpy (abtCmd + 1, pbtTx, szTx);
+    szExtraTxLen = 1;
+  }
+
+  // To transfer command frames bytes we can not have any leading bits, reset this to zero
+  if (!pn53x_set_tx_bits (pnd, 0))
+    return false;
+
+  // Send the frame to the PN53X chip and get the answer
+  // We have to give the amount of bytes + (the two command bytes 0xD4, 0x42)
+  byte_t  abtRx[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
+  size_t  szRx = sizeof(abtRx);
+  if (!pn53x_transceive (pnd, abtCmd, szTx + szExtraTxLen, abtRx, &szRx))
+    return false;
+
+  // Save the received byte count
+  *pszRx = szRx - 1;
+
+  // Copy the received bytes
+  memcpy (pbtRx, abtRx + 1, *pszRx);
+
+  // Everything went successful
+  return true;
+}
+
+void __pn53x_init_timer(nfc_device_t * pnd)
+{
+  uint16_t prescaler = 0;
+  uint16_t reloadval = 0xFFFF;
+  // Initialize timer
+  pn53x_write_register (pnd, REG_CIU_TMODE, 0xFF, SYMBOL_TAUTO | ((prescaler >> 8) & SYMBOL_TPRESCALERHI));
+  pn53x_write_register (pnd, REG_CIU_TPRESCALER, 0xFF, (prescaler & SYMBOL_TPRESCALERLO));
+  pn53x_write_register (pnd, REG_CIU_TRELOADVALHI, 0xFF, (reloadval >> 8) & 0xFF);
+  pn53x_write_register (pnd, REG_CIU_TRELOADVALLO, 0xFF, reloadval & 0xFF);
+}
+
+uint16_t __pn53x_get_timer(nfc_device_t * pnd, const uint8_t last_cmd_byte)
+{
+  uint8_t parity;
+  uint8_t counter_hi, counter_lo;
+  uint16_t counter, cycles;
+  // Read timer
+  pn53x_read_register (pnd, REG_CIU_TCOUNTERVALHI, &counter_hi);
+  pn53x_read_register (pnd, REG_CIU_TCOUNTERVALLO, &counter_lo);
+  counter = counter_hi;
+  counter = (counter << 8) + counter_lo;
+  if (counter == 0) {
+    // counter saturated
+    cycles = 0xFFFF;
+  } else {
+    cycles = 0xFFFF - counter + 1;
+    // Correction depending on PN53x Rx detection handling:
+    // timer stops after 5 (or 2 for PN531) bits are received
+    if(CHIP_DATA(pnd)->type == PN531) {
+      cycles -= (2 * 128);
+    } else {
+      cycles -= (5 * 128);
+    }
+    // Correction depending on last parity bit sent
+    parity = (last_cmd_byte >> 7) ^ ((last_cmd_byte >> 6) & 1) ^
+    ((last_cmd_byte >> 5) & 1) ^ ((last_cmd_byte >> 4) & 1) ^
+    ((last_cmd_byte >> 3) & 1) ^ ((last_cmd_byte >> 2) & 1) ^
+    ((last_cmd_byte >> 1) & 1) ^ (last_cmd_byte & 1);
+    parity = parity ? 0:1;
+    // When sent ...YY (cmd ends with logical 1, so when last parity bit is 1):
+    if (parity) {
+      // it finishes 64us sooner than a ...ZY signal
+      cycles += 64;
+    }
+    // Correction depending on device design
+    cycles += CHIP_DATA(pnd)->timer_correction;
+  }
+  return cycles;
+}
+
+bool
+pn53x_initiator_transceive_bits_timed (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxBits,
+                                       const byte_t * pbtTxPar, byte_t * pbtRx, size_t * pszRxBits, byte_t * pbtRxPar, uint16_t * cycles)
+{
+  // TODO Do something with these bytes...
+  (void) pbtTxPar;
+  (void) pbtRxPar;
+  unsigned int i;
+  uint8_t sz;
+
+  // Sorry, no arbitrary parity bits support for now
+  if (!pnd->bPar) {
+    pnd->iLastError = DENOTSUP;
+    return false;
+  }
+  // Sorry, no easy framing support
+  if (pnd->bEasyFraming) {
+    pnd->iLastError = DENOTSUP;
+    return false;
+  }
+  // Sorry, no CRC support
+  // TODO but it probably doesn't make sense for (szTxBits % 8 != 0) ...
+  if (pnd->bCrc) {
+    pnd->iLastError = DENOTSUP;
+    return false;
+  }
+
+  __pn53x_init_timer(pnd);
+
+  // Once timer is started, we cannot use Tama commands anymore.
+  // E.g. on SCL3711 timer settings are reset by 0x42 InCommunicateThru command to:
+  //  631a=82 631b=a5 631c=02 631d=00
+  // Prepare FIFO
+  pn53x_write_register (pnd, REG_CIU_COMMAND, 0xFF, SYMBOL_COMMAND & SYMBOL_COMMAND_TRANSCEIVE);
+  pn53x_write_register (pnd, REG_CIU_FIFOLEVEL, 0xFF, SYMBOL_FLUSH_BUFFER);
+  for (i=0; i< ((szTxBits / 8) + 1); i++) {
+    pn53x_write_register (pnd, REG_CIU_FIFODATA, 0xFF, pbtTx[i]);
+  }
+
+  // Send data
+  pn53x_write_register (pnd, REG_CIU_BIT_FRAMING, 0xFF, SYMBOL_START_SEND | ((szTxBits % 8) & SYMBOL_TX_LAST_BITS));
+
+  // Recv data
+  pn53x_read_register (pnd, REG_CIU_FIFOLEVEL, &sz);
+  *pszRxBits = (sz & SYMBOL_FIFO_LEVEL) * 8;
+  for (i=0; i< sz; i++) {
+    pn53x_read_register (pnd, REG_CIU_FIFODATA, &(pbtRx[i]));
+  }
+
+  // Recv corrected timer value
+  *cycles = __pn53x_get_timer (pnd, pbtTx[szTxBits / 8]);
+
+  return true;
+}
+
+bool
+pn53x_initiator_transceive_bytes_timed (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, byte_t * pbtRx,
+                                        size_t * pszRx, uint16_t * cycles)
+{
+  unsigned int i;
+  uint8_t sz;
+
+  // We can not just send bytes without parity while the PN53X expects we handled them
+  if (!pnd->bPar) {
+    pnd->iLastError = DENOTSUP;
+    return false;
+  }
+  // Sorry, no easy framing support
+  // TODO: to be changed once we'll provide easy framing support from libnfc itself...
+  if (pnd->bEasyFraming) {
+    pnd->iLastError = DENOTSUP;
+    return false;
+  }
+
+  __pn53x_init_timer(pnd);
+
+  // Once timer is started, we cannot use Tama commands anymore.
+  // E.g. on SCL3711 timer settings are reset by 0x42 InCommunicateThru command to:
+  //  631a=82 631b=a5 631c=02 631d=00
+  // Prepare FIFO
+  pn53x_write_register (pnd, REG_CIU_COMMAND, 0xFF, SYMBOL_COMMAND & SYMBOL_COMMAND_TRANSCEIVE);
+  pn53x_write_register (pnd, REG_CIU_FIFOLEVEL, 0xFF, SYMBOL_FLUSH_BUFFER);
+  for (i=0; i< szTx; i++) {
+    pn53x_write_register (pnd, REG_CIU_FIFODATA, 0xFF, pbtTx[i]);
+  }
+
+  // Send data
+  pn53x_write_register (pnd, REG_CIU_BIT_FRAMING, 0xFF, SYMBOL_START_SEND);
+
+  // Recv data
+  pn53x_read_register (pnd, REG_CIU_FIFOLEVEL, &sz);
+  *pszRx = (size_t)(sz);
+  for (i=0; i<sz; i++) {
+    pn53x_read_register (pnd, REG_CIU_FIFODATA, &(pbtRx[i]));
+  }
+
+  // Recv corrected timer value
+  if (pnd->bCrc) {
+    // We've to compute CRC ourselves to know last byte actually sent
+    uint8_t * pbtTxRaw;
+    pbtTxRaw = (uint8_t *) malloc(szTx+2);
+    memcpy (pbtTxRaw, pbtTx, szTx);
+    iso14443a_crc_append (pbtTxRaw, szTx);
+    *cycles = __pn53x_get_timer (pnd, pbtTxRaw[szTx +1]);
+    free(pbtTxRaw);
+  } else {
+    *cycles = __pn53x_get_timer (pnd, pbtTx[szTx -1]);
+  }
+  return true;
+}
+
+bool
 pn53x_initiator_deselect_target (nfc_device_t * pnd)
 {
   return (pn53x_InDeselect (pnd, 0));   // 0 mean deselect all selected targets
+}
+
+#define SAK_ISO14443_4_COMPLIANT 0x20
+bool
+pn53x_target_init (nfc_device_t * pnd, nfc_target_t * pnt, byte_t * pbtRx, size_t * pszRx)
+{
+  // Save the current configuration settings
+  bool    bCrc = pnd->bCrc;
+  bool    bPar = pnd->bPar;
+
+  pn53x_target_mode_t ptm = PTM_NORMAL;
+  switch (pnt->nm.nmt) {
+    case NMT_ISO14443A:
+      ptm = PTM_PASSIVE_ONLY;
+      if ((pnt->nti.nai.abtUid[0] != 0x08) || (pnt->nti.nai.szUidLen != 4)) {
+        pnd->iLastError = ETGUIDNOTSUP;
+        return false;
+      }
+      pn53x_set_parameters (pnd, PARAM_AUTO_ATR_RES, false);
+      if (CHIP_DATA(pnd)->type == PN532) { // We have a PN532
+        if ((pnt->nti.nai.btSak & SAK_ISO14443_4_COMPLIANT) && (pnd->bAutoIso14443_4)) {
+          // We have a ISO14443-4 tag to emulate and NDO_AUTO_14443_4A option is enabled
+          ptm |= PTM_ISO14443_4_PICC_ONLY; // We add ISO14443-4 restriction
+          pn53x_set_parameters (pnd, PARAM_14443_4_PICC, true);
+        } else {
+          pn53x_set_parameters (pnd, PARAM_14443_4_PICC, false);
+        }
+      }
+    break;
+    case NMT_FELICA:
+      ptm = PTM_PASSIVE_ONLY;
+    break;
+    case NMT_DEP:
+      pn53x_set_parameters (pnd, PARAM_AUTO_ATR_RES, true);
+      ptm = PTM_DEP_ONLY;
+      if (pnt->nti.ndi.ndm == NDM_PASSIVE) {
+        ptm |= PTM_PASSIVE_ONLY; // We add passive mode restriction
+      }
+    break;
+    case NMT_ISO14443B:
+    case NMT_JEWEL:
+      pnd->iLastError = DENOTSUP;
+      return false;
+    break;
+  }
+
+  // Make sure the CRC & parity are handled by the device, this is needed for target_init to work properly
+  if (!bCrc)
+    pn53x_configure (pnd, NDO_HANDLE_CRC, true);
+  if (!bPar)
+    pn53x_configure (pnd, NDO_HANDLE_PARITY, true);
+
+  // Let the PN53X be activated by the RF level detector from power down mode
+  if (!pn53x_write_register (pnd, REG_CIU_TX_AUTO, SYMBOL_INITIAL_RF_ON, 0x04))
+    return false;
+
+  byte_t abtMifareParams[6];
+  byte_t * pbtMifareParams = NULL;
+  byte_t * pbtTkt = NULL;
+  size_t szTkt = 0;
+
+  byte_t abtFeliCaParams[18];
+  byte_t * pbtFeliCaParams = NULL;
+
+  const byte_t * pbtNFCID3t = NULL;
+  const byte_t * pbtGBt = NULL;
+  size_t szGBt = 0;
+
+  switch(pnt->nm.nmt) {
+    case NMT_ISO14443A: {
+      // Set ATQA (SENS_RES)
+      abtMifareParams[0] = pnt->nti.nai.abtAtqa[1];
+      abtMifareParams[1] = pnt->nti.nai.abtAtqa[0];
+      // Set UID
+      // Note: in this mode we can only emulate a single size (4 bytes) UID where the first is hard-wired by PN53x as 0x08
+      abtMifareParams[2] = pnt->nti.nai.abtUid[1];
+      abtMifareParams[3] = pnt->nti.nai.abtUid[2];
+      abtMifareParams[4] = pnt->nti.nai.abtUid[3];
+      // Set SAK (SEL_RES)
+      abtMifareParams[5] = pnt->nti.nai.btSak;
+
+      pbtMifareParams = abtMifareParams;
+
+      // Historical Bytes
+      pbtTkt = iso14443a_locate_historical_bytes (pnt->nti.nai.abtAts, pnt->nti.nai.szAtsLen, &szTkt);
+    }
+    break;
+
+    case NMT_FELICA:
+      // Set NFCID2t
+      memcpy(abtFeliCaParams, pnt->nti.nfi.abtId, 8);
+      // Set PAD
+      memcpy(abtFeliCaParams+8, pnt->nti.nfi.abtPad, 8);
+      // Set SystemCode
+      memcpy(abtFeliCaParams+16, pnt->nti.nfi.abtSysCode, 2);
+      pbtFeliCaParams = abtFeliCaParams;
+    break;
+
+    case NMT_DEP:
+      // Set NFCID3
+      pbtNFCID3t = pnt->nti.ndi.abtNFCID3;
+      // Set General Bytes, if relevant
+      szGBt = pnt->nti.ndi.szGB;
+      if (szGBt) pbtGBt = pnt->nti.ndi.abtGB;
+    break;
+    case NMT_ISO14443B:
+    case NMT_JEWEL:
+      pnd->iLastError = DENOTSUP;
+      return false;
+    break;
+  }
+
+  bool targetActivated = false;
+  while (!targetActivated) {
+    byte_t btActivatedMode;
+
+    if(!pn53x_TgInitAsTarget(pnd, ptm, pbtMifareParams, pbtTkt, szTkt, pbtFeliCaParams, pbtNFCID3t, pbtGBt, szGBt, pbtRx, pszRx, &btActivatedMode)) {
+      return false;
+    }
+
+    nfc_modulation_t nm = {
+      .nmt = NMT_DEP, // Silent compilation warnings
+      .nbr = NBR_UNDEFINED
+    };
+    nfc_dep_mode_t ndm = NDM_UNDEFINED;
+    // Decode activated "mode"
+    switch(btActivatedMode & 0x70) { // Baud rate
+      case 0x00: // 106kbps
+        nm.nbr = NBR_106;
+      break;
+      case 0x10: // 212kbps
+        nm.nbr = NBR_212;
+      break;
+      case 0x20: // 424kbps
+        nm.nbr = NBR_424;
+      break;
+    };
+
+    if (btActivatedMode & 0x04) { // D.E.P.
+      nm.nmt = NMT_DEP;
+      if ((btActivatedMode & 0x03) == 0x01) { // Active mode
+        ndm = NDM_ACTIVE;
+      } else { // Passive mode
+        ndm = NDM_PASSIVE;
+      }
+    } else { // Not D.E.P.
+      if ((btActivatedMode & 0x03) == 0x00) { // MIFARE
+        nm.nmt = NMT_ISO14443A;
+      } else if ((btActivatedMode & 0x03) == 0x02) { // FeliCa
+        nm.nmt = NMT_FELICA;
+      }
+    }
+
+    if(pnt->nm.nmt == nm.nmt) { // Actual activation have the right modulation type
+      if ((pnt->nm.nbr == NBR_UNDEFINED) || (pnt->nm.nbr == nm.nbr)) { // Have the right baud rate (or undefined)
+        if ((pnt->nm.nmt != NMT_DEP) || (pnt->nti.ndi.ndm == NDM_UNDEFINED) || (pnt->nti.ndi.ndm == ndm)) { // Have the right DEP mode (or is not a DEP)
+          targetActivated = true;
+        }
+      }
+    }
+
+    if (targetActivated) {
+      pnt->nm.nbr = nm.nbr; // Update baud rate
+      if (pnt->nm.nmt == NMT_DEP) {
+        pnt->nti.ndi.ndm = ndm; // Update DEP mode
+      }
+      // Keep the current nfc_target for further commands
+      if (CHIP_DATA (pnd)->current_target) {
+        free (CHIP_DATA (pnd)->current_target);
+      }
+      CHIP_DATA (pnd)->current_target = malloc (sizeof(nfc_target_t));
+      memcpy (CHIP_DATA (pnd)->current_target, pnt, sizeof(nfc_target_t));
+    }
+  }
+
+  // Restore the CRC & parity setting to the original value (if needed)
+  if (!bCrc)
+    pn53x_configure ((nfc_device_t *) pnd, NDO_HANDLE_CRC, false);
+  if (!bPar)
+    pn53x_configure ((nfc_device_t *) pnd, NDO_HANDLE_PARITY, false);
+
+  return true;
+}
+
+bool
+pn53x_target_receive_bits (nfc_device_t * pnd, byte_t * pbtRx, size_t * pszRxBits, byte_t * pbtRxPar)
+{
+  byte_t  abtCmd[] = { TgGetInitiatorCommand };
+
+  byte_t  abtRx[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
+  size_t  szRx = sizeof (abtRx);
+  // Try to gather a received frame from the reader
+  if (!pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), abtRx, &szRx))
+    return false;
+
+  // Get the last bit-count that is stored in the received byte
+  uint8_t ui8rcc;
+  if (!pn53x_read_register (pnd, REG_CIU_CONTROL, &ui8rcc))
+    return false;
+  uint8_t ui8Bits = ui8rcc & SYMBOL_RX_LAST_BITS;
+
+  // Recover the real frame length in bits
+  size_t szFrameBits = ((szRx - 1 - ((ui8Bits == 0) ? 0 : 1)) * 8) + ui8Bits;
+
+  // Ignore the status byte from the PN53X here, it was checked earlier in pn53x_transceive()
+  // Check if we should recover the parity bits ourself
+  if (!pnd->bPar) {
+    // Unwrap the response frame
+    pn53x_unwrap_frame (abtRx + 1, szFrameBits, pbtRx, pszRxBits, pbtRxPar);
+  } else {
+    // Save the received bits
+    *pszRxBits = szFrameBits;
+    // Copy the received bytes
+    memcpy (pbtRx, abtRx + 1, szRx - 1);
+  }
+  // Everyting seems ok, return true
+  return true;
+}
+
+bool
+pn53x_target_receive_bytes (nfc_device_t * pnd, byte_t * pbtRx, size_t * pszRx)
+{
+  byte_t  abtCmd[1];
+
+  if (pnd->bEasyFraming) {
+    if ((CHIP_DATA (pnd)->current_target->nm.nmt == NMT_DEP) || // If DEP mode
+    ((CHIP_DATA(pnd)->type == PN532) && (pnd->bAutoIso14443_4) &&
+    (CHIP_DATA (pnd)->current_target->nm.nmt == NMT_ISO14443A) && (CHIP_DATA (pnd)->current_target->nti.nai.btSak & SAK_ISO14443_4_COMPLIANT)) // If ISO14443-4 PICC emulation
+    ) {
+      abtCmd[0] = TgGetData;
+    } else {
+      // TODO Support EasyFraming for other cases by software
+      pnd->iLastError = DENOTSUP;
+      return false;
+    }
+  } else {
+    abtCmd[0] = TgGetInitiatorCommand;
+  }
+
+  // Try to gather a received frame from the reader
+  byte_t  abtRx[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
+  size_t  szRx = sizeof (abtRx);
+  if (!pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), abtRx, &szRx))
+    return false;
+
+  // Save the received byte count
+  *pszRx = szRx - 1;
+
+  // FIXME szRx can be 0
+
+  // Copy the received bytes
+  memcpy (pbtRx, abtRx + 1, *pszRx);
+
+  // Everyting seems ok, return true
+  return true;
+}
+
+bool
+pn53x_target_send_bits (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxBits, const byte_t * pbtTxPar)
+{
+  size_t  szFrameBits = 0;
+  size_t  szFrameBytes = 0;
+  uint8_t ui8Bits = 0;
+  byte_t  abtCmd[PN53x_EXTENDED_FRAME__DATA_MAX_LEN] = { TgResponseToInitiator };
+
+  // Check if we should prepare the parity bits ourself
+  if (!pnd->bPar) {
+    // Convert data with parity to a frame
+    pn53x_wrap_frame (pbtTx, szTxBits, pbtTxPar, abtCmd + 1, &szFrameBits);
+  } else {
+    szFrameBits = szTxBits;
+  }
+
+  // Retrieve the leading bits
+  ui8Bits = szFrameBits % 8;
+
+  // Get the amount of frame bytes + optional (1 byte if there are leading bits)
+  szFrameBytes = (szFrameBits / 8) + ((ui8Bits == 0) ? 0 : 1);
+
+  // When the parity is handled before us, we just copy the data
+  if (pnd->bPar)
+    memcpy (abtCmd + 1, pbtTx, szFrameBytes);
+
+  // Set the amount of transmission bits in the PN53X chip register
+  if (!pn53x_set_tx_bits (pnd, ui8Bits))
+    return false;
+
+  // Try to send the bits to the reader
+  if (!pn53x_transceive (pnd, abtCmd, szFrameBytes + 1, NULL, NULL))
+    return false;
+
+  // Everyting seems ok, return true
+  return true;
+}
+
+bool
+pn53x_target_send_bytes (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx)
+{
+  byte_t  abtCmd[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
+
+  // We can not just send bytes without parity if while the PN53X expects we handled them
+  if (!pnd->bPar)
+    return false;
+
+  if (pnd->bEasyFraming) {
+    if ((CHIP_DATA (pnd)->current_target->nm.nmt == NMT_DEP) || // If DEP mode
+    ((CHIP_DATA(pnd)->type == PN532) && (pnd->bAutoIso14443_4) &&
+    (CHIP_DATA (pnd)->current_target->nm.nmt == NMT_ISO14443A) && (CHIP_DATA (pnd)->current_target->nti.nai.btSak & SAK_ISO14443_4_COMPLIANT)) // If ISO14443-4 PICC emulation
+    ) {
+      abtCmd[0] = TgSetData;
+    } else {
+      // TODO Support EasyFraming for other cases by software
+      pnd->iLastError = DENOTSUP;
+      return false;
+    }
+  } else {
+    abtCmd[0] = TgResponseToInitiator;
+  }
+
+  // Copy the data into the command frame
+  memcpy (abtCmd + 1, pbtTx, szTx);
+
+  // Try to send the bits to the reader
+  if (!pn53x_transceive (pnd, abtCmd, szTx + 1, NULL, NULL))
+    return false;
+
+  // Everyting seems ok, return true
+  return true;
+}
+
+static struct sErrorMessage {
+  int     iErrorCode;
+  const char *pcErrorMsg;
+} sErrorMessages[] = {
+  /* Chip-level errors */
+  { 0x00, "Success" },
+  { ETIMEOUT, "Timeout" },      // Time Out, the target has not answered
+  { ECRC,     "CRC Error" },      // A CRC error has been detected by the CIU
+  { EPARITY,  "Parity Error" },     // A Parity error has been detected by the CIU
+  { EBITCOUNT, "Erroneous Bit Count" },   // During an anti-collision/select operation (ISO/IEC14443-3 Type A and ISO/IEC18092 106 kbps passive mode), an erroneous Bit Count has been detected
+  { EFRAMING, "Framing Error" },    // Framing error during MIFARE operation
+  { EBITCOLL, "Bit-collision" },    // An abnormal bit-collision has been detected during bit wise anti-collision at 106 kbps
+  { ESMALLBUF, "Communication Buffer Too Small" },  // Communication buffer size insufficient
+  { EBUFOVF, "Buffer Overflow" },   // RF Buffer overflow has been detected by the CIU (bit BufferOvfl of the register CIU_Error)
+  { ERFTIMEOUT, "RF Timeout" },     // In active communication mode, the RF field has not been switched on in time by the counterpart (as defined in NFCIP-1 standard)
+  { ERFPROTO, "RF Protocol Error" },    // RF Protocol error (see PN53x manual)
+  { EOVHEAT, "Chip Overheating" },    // Temperature error: the internal temperature sensor has detected overheating, and therefore has automatically switched off the antenna drivers
+  { EINBUFOVF, "Internal Buffer overflow."},  // Internal buffer overflow
+  { EINVPARAM, "Invalid Parameter"},    // Invalid parameter (range, format, …)
+  /* DEP Errors */
+  { EDEPUNKCMD, "Unknown DEP Command" },
+  /* MIFARE */
+  { EMFAUTH, "Mifare Authentication Error" },
+  /*  */
+  { EINVRXFRAM, "Invalid Received Frame" }, // DEP Protocol, Mifare or ISO/IEC14443-4: The data format does not match to the specification.
+  { ENSECNOTSUPP, "NFC Secure not supported" }, // Target or Initiator does not support NFC Secure
+  { EBCC, "Wrong UID Check Byte (BCC)" }, // ISO/IEC14443-3: UID Check byte is wrong
+  { EDEPINVSTATE, "Invalid DEP State" },  // DEP Protocol: Invalid device state, the system is in a state which does not allow the operation
+  { EOPNOTALL, "Operation Not Allowed" }, // Operation not allowed in this configuration (host controller interface)
+  { ECMD, "Command Not Acceptable" },   // Command is not acceptable due to the current context
+  { ETGREL, "Target Released" },    // Target have been released by initiator
+  // FIXME: Errors can be grouped (DEP-related, MIFARE-related, ISO14443B-related, etc.)
+  // Purposal: Use prefix/suffix to identify them
+  { ECID, "Card ID Mismatch" },     // ISO14443 type B: Card ID mismatch, meaning that the expected card has been exchanged with another one.
+  { ECDISCARDED, "Card Discarded" },    // ISO/IEC14443 type B: the card previously activated has disappeared.
+  { ENFCID3, "NFCID3 Mismatch" },
+  { EOVCURRENT, "Over Current"  },
+  { ENAD, "NAD Missing in DEP Frame" },
+  /* Software level errors */
+  { ETGUIDNOTSUP, "Target UID not supported" }, // In target mode, PN53x only support 4 bytes UID and the first byte must start with 0x08
+  /* Driver-level errors */
+  { DENACK, "Received NACK" },
+  { DEACKMISMATCH, "Expected ACK/NACK" },
+  { DEISERRFRAME, "Received an error frame" },
+  // TODO: Move me in more generic code for libnfc 1.6
+  // FIXME: Driver-errors and Device-errors have the same prefix (DE*)
+  // eg. DENACK means Driver Error NACK while DEIO means Device Error I/O
+  { DEINVAL, "Invalid argument" },
+  { DEIO, "Input/output error" },
+  { DETIMEOUT, "Operation timed-out" },
+  { DEABORT, "Operation aborted" },
+  { DENOTSUP, "Operation not supported" }
+};
+
+const char *
+pn53x_strerror (const nfc_device_t * pnd)
+{
+  const char *pcRes = "Unknown error";
+  size_t  i;
+
+  for (i = 0; i < (sizeof (sErrorMessages) / sizeof (struct sErrorMessage)); i++) {
+    if (sErrorMessages[i].iErrorCode == pnd->iLastError) {
+      pcRes = sErrorMessages[i].pcErrorMsg;
+      break;
+    }
+  }
+
+  return pcRes;
+}
+
+bool
+pn53x_SetParameters (nfc_device_t * pnd, const uint8_t ui8Value)
+{
+  byte_t  abtCmd[] = { SetParameters, ui8Value };
+
+  if(!pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, NULL)) {
+    return false;
+  }
+  // We save last parameters in register cache
+  CHIP_DATA (pnd)->ui8Parameters = ui8Value;
+  return true;
+}
+
+/*
+ t *ypedef enum {
+     NORMAL = 0x01,
+     VIRTUAL_CARD = 0x02,
+     WIRED_MODE = 0x03,
+     DUAL_CARD = 0x04
+ } pn532_sam_mode;
+ */
+
+bool
+pn53x_SAMConfiguration (nfc_device_t * pnd, const uint8_t ui8Mode)
+{
+  byte_t  abtCmd[] = { SAMConfiguration, ui8Mode, 0x00, 0x00 };
+  size_t szCmd = sizeof(abtCmd);
+  switch (ui8Mode) {
+    case 0x01: // Normal mode
+      szCmd = 2;
+      break;
+    case 0x02: // Virtual card mode
+    case 0x03: // Wired card mode
+    case 0x04: // Dual card mode
+    // TODO: Handle these SAM mode
+      break;
+    default:
+      pnd->iLastError = DENOTSUP;
+      return false;
+  }
+  return (pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, NULL));
 }
 
 /**
@@ -691,36 +1484,6 @@ pn53x_InDeselect (nfc_device_t * pnd, const uint8_t ui8Target)
   return (pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, NULL));
 }
 
-/*
-typedef enum {
-  NORMAL = 0x01,
-  VIRTUAL_CARD = 0x02,
-  WIRED_MODE = 0x03,
-  DUAL_CARD = 0x04
-} pn532_sam_mode;
-*/
-
-bool
-pn53x_SAMConfiguration (nfc_device_t * pnd, const uint8_t ui8Mode)
-{
-  byte_t  abtCmd[] = { SAMConfiguration, ui8Mode, 0x00, 0x00 };
-  size_t szCmd = sizeof(abtCmd);
-  switch (ui8Mode) {
-    case 0x01: // Normal mode
-      szCmd = 2;
-      break;
-    case 0x02: // Virtual card mode
-    case 0x03: // Wired card mode
-    case 0x04: // Dual card mode
-      // TODO: Handle these SAM mode
-      break;  
-    default:
-      pnd->iLastError = DENOTSUP;
-      return false;
-  }
-  return (pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, NULL));
-}
-
 bool
 pn53x_InRelease (nfc_device_t * pnd, const uint8_t ui8Target)
 {
@@ -779,250 +1542,6 @@ pn53x_InAutoPoll (nfc_device_t * pnd,
     }
   }
   return true;
-}
-
-static struct sErrorMessage {
-  int     iErrorCode;
-  const char *pcErrorMsg;
-} sErrorMessages[] = {
-  /* Chip-level errors */
-  { 0x00, "Success" },
-  { ETIMEOUT, "Timeout" },			// Time Out, the target has not answered
-  { ECRC,     "CRC Error" },			// A CRC error has been detected by the CIU
-  { EPARITY,  "Parity Error" },			// A Parity error has been detected by the CIU
-  { EBITCOUNT, "Erroneous Bit Count" },		// During an anti-collision/select operation (ISO/IEC14443-3 Type A and ISO/IEC18092 106 kbps passive mode), an erroneous Bit Count has been detected
-  { EFRAMING, "Framing Error" },		// Framing error during MIFARE operation
-  { EBITCOLL, "Bit-collision" },		// An abnormal bit-collision has been detected during bit wise anti-collision at 106 kbps
-  { ESMALLBUF, "Communication Buffer Too Small" },	// Communication buffer size insufficient
-  { EBUFOVF, "Buffer Overflow" },		// RF Buffer overflow has been detected by the CIU (bit BufferOvfl of the register CIU_Error)
-  { ERFTIMEOUT, "RF Timeout" },			// In active communication mode, the RF field has not been switched on in time by the counterpart (as defined in NFCIP-1 standard)
-  { ERFPROTO, "RF Protocol Error" },		// RF Protocol error (see PN53x manual)
-  { EOVHEAT, "Chip Overheating" },		// Temperature error: the internal temperature sensor has detected overheating, and therefore has automatically switched off the antenna drivers
-  { EINBUFOVF, "Internal Buffer overflow."},	// Internal buffer overflow
-  { EINVPARAM, "Invalid Parameter"},		// Invalid parameter (range, format, …)
-    /* DEP Errors */
-  { EDEPUNKCMD, "Unknown DEP Command" },
-    /* MIFARE */
-  { EMFAUTH, "Mifare Authentication Error" },
-    /*  */
-  { EINVRXFRAM, "Invalid Received Frame" },	// DEP Protocol, Mifare or ISO/IEC14443-4: The data format does not match to the specification.
-  { ENSECNOTSUPP, "NFC Secure not supported" },	// Target or Initiator does not support NFC Secure
-  { EBCC, "Wrong UID Check Byte (BCC)" },	// ISO/IEC14443-3: UID Check byte is wrong
-  { EDEPINVSTATE, "Invalid DEP State" },	// DEP Protocol: Invalid device state, the system is in a state which does not allow the operation
-  { EOPNOTALL, "Operation Not Allowed" },	// Operation not allowed in this configuration (host controller interface)
-  { ECMD, "Command Not Acceptable" },		// Command is not acceptable due to the current context
-  { ETGREL, "Target Released" },		// Target have been released by initiator
-    // FIXME: Errors can be grouped (DEP-related, MIFARE-related, ISO14443B-related, etc.)
-    // Purposal: Use prefix/suffix to identify them
-  { ECID, "Card ID Mismatch" },			// ISO14443 type B: Card ID mismatch, meaning that the expected card has been exchanged with another one.
-  { ECDISCARDED, "Card Discarded" },		// ISO/IEC14443 type B: the card previously activated has disappeared.
-  { ENFCID3, "NFCID3 Mismatch" },
-  { EOVCURRENT, "Over Current"  },
-  { ENAD, "NAD Missing in DEP Frame" },
-    /* Software level errors */
-  { ETGUIDNOTSUP, "Target UID not supported" }, // In target mode, PN53x only support 4 bytes UID and the first byte must start with 0x08
-    /* Driver-level errors */
-  { DENACK, "Received NACK" },
-  { DEACKMISMATCH, "Expected ACK/NACK" },
-  { DEISERRFRAME, "Received an error frame" },
-    // TODO: Move me in more generic code for libnfc 1.6
-    // FIXME: Driver-errors and Device-errors have the same prefix (DE*)
-    // eg. DENACK means Driver Error NACK while DEIO means Device Error I/O
-  { DEINVAL, "Invalid argument" },
-  { DEIO, "Input/output error" },
-  { DETIMEOUT, "Operation timed-out" },
-  { DEABORT, "Operation aborted" },
-  { DENOTSUP, "Operation not supported" }
-};
-
-const char *
-pn53x_strerror (const nfc_device_t * pnd)
-{
-  const char *pcRes = "Unknown error";
-  size_t  i;
-
-  for (i = 0; i < (sizeof (sErrorMessages) / sizeof (struct sErrorMessage)); i++) {
-    if (sErrorMessages[i].iErrorCode == pnd->iLastError) {
-      pcRes = sErrorMessages[i].pcErrorMsg;
-      break;
-    }
-  }
-
-  return pcRes;
-}
-
-bool
-pn53x_get_firmware_version (nfc_device_t * pnd, char abtFirmwareText[18])
-{
-  const byte_t abtCmd[] = { GetFirmwareVersion };
-  byte_t  abtFw[4];
-  size_t  szFwLen = sizeof (abtFw);
-  if (!pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), abtFw, &szFwLen)) {
-    // Failed to get firmware revision??, whatever...let's disconnect and clean up and return err
-    // FIXME: Wtf?
-    return false;
-  }
-  // Determine which version of chip it is: PN531 will return only 2 bytes, while others return 4 bytes and have the first to tell the version IC
-  if (szFwLen == 2) {
-    CHIP_DATA(pnd)->type = PN531;
-  } else if (szFwLen == 4) {
-    if (abtFw[0] == 0x32) { // PN532 version IC
-      CHIP_DATA(pnd)->type = PN532;
-    } else if (abtFw[0] == 0x33)  { // PN532 version IC
-      CHIP_DATA(pnd)->type = PN533;
-    } else {
-      // Unknown version IC
-      return false;
-    }
-  } else {
-    // Unknown chip
-    return false;
-  }
-  // Convert firmware info in text, PN531 gives 2 bytes info, but PN532 and PN533 gives 4
-  switch (CHIP_DATA(pnd)->type) {
-  case PN531:
-    snprintf (abtFirmwareText, 18, "PN531 v%d.%d", abtFw[0], abtFw[1]);
-    pnd->btSupportByte = SUPPORT_ISO14443A | SUPPORT_ISO18092;
-    break;
-  case PN532:
-    snprintf (abtFirmwareText, 18, "PN532 v%d.%d (0x%02x)", abtFw[1], abtFw[2], abtFw[3]);
-    pnd->btSupportByte = abtFw[3];
-    break;
-  case PN533:
-    snprintf (abtFirmwareText, 18, "PN533 v%d.%d (0x%02x)", abtFw[1], abtFw[2], abtFw[3]);
-    pnd->btSupportByte = abtFw[3];
-    break;
-  }
-  return true;
-}
-
-bool
-pn53x_configure (nfc_device_t * pnd, const nfc_device_option_t ndo, const bool bEnable)
-{
-  byte_t  btValue;
-
-  switch (ndo) {
-  case NDO_HANDLE_CRC:
-    // Enable or disable automatic receiving/sending of CRC bytes
-    // TX and RX are both represented by the symbol 0x80
-    btValue = (bEnable) ? 0x80 : 0x00;
-    if (!pn53x_write_register (pnd, REG_CIU_TX_MODE, SYMBOL_TX_CRC_ENABLE, btValue))
-      return false;
-    if (!pn53x_write_register (pnd, REG_CIU_RX_MODE, SYMBOL_RX_CRC_ENABLE, btValue))
-      return false;
-    pnd->bCrc = bEnable;
-    break;
-
-  case NDO_HANDLE_PARITY:
-    // Handle parity bit by PN53X chip or parse it as data bit
-    btValue = (bEnable) ? 0x00 : SYMBOL_PARITY_DISABLE;
-    if (!pn53x_write_register (pnd, REG_CIU_MANUAL_RCV, SYMBOL_PARITY_DISABLE, btValue))
-      return false;
-    pnd->bPar = bEnable;
-    break;
-
-  case NDO_EASY_FRAMING:
-    pnd->bEasyFraming = bEnable;
-    break;
-
-  case NDO_ACTIVATE_FIELD:
-    {
-      byte_t  abtCmd[] = { RFConfiguration, RFCI_FIELD, (bEnable) ? 0x01 : 0x00 };
-      if (!pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, NULL))
-        return false;
-    }
-    break;
-
-  case NDO_ACTIVATE_CRYPTO1:
-    btValue = (bEnable) ? SYMBOL_MF_CRYPTO1_ON : 0x00;
-    if (!pn53x_write_register (pnd, REG_CIU_STATUS2, SYMBOL_MF_CRYPTO1_ON, btValue))
-      return false;
-    break;
-
-  case NDO_INFINITE_SELECT:
-    {
-      // TODO Made some research around this point: 
-      // timings could be tweak better than this, and maybe we can tweak timings
-      // to "gain" a sort-of hardware polling (ie. like PN532 does)
-
-      // Retry format: 0x00 means only 1 try, 0xff means infinite
-      byte_t  abtCmd[] = {
-        RFConfiguration,
-        RFCI_RETRY_SELECT,
-        (bEnable) ? 0xff : 0x00,        // MxRtyATR, default: active = 0xff, passive = 0x02
-        (bEnable) ? 0xff : 0x00,        // MxRtyPSL, default: 0x01
-        (bEnable) ? 0xff : 0x02         // MxRtyPassiveActivation, default: 0xff (0x00 leads to problems with PN531)
-      };
-      if (!pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, NULL))
-        return false;
-    }
-    break;
-
-  case NDO_ACCEPT_INVALID_FRAMES:
-    btValue = (bEnable) ? SYMBOL_RX_NO_ERROR : 0x00;
-    if (!pn53x_write_register (pnd, REG_CIU_RX_MODE, SYMBOL_RX_NO_ERROR, btValue))
-      return false;
-    break;
-
-  case NDO_ACCEPT_MULTIPLE_FRAMES:
-    btValue = (bEnable) ? SYMBOL_RX_MULTIPLE : 0x00;
-    if (!pn53x_write_register (pnd, REG_CIU_RX_MODE, SYMBOL_RX_MULTIPLE, btValue))
-      return false;
-    return true;
-    break;
-
-  case NDO_AUTO_ISO14443_4:
-    // TODO Cache activated/disactivated options
-    pnd->bAutoIso14443_4 = bEnable;
-    return pn53x_set_parameters (pnd, PARAM_AUTO_RATS, bEnable);
-    break;
-
-  case NDO_FORCE_ISO14443_A:
-    if(!bEnable) {
-      // Nothing to do
-      return true;
-    }
-    // Force pn53x to be in ISO14443-A mode
-    if (!pn53x_write_register (pnd, REG_CIU_TX_MODE, SYMBOL_TX_FRAMING, 0x00)) {
-      return false;
-    }
-    if (!pn53x_write_register (pnd, REG_CIU_RX_MODE, SYMBOL_RX_FRAMING, 0x00)) {
-      return false;
-    }
-    return true;
-    break;
-  }
-
-  // When we reach this, the configuration is completed and succesful
-  return true;
-}
-
-bool
-pn53x_initiator_select_dep_target(nfc_device_t * pnd,
-                                  const nfc_dep_mode_t ndm, const nfc_baud_rate_t nbr,
-                                  const nfc_dep_info_t * pndiInitiator,
-                                  nfc_target_t * pnt)
-{
-  const byte_t abtPassiveInitiatorData[] = { 0x00, 0xff, 0xff, 0x00, 0x00 }; // Only for 212/424 kpbs: First 4 bytes shall be set like this according to NFCIP-1, last byte is TSN (Time Slot Number)
-  const byte_t * pbtPassiveInitiatorData = NULL;
-
-  switch (nbr) {
-    case NBR_212:
-    case NBR_424:
-      // Only use this predefined bytes array when we are at 212/424kbps
-      pbtPassiveInitiatorData = abtPassiveInitiatorData;
-      break;
-
-    default:
-      // Nothing to do
-      break;
-  }
-
-  if (pndiInitiator) {
-    return pn53x_InJumpForDEP (pnd, ndm, nbr, pbtPassiveInitiatorData, pndiInitiator->abtNFCID3, pndiInitiator->abtGB, pndiInitiator->szGB, pnt);
-  } else {
-    return pn53x_InJumpForDEP (pnd, ndm, nbr, pbtPassiveInitiatorData, NULL, NULL, 0, pnt);
-  }
 }
 
 /**
@@ -1130,459 +1649,6 @@ pn53x_InJumpForDEP (nfc_device_t * pnd,
   return true;
 }
 
-void __pn53x_init_timer(nfc_device_t * pnd)
-{
-  uint16_t prescaler = 0;
-  uint16_t reloadval = 0xFFFF;
-  // Initialize timer
-  pn53x_write_register (pnd, REG_CIU_TMODE, 0xFF, SYMBOL_TAUTO | ((prescaler >> 8) & SYMBOL_TPRESCALERHI));
-  pn53x_write_register (pnd, REG_CIU_TPRESCALER, 0xFF, (prescaler & SYMBOL_TPRESCALERLO));
-  pn53x_write_register (pnd, REG_CIU_TRELOADVALHI, 0xFF, (reloadval >> 8) & 0xFF);
-  pn53x_write_register (pnd, REG_CIU_TRELOADVALLO, 0xFF, reloadval & 0xFF);
-}
-
-uint16_t __pn53x_get_timer(nfc_device_t * pnd, const uint8_t last_cmd_byte)
-{
-  uint8_t parity;
-  uint8_t counter_hi, counter_lo;
-  uint16_t counter, cycles;
-  // Read timer
-  pn53x_read_register (pnd, REG_CIU_TCOUNTERVALHI, &counter_hi);
-  pn53x_read_register (pnd, REG_CIU_TCOUNTERVALLO, &counter_lo);
-  counter = counter_hi;
-  counter = (counter << 8) + counter_lo;
-  if (counter == 0) {
-    // counter saturated
-    cycles = 0xFFFF;
-  } else {
-    cycles = 0xFFFF - counter + 1;
-    // Correction depending on PN53x Rx detection handling:
-    // timer stops after 5 (or 2 for PN531) bits are received
-    if(CHIP_DATA(pnd)->type == PN531) {
-      cycles -= (2 * 128);
-    } else {
-      cycles -= (5 * 128);
-    }
-    // Correction depending on last parity bit sent
-    parity = (last_cmd_byte >> 7) ^ ((last_cmd_byte >> 6) & 1) ^
-             ((last_cmd_byte >> 5) & 1) ^ ((last_cmd_byte >> 4) & 1) ^
-             ((last_cmd_byte >> 3) & 1) ^ ((last_cmd_byte >> 2) & 1) ^
-             ((last_cmd_byte >> 1) & 1) ^ (last_cmd_byte & 1);
-    parity = parity ? 0:1;
-    // When sent ...YY (cmd ends with logical 1, so when last parity bit is 1):
-    if (parity) {
-      // it finishes 64us sooner than a ...ZY signal
-      cycles += 64;
-    }
-    // Correction depending on device design
-    cycles += CHIP_DATA(pnd)->timer_correction;
-  }
-  return cycles;
-}
-
-bool
-pn53x_initiator_transceive_bits (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxBits,
-                                 const byte_t * pbtTxPar, byte_t * pbtRx, size_t * pszRxBits, byte_t * pbtRxPar)
-{
-  size_t  szFrameBits = 0;
-  size_t  szFrameBytes = 0;
-  uint8_t ui8rcc;
-  uint8_t ui8Bits = 0;
-  byte_t  abtCmd[PN53x_EXTENDED_FRAME__DATA_MAX_LEN] = { InCommunicateThru };
-
-  // Check if we should prepare the parity bits ourself
-  if (!pnd->bPar) {
-    // Convert data with parity to a frame
-    pn53x_wrap_frame (pbtTx, szTxBits, pbtTxPar, abtCmd + 1, &szFrameBits);
-  } else {
-    szFrameBits = szTxBits;
-  }
-
-  // Retrieve the leading bits
-  ui8Bits = szFrameBits % 8;
-
-  // Get the amount of frame bytes + optional (1 byte if there are leading bits) 
-  szFrameBytes = (szFrameBits / 8) + ((ui8Bits == 0) ? 0 : 1);
-
-  // When the parity is handled before us, we just copy the data
-  if (pnd->bPar)
-    memcpy (abtCmd + 1, pbtTx, szFrameBytes);
-
-  // Set the amount of transmission bits in the PN53X chip register
-  if (!pn53x_set_tx_bits (pnd, ui8Bits))
-    return false;
-
-  // Send the frame to the PN53X chip and get the answer
-  // We have to give the amount of bytes + (the command byte 0x42)
-  byte_t  abtRx[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
-  size_t  szRx = sizeof(abtRx);
-  if (!pn53x_transceive (pnd, abtCmd, szFrameBytes + 1, abtRx, &szRx))
-    return false;
-
-  // Get the last bit-count that is stored in the received byte 
-  if (!pn53x_read_register (pnd, REG_CIU_CONTROL, &ui8rcc))
-    return false;
-  ui8Bits = ui8rcc & SYMBOL_RX_LAST_BITS;
-
-  // Recover the real frame length in bits
-  szFrameBits = ((szRx - 1 - ((ui8Bits == 0) ? 0 : 1)) * 8) + ui8Bits;
-
-  // Ignore the status byte from the PN53X here, it was checked earlier in pn53x_transceive()
-  // Check if we should recover the parity bits ourself
-  if (!pnd->bPar) {
-    // Unwrap the response frame
-    pn53x_unwrap_frame (abtRx + 1, szFrameBits, pbtRx, pszRxBits, pbtRxPar);
-  } else {
-    // Save the received bits
-    *pszRxBits = szFrameBits;
-    // Copy the received bytes
-    memcpy (pbtRx, abtRx + 1, szRx - 1);
-  }
-
-  // Everything went successful
-  return true;
-}
-
-bool
-pn53x_initiator_transceive_bits_timed (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxBits,
-                                 const byte_t * pbtTxPar, byte_t * pbtRx, size_t * pszRxBits, byte_t * pbtRxPar, uint16_t * cycles)
-{
-  // TODO Do something with these bytes...
-  (void) pbtTxPar;
-  (void) pbtRxPar;
-  unsigned int i;
-  uint8_t sz;
-
-  // Sorry, no arbitrary parity bits support for now
-  if (!pnd->bPar) {
-    pnd->iLastError = DENOTSUP;
-    return false;
-  }
-  // Sorry, no easy framing support
-  if (pnd->bEasyFraming) {
-    pnd->iLastError = DENOTSUP;
-    return false;
-  }
-  // Sorry, no CRC support
-  // TODO but it probably doesn't make sense for (szTxBits % 8 != 0) ...
-  if (pnd->bCrc) {
-    pnd->iLastError = DENOTSUP;
-    return false;
-  }
-
-  __pn53x_init_timer(pnd);
-
-  // Once timer is started, we cannot use Tama commands anymore.
-  // E.g. on SCL3711 timer settings are reset by 0x42 InCommunicateThru command to:
-  //  631a=82 631b=a5 631c=02 631d=00
-  // Prepare FIFO
-  pn53x_write_register (pnd, REG_CIU_COMMAND, 0xFF, SYMBOL_COMMAND & SYMBOL_COMMAND_TRANSCEIVE);
-  pn53x_write_register (pnd, REG_CIU_FIFOLEVEL, 0xFF, SYMBOL_FLUSH_BUFFER);
-  for (i=0; i< ((szTxBits / 8) + 1); i++) {
-        pn53x_write_register (pnd, REG_CIU_FIFODATA, 0xFF, pbtTx[i]);
-  }
-
-  // Send data
-  pn53x_write_register (pnd, REG_CIU_BIT_FRAMING, 0xFF, SYMBOL_START_SEND | ((szTxBits % 8) & SYMBOL_TX_LAST_BITS));
-
-  // Recv data
-  pn53x_read_register (pnd, REG_CIU_FIFOLEVEL, &sz);
-  *pszRxBits = (sz & SYMBOL_FIFO_LEVEL) * 8;
-  for (i=0; i< sz; i++) {
-    pn53x_read_register (pnd, REG_CIU_FIFODATA, &(pbtRx[i]));
-  }
-
-  // Recv corrected timer value
-  *cycles = __pn53x_get_timer (pnd, pbtTx[szTxBits / 8]);
-
-  return true;
-}
-
-bool
-pn53x_initiator_transceive_bytes (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, byte_t * pbtRx,
-                                  size_t * pszRx)
-{
-  size_t  szExtraTxLen;
-  byte_t  abtCmd[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
-
-  // We can not just send bytes without parity if while the PN53X expects we handled them
-  if (!pnd->bPar) {
-    pnd->iLastError = DENOTSUP;
-    return false;
-  }
-
-  // Copy the data into the command frame
-  if (pnd->bEasyFraming) {
-    abtCmd[0] = InDataExchange;
-    abtCmd[1] = 1;              /* target number */
-    memcpy (abtCmd + 2, pbtTx, szTx);
-    szExtraTxLen = 2;
-  } else {
-    abtCmd[0] = InCommunicateThru;
-    memcpy (abtCmd + 1, pbtTx, szTx);
-    szExtraTxLen = 1;
-  }
-
-  // To transfer command frames bytes we can not have any leading bits, reset this to zero
-  if (!pn53x_set_tx_bits (pnd, 0))
-    return false;
-
-  // Send the frame to the PN53X chip and get the answer
-  // We have to give the amount of bytes + (the two command bytes 0xD4, 0x42)
-  byte_t  abtRx[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
-  size_t  szRx = sizeof(abtRx);
-  if (!pn53x_transceive (pnd, abtCmd, szTx + szExtraTxLen, abtRx, &szRx))
-    return false;
-
-  // Save the received byte count
-  *pszRx = szRx - 1;
-
-  // Copy the received bytes
-  memcpy (pbtRx, abtRx + 1, *pszRx);
-
-  // Everything went successful
-  return true;
-}
-
-bool
-pn53x_initiator_transceive_bytes_timed (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, byte_t * pbtRx,
-                                  size_t * pszRx, uint16_t * cycles)
-{
-  unsigned int i;
-  uint8_t sz;
-
-  // We can not just send bytes without parity while the PN53X expects we handled them
-  if (!pnd->bPar) {
-    pnd->iLastError = DENOTSUP;
-    return false;
-  }
-  // Sorry, no easy framing support
-  // TODO: to be changed once we'll provide easy framing support from libnfc itself...
-  if (pnd->bEasyFraming) {
-    pnd->iLastError = DENOTSUP;
-    return false;
-  }
-
-  __pn53x_init_timer(pnd);
-
-  // Once timer is started, we cannot use Tama commands anymore.
-  // E.g. on SCL3711 timer settings are reset by 0x42 InCommunicateThru command to:
-  //  631a=82 631b=a5 631c=02 631d=00
-  // Prepare FIFO
-  pn53x_write_register (pnd, REG_CIU_COMMAND, 0xFF, SYMBOL_COMMAND & SYMBOL_COMMAND_TRANSCEIVE);
-  pn53x_write_register (pnd, REG_CIU_FIFOLEVEL, 0xFF, SYMBOL_FLUSH_BUFFER);
-  for (i=0; i< szTx; i++) {
-    pn53x_write_register (pnd, REG_CIU_FIFODATA, 0xFF, pbtTx[i]);
-  }
-
-  // Send data
-  pn53x_write_register (pnd, REG_CIU_BIT_FRAMING, 0xFF, SYMBOL_START_SEND);
-
-  // Recv data
-  pn53x_read_register (pnd, REG_CIU_FIFOLEVEL, &sz);
-  *pszRx = (size_t)(sz);
-  for (i=0; i<sz; i++) {
-    pn53x_read_register (pnd, REG_CIU_FIFODATA, &(pbtRx[i]));
-  }
-
-  // Recv corrected timer value
-  if (pnd->bCrc) {
-    // We've to compute CRC ourselves to know last byte actually sent
-    uint8_t * pbtTxRaw;
-    pbtTxRaw = (uint8_t *) malloc(szTx+2);
-    memcpy (pbtTxRaw, pbtTx, szTx);
-    iso14443a_crc_append (pbtTxRaw, szTx);
-    *cycles = __pn53x_get_timer (pnd, pbtTxRaw[szTx +1]);
-    free(pbtTxRaw);
-  } else {
-    *cycles = __pn53x_get_timer (pnd, pbtTx[szTx -1]);
-  }
-  return true;
-}
-
-
-#define SAK_ISO14443_4_COMPLIANT 0x20
-bool
-pn53x_target_init (nfc_device_t * pnd, nfc_target_t * pnt, byte_t * pbtRx, size_t * pszRx)
-{
-  // Save the current configuration settings
-  bool    bCrc = pnd->bCrc;
-  bool    bPar = pnd->bPar;
-
-  pn53x_target_mode_t ptm = PTM_NORMAL;
-  switch (pnt->nm.nmt) {
-    case NMT_ISO14443A:
-      ptm = PTM_PASSIVE_ONLY;
-      if ((pnt->nti.nai.abtUid[0] != 0x08) || (pnt->nti.nai.szUidLen != 4)) {
-        pnd->iLastError = ETGUIDNOTSUP;
-        return false;
-      }
-      pn53x_set_parameters (pnd, PARAM_AUTO_ATR_RES, false);
-      if (CHIP_DATA(pnd)->type == PN532) { // We have a PN532
-        if ((pnt->nti.nai.btSak & SAK_ISO14443_4_COMPLIANT) && (pnd->bAutoIso14443_4)) { 
-          // We have a ISO14443-4 tag to emulate and NDO_AUTO_14443_4A option is enabled
-          ptm |= PTM_ISO14443_4_PICC_ONLY; // We add ISO14443-4 restriction
-          pn53x_set_parameters (pnd, PARAM_14443_4_PICC, true);
-        } else {
-          pn53x_set_parameters (pnd, PARAM_14443_4_PICC, false);
-        }
-      }
-    break;
-    case NMT_FELICA:
-      ptm = PTM_PASSIVE_ONLY;
-    break;
-    case NMT_DEP:
-      pn53x_set_parameters (pnd, PARAM_AUTO_ATR_RES, true);
-      ptm = PTM_DEP_ONLY;
-      if (pnt->nti.ndi.ndm == NDM_PASSIVE) {
-        ptm |= PTM_PASSIVE_ONLY; // We add passive mode restriction
-      }
-    break;
-    case NMT_ISO14443B:
-    case NMT_JEWEL:
-      pnd->iLastError = DENOTSUP;
-      return false;
-    break;
-  }
-
-  // Make sure the CRC & parity are handled by the device, this is needed for target_init to work properly
-  if (!bCrc)
-    pn53x_configure (pnd, NDO_HANDLE_CRC, true);
-  if (!bPar)
-    pn53x_configure (pnd, NDO_HANDLE_PARITY, true);
-
-  // Let the PN53X be activated by the RF level detector from power down mode
-  if (!pn53x_write_register (pnd, REG_CIU_TX_AUTO, SYMBOL_INITIAL_RF_ON, 0x04))
-    return false;
-
-  byte_t abtMifareParams[6];
-  byte_t * pbtMifareParams = NULL;
-  byte_t * pbtTkt = NULL;
-  size_t szTkt = 0;
-
-  byte_t abtFeliCaParams[18];
-  byte_t * pbtFeliCaParams = NULL;
-
-  const byte_t * pbtNFCID3t = NULL;
-  const byte_t * pbtGBt = NULL;
-  size_t szGBt = 0;
-
-  switch(pnt->nm.nmt) {
-    case NMT_ISO14443A: {
-      // Set ATQA (SENS_RES)
-      abtMifareParams[0] = pnt->nti.nai.abtAtqa[1];
-      abtMifareParams[1] = pnt->nti.nai.abtAtqa[0];
-      // Set UID 
-      // Note: in this mode we can only emulate a single size (4 bytes) UID where the first is hard-wired by PN53x as 0x08
-      abtMifareParams[2] = pnt->nti.nai.abtUid[1];
-      abtMifareParams[3] = pnt->nti.nai.abtUid[2];
-      abtMifareParams[4] = pnt->nti.nai.abtUid[3];
-      // Set SAK (SEL_RES)
-      abtMifareParams[5] = pnt->nti.nai.btSak;
-
-      pbtMifareParams = abtMifareParams;
-
-      // Historical Bytes
-      pbtTkt = iso14443a_locate_historical_bytes (pnt->nti.nai.abtAts, pnt->nti.nai.szAtsLen, &szTkt);
-    }
-    break;
-
-    case NMT_FELICA:
-      // Set NFCID2t 
-      memcpy(abtFeliCaParams, pnt->nti.nfi.abtId, 8);
-      // Set PAD
-      memcpy(abtFeliCaParams+8, pnt->nti.nfi.abtPad, 8);
-      // Set SystemCode
-      memcpy(abtFeliCaParams+16, pnt->nti.nfi.abtSysCode, 2);
-      pbtFeliCaParams = abtFeliCaParams;
-    break;
-
-    case NMT_DEP:
-      // Set NFCID3
-      pbtNFCID3t = pnt->nti.ndi.abtNFCID3;
-      // Set General Bytes, if relevant
-      szGBt = pnt->nti.ndi.szGB;
-      if (szGBt) pbtGBt = pnt->nti.ndi.abtGB;
-    break;
-    case NMT_ISO14443B:
-    case NMT_JEWEL:
-      pnd->iLastError = DENOTSUP;
-      return false;
-    break;
-  }
-
-  bool targetActivated = false;
-  while (!targetActivated) {
-    byte_t btActivatedMode;
-
-    if(!pn53x_TgInitAsTarget(pnd, ptm, pbtMifareParams, pbtTkt, szTkt, pbtFeliCaParams, pbtNFCID3t, pbtGBt, szGBt, pbtRx, pszRx, &btActivatedMode)) {
-      return false;
-    }
-
-    nfc_modulation_t nm = {
-      .nmt = NMT_DEP, // Silent compilation warnings
-      .nbr = NBR_UNDEFINED
-    };
-    nfc_dep_mode_t ndm = NDM_UNDEFINED;
-    // Decode activated "mode"
-    switch(btActivatedMode & 0x70) { // Baud rate
-      case 0x00: // 106kbps
-        nm.nbr = NBR_106;
-      break;
-      case 0x10: // 212kbps
-        nm.nbr = NBR_212;
-      break;
-      case 0x20: // 424kbps
-        nm.nbr = NBR_424;
-      break;
-    };
-  
-    if (btActivatedMode & 0x04) { // D.E.P.
-      nm.nmt = NMT_DEP;
-      if ((btActivatedMode & 0x03) == 0x01) { // Active mode
-        ndm = NDM_ACTIVE;
-      } else { // Passive mode
-        ndm = NDM_PASSIVE;
-      }
-    } else { // Not D.E.P.
-      if ((btActivatedMode & 0x03) == 0x00) { // MIFARE
-        nm.nmt = NMT_ISO14443A;
-      } else if ((btActivatedMode & 0x03) == 0x02) { // FeliCa
-        nm.nmt = NMT_FELICA;
-      }
-    }
-
-    if(pnt->nm.nmt == nm.nmt) { // Actual activation have the right modulation type
-      if ((pnt->nm.nbr == NBR_UNDEFINED) || (pnt->nm.nbr == nm.nbr)) { // Have the right baud rate (or undefined)
-        if ((pnt->nm.nmt != NMT_DEP) || (pnt->nti.ndi.ndm == NDM_UNDEFINED) || (pnt->nti.ndi.ndm == ndm)) { // Have the right DEP mode (or is not a DEP)
-          targetActivated = true;
-        }
-      }
-    }
- 
-    if (targetActivated) {
-      pnt->nm.nbr = nm.nbr; // Update baud rate
-      if (pnt->nm.nmt == NMT_DEP) {
-        pnt->nti.ndi.ndm = ndm; // Update DEP mode
-      }
-      // Keep the current nfc_target for further commands
-      if (CHIP_DATA (pnd)->current_target) {
-        free (CHIP_DATA (pnd)->current_target);
-      }
-      CHIP_DATA (pnd)->current_target = malloc (sizeof(nfc_target_t));
-      memcpy (CHIP_DATA (pnd)->current_target, pnt, sizeof(nfc_target_t));
-    }
-  }
-
-  // Restore the CRC & parity setting to the original value (if needed)
-  if (!bCrc)
-    pn53x_configure ((nfc_device_t *) pnd, NDO_HANDLE_CRC, false);
-  if (!bPar)
-    pn53x_configure ((nfc_device_t *) pnd, NDO_HANDLE_PARITY, false);
-
-  return true;
-}
-
 bool
 pn53x_TgInitAsTarget (nfc_device_t * pnd, pn53x_target_mode_t ptm,
                       const byte_t * pbtMifareParams,
@@ -1655,151 +1721,94 @@ pn53x_TgInitAsTarget (nfc_device_t * pnd, pn53x_target_mode_t ptm,
 }
 
 bool
-pn53x_target_receive_bits (nfc_device_t * pnd, byte_t * pbtRx, size_t * pszRxBits, byte_t * pbtRxPar)
+pn53x_check_ack_frame (nfc_device_t * pnd, const byte_t * pbtRxFrame, const size_t szRxFrameLen)
 {
-  byte_t  abtCmd[] = { TgGetInitiatorCommand };
-
-  byte_t  abtRx[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
-  size_t  szRx = sizeof (abtRx);
-  // Try to gather a received frame from the reader
-  if (!pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), abtRx, &szRx))
-    return false;
-
-  // Get the last bit-count that is stored in the received byte 
-  uint8_t ui8rcc;
-  if (!pn53x_read_register (pnd, REG_CIU_CONTROL, &ui8rcc))
-    return false;
-  uint8_t ui8Bits = ui8rcc & SYMBOL_RX_LAST_BITS;
-
-  // Recover the real frame length in bits
-  size_t szFrameBits = ((szRx - 1 - ((ui8Bits == 0) ? 0 : 1)) * 8) + ui8Bits;
-
-  // Ignore the status byte from the PN53X here, it was checked earlier in pn53x_transceive()
-  // Check if we should recover the parity bits ourself
-  if (!pnd->bPar) {
-    // Unwrap the response frame
-    pn53x_unwrap_frame (abtRx + 1, szFrameBits, pbtRx, pszRxBits, pbtRxPar);
-  } else {
-    // Save the received bits
-    *pszRxBits = szFrameBits;
-    // Copy the received bytes
-    memcpy (pbtRx, abtRx + 1, szRx - 1);
+  if (szRxFrameLen >= sizeof (pn53x_ack_frame)) {
+    if (0 == memcmp (pbtRxFrame, pn53x_ack_frame, sizeof (pn53x_ack_frame))) {
+      // DBG ("%s", "PN53x ACKed");
+      return true;
+    }
   }
-  // Everyting seems ok, return true
-  return true;
+  pnd->iLastError = DEACKMISMATCH;
+  ERR ("%s", "Unexpected PN53x reply!");
+  return false;
 }
 
 bool
-pn53x_target_receive_bytes (nfc_device_t * pnd, byte_t * pbtRx, size_t * pszRx)
+pn53x_check_error_frame (nfc_device_t * pnd, const byte_t * pbtRxFrame, const size_t szRxFrameLen)
 {
-  byte_t  abtCmd[1];
-
-  if (pnd->bEasyFraming) {
-    if ((CHIP_DATA (pnd)->current_target->nm.nmt == NMT_DEP) || // If DEP mode
-      ((CHIP_DATA(pnd)->type == PN532) && (pnd->bAutoIso14443_4) && 
-        (CHIP_DATA (pnd)->current_target->nm.nmt == NMT_ISO14443A) && (CHIP_DATA (pnd)->current_target->nti.nai.btSak & SAK_ISO14443_4_COMPLIANT)) // If ISO14443-4 PICC emulation
-    ) {
-      abtCmd[0] = TgGetData;
-    } else {
-      // TODO Support EasyFraming for other cases by software
-      pnd->iLastError = DENOTSUP;
+  if (szRxFrameLen >= sizeof (pn53x_error_frame)) {
+    if (0 == memcmp (pbtRxFrame, pn53x_error_frame, sizeof (pn53x_error_frame))) {
+      DBG ("%s", "PN53x sent an error frame");
+      pnd->iLastError = DEISERRFRAME;
       return false;
     }
-  } else {
-    abtCmd[0] = TgGetInitiatorCommand;
   }
-
-  // Try to gather a received frame from the reader
-  byte_t  abtRx[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
-  size_t  szRx = sizeof (abtRx);
-  if (!pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), abtRx, &szRx))
-    return false;
-
-  // Save the received byte count
-  *pszRx = szRx - 1;
-
-  // FIXME szRx can be 0
-
-  // Copy the received bytes
-  memcpy (pbtRx, abtRx + 1, *pszRx);
-
-  // Everyting seems ok, return true
   return true;
 }
 
+/**
+ * @brief Build a PN53x frame
+ *
+ * @param pbtData payload (bytes array) of the frame, will become PD0, ..., PDn in PN53x frame
+ * @note The first byte of pbtData is the Command Code (CC)
+ */
 bool
-pn53x_target_send_bits (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxBits, const byte_t * pbtTxPar)
+pn53x_build_frame (byte_t * pbtFrame, size_t * pszFrame, const byte_t * pbtData, const size_t szData)
 {
-  size_t  szFrameBits = 0;
-  size_t  szFrameBytes = 0;
-  uint8_t ui8Bits = 0;
-  byte_t  abtCmd[PN53x_EXTENDED_FRAME__DATA_MAX_LEN] = { TgResponseToInitiator };
+  if (szData <= PN53x_NORMAL_FRAME__DATA_MAX_LEN) {
+    // LEN - Packet length = data length (len) + checksum (1) + end of stream marker (1)
+    pbtFrame[3] = szData + 1;
+    // LCS - Packet length checksum
+    pbtFrame[4] = 256 - (szData + 1);
+    // TFI
+    pbtFrame[5] = 0xD4;
+    // DATA - Copy the PN53X command into the packet buffer
+    memcpy (pbtFrame + 6, pbtData, szData);
 
-  // Check if we should prepare the parity bits ourself
-  if (!pnd->bPar) {
-    // Convert data with parity to a frame
-    pn53x_wrap_frame (pbtTx, szTxBits, pbtTxPar, abtCmd + 1, &szFrameBits);
-  } else {
-    szFrameBits = szTxBits;
-  }
-
-  // Retrieve the leading bits
-  ui8Bits = szFrameBits % 8;
-
-  // Get the amount of frame bytes + optional (1 byte if there are leading bits) 
-  szFrameBytes = (szFrameBits / 8) + ((ui8Bits == 0) ? 0 : 1);
-
-  // When the parity is handled before us, we just copy the data
-  if (pnd->bPar)
-    memcpy (abtCmd + 1, pbtTx, szFrameBytes);
-
-  // Set the amount of transmission bits in the PN53X chip register
-  if (!pn53x_set_tx_bits (pnd, ui8Bits))
-    return false;
-
-  // Try to send the bits to the reader
-  if (!pn53x_transceive (pnd, abtCmd, szFrameBytes + 1, NULL, NULL))
-    return false;
-
-  // Everyting seems ok, return true
-  return true;
-}
-
-bool
-pn53x_target_send_bytes (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx)
-{
-  byte_t  abtCmd[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
-
-  // We can not just send bytes without parity if while the PN53X expects we handled them
-  if (!pnd->bPar)
-    return false;
-
-  if (pnd->bEasyFraming) {
-    if ((CHIP_DATA (pnd)->current_target->nm.nmt == NMT_DEP) || // If DEP mode
-      ((CHIP_DATA(pnd)->type == PN532) && (pnd->bAutoIso14443_4) && 
-        (CHIP_DATA (pnd)->current_target->nm.nmt == NMT_ISO14443A) && (CHIP_DATA (pnd)->current_target->nti.nai.btSak & SAK_ISO14443_4_COMPLIANT)) // If ISO14443-4 PICC emulation
-    ) {
-      abtCmd[0] = TgSetData;
-    } else {
-      // TODO Support EasyFraming for other cases by software
-      pnd->iLastError = DENOTSUP;
-      return false;
+    // DCS - Calculate data payload checksum
+    byte_t btDCS = (256 - 0xD4);
+    for (size_t szPos = 0; szPos < szData; szPos++) {
+      btDCS -= pbtData[szPos];
     }
+    pbtFrame[6 + szData] = btDCS;
+
+    // 0x00 - End of stream marker
+    pbtFrame[szData + 7] = 0x00;
+
+    (*pszFrame) = szData + PN53x_NORMAL_FRAME__OVERHEAD;
+  } else if (szData <= PN53x_EXTENDED_FRAME__DATA_MAX_LEN) {
+    // Extended frame marker
+    pbtFrame[3] = 0xff;
+    pbtFrame[4] = 0xff;
+    // LENm
+    pbtFrame[5] = (szData + 1) >> 8;
+    // LENl
+    pbtFrame[6] = (szData + 1) & 0xff;
+    // LCS
+    pbtFrame[7] = 256 - ((pbtFrame[5] + pbtFrame[6]) & 0xff);
+    // TFI
+    pbtFrame[8] = 0xD4;
+    // DATA - Copy the PN53X command into the packet buffer
+    memcpy (pbtFrame + 9, pbtData, szData);
+
+    // DCS - Calculate data payload checksum
+    byte_t btDCS = (256 - 0xD4);
+    for (size_t szPos = 0; szPos < szData; szPos++) {
+      btDCS -= pbtData[szPos];
+    }
+    pbtFrame[9 + szData] = btDCS;
+
+    // 0x00 - End of stream marker
+    pbtFrame[szData + 10] = 0x00;
+
+    (*pszFrame) = szData + PN53x_EXTENDED_FRAME__OVERHEAD;
   } else {
-    abtCmd[0] = TgResponseToInitiator;
-  }
-
-  // Copy the data into the command frame
-  memcpy (abtCmd + 1, pbtTx, szTx);
-
-  // Try to send the bits to the reader
-  if (!pn53x_transceive (pnd, abtCmd, szTx + 1, NULL, NULL))
+    ERR ("We can't send more than %d bytes in a raw (requested: %zd)", PN53x_EXTENDED_FRAME__DATA_MAX_LEN, szData);
     return false;
-
-  // Everyting seems ok, return true
+  }
   return true;
 }
-
 pn53x_modulation_t
 pn53x_nm_to_pm(const nfc_modulation_t nm)
 {
@@ -1951,18 +1960,4 @@ pn53x_nm_to_ptt(const nfc_modulation_t nm)
     break;
   }
   return PTT_UNDEFINED;
-}
-
-bool
-pn53x_check_communication (nfc_device_t *pnd)
-{
-  const byte_t abtCmd[] = { Diagnose, 0x00, 'l', 'i', 'b', 'n', 'f', 'c' };
-  const byte_t abtExpectedRx[] = { 0x00, 'l', 'i', 'b', 'n', 'f', 'c' };
-  byte_t abtRx[sizeof(abtExpectedRx)];
-  size_t szRx = sizeof (abtRx);
-
-  if (!pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), abtRx, &szRx))
-    return false;
-
-  return ((sizeof(abtExpectedRx) == szRx) && (0 == memcmp (abtRx, abtExpectedRx, sizeof(abtExpectedRx))));
 }
