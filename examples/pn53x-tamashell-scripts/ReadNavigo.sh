@@ -8,7 +8,7 @@ ID=$(cat << EOF | \
 3205000002
 # ListTarget ModeB
 4a010300
-# TYPEB'
+# TypeB' APGEN
 42010b3f80
 EOF
 )
@@ -36,14 +36,14 @@ cat << EOF | \
 # ListTarget ModeB
 4a010300
 
-# TYPEB'
+# TypeB'
 42010b3f80
 
 # timings...
 3202010b0c
 
-# We need a first dummy INS with target UID
-42 01 c2 06 0001000000 $ID
+# TypeB' ATTRIB
+42 01 0f $ID
 
 # Select ICC file
 42 01 04 0a 00a4 0800 04 3f00 0002
@@ -89,4 +89,8 @@ cat << EOF | \
 42 01 06 0a 00a4 08 0004 2000 2040
 #SpecEv1:
 42 01 08 06 00b2 0104 1d
+
+# TypeB' Disconnect
+42 01 03
+
 EOF
