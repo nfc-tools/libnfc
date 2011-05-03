@@ -859,7 +859,7 @@ pn53x_initiator_transceive_bits_timed (nfc_device_t * pnd, const byte_t * pbtTx,
   (void) pbtTxPar;
   (void) pbtRxPar;
   unsigned int i;
-  uint8_t sz;
+  uint8_t sz, sz2;
 
   // Sorry, no arbitrary parity bits support for now
   if (!pnd->bPar) {
@@ -899,6 +899,14 @@ pn53x_initiator_transceive_bits_timed (nfc_device_t * pnd, const byte_t * pbtTx,
   for (i=0; i< sz; i++) {
     pn53x_read_register (pnd, REG_CIU_FIFODATA, &(pbtRx[i]));
   }
+  // Did we get more data meanwhile?
+  pn53x_read_register (pnd, REG_CIU_FIFOLEVEL, &sz2);
+  if (sz2 != 0) {
+    *pszRxBits += (sz2 & SYMBOL_FIFO_LEVEL) * 8;
+    for (i=0; i< sz2; i++) {
+      pn53x_read_register (pnd, REG_CIU_FIFODATA, &(pbtRx[i+sz]));
+    }
+  }
 
   // Recv corrected timer value
   *cycles = __pn53x_get_timer (pnd, pbtTx[szTxBits / 8]);
@@ -911,7 +919,7 @@ pn53x_initiator_transceive_bytes_timed (nfc_device_t * pnd, const byte_t * pbtTx
                                         size_t * pszRx, uint16_t * cycles)
 {
   unsigned int i;
-  uint8_t sz;
+  uint8_t sz, sz2;
 
   // We can not just send bytes without parity while the PN53X expects we handled them
   if (!pnd->bPar) {
@@ -945,6 +953,14 @@ pn53x_initiator_transceive_bytes_timed (nfc_device_t * pnd, const byte_t * pbtTx
   *pszRx = (size_t)(sz);
   for (i=0; i<sz; i++) {
     pn53x_read_register (pnd, REG_CIU_FIFODATA, &(pbtRx[i]));
+  }
+  // Did we get more data meanwhile?
+  pn53x_read_register (pnd, REG_CIU_FIFOLEVEL, &sz2);
+  if (sz2 != 0) {
+    *pszRx += sz2 & SYMBOL_FIFO_LEVEL;
+    for (i=0; i< sz2; i++) {
+      pn53x_read_register (pnd, REG_CIU_FIFODATA, &(pbtRx[i+sz]));
+    }
   }
 
   // Recv corrected timer value
