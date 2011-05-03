@@ -573,9 +573,9 @@ On ASK LoGO hardware:
    field by switching off the field on PN533 then set P34 to '0'.
 */
 
-    /* Set P30, P31, P33, P35 to logic 1 and P32, P34 to 0 logic */
-    /* ie. Switch LED1 on and turn off progressive field */
-    pn53x_write_register (pnd, SFR_P3, 0xFF, _BV (P30) | _BV (P31) | _BV (P33) | _BV (P35));
+    /* Set P30, P31, P33, P35, P34 to logic 1 and P32 to 0 logic */
+    /* ie. Switch LED1 on and turn on progressive field */
+    pn53x_write_register (pnd, SFR_P3, 0xFF, _BV (P30) | _BV (P31) | _BV (P33) | _BV (P34) | _BV (P35));
   }
 
   return true;
