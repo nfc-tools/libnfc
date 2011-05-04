@@ -859,7 +859,7 @@ pn53x_initiator_transceive_bits_timed (nfc_device_t * pnd, const byte_t * pbtTx,
   (void) pbtTxPar;
   (void) pbtRxPar;
   unsigned int i;
-  uint8_t sz, sz2;
+  uint8_t sz;
 
   // Sorry, no arbitrary parity bits support for now
   if (!pnd->bPar) {
@@ -894,19 +894,26 @@ pn53x_initiator_transceive_bits_timed (nfc_device_t * pnd, const byte_t * pbtTx,
   pn53x_write_register (pnd, REG_CIU_BIT_FRAMING, 0xFF, SYMBOL_START_SEND | ((szTxBits % 8) & SYMBOL_TX_LAST_BITS));
 
   // Recv data
-  pn53x_read_register (pnd, REG_CIU_FIFOLEVEL, &sz);
-  *pszRxBits = (sz & SYMBOL_FIFO_LEVEL) * 8;
-  for (i=0; i< sz; i++) {
-    pn53x_read_register (pnd, REG_CIU_FIFODATA, &(pbtRx[i]));
+  *pszRxBits = 0;
+  // we've to watch for coming data until we decide to timeout.
+  // our PN53x timer saturates after 4.8ms so this function shouldn't be used for
+  // responses coming very late anyway.
+  // Ideally we should implement a real timer here too but looping a few times is good enough.
+  for (i=0; i<4; i++) {
+    pn53x_read_register (pnd, REG_CIU_FIFOLEVEL, &sz);
+    if (sz > 0)
+      break;
   }
-  // Did we get more data meanwhile?
-  pn53x_read_register (pnd, REG_CIU_FIFOLEVEL, &sz2);
-  if (sz2 != 0) {
-    *pszRxBits += (sz2 & SYMBOL_FIFO_LEVEL) * 8;
-    for (i=0; i< sz2; i++) {
-      pn53x_read_register (pnd, REG_CIU_FIFODATA, &(pbtRx[i+sz]));
+  while (1) {
+    for (i=0; i<sz; i++) {
+      pn53x_read_register (pnd, REG_CIU_FIFODATA, &(pbtRx[i+*pszRxBits]));
     }
+    *pszRxBits += (size_t) (sz & SYMBOL_FIFO_LEVEL);
+    pn53x_read_register (pnd, REG_CIU_FIFOLEVEL, &sz);
+    if (sz == 0)
+      break;
   }
+  *pszRxBits *= 8; // in bits, not bytes
 
   // Recv corrected timer value
   *cycles = __pn53x_get_timer (pnd, pbtTx[szTxBits / 8]);
@@ -919,7 +926,7 @@ pn53x_initiator_transceive_bytes_timed (nfc_device_t * pnd, const byte_t * pbtTx
                                         size_t * pszRx, uint16_t * cycles)
 {
   unsigned int i;
-  uint8_t sz, sz2;
+  uint8_t sz;
 
   // We can not just send bytes without parity while the PN53X expects we handled them
   if (!pnd->bPar) {
@@ -949,18 +956,24 @@ pn53x_initiator_transceive_bytes_timed (nfc_device_t * pnd, const byte_t * pbtTx
   pn53x_write_register (pnd, REG_CIU_BIT_FRAMING, 0xFF, SYMBOL_START_SEND);
 
   // Recv data
-  pn53x_read_register (pnd, REG_CIU_FIFOLEVEL, &sz);
-  *pszRx = (size_t)(sz);
-  for (i=0; i<sz; i++) {
-    pn53x_read_register (pnd, REG_CIU_FIFODATA, &(pbtRx[i]));
+  *pszRx = 0;
+  // we've to watch for coming data until we decide to timeout.
+  // our PN53x timer saturates after 4.8ms so this function shouldn't be used for
+  // responses coming very late anyway.
+  // Ideally we should implement a real timer here too but looping a few times is good enough.
+  for (i=0; i<4; i++) {
+    pn53x_read_register (pnd, REG_CIU_FIFOLEVEL, &sz);
+    if (sz > 0)
+      break;
   }
-  // Did we get more data meanwhile?
-  pn53x_read_register (pnd, REG_CIU_FIFOLEVEL, &sz2);
-  if (sz2 != 0) {
-    *pszRx += sz2 & SYMBOL_FIFO_LEVEL;
-    for (i=0; i< sz2; i++) {
-      pn53x_read_register (pnd, REG_CIU_FIFODATA, &(pbtRx[i+sz]));
+  while (1) {
+    for (i=0; i<sz; i++) {
+      pn53x_read_register (pnd, REG_CIU_FIFODATA, &(pbtRx[i+*pszRx]));
     }
+    *pszRx += (size_t) (sz & SYMBOL_FIFO_LEVEL);
+    pn53x_read_register (pnd, REG_CIU_FIFOLEVEL, &sz);
+    if (sz == 0)
+      break;
   }
 
   // Recv corrected timer value
