@@ -88,20 +88,22 @@ main (int argc, const char *argv[])
 
   if(!nfc_initiator_select_dep_target (pnd, NDM_PASSIVE, NBR_212, NULL, &nt)) {
     nfc_perror(pnd, "nfc_initiator_select_dep_target");
-    return EXIT_FAILURE;
+    goto error;
   }
   print_nfc_target (nt, false);
 
   printf ("Sending: %s\n", abtTx);
   if (!nfc_initiator_transceive_bytes (pnd, abtTx, sizeof(abtTx), abtRx, &szRx)) {
     nfc_perror(pnd, "nfc_initiator_transceive_bytes");
-    return EXIT_FAILURE;
+    goto error;
   }
 
   abtRx[szRx] = 0;
   printf ("Received: %s\n", abtRx);
 
   nfc_initiator_deselect_target (pnd);
+
+error:
   nfc_disconnect (pnd);
   return EXIT_SUCCESS;
 }

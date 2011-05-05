@@ -120,13 +120,13 @@ main (int argc, const char *argv[])
   printf ("Waiting for initiator request...\n");
   if(!nfc_target_init (pnd, &nt, abtRx, &szRx)) {
     nfc_perror(pnd, "nfc_target_init");
-    return EXIT_FAILURE;
+    goto error;
   }
 
   printf("Initiator request received. Waiting for data...\n");
   if (!nfc_target_receive_bytes (pnd, abtRx, &szRx)) {
     nfc_perror(pnd, "nfc_target_receive_bytes");
-    return EXIT_FAILURE;
+    goto error;
   }
   abtRx[szRx] = '\0';
   printf ("Received: %s\n", abtRx);
@@ -134,10 +134,11 @@ main (int argc, const char *argv[])
   printf ("Sending: %s\n", abtTx);
   if (!nfc_target_send_bytes (pnd, abtTx, sizeof(abtTx))) {
     nfc_perror(pnd, "nfc_target_send_bytes");
-    return EXIT_FAILURE;
+    goto error;
   }
   printf("Data sent.\n");
 
+error:
   nfc_disconnect (pnd);
   return EXIT_SUCCESS;
 }
