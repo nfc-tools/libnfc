@@ -615,6 +615,9 @@ nfc_target_init (nfc_device_t * pnd, nfc_target_t * pnt, byte_t * pbtRx, size_t 
   // Deactivate the CRYPTO1 cipher, it may could cause problems when still active
   if (!nfc_configure (pnd, NDO_ACTIVATE_CRYPTO1, false))
     return false;
+  // Drop explicitely the field
+  if (!nfc_configure (pnd, NDO_ACTIVATE_FIELD, false))
+    return false;
 
   HAL (target_init, pnd, pnt, pbtRx, pszRx);
 }
