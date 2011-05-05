@@ -66,7 +66,6 @@ typedef struct {
  *    +----------- Driver-level general error (common to all drivers)
  */
   int     iLastError;
-  int     iAbortFds[2];
 } nfc_device_t;
 
 /**

@@ -35,7 +35,6 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <string.h>
-#include <unistd.h>
 
 #include <nfc/nfc.h>
 
@@ -138,8 +137,6 @@ nfc_connect (nfc_device_desc_t * pndd)
       if (!nfc_configure (pnd, NDO_ACCEPT_MULTIPLE_FRAMES, false))
         return NULL;
 
-      pipe (pnd->iAbortFds);
-
       return pnd;
     } else {
       DBG ("No device found using driver: %s", ndr->name);
@@ -164,8 +161,6 @@ nfc_disconnect (nfc_device_t * pnd)
     nfc_initiator_deselect_target (pnd);
     // Disable RF field to avoid heating
     nfc_configure (pnd, NDO_ACTIVATE_FIELD, false);
-    close (pnd->iAbortFds[0]);
-    close (pnd->iAbortFds[1]);
     // Disconnect, clean up and release the device 
     pnd->driver->disconnect (pnd);
   }
@@ -608,13 +603,11 @@ nfc_target_init (nfc_device_t * pnd, nfc_target_t * pnt, byte_t * pbtRx, size_t 
   HAL (target_init, pnd, pnt, pbtRx, pszRx);
 }
 
-void
+/* TODO Document this function */
+bool
 nfc_abort_command (nfc_device_t * pnd)
 {
-  if (pnd) {
-    close (pnd->iAbortFds[0]);
-    pipe (pnd->iAbortFds);
-  }
+  HAL (abort_command, pnd);
 }
 
 /**

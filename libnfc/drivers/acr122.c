@@ -409,7 +409,7 @@ const struct nfc_driver_t acr122_driver = {
 
   .initiator_init                   = pn53x_initiator_init,
   .initiator_select_passive_target  = pn53x_initiator_select_passive_target,
-  .initiator_poll_targets           = NULL,
+  .initiator_poll_targets           = pn53x_initiator_poll_targets,
   .initiator_select_dep_target      = pn53x_initiator_select_dep_target,
   .initiator_deselect_target        = pn53x_initiator_deselect_target,
   .initiator_transceive_bytes       = pn53x_initiator_transceive_bytes,
@@ -417,12 +417,14 @@ const struct nfc_driver_t acr122_driver = {
   .initiator_transceive_bytes_timed = pn53x_initiator_transceive_bytes_timed,
   .initiator_transceive_bits_timed  = pn53x_initiator_transceive_bits_timed,
 
-  .target_init           = NULL,
-  .target_send_bytes     = NULL,
-  .target_receive_bytes  = NULL,
-  .target_send_bits      = NULL,
-  .target_receive_bits   = NULL,
+  .target_init           = pn53x_target_init,
+  .target_send_bytes     = pn53x_target_send_bytes,
+  .target_receive_bytes  = pn53x_target_receive_bytes,
+  .target_send_bits      = pn53x_target_send_bits,
+  .target_receive_bits   = pn53x_target_receive_bits,
 
   .configure  = pn53x_configure,
+
+  .abort_command  = NULL,
 };
 

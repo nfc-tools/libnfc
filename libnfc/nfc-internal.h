@@ -124,6 +124,8 @@ struct nfc_driver_t {
   bool (*target_receive_bits) (nfc_device_t * pnd, byte_t * pbtRx, size_t * pszRxBits, byte_t * pbtRxPar);
 
   bool (*configure) (nfc_device_t * pnd, const nfc_device_option_t ndo, const bool bEnable);
+
+  bool (*abort_command) (nfc_device_t * pnd);
 };
 
 nfc_device_t  *nfc_device_new (void);

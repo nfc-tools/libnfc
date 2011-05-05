@@ -66,6 +66,7 @@ struct pn53x_usb_data {
   uint32_t uiEndPointIn;
   uint32_t uiEndPointOut;
   uint32_t uiMaxPacketSize;
+  volatile bool abort_flag;
 };
 
 const struct pn53x_io pn53x_usb_io;
@@ -261,17 +262,23 @@ pn53x_usb_connect (const nfc_device_desc_t *pndd)
       if (uiBusIndex == 0) {
         // Open the USB device
         data.pudh = usb_open (dev);
-
+        // Retrieve end points
         pn53x_usb_get_end_points (dev, &data);
-        if (usb_set_configuration (data.pudh, 1) < 0) {
-          ERR ("Unable to set USB configuration, please check USB permissions for device %04x:%04x", dev->descriptor.idVendor, dev->descriptor.idProduct);
+        // Set configuration
+        int res = usb_set_configuration (data.pudh, 1);
+        if (res < 0) {
+          ERR ("Unable to set USB configuration (%s)", strerror (-res));
+          if (EPERM == -res) {
+            WARN ("Please double check USB permissions for device %04x:%04x", dev->descriptor.idVendor, dev->descriptor.idProduct);
+          }
           usb_close (data.pudh);
           // we failed to use the specified device
           return NULL;
         }
 
-        if (usb_claim_interface (data.pudh, 0) < 0) {
-          DBG ("%s", "Can't claim interface");
+        res = usb_claim_interface (data.pudh, 0);
+        if (res < 0) {
+          DBG ("Can't claim interface (%s)", strerror (-res));
           usb_close (data.pudh);
           // we failed to use the specified device
           return NULL;
@@ -317,7 +324,7 @@ pn53x_usb_connect (const nfc_device_desc_t *pndd)
           usb_close (data.pudh);
           goto error;
         }
-
+        DRIVER_DATA (pnd)->abort_flag = false;
         return pnd;
       }
     }
@@ -377,7 +384,7 @@ pn53x_usb_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szData)
     return false;
   }
 
-  byte_t abtRxBuf[6];
+  byte_t abtRxBuf[PN53X_USB_BUFFER_LEN];
   res = pn53x_usb_bulk_read (DRIVER_DATA (pnd), abtRxBuf, sizeof (abtRxBuf));
   if (res < 0) {
     DBG ("usb_bulk_read failed with error %d", res);
@@ -401,13 +408,14 @@ pn53x_usb_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen)
 {
   size_t len;
   off_t offset = 0;
-  int abort_fd = 0;
+  bool delayed_reply = false;
 
   switch (CHIP_DATA (pnd)->ui8LastCommand) {
-  case TgInitAsTarget:
   case InJumpForDEP:
+  case TgInitAsTarget:
   case TgGetData:
-    abort_fd = pnd->iAbortFds[1];
+    DBG ("Delayed reply detected");
+    delayed_reply = true;
     break;
   default:
     break;
@@ -417,36 +425,21 @@ pn53x_usb_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen)
   int res;
 
 read:
-  res = pn53x_usb_bulk_read_ex (DRIVER_DATA (pnd), abtRxBuf, sizeof (abtRxBuf), 250);
+  res = pn53x_usb_bulk_read_ex (DRIVER_DATA (pnd), abtRxBuf, sizeof (abtRxBuf), delayed_reply ? 250 : 0);
 
-  if (res == -ETIMEDOUT) {
-    struct timeval tv = {
-      .tv_sec  = 0,
-      .tv_usec = 0,
-    };
-
-    fd_set readfds;
-    FD_ZERO(&readfds);
-    FD_SET(abort_fd, &readfds);
-    switch (select (abort_fd + 1, &readfds, NULL, NULL, &tv)) {
-    case -1:
-      // An error occured
-      return false;
-      break;
-    case 0:
-      // Timeout
-      goto read;
-      break;
-    case 1:
+  if (delayed_reply && (res == -ETIMEDOUT)) {
+    if (DRIVER_DATA (pnd)->abort_flag) {
+      DRIVER_DATA (pnd)->abort_flag = false;
       pn53x_usb_ack (pnd);
       pnd->iLastError = DEABORT;
       return -1;
-      break;
+    } else {
+      goto read;
     }
   }
 
   if (res < 0) {
-    DBG ("usb_bulk_read failed with error %d", res);
+    DBG ("usb_bulk_read failed with error %d (%s)", res, strerror(-res));
     pnd->iLastError = DEIO;
     // try to interrupt current device state
     pn53x_usb_ack(pnd);
@@ -540,6 +533,11 @@ pn53x_usb_ack (nfc_device_t * pnd)
 bool
 pn53x_usb_init (nfc_device_t *pnd)
 {
+  // Sometimes PN53x USB doesn't reply ACK one the first frame, so we need to send a dummy one...
+  pn53x_check_communication (pnd);
+  // ...and we don't care about error
+  pnd->iLastError = 0;
+
   if (!pn53x_init (pnd))
     return false;
 
@@ -633,6 +631,13 @@ pn53x_usb_configure (nfc_device_t * pnd, const nfc_device_option_t ndo, const bo
   return true;
 }
 
+bool
+pn53x_usb_abort_command (nfc_device_t * pnd)
+{
+  DRIVER_DATA (pnd)->abort_flag = true;
+  return true;
+}
+
 const struct pn53x_io pn53x_usb_io = {
   .send       = pn53x_usb_send,
   .receive    = pn53x_usb_receive,
@@ -662,4 +667,6 @@ const struct nfc_driver_t pn53x_usb_driver = {
   .target_receive_bits   = pn53x_target_receive_bits,
 
   .configure  = pn53x_usb_configure,
+
+  .abort_command  = pn53x_usb_abort_command,
 };

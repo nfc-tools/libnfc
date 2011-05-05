@@ -36,6 +36,7 @@
 #include <string.h>
 #include <sys/param.h>
 #include <string.h>
+#include <unistd.h>
 
 #include <nfc/nfc.h>
 
@@ -71,6 +72,7 @@ const struct pn53x_io arygon_tama_io;
 
 struct arygon_data {
   serial_port port;
+  int     iAbortFds[2];
 };
 
 static const byte_t arygon_error_none[] = "FF000000\x0d\x0a";
@@ -184,6 +186,9 @@ arygon_connect (const nfc_device_desc_t * pndd)
     return NULL;
   }
 
+  // pipe-based abort mecanism
+  pipe (DRIVER_DATA (pnd)->iAbortFds);
+
   char arygon_firmware_version[10];
   arygon_firmware (pnd, arygon_firmware_version);
   char   *pcName;
@@ -198,7 +203,13 @@ arygon_connect (const nfc_device_desc_t * pndd)
 void
 arygon_disconnect (nfc_device_t * pnd)
 {
+  // Release UART port
   uart_close (DRIVER_DATA (pnd)->port);
+
+  // Release file descriptors used for abort mecanism
+  close (DRIVER_DATA (pnd)->iAbortFds[0]);
+  close (DRIVER_DATA (pnd)->iAbortFds[1]);
+
   nfc_device_free (pnd);
 }
 
@@ -276,7 +287,7 @@ arygon_tama_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLe
   case TgInitAsTarget:
   case TgGetData:
   case InJumpForDEP:
-    abort_fd = pnd->iAbortFds[1];
+    abort_fd = DRIVER_DATA (pnd)->iAbortFds[1];
     break;
   default:
     break;
@@ -440,6 +451,17 @@ arygon_reset_tama (nfc_device_t * pnd)
   return true;
 }
 
+bool 
+arygon_abort_command (nfc_device_t * pnd)
+{
+  if (pnd) {
+    close (DRIVER_DATA (pnd)->iAbortFds[0]);
+    pipe (DRIVER_DATA (pnd)->iAbortFds);
+  }
+  return true;
+}
+
+
 const struct pn53x_io arygon_tama_io = {
   .send       = arygon_tama_send,
   .receive    = arygon_tama_receive,
@@ -469,5 +491,7 @@ const struct nfc_driver_t arygon_driver = {
   .target_receive_bits   = pn53x_target_receive_bits,
 
   .configure  = pn53x_configure,
+
+  .abort_command  = arygon_abort_command,
 };
 

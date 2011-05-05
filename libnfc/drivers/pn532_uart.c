@@ -33,6 +33,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 
 #include <nfc/nfc.h>
 
@@ -55,6 +56,7 @@ const struct pn53x_io pn532_uart_io;
 
 struct pn532_uart_data {
   serial_port port;
+  int     iAbortFds[2];
 };
   
 #define DRIVER_DATA(pnd) ((struct pn532_uart_data*)(pnd->driver_data))
@@ -171,6 +173,9 @@ pn532_uart_connect (const nfc_device_desc_t * pndd)
     return NULL;
   }
 
+  // pipe-based abort mecanism
+  pipe (DRIVER_DATA (pnd)->iAbortFds);
+
   pn53x_init(pnd);
   return pnd;
 }
@@ -178,7 +183,13 @@ pn532_uart_connect (const nfc_device_desc_t * pndd)
 void
 pn532_uart_disconnect (nfc_device_t * pnd)
 {
+  // Release UART port
   uart_close (DRIVER_DATA(pnd)->port);
+
+  // Release file descriptors used for abort mecanism
+  close (DRIVER_DATA (pnd)->iAbortFds[0]);
+  close (DRIVER_DATA (pnd)->iAbortFds[1]);
+
   nfc_device_free (pnd);
 }
 
@@ -263,7 +274,7 @@ pn532_uart_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen
   case InJumpForDEP:
   case TgInitAsTarget:
   case TgGetData:
-    abort_fd = pnd->iAbortFds[1];
+    abort_fd = DRIVER_DATA (pnd)->iAbortFds[1];
     break;
   default:
     break;
@@ -390,6 +401,16 @@ pn532_uart_ack (nfc_device_t * pnd)
   return (0 == uart_send (DRIVER_DATA(pnd)->port, ack_frame, sizeof (ack_frame))) ? 0 : -1;
 }
 
+bool 
+pn532_uart_abort_command (nfc_device_t * pnd)
+{
+  if (pnd) {
+    close (DRIVER_DATA (pnd)->iAbortFds[0]);
+    pipe (DRIVER_DATA (pnd)->iAbortFds);
+  }
+  return true;
+}
+
 const struct pn53x_io pn532_uart_io = {
   .send       = pn532_uart_send,
   .receive    = pn532_uart_receive,
@@ -419,5 +440,7 @@ const struct nfc_driver_t pn532_uart_driver = {
   .target_receive_bits   = pn53x_target_receive_bits,
 
   .configure  = pn53x_configure,
+
+  .abort_command  = pn532_uart_abort_command,
 };
 
