@@ -68,11 +68,10 @@ byte_t  abtSak[9] = { 0x08, 0xb6, 0xdd };
 void
 intr_hdlr (void)
 {
-  printf ("\nQuitting...\n");
   if (pnd != NULL) {
-    nfc_disconnect(pnd);
+    printf ("\nAborting current command...\n");
+    nfc_abort_command (pnd);
   }
-  exit (EXIT_FAILURE);
 }
 
 void
@@ -159,7 +158,7 @@ main (int argc, char *argv[])
   if (!nfc_target_init (pnd, &nt, abtRecv, &szRecvBits)) {
     nfc_perror (pnd, "nfc_target_init");
     ERR ("Could not come out of auto-emulation, no command was received");
-    exit(EXIT_FAILURE);
+    goto error;
   }
   printf ("[+] Received initiator command: ");
   print_hex_bits (abtRecv, szRecvBits);
@@ -208,7 +207,7 @@ main (int argc, char *argv[])
         // Send and print the command to the screen
         if (!nfc_target_send_bits (pnd, pbtTx, szTxBits, NULL)) {
           nfc_perror (pnd, "nfc_target_send_bits");
-          exit (EXIT_FAILURE);
+          goto error;
         }
         if (!quiet_output) {
           printf ("T: ");
@@ -217,7 +216,10 @@ main (int argc, char *argv[])
       }
     }
   }
-
   nfc_disconnect (pnd);
   exit (EXIT_SUCCESS);
+
+error:
+  nfc_disconnect (pnd);
+  exit (EXIT_FAILURE);
 }
