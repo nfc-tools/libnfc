@@ -13,7 +13,9 @@ r1013, nfc-anticol, ASK / LoGO - PN533 v2.7, MFC, OK
 r1013, nfc-anticol, ASK / LoGO - PN533 v2.7, UL, OK
 r1013, nfc-anticol, ASK / LoGO - PN533 v2.7, ULC, OK
 r736, nfc-dep-initiator, SCM Micro / SCL3711-NFC&RW - PN533 v2.7, ACS ACR 38U-CCID 00 00 / ACR122U102 - PN532 v1.4, OK
+r1036, nfc-dep-initiator, ASK / LoGO - PN533 v2.7, Nokia 6212 Classic, OK
 r736, nfc-dep-target, ACS ACR 38U-CCID 00 00 / ACR122U102 - PN532 v1.4, SCM Micro / SCL3711-NFC&RW - PN533 v2.7, OK
+r1036, nfc-dep-target, ASK / LoGO - PN533 v2.7, Nokia 6212 Classic, OK but USB device is not reacheable after that
 r736, nfc-emulate-forum-tag4, ACS ACR122U PICC Interface 00 00 / ACR122U102 - PN532 v1.4, ctrl-c & use, FAIL
 r744, nfc-emulate-forum-tag4, ACS ACR122U PICC Interface 00 00 / ACR122U102 - PN532 v1.4, Nokia 6131 NFC, OK
 r736, nfc-emulate-forum-tag4, ACS ACR 38U-CCID 00 00 / ACR122U102 - PN532 v1.4, Nokia 6212 Classic, OK
@@ -48,6 +50,7 @@ r1013, nfc-list, ASK / LoGO - PN533 v2.7, DESfire, OK
 r1013, nfc-list, ASK / LoGO - PN533 v2.7, MFC, OK
 r1013, nfc-list, ASK / LoGO - PN533 v2.7, UL, OK
 r1013, nfc-list, ASK / LoGO - PN533 v2.7, ULC, OK 
+r1036, nfc-list, ASK / LoGO - PN533 v2.7, DESFire, OK 
 r736, nfc-mfclassic r a foo, ACS ACR122U PICC Interface 00 00 / ACR122U102 - PN532 v1.4, MFC, OK
 r846, nfc-mfclassic r a foo, ARYGON 00V5.1 (/dev/ttyUSB0) - PN532 v1.4 (APDB2UA33), MFC, OK
 r736, nfc-mfclassic r a foo, SCM Micro / SCL3711-NFC&RW - PN533 v2.7, MFC, OK
