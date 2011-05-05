@@ -409,6 +409,9 @@ pn53x_read_register (nfc_device_t * pnd, uint16_t ui16Reg, uint8_t * ui8Value)
 
   byte_t  abtRegValue[2];
   size_t  szRegValue = sizeof (abtRegValue);
+
+  PNREG_DBG (ui16Reg);
+
   if (pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), abtRegValue, &szRegValue)) {
     if (CHIP_DATA(pnd)->type == PN533) {
       // PN533 prepends its answer by a status byte

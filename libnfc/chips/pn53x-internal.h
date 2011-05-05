@@ -187,6 +187,7 @@ static const pn53x_command pn53x_commands[] = {
   PNCMD( TgGetTargetStatus, PN531|PN532|PN533 ),
 };
 
+// SFR part
 #define _BV( X ) (1 << X)
 
 #define P30 0
@@ -195,5 +196,166 @@ static const pn53x_command pn53x_commands[] = {
 #define P33 3
 #define P34 4
 #define P35 5
+
+// Registers part
+#ifdef DEBUG
+typedef struct {
+  uint16_t ui16Address;
+  const char * abtRegisterText;
+  const char * abtRegisterDescription;
+} pn53x_register;
+#endif
+
+/*
+#define PN531 0x01
+#define PN532 0x02
+#define PN533 0X04
+*/
+
+#ifndef DEBUG
+#  define PNREG_DBG( X ) do { \
+   } while(0)
+#else
+#  define PNREG( X, Y ) { X , #X, Y }
+#  define PNREG_DBG( X ) do { \
+     for (size_t i=0; i<(sizeof(pn53x_registers)/sizeof(pn53x_register)); i++) { \
+       if ( X == pn53x_registers[i].ui16Address ) { \
+         DBG( "%s (%s)", pn53x_registers[i].abtRegisterText, pn53x_registers[i].abtRegisterDescription ); \
+         break; \
+       } \
+     } \
+   } while(0)
+#endif
+
+// Register addresses
+#define PN53X_REG_CIU_Mode 0x6301
+#define PN53X_REG_CIU_TxMode 0x6303
+#define PN53X_REG_CIU_RxMode 0x6303
+#define PN53X_REG_CIU_TxControl 0x6304
+#define PN53X_REG_CIU_TxAuto 0x6305
+#define PN53X_REG_CIU_TxSel 0x6306
+#define PN53X_REG_CIU_RxSel 0x6307
+#define PN53X_REG_CIU_RxThreshold 0x6308
+#define PN53X_REG_CIU_Demod 0x6309
+#define PN53X_REG_CIU_FelNFC1 0x630A
+#define PN53X_REG_CIU_FelNFC2 0x630B
+#define PN53X_REG_CIU_MifNFC 0x630C
+#define PN53X_REG_CIU_ManualRCV 0x630D
+#define PN53X_REG_CIU_TypeB 0x630E
+// #define PN53X_REG_- 0x630F
+// #define PN53X_REG_- 0x6310
+#define PN53X_REG_CIU_CRCResultMSB 0x6311
+#define PN53X_REG_CIU_CRCResultLSB 0x6312
+#define PN53X_REG_CIU_GsNOFF 0x6313
+#define PN53X_REG_CIU_ModWidth 0x6314
+#define PN53X_REG_CIU_TxBitPhase 0x6315
+#define PN53X_REG_CIU_RFCfg 0x6316
+#define PN53X_REG_CIU_GsNOn 0x6317
+#define PN53X_REG_CIU_CWGsP 0x6318
+#define PN53X_REG_CIU_ModGsP 0x6319
+#define PN53X_REG_CIU_TMode 0x631A
+#define PN53X_REG_CIU_TPrescaler 0x631B
+#define PN53X_REG_CIU_TReloadVal_hi 0x631C
+#define PN53X_REG_CIU_TReloadVal_lo 0x631D
+#define PN53X_REG_CIU_TCounterVal_hi 0x631E
+#define PN53X_REG_CIU_TCounterVal_lo 0x631F
+// #define PN53X_REG_- 0x6320
+#define PN53X_REG_CIU_TestSel1 0x6321
+#define PN53X_REG_CIU_TestSel2 0x6322
+#define PN53X_REG_CIU_TestPinEn 0x6323
+#define PN53X_REG_CIU_TestPinValue 0x6324
+#define PN53X_REG_CIU_TestBus 0x6325
+#define PN53X_REG_CIU_AutoTest 0x6326
+#define PN53X_REG_CIU_Version 0x6327
+#define PN53X_REG_CIU_AnalogTest 0x6328
+#define PN53X_REG_CIU_TestDAC1 0x6329
+#define PN53X_REG_CIU_TestDAC2 0x632A
+#define PN53X_REG_CIU_TestADC 0x632B
+// #define PN53X_REG_- 0x632C
+// #define PN53X_REG_- 0x632D
+// #define PN53X_REG_- 0x632E
+#define PN53X_REG_CIU_RFlevelDet 0x632F
+#define PN53X_REG_CIU_SIC_CLK_en 0x6330
+#define PN53X_REG_CIU_Command 0x6331
+#define PN53X_REG_CIU_CommIEn 0x6332
+#define PN53X_REG_CIU_DivIEn 0x6333
+#define PN53X_REG_CIU_CommIrq 0x6334
+#define PN53X_REG_CIU_DivIrq 0x6335
+#define PN53X_REG_CIU_Error 0x6336
+#define PN53X_REG_CIU_Status1 0x6337
+#define PN53X_REG_CIU_Status2 0x6338
+#define PN53X_REG_CIU_FIFOData 0x6339
+#define PN53X_REG_CIUFIFOLevel 0x633A
+#define PN53X_REG_CIUWaterLevel 0x633B
+#define PN53X_REG_CIUControl 0x633C
+#define PN53X_REG_CIUBitFraming 0x633D
+#define PN53X_REG_CIUColl 0x633E
+
+#ifdef DEBUG
+static const pn53x_register pn53x_registers[] = {
+  PNREG (PN53X_REG_CIU_Mode, "Defines general modes for transmitting and receiving"),
+  PNREG (PN53X_REG_CIU_TxMode, "Defines the transmission data rate and framing during transmission"),
+  PNREG (PN53X_REG_CIU_RxMode, "Defines the transmission data rate and framing during receiving"),
+  PNREG (PN53X_REG_CIU_TxControl, "Controls the logical behaviour of the antenna driver pins TX1 and TX2"),
+  PNREG (PN53X_REG_CIU_TxAuto, "Controls the settings of the antenna driver"),
+  PNREG (PN53X_REG_CIU_TxSel, "Selects the internal sources for the antenna driver"),
+  PNREG (PN53X_REG_CIU_RxSel, "Selects internal receiver settings"),
+  PNREG (PN53X_REG_CIU_RxThreshold, "Selects thresholds for the bit decoder"),
+  PNREG (PN53X_REG_CIU_Demod, "Defines demodulator settings"),
+  PNREG (PN53X_REG_CIU_FelNFC1, "Defines the length of the valid range for the received frame"),
+  PNREG (PN53X_REG_CIU_FelNFC2, "Defines the length of the valid range for the received frame"),
+  PNREG (PN53X_REG_CIU_MifNFC, "Controls the communication in ISO/IEC 14443/MIFARE and NFC target mode at 106 kbit/s"),
+  PNREG (PN53X_REG_CIU_ManualRCV, "Allows manual fine tuning of the internal receiver"),
+  PNREG (PN53X_REG_CIU_TypeB, "Configure the ISO/IEC 14443 type B"),
+//  PNREG (PN53X_REG_-, "Reserved"),
+//  PNREG (PN53X_REG_-, "Reserved"),
+  PNREG (PN53X_REG_CIU_CRCResultMSB, "Shows the actual MSB values of the CRC calculation"),
+  PNREG (PN53X_REG_CIU_CRCResultLSB, "Shows the actual LSB values of the CRC calculation"),
+  PNREG (PN53X_REG_CIU_GsNOFF, "Selects the conductance of the antenna driver pins TX1 and TX2 for load modulation when own RF field is switched OFF"),
+  PNREG (PN53X_REG_CIU_ModWidth, "Controls the setting of the width of the Miller pause"),
+  PNREG (PN53X_REG_CIU_TxBitPhase, "Bit synchronization at 106 kbit/s"),
+  PNREG (PN53X_REG_CIU_RFCfg, "Configures the receiver gain and RF level"),
+  PNREG (PN53X_REG_CIU_GsNOn, "Selects the conductance of the antenna driver pins TX1 and TX2 for modulation, when own RF field is switched ON"),
+  PNREG (PN53X_REG_CIU_CWGsP, "Selects the conductance of the antenna driver pins TX1 and TX2 when not in modulation phase"),
+  PNREG (PN53X_REG_CIU_ModGsP, "Selects the conductance of the antenna driver pins TX1 and TX2 when in modulation phase"),
+  PNREG (PN53X_REG_CIU_TMode, "Defines settings for the internal timer"),
+  PNREG (PN53X_REG_CIU_TPrescaler, "Defines settings for the internal timer"),
+  PNREG (PN53X_REG_CIU_TReloadVal_hi, "Describes the 16-bit long timer reload value (Higher 8 bits)"),
+  PNREG (PN53X_REG_CIU_TReloadVal_lo, "Describes the 16-bit long timer reload value (Lower 8 bits)"),
+  PNREG (PN53X_REG_CIU_TCounterVal_hi, "Describes the 16-bit long timer actual value (Higher 8 bits)"),
+  PNREG (PN53X_REG_CIU_TCounterVal_lo, "Describes the 16-bit long timer actual value (Lower 8 bits)"),
+//  PNREG (PN53X_REG_-, "Reserved"),
+  PNREG (PN53X_REG_CIU_TestSel1, "General test signals configuration"),
+  PNREG (PN53X_REG_CIU_TestSel2, "General test signals configuration and PRBS control"),
+  PNREG (PN53X_REG_CIU_TestPinEn, "Enables test signals output on pins."),
+  PNREG (PN53X_REG_CIU_TestPinValue, "Defines the values for the 8-bit parallel bus when it is used as I/O bus"),
+  PNREG (PN53X_REG_CIU_TestBus, "Shows the status of the internal test bus"),
+  PNREG (PN53X_REG_CIU_AutoTest, "Controls the digital self-test"),
+  PNREG (PN53X_REG_CIU_Version, "Shows the CIU version"),
+  PNREG (PN53X_REG_CIU_AnalogTest, "Controls the pins AUX1 and AUX2"),
+  PNREG (PN53X_REG_CIU_TestDAC1, "Defines the test value for the TestDAC1"),
+  PNREG (PN53X_REG_CIU_TestDAC2, "Defines the test value for the TestDAC2"),
+  PNREG (PN53X_REG_CIU_TestADC, "Show the actual value of ADC I and Q"),
+//  PNREG (PN53X_REG_-, "Reserved for tests"),
+//  PNREG (PN53X_REG_-, "Reserved for tests"),
+//  PNREG (PN53X_REG_-, "Reserved for tests"),
+  PNREG (PN53X_REG_CIU_RFlevelDet, "Power down of the RF level detector"),
+  PNREG (PN53X_REG_CIU_SIC_CLK_en, "Enables the use of secure IC clock on P34 / SIC_CLK"),
+  PNREG (PN53X_REG_CIU_Command, "Starts and stops the command execution"),
+  PNREG (PN53X_REG_CIU_CommIEn, "Control bits to enable and disable the passing of interrupt requests"),
+  PNREG (PN53X_REG_CIU_DivIEn, "Controls bits to enable and disable the passing of interrupt requests"),
+  PNREG (PN53X_REG_CIU_CommIrq, "Contains common CIU interrupt request flags"),
+  PNREG (PN53X_REG_CIU_DivIrq, "Contains miscellaneous interrupt request flags"),
+  PNREG (PN53X_REG_CIU_Error, "Error flags showing the error status of the last command executed"),
+  PNREG (PN53X_REG_CIU_Status1, "Contains status flags of the CRC, Interrupt Request System and FIFO buffer"),
+  PNREG (PN53X_REG_CIU_Status2, "Contain status flags of the receiver, transmitter and Data Mode Detector"),
+  PNREG (PN53X_REG_CIU_FIFOData, "In- and output of 64 byte FIFO buffer"),
+  PNREG (PN53X_REG_CIUFIFOLevel, "Indicates the number of bytes stored in the FIFO"),
+  PNREG (PN53X_REG_CIUWaterLevel, "Defines the thresholds for FIFO under- and overflow warning"),
+  PNREG (PN53X_REG_CIUControl, "Contains miscellaneous control bits"),
+  PNREG (PN53X_REG_CIUBitFraming, "Adjustments for bit oriented frames"),
+  PNREG (PN53X_REG_CIUColl, "Defines the first bit collision detected on the RF interface"),
+};
+#endif
 
 #endif /* __PN53X_INTERNAL_H__ */
