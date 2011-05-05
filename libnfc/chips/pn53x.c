@@ -1100,6 +1100,19 @@ pn53x_target_init (nfc_device_t * pnd, nfc_target_t * pnt, byte_t * pbtRx, size_
       // Set General Bytes, if relevant
       szGBt = pnt->nti.ndi.szGB;
       if (szGBt) pbtGBt = pnt->nti.ndi.abtGB;
+
+      // Set ATQA (SENS_RES)
+      abtMifareParams[0] = 0x08;
+      abtMifareParams[1] = 0x00;
+      // Set UID
+      // Note: in this mode we can only emulate a single size (4 bytes) UID where the first is hard-wired by PN53x as 0x08
+      abtMifareParams[2] = 0x12;
+      abtMifareParams[3] = 0x34;
+      abtMifareParams[4] = 0x45;
+      // Set SAK (SEL_RES)
+      abtMifareParams[5] = 0x40; // ISO/IEC 18092 compliant
+
+      pbtMifareParams = abtMifareParams;
     break;
     case NMT_ISO14443B:
     case NMT_JEWEL:
