@@ -53,6 +53,7 @@ static const byte_t pn53x_nack_frame[] = { 0x00, 0x00, 0xff, 0xff, 0x00, 0x00 };
 static const byte_t pn53x_error_frame[] = { 0x00, 0x00, 0xff, 0x01, 0xff, 0x7f, 0x81, 0x00 };
 
 /* prototypes */
+bool pn53x_reset_settings(nfc_device_t * pnd);
 nfc_modulation_t pn53x_ptt_to_nm (const pn53x_target_type_t ptt);
 pn53x_modulation_t pn53x_nm_to_pm (const nfc_modulation_t nm);
 pn53x_target_type_t pn53x_nm_to_ptt (const nfc_modulation_t nm);
@@ -74,17 +75,13 @@ pn53x_init(nfc_device_t * pnd)
   // Parity handling is enabled by default
   pnd->bPar = true;
 
-  // Reset the ending transmission bits register, it is unknown what the last tranmission used there
-  CHIP_DATA (pnd)->ui8TxBits = 0;
-  if (!pn53x_write_register (pnd, REG_CIU_BIT_FRAMING, SYMBOL_TX_LAST_BITS, 0x00)) {
-    return false;
-  }
-
   // We can't read these parameters, so we set a default config by using the SetParameters wrapper
   // Note: pn53x_SetParameters() will save the sent value in pnd->ui8Parameters cache
   if(!pn53x_SetParameters(pnd, PARAM_AUTO_ATR_RES | PARAM_AUTO_RATS)) {
     return false;
   }
+
+  pn53x_reset_settings(pnd);
 
   // Add the firmware revision to the device name
   char   *pcName;
@@ -92,6 +89,16 @@ pn53x_init(nfc_device_t * pnd)
   snprintf (pnd->acName, DEVICE_NAME_LENGTH - 1, "%s - %s", pcName, abtFirmwareText);
   free (pcName);
   return true;
+}
+
+bool
+pn53x_reset_settings(nfc_device_t * pnd)
+{
+  // Reset the ending transmission bits register, it is unknown what the last tranmission used there
+  CHIP_DATA (pnd)->ui8TxBits = 0;
+  if (!pn53x_write_register (pnd, REG_CIU_BIT_FRAMING, SYMBOL_TX_LAST_BITS, 0x00)) {
+    return false;
+  }
 }
 
 bool
@@ -571,6 +578,10 @@ pn53x_configure (nfc_device_t * pnd, const nfc_device_option_t ndo, const bool b
       if (!pn53x_write_register (pnd, REG_CIU_RX_MODE, SYMBOL_RX_FRAMING, 0x00)) {
         return false;
       }
+      // Set the PN53X to force 100% ASK Modified miller decoding (default for 14443A cards)
+      if (!pn53x_write_register (pnd, REG_CIU_TX_AUTO, SYMBOL_FORCE_100_ASK, 0x40))
+        return false;
+
       return true;
       break;
   }
@@ -596,9 +607,7 @@ pn53x_check_communication (nfc_device_t *pnd)
 bool
 pn53x_initiator_init (nfc_device_t * pnd)
 {
-  // Set the PN53X to force 100% ASK Modified miller decoding (default for 14443A cards)
-  if (!pn53x_write_register (pnd, REG_CIU_TX_AUTO, SYMBOL_FORCE_100_ASK, 0x40))
-    return false;
+  pn53x_reset_settings(pnd);
 
   // Configure the PN53X to be an Initiator or Reader/Writer
   if (!pn53x_write_register (pnd, REG_CIU_CONTROL, SYMBOL_INITIATOR, 0x10))
@@ -1001,10 +1010,7 @@ pn53x_initiator_deselect_target (nfc_device_t * pnd)
 bool
 pn53x_target_init (nfc_device_t * pnd, nfc_target_t * pnt, byte_t * pbtRx, size_t * pszRx)
 {
-  // Save the current configuration settings
-  bool    bCrc = pnd->bCrc;
-  bool    bPar = pnd->bPar;
-
+  pn53x_reset_settings(pnd);
   pn53x_target_mode_t ptm = PTM_NORMAL;
   switch (pnt->nm.nmt) {
     case NMT_ISO14443A:
@@ -1040,12 +1046,6 @@ pn53x_target_init (nfc_device_t * pnd, nfc_target_t * pnt, byte_t * pbtRx, size_
       return false;
     break;
   }
-
-  // Make sure the CRC & parity are handled by the device, this is needed for target_init to work properly
-  if (!bCrc)
-    pn53x_configure (pnd, NDO_HANDLE_CRC, true);
-  if (!bPar)
-    pn53x_configure (pnd, NDO_HANDLE_PARITY, true);
 
   // Let the PN53X be activated by the RF level detector from power down mode
   if (!pn53x_write_register (pnd, REG_CIU_TX_AUTO, SYMBOL_INITIAL_RF_ON, 0x04))
@@ -1169,12 +1169,6 @@ pn53x_target_init (nfc_device_t * pnd, nfc_target_t * pnt, byte_t * pbtRx, size_
       memcpy (CHIP_DATA (pnd)->current_target, pnt, sizeof(nfc_target_t));
     }
   }
-
-  // Restore the CRC & parity setting to the original value (if needed)
-  if (!bCrc)
-    pn53x_configure ((nfc_device_t *) pnd, NDO_HANDLE_CRC, false);
-  if (!bPar)
-    pn53x_configure ((nfc_device_t *) pnd, NDO_HANDLE_PARITY, false);
 
   return true;
 }

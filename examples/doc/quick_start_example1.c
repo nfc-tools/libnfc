@@ -27,9 +27,6 @@ main (int argc, const char *argv[])
   // Set connected NFC device to initiator mode
   nfc_initiator_init (pnd);
 
-  // Enable field so more power consuming cards can power themselves up
-  nfc_configure (pnd, NDO_ACTIVATE_FIELD, true);
-
   printf ("Connected to NFC reader: %s\n", pnd->acName);
 
   // Poll for a ISO14443A (MIFARE) tag

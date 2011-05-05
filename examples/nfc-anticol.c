@@ -152,19 +152,8 @@ main (int argc, char *argv[])
   // Initialise NFC device as "initiator"
   nfc_initiator_init (pnd);
 
-  // Drop the field for a while
-  if (!nfc_configure (pnd, NDO_ACTIVATE_FIELD, false)) {
-    nfc_perror (pnd, "nfc_configure");
-    exit (EXIT_FAILURE);
-  }
-
   // Configure the CRC
   if (!nfc_configure (pnd, NDO_HANDLE_CRC, false)) {
-    nfc_perror (pnd, "nfc_configure");
-    exit (EXIT_FAILURE);
-  }
-  // Configure parity settings
-  if (!nfc_configure (pnd, NDO_HANDLE_PARITY, true)) {
     nfc_perror (pnd, "nfc_configure");
     exit (EXIT_FAILURE);
   }
@@ -175,17 +164,6 @@ main (int argc, char *argv[])
   }
   // Disable 14443-4 autoswitching
   if (!nfc_configure (pnd, NDO_AUTO_ISO14443_4, false)) {
-    nfc_perror (pnd, "nfc_configure");
-    exit (EXIT_FAILURE);
-  }
-  // Force 14443-A mode
-  if (!nfc_configure (pnd, NDO_FORCE_ISO14443_A, true)) {
-    nfc_perror (pnd, "nfc_configure");
-    exit (EXIT_FAILURE);
-  }
-
-  // Enable field so more power consuming cards can power themselves up
-  if (!nfc_configure (pnd, NDO_ACTIVATE_FIELD, true)) {
     nfc_perror (pnd, "nfc_configure");
     exit (EXIT_FAILURE);
   }

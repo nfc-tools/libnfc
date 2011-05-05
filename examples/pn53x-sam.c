@@ -174,18 +174,8 @@ main (int argc, const char *argv[])
       // Set connected NFC device to initiator mode
       nfc_initiator_init (pnd);
 
-      // Drop the field for a while
-      if (!nfc_configure (pnd, NDO_ACTIVATE_FIELD, false)) {
-        nfc_perror (pnd, "nfc_configure");
-        exit (EXIT_FAILURE);
-      }
       // Let the reader only try once to find a tag
       if (!nfc_configure (pnd, NDO_INFINITE_SELECT, false)) {
-        nfc_perror (pnd, "nfc_configure");
-        exit (EXIT_FAILURE);
-      }
-      // Enable field so more power consuming cards can power themselves up
-      if (!nfc_configure (pnd, NDO_ACTIVATE_FIELD, true)) {
         nfc_perror (pnd, "nfc_configure");
         exit (EXIT_FAILURE);
       }

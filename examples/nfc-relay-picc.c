@@ -245,6 +245,12 @@ main (int argc, char *argv[])
 
     printf ("Connected to the NFC reader device: %s\n", pndInitiator->acName);
 
+    if (!nfc_initiator_init (pndInitiator) {
+      printf ("Error: fail initializing initiator\n");
+      nfc_disconnect (pndInitiator);
+      exit (EXIT_FAILURE);
+    }
+
     // Try to find a ISO 14443-4A tag
     nfc_modulation_t nm = {
       .nmt = NMT_ISO14443A,
@@ -253,7 +259,7 @@ main (int argc, char *argv[])
     if (!nfc_initiator_select_passive_target (pndInitiator, nm, NULL, 0, &ntRealTarget)) {
       printf ("Error: no tag was found\n");
       nfc_disconnect (pndInitiator);
-     exit (EXIT_FAILURE);
+      exit (EXIT_FAILURE);
     }
 
     printf("Found tag:\n");

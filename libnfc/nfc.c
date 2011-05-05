@@ -74,7 +74,7 @@ const struct nfc_driver_t *nfc_drivers[] = {
  * When it has successfully claimed a NFC device, memory is allocated to save the device information. It will return a pointer to a \a nfc_device_t struct.
  * This pointer should be supplied by every next functions of libnfc that should perform an action with this device.
  *
- * @note During this function, the device will be configured with default options:
+ * @note During this function, the device will be configured with default initiator options, cf nfc_initiator_init:
  * - Crc is handled by the device (NDO_HANDLE_CRC = true)
  * - Parity is handled the device (NDO_HANDLE_PARITY = true)
  * - Cryto1 cipher is disabled (NDO_ACTIVATE_CRYPTO1 = false)
@@ -82,6 +82,9 @@ const struct nfc_driver_t *nfc_drivers[] = {
  * - Auto-switching in ISO14443-4 mode is enabled (NDO_AUTO_ISO14443_4 = true)
  * - Invalid frames are not accepted (NDO_ACCEPT_INVALID_FRAMES = false)
  * - Multiple frames are not accepted (NDO_ACCEPT_MULTIPLE_FRAMES = false)
+ * - 14443-A mode is activated (NDO_FORCE_ISO14443_A = true)
+ * - Let the device try forever to find a target (NDO_INFINITE_SELECT = true)
+ * - RF field is shortly dropped (if it was enabled) then activated again
  */
 nfc_device_t *
 nfc_connect (nfc_device_desc_t * pndd)
@@ -111,30 +114,7 @@ nfc_connect (nfc_device_desc_t * pndd)
       DBG ("[%s] has been claimed.", pnd->acName);
 
       // Set default configuration options
-      // Make sure we reset the CRC and parity to chip handling.
-      if (!nfc_configure (pnd, NDO_HANDLE_CRC, true))
-        return NULL;
-      if (!nfc_configure (pnd, NDO_HANDLE_PARITY, true))
-        return NULL;
-
-      // Deactivate the CRYPTO1 cipher, it may could cause problems when still active
-      if (!nfc_configure (pnd, NDO_ACTIVATE_CRYPTO1, false))
-        return NULL;
-
-      // Activate "easy framing" feature by default
-      if (!nfc_configure (pnd, NDO_EASY_FRAMING, true))
-        return NULL;
-
-      // Activate auto ISO14443-4 switching by default
-      if (!nfc_configure (pnd, NDO_AUTO_ISO14443_4, true))
-        return NULL;
-
-      // Disallow invalid frame
-      if (!nfc_configure (pnd, NDO_ACCEPT_INVALID_FRAMES, false))
-        return NULL;
-
-      // Disallow multiple frames
-      if (!nfc_configure (pnd, NDO_ACCEPT_MULTIPLE_FRAMES, false))
+      if (!nfc_initiator_init(pnd))
         return NULL;
 
       return pnd;
@@ -255,7 +235,41 @@ nfc_configure (nfc_device_t * pnd, const nfc_device_option_t ndo, const bool bEn
 bool
 nfc_initiator_init (nfc_device_t * pnd)
 {
+  // Drop the field for a while
+  if (!nfc_configure (pnd, NDO_ACTIVATE_FIELD, false))
+    return false;
+  // Force 14443-A mode
+  if (!nfc_configure (pnd, NDO_FORCE_ISO14443_A, true))
+    return false;
+  // Disallow invalid frame
+  if (!nfc_configure (pnd, NDO_ACCEPT_INVALID_FRAMES, false))
+    return false;
+  // Disallow multiple frames
+  if (!nfc_configure (pnd, NDO_ACCEPT_MULTIPLE_FRAMES, false))
+    return false;
+  // Make sure we reset the CRC and parity to chip handling.
+  if (!nfc_configure (pnd, NDO_HANDLE_CRC, true))
+    return false;
+  if (!nfc_configure (pnd, NDO_HANDLE_PARITY, true))
+    return false;
+  // Activate "easy framing" feature by default
+  if (!nfc_configure (pnd, NDO_EASY_FRAMING, true))
+    return false;
+  // Activate auto ISO14443-4 switching by default
+  if (!nfc_configure (pnd, NDO_AUTO_ISO14443_4, true))
+    return false;
+  // Deactivate the CRYPTO1 cipher, it may could cause problems when still active
+  if (!nfc_configure (pnd, NDO_ACTIVATE_CRYPTO1, false))
+    return false;
+  // Let the device try forever to find a target/tag
+  if (!nfc_configure (pnd, NDO_INFINITE_SELECT, true))
+    return false;
+  // Enable field so more power consuming cards can power themselves up
+  if (!nfc_configure (pnd, NDO_ACTIVATE_FIELD, true))
+    return false;
+
   HAL (initiator_init, pnd);
+  return true;
 }
 
 /**
@@ -351,16 +365,8 @@ nfc_initiator_list_passive_targets (nfc_device_t * pnd,
 
   pnd->iLastError = 0;
 
-  // Drop the field for a while
-  if (!nfc_configure (pnd, NDO_ACTIVATE_FIELD, false)) {
-    return false;
-  }
   // Let the reader only try once to find a tag
   if (!nfc_configure (pnd, NDO_INFINITE_SELECT, false)) {
-    return false;
-  }
-  // Enable field so more power consuming cards can power themselves up
-  if (!nfc_configure (pnd, NDO_ACTIVATE_FIELD, true)) {
     return false;
   }
 
@@ -600,7 +606,26 @@ nfc_initiator_transceive_bits_timed (nfc_device_t * pnd, const byte_t * pbtTx, c
 bool
 nfc_target_init (nfc_device_t * pnd, nfc_target_t * pnt, byte_t * pbtRx, size_t * pszRx)
 {
+  // Disallow invalid frame
+  if (!nfc_configure (pnd, NDO_ACCEPT_INVALID_FRAMES, false))
+    return false;
+  // Disallow multiple frames
+  if (!nfc_configure (pnd, NDO_ACCEPT_MULTIPLE_FRAMES, false))
+    return false;
+  // Make sure we reset the CRC and parity to chip handling.
+  if (!nfc_configure (pnd, NDO_HANDLE_CRC, true))
+    return false;
+  if (!nfc_configure (pnd, NDO_HANDLE_PARITY, true))
+    return false;
+  // Activate "easy framing" feature by default
+  if (!nfc_configure (pnd, NDO_EASY_FRAMING, true))
+    return false;
+  // Deactivate the CRYPTO1 cipher, it may could cause problems when still active
+  if (!nfc_configure (pnd, NDO_ACTIVATE_CRYPTO1, false))
+    return false;
+
   HAL (target_init, pnd, pnt, pbtRx, pszRx);
+  return true;
 }
 
 /* TODO Document this function */

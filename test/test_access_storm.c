@@ -38,24 +38,6 @@ test_access_storm (void)
 	    res = nfc_initiator_init(device);
 	    cut_assert_true (res, cut_message ("nfc_initiator_init"));
 
-	    // Drop the field for a while
-	    res = nfc_configure(device,NDO_ACTIVATE_FIELD,false);
-	    cut_assert_true (res, cut_message ("nfc_configure"));
-
-	    // Let the reader only try once to find a tag
-	    res = nfc_configure(device,NDO_INFINITE_SELECT,false);
-	    cut_assert_true (res, cut_message ("nfc_configure"));
-
-	    // Configure the CRC and Parity settings
-	    res = nfc_configure(device,NDO_HANDLE_CRC,true);
-	    cut_assert_true (res, cut_message ("nfc_configure"));
-	    res = nfc_configure(device,NDO_HANDLE_PARITY,true);
-	    cut_assert_true (res, cut_message ("nfc_configure"));
-
-	    // Enable field so more power consuming cards can power themselves
-	    res = nfc_configure(device,NDO_ACTIVATE_FIELD,true);
-	    cut_assert_true (res, cut_message ("nfc_configure"));
-
 	    const nfc_modulation_t nm = {
 		.nmt = NMT_ISO14443A,
 		.nbr = NBR_106,
