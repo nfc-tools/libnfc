@@ -1008,6 +1008,7 @@ pn53x_initiator_deselect_target (nfc_device_t * pnd)
 }
 
 #define SAK_ISO14443_4_COMPLIANT 0x20
+#define SAK_ISO18092_COMPLIANT   0x40
 bool
 pn53x_target_init (nfc_device_t * pnd, nfc_target_t * pnt, byte_t * pbtRx, size_t * pszRx)
 {
@@ -1101,6 +1102,7 @@ pn53x_target_init (nfc_device_t * pnd, nfc_target_t * pnt, byte_t * pbtRx, size_
       szGBt = pnt->nti.ndi.szGB;
       if (szGBt) pbtGBt = pnt->nti.ndi.abtGB;
 
+      // Set ISO/IEC 14443 part
       // Set ATQA (SENS_RES)
       abtMifareParams[0] = 0x08;
       abtMifareParams[1] = 0x00;
@@ -1108,11 +1110,36 @@ pn53x_target_init (nfc_device_t * pnd, nfc_target_t * pnt, byte_t * pbtRx, size_
       // Note: in this mode we can only emulate a single size (4 bytes) UID where the first is hard-wired by PN53x as 0x08
       abtMifareParams[2] = 0x12;
       abtMifareParams[3] = 0x34;
-      abtMifareParams[4] = 0x45;
+      abtMifareParams[4] = 0x56;
       // Set SAK (SEL_RES)
-      abtMifareParams[5] = 0x40; // ISO/IEC 18092 compliant
+      abtMifareParams[5] = SAK_ISO18092_COMPLIANT; // Allow ISO/IEC 18092 in DEP mode
 
       pbtMifareParams = abtMifareParams;
+
+      // Set FeliCa part
+      // Set NFCID2t
+      abtFeliCaParams[0] = 0x01;
+      abtFeliCaParams[1] = 0xfe;
+      abtFeliCaParams[2] = 0x12;
+      abtFeliCaParams[3] = 0x34;
+      abtFeliCaParams[4] = 0x56;
+      abtFeliCaParams[5] = 0x78;
+      abtFeliCaParams[6] = 0x90;
+      abtFeliCaParams[7] = 0x12;
+      // Set PAD
+      abtFeliCaParams[8]  = 0xc0;
+      abtFeliCaParams[9]  = 0xc1;
+      abtFeliCaParams[10] = 0xc2;
+      abtFeliCaParams[11] = 0xc3;
+      abtFeliCaParams[12] = 0xc4;
+      abtFeliCaParams[13] = 0xc5;
+      abtFeliCaParams[14] = 0xc6;
+      abtFeliCaParams[15] = 0xc7;
+      // Set System Code
+      abtFeliCaParams[16] = 0x0f;
+      abtFeliCaParams[17] = 0xab;
+    
+      pbtFeliCaParams = abtFeliCaParams;
     break;
     case NMT_ISO14443B:
     case NMT_JEWEL:
