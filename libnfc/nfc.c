@@ -389,13 +389,6 @@ nfc_initiator_list_passive_targets (nfc_device_t * pnd,
 
   while (nfc_initiator_select_passive_target (pnd, nm, pbtInitData, szInitDataLen, &nt)) {
     nfc_initiator_deselect_target (pnd);
-
-    // some readers have to reset the RF field (e.g. LoGO) so we stop if we see more than once the same tag
-    if (nm.nmt == NMT_ISO14443B && szTargetFound >= 1) {
-      if (0 == memcmp(nt.nti.nbi.abtPupi, ant[0].nti.nbi.abtPupi, sizeof (nt.nti.nbi.abtPupi))) {
-        break;
-      }
-    }
     if (szTargets > szTargetFound) {
       memcpy (&(ant[szTargetFound]), &nt, sizeof (nfc_target_t));
     } else {
