@@ -411,10 +411,10 @@ pn53x_usb_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen)
   bool delayed_reply = false;
 
   switch (CHIP_DATA (pnd)->ui8LastCommand) {
+  case InDataExchange:
   case InJumpForDEP:
-  case TgInitAsTarget:
   case TgGetData:
-    DBG ("Delayed reply detected");
+  case TgInitAsTarget:
     delayed_reply = true;
     break;
   default:

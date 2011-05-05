@@ -271,9 +271,10 @@ pn532_uart_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen
 
   switch (CHIP_DATA (pnd)->ui8LastCommand) {
   case InAutoPoll:
+  case InDataExchange:
   case InJumpForDEP:
-  case TgInitAsTarget:
   case TgGetData:
+  case TgInitAsTarget:
     abort_fd = DRIVER_DATA (pnd)->iAbortFds[1];
     break;
   default:

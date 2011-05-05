@@ -284,9 +284,10 @@ arygon_tama_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLe
 
   switch (CHIP_DATA (pnd)->ui8LastCommand) {
   case InAutoPoll:
-  case TgInitAsTarget:
-  case TgGetData:
+  case InDataExchange:
   case InJumpForDEP:
+  case TgGetData:
+  case TgInitAsTarget:
     abort_fd = DRIVER_DATA (pnd)->iAbortFds[1];
     break;
   default:
