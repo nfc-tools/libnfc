@@ -269,7 +269,6 @@ nfc_initiator_init (nfc_device_t * pnd)
     return false;
 
   HAL (initiator_init, pnd);
-  return true;
 }
 
 /**
@@ -625,7 +624,6 @@ nfc_target_init (nfc_device_t * pnd, nfc_target_t * pnt, byte_t * pbtRx, size_t 
     return false;
 
   HAL (target_init, pnd, pnt, pbtRx, pszRx);
-  return true;
 }
 
 /* TODO Document this function */

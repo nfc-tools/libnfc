@@ -99,6 +99,7 @@ pn53x_reset_settings(nfc_device_t * pnd)
   if (!pn53x_write_register (pnd, REG_CIU_BIT_FRAMING, SYMBOL_TX_LAST_BITS, 0x00)) {
     return false;
   }
+  return true;
 }
 
 bool
