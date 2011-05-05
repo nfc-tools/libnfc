@@ -299,9 +299,6 @@ bool    pn53x_target_send_bits (nfc_device_t * pnd, const byte_t * pbtTx, const 
 bool    pn53x_target_send_bytes (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx);
 // Error handling functions
 const char *pn53x_strerror (const nfc_device_t * pnd);
-static const struct chip_callbacks pn53x_callbacks_list = {
-  pn53x_strerror
-};
 
 // C wrappers for PN53x commands
 bool    pn53x_SetParameters (nfc_device_t * pnd, const uint8_t ui8Value);

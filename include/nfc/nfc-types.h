@@ -87,15 +87,6 @@ typedef struct {
   uint32_t uiBusIndex;
 } nfc_device_desc_t;
 
-/**
- * @struct chip_callbacks
- * @brief Functions for chip specific functions.
- */
-struct chip_callbacks {
-    /** Error lookup */
-  const char *(*strerror) (const nfc_device_t * pnd);
-};
-
 // Compiler directive, set struct alignment to 1 byte_t for compatibility
 #  pragma pack(1)
 
