@@ -354,6 +354,7 @@ acr122_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szData)
   memcpy (pbtData, DRIVER_DATA (pnd)->abtRx + 2, len);
 
   // Transmission went successful
+  pnd->iLastError = 0;
   return len;
 }
 

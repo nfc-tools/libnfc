@@ -443,7 +443,7 @@ read:
     pnd->iLastError = DEIO;
     // try to interrupt current device state
     pn53x_usb_ack(pnd);
-    return false;
+    return -1;
   }
 
   const byte_t pn53x_preamble[3] = { 0x00, 0x00, 0xff };
@@ -521,6 +521,7 @@ read:
     return -1;
   }
   // The PN53x command is done and we successfully received the reply
+  pnd->iLastError = 0;
   return len;
 }
 
