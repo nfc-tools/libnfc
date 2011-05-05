@@ -752,18 +752,19 @@ pn53x_initiator_transceive_bits (nfc_device_t * pnd, const byte_t * pbtTx, const
   // Recover the real frame length in bits
   szFrameBits = ((szRx - 1 - ((ui8Bits == 0) ? 0 : 1)) * 8) + ui8Bits;
 
-  // Ignore the status byte from the PN53X here, it was checked earlier in pn53x_transceive()
-  // Check if we should recover the parity bits ourself
-  if (!pnd->bPar) {
-    // Unwrap the response frame
-    pn53x_unwrap_frame (abtRx + 1, szFrameBits, pbtRx, pszRxBits, pbtRxPar);
-  } else {
-    // Save the received bits
-    *pszRxBits = szFrameBits;
-    // Copy the received bytes
-    memcpy (pbtRx, abtRx + 1, szRx - 1);
+  if (pbtRx != NULL) {
+    // Ignore the status byte from the PN53X here, it was checked earlier in pn53x_transceive()
+    // Check if we should recover the parity bits ourself
+    if (!pnd->bPar) {
+      // Unwrap the response frame
+      pn53x_unwrap_frame (abtRx + 1, szFrameBits, pbtRx, pszRxBits, pbtRxPar);
+    } else {
+      // Save the received bits
+      *pszRxBits = szFrameBits;
+      // Copy the received bytes
+      memcpy (pbtRx, abtRx + 1, szRx - 1);
+    }
   }
-
   // Everything went successful
   return true;
 }
@@ -804,12 +805,13 @@ pn53x_initiator_transceive_bytes (nfc_device_t * pnd, const byte_t * pbtTx, cons
   if (!pn53x_transceive (pnd, abtCmd, szTx + szExtraTxLen, abtRx, &szRx))
     return false;
 
-  // Save the received byte count
-  *pszRx = szRx - 1;
+  if (pbtRx != NULL) {
+    // Save the received byte count
+    *pszRx = szRx - 1;
 
-  // Copy the received bytes
-  memcpy (pbtRx, abtRx + 1, *pszRx);
-
+    // Copy the received bytes
+    memcpy (pbtRx, abtRx + 1, *pszRx);
+  }
   // Everything went successful
   return true;
 }
