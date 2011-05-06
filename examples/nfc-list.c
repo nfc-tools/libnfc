@@ -199,6 +199,34 @@ main (int argc, const char *argv[])
       }
     }
 
+    nm.nmt = NMT_ISO14443B3SR;
+    nm.nbr = NBR_106;
+    // List ISO14443B-3 ST SRx family targets
+    if (nfc_initiator_list_passive_targets (pnd, nm, ant, MAX_TARGET_COUNT, &szTargetFound)) {
+      size_t  n;
+      if (verbose || (szTargetFound > 0)) {
+        printf ("%d ISO14443B-3 ST SRx passive target(s) found%s\n", (int) szTargetFound, (szTargetFound == 0) ? ".\n" : ":");
+      }
+      for (n = 0; n < szTargetFound; n++) {
+        print_nfc_iso14443b3sr_info (ant[n].nti.nsi, verbose);
+        printf ("\n");
+      }
+    }
+
+    nm.nmt = NMT_ISO14443B3CT;
+    nm.nbr = NBR_106;
+    // List ISO14443B-3 ASK CTx family targets
+    if (nfc_initiator_list_passive_targets (pnd, nm, ant, MAX_TARGET_COUNT, &szTargetFound)) {
+      size_t  n;
+      if (verbose || (szTargetFound > 0)) {
+        printf ("%d ISO14443B-3 ASK CTx passive target(s) found%s\n", (int) szTargetFound, (szTargetFound == 0) ? ".\n" : ":");
+      }
+      for (n = 0; n < szTargetFound; n++) {
+        print_nfc_iso14443b3ct_info (ant[n].nti.nci, verbose);
+        printf ("\n");
+      }
+    }
+
     nm.nmt = NMT_JEWEL;
     nm.nbr = NBR_106;
     // List Jewel targets

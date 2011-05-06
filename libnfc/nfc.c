@@ -164,7 +164,7 @@ nfc_pick_device (void)
 
       if (!ndr->probe (pndd, 1, &szN)) {
         ERR ("%s probe failed", ndr->name);
-	szN = 0;
+        szN = 0;
       }
 
       if (szN == 0) {
@@ -386,6 +386,18 @@ nfc_initiator_list_passive_targets (nfc_device_t * pnd,
       szInitDataLen = 4;
     }
     break;
+    case NMT_ISO14443B3SR: {
+      // Get_UID
+      pbtInitData = (byte_t *) "\x0b";
+      szInitDataLen = 1;
+    }
+    break;
+    case NMT_ISO14443B3CT: {
+      // REQT
+      pbtInitData = (byte_t *) "\x10";
+      szInitDataLen = 1;
+    }
+    break;
     case NMT_FELICA: {
       // polling payload must be present (see ISO/IEC 18092 11.2.2.5)
       pbtInitData = (byte_t *) "\x00\xff\xff\x01\x00";
@@ -407,7 +419,7 @@ nfc_initiator_list_passive_targets (nfc_device_t * pnd,
     szTargetFound++;
     // deselect has no effect on FeliCa and Jewel cards so we'll stop after one...
     // ISO/IEC 14443 B' cards are polled at 100% probability so it's not possible to detect correctly two cards at the same time
-    if ((nm.nmt == NMT_FELICA) || (nm.nmt == NMT_JEWEL) || (nm.nmt == NMT_ISO14443BI)) {
+    if ((nm.nmt == NMT_FELICA) || (nm.nmt == NMT_JEWEL) || (nm.nmt == NMT_ISO14443BI) || (nm.nmt == NMT_ISO14443B3SR) || (nm.nmt == NMT_ISO14443B3CT)) {
       break;
     }
   }

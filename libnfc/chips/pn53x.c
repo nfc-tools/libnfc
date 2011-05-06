@@ -383,10 +383,23 @@ pn53x_decode_target_data (const byte_t * pbtRawData, size_t szRawData, pn53x_typ
         pnti->nii.btConfig = *(pbtRawData++);
         if (pnti->nii.btConfig & 0x40) {
           memcpy (pnti->nii.abtAtr, pbtRawData, szRawData - 8);
-          pbtRawData += szRawData - 6;
+          pbtRawData += szRawData - 8;
           pnti->nii.szAtrLen = szRawData - 8;
         }
       }
+      break;
+
+    case NMT_ISO14443B3SR:
+      // Store the UID
+      memcpy (pnti->nsi.abtUID, pbtRawData, 8);
+      pbtRawData += 8;
+      break;
+
+    case NMT_ISO14443B3CT:
+      // Store the unknown data as one blob for now
+      memcpy (pnti->nci.abtData, pbtRawData, szRawData);
+      pbtRawData += szRawData;
+      pnti->nci.szDataLen = szRawData;
       break;
 
     case NMT_FELICA:
@@ -639,8 +652,6 @@ pn53x_configure (nfc_device_t * pnd, const nfc_device_option_t ndo, const bool b
         return false;
       }
 
-      // TODO not yet sufficient to setup TypeB, some settings are missing here...
-
       return true;
       break;
   }
@@ -683,10 +694,8 @@ pn53x_initiator_select_passive_target (nfc_device_t * pnd,
   byte_t  abtTargetsData[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
   size_t  szTargetsData = sizeof(abtTargetsData);
 
-  if (nm.nmt == NMT_ISO14443BI) {
+  if (nm.nmt == NMT_ISO14443BI || nm.nmt == NMT_ISO14443B3SR || nm.nmt == NMT_ISO14443B3CT) {
     // No native support in InListPassiveTarget so we do discovery by hand
-    byte_t abtAttrib[6];
-    size_t szAttrib = sizeof(abtAttrib);
     if (!nfc_configure (pnd, NDO_FORCE_ISO14443_B, true)) {
       return false;
     }
@@ -697,6 +706,23 @@ pn53x_initiator_select_passive_target (nfc_device_t * pnd,
       return false;
     }
     pnd->bEasyFraming = false;
+    if (nm.nmt == NMT_ISO14443B3SR) {
+      // Some work to do before getting the UID...
+      byte_t abtInitiate[]="\x06\x00";
+      size_t szInitiateLen = 2;
+      byte_t abtSelect[]="\x0e\x00";
+      size_t szSelectLen = 2;
+      byte_t abtRx[1];
+      size_t szRxLen = 1;
+      // Getting random Chip_ID
+      if (!pn53x_initiator_transceive_bytes (pnd, abtInitiate, szInitiateLen, abtRx, &szRxLen)) {
+        return false;
+      }
+      abtSelect[1] = abtRx[0];
+      if (!pn53x_initiator_transceive_bytes (pnd, abtSelect, szSelectLen, abtRx, &szRxLen)) {
+        return false;
+      }
+    }
     if (!pn53x_initiator_transceive_bytes (pnd, pbtInitData, szInitData, abtTargetsData, &szTargetsData)) {
       return false;
     }
@@ -707,10 +733,15 @@ pn53x_initiator_select_passive_target (nfc_device_t * pnd,
         return false;
       }
     }
-    memcpy(abtAttrib, abtTargetsData, szAttrib);
-    abtAttrib[1] = 0x0f; // ATTRIB
-    if (!pn53x_initiator_transceive_bytes (pnd, abtAttrib, szAttrib, NULL, NULL)) {
-      return false;
+    if (nm.nmt == NMT_ISO14443BI) {
+      // Select tag
+      byte_t abtAttrib[6];
+      size_t szAttribLen = sizeof(abtAttrib);
+      memcpy(abtAttrib, abtTargetsData, szAttribLen);
+      abtAttrib[1] = 0x0f; // ATTRIB
+      if (!pn53x_initiator_transceive_bytes (pnd, abtAttrib, szAttribLen, NULL, NULL)) {
+        return false;
+      }
     }
     return true;
   } // else:
@@ -1137,6 +1168,8 @@ pn53x_target_init (nfc_device_t * pnd, nfc_target_t * pnt, byte_t * pbtRx, size_
     break;
     case NMT_ISO14443B:
     case NMT_ISO14443BI:
+    case NMT_ISO14443B3SR:
+    case NMT_ISO14443B3CT:
     case NMT_JEWEL:
       pnd->iLastError = DENOTSUP;
       return false;
@@ -1237,6 +1270,8 @@ pn53x_target_init (nfc_device_t * pnd, nfc_target_t * pnt, byte_t * pbtRx, size_
     break;
     case NMT_ISO14443B:
     case NMT_ISO14443BI:
+    case NMT_ISO14443B3SR:
+    case NMT_ISO14443B3CT:
     case NMT_JEWEL:
       pnd->iLastError = DENOTSUP;
       return false;
@@ -2017,6 +2052,8 @@ pn53x_nm_to_pm(const nfc_modulation_t nm)
     break;
 
     case NMT_ISO14443BI:
+    case NMT_ISO14443B3SR:
+    case NMT_ISO14443B3CT:
     case NMT_DEP:
       // Nothing to do...
     break;
@@ -2117,6 +2154,8 @@ pn53x_nm_to_ptt(const nfc_modulation_t nm)
     break;
 
     case NMT_ISO14443BI:
+    case NMT_ISO14443B3SR:
+    case NMT_ISO14443B3CT:
     case NMT_DEP:
       // Nothing to do...
     break;
