@@ -461,8 +461,16 @@ read:
     return -1;
   } else if ((0xff == abtRxBuf[offset]) && (0xff == abtRxBuf[offset + 1])) {
     // Extended frame
-    // FIXME: Code this
-    abort ();
+    offset += 2;
+
+    // (abtRxBuf[offset] << 8) + abtRxBuf[offset + 1] (LEN) include TFI + (CC+1)
+    len = (abtRxBuf[offset] << 8) + abtRxBuf[offset + 1] - 2;
+    if (((abtRxBuf[offset] + abtRxBuf[offset + 1] + abtRxBuf[offset + 2]) % 256) != 0) {
+      // TODO: Retry
+      ERR ("%s", "Length checksum mismatch");
+      pnd->iLastError = DEIO;
+      return -1;
+    }
     offset += 3;
   } else {
     // Normal frame

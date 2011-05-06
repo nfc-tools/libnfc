@@ -309,6 +309,7 @@ pn532_uart_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen
   } else if ((0xff == abtRxBuf[3]) && (0xff == abtRxBuf[4])) {
     // Extended frame
     pnd->iLastError = uart_receive (DRIVER_DATA(pnd)->port, abtRxBuf, 3, 0);
+    if (pnd->iLastError) return -1;
 
     // (abtRxBuf[0] << 8) + abtRxBuf[1] (LEN) include TFI + (CC+1)
     len = (abtRxBuf[0] << 8) + abtRxBuf[1] - 2;

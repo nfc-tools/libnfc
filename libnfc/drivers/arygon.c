@@ -324,7 +324,7 @@ arygon_tama_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLe
     return -1;
   } else if ((0xff == abtRxBuf[3]) && (0xff == abtRxBuf[4])) {
     // Extended frame
-    // FIXME: Code this
+    // ARYGON devices does not support extended frame sending
     abort ();
   } else {
     // Normal frame
