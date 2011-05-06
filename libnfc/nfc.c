@@ -83,6 +83,7 @@ const struct nfc_driver_t *nfc_drivers[] = {
  * - Invalid frames are not accepted (NDO_ACCEPT_INVALID_FRAMES = false)
  * - Multiple frames are not accepted (NDO_ACCEPT_MULTIPLE_FRAMES = false)
  * - 14443-A mode is activated (NDO_FORCE_ISO14443_A = true)
+ * - speed is set to 106 kbps (NDO_FORCE_SPEED_106 = true)
  * - Let the device try forever to find a target (NDO_INFINITE_SELECT = true)
  * - RF field is shortly dropped (if it was enabled) then activated again
  */
@@ -241,6 +242,9 @@ nfc_initiator_init (nfc_device_t * pnd)
   // Force 14443-A mode
   if (!nfc_configure (pnd, NDO_FORCE_ISO14443_A, true))
     return false;
+  // Force speed at 106kbps
+  if (!nfc_configure (pnd, NDO_FORCE_SPEED_106, true))
+    return false;
   // Disallow invalid frame
   if (!nfc_configure (pnd, NDO_ACCEPT_INVALID_FRAMES, false))
     return false;
@@ -376,6 +380,12 @@ nfc_initiator_list_passive_targets (nfc_device_t * pnd,
       szInitDataLen = 1;
     }
     break;
+    case NMT_ISO14443BI: {
+      // APGEN
+      pbtInitData = (byte_t *) "\x01\x0b\x3f\x80";
+      szInitDataLen = 4;
+    }
+    break;
     case NMT_FELICA: {
       // polling payload must be present (see ISO/IEC 18092 11.2.2.5)
       pbtInitData = (byte_t *) "\x00\xff\xff\x01\x00";
@@ -396,7 +406,8 @@ nfc_initiator_list_passive_targets (nfc_device_t * pnd,
     }
     szTargetFound++;
     // deselect has no effect on FeliCa and Jewel cards so we'll stop after one...
-    if ((nm.nmt == NMT_FELICA) || (nm.nmt == NMT_JEWEL)) {
+    // ISO/IEC 14443 B' cards are polled at 100% probability so it's not possible to detect correctly two cards at the same time
+    if ((nm.nmt == NMT_FELICA) || (nm.nmt == NMT_JEWEL) || (nm.nmt == NMT_ISO14443BI)) {
       break;
     }
   }

@@ -32,6 +32,7 @@
 // Registers and symbols masks used to covers parts within a register
 #  define REG_CIU_TX_MODE           0x6302
 #  define SYMBOL_TX_CRC_ENABLE      0x80
+#  define SYMBOL_TX_SPEED           0x70
 // TX_FRAMING bits explanation:
 //   00 : ISO/IEC 14443A/MIFARE and Passive Communication mode 106 kbit/s
 //   01 : Active Communication mode
@@ -46,6 +47,7 @@
 
 #  define REG_CIU_RX_MODE           0x6303
 #  define SYMBOL_RX_CRC_ENABLE      0x80
+#  define SYMBOL_RX_SPEED           0x70
 #  define SYMBOL_RX_NO_ERROR        0x08
 #  define SYMBOL_RX_MULTIPLE        0x04
 // RX_FRAMING follow same scheme than TX_FRAMING

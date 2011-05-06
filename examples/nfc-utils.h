@@ -88,6 +88,7 @@ void    print_hex_par (const byte_t * pbtData, const size_t szBits, const byte_t
 
 void    print_nfc_iso14443a_info (const nfc_iso14443a_info_t nai, bool verbose);
 void    print_nfc_iso14443b_info (const nfc_iso14443b_info_t nbi, bool verbose);
+void    print_nfc_iso14443bi_info (const nfc_iso14443bi_info_t nii, bool verbose);
 void    print_nfc_felica_info (const nfc_felica_info_t nfi, bool verbose);
 void    print_nfc_jewel_info (const nfc_jewel_info_t nji, bool verbose);
 void    print_nfc_dep_info (const nfc_dep_info_t ndi, bool verbose);

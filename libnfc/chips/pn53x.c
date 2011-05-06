@@ -368,6 +368,27 @@ pn53x_decode_target_data (const byte_t * pbtRawData, size_t szRawData, pn53x_typ
       }
       break;
 
+    case NMT_ISO14443BI:
+      // Skip V & T Addresses
+      pbtRawData++;
+      if (*pbtRawData != 0x07) { // 0x07 = REPGEN 
+        return false;
+      }
+      pbtRawData++;
+      // Store the UID
+      memcpy (pnti->nii.abtDIV, pbtRawData, 4);
+      pbtRawData += 4;
+      pnti->nii.btVerLog = *(pbtRawData++);
+      if (pnti->nii.btVerLog & 0x80) { // Type = long?
+        pnti->nii.btConfig = *(pbtRawData++);
+        if (pnti->nii.btConfig & 0x40) {
+          memcpy (pnti->nii.abtAtr, pbtRawData, szRawData - 8);
+          pbtRawData += szRawData - 6;
+          pnti->nii.szAtrLen = szRawData - 8;
+        }
+      }
+      break;
+
     case NMT_FELICA:
       // We skip the first byte: its the target number (Tg)
       pbtRawData++;
@@ -588,6 +609,40 @@ pn53x_configure (nfc_device_t * pnd, const nfc_device_option_t ndo, const bool b
 
       return true;
       break;
+
+    case NDO_FORCE_ISO14443_B:
+      if(!bEnable) {
+        // Nothing to do
+        return true;
+      }
+      // Force pn53x to be in ISO14443-B mode
+      if (!pn53x_write_register (pnd, REG_CIU_TX_MODE, SYMBOL_TX_FRAMING, 0x03)) {
+        return false;
+      }
+      if (!pn53x_write_register (pnd, REG_CIU_RX_MODE, SYMBOL_RX_FRAMING, 0x03)) {
+        return false;
+      }
+
+      return true;
+      break;
+
+    case NDO_FORCE_SPEED_106:
+      if(!bEnable) {
+        // Nothing to do
+        return true;
+      }
+      // Force pn53x to be at 106 kbps
+      if (!pn53x_write_register (pnd, REG_CIU_TX_MODE, SYMBOL_TX_SPEED, 0x00)) {
+        return false;
+      }
+      if (!pn53x_write_register (pnd, REG_CIU_RX_MODE, SYMBOL_RX_SPEED, 0x00)) {
+        return false;
+      }
+
+      // TODO not yet sufficient to setup TypeB, some settings are missing here...
+
+      return true;
+      break;
   }
 
   // When we reach this, the configuration is completed and succesful
@@ -628,11 +683,44 @@ pn53x_initiator_select_passive_target (nfc_device_t * pnd,
   byte_t  abtTargetsData[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
   size_t  szTargetsData = sizeof(abtTargetsData);
 
+  if (nm.nmt == NMT_ISO14443BI) {
+    // No native support in InListPassiveTarget so we do discovery by hand
+    byte_t abtAttrib[6];
+    size_t szAttrib = sizeof(abtAttrib);
+    if (!nfc_configure (pnd, NDO_FORCE_ISO14443_B, true)) {
+      return false;
+    }
+    if (!nfc_configure (pnd, NDO_FORCE_SPEED_106, true)) {
+      return false;
+    }
+    if (!nfc_configure (pnd, NDO_HANDLE_CRC, true)) {
+      return false;
+    }
+    pnd->bEasyFraming = false;
+    if (!pn53x_initiator_transceive_bytes (pnd, pbtInitData, szInitData, abtTargetsData, &szTargetsData)) {
+      return false;
+    }
+    if (pnt) {
+      pnt->nm = nm;
+      // Fill the tag info struct with the values corresponding to this init modulation
+      if (!pn53x_decode_target_data (abtTargetsData, szTargetsData, CHIP_DATA(pnd)->type, nm.nmt, &(pnt->nti))) {
+        return false;
+      }
+    }
+    memcpy(abtAttrib, abtTargetsData, szAttrib);
+    abtAttrib[1] = 0x0f; // ATTRIB
+    if (!pn53x_initiator_transceive_bytes (pnd, abtAttrib, szAttrib, NULL, NULL)) {
+      return false;
+    }
+    return true;
+  } // else:
+
   const pn53x_modulation_t pm = pn53x_nm_to_pm(nm);
   if (PM_UNDEFINED == pm) {
     pnd->iLastError = DENOTSUP;
     return false;
   }
+
   if (!pn53x_InListPassiveTarget (pnd, pm, 1, pbtInitData, szInitData, abtTargetsData, &szTargetsData))
     return false;
 
@@ -1048,6 +1136,7 @@ pn53x_target_init (nfc_device_t * pnd, nfc_target_t * pnt, byte_t * pbtRx, size_
       }
     break;
     case NMT_ISO14443B:
+    case NMT_ISO14443BI:
     case NMT_JEWEL:
       pnd->iLastError = DENOTSUP;
       return false;
@@ -1147,6 +1236,7 @@ pn53x_target_init (nfc_device_t * pnd, nfc_target_t * pnt, byte_t * pbtRx, size_
       pbtFeliCaParams = abtFeliCaParams;
     break;
     case NMT_ISO14443B:
+    case NMT_ISO14443BI:
     case NMT_JEWEL:
       pnd->iLastError = DENOTSUP;
       return false;
@@ -1925,6 +2015,8 @@ pn53x_nm_to_pm(const nfc_modulation_t nm)
         break;
       }
     break;
+
+    case NMT_ISO14443BI:
     case NMT_DEP:
       // Nothing to do...
     break;
@@ -2024,6 +2116,7 @@ pn53x_nm_to_ptt(const nfc_modulation_t nm)
       }
     break;
 
+    case NMT_ISO14443BI:
     case NMT_DEP:
       // Nothing to do...
     break;

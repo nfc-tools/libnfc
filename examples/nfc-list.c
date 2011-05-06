@@ -185,6 +185,20 @@ main (int argc, const char *argv[])
       }
     }
 
+    nm.nmt = NMT_ISO14443BI;
+    nm.nbr = NBR_106;
+    // List ISO14443B' targets
+    if (nfc_initiator_list_passive_targets (pnd, nm, ant, MAX_TARGET_COUNT, &szTargetFound)) {
+      size_t  n;
+      if (verbose || (szTargetFound > 0)) {
+        printf ("%d ISO14443B' passive target(s) found%s\n", (int) szTargetFound, (szTargetFound == 0) ? ".\n" : ":");
+      }
+      for (n = 0; n < szTargetFound; n++) {
+        print_nfc_iso14443bi_info (ant[n].nti.nii, verbose);
+        printf ("\n");
+      }
+    }
+
     nm.nmt = NMT_JEWEL;
     nm.nbr = NBR_106;
     // List Jewel targets

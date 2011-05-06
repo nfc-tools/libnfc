@@ -147,6 +147,10 @@ typedef enum {
   NDO_EASY_FRAMING = 0x41,
 /** Force the chip to switch in ISO14443-A */
   NDO_FORCE_ISO14443_A = 0x42,
+/** Force the chip to switch in ISO14443-B */
+  NDO_FORCE_ISO14443_B = 0x43,
+/** Force the chip to run at 106 kbps */
+  NDO_FORCE_SPEED_106 = 0x50,
 } nfc_device_option_t;
 
 /**
@@ -224,6 +228,22 @@ typedef struct {
 } nfc_iso14443b_info_t;
 
 /**
+ * @struct nfc_iso14443bi_info_t
+ * @brief NFC ISO14443B' tag information
+ */
+typedef struct {
+/** DIV: 4 LSBytes of tag serial number */
+  byte_t abtDIV[4];
+/** Software version & type of REPGEN */
+  byte_t btVerLog;
+/** Config Byte, present if long REPGEN */
+  byte_t btConfig;
+/** ATR, if any */
+  size_t szAtrLen;
+  byte_t  abtAtr[33];
+} nfc_iso14443bi_info_t;
+
+/**
  * @struct nfc_jewel_info_t
  * @brief NFC Jewel tag information
  */
@@ -240,6 +260,7 @@ typedef union {
   nfc_iso14443a_info_t nai;
   nfc_felica_info_t nfi;
   nfc_iso14443b_info_t nbi;
+  nfc_iso14443bi_info_t nii;
   nfc_jewel_info_t nji;
   nfc_dep_info_t ndi;
 } nfc_target_info_t;
@@ -263,6 +284,7 @@ typedef enum {
 typedef enum {
   NMT_ISO14443A,
   NMT_ISO14443B,
+  NMT_ISO14443BI, // pre-ISO14443B aka ISO/IEC 14443 B' or Type B'
   NMT_FELICA,
   NMT_JEWEL,
   NMT_DEP,

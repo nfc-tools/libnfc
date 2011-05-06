@@ -608,6 +608,30 @@ print_nfc_iso14443b_info (const nfc_iso14443b_info_t nbi, bool verbose)
 }
 
 void
+print_nfc_iso14443bi_info (const nfc_iso14443bi_info_t nii, bool verbose)
+{
+  printf ("                DIV: ");
+  print_hex (nii.abtDIV, 4);
+  if (verbose) {
+    int version = (nii.btVerLog & 0x1e)>>1;
+    printf ("   Software Version: ");
+    if (version == 15) {
+      printf ("Undefined\n");
+    } else {
+      printf ("%i\n", version);
+    }
+
+    if ((nii.btVerLog & 0x80) && (nii.btConfig & 0x80)){
+      printf ("        Wait Enable: yes");
+    }
+  }
+  if ((nii.btVerLog & 0x80) && (nii.btConfig & 0x40)) {
+    printf ("                ATS: ");
+    print_hex (nii.abtAtr, nii.szAtrLen);
+  }
+}
+
+void
 print_nfc_dep_info (const nfc_dep_info_t ndi, bool verbose)
 {
   (void) verbose;
@@ -711,6 +735,10 @@ print_nfc_target (const nfc_target_t nt, bool verbose)
     case NMT_ISO14443B:
       printf ("ISO/IEC 14443-4B (%s) target:\n", str_nfc_baud_rate(nt.nm.nbr));
       print_nfc_iso14443b_info (nt.nti.nbi, verbose);
+    break;
+    case NMT_ISO14443BI:
+      printf ("ISO/IEC 14443-4B' (%s) target:\n", str_nfc_baud_rate(nt.nm.nbr));
+      print_nfc_iso14443bi_info (nt.nti.nii, verbose);
     break;
     case NMT_DEP:
       printf ("D.E.P. (%s) target:\n", str_nfc_baud_rate(nt.nm.nbr));
