@@ -645,7 +645,17 @@ nfc_target_init (nfc_device_t * pnd, nfc_target_t * pnt, byte_t * pbtRx, size_t 
   HAL (target_init, pnd, pnt, pbtRx, pszRx);
 }
 
-/* TODO Document this function */
+/**
+ * @brief Abort current running command
+ * @return Returns \c true if action was successfully performed; otherwise returns \c false.
+ *
+ * @param pnd \a nfc_device_t struct pointer that represent currently used device
+ *
+ * Some commands (ie. nfc_target_init()) are blocking functions and will return only in particular conditions (ie. external initiator request).
+ * This function attempt to abort the current running command.
+ *
+ * @note The blocking function (ie. nfc_target_init()) will failed with DEABORT error.
+ */
 bool
 nfc_abort_command (nfc_device_t * pnd)
 {
