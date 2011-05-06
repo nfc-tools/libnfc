@@ -229,7 +229,7 @@ typedef struct {
 
 // Register addresses
 #define PN53X_REG_CIU_Mode 0x6301
-#define PN53X_REG_CIU_TxMode 0x6303
+#define PN53X_REG_CIU_TxMode 0x6302
 #define PN53X_REG_CIU_RxMode 0x6303
 #define PN53X_REG_CIU_TxControl 0x6304
 #define PN53X_REG_CIU_TxAuto 0x6305
@@ -290,6 +290,16 @@ typedef struct {
 #define PN53X_REG_CIUControl 0x633C
 #define PN53X_REG_CIUBitFraming 0x633D
 #define PN53X_REG_CIUColl 0x633E
+
+#define PN53X_SFR_P3 0xFFB0
+
+#define PN53X_SFR_P3CFGA 0xFFFC 
+#define PN53X_SFR_P3CFGB 0xFFFD 
+#define PN53X_SFR_P3 0xFFB0 
+#define PN53X_SFR_P7CFGA 0xFFF4 
+#define PN53X_SFR_P7CFGB 0xFFF5 
+#define PN53X_SFR_P7 0xFFF7 
+
 
 #ifdef DEBUG
 static const pn53x_register pn53x_registers[] = {
@@ -355,6 +365,14 @@ static const pn53x_register pn53x_registers[] = {
   PNREG (PN53X_REG_CIUControl, "Contains miscellaneous control bits"),
   PNREG (PN53X_REG_CIUBitFraming, "Adjustments for bit oriented frames"),
   PNREG (PN53X_REG_CIUColl, "Defines the first bit collision detected on the RF interface"),
+
+  // SFR
+  PNREG (PN53X_SFR_P3CFGA, "Port 3 configuration"),
+  PNREG (PN53X_SFR_P3CFGB, "Port 3 configuration"),
+  PNREG (PN53X_SFR_P3, "Port 3 value"),
+  PNREG (PN53X_SFR_P7CFGA, "Port 7 configuration"),
+  PNREG (PN53X_SFR_P7CFGB, "Port 7 configuration"),
+  PNREG (PN53X_SFR_P7, "Port 7 value"),
 };
 #endif
 
