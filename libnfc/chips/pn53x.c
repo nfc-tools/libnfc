@@ -443,46 +443,52 @@ pn53x_decode_target_data (const byte_t * pbtRawData, size_t szRawData, pn53x_typ
 }
 
 bool
-pn53x_read_register (nfc_device_t * pnd, uint16_t ui16Reg, uint8_t * ui8Value)
+pn53x_ReadRegister (nfc_device_t * pnd, uint16_t ui16RegisterAddress, uint8_t * ui8Value)
 {
-  byte_t  abtCmd[] = { ReadRegister, ui16Reg >> 8, ui16Reg & 0xff };
+  byte_t  abtCmd[] = { ReadRegister, ui16RegisterAddress >> 8, ui16RegisterAddress & 0xff };
   byte_t  abtRegValue[2];
   size_t  szRegValue = sizeof (abtRegValue);
 
-  PNREG_DBG (ui16Reg);
-
-  if (pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), abtRegValue, &szRegValue)) {
-    if (CHIP_DATA(pnd)->type == PN533) {
-      // PN533 prepends its answer by a status byte
-      if (abtRegValue[0] == 0x00) {
-        *ui8Value = abtRegValue[1];
-      } else {
-        return false;
-      }
-    } else {
-      *ui8Value = abtRegValue[0];
-    }
-    return true;
+  DBG ("ReadRegister (%04x)", ui16RegisterAddress);
+  if (!pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), abtRegValue, &szRegValue)) {
+    return false;
   }
-  return false;
+  if (CHIP_DATA(pnd)->type == PN533) {
+    // PN533 prepends its answer by a status byte
+    *ui8Value = abtRegValue[1];
+  } else {
+    *ui8Value = abtRegValue[0];
+  }
+  return true;
+}
+
+bool pn53x_read_register (nfc_device_t * pnd, uint16_t ui16RegisterAddress, uint8_t * ui8Value)
+{
+  return pn53x_ReadRegister (pnd, ui16RegisterAddress, ui8Value);
 }
 
 bool
-pn53x_write_register (nfc_device_t * pnd, const uint16_t ui16Reg, const uint8_t ui8SymbolMask, const uint8_t ui8Value)
+pn53x_WriteRegister (nfc_device_t * pnd, const uint16_t ui16RegisterAddress, const uint8_t ui8Value)
 {
-  byte_t  abtCmd[] = { WriteRegister, ui16Reg >> 8, ui16Reg & 0xff, 0x00 };
+  byte_t  abtCmd[] = { WriteRegister, ui16RegisterAddress >> 8, ui16RegisterAddress & 0xff, ui8Value };
+  PNREG_DBG (ui16RegisterAddress);
+  DBG ("WriteRegister (%04x, %02x)", ui16RegisterAddress, ui8Value);
+  return pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, NULL);
+}
 
+bool
+pn53x_write_register (nfc_device_t * pnd, const uint16_t ui16RegisterAddress, const uint8_t ui8SymbolMask, const uint8_t ui8Value)
+{
   if (ui8SymbolMask != 0xff) {
-    uint8_t ui8Current;
-    if (!pn53x_read_register (pnd, ui16Reg, &ui8Current))
+    uint8_t ui8CurrentValue;
+    if (!pn53x_read_register (pnd, ui16RegisterAddress, &ui8CurrentValue))
       return false;
-    abtCmd[3] = ((ui8Value & ui8SymbolMask) | (ui8Current & (~ui8SymbolMask)));
-    if (abtCmd[3] != ui8Current) {
-      return pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, NULL);
+    uint8_t ui8NewValue = ((ui8Value & ui8SymbolMask) | (ui8CurrentValue & (~ui8SymbolMask)));
+    if (ui8NewValue != ui8CurrentValue) {
+      return pn53x_WriteRegister (pnd, ui16RegisterAddress, ui8NewValue);
     }
   } else {
-    abtCmd[3] = ui8Value;
-    return pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, NULL);
+    return pn53x_WriteRegister (pnd, ui16RegisterAddress, ui8Value);
   }
   return true;
 }
