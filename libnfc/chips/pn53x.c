@@ -53,7 +53,9 @@ static const byte_t pn53x_nack_frame[] = { 0x00, 0x00, 0xff, 0xff, 0x00, 0x00 };
 static const byte_t pn53x_error_frame[] = { 0x00, 0x00, 0xff, 0x01, 0xff, 0x7f, 0x81, 0x00 };
 
 /* prototypes */
-bool pn53x_reset_settings(nfc_device_t * pnd);
+bool pn53x_reset_settings (nfc_device_t * pnd);
+bool pn53x_writeback_register (nfc_device_t * pnd);
+
 nfc_modulation_t pn53x_ptt_to_nm (const pn53x_target_type_t ptt);
 pn53x_modulation_t pn53x_nm_to_pm (const nfc_modulation_t nm);
 pn53x_target_type_t pn53x_nm_to_ptt (const nfc_modulation_t nm);
@@ -102,6 +104,12 @@ pn53x_reset_settings(nfc_device_t * pnd)
 bool
 pn53x_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, byte_t * pbtRx, size_t *pszRx)
 {
+  if (CHIP_DATA (pnd)->wb_trigged) {
+    if (!pn53x_writeback_register (pnd)) {
+      return false;
+    }
+  }
+
   PNCMD_DBG (pbtTx[0]);
   byte_t  abtRx[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
   size_t  szRx = sizeof(abtRx);
@@ -473,16 +481,94 @@ pn53x_WriteRegister (nfc_device_t * pnd, const uint16_t ui16RegisterAddress, con
 bool
 pn53x_write_register (nfc_device_t * pnd, const uint16_t ui16RegisterAddress, const uint8_t ui8SymbolMask, const uint8_t ui8Value)
 {
-  if (ui8SymbolMask != 0xff) {
-    uint8_t ui8CurrentValue;
-    if (!pn53x_read_register (pnd, ui16RegisterAddress, &ui8CurrentValue))
-      return false;
-    uint8_t ui8NewValue = ((ui8Value & ui8SymbolMask) | (ui8CurrentValue & (~ui8SymbolMask)));
-    if (ui8NewValue != ui8CurrentValue) {
-      return pn53x_WriteRegister (pnd, ui16RegisterAddress, ui8NewValue);
+  if ((ui16RegisterAddress < PN53X_CACHE_REGISTER_MIN_ADDRESS) || (ui16RegisterAddress > PN53X_CACHE_REGISTER_MAX_ADDRESS)) {
+    // Direct write
+    if (ui8SymbolMask != 0xff) {
+      uint8_t ui8CurrentValue;
+      if (!pn53x_read_register (pnd, ui16RegisterAddress, &ui8CurrentValue))
+        return false;
+      uint8_t ui8NewValue = ((ui8Value & ui8SymbolMask) | (ui8CurrentValue & (~ui8SymbolMask)));
+      if (ui8NewValue != ui8CurrentValue) {
+        return pn53x_WriteRegister (pnd, ui16RegisterAddress, ui8NewValue);
+      }
+    } else {
+      return pn53x_WriteRegister (pnd, ui16RegisterAddress, ui8Value);
     }
   } else {
-    return pn53x_WriteRegister (pnd, ui16RegisterAddress, ui8Value);
+    // Write-back cache area
+    const int internal_address = ui16RegisterAddress - PN53X_CACHE_REGISTER_MIN_ADDRESS;
+    CHIP_DATA (pnd)->wb_data[internal_address] = (CHIP_DATA (pnd)->wb_data[internal_address] & CHIP_DATA (pnd)->wb_mask[internal_address]) | (ui8Value & ui8SymbolMask);
+    CHIP_DATA (pnd)->wb_mask[internal_address] = CHIP_DATA (pnd)->wb_mask[internal_address] | ui8SymbolMask;
+    CHIP_DATA (pnd)->wb_trigged = true;
+    DBG ("WriteBackRegister (%04x, %02x, %02x)", ui16RegisterAddress, CHIP_DATA (pnd)->wb_data[internal_address], CHIP_DATA (pnd)->wb_mask[internal_address]);
+  }
+  return true;
+}
+
+bool
+pn53x_writeback_register (nfc_device_t * pnd)
+{
+  // TODO Check at each step (ReadRegister, WriteRegister) if we don't exceeded max supported frame lenght
+  uint8_t abtCmd[PN53x_EXTENDED_FRAME__DATA_MAX_LEN] = { ReadRegister };
+  size_t szCmd = 1;
+
+  // First step, it look for registers which need to be readed before applying the requested mask
+  CHIP_DATA (pnd)->wb_trigged = false;
+  for (size_t n = 0; n < PN53X_CACHE_REGISTER_MAX_ADDRESS - PN53X_CACHE_REGISTER_MIN_ADDRESS; n++) {
+    if ((CHIP_DATA (pnd)->wb_mask[n]) && (CHIP_DATA (pnd)->wb_mask[n] != 0xff)) {
+      // This register need to be readed: mask is present but does not cover full data width (ie. mask != 0xff)
+      const uint16_t pn53x_register_address = PN53X_CACHE_REGISTER_MIN_ADDRESS + n;
+      abtCmd[szCmd++] = pn53x_register_address  >> 8;
+      abtCmd[szCmd++] = pn53x_register_address & 0xff;
+    }
+  }
+
+  if (szCmd > 1) {
+    // It need to read some registers
+    uint8_t abtRes[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
+    size_t szRes = sizeof(abtRes);
+    // Transceive the previously constructed ReadRegister command
+    if (!pn53x_transceive (pnd, abtCmd, szCmd, abtRes, &szRes)) {
+      return false;
+    }
+    size_t i = 0;
+    if (CHIP_DATA(pnd)->type == PN533) {
+      // PN533 prepends its answer by a status byte
+      i = 1;
+    }
+    for (size_t n = 0; n < PN53X_CACHE_REGISTER_MAX_ADDRESS - PN53X_CACHE_REGISTER_MIN_ADDRESS; n++) {
+      if ((CHIP_DATA (pnd)->wb_mask[n]) && (CHIP_DATA (pnd)->wb_mask[n] != 0xff)) {
+        CHIP_DATA (pnd)->wb_data[n] = ((CHIP_DATA (pnd)->wb_data[n] & CHIP_DATA (pnd)->wb_mask[n]) | (abtRes[i] & (~CHIP_DATA (pnd)->wb_mask[n])));
+        if (CHIP_DATA (pnd)->wb_data[n] != abtRes[i]) {
+          // Requested value is different from readed one
+          CHIP_DATA (pnd)->wb_mask[n] = 0xff; // We can now apply whole data bits
+        } else {
+          CHIP_DATA (pnd)->wb_mask[n] = 0x00; // We already have the right value
+        }
+        i++;
+      }
+    }
+  }
+  // Now, the writeback-cache only have masks with 0xff, we can start to WriteRegister
+  szCmd = 1;
+  abtCmd[0] = WriteRegister;
+  for (size_t n = 0; n < PN53X_CACHE_REGISTER_MAX_ADDRESS - PN53X_CACHE_REGISTER_MIN_ADDRESS; n++) {
+    if (CHIP_DATA (pnd)->wb_mask[n] == 0xff) {
+      const uint16_t pn53x_register_address = PN53X_CACHE_REGISTER_MIN_ADDRESS + n;
+      abtCmd[szCmd++] = pn53x_register_address  >> 8;
+      abtCmd[szCmd++] = pn53x_register_address & 0xff;
+      abtCmd[szCmd++] = CHIP_DATA (pnd)->wb_data[n];
+      DBG ("WriteBackRegister will write (%04x, %02x)", pn53x_register_address, CHIP_DATA (pnd)->wb_data[n]);
+      // This register is handled, we reset the mask to prevent
+      CHIP_DATA (pnd)->wb_mask[n] = 0x00;
+    }
+  }
+
+  if (szCmd > 1) {
+    // We need to write some registers
+    if (!pn53x_transceive (pnd, abtCmd, szCmd, NULL, NULL)) {
+      return false;
+    }
   }
   return true;
 }
@@ -2247,4 +2333,8 @@ pn53x_data_new (nfc_device_t * pnd, const struct pn53x_io* io)
 
   // Set current target to NULL
   CHIP_DATA (pnd)->current_target = NULL;
+
+  // WriteBack cache is clean
+  CHIP_DATA (pnd)->wb_trigged = false;
+  memset (CHIP_DATA (pnd)->wb_mask, 0x00, PN53X_CACHE_REGISTER_MAX_ADDRESS-PN53X_CACHE_REGISTER_MIN_ADDRESS);
 }

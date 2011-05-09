@@ -151,6 +151,10 @@ struct pn53x_io {
   int (*receive)(nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen);
 };
 
+/* defines */
+#define PN53X_CACHE_REGISTER_MIN_ADDRESS PN53X_REG_CIU_Mode
+#define PN53X_CACHE_REGISTER_MAX_ADDRESS PN53X_REG_CIUColl
+
 struct pn53x_data {
 /** Chip type (PN531, PN532 or PN533)*/
   pn53x_type type;
@@ -170,6 +174,10 @@ struct pn53x_data {
   uint8_t ui8LastCommand;
 /** Interframe timer correction */
   int16_t timer_correction;
+/** WriteBack cache */
+  uint8_t wb_data[PN53X_CACHE_REGISTER_MAX_ADDRESS-PN53X_CACHE_REGISTER_MIN_ADDRESS];
+  uint8_t wb_mask[PN53X_CACHE_REGISTER_MAX_ADDRESS-PN53X_CACHE_REGISTER_MIN_ADDRESS];
+  bool wb_trigged;
 };
 
 #define CHIP_DATA(pnd) ((struct pn53x_data*)(pnd->chip_data))
