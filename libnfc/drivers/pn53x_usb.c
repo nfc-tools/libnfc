@@ -290,10 +290,9 @@ pn53x_usb_connect (const nfc_device_desc_t *pndd)
 
         pnd->driver_data = malloc(sizeof(struct pn53x_usb_data));
         *DRIVER_DATA (pnd) = data;
-        pnd->chip_data = malloc(sizeof(struct pn53x_data));
 
-        CHIP_DATA (pnd)->power_mode = NORMAL;
-        CHIP_DATA (pnd)->io = &pn53x_usb_io;
+        // Alloc and init chip's data
+        pn53x_data_new (pnd, &pn53x_usb_io);
 
         switch (DRIVER_DATA (pnd)->model) {
           // empirical tuning

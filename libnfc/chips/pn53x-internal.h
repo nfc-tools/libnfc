@@ -25,8 +25,6 @@
 #ifndef __PN53X_INTERNAL_H__
 #define __PN53X_INTERNAL_H__
 
-#include "pn53x.h"
-
 // Miscellaneous
 #define Diagnose 0x00
 #define GetFirmwareVersion 0x02
@@ -118,11 +116,11 @@ typedef struct {
 #endif
 } pn53x_command;
 
-/*
-#define PN531 0x01
-#define PN532 0x02
-#define PN533 0X04
-*/
+typedef enum {
+  PN531 = 0x01,
+  PN532 = 0x02,
+  PN533 = 0x04
+} pn53x_type;
 
 #ifndef DEBUG
 #  define PNCMD( X, Y ) { X , Y }

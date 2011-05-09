@@ -28,6 +28,7 @@
 #  define __NFC_CHIPS_PN53X_H__
 
 #  include <nfc/nfc-types.h>
+#  include "pn53x-internal.h"
 
 // TODO Remove double register address defines
 // Registers and symbols masks used to covers parts within a register
@@ -132,12 +133,6 @@
 #  define DENACK          0x0100/* NACK */
 #  define DEACKMISMATCH   0x0200/* Unexpected data */
 #  define DEISERRFRAME    0x0300/* Error frame */
-
-typedef enum {
-  PN531 = 0x01,
-  PN532 = 0x02,
-  PN533 = 0x04
-} pn53x_type;
 
 typedef enum {
   NORMAL,	// In that case, there is no power saved but the PN53x reacts as fast as possible on the host controller interface.
@@ -312,6 +307,7 @@ bool    pn53x_target_receive_bytes (nfc_device_t * pnd, byte_t * pbtRx, size_t *
 bool    pn53x_target_send_bits (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxBits,
                                 const byte_t * pbtTxPar);
 bool    pn53x_target_send_bytes (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx);
+
 // Error handling functions
 const char *pn53x_strerror (const nfc_device_t * pnd);
 
@@ -344,5 +340,7 @@ bool	pn53x_TgInitAsTarget (nfc_device_t * pnd, pn53x_target_mode_t ptm,
 bool    pn53x_check_ack_frame (nfc_device_t * pnd, const byte_t * pbtRxFrame, const size_t szRxFrameLen);
 bool    pn53x_check_error_frame (nfc_device_t * pnd, const byte_t * pbtRxFrame, const size_t szRxFrameLen);
 bool    pn53x_build_frame (byte_t * pbtFrame, size_t * pszFrame, const byte_t * pbtData, const size_t szData);
+
+void    pn53x_data_new (nfc_device_t * pnd, const struct pn53x_io* io);
 
 #endif // __NFC_CHIPS_PN53X_H__

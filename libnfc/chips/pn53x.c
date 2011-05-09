@@ -67,12 +67,6 @@ pn53x_init(nfc_device_t * pnd)
     return false;
   }
 
-  // PN53x starts in initiator mode
-  CHIP_DATA (pnd)->operating_mode = INITIATOR;
-
-  // Set current target to NULL
-  CHIP_DATA (pnd)->current_target = NULL;
-
   // CRC handling is enabled by default
   pnd->bCrc = true;
   // Parity handling is enabled by default
@@ -500,8 +494,6 @@ pn53x_get_firmware_version (nfc_device_t * pnd, char abtFirmwareText[18])
   byte_t  abtFw[4];
   size_t  szFwLen = sizeof (abtFw);
   if (!pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), abtFw, &szFwLen)) {
-    // Failed to get firmware revision??, whatever...let's disconnect and clean up and return err
-    // FIXME: Wtf?
     return false;
   }
   // Determine which version of chip it is: PN531 will return only 2 bytes, while others return 4 bytes and have the first to tell the version IC
@@ -2236,4 +2228,23 @@ pn53x_nm_to_ptt(const nfc_modulation_t nm)
     break;
   }
   return PTT_UNDEFINED;
+}
+
+void
+pn53x_data_new (nfc_device_t * pnd, const struct pn53x_io* io)
+{
+  pnd->chip_data = malloc(sizeof(struct pn53x_data));
+
+  // Keep I/O functions
+  CHIP_DATA (pnd)->io = io;
+
+  // Set power mode to normal, if your device starts in LowVBat (ie. PN532
+  // UART) the driver layer have to correctly set it.
+  CHIP_DATA (pnd)->power_mode = NORMAL;
+
+  // PN53x starts in initiator mode
+  CHIP_DATA (pnd)->operating_mode = INITIATOR;
+
+  // Set current target to NULL
+  CHIP_DATA (pnd)->current_target = NULL;
 }

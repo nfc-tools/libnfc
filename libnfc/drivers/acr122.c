@@ -193,7 +193,9 @@ acr122_connect (const nfc_device_desc_t * pndd)
   char   *pcFirmware;
   nfc_device_t *pnd = nfc_device_new ();
   pnd->driver_data = malloc (sizeof (struct acr122_data));
-  pnd->chip_data = malloc (sizeof (struct pn53x_data));
+
+  // Alloc and init chip's data
+  pn53x_data_new (pnd, &acr122_io);
 
   SCARDCONTEXT *pscc;
 
@@ -220,8 +222,6 @@ acr122_connect (const nfc_device_desc_t * pndd)
     // Done, we found the reader we are looking for
     snprintf (pnd->acName, sizeof (pnd->acName), "%s / %s", pndd->acDevice, pcFirmware);
 
-    CHIP_DATA (pnd)->power_mode = NORMAL;
-    CHIP_DATA (pnd)->io = &acr122_io;
     // 50: empirical tuning on Touchatag
     // 46: empirical tuning on ACR122U
     CHIP_DATA (pnd)->timer_correction = 50;

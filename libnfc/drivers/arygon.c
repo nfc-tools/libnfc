@@ -117,9 +117,9 @@ arygon_probe (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * pszDev
       pnd->driver = &arygon_driver;
       pnd->driver_data = malloc(sizeof(struct arygon_data));
       DRIVER_DATA (pnd)->port = sp;
-      pnd->chip_data = malloc(sizeof(struct pn53x_data));
-      CHIP_DATA (pnd)->power_mode = NORMAL;
-      CHIP_DATA (pnd)->io = &arygon_tama_io;
+
+      // Alloc and init chip's data
+      pn53x_data_new (pnd, &arygon_tama_io);
 
       bool res = arygon_reset_tama (pnd);
       nfc_device_free (pnd);
