@@ -1161,13 +1161,17 @@ pn53x_initiator_transceive_bits_timed (nfc_device_t * pnd, const byte_t * pbtTx,
   //  631a=82 631b=a5 631c=02 631d=00
   // Prepare FIFO
   pn53x_write_register (pnd, REG_CIU_COMMAND, 0xFF, SYMBOL_COMMAND & SYMBOL_COMMAND_TRANSCEIVE);
+  pn53x_writeback_register(pnd);
   pn53x_write_register (pnd, REG_CIU_FIFOLEVEL, 0xFF, SYMBOL_FLUSH_BUFFER);
+  pn53x_writeback_register(pnd);
   for (i=0; i< ((szTxBits / 8) + 1); i++) {
     pn53x_write_register (pnd, REG_CIU_FIFODATA, 0xFF, pbtTx[i]);
+    pn53x_writeback_register(pnd);
   }
 
   // Send data
   pn53x_write_register (pnd, REG_CIU_BIT_FRAMING, 0xFF, SYMBOL_START_SEND | ((szTxBits % 8) & SYMBOL_TX_LAST_BITS));
+  pn53x_writeback_register(pnd);
 
   // Recv data
   *pszRxBits = 0;
@@ -1223,13 +1227,17 @@ pn53x_initiator_transceive_bytes_timed (nfc_device_t * pnd, const byte_t * pbtTx
   //  631a=82 631b=a5 631c=02 631d=00
   // Prepare FIFO
   pn53x_write_register (pnd, REG_CIU_COMMAND, 0xFF, SYMBOL_COMMAND & SYMBOL_COMMAND_TRANSCEIVE);
+  pn53x_writeback_register(pnd);
   pn53x_write_register (pnd, REG_CIU_FIFOLEVEL, 0xFF, SYMBOL_FLUSH_BUFFER);
+  pn53x_writeback_register(pnd);
   for (i=0; i< szTx; i++) {
     pn53x_write_register (pnd, REG_CIU_FIFODATA, 0xFF, pbtTx[i]);
+    pn53x_writeback_register(pnd);
   }
 
   // Send data
   pn53x_write_register (pnd, REG_CIU_BIT_FRAMING, 0xFF, SYMBOL_START_SEND);
+  pn53x_writeback_register(pnd);
 
   // Recv data
   *pszRx = 0;
