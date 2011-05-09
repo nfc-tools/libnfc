@@ -226,7 +226,7 @@ static const struct timeval tvTimeout = {
 int
 uart_receive (serial_port sp, byte_t * pbtRx, const size_t szRx, void * abort_p)
 {
-  int iAbortFd = *((int*)abort_p);
+  int iAbortFd = abort_p ? *((int*)abort_p) : 0;
   struct timeval tv = tvTimeout;
   struct timeval *ptv = &tv;
   int received_bytes_count = 0;
