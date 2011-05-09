@@ -497,7 +497,7 @@ pn53x_write_register (nfc_device_t * pnd, const uint16_t ui16RegisterAddress, co
   } else {
     // Write-back cache area
     const int internal_address = ui16RegisterAddress - PN53X_CACHE_REGISTER_MIN_ADDRESS;
-    CHIP_DATA (pnd)->wb_data[internal_address] = (CHIP_DATA (pnd)->wb_data[internal_address] & CHIP_DATA (pnd)->wb_mask[internal_address]) | (ui8Value & ui8SymbolMask);
+    CHIP_DATA (pnd)->wb_data[internal_address] = (CHIP_DATA (pnd)->wb_data[internal_address] & CHIP_DATA (pnd)->wb_mask[internal_address] & (~ui8SymbolMask)) | (ui8Value & ui8SymbolMask);
     CHIP_DATA (pnd)->wb_mask[internal_address] = CHIP_DATA (pnd)->wb_mask[internal_address] | ui8SymbolMask;
     CHIP_DATA (pnd)->wb_trigged = true;
     DBG ("WriteBackRegister (%04x, %02x, %02x)", ui16RegisterAddress, CHIP_DATA (pnd)->wb_data[internal_address], CHIP_DATA (pnd)->wb_mask[internal_address]);
@@ -540,7 +540,7 @@ pn53x_writeback_register (nfc_device_t * pnd)
       if ((CHIP_DATA (pnd)->wb_mask[n]) && (CHIP_DATA (pnd)->wb_mask[n] != 0xff)) {
         CHIP_DATA (pnd)->wb_data[n] = ((CHIP_DATA (pnd)->wb_data[n] & CHIP_DATA (pnd)->wb_mask[n]) | (abtRes[i] & (~CHIP_DATA (pnd)->wb_mask[n])));
         if (CHIP_DATA (pnd)->wb_data[n] != abtRes[i]) {
-          // Requested value is different from readed one
+          // Requested value is different from read one
           CHIP_DATA (pnd)->wb_mask[n] = 0xff; // We can now apply whole data bits
         } else {
           CHIP_DATA (pnd)->wb_mask[n] = 0x00; // We already have the right value
@@ -549,7 +549,7 @@ pn53x_writeback_register (nfc_device_t * pnd)
       }
     }
   }
-  // Now, the writeback-cache only have masks with 0xff, we can start to WriteRegister
+  // Now, the writeback-cache only has masks with 0xff, we can start to WriteRegister
   szCmd = 1;
   abtCmd[0] = WriteRegister;
   for (size_t n = 0; n < PN53X_CACHE_REGISTER_SIZE; n++) {
@@ -2336,5 +2336,5 @@ pn53x_data_new (nfc_device_t * pnd, const struct pn53x_io* io)
 
   // WriteBack cache is clean
   CHIP_DATA (pnd)->wb_trigged = false;
-  memset (CHIP_DATA (pnd)->wb_mask, 0x00, PN53X_CACHE_REGISTER_MAX_ADDRESS-PN53X_CACHE_REGISTER_MIN_ADDRESS);
+  memset (CHIP_DATA (pnd)->wb_mask, 0x00, PN53X_CACHE_REGISTER_SIZE);
 }
