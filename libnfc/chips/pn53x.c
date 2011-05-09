@@ -668,7 +668,18 @@ pn53x_idle (nfc_device_t *pnd)
 {
   switch (CHIP_DATA (pnd)->operating_mode) {
     case TARGET:
-      return pn53x_InRelease (pnd, 0);
+      // InRelease used in target mode stops the target emulation and no more
+      // tag are seen from external initiator
+      if (!pn53x_InRelease (pnd, 0)) {
+        return false;
+      }
+      if (CHIP_DATA (pnd)->type == PN532) {
+        // Use PowerDown to go in "Low VBat" power mode
+        if (!pn53x_PowerDown (pnd)) {
+          return false;
+        }
+        CHIP_DATA (pnd)->power_mode = LOWVBAT;
+      }
     break;
     case INITIATOR:
       // Deselect all active communications
@@ -680,7 +691,7 @@ pn53x_idle (nfc_device_t *pnd)
         return false;
       }
       if (CHIP_DATA (pnd)->type == PN532) {
-        // Use InPowerDown to go in "Low VBat"
+        // Use PowerDown to go in "Low VBat" power mode
         if (!pn53x_PowerDown (pnd)) {
           return false;
         }
