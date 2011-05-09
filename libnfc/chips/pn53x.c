@@ -508,15 +508,15 @@ pn53x_write_register (nfc_device_t * pnd, const uint16_t ui16RegisterAddress, co
 bool
 pn53x_writeback_register (nfc_device_t * pnd)
 {
-  // TODO Check at each step (ReadRegister, WriteRegister) if we don't exceeded max supported frame lenght
+  // TODO Check at each step (ReadRegister, WriteRegister) if we didn't exceed max supported frame length
   uint8_t abtCmd[PN53x_EXTENDED_FRAME__DATA_MAX_LEN] = { ReadRegister };
   size_t szCmd = 1;
 
-  // First step, it look for registers which need to be readed before applying the requested mask
+  // First step, it looks for registers to be readed before applying the requested mask
   CHIP_DATA (pnd)->wb_trigged = false;
-  for (size_t n = 0; n < PN53X_CACHE_REGISTER_MAX_ADDRESS - PN53X_CACHE_REGISTER_MIN_ADDRESS; n++) {
+  for (size_t n = 0; n < PN53X_CACHE_REGISTER_SIZE; n++) {
     if ((CHIP_DATA (pnd)->wb_mask[n]) && (CHIP_DATA (pnd)->wb_mask[n] != 0xff)) {
-      // This register need to be readed: mask is present but does not cover full data width (ie. mask != 0xff)
+      // This register needs to be readed: mask is present but does not cover full data width (ie. mask != 0xff)
       const uint16_t pn53x_register_address = PN53X_CACHE_REGISTER_MIN_ADDRESS + n;
       abtCmd[szCmd++] = pn53x_register_address  >> 8;
       abtCmd[szCmd++] = pn53x_register_address & 0xff;
@@ -524,10 +524,10 @@ pn53x_writeback_register (nfc_device_t * pnd)
   }
 
   if (szCmd > 1) {
-    // It need to read some registers
+    // It needs to read some registers
     uint8_t abtRes[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
     size_t szRes = sizeof(abtRes);
-    // Transceive the previously constructed ReadRegister command
+    // It transceives the previously constructed ReadRegister command
     if (!pn53x_transceive (pnd, abtCmd, szCmd, abtRes, &szRes)) {
       return false;
     }
@@ -536,7 +536,7 @@ pn53x_writeback_register (nfc_device_t * pnd)
       // PN533 prepends its answer by a status byte
       i = 1;
     }
-    for (size_t n = 0; n < PN53X_CACHE_REGISTER_MAX_ADDRESS - PN53X_CACHE_REGISTER_MIN_ADDRESS; n++) {
+    for (size_t n = 0; n < PN53X_CACHE_REGISTER_SIZE; n++) {
       if ((CHIP_DATA (pnd)->wb_mask[n]) && (CHIP_DATA (pnd)->wb_mask[n] != 0xff)) {
         CHIP_DATA (pnd)->wb_data[n] = ((CHIP_DATA (pnd)->wb_data[n] & CHIP_DATA (pnd)->wb_mask[n]) | (abtRes[i] & (~CHIP_DATA (pnd)->wb_mask[n])));
         if (CHIP_DATA (pnd)->wb_data[n] != abtRes[i]) {
@@ -552,7 +552,7 @@ pn53x_writeback_register (nfc_device_t * pnd)
   // Now, the writeback-cache only have masks with 0xff, we can start to WriteRegister
   szCmd = 1;
   abtCmd[0] = WriteRegister;
-  for (size_t n = 0; n < PN53X_CACHE_REGISTER_MAX_ADDRESS - PN53X_CACHE_REGISTER_MIN_ADDRESS; n++) {
+  for (size_t n = 0; n < PN53X_CACHE_REGISTER_SIZE; n++) {
     if (CHIP_DATA (pnd)->wb_mask[n] == 0xff) {
       const uint16_t pn53x_register_address = PN53X_CACHE_REGISTER_MIN_ADDRESS + n;
       abtCmd[szCmd++] = pn53x_register_address  >> 8;

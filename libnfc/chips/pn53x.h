@@ -152,9 +152,9 @@ struct pn53x_io {
 };
 
 /* defines */
-#define PN53X_CACHE_REGISTER_MIN_ADDRESS PN53X_REG_CIU_Mode
-#define PN53X_CACHE_REGISTER_MAX_ADDRESS PN53X_REG_CIUColl
-
+#define PN53X_CACHE_REGISTER_MIN_ADDRESS 	PN53X_REG_CIU_Mode
+#define PN53X_CACHE_REGISTER_MAX_ADDRESS 	PN53X_REG_CIUColl
+#define PN53X_CACHE_REGISTER_SIZE 		((PN53X_CACHE_REGISTER_MAX_ADDRESS - PN53X_CACHE_REGISTER_MIN_ADDRESS) + 1)
 struct pn53x_data {
 /** Chip type (PN531, PN532 or PN533)*/
   pn53x_type type;
@@ -175,8 +175,8 @@ struct pn53x_data {
 /** Interframe timer correction */
   int16_t timer_correction;
 /** WriteBack cache */
-  uint8_t wb_data[PN53X_CACHE_REGISTER_MAX_ADDRESS-PN53X_CACHE_REGISTER_MIN_ADDRESS];
-  uint8_t wb_mask[PN53X_CACHE_REGISTER_MAX_ADDRESS-PN53X_CACHE_REGISTER_MIN_ADDRESS];
+  uint8_t wb_data[PN53X_CACHE_REGISTER_SIZE];
+  uint8_t wb_mask[PN53X_CACHE_REGISTER_SIZE];
   bool wb_trigged;
 };
 
