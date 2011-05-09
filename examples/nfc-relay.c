@@ -143,7 +143,7 @@ main (int argc, char *argv[])
     .nti = {
       .nai = {
         .abtAtqa = { 0x04, 0x00 },
-        .abtUid = { 0xde, 0xad, 0xbe, 0xef },
+        .abtUid = { 0x08, 0xad, 0xbe, 0xef },
         .btSak = 0x20,
         .szUidLen = 4,
         .szAtsLen = 0,
