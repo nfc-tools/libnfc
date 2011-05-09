@@ -72,7 +72,11 @@ const struct pn53x_io arygon_tama_io;
 
 struct arygon_data {
   serial_port port;
+#ifndef WIN32
   int     iAbortFds[2];
+#else
+  volatile bool abort_flag;
+#endif
 };
 
 static const byte_t arygon_error_none[] = "FF000000\x0d\x0a";
@@ -186,8 +190,12 @@ arygon_connect (const nfc_device_desc_t * pndd)
     return NULL;
   }
 
+#ifndef WIN32
   // pipe-based abort mecanism
   pipe (DRIVER_DATA (pnd)->iAbortFds);
+#else
+  DRIVER_DATA (pnd)->abort_flag = false;
+#endif
 
   char arygon_firmware_version[10];
   arygon_firmware (pnd, arygon_firmware_version);
@@ -206,9 +214,11 @@ arygon_disconnect (nfc_device_t * pnd)
   // Release UART port
   uart_close (DRIVER_DATA (pnd)->port);
 
+#ifndef WIN32
   // Release file descriptors used for abort mecanism
   close (DRIVER_DATA (pnd)->iAbortFds[0]);
   close (DRIVER_DATA (pnd)->iAbortFds[1]);
+#endif
 
   nfc_device_free (pnd);
 }
@@ -280,7 +290,7 @@ arygon_tama_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLe
 {
   byte_t  abtRxBuf[5];
   size_t len;
-  int abort_fd = 0;
+  void * abort_p = NULL;
 
   switch (CHIP_DATA (pnd)->ui8LastCommand) {
   case InAutoPoll:
@@ -288,15 +298,19 @@ arygon_tama_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLe
   case InJumpForDEP:
   case TgGetData:
   case TgInitAsTarget:
-    abort_fd = DRIVER_DATA (pnd)->iAbortFds[1];
+#ifndef WIN32
+    abort_p = &(DRIVER_DATA (pnd)->iAbortFds[1]);
+#else
+    abort_p = &(DRIVER_DATA (pnd)->abort_flag);
+#endif
     break;
   default:
     break;
   }
 
-  pnd->iLastError = uart_receive (DRIVER_DATA (pnd)->port, abtRxBuf, 5, abort_fd);
+  pnd->iLastError = uart_receive (DRIVER_DATA (pnd)->port, abtRxBuf, 5, abort_p);
 
-  if (abort_fd && (DEABORT == pnd->iLastError)) {
+  if (abort_p && (DEABORT == pnd->iLastError)) {
     arygon_abort (pnd);
 
     /* iLastError got reset by arygon_abort() */
@@ -456,8 +470,12 @@ bool
 arygon_abort_command (nfc_device_t * pnd)
 {
   if (pnd) {
+#ifndef WIN32
     close (DRIVER_DATA (pnd)->iAbortFds[0]);
     pipe (DRIVER_DATA (pnd)->iAbortFds);
+#else
+    DRIVER_DATA (pnd)->abort_flag = true;
+#endif
   }
   return true;
 }

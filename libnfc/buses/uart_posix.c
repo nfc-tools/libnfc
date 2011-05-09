@@ -224,8 +224,9 @@ static const struct timeval tvTimeout = {
  * @return 0 on success, otherwise driver error code
  */
 int
-uart_receive (serial_port sp, byte_t * pbtRx, const size_t szRx, int iAbortFd)
+uart_receive (serial_port sp, byte_t * pbtRx, const size_t szRx, void * abort_p)
 {
+  int iAbortFd = *((int*)abort_p);
   struct timeval tv = tvTimeout;
   struct timeval *ptv = &tv;
   int received_bytes_count = 0;

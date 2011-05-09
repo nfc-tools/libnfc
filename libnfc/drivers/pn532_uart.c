@@ -56,7 +56,11 @@ const struct pn53x_io pn532_uart_io;
 
 struct pn532_uart_data {
   serial_port port;
+#ifndef WIN32
   int     iAbortFds[2];
+#else
+  volatile bool abort_flag;
+#endif
 };
   
 #define DRIVER_DATA(pnd) ((struct pn532_uart_data*)(pnd->driver_data))
@@ -173,8 +177,12 @@ pn532_uart_connect (const nfc_device_desc_t * pndd)
     return NULL;
   }
 
+#ifndef WIN32
   // pipe-based abort mecanism
   pipe (DRIVER_DATA (pnd)->iAbortFds);
+#else
+  abort_flag = false;
+#endif
 
   pn53x_init(pnd);
   return pnd;
@@ -186,9 +194,11 @@ pn532_uart_disconnect (nfc_device_t * pnd)
   // Release UART port
   uart_close (DRIVER_DATA(pnd)->port);
 
+#ifndef WIN32
   // Release file descriptors used for abort mecanism
   close (DRIVER_DATA (pnd)->iAbortFds[0]);
   close (DRIVER_DATA (pnd)->iAbortFds[1]);
+#endif
 
   nfc_device_free (pnd);
 }
@@ -267,7 +277,7 @@ pn532_uart_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen
 {
   byte_t  abtRxBuf[5];
   size_t len;
-  int abort_fd = 0;
+  void * abort_p = NULL;
 
   switch (CHIP_DATA (pnd)->ui8LastCommand) {
   case InAutoPoll:
@@ -275,15 +285,19 @@ pn532_uart_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen
   case InJumpForDEP:
   case TgGetData:
   case TgInitAsTarget:
-    abort_fd = DRIVER_DATA (pnd)->iAbortFds[1];
+#ifndef WIN32
+    abort_p = &(DRIVER_DATA (pnd)->iAbortFds[1]);
+#else
+    abort_p = &(DRIVER_DATA (pnd)->abort_flag);
+#endif
     break;
   default:
     break;
   }
 
-  pnd->iLastError = uart_receive (DRIVER_DATA(pnd)->port, abtRxBuf, 5, abort_fd);
+  pnd->iLastError = uart_receive (DRIVER_DATA(pnd)->port, abtRxBuf, 5, abort_p);
 
-  if (abort_fd && (DEABORT == pnd->iLastError)) {
+  if (abort_p && (DEABORT == pnd->iLastError)) {
     pn532_uart_ack (pnd);
     return -1;
   }
@@ -407,8 +421,12 @@ bool
 pn532_uart_abort_command (nfc_device_t * pnd)
 {
   if (pnd) {
+#ifndef WIN32
     close (DRIVER_DATA (pnd)->iAbortFds[0]);
     pipe (DRIVER_DATA (pnd)->iAbortFds);
+#else
+    DRIVER_DATA (pnd)->abort_flag = true;
+#endif
   }
   return true;
 }

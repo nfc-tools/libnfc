@@ -142,13 +142,16 @@ uart_get_speed (const serial_port sp)
 }
 
 int
-uart_receive (serial_port sp, byte_t * pbtRx, const size_t szRx, int iAbortFd)
+uart_receive (serial_port sp, byte_t * pbtRx, const size_t szRx, void * abort_p)
 {
-  // TODO: Implement abort mecanism (using iAbortFd)
+  // TODO Test me with abort_p
+  volatile bool * abort_flag_p = (volatile bool *)abort_p;
   DWORD dwRxLen = szRx;
-  if (!ReadFile (((serial_port_windows *) sp)->hPort, pbtRx, dwRxLen, &dwRxLen, NULL)) {
-    return DEIO;
-  }
+  do {
+    if (!ReadFile (((serial_port_windows *) sp)->hPort, pbtRx, dwRxLen, &dwRxLen, NULL)) {
+      return DEIO;
+    }
+  } while ( (dwRxLen != (DWORD) szRx) && ((abort_flag_p) && !(*abort_flag_p)) );
   return (dwRxLen == (DWORD) szRx) ? 0 : DEIO;
 }
 
