@@ -230,7 +230,6 @@ arygon_tama_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szDat
 {
   byte_t abtFrame[ARYGON_TX_BUFFER_LEN] = { DEV_ARYGON_PROTOCOL_TAMA, 0x00, 0x00, 0xff };     // Every packet must start with "0x32 0x00 0x00 0xff"
 
-  CHIP_DATA (pnd)->ui8LastCommand = pbtData[0];
   size_t szFrame = 0;
   if (szData > PN53x_NORMAL_FRAME__DATA_MAX_LEN) {
     // ARYGON Reader with PN532 equipped does not support extended frame (bug in ARYGON firmware?)

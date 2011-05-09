@@ -241,7 +241,6 @@ pn532_uart_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szData
   };
 
   byte_t  abtFrame[PN532_BUFFER_LEN] = { 0x00, 0x00, 0xff };       // Every packet must start with "00 00 ff"
-  CHIP_DATA (pnd)->ui8LastCommand = pbtData[0];
   size_t szFrame = 0;
 
   if (!pn53x_build_frame (abtFrame, &szFrame, pbtData, szData)) {

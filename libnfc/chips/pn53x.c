@@ -119,12 +119,15 @@ pn53x_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, b
   }
 
   // Call the send/receice callback functions of the current driver
-  if (!CHIP_DATA(pnd)->io->send (pnd, pbtTx, szTx))
+  if (!CHIP_DATA (pnd)->io->send (pnd, pbtTx, szTx))
     return false;
 
+  // Command is sent, we store the command
+  CHIP_DATA (pnd)->ui8LastCommand = pbtTx[0];
+
   // Handle power mode for PN532
-  if ((CHIP_DATA(pnd)->type == PN532) && (TgInitAsTarget == pbtTx[0])) { // PN532 automatically goes into PowerDown mode when TgInitAsTarget command will be sent
-    CHIP_DATA(pnd)->power_mode = POWERDOWN;
+  if ((CHIP_DATA (pnd)->type == PN532) && (TgInitAsTarget == pbtTx[0])) { // PN532 automatically goes into PowerDown mode when TgInitAsTarget command will be sent
+    CHIP_DATA (pnd)->power_mode = POWERDOWN;
   }
 
   int res = CHIP_DATA(pnd)->io->receive (pnd, pbtRx, *pszRx);
@@ -443,7 +446,6 @@ bool
 pn53x_read_register (nfc_device_t * pnd, uint16_t ui16Reg, uint8_t * ui8Value)
 {
   byte_t  abtCmd[] = { ReadRegister, ui16Reg >> 8, ui16Reg & 0xff };
-
   byte_t  abtRegValue[2];
   size_t  szRegValue = sizeof (abtRegValue);
 
@@ -475,11 +477,14 @@ pn53x_write_register (nfc_device_t * pnd, const uint16_t ui16Reg, const uint8_t 
     if (!pn53x_read_register (pnd, ui16Reg, &ui8Current))
       return false;
     abtCmd[3] = ((ui8Value & ui8SymbolMask) | (ui8Current & (~ui8SymbolMask)));
-    return (abtCmd[3] != ui8Current) ? pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, NULL) : true;
+    if (abtCmd[3] != ui8Current) {
+      return pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, NULL);
+    }
   } else {
     abtCmd[3] = ui8Value;
     return pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, NULL);
   }
+  return true;
 }
 
 bool
