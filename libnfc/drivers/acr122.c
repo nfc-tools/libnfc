@@ -427,5 +427,6 @@ const struct nfc_driver_t acr122_driver = {
   .configure  = pn53x_configure,
 
   .abort_command  = NULL,
+  .idle  = NULL,
 };
 

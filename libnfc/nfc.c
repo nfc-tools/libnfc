@@ -138,10 +138,8 @@ void
 nfc_disconnect (nfc_device_t * pnd)
 {
   if (pnd) {
-    // Release and deselect all active communications
-    nfc_initiator_deselect_target (pnd);
-    // Disable RF field to avoid heating
-    nfc_configure (pnd, NDO_ACTIVATE_FIELD, false);
+    // Go in idle mode
+    nfc_idle (pnd);
     // Disconnect, clean up and release the device 
     pnd->driver->disconnect (pnd);
   }
@@ -643,6 +641,22 @@ nfc_target_init (nfc_device_t * pnd, nfc_target_t * pnt, byte_t * pbtRx, size_t 
     return false;
 
   HAL (target_init, pnd, pnt, pbtRx, pszRx);
+}
+
+/**
+ * @brief Turn NFC device in idle mode
+ * @return Returns \c true if action was successfully performed; otherwise returns \c false.
+ *
+ * @param pnd \a nfc_device_t struct pointer that represent currently used device
+ *
+ * This function switch the device in idle mode.
+ * In initiator mode, the RF field is turned off and the device is set to low power mode (if avaible);
+ * In target mode, the emulation is stoped (no target available from external initiator) and the device is set to low power mode (if avaible).
+ */
+bool
+nfc_idle (nfc_device_t * pnd)
+{
+  HAL (idle, pnd);
 }
 
 /**

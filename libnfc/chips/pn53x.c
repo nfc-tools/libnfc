@@ -67,6 +67,9 @@ pn53x_init(nfc_device_t * pnd)
     return false;
   }
 
+  // PN53x starts in initiator mode
+  CHIP_DATA (pnd)->operating_mode = INITIATOR;
+
   // Set current target to NULL
   CHIP_DATA (pnd)->current_target = NULL;
 
@@ -661,6 +664,43 @@ pn53x_configure (nfc_device_t * pnd, const nfc_device_option_t ndo, const bool b
 }
 
 bool
+pn53x_idle (nfc_device_t *pnd)
+{
+  switch (CHIP_DATA (pnd)->operating_mode) {
+    case TARGET:
+      return pn53x_InRelease (pnd, 0);
+    break;
+    case INITIATOR:
+      // Deselect all active communications
+      if (!pn53x_InDeselect (pnd, 0)) {
+        return false;
+      }
+      // Disable RF field to avoid heating
+      if (!nfc_configure (pnd, NDO_ACTIVATE_FIELD, false)) {
+        return false;
+      }
+      if (CHIP_DATA (pnd)->type == PN532) {
+        // Use InPowerDown to go in "Low VBat"
+        if (!pn53x_PowerDown (pnd)) {
+          return false;
+        }
+        CHIP_DATA (pnd)->power_mode = LOWVBAT;
+      } else {
+        // Use InRelease to go in "Standby mode"
+        if (!pn53x_InRelease (pnd, 0)) {
+          return false;
+        }
+      }
+    break;
+    default:
+      // Nothing to do
+    break;
+  };
+  CHIP_DATA (pnd)->operating_mode = IDLE;
+  return true;
+}
+
+bool
 pn53x_check_communication (nfc_device_t *pnd)
 {
   const byte_t abtCmd[] = { Diagnose, 0x00, 'l', 'i', 'b', 'n', 'f', 'c' };
@@ -682,6 +722,8 @@ pn53x_initiator_init (nfc_device_t * pnd)
   // Configure the PN53X to be an Initiator or Reader/Writer
   if (!pn53x_write_register (pnd, REG_CIU_CONTROL, SYMBOL_INITIATOR, 0x10))
     return false;
+
+  CHIP_DATA (pnd)->operating_mode = INITIATOR;
   return true;
 }
 
@@ -1137,7 +1179,11 @@ bool
 pn53x_target_init (nfc_device_t * pnd, nfc_target_t * pnt, byte_t * pbtRx, size_t * pszRx)
 {
   pn53x_reset_settings(pnd);
+
+  CHIP_DATA (pnd)->operating_mode = TARGET;
+
   pn53x_target_mode_t ptm = PTM_NORMAL;
+
   switch (pnt->nm.nmt) {
     case NMT_ISO14443A:
       ptm = PTM_PASSIVE_ONLY;
@@ -1600,6 +1646,13 @@ pn53x_SAMConfiguration (nfc_device_t * pnd, const uint8_t ui8Mode)
       pnd->iLastError = DENOTSUP;
       return false;
   }
+  return (pn53x_transceive (pnd, abtCmd, szCmd, NULL, NULL));
+}
+
+bool
+pn53x_PowerDown (nfc_device_t * pnd)
+{
+  byte_t  abtCmd[] = { PowerDown, 0xf0 };
   return (pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, NULL));
 }
 

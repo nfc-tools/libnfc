@@ -29,6 +29,7 @@
 
 #  include <nfc/nfc-types.h>
 
+// TODO Remove double register address defines
 // Registers and symbols masks used to covers parts within a register
 #  define REG_CIU_TX_MODE           0x6302
 #  define SYMBOL_TX_CRC_ENABLE      0x80
@@ -144,15 +145,27 @@ typedef enum {
   LOWVBAT	// Only on PN532, need to be wake up to process commands with a long preamble and SAMConfiguration command
 } pn53x_power_mode;
 
+typedef enum {
+  IDLE,
+  INITIATOR,
+  TARGET,
+} pn53x_operating_mode;
+
 struct pn53x_io {
   bool (*send)(nfc_device_t * pnd, const byte_t * pbtData, const size_t szData);
   int (*receive)(nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen);
 };
 
 struct pn53x_data {
+/** Chip type (PN531, PN532 or PN533)*/
   pn53x_type type;
+/** Current power mode */
   pn53x_power_mode power_mode;
+/** Current operating mode */
+  pn53x_operating_mode operating_mode;
+/** Current emulated target */
   nfc_target_t* current_target;
+/** PN53x I/O functions stored in struct */
   const struct pn53x_io * io;
 /** Register cache for REG_CIU_BIT_FRAMING, SYMBOL_TX_LAST_BITS: The last TX bits setting, we need to reset this if it does not apply anymore */
   uint8_t ui8TxBits;
@@ -166,7 +179,6 @@ struct pn53x_data {
 
 #define CHIP_DATA(pnd) ((struct pn53x_data*)(pnd->chip_data))
 
-/* PN53x specific types */
 /**
  * @enum pn53x_modulation_t
  * @brief NFC modulation
@@ -265,6 +277,7 @@ bool    pn53x_write_register (nfc_device_t * pnd, uint16_t ui16Reg, uint8_t ui8S
 bool    pn53x_get_firmware_version (nfc_device_t * pnd, char abtFirmwareText[18]);
 bool    pn53x_configure (nfc_device_t * pnd, const nfc_device_option_t ndo, const bool bEnable);
 bool    pn53x_check_communication (nfc_device_t *pnd);
+bool    pn53x_idle (nfc_device_t * pnd);
 
 // NFC device as Initiator functions
 bool    pn53x_initiator_init (nfc_device_t * pnd);
@@ -305,6 +318,7 @@ const char *pn53x_strerror (const nfc_device_t * pnd);
 // C wrappers for PN53x commands
 bool    pn53x_SetParameters (nfc_device_t * pnd, const uint8_t ui8Value);
 bool    pn53x_SAMConfiguration (nfc_device_t * pnd, const uint8_t ui8Mode);
+bool    pn53x_PowerDown (nfc_device_t * pnd);
 bool    pn53x_InListPassiveTarget (nfc_device_t * pnd, const pn53x_modulation_t pmInitModulation,
                                    const byte_t szMaxTargets, const byte_t * pbtInitiatorData,
                                    const size_t szInitiatorDataLen, byte_t * pbtTargetsData, size_t * pszTargetsData);

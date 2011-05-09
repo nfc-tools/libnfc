@@ -494,5 +494,7 @@ const struct nfc_driver_t arygon_driver = {
   .configure  = pn53x_configure,
 
   .abort_command  = arygon_abort_command,
+  // FIXME Implement me
+  .idle  = NULL,
 };
 

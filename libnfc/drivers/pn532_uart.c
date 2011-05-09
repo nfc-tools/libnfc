@@ -444,5 +444,6 @@ const struct nfc_driver_t pn532_uart_driver = {
   .configure  = pn53x_configure,
 
   .abort_command  = pn532_uart_abort_command,
+  .idle  = pn53x_idle,
 };
 
