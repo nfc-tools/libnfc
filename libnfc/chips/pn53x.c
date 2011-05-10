@@ -509,8 +509,8 @@ bool
 pn53x_writeback_register (nfc_device_t * pnd)
 {
   // TODO Check at each step (ReadRegister, WriteRegister) if we didn't exceed max supported frame length
-  uint8_t abtCmd[PN53x_EXTENDED_FRAME__DATA_MAX_LEN] = { ReadRegister };
-  size_t szCmd = 1;
+  BUFFER_INIT (abtReadRegisterCmd, PN53x_EXTENDED_FRAME__DATA_MAX_LEN);
+  BUFFER_APPEND (abtReadRegisterCmd, ReadRegister);
 
   // First step, it looks for registers to be readed before applying the requested mask
   CHIP_DATA (pnd)->wb_trigged = false;
@@ -518,17 +518,17 @@ pn53x_writeback_register (nfc_device_t * pnd)
     if ((CHIP_DATA (pnd)->wb_mask[n]) && (CHIP_DATA (pnd)->wb_mask[n] != 0xff)) {
       // This register needs to be readed: mask is present but does not cover full data width (ie. mask != 0xff)
       const uint16_t pn53x_register_address = PN53X_CACHE_REGISTER_MIN_ADDRESS + n;
-      abtCmd[szCmd++] = pn53x_register_address  >> 8;
-      abtCmd[szCmd++] = pn53x_register_address & 0xff;
+      BUFFER_APPEND (abtReadRegisterCmd, pn53x_register_address  >> 8);
+      BUFFER_APPEND (abtReadRegisterCmd, pn53x_register_address & 0xff);
     }
   }
 
-  if (szCmd > 1) {
+  if (BUFFER_SIZE (abtReadRegisterCmd) > 1) {
     // It needs to read some registers
     uint8_t abtRes[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
     size_t szRes = sizeof(abtRes);
     // It transceives the previously constructed ReadRegister command
-    if (!pn53x_transceive (pnd, abtCmd, szCmd, abtRes, &szRes)) {
+    if (!pn53x_transceive (pnd, abtReadRegisterCmd, BUFFER_SIZE (abtReadRegisterCmd), abtRes, &szRes)) {
       return false;
     }
     size_t i = 0;
@@ -550,23 +550,23 @@ pn53x_writeback_register (nfc_device_t * pnd)
     }
   }
   // Now, the writeback-cache only has masks with 0xff, we can start to WriteRegister
-  szCmd = 1;
-  abtCmd[0] = WriteRegister;
+  BUFFER_INIT (abtWriteRegisterCmd, PN53x_EXTENDED_FRAME__DATA_MAX_LEN);
+  BUFFER_APPEND (abtWriteRegisterCmd, WriteRegister);
   for (size_t n = 0; n < PN53X_CACHE_REGISTER_SIZE; n++) {
     if (CHIP_DATA (pnd)->wb_mask[n] == 0xff) {
       const uint16_t pn53x_register_address = PN53X_CACHE_REGISTER_MIN_ADDRESS + n;
-      abtCmd[szCmd++] = pn53x_register_address  >> 8;
-      abtCmd[szCmd++] = pn53x_register_address & 0xff;
-      abtCmd[szCmd++] = CHIP_DATA (pnd)->wb_data[n];
+      BUFFER_APPEND (abtWriteRegisterCmd, pn53x_register_address  >> 8);
+      BUFFER_APPEND (abtWriteRegisterCmd, pn53x_register_address & 0xff);
+      BUFFER_APPEND (abtWriteRegisterCmd, CHIP_DATA (pnd)->wb_data[n]);
       DBG ("WriteBackRegister will write (%04x, %02x)", pn53x_register_address, CHIP_DATA (pnd)->wb_data[n]);
       // This register is handled, we reset the mask to prevent
       CHIP_DATA (pnd)->wb_mask[n] = 0x00;
     }
   }
 
-  if (szCmd > 1) {
+  if (BUFFER_SIZE (abtWriteRegisterCmd) > 1) {
     // We need to write some registers
-    if (!pn53x_transceive (pnd, abtCmd, szCmd, NULL, NULL)) {
+    if (!pn53x_transceive (pnd, abtWriteRegisterCmd, BUFFER_SIZE (abtWriteRegisterCmd), NULL, NULL)) {
       return false;
     }
   }

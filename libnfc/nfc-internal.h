@@ -100,6 +100,87 @@
     return false; \
   }
 
+/*
+ * Buffer management macros.
+ * 
+ * The following macros ease setting-up and using buffers:
+ * BUFFER_INIT (data, 5);      // data -> [ xx, xx, xx, xx, xx ]
+ * BUFFER_SIZE (data);         // size -> 0
+ * BUFFER_APPEND (data, 0x12); // data -> [ 12, xx, xx, xx, xx ]
+ * BUFFER_SIZE (data);         // size -> 1
+ * uint16_t x = 0x3456;        // We suppose we are little endian
+ * BUFFER_APPEND_BYTES (data, x, 2);
+ *                             // data -> [ 12, 56, 34, xx, xx ]
+ * BUFFER_SIZE (data);         // size -> 3
+ * BUFFER_APPEND_LE (data, x, 2, sizeof (x));
+ *                             // data -> [ 12, 56, 34, 34, 56 ]
+ * BUFFER_SIZE (data);         // size -> 5
+ */
+
+/*
+ * Initialise a buffer named buffer_name of size bytes.
+ */
+#define BUFFER_INIT(buffer_name, size) \
+    uint8_t buffer_name[size]; \
+    size_t __##buffer_name##_n = 0
+
+/*
+ * Create a wrapper for an existing buffer.
+ * BEWARE!  It eats children!
+ */
+#define BUFFER_ALIAS(buffer_name, origin) \
+    uint8_t *buffer_name = (void *)origin; \
+    size_t __##buffer_name##_n = 0;
+
+#define BUFFER_SIZE(buffer_name) (__##buffer_name##_n)
+
+#define BUFFER_CLEAR(buffer_name) (__##buffer_name##_n = 0)
+/*
+ * Append one byte of data to the buffer buffer_name.
+ */
+#define BUFFER_APPEND(buffer_name, data) \
+    do { \
+	buffer_name[__##buffer_name##_n++] = data; \
+    } while (0)
+
+/*
+ * Append size bytes of data to the buffer buffer_name.
+ */
+#define BUFFER_APPEND_BYTES(buffer_name, data, size) \
+    do { \
+	size_t __n = 0; \
+	while (__n < size) { \
+            buffer_name[__##buffer_name##_n++] = ((uint8_t *)data)[__n++]; \
+        } \
+    } while (0)
+
+/*
+ * Append data_size bytes of data at the end of the buffer.  Since data is
+ * copied as a little endian value, the storage size of the value has to be
+ * passed as the field_size parameter.
+ *
+ * Example: to copy 24 bits of data from a 32 bits value:
+ * BUFFER_APPEND_LE (buffer, data, 3, 4);
+ */
+
+#if _BYTE_ORDER != _LITTLE_ENDIAN
+#define BUFFER_APPEND_LE(buffer, data, data_size, field_size) \
+    do { \
+        size_t __data_size = data_size; \
+        size_t __field_size = field_size; \
+        while (__field_size--, __data_size--) { \
+            buffer[__##buffer##_n++] = ((uint8_t *)&data)[__field_size]; \
+        } \
+    } while (0)
+#else
+#define BUFFER_APPEND_LE(buffer, data, data_size, field_size) \
+    do { \
+        memcpy (buffer + __##buffer##_n, &data, data_size); \
+        __##buffer##_n += data_size; \
+    } while (0)
+#endif
+
+
 struct nfc_driver_t {
   const char *name;
   bool (*probe)(nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * pszDeviceFound);
