@@ -74,18 +74,8 @@ const struct nfc_driver_t *nfc_drivers[] = {
  * When it has successfully claimed a NFC device, memory is allocated to save the device information. It will return a pointer to a \a nfc_device_t struct.
  * This pointer should be supplied by every next functions of libnfc that should perform an action with this device.
  *
- * @note During this function, the device will be configured with default initiator options, cf nfc_initiator_init:
- * - Crc is handled by the device (NDO_HANDLE_CRC = true)
- * - Parity is handled the device (NDO_HANDLE_PARITY = true)
- * - Cryto1 cipher is disabled (NDO_ACTIVATE_CRYPTO1 = false)
- * - Easy framing is enabled (NDO_EASY_FRAMING = true)
- * - Auto-switching in ISO14443-4 mode is enabled (NDO_AUTO_ISO14443_4 = true)
- * - Invalid frames are not accepted (NDO_ACCEPT_INVALID_FRAMES = false)
- * - Multiple frames are not accepted (NDO_ACCEPT_MULTIPLE_FRAMES = false)
- * - 14443-A mode is activated (NDO_FORCE_ISO14443_A = true)
- * - speed is set to 106 kbps (NDO_FORCE_SPEED_106 = true)
- * - Let the device try forever to find a target (NDO_INFINITE_SELECT = true)
- * - RF field is shortly dropped (if it was enabled) then activated again
+ * @note Depending on the desired operation mode, the device needs to be configured
+ * by using nfc_initiator_init() or nfc_target_init(), optionally followed by manual tuning of the parameters if the default parameters are not suiting your goals.
  */
 nfc_device_t *
 nfc_connect (nfc_device_desc_t * pndd)
@@ -113,11 +103,6 @@ nfc_connect (nfc_device_desc_t * pndd)
     // Test if the connection was successful
     if (pnd != NULL) {
       DBG ("[%s] has been claimed.", pnd->acName);
-
-      // Set default configuration options
-      if (!nfc_initiator_init(pnd))
-        return NULL;
-
       return pnd;
     } else {
       DBG ("No device found using driver: %s", ndr->name);
@@ -230,12 +215,32 @@ nfc_configure (nfc_device_t * pnd, const nfc_device_option_t ndo, const bool bEn
  * The NFC device is configured to function as RFID reader.
  * After initialization it can be used to communicate to passive RFID tags and active NFC devices.
  * The reader will act as initiator to communicate peer 2 peer (NFCIP) to other active NFC devices.
+ * - Crc is handled by the device (NDO_HANDLE_CRC = true)
+ * - Parity is handled the device (NDO_HANDLE_PARITY = true)
+ * - Cryto1 cipher is disabled (NDO_ACTIVATE_CRYPTO1 = false)
+ * - Easy framing is enabled (NDO_EASY_FRAMING = true)
+ * - Auto-switching in ISO14443-4 mode is enabled (NDO_AUTO_ISO14443_4 = true)
+ * - Invalid frames are not accepted (NDO_ACCEPT_INVALID_FRAMES = false)
+ * - Multiple frames are not accepted (NDO_ACCEPT_MULTIPLE_FRAMES = false)
+ * - 14443-A mode is activated (NDO_FORCE_ISO14443_A = true)
+ * - speed is set to 106 kbps (NDO_FORCE_SPEED_106 = true)
+ * - Let the device try forever to find a target (NDO_INFINITE_SELECT = true)
+ * - RF field is shortly dropped (if it was enabled) then activated again
  */
 bool
 nfc_initiator_init (nfc_device_t * pnd)
 {
   // Drop the field for a while
   if (!nfc_configure (pnd, NDO_ACTIVATE_FIELD, false))
+    return false;
+  // Enable field so more power consuming cards can power themselves up
+  if (!nfc_configure (pnd, NDO_ACTIVATE_FIELD, true))
+    return false;
+  // Let the device try forever to find a target/tag
+  if (!nfc_configure (pnd, NDO_INFINITE_SELECT, true))
+    return false;
+  // Activate auto ISO14443-4 switching by default
+  if (!nfc_configure (pnd, NDO_AUTO_ISO14443_4, true))
     return false;
   // Force 14443-A mode
   if (!nfc_configure (pnd, NDO_FORCE_ISO14443_A, true))
@@ -257,17 +262,8 @@ nfc_initiator_init (nfc_device_t * pnd)
   // Activate "easy framing" feature by default
   if (!nfc_configure (pnd, NDO_EASY_FRAMING, true))
     return false;
-  // Activate auto ISO14443-4 switching by default
-  if (!nfc_configure (pnd, NDO_AUTO_ISO14443_4, true))
-    return false;
   // Deactivate the CRYPTO1 cipher, it may could cause problems when still active
   if (!nfc_configure (pnd, NDO_ACTIVATE_CRYPTO1, false))
-    return false;
-  // Let the device try forever to find a target/tag
-  if (!nfc_configure (pnd, NDO_INFINITE_SELECT, true))
-    return false;
-  // Enable field so more power consuming cards can power themselves up
-  if (!nfc_configure (pnd, NDO_ACTIVATE_FIELD, true))
     return false;
 
   HAL (initiator_init, pnd);
@@ -608,8 +604,15 @@ nfc_initiator_transceive_bits_timed (nfc_device_t * pnd, const byte_t * pbtTx, c
  * @param[out] pbtRx Rx buffer pointer
  * @param[out] pszRx received bytes count
  *
- * This function initialize NFC device in \e target mode in order to emulate a
+ * This function initializes NFC device in \e target mode in order to emulate a
  * tag using the specified \a nfc_target_mode_t.
+ * - Crc is handled by the device (NDO_HANDLE_CRC = true)
+ * - Parity is handled the device (NDO_HANDLE_PARITY = true)
+ * - Cryto1 cipher is disabled (NDO_ACTIVATE_CRYPTO1 = false)
+ * - Easy framing is disabled (NDO_EASY_FRAMING = false)
+ * - Invalid frames are not accepted (NDO_ACCEPT_INVALID_FRAMES = false)
+ * - Multiple frames are not accepted (NDO_ACCEPT_MULTIPLE_FRAMES = false)
+ * - RF field is dropped
  *
  * @warning Be aware that this function will wait (hang) until a command is
  * received that is not part of the anti-collision. The RATS command for

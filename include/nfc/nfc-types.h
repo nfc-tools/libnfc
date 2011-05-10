@@ -49,11 +49,12 @@ typedef struct {
   char    acName[DEVICE_NAME_LENGTH];
 /** Is the crc automaticly added, checked and removed from the frames */
   bool    bCrc;
-/** Does the PN53x chip handles parity bits, all parities are handled as data */
+/** Does the chip handle parity bits, all parities are handled as data */
   bool    bPar;
-/** Should the PN53x chip handle frames encapsulation and chaining */
+/** Should the chip handle frames encapsulation and chaining */
   bool    bEasyFraming;
-/** Should the PN53x chip switch automatically in ISO14443-4 when ISO14443 */
+/** Should the chip switch automatically activate ISO14443-4 when
+    selecting tags supporting it? */
   bool    bAutoIso14443_4;
 /** Supported modulation encoded in a byte */
   byte_t  btSupportByte;

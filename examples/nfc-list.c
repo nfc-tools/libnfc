@@ -127,11 +127,11 @@ main (int argc, const char *argv[])
 
     printf ("Connected to NFC device: %s\n", pnd->acName);
 
+    nfc_modulation_t nm;
+
+    nm.nmt = NMT_ISO14443A;
+    nm.nbr = NBR_106;
     // List ISO14443A targets
-    nfc_modulation_t nm = {
-      .nmt = NMT_ISO14443A,
-      .nbr = NBR_106,
-    };
     if (nfc_initiator_list_passive_targets (pnd, nm, ant, MAX_TARGET_COUNT, &szTargetFound)) {
       size_t  n;
       if (verbose || (szTargetFound > 0)) {

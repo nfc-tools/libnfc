@@ -69,10 +69,10 @@ pn53x_init(nfc_device_t * pnd)
     return false;
   }
 
-  // CRC handling is enabled by default
-  pnd->bCrc = true;
-  // Parity handling is enabled by default
-  pnd->bPar = true;
+  // CRC handling should be enabled by default as declared in nfc_device_new
+  // which is the case by default for pn53x, so nothing to do here
+  // Parity handling should be enabled by default as declared in nfc_device_new
+  // which is the case by default for pn53x, so nothing to do here
 
   // We can't read these parameters, so we set a default config by using the SetParameters wrapper
   // Note: pn53x_SetParameters() will save the sent value in pnd->ui8Parameters cache
@@ -512,11 +512,11 @@ pn53x_writeback_register (nfc_device_t * pnd)
   BUFFER_INIT (abtReadRegisterCmd, PN53x_EXTENDED_FRAME__DATA_MAX_LEN);
   BUFFER_APPEND (abtReadRegisterCmd, ReadRegister);
 
-  // First step, it looks for registers to be readed before applying the requested mask
+  // First step, it looks for registers to be read before applying the requested mask
   CHIP_DATA (pnd)->wb_trigged = false;
   for (size_t n = 0; n < PN53X_CACHE_REGISTER_SIZE; n++) {
     if ((CHIP_DATA (pnd)->wb_mask[n]) && (CHIP_DATA (pnd)->wb_mask[n] != 0xff)) {
-      // This register needs to be readed: mask is present but does not cover full data width (ie. mask != 0xff)
+      // This register needs to be read: mask is present but does not cover full data width (ie. mask != 0xff)
       const uint16_t pn53x_register_address = PN53X_CACHE_REGISTER_MIN_ADDRESS + n;
       BUFFER_APPEND (abtReadRegisterCmd, pn53x_register_address  >> 8);
       BUFFER_APPEND (abtReadRegisterCmd, pn53x_register_address & 0xff);
@@ -620,10 +620,13 @@ bool
 pn53x_configure (nfc_device_t * pnd, const nfc_device_option_t ndo, const bool bEnable)
 {
   byte_t  btValue;
-
   switch (ndo) {
     case NDO_HANDLE_CRC:
       // Enable or disable automatic receiving/sending of CRC bytes
+      if (bEnable == pnd->bCrc) {
+        // Nothing to do
+        return true;
+      }
       // TX and RX are both represented by the symbol 0x80
       btValue = (bEnable) ? 0x80 : 0x00;
       if (!pn53x_write_register (pnd, PN53X_REG_CIU_TxMode, SYMBOL_TX_CRC_ENABLE, btValue))
@@ -635,6 +638,9 @@ pn53x_configure (nfc_device_t * pnd, const nfc_device_option_t ndo, const bool b
 
     case NDO_HANDLE_PARITY:
       // Handle parity bit by PN53X chip or parse it as data bit
+      if (bEnable == pnd->bPar)
+        // Nothing to do
+        return true;
       btValue = (bEnable) ? 0x00 : SYMBOL_PARITY_DISABLE;
       if (!pn53x_write_register (pnd, PN53X_REG_CIU_ManualRCV, SYMBOL_PARITY_DISABLE, btValue))
         return false;
@@ -691,7 +697,9 @@ pn53x_configure (nfc_device_t * pnd, const nfc_device_option_t ndo, const bool b
       break;
 
     case NDO_AUTO_ISO14443_4:
-      // TODO Cache activated/disactivated options
+      if (bEnable == pnd->bAutoIso14443_4)
+        // Nothing to do
+        return true;
       pnd->bAutoIso14443_4 = bEnable;
       return pn53x_set_parameters (pnd, PARAM_AUTO_RATS, bEnable);
       break;
