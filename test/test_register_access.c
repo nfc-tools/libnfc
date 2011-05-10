@@ -25,20 +25,20 @@ test_register_endianness (void)
     uint8_t value;
 
     /* Set a 0xAA test value in writable register memory to test register access */
-    res = pn53x_write_register (device, REG_CIU_TX_MODE, 0xFF, 0xAA);
+    res = pn53x_write_register (device, PN53X_REG_CIU_TxMode, 0xFF, 0xAA);
     cut_assert_true (res, cut_message ("write register value to 0xAA"));
 
     /* Get test value from register memory */
-    res = pn53x_read_register (device, REG_CIU_TX_MODE, &value);
+    res = pn53x_read_register (device, PN53X_REG_CIU_TxMode, &value);
     cut_assert_true (res, cut_message ("read register value"));
     cut_assert_equal_uint (0xAA, value, cut_message ("check register value"));
 
     /* Set a 0x55 test value in writable register memory to test register access */
-    res = pn53x_write_register (device, REG_CIU_TX_MODE, 0xFF, 0x55);
+    res = pn53x_write_register (device, PN53X_REG_CIU_TxMode, 0xFF, 0x55);
     cut_assert_true (res, cut_message ("write register value to 0x55"));
 
     /* Get test value from register memory */
-    res = pn53x_read_register (device, REG_CIU_TX_MODE, &value);
+    res = pn53x_read_register (device, PN53X_REG_CIU_TxMode, &value);
     cut_assert_true (res, cut_message ("read register value"));
     cut_assert_equal_uint (0x55, value, cut_message ("check register value"));
 

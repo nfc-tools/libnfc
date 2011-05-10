@@ -95,7 +95,7 @@ pn53x_reset_settings(nfc_device_t * pnd)
 {
   // Reset the ending transmission bits register, it is unknown what the last tranmission used there
   CHIP_DATA (pnd)->ui8TxBits = 0;
-  if (!pn53x_write_register (pnd, REG_CIU_BIT_FRAMING, SYMBOL_TX_LAST_BITS, 0x00)) {
+  if (!pn53x_write_register (pnd, PN53X_REG_CIU_BitFraming, SYMBOL_TX_LAST_BITS, 0x00)) {
     return false;
   }
   return true;
@@ -193,7 +193,7 @@ pn53x_set_tx_bits (nfc_device_t * pnd, const uint8_t ui8Bits)
   // Test if we need to update the transmission bits register setting
   if (CHIP_DATA (pnd)->ui8TxBits != ui8Bits) {
     // Set the amount of transmission bits in the PN53X chip register
-    if (!pn53x_write_register (pnd, REG_CIU_BIT_FRAMING, SYMBOL_TX_LAST_BITS, ui8Bits))
+    if (!pn53x_write_register (pnd, PN53X_REG_CIU_BitFraming, SYMBOL_TX_LAST_BITS, ui8Bits))
       return false;
 
     // Store the new setting
@@ -626,9 +626,9 @@ pn53x_configure (nfc_device_t * pnd, const nfc_device_option_t ndo, const bool b
       // Enable or disable automatic receiving/sending of CRC bytes
       // TX and RX are both represented by the symbol 0x80
       btValue = (bEnable) ? 0x80 : 0x00;
-      if (!pn53x_write_register (pnd, REG_CIU_TX_MODE, SYMBOL_TX_CRC_ENABLE, btValue))
+      if (!pn53x_write_register (pnd, PN53X_REG_CIU_TxMode, SYMBOL_TX_CRC_ENABLE, btValue))
         return false;
-      if (!pn53x_write_register (pnd, REG_CIU_RX_MODE, SYMBOL_RX_CRC_ENABLE, btValue))
+      if (!pn53x_write_register (pnd, PN53X_REG_CIU_RxMode, SYMBOL_RX_CRC_ENABLE, btValue))
         return false;
       pnd->bCrc = bEnable;
       break;
@@ -636,7 +636,7 @@ pn53x_configure (nfc_device_t * pnd, const nfc_device_option_t ndo, const bool b
     case NDO_HANDLE_PARITY:
       // Handle parity bit by PN53X chip or parse it as data bit
       btValue = (bEnable) ? 0x00 : SYMBOL_PARITY_DISABLE;
-      if (!pn53x_write_register (pnd, REG_CIU_MANUAL_RCV, SYMBOL_PARITY_DISABLE, btValue))
+      if (!pn53x_write_register (pnd, PN53X_REG_CIU_ManualRCV, SYMBOL_PARITY_DISABLE, btValue))
         return false;
       pnd->bPar = bEnable;
       break;
@@ -655,7 +655,7 @@ pn53x_configure (nfc_device_t * pnd, const nfc_device_option_t ndo, const bool b
 
     case NDO_ACTIVATE_CRYPTO1:
       btValue = (bEnable) ? SYMBOL_MF_CRYPTO1_ON : 0x00;
-      if (!pn53x_write_register (pnd, REG_CIU_STATUS2, SYMBOL_MF_CRYPTO1_ON, btValue))
+      if (!pn53x_write_register (pnd, PN53X_REG_CIU_Status2, SYMBOL_MF_CRYPTO1_ON, btValue))
         return false;
       break;
 
@@ -679,13 +679,13 @@ pn53x_configure (nfc_device_t * pnd, const nfc_device_option_t ndo, const bool b
 
     case NDO_ACCEPT_INVALID_FRAMES:
       btValue = (bEnable) ? SYMBOL_RX_NO_ERROR : 0x00;
-      if (!pn53x_write_register (pnd, REG_CIU_RX_MODE, SYMBOL_RX_NO_ERROR, btValue))
+      if (!pn53x_write_register (pnd, PN53X_REG_CIU_RxMode, SYMBOL_RX_NO_ERROR, btValue))
         return false;
       break;
 
     case NDO_ACCEPT_MULTIPLE_FRAMES:
       btValue = (bEnable) ? SYMBOL_RX_MULTIPLE : 0x00;
-      if (!pn53x_write_register (pnd, REG_CIU_RX_MODE, SYMBOL_RX_MULTIPLE, btValue))
+      if (!pn53x_write_register (pnd, PN53X_REG_CIU_RxMode, SYMBOL_RX_MULTIPLE, btValue))
         return false;
       return true;
       break;
@@ -702,14 +702,14 @@ pn53x_configure (nfc_device_t * pnd, const nfc_device_option_t ndo, const bool b
         return true;
       }
       // Force pn53x to be in ISO14443-A mode
-      if (!pn53x_write_register (pnd, REG_CIU_TX_MODE, SYMBOL_TX_FRAMING, 0x00)) {
+      if (!pn53x_write_register (pnd, PN53X_REG_CIU_TxMode, SYMBOL_TX_FRAMING, 0x00)) {
         return false;
       }
-      if (!pn53x_write_register (pnd, REG_CIU_RX_MODE, SYMBOL_RX_FRAMING, 0x00)) {
+      if (!pn53x_write_register (pnd, PN53X_REG_CIU_RxMode, SYMBOL_RX_FRAMING, 0x00)) {
         return false;
       }
       // Set the PN53X to force 100% ASK Modified miller decoding (default for 14443A cards)
-      if (!pn53x_write_register (pnd, REG_CIU_TX_AUTO, SYMBOL_FORCE_100_ASK, 0x40))
+      if (!pn53x_write_register (pnd, PN53X_REG_CIU_TxAuto, SYMBOL_FORCE_100_ASK, 0x40))
         return false;
 
       return true;
@@ -721,10 +721,10 @@ pn53x_configure (nfc_device_t * pnd, const nfc_device_option_t ndo, const bool b
         return true;
       }
       // Force pn53x to be in ISO14443-B mode
-      if (!pn53x_write_register (pnd, REG_CIU_TX_MODE, SYMBOL_TX_FRAMING, 0x03)) {
+      if (!pn53x_write_register (pnd, PN53X_REG_CIU_TxMode, SYMBOL_TX_FRAMING, 0x03)) {
         return false;
       }
-      if (!pn53x_write_register (pnd, REG_CIU_RX_MODE, SYMBOL_RX_FRAMING, 0x03)) {
+      if (!pn53x_write_register (pnd, PN53X_REG_CIU_RxMode, SYMBOL_RX_FRAMING, 0x03)) {
         return false;
       }
 
@@ -737,10 +737,10 @@ pn53x_configure (nfc_device_t * pnd, const nfc_device_option_t ndo, const bool b
         return true;
       }
       // Force pn53x to be at 106 kbps
-      if (!pn53x_write_register (pnd, REG_CIU_TX_MODE, SYMBOL_TX_SPEED, 0x00)) {
+      if (!pn53x_write_register (pnd, PN53X_REG_CIU_TxMode, SYMBOL_TX_SPEED, 0x00)) {
         return false;
       }
-      if (!pn53x_write_register (pnd, REG_CIU_RX_MODE, SYMBOL_RX_SPEED, 0x00)) {
+      if (!pn53x_write_register (pnd, PN53X_REG_CIU_RxMode, SYMBOL_RX_SPEED, 0x00)) {
         return false;
       }
 
@@ -820,7 +820,7 @@ pn53x_initiator_init (nfc_device_t * pnd)
   pn53x_reset_settings(pnd);
 
   // Configure the PN53X to be an Initiator or Reader/Writer
-  if (!pn53x_write_register (pnd, REG_CIU_CONTROL, SYMBOL_INITIATOR, 0x10))
+  if (!pn53x_write_register (pnd, PN53X_REG_CIU_Control, SYMBOL_INITIATOR, 0x10))
     return false;
 
   CHIP_DATA (pnd)->operating_mode = INITIATOR;
@@ -1006,7 +1006,7 @@ pn53x_initiator_transceive_bits (nfc_device_t * pnd, const byte_t * pbtTx, const
     return false;
 
   // Get the last bit-count that is stored in the received byte
-  if (!pn53x_read_register (pnd, REG_CIU_CONTROL, &ui8rcc))
+  if (!pn53x_read_register (pnd, PN53X_REG_CIU_Control, &ui8rcc))
     return false;
   ui8Bits = ui8rcc & SYMBOL_RX_LAST_BITS;
 
@@ -1082,10 +1082,10 @@ void __pn53x_init_timer(nfc_device_t * pnd)
   uint16_t prescaler = 0;
   uint16_t reloadval = 0xFFFF;
   // Initialize timer
-  pn53x_write_register (pnd, REG_CIU_TMODE, 0xFF, SYMBOL_TAUTO | ((prescaler >> 8) & SYMBOL_TPRESCALERHI));
-  pn53x_write_register (pnd, REG_CIU_TPRESCALER, 0xFF, (prescaler & SYMBOL_TPRESCALERLO));
-  pn53x_write_register (pnd, REG_CIU_TRELOADVALHI, 0xFF, (reloadval >> 8) & 0xFF);
-  pn53x_write_register (pnd, REG_CIU_TRELOADVALLO, 0xFF, reloadval & 0xFF);
+  pn53x_write_register (pnd, PN53X_REG_CIU_TMode, 0xFF, SYMBOL_TAUTO | ((prescaler >> 8) & SYMBOL_TPRESCALERHI));
+  pn53x_write_register (pnd, PN53X_REG_CIU_TPrescaler, 0xFF, (prescaler & SYMBOL_TPRESCALERLO));
+  pn53x_write_register (pnd, PN53X_REG_CIU_TReloadVal_hi, 0xFF, (reloadval >> 8) & 0xFF);
+  pn53x_write_register (pnd, PN53X_REG_CIU_TReloadVal_lo, 0xFF, reloadval & 0xFF);
 }
 
 uint16_t __pn53x_get_timer(nfc_device_t * pnd, const uint8_t last_cmd_byte)
@@ -1094,8 +1094,8 @@ uint16_t __pn53x_get_timer(nfc_device_t * pnd, const uint8_t last_cmd_byte)
   uint8_t counter_hi, counter_lo;
   uint16_t counter, cycles;
   // Read timer
-  pn53x_read_register (pnd, REG_CIU_TCOUNTERVALHI, &counter_hi);
-  pn53x_read_register (pnd, REG_CIU_TCOUNTERVALLO, &counter_lo);
+  pn53x_read_register (pnd, PN53X_REG_CIU_TCounterVal_hi, &counter_hi);
+  pn53x_read_register (pnd, PN53X_REG_CIU_TCounterVal_lo, &counter_lo);
   counter = counter_hi;
   counter = (counter << 8) + counter_lo;
   if (counter == 0) {
@@ -1160,14 +1160,14 @@ pn53x_initiator_transceive_bits_timed (nfc_device_t * pnd, const byte_t * pbtTx,
   // E.g. on SCL3711 timer settings are reset by 0x42 InCommunicateThru command to:
   //  631a=82 631b=a5 631c=02 631d=00
   // Prepare FIFO
-  pn53x_WriteRegister (pnd, REG_CIU_COMMAND, SYMBOL_COMMAND & SYMBOL_COMMAND_TRANSCEIVE);
-  pn53x_WriteRegister (pnd, REG_CIU_FIFOLEVEL, SYMBOL_FLUSH_BUFFER);
+  pn53x_WriteRegister (pnd, PN53X_REG_CIU_Command, SYMBOL_COMMAND & SYMBOL_COMMAND_TRANSCEIVE);
+  pn53x_WriteRegister (pnd, PN53X_REG_CIU_FIFOLevel, SYMBOL_FLUSH_BUFFER);
   for (i=0; i< ((szTxBits / 8) + 1); i++) {
-    pn53x_WriteRegister (pnd, REG_CIU_FIFODATA, pbtTx[i]);
+    pn53x_WriteRegister (pnd, PN53X_REG_CIU_FIFOData, pbtTx[i]);
   }
 
   // Send data
-  pn53x_WriteRegister (pnd, REG_CIU_BIT_FRAMING, SYMBOL_START_SEND | ((szTxBits % 8) & SYMBOL_TX_LAST_BITS));
+  pn53x_WriteRegister (pnd, PN53X_REG_CIU_BitFraming, SYMBOL_START_SEND | ((szTxBits % 8) & SYMBOL_TX_LAST_BITS));
 
   // Recv data
   *pszRxBits = 0;
@@ -1176,16 +1176,16 @@ pn53x_initiator_transceive_bits_timed (nfc_device_t * pnd, const byte_t * pbtTx,
   // responses coming very late anyway.
   // Ideally we should implement a real timer here too but looping a few times is good enough.
   for (i=0; i<4; i++) {
-    pn53x_read_register (pnd, REG_CIU_FIFOLEVEL, &sz);
+    pn53x_read_register (pnd, PN53X_REG_CIU_FIFOLevel, &sz);
     if (sz > 0)
       break;
   }
   while (1) {
     for (i=0; i<sz; i++) {
-      pn53x_read_register (pnd, REG_CIU_FIFODATA, &(pbtRx[i+*pszRxBits]));
+      pn53x_read_register (pnd, PN53X_REG_CIU_FIFOData, &(pbtRx[i+*pszRxBits]));
     }
     *pszRxBits += (size_t) (sz & SYMBOL_FIFO_LEVEL);
-    pn53x_read_register (pnd, REG_CIU_FIFOLEVEL, &sz);
+    pn53x_read_register (pnd, PN53X_REG_CIU_FIFOLevel, &sz);
     if (sz == 0)
       break;
   }
@@ -1222,14 +1222,14 @@ pn53x_initiator_transceive_bytes_timed (nfc_device_t * pnd, const byte_t * pbtTx
   // E.g. on SCL3711 timer settings are reset by 0x42 InCommunicateThru command to:
   //  631a=82 631b=a5 631c=02 631d=00
   // Prepare FIFO
-  pn53x_WriteRegister (pnd, REG_CIU_COMMAND, SYMBOL_COMMAND & SYMBOL_COMMAND_TRANSCEIVE);
-  pn53x_WriteRegister (pnd, REG_CIU_FIFOLEVEL, SYMBOL_FLUSH_BUFFER);
+  pn53x_WriteRegister (pnd, PN53X_REG_CIU_Command, SYMBOL_COMMAND & SYMBOL_COMMAND_TRANSCEIVE);
+  pn53x_WriteRegister (pnd, PN53X_REG_CIU_FIFOLevel, SYMBOL_FLUSH_BUFFER);
   for (i=0; i< szTx; i++) {
-    pn53x_WriteRegister (pnd, REG_CIU_FIFODATA, pbtTx[i]);
+    pn53x_WriteRegister (pnd, PN53X_REG_CIU_FIFOData, pbtTx[i]);
   }
 
   // Send data
-  pn53x_WriteRegister (pnd, REG_CIU_BIT_FRAMING, SYMBOL_START_SEND);
+  pn53x_WriteRegister (pnd, PN53X_REG_CIU_BitFraming, SYMBOL_START_SEND);
 
   // Recv data
   *pszRx = 0;
@@ -1238,16 +1238,16 @@ pn53x_initiator_transceive_bytes_timed (nfc_device_t * pnd, const byte_t * pbtTx
   // responses coming very late anyway.
   // Ideally we should implement a real timer here too but looping a few times is good enough.
   for (i=0; i<4; i++) {
-    pn53x_read_register (pnd, REG_CIU_FIFOLEVEL, &sz);
+    pn53x_read_register (pnd, PN53X_REG_CIU_FIFOLevel, &sz);
     if (sz > 0)
       break;
   }
   while (1) {
     for (i=0; i<sz; i++) {
-      pn53x_read_register (pnd, REG_CIU_FIFODATA, &(pbtRx[i+*pszRx]));
+      pn53x_read_register (pnd, PN53X_REG_CIU_FIFOData, &(pbtRx[i+*pszRx]));
     }
     *pszRx += (size_t) (sz & SYMBOL_FIFO_LEVEL);
-    pn53x_read_register (pnd, REG_CIU_FIFOLEVEL, &sz);
+    pn53x_read_register (pnd, PN53X_REG_CIU_FIFOLevel, &sz);
     if (sz == 0)
       break;
   }
@@ -1323,7 +1323,7 @@ pn53x_target_init (nfc_device_t * pnd, nfc_target_t * pnt, byte_t * pbtRx, size_
   }
 
   // Let the PN53X be activated by the RF level detector from power down mode
-  if (!pn53x_write_register (pnd, REG_CIU_TX_AUTO, SYMBOL_INITIAL_RF_ON, 0x04))
+  if (!pn53x_write_register (pnd, PN53X_REG_CIU_TxAuto, SYMBOL_INITIAL_RF_ON, 0x04))
     return false;
 
   byte_t abtMifareParams[6];
@@ -1503,7 +1503,7 @@ pn53x_target_receive_bits (nfc_device_t * pnd, byte_t * pbtRx, size_t * pszRxBit
 
   // Get the last bit-count that is stored in the received byte
   uint8_t ui8rcc;
-  if (!pn53x_read_register (pnd, REG_CIU_CONTROL, &ui8rcc))
+  if (!pn53x_read_register (pnd, PN53X_REG_CIU_Control, &ui8rcc))
     return false;
   uint8_t ui8Bits = ui8rcc & SYMBOL_RX_LAST_BITS;
 

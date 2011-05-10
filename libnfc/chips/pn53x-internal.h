@@ -226,6 +226,7 @@ typedef struct {
 #endif
 
 // Register addresses
+#define PN53X_REG_Control_switch_rng 0x6106
 #define PN53X_REG_CIU_Mode 0x6301
 #define PN53X_REG_CIU_TxMode 0x6302
 #define PN53X_REG_CIU_RxMode 0x6303
@@ -283,11 +284,11 @@ typedef struct {
 #define PN53X_REG_CIU_Status1 0x6337
 #define PN53X_REG_CIU_Status2 0x6338
 #define PN53X_REG_CIU_FIFOData 0x6339
-#define PN53X_REG_CIUFIFOLevel 0x633A
-#define PN53X_REG_CIUWaterLevel 0x633B
-#define PN53X_REG_CIUControl 0x633C
-#define PN53X_REG_CIUBitFraming 0x633D
-#define PN53X_REG_CIUColl 0x633E
+#define PN53X_REG_CIU_FIFOLevel 0x633A
+#define PN53X_REG_CIU_WaterLevel 0x633B
+#define PN53X_REG_CIU_Control 0x633C
+#define PN53X_REG_CIU_BitFraming 0x633D
+#define PN53X_REG_CIU_Coll 0x633E
 
 #define PN53X_SFR_P3 0xFFB0
 
@@ -358,11 +359,11 @@ static const pn53x_register pn53x_registers[] = {
   PNREG (PN53X_REG_CIU_Status1, "Contains status flags of the CRC, Interrupt Request System and FIFO buffer"),
   PNREG (PN53X_REG_CIU_Status2, "Contain status flags of the receiver, transmitter and Data Mode Detector"),
   PNREG (PN53X_REG_CIU_FIFOData, "In- and output of 64 byte FIFO buffer"),
-  PNREG (PN53X_REG_CIUFIFOLevel, "Indicates the number of bytes stored in the FIFO"),
-  PNREG (PN53X_REG_CIUWaterLevel, "Defines the thresholds for FIFO under- and overflow warning"),
-  PNREG (PN53X_REG_CIUControl, "Contains miscellaneous control bits"),
-  PNREG (PN53X_REG_CIUBitFraming, "Adjustments for bit oriented frames"),
-  PNREG (PN53X_REG_CIUColl, "Defines the first bit collision detected on the RF interface"),
+  PNREG (PN53X_REG_CIU_FIFOLevel, "Indicates the number of bytes stored in the FIFO"),
+  PNREG (PN53X_REG_CIU_WaterLevel, "Defines the thresholds for FIFO under- and overflow warning"),
+  PNREG (PN53X_REG_CIU_Control, "Contains miscellaneous control bits"),
+  PNREG (PN53X_REG_CIU_BitFraming, "Adjustments for bit oriented frames"),
+  PNREG (PN53X_REG_CIU_Coll, "Defines the first bit collision detected on the RF interface"),
 
   // SFR
   PNREG (PN53X_SFR_P3CFGA, "Port 3 configuration"),

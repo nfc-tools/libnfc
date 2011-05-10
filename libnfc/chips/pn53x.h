@@ -30,9 +30,8 @@
 #  include <nfc/nfc-types.h>
 #  include "pn53x-internal.h"
 
-// TODO Remove double register address defines
 // Registers and symbols masks used to covers parts within a register
-#  define REG_CIU_TX_MODE           0x6302
+//   PN53X_REG_CIU_TxMode
 #  define SYMBOL_TX_CRC_ENABLE      0x80
 #  define SYMBOL_TX_SPEED           0x70
 // TX_FRAMING bits explanation:
@@ -42,12 +41,12 @@
 //   11 : ISO/IEC 14443B
 #  define SYMBOL_TX_FRAMING         0x03
 
-#  define REG_CONTROL_SWITCH_RNG    0x6106
+//   PN53X_REG_Control_switch_rng
 #  define SYMBOL_CURLIMOFF          0x08     /* When set to 1, the 100 mA current limitations is desactivated. */
 #  define SYMBOL_SIC_SWITCH_EN      0x10     /* When set to logic 1, the SVDD switch is enabled and the SVDD output delivers power to secure IC and internal pads (SIGIN, SIGOUT and P34). */
 #  define SYMBOL_RANDOM_DATAREADY   0x02     /* When set to logic 1, a new random number is available. */
 
-#  define REG_CIU_RX_MODE           0x6303
+//   PN53X_REG_CIU_RxMode
 #  define SYMBOL_RX_CRC_ENABLE      0x80
 #  define SYMBOL_RX_SPEED           0x70
 #  define SYMBOL_RX_NO_ERROR        0x08
@@ -55,55 +54,41 @@
 // RX_FRAMING follow same scheme than TX_FRAMING
 #  define SYMBOL_RX_FRAMING         0x03
 
-#  define REG_CIU_TX_AUTO           0x6305
+//   PN53X_REG_CIU_TxAuto
 #  define SYMBOL_FORCE_100_ASK      0x40
 #  define SYMBOL_AUTO_WAKE_UP       0x20
 #  define SYMBOL_INITIAL_RF_ON      0x04
 
-#  define REG_CIU_TXSEL             0x6306
-
-#  define REG_CIU_MANUAL_RCV        0x630D
+//   PN53X_REG_CIU_ManualRCV
 #  define SYMBOL_PARITY_DISABLE     0x10
 
-#  define REG_CIU_TMODE             0x631A
+//   PN53X_REG_CIU_TMode
 #  define SYMBOL_TAUTO              0x80
 #  define SYMBOL_TPRESCALERHI       0x0F
 
-#  define REG_CIU_TPRESCALER        0x631B
+//   PN53X_REG_CIU_TPrescaler
 #  define SYMBOL_TPRESCALERLO       0xFF
 
-#  define REG_CIU_TRELOADVALHI      0x631C
-
-#  define REG_CIU_TRELOADVALLO      0x631D
-
-#  define REG_CIU_TCOUNTERVALHI     0x631E
-
-#  define REG_CIU_TCOUNTERVALLO     0x631F
-
-#  define REG_CIU_COMMAND           0x6331
+//   PN53X_REG_CIU_Command
 #  define SYMBOL_COMMAND            0x0F
 #  define SYMBOL_COMMAND_TRANSCEIVE 0xC
 
-#  define REG_CIU_STATUS2           0x6338
+//   PN53X_REG_CIU_Status2
 #  define SYMBOL_MF_CRYPTO1_ON      0x08
 
-#  define REG_CIU_FIFODATA          0x6339
-
-#  define REG_CIU_FIFOLEVEL         0x633A
+//   PN53X_REG_CIU_FIFOLevel
 #  define SYMBOL_FLUSH_BUFFER       0x80
 #  define SYMBOL_FIFO_LEVEL         0x7F
 
-#  define REG_CIU_CONTROL           0x633C
+//   PN53X_REG_CIU_Control
 #  define SYMBOL_INITIATOR          0x10
 #  define SYMBOL_RX_LAST_BITS       0x07
 
-#  define REG_CIU_BIT_FRAMING       0x633D
+//   PN53X_REG_CIU_BitFraming
 #  define SYMBOL_START_SEND         0x80
 #  define SYMBOL_RX_ALIGN           0x70
 #  define SYMBOL_TX_LAST_BITS       0x07
 
-#  define SFR_P3CFGB                0xFFFD
-#  define SFR_P3                    0xFFB0
 // PN53X Support Byte flags
 #define SUPPORT_ISO14443A             0x01
 #define SUPPORT_ISO14443B             0x02
@@ -153,7 +138,7 @@ struct pn53x_io {
 
 /* defines */
 #define PN53X_CACHE_REGISTER_MIN_ADDRESS 	PN53X_REG_CIU_Mode
-#define PN53X_CACHE_REGISTER_MAX_ADDRESS 	PN53X_REG_CIUColl
+#define PN53X_CACHE_REGISTER_MAX_ADDRESS 	PN53X_REG_CIU_Coll
 #define PN53X_CACHE_REGISTER_SIZE 		((PN53X_CACHE_REGISTER_MAX_ADDRESS - PN53X_CACHE_REGISTER_MIN_ADDRESS) + 1)
 struct pn53x_data {
 /** Chip type (PN531, PN532 or PN533)*/

@@ -347,7 +347,7 @@ pn53x_usb_disconnect (nfc_device_t * pnd)
   if (DRIVER_DATA (pnd)->model == ASK_LOGO) {
     /* Set P30, P31, P32, P33, P35 to logic 1 and P34 to 0 logic */
     /* ie. Switch all LEDs off and turn off progressive field */
-    pn53x_write_register (pnd, SFR_P3, 0xFF, _BV (P30) | _BV (P31) | _BV (P32) | _BV (P33) | _BV (P35));
+    pn53x_write_register (pnd, PN53X_SFR_P3, 0xFF, _BV (P30) | _BV (P31) | _BV (P32) | _BV (P33) | _BV (P35));
   }
 
   int res;
@@ -553,13 +553,13 @@ pn53x_usb_init (nfc_device_t *pnd)
     DBG ("ASK LoGO initialization.");
     /* Internal registers */
     /* Disable 100mA current limit, Power on Secure IC (SVDD) */
-    pn53x_write_register (pnd, REG_CONTROL_SWITCH_RNG, 0xFF, SYMBOL_CURLIMOFF | SYMBOL_SIC_SWITCH_EN | SYMBOL_RANDOM_DATAREADY);
+    pn53x_write_register (pnd, PN53X_REG_Control_switch_rng, 0xFF, SYMBOL_CURLIMOFF | SYMBOL_SIC_SWITCH_EN | SYMBOL_RANDOM_DATAREADY);
     /* Select the signal to be output on SIGOUT: Modulation signal (envelope) from the internal coder */
-    pn53x_write_register (pnd, REG_CIU_TXSEL, 0xFF, 0x14);
+    pn53x_write_register (pnd, PN53X_REG_CIU_TxSel, 0xFF, 0x14);
 
     /* SFR Registers */
     /* Setup push-pulls for pins from P30 to P35 */
-    pn53x_write_register (pnd, SFR_P3CFGB, 0xFF, 0x37);
+    pn53x_write_register (pnd, PN53X_SFR_P3CFGB, 0xFF, 0x37);
 
 /*
 On ASK LoGO hardware:
@@ -581,7 +581,7 @@ On ASK LoGO hardware:
 
     /* Set P30, P31, P33, P35 to logic 1 and P32, P34 to 0 logic */
     /* ie. Switch LED1 on and turn off progressive field */
-    pn53x_write_register (pnd, SFR_P3, 0xFF, _BV (P30) | _BV (P31) | _BV (P33) | _BV (P35));
+    pn53x_write_register (pnd, PN53X_SFR_P3, 0xFF, _BV (P30) | _BV (P31) | _BV (P33) | _BV (P35));
   }
 
   return true;
@@ -598,14 +598,14 @@ pn53x_usb_configure (nfc_device_t * pnd, const nfc_device_option_t ndo, const bo
       if (NDO_ACTIVATE_FIELD == ndo) {
         /* Switch on/off LED2 and Progressive Field GPIO according to ACTIVATE_FIELD option */
         DBG ("Switch progressive field %s", bEnable ? "On" : "Off");
-        if (!pn53x_write_register (pnd, SFR_P3, _BV(P31) | _BV(P34), bEnable ? _BV (P34) : _BV (P31)))
+        if (!pn53x_write_register (pnd, PN53X_SFR_P3, _BV(P31) | _BV(P34), bEnable ? _BV (P34) : _BV (P31)))
           return false;
       }
       break;
     case SCM_SCL3711:
       if (NDO_ACTIVATE_FIELD == ndo) {
         // Switch on/off LED according to ACTIVATE_FIELD option
-        if (!pn53x_write_register (pnd, SFR_P3, _BV (P32), bEnable ? 0 : _BV (P32)))
+        if (!pn53x_write_register (pnd, PN53X_SFR_P3, _BV (P32), bEnable ? 0 : _BV (P32)))
           return false;
       }
       break;
