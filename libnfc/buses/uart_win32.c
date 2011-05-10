@@ -144,15 +144,33 @@ uart_get_speed (const serial_port sp)
 int
 uart_receive (serial_port sp, byte_t * pbtRx, const size_t szRx, void * abort_p)
 {
-  // TODO Test me with abort_p
+  DWORD dwBytesToGet = (DWORD)szRx;
+  DWORD dwBytesReceived = 0;
+  DWORD dwTotalBytesReceived = 0;
+  BOOL res;
+
   volatile bool * abort_flag_p = (volatile bool *)abort_p;
-  DWORD dwRxLen = szRx;
   do {
-    if (!ReadFile (((serial_port_windows *) sp)->hPort, pbtRx, dwRxLen, &dwRxLen, NULL)) {
+    res = ReadFile (((serial_port_windows *) sp)->hPort, pbtRx + received_bytes_count,
+      dwBytesToGet, 
+      &dwBytesReceived, NULL);
+
+    dwTotalBytesReceived += dwBytesReceived;
+
+    if (!res) {
+      WARN("ReadFile returned error\n");
       return DEIO;
     }
-  } while ( (dwRxLen != (DWORD) szRx) && ((abort_flag_p) && !(*abort_flag_p)) );
-  return (dwRxLen == (DWORD) szRx) ? 0 : DEIO;
+    if (((DWORD)szRx) > dwTotalBytesReceived) {
+      dwBytesToGet -= dwBytesReceived;
+    }
+
+    if (abort_flag_p != NULL && (*abort_flag_p) && dwTotalBytesReceived == 0) {
+      return DEABORT;
+    }
+  } while (((DWORD)szRx) > dwTotalBytesReceived);
+
+  return (dwTotalBytesReceived == (DWORD) szRx) ? 0 : DEIO;
 }
 
 int

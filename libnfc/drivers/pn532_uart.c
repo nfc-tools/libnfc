@@ -182,7 +182,7 @@ pn532_uart_connect (const nfc_device_desc_t * pndd)
   // pipe-based abort mecanism
   pipe (DRIVER_DATA (pnd)->iAbortFds);
 #else
-  abort_flag = false;
+  DRIVER_DATA (pnd)->abort_flag = false;
 #endif
 
   pn53x_init(pnd);
@@ -288,7 +288,7 @@ pn532_uart_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen
 #ifndef WIN32
     abort_p = &(DRIVER_DATA (pnd)->iAbortFds[1]);
 #else
-    abort_p = &(DRIVER_DATA (pnd)->abort_flag);
+    abort_p = (void*)&(DRIVER_DATA (pnd)->abort_flag);
 #endif
     break;
   default:
