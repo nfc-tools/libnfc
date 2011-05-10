@@ -1101,9 +1101,26 @@ uint16_t __pn53x_get_timer(nfc_device_t * pnd, const uint8_t last_cmd_byte)
   uint8_t parity;
   uint8_t counter_hi, counter_lo;
   uint16_t counter, cycles;
+  size_t off = 0;
+  if (CHIP_DATA(pnd)->type == PN533) {
+    // PN533 prepends its answer by a status byte
+    off = 1;
+  }
   // Read timer
-  pn53x_read_register (pnd, PN53X_REG_CIU_TCounterVal_hi, &counter_hi);
-  pn53x_read_register (pnd, PN53X_REG_CIU_TCounterVal_lo, &counter_lo);
+  BUFFER_INIT (abtReadRegisterCmd, PN53x_EXTENDED_FRAME__DATA_MAX_LEN);
+  BUFFER_APPEND (abtReadRegisterCmd, ReadRegister);
+  BUFFER_APPEND (abtReadRegisterCmd, PN53X_REG_CIU_TCounterVal_hi  >> 8);
+  BUFFER_APPEND (abtReadRegisterCmd, PN53X_REG_CIU_TCounterVal_hi & 0xff);
+  BUFFER_APPEND (abtReadRegisterCmd, PN53X_REG_CIU_TCounterVal_lo  >> 8);
+  BUFFER_APPEND (abtReadRegisterCmd, PN53X_REG_CIU_TCounterVal_lo & 0xff);
+  uint8_t abtRes[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
+  size_t szRes = sizeof(abtRes);
+  // Let's send the previously constructed ReadRegister command
+  if (!pn53x_transceive (pnd, abtReadRegisterCmd, BUFFER_SIZE (abtReadRegisterCmd), abtRes, &szRes)) {
+    return false;
+  }
+  counter_hi = abtRes[off];
+  counter_lo = abtRes[off+1];
   counter = counter_hi;
   counter = (counter << 8) + counter_lo;
   if (counter == 0) {
@@ -1168,14 +1185,28 @@ pn53x_initiator_transceive_bits_timed (nfc_device_t * pnd, const byte_t * pbtTx,
   // E.g. on SCL3711 timer settings are reset by 0x42 InCommunicateThru command to:
   //  631a=82 631b=a5 631c=02 631d=00
   // Prepare FIFO
-  pn53x_WriteRegister (pnd, PN53X_REG_CIU_Command, SYMBOL_COMMAND & SYMBOL_COMMAND_TRANSCEIVE);
-  pn53x_WriteRegister (pnd, PN53X_REG_CIU_FIFOLevel, SYMBOL_FLUSH_BUFFER);
-  for (i=0; i< ((szTxBits / 8) + 1); i++) {
-    pn53x_WriteRegister (pnd, PN53X_REG_CIU_FIFOData, pbtTx[i]);
-  }
+  BUFFER_INIT (abtWriteRegisterCmd, PN53x_EXTENDED_FRAME__DATA_MAX_LEN);
+  BUFFER_APPEND (abtWriteRegisterCmd, WriteRegister);
 
+  BUFFER_APPEND (abtWriteRegisterCmd, PN53X_REG_CIU_Command  >> 8);
+  BUFFER_APPEND (abtWriteRegisterCmd, PN53X_REG_CIU_Command & 0xff);
+  BUFFER_APPEND (abtWriteRegisterCmd, SYMBOL_COMMAND & SYMBOL_COMMAND_TRANSCEIVE);
+  BUFFER_APPEND (abtWriteRegisterCmd, PN53X_REG_CIU_FIFOLevel  >> 8);
+  BUFFER_APPEND (abtWriteRegisterCmd, PN53X_REG_CIU_FIFOLevel & 0xff);
+  BUFFER_APPEND (abtWriteRegisterCmd, SYMBOL_FLUSH_BUFFER);
+  for (i=0; i< ((szTxBits / 8) + 1); i++) {
+    BUFFER_APPEND (abtWriteRegisterCmd, PN53X_REG_CIU_FIFOData  >> 8);
+    BUFFER_APPEND (abtWriteRegisterCmd, PN53X_REG_CIU_FIFOData & 0xff);
+    BUFFER_APPEND (abtWriteRegisterCmd, pbtTx[i]);
+  }
   // Send data
-  pn53x_WriteRegister (pnd, PN53X_REG_CIU_BitFraming, SYMBOL_START_SEND | ((szTxBits % 8) & SYMBOL_TX_LAST_BITS));
+  BUFFER_APPEND (abtWriteRegisterCmd, PN53X_REG_CIU_BitFraming  >> 8);
+  BUFFER_APPEND (abtWriteRegisterCmd, PN53X_REG_CIU_BitFraming & 0xff);
+  BUFFER_APPEND (abtWriteRegisterCmd, SYMBOL_START_SEND | ((szTxBits % 8) & SYMBOL_TX_LAST_BITS));
+  // Let's send the previously constructed WriteRegister command
+  if (!pn53x_transceive (pnd, abtWriteRegisterCmd, BUFFER_SIZE (abtWriteRegisterCmd), NULL, NULL)) {
+    return false;
+  }
 
   // Recv data
   *pszRxBits = 0;
@@ -1188,12 +1219,31 @@ pn53x_initiator_transceive_bits_timed (nfc_device_t * pnd, const byte_t * pbtTx,
     if (sz > 0)
       break;
   }
+  size_t off = 0;
+  if (CHIP_DATA(pnd)->type == PN533) {
+    // PN533 prepends its answer by a status byte
+    off = 1;
+  }
   while (1) {
+    BUFFER_INIT (abtReadRegisterCmd, PN53x_EXTENDED_FRAME__DATA_MAX_LEN);
+    BUFFER_APPEND (abtReadRegisterCmd, ReadRegister);
     for (i=0; i<sz; i++) {
-      pn53x_read_register (pnd, PN53X_REG_CIU_FIFOData, &(pbtRx[i+*pszRxBits]));
+      BUFFER_APPEND (abtReadRegisterCmd, PN53X_REG_CIU_FIFOData  >> 8);
+      BUFFER_APPEND (abtReadRegisterCmd, PN53X_REG_CIU_FIFOData & 0xff);
+    }
+    BUFFER_APPEND (abtReadRegisterCmd, PN53X_REG_CIU_FIFOLevel  >> 8);
+    BUFFER_APPEND (abtReadRegisterCmd, PN53X_REG_CIU_FIFOLevel & 0xff);
+    uint8_t abtRes[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
+    size_t szRes = sizeof(abtRes);
+    // Let's send the previously constructed ReadRegister command
+    if (!pn53x_transceive (pnd, abtReadRegisterCmd, BUFFER_SIZE (abtReadRegisterCmd), abtRes, &szRes)) {
+      return false;
+    }
+    for (i = 0; i < sz; i++) {
+      pbtRx[i+*pszRxBits] = abtRes[i+off];
     }
     *pszRxBits += (size_t) (sz & SYMBOL_FIFO_LEVEL);
-    pn53x_read_register (pnd, PN53X_REG_CIU_FIFOLevel, &sz);
+    sz = abtRes[sz+off];
     if (sz == 0)
       break;
   }
@@ -1230,14 +1280,28 @@ pn53x_initiator_transceive_bytes_timed (nfc_device_t * pnd, const byte_t * pbtTx
   // E.g. on SCL3711 timer settings are reset by 0x42 InCommunicateThru command to:
   //  631a=82 631b=a5 631c=02 631d=00
   // Prepare FIFO
-  pn53x_WriteRegister (pnd, PN53X_REG_CIU_Command, SYMBOL_COMMAND & SYMBOL_COMMAND_TRANSCEIVE);
-  pn53x_WriteRegister (pnd, PN53X_REG_CIU_FIFOLevel, SYMBOL_FLUSH_BUFFER);
-  for (i=0; i< szTx; i++) {
-    pn53x_WriteRegister (pnd, PN53X_REG_CIU_FIFOData, pbtTx[i]);
-  }
+  BUFFER_INIT (abtWriteRegisterCmd, PN53x_EXTENDED_FRAME__DATA_MAX_LEN);
+  BUFFER_APPEND (abtWriteRegisterCmd, WriteRegister);
 
+  BUFFER_APPEND (abtWriteRegisterCmd, PN53X_REG_CIU_Command  >> 8);
+  BUFFER_APPEND (abtWriteRegisterCmd, PN53X_REG_CIU_Command & 0xff);
+  BUFFER_APPEND (abtWriteRegisterCmd, SYMBOL_COMMAND & SYMBOL_COMMAND_TRANSCEIVE);
+  BUFFER_APPEND (abtWriteRegisterCmd, PN53X_REG_CIU_FIFOLevel  >> 8);
+  BUFFER_APPEND (abtWriteRegisterCmd, PN53X_REG_CIU_FIFOLevel & 0xff);
+  BUFFER_APPEND (abtWriteRegisterCmd, SYMBOL_FLUSH_BUFFER);
+  for (i=0; i< szTx; i++) {
+    BUFFER_APPEND (abtWriteRegisterCmd, PN53X_REG_CIU_FIFOData  >> 8);
+    BUFFER_APPEND (abtWriteRegisterCmd, PN53X_REG_CIU_FIFOData & 0xff);
+    BUFFER_APPEND (abtWriteRegisterCmd, pbtTx[i]);
+  }
   // Send data
-  pn53x_WriteRegister (pnd, PN53X_REG_CIU_BitFraming, SYMBOL_START_SEND);
+  BUFFER_APPEND (abtWriteRegisterCmd, PN53X_REG_CIU_BitFraming  >> 8);
+  BUFFER_APPEND (abtWriteRegisterCmd, PN53X_REG_CIU_BitFraming & 0xff);
+  BUFFER_APPEND (abtWriteRegisterCmd, SYMBOL_START_SEND);
+  // Let's send the previously constructed WriteRegister command
+  if (!pn53x_transceive (pnd, abtWriteRegisterCmd, BUFFER_SIZE (abtWriteRegisterCmd), NULL, NULL)) {
+    return false;
+  }
 
   // Recv data
   *pszRx = 0;
@@ -1250,12 +1314,31 @@ pn53x_initiator_transceive_bytes_timed (nfc_device_t * pnd, const byte_t * pbtTx
     if (sz > 0)
       break;
   }
+  size_t off = 0;
+  if (CHIP_DATA(pnd)->type == PN533) {
+    // PN533 prepends its answer by a status byte
+    off = 1;
+  }
   while (1) {
+    BUFFER_INIT (abtReadRegisterCmd, PN53x_EXTENDED_FRAME__DATA_MAX_LEN);
+    BUFFER_APPEND (abtReadRegisterCmd, ReadRegister);
     for (i=0; i<sz; i++) {
-      pn53x_read_register (pnd, PN53X_REG_CIU_FIFOData, &(pbtRx[i+*pszRx]));
+      BUFFER_APPEND (abtReadRegisterCmd, PN53X_REG_CIU_FIFOData  >> 8);
+      BUFFER_APPEND (abtReadRegisterCmd, PN53X_REG_CIU_FIFOData & 0xff);
+    }
+    BUFFER_APPEND (abtReadRegisterCmd, PN53X_REG_CIU_FIFOLevel  >> 8);
+    BUFFER_APPEND (abtReadRegisterCmd, PN53X_REG_CIU_FIFOLevel & 0xff);
+    uint8_t abtRes[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
+    size_t szRes = sizeof(abtRes);
+    // Let's send the previously constructed ReadRegister command
+    if (!pn53x_transceive (pnd, abtReadRegisterCmd, BUFFER_SIZE (abtReadRegisterCmd), abtRes, &szRes)) {
+      return false;
+    }
+    for (i = 0; i < sz; i++) {
+      pbtRx[i+*pszRx] = abtRes[i+off];
     }
     *pszRx += (size_t) (sz & SYMBOL_FIFO_LEVEL);
-    pn53x_read_register (pnd, PN53X_REG_CIU_FIFOLevel, &sz);
+    sz = abtRes[sz+off];
     if (sz == 0)
       break;
   }
