@@ -1,2 +1,2 @@
 debian/tmp/usr/lib/libnfc.so.*
-pn53x.rules etc/udev/rules.d/
+pn53x.rules lib/udev/rules.d

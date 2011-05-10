@@ -1,41 +1,49 @@
 Source: libnfc
-Section: devel
-Priority: optional
-Maintainer: Romuald Conty <rconty@il4p.fr>
-Build-Depends: debhelper (>= 5.0.37.2), automake, libtool, pkg-config, libusb-dev, libpcsclite-dev
-Standards-Version: 3.7.3
+Section: libs
+Priority: extra
+Maintainer: Thomas Hood <jdthood@gmail.com>
+Build-Depends: debhelper (>= 7), automake, libtool, pkg-config, libusb-dev, libpcsclite-dev
+Standards-Version: 3.9.2
 Homepage: http://www.libnfc.org/
 
-Package: libnfc0
+Package: libnfc1
+Section: libs
 Architecture: any
-Depends: ${shlibs:Depends}, libusb-0.1-4, libpcsclite1 (>= 1.5), libccid (>= 1.3.10), pcscd (>= 1.5)
+Depends: ${shlibs:Depends}, ${misc:Depends}, libusb-0.1-4, libpcsclite1 (>= 1.5), libccid (>= 1.3.10), pcscd (>= 1.5)
 Description: Near Field Communication (NFC) library
- libnfc is a Free Software library for Near Field Communication. Supported NFC hardware 
- devices are, theorically, all hardware based on the NXP PN531, PN532 or PN533 NFC 
- controller chip.
+ libnfc is a Free Software library for Near Field Communication.
+ Supported NFC hardware devices are, theorically, all hardware
+ based on the NXP PN531, PN532 or PN533 NFC controller chip.
 
 Package: libnfc-dev
+Section: libdevel
 Architecture: any
-Depends: libnfc0, libusb-dev, libpcsclite-dev
+Depends: ${shlibs:Depends}, ${misc:Depends}, libnfc1 (= ${binary:Version}), libusb-dev, libpcsclite-dev
 Description: Near Field Communication library (development files)
- libnfc is a Free Software library for Near Field Communication. Supported NFC hardware 
- devices are, theorically, all hardware based on the NXP PN531, PN532 or PN533 NFC 
- controller chip.
+ libnfc is a Free Software library for Near Field Communication.
+ Supported NFC hardware devices are, theorically, all hardware
+ based on the NXP PN531, PN532 or PN533 NFC controller chip.
 
 Package: libnfc-bin
+Section: utils
 Architecture: any
-Depends: libnfc0
+Depends: ${shlibs:Depends}, ${misc:Depends}, libnfc1 (>= ${binary:Version})
 Description: Near Field Communication binaries
- Some binaries are provided with libnfc useful for developement (nfc-list, nfc-mfclassic, nfc-mfultralight, etc.).
+ Some binaries are provided with libnfc useful for development
+ (nfc-list, nfc-mfclassic, nfc-mfultralight, etc.).
 
 Package: libnfc-examples
+Section: utils
 Architecture: any
-Depends: libnfc0
+Depends: ${shlibs:Depends}, ${misc:Depends}, libnfc1 (>= ${binary:Version})
 Description: Near Field Communication examples
- Some examples are provided with libnfc for debugging and/or educational purpose (nfc-anticol, nfc-emulate, etc.).
+ Some examples are provided with libnfc for debugging and/or
+ educational purpose (nfc-anticol, nfc-emulate, etc.).
 
 Package: libnfc-pn53x-examples
+Section: utils
 Architecture: any
-Depends: libnfc0
+Depends: ${shlibs:Depends}, ${misc:Depends}, libnfc1 (>= ${binary:Version})
 Description: Near Field Communication examples for PN53x chips only
- Some PN53x-only examples are provided with libnfc for debugging and/or educational purpose (pn53x-sam, pn53x-tamashell, etc.).
+ Some PN53x-only examples are provided with libnfc for debugging
+ and/or educational purpose (pn53x-sam, pn53x-tamashell, etc.).

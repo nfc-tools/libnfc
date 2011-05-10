@@ -4,6 +4,12 @@ libnfc (1.5.0-0) unstable; urgency=low
 
  -- Romuald Conty <rconty@il4p.fr>  Mon, 4 Apr 2011 11:42:42 +0100
 
+libnfc (1.4.2-0ppa3~natty) natty; urgency=low
+
+  * Upload to PPA
+
+ -- Thomas Hood <jdthood@gmail.com>  Thu, 05 May 2011 10:00:00 +0200
+
 libnfc (1.4.2-0) unstable; urgency=low
   
   * New upstream release.

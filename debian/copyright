@@ -17,11 +17,11 @@ License: GNU Lesser General Public License version 3
   GNU General Public License for more details.
 
   You should have received a copy of the GNU General Public License
-  along with this program; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+  along with this program; if not, see <http://www.gnu.org/licenses/>.
 
 On Debian GNU/Linux systems, the complete text of the GNU General Public
 License, version 3, can be found in `/usr/share/common-licenses/LGPL-3'.
 
-The Debian packaging is (C) 2009, Romuald Conty <romuald.conty@free.fr> and
-is licensed under the GPL, see `/usr/share/common-licenses/GPL'.
+The Debian packaging is copyright 2009, Romuald Conty <romuald.conty@free.fr>
+and Thomas Hood <jdthood@gmail.com> is licensed under the GPL, version 2.
+See `/usr/share/common-licenses/GPL-2'.
