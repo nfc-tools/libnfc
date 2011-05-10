@@ -151,7 +151,7 @@ uart_receive (serial_port sp, byte_t * pbtRx, const size_t szRx, void * abort_p)
 
   volatile bool * abort_flag_p = (volatile bool *)abort_p;
   do {
-    res = ReadFile (((serial_port_windows *) sp)->hPort, pbtRx + received_bytes_count,
+    res = ReadFile (((serial_port_windows *) sp)->hPort, pbtRx + dwTotalBytesReceived,
       dwBytesToGet, 
       &dwBytesReceived, NULL);
 
