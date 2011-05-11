@@ -1085,22 +1085,30 @@ pn53x_initiator_transceive_bytes (nfc_device_t * pnd, const byte_t * pbtTx, cons
   return true;
 }
 
+// For _timer() functions, the prescaler will dictate what will
+// be the precision and the largest delay to measure before saturation
+// prescaler =  0 => precision:  ~73ns  timer saturates at    ~5ms
+// prescaler =  1 => precision: ~221ns  timer saturates at   ~15ms
+// prescaler =  2 => precision: ~369ns  timer saturates at   ~25ms
+// prescaler = 10 => precision: ~1.5us  timer saturates at  ~100ms
+static uint16_t __timer_prescaler = 0;
+
 void __pn53x_init_timer(nfc_device_t * pnd)
 {
-  uint16_t prescaler = 0;
   uint16_t reloadval = 0xFFFF;
   // Initialize timer
-  pn53x_write_register (pnd, PN53X_REG_CIU_TMode, 0xFF, SYMBOL_TAUTO | ((prescaler >> 8) & SYMBOL_TPRESCALERHI));
-  pn53x_write_register (pnd, PN53X_REG_CIU_TPrescaler, 0xFF, (prescaler & SYMBOL_TPRESCALERLO));
+  pn53x_write_register (pnd, PN53X_REG_CIU_TMode, 0xFF, SYMBOL_TAUTO | ((__timer_prescaler >> 8) & SYMBOL_TPRESCALERHI));
+  pn53x_write_register (pnd, PN53X_REG_CIU_TPrescaler, 0xFF, (__timer_prescaler & SYMBOL_TPRESCALERLO));
   pn53x_write_register (pnd, PN53X_REG_CIU_TReloadVal_hi, 0xFF, (reloadval >> 8) & 0xFF);
   pn53x_write_register (pnd, PN53X_REG_CIU_TReloadVal_lo, 0xFF, reloadval & 0xFF);
 }
 
-uint16_t __pn53x_get_timer(nfc_device_t * pnd, const uint8_t last_cmd_byte)
+uint32_t __pn53x_get_timer(nfc_device_t * pnd, const uint8_t last_cmd_byte)
 {
   uint8_t parity;
   uint8_t counter_hi, counter_lo;
-  uint16_t counter, cycles;
+  uint16_t counter, u16cycles;
+  uint32_t u32cycles;
   size_t off = 0;
   if (CHIP_DATA(pnd)->type == PN533) {
     // PN533 prepends its answer by a status byte
@@ -1125,15 +1133,18 @@ uint16_t __pn53x_get_timer(nfc_device_t * pnd, const uint8_t last_cmd_byte)
   counter = (counter << 8) + counter_lo;
   if (counter == 0) {
     // counter saturated
-    cycles = 0xFFFF;
+    u32cycles = 0xFFFFFFFF;
   } else {
-    cycles = 0xFFFF - counter + 1;
+    u16cycles = 0xFFFF - counter;
+    u32cycles = u16cycles;
+    u32cycles *= (__timer_prescaler * 2 + 1);
+    u32cycles++;
     // Correction depending on PN53x Rx detection handling:
     // timer stops after 5 (or 2 for PN531) bits are received
     if(CHIP_DATA(pnd)->type == PN531) {
-      cycles -= (2 * 128);
+      u32cycles -= (2 * 128);
     } else {
-      cycles -= (5 * 128);
+      u32cycles -= (5 * 128);
     }
     // Correction depending on last parity bit sent
     parity = (last_cmd_byte >> 7) ^ ((last_cmd_byte >> 6) & 1) ^
@@ -1144,17 +1155,17 @@ uint16_t __pn53x_get_timer(nfc_device_t * pnd, const uint8_t last_cmd_byte)
     // When sent ...YY (cmd ends with logical 1, so when last parity bit is 1):
     if (parity) {
       // it finishes 64us sooner than a ...ZY signal
-      cycles += 64;
+      u32cycles += 64;
     }
     // Correction depending on device design
-    cycles += CHIP_DATA(pnd)->timer_correction;
+    u32cycles += CHIP_DATA(pnd)->timer_correction;
   }
-  return cycles;
+  return u32cycles;
 }
 
 bool
 pn53x_initiator_transceive_bits_timed (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxBits,
-                                       const byte_t * pbtTxPar, byte_t * pbtRx, size_t * pszRxBits, byte_t * pbtRxPar, uint16_t * cycles)
+                                       const byte_t * pbtTxPar, byte_t * pbtRx, size_t * pszRxBits, byte_t * pbtRxPar, uint32_t * cycles)
 {
   // TODO Do something with these bytes...
   (void) pbtTxPar;
@@ -1214,7 +1225,7 @@ pn53x_initiator_transceive_bits_timed (nfc_device_t * pnd, const byte_t * pbtTx,
   // our PN53x timer saturates after 4.8ms so this function shouldn't be used for
   // responses coming very late anyway.
   // Ideally we should implement a real timer here too but looping a few times is good enough.
-  for (i=0; i<4; i++) {
+  for (i=0; i<(3 *(__timer_prescaler * 2 + 1)); i++) {
     pn53x_read_register (pnd, PN53X_REG_CIU_FIFOLevel, &sz);
     if (sz > 0)
       break;
@@ -1257,7 +1268,7 @@ pn53x_initiator_transceive_bits_timed (nfc_device_t * pnd, const byte_t * pbtTx,
 
 bool
 pn53x_initiator_transceive_bytes_timed (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, byte_t * pbtRx,
-                                        size_t * pszRx, uint16_t * cycles)
+                                        size_t * pszRx, uint32_t * cycles)
 {
   unsigned int i;
   uint8_t sz;
@@ -1309,7 +1320,7 @@ pn53x_initiator_transceive_bytes_timed (nfc_device_t * pnd, const byte_t * pbtTx
   // our PN53x timer saturates after 4.8ms so this function shouldn't be used for
   // responses coming very late anyway.
   // Ideally we should implement a real timer here too but looping a few times is good enough.
-  for (i=0; i<4; i++) {
+  for (i=0; i<(3 *(__timer_prescaler * 2 + 1)); i++) {
     pn53x_read_register (pnd, PN53X_REG_CIU_FIFOLevel, &sz);
     if (sz > 0)
       break;

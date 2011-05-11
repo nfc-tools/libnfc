@@ -288,9 +288,9 @@ bool    pn53x_initiator_transceive_bytes (nfc_device_t * pnd, const byte_t * pbt
                                           byte_t * pbtRx, size_t * pszRx);
 bool    pn53x_initiator_transceive_bits_timed (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxBits,
                                          const byte_t * pbtTxPar, byte_t * pbtRx, size_t * pszRxBits,
-                                         byte_t * pbtRxPar, uint16_t * cycles);
+                                         byte_t * pbtRxPar, uint32_t * cycles);
 bool    pn53x_initiator_transceive_bytes_timed (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx,
-                                          byte_t * pbtRx, size_t * pszRx, uint16_t * cycles);
+                                          byte_t * pbtRx, size_t * pszRx, uint32_t * cycles);
 bool    pn53x_initiator_deselect_target (nfc_device_t * pnd);
 
 // NFC device as Target functions

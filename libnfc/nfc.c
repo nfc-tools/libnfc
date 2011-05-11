@@ -565,7 +565,7 @@ nfc_initiator_transceive_bits (nfc_device_t * pnd, const byte_t * pbtTx, const s
  */
 bool
 nfc_initiator_transceive_bytes_timed (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, byte_t * pbtRx,
-                                size_t * pszRx, uint16_t * cycles)
+                                size_t * pszRx, uint32_t * cycles)
 {
   HAL (initiator_transceive_bytes_timed, pnd, pbtTx, szTx, pbtRx, pszRx, cycles)
 }
@@ -585,7 +585,7 @@ nfc_initiator_transceive_bytes_timed (nfc_device_t * pnd, const byte_t * pbtTx, 
  */
 bool
 nfc_initiator_transceive_bits_timed (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxBits, const byte_t * pbtTxPar,
-                               byte_t * pbtRx, size_t * pszRxBits, byte_t * pbtRxPar, uint16_t * cycles)
+                               byte_t * pbtRx, size_t * pszRxBits, byte_t * pbtRxPar, uint32_t * cycles)
 {
   HAL (initiator_transceive_bits_timed, pnd, pbtTx, szTxBits, pbtTxPar, pbtRx, pszRxBits, pbtRxPar, cycles);
 }
