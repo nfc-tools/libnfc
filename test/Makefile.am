@@ -7,10 +7,16 @@ if WITH_CUTTER
 TESTS = run-test.sh
 TESTS_ENVIRONMENT = NO_MAKE=yes CUTTER="$(CUTTER)"
 
-noinst_LTLIBRARIES = \
-		     test_access_storm.la \
-		     test_register_access.la \
-		     test_register_endianness.la
+cutter_unit_test_libs = \
+			test_access_storm.la \
+			test_register_access.la \
+			test_register_endianness.la
+
+if WITH_DEBUG
+noinst_LTLIBRARIES = $(cutter_unit_test_libs)
+else
+check_LTLIBRARIES = $(cutter_unit_test_libs)
+endif
 
 AM_LDFLAGS = -module -rpath $(libdir) -avoid-version -no-undefined
 
