@@ -632,17 +632,22 @@ print_nfc_iso14443bi_info (const nfc_iso14443bi_info_t nii, bool verbose)
 }
 
 void
-print_nfc_iso14443b3sr_info (const nfc_iso14443b3sr_info_t nsi, bool verbose)
+print_nfc_iso14443b2sr_info (const nfc_iso14443b2sr_info_t nsi, bool verbose)
 {
   printf ("                UID: ");
   print_hex (nsi.abtUID, 8);
 }
 
 void
-print_nfc_iso14443b3ct_info (const nfc_iso14443b3ct_info_t nci, bool verbose)
+print_nfc_iso14443b2ct_info (const nfc_iso14443b2ct_info_t nci, bool verbose)
 {
-  printf ("               Data: ");
-  print_hex (nci.abtData, nci.szDataLen);
+  uint32_t uid;
+  uid = (nci.abtUID[3] << 24) + (nci.abtUID[2] << 16) + (nci.abtUID[1] << 8) + nci.abtUID[0];
+  printf ("                UID: ");
+  print_hex (nci.abtUID, sizeof(nci.abtUID));
+  printf ("      UID (decimal): %010u\n", uid);
+  printf ("       Product Code: %02X\n", nci.btProdCode);
+  printf ("           Fab Code: %02X\n", nci.btFabCode);
 }
 
 void
@@ -754,13 +759,13 @@ print_nfc_target (const nfc_target_t nt, bool verbose)
       printf ("ISO/IEC 14443-4B' (%s) target:\n", str_nfc_baud_rate(nt.nm.nbr));
       print_nfc_iso14443bi_info (nt.nti.nii, verbose);
     break;
-    case NMT_ISO14443B3SR:
-      printf ("ISO/IEC 14443-3B ST SRx (%s) target:\n", str_nfc_baud_rate(nt.nm.nbr));
-      print_nfc_iso14443b3sr_info (nt.nti.nsi, verbose);
+    case NMT_ISO14443B2SR:
+      printf ("ISO/IEC 14443-2B ST SRx (%s) target:\n", str_nfc_baud_rate(nt.nm.nbr));
+      print_nfc_iso14443b2sr_info (nt.nti.nsi, verbose);
     break;
-    case NMT_ISO14443B3CT:
-      printf ("ISO/IEC 14443-3B ASK CTx (%s) target:\n", str_nfc_baud_rate(nt.nm.nbr));
-      print_nfc_iso14443b3ct_info (nt.nti.nci, verbose);
+    case NMT_ISO14443B2CT:
+      printf ("ISO/IEC 14443-2B ASK CTx (%s) target:\n", str_nfc_baud_rate(nt.nm.nbr));
+      print_nfc_iso14443b2ct_info (nt.nti.nci, verbose);
     break;
     case NMT_DEP:
       printf ("D.E.P. (%s) target:\n", str_nfc_baud_rate(nt.nm.nbr));

@@ -397,17 +397,22 @@ pn53x_decode_target_data (const byte_t * pbtRawData, size_t szRawData, pn53x_typ
       }
       break;
 
-    case NMT_ISO14443B3SR:
+    case NMT_ISO14443B2SR:
       // Store the UID
       memcpy (pnti->nsi.abtUID, pbtRawData, 8);
       pbtRawData += 8;
       break;
 
-    case NMT_ISO14443B3CT:
-      // Store the unknown data as one blob for now
-      memcpy (pnti->nci.abtData, pbtRawData, szRawData);
-      pbtRawData += szRawData;
-      pnti->nci.szDataLen = szRawData;
+    case NMT_ISO14443B2CT:
+      // Store UID LSB
+      memcpy (pnti->nci.abtUID, pbtRawData, 2);
+      pbtRawData += 2;
+      // Store Prod Code & Fab Code
+      pnti->nci.btProdCode = *(pbtRawData++);
+      pnti->nci.btFabCode = *(pbtRawData++);
+      // Store UID MSB
+      memcpy (pnti->nci.abtUID+2, pbtRawData, 2);
+      pbtRawData += 2;
       break;
 
     case NMT_FELICA:
@@ -844,7 +849,7 @@ pn53x_initiator_select_passive_target (nfc_device_t * pnd,
   byte_t  abtTargetsData[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
   size_t  szTargetsData = sizeof(abtTargetsData);
 
-  if (nm.nmt == NMT_ISO14443BI || nm.nmt == NMT_ISO14443B3SR || nm.nmt == NMT_ISO14443B3CT) {
+  if (nm.nmt == NMT_ISO14443BI || nm.nmt == NMT_ISO14443B2SR || nm.nmt == NMT_ISO14443B2CT) {
     // No native support in InListPassiveTarget so we do discovery by hand
     if (!nfc_configure (pnd, NDO_FORCE_ISO14443_B, true)) {
       return false;
@@ -856,7 +861,7 @@ pn53x_initiator_select_passive_target (nfc_device_t * pnd,
       return false;
     }
     pnd->bEasyFraming = false;
-    if (nm.nmt == NMT_ISO14443B3SR) {
+    if (nm.nmt == NMT_ISO14443B2SR) {
       // Some work to do before getting the UID...
       byte_t abtInitiate[]="\x06\x00";
       size_t szInitiateLen = 2;
@@ -873,8 +878,31 @@ pn53x_initiator_select_passive_target (nfc_device_t * pnd,
         return false;
       }
     }
+    else if (nm.nmt == NMT_ISO14443B2CT) {
+      // Some work to do before getting the UID...
+      byte_t abtReqt[]="\x10";
+      size_t szReqtLen = 1;
+      byte_t abtRx[2];
+      size_t szRxLen = 2;
+      // Getting product code / fab code & store it in output buffer after the serial nr we'll obtain later
+      if (!pn53x_initiator_transceive_bytes (pnd, abtReqt, szReqtLen, abtTargetsData+2, &szTargetsData) || szTargetsData != 2) {
+        return false;
+      }
+    }
     if (!pn53x_initiator_transceive_bytes (pnd, pbtInitData, szInitData, abtTargetsData, &szTargetsData)) {
       return false;
+    }
+    if (nm.nmt == NMT_ISO14443B2CT) {
+      if (szTargetsData != 2)
+        return false;
+      byte_t abtRead[]="\xC4"; // Reading UID_MSB (Read address 4)
+      size_t szReadLen = 1;
+      byte_t abtRx[2];
+      size_t szRxLen = 2;
+      if (!pn53x_initiator_transceive_bytes (pnd, abtRead, szReadLen, abtTargetsData+4, &szTargetsData) || szTargetsData != 2) {
+        return false;
+      }
+      szTargetsData = 6; // u16 UID_LSB, u8 prod code, u8 fab code, u16 UID_MSB
     }
     if (pnt) {
       pnt->nm = nm;
@@ -1416,8 +1444,8 @@ pn53x_target_init (nfc_device_t * pnd, nfc_target_t * pnt, byte_t * pbtRx, size_
     break;
     case NMT_ISO14443B:
     case NMT_ISO14443BI:
-    case NMT_ISO14443B3SR:
-    case NMT_ISO14443B3CT:
+    case NMT_ISO14443B2SR:
+    case NMT_ISO14443B2CT:
     case NMT_JEWEL:
       pnd->iLastError = DENOTSUP;
       return false;
@@ -1518,8 +1546,8 @@ pn53x_target_init (nfc_device_t * pnd, nfc_target_t * pnt, byte_t * pbtRx, size_
     break;
     case NMT_ISO14443B:
     case NMT_ISO14443BI:
-    case NMT_ISO14443B3SR:
-    case NMT_ISO14443B3CT:
+    case NMT_ISO14443B2SR:
+    case NMT_ISO14443B2CT:
     case NMT_JEWEL:
       pnd->iLastError = DENOTSUP;
       return false;
@@ -2307,8 +2335,8 @@ pn53x_nm_to_pm(const nfc_modulation_t nm)
     break;
 
     case NMT_ISO14443BI:
-    case NMT_ISO14443B3SR:
-    case NMT_ISO14443B3CT:
+    case NMT_ISO14443B2SR:
+    case NMT_ISO14443B2CT:
     case NMT_DEP:
       // Nothing to do...
     break;
@@ -2409,8 +2437,8 @@ pn53x_nm_to_ptt(const nfc_modulation_t nm)
     break;
 
     case NMT_ISO14443BI:
-    case NMT_ISO14443B3SR:
-    case NMT_ISO14443B3CT:
+    case NMT_ISO14443B2SR:
+    case NMT_ISO14443B2CT:
     case NMT_DEP:
       // Nothing to do...
     break;

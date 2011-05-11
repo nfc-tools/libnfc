@@ -245,21 +245,22 @@ typedef struct {
 } nfc_iso14443bi_info_t;
 
 /**
- * @struct nfc_iso14443b3sr_info_t
- * @brief NFC ISO14443-3B ST SRx tag information
+ * @struct nfc_iso14443b2sr_info_t
+ * @brief NFC ISO14443-2B ST SRx tag information
  */
 typedef struct {
   byte_t abtUID[8];
-} nfc_iso14443b3sr_info_t;
+} nfc_iso14443b2sr_info_t;
 
 /**
- * @struct nfc_iso14443b3ct_info_t
- * @brief NFC ISO14443-3B ASK CTx tag information
+ * @struct nfc_iso14443b2ct_info_t
+ * @brief NFC ISO14443-2B ASK CTx tag information
  */
 typedef struct {
-  byte_t abtData[256]; // No idea what data to expect...
-  size_t szDataLen;
-} nfc_iso14443b3ct_info_t;
+  byte_t abtUID[4];
+  byte_t btProdCode;
+  byte_t btFabCode;
+} nfc_iso14443b2ct_info_t;
 
 /**
  * @struct nfc_jewel_info_t
@@ -279,8 +280,8 @@ typedef union {
   nfc_felica_info_t nfi;
   nfc_iso14443b_info_t nbi;
   nfc_iso14443bi_info_t nii;
-  nfc_iso14443b3sr_info_t nsi;
-  nfc_iso14443b3ct_info_t nci;
+  nfc_iso14443b2sr_info_t nsi;
+  nfc_iso14443b2ct_info_t nci;
   nfc_jewel_info_t nji;
   nfc_dep_info_t ndi;
 } nfc_target_info_t;
@@ -306,8 +307,8 @@ typedef enum {
   NMT_JEWEL,
   NMT_ISO14443B,
   NMT_ISO14443BI, // pre-ISO14443B aka ISO/IEC 14443 B' or Type B'
-  NMT_ISO14443B3SR, // ISO14443-3B ST SRx
-  NMT_ISO14443B3CT, // ISO14443-3B ASK CTx
+  NMT_ISO14443B2SR, // ISO14443-2B ST SRx
+  NMT_ISO14443B2CT, // ISO14443-2B ASK CTx
   NMT_FELICA,
   NMT_DEP,
 } nfc_modulation_type_t;
