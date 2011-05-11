@@ -159,6 +159,8 @@ struct pn53x_data {
   uint8_t ui8LastCommand;
 /** Interframe timer correction */
   int16_t timer_correction;
+/** Timer prescaler */
+  uint16_t timer_prescaler;
 /** WriteBack cache */
   uint8_t wb_data[PN53X_CACHE_REGISTER_SIZE];
   uint8_t wb_mask[PN53X_CACHE_REGISTER_SIZE];
