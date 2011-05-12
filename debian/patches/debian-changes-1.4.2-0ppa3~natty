@@ -1,0 +1,676 @@
+Description: Upstream changes introduced in version 1.4.2-0ppa3~natty
+ This patch has been created by dpkg-source during the package build.
+ Here's the last changelog entry, hopefully it gives details on why
+ those changes were made:
+ .
+ libnfc (1.4.2-0ppa3~natty) natty; urgency=low
+ .
+   * Upload to PPA
+ .
+ The person named in the Author field signed this changelog entry.
+Author: Thomas Hood <jdthood@gmail.com>
+
+---
+The information above should follow the Patch Tagging Guidelines, please
+checkout http://dep.debian.net/deps/dep3/ to learn about the format. Here
+are templates for supplementary fields that you might want to add:
+
+Origin: <vendor|upstream|other>, <url of original patch>
+Bug: <url in upstream bugtracker>
+Bug-Debian: http://bugs.debian.org/<bugnumber>
+Bug-Ubuntu: https://launchpad.net/bugs/<bugnumber>
+Forwarded: <no|not-needed|url proving that it has been forwarded>
+Reviewed-By: <name and email of someone who approved the patch>
+Last-Update: <YYYY-MM-DD>
+
+--- libnfc-1.4.2.orig/aclocal.m4
++++ libnfc-1.4.2/aclocal.m4
+@@ -19,200 +19,6 @@ You have another version of autoconf.  I
+ If you have problems, you may need to regenerate the build system entirely.
+ To do so, use the procedure documented by the package, typically `autoreconf'.])])
+ 
+-AC_DEFUN([AC_CHECK_ENABLE_COVERAGE],
+-[
+-  AC_ARG_ENABLE([coverage],
+-                AS_HELP_STRING([--enable-coverage],
+-                               [Enable coverage]),
+-                [cutter_enable_coverage=$enableval],
+-                [cutter_enable_coverage=no])
+-  if test "x$cutter_enable_coverage" != "xno"; then
+-    ltp_version_list="1.6 1.7 1.8 1.9"
+-    AC_PATH_TOOL(LCOV, lcov)
+-    AC_PATH_TOOL(GENHTML, genhtml)
+-
+-    if test -x "$LCOV"; then
+-      AC_CACHE_CHECK([for ltp version],
+-                     cutter_cv_ltp_version,
+-                     [
+-        ltp_version=`$LCOV -v 2>/dev/null | $SED -e 's/^.* //'`
+-        cutter_cv_ltp_version="$ltp_version (NG)"
+-        for ltp_check_version in $ltp_version_list; do
+-          if test "$ltp_version" = "$ltp_check_version"; then
+-            cutter_cv_ltp_version="$ltp_check_version (ok)"
+-          fi
+-        done
+-      ])
+-    fi
+-
+-    case "$cutter_cv_ltp_version" in
+-      *\(ok\)*)
+-        cutter_enable_coverage=yes
+-        ;;
+-      *)
+-        cutter_enable_coverage=no
+-        ;;
+-    esac
+-  fi
+-  AC_MSG_CHECKING([for enabling coverage])
+-  AC_MSG_RESULT($cutter_enable_coverage)
+-])
+-
+-AC_DEFUN([AC_CHECK_COVERAGE],
+-[
+-  ac_check_coverage_makefile=$1
+-  if test -z "$ac_check_coverage_makefile"; then
+-    ac_check_coverage_makefile=Makefile
+-  fi
+-  AC_SUBST(ac_check_coverage_makefile)
+-
+-  AC_CHECK_ENABLE_COVERAGE
+-
+-  COVERAGE_CFLAGS=
+-  if test "$cutter_enable_coverage" = "yes"; then
+-    COVERAGE_CFLAGS="--coverage"
+-  fi
+-  AC_SUBST(COVERAGE_CFLAGS)
+-  AM_CONDITIONAL([ENABLE_COVERAGE], [test "$cutter_enable_coverage" = "yes"])
+-
+-  COVERAGE_INFO_FILE="coverage.info"
+-  AC_SUBST(COVERAGE_INFO_FILE)
+-
+-  COVERAGE_REPORT_DIR="coverage"
+-  AC_SUBST(COVERAGE_REPORT_DIR)
+-
+-  if test "$GENHTML_OPTIONS" = ""; then
+-    GENHTML_OPTIONS=""
+-  fi
+-  AC_SUBST(GENHTML_OPTIONS)
+-
+-  if test "$cutter_enable_coverage" = "yes"; then
+-    AC_CONFIG_COMMANDS([coverage], [
+-      if test -e "$ac_check_coverage_makefile" && \
+-         grep -q '^coverage:' $ac_check_coverage_makefile; then
+-        : # do nothing
+-      else
+-        sed -e 's/^        /	/g' <<EOS >>$ac_check_coverage_makefile
+-.PHONY: coverage-clean coverage-report coverage coverage-force
+-
+-coverage-clean:
+-	\$(LCOV) --compat-libtool --zerocounters --directory . \\
+-	  --output-file \$(COVERAGE_INFO_FILE)
+-
+-coverage-report:
+-	\$(LCOV) --compat-libtool --directory . \\
+-	  --capture --output-file \$(COVERAGE_INFO_FILE)
+-	\$(LCOV) --compat-libtool --directory . \\
+-	  --extract \$(COVERAGE_INFO_FILE) "\`(cd '\$(top_srcdir)'; pwd)\`/*" \\
+-	  --output-file \$(COVERAGE_INFO_FILE)
+-	\$(GENHTML) --highlight --legend \\
+-	  --output-directory \$(COVERAGE_REPORT_DIR) \\
+-	  --prefix "\`(cd '\$(top_srcdir)'; pwd)\`" \\
+-	  \$(GENHTML_OPTIONS) \$(COVERAGE_INFO_FILE)
+-
+-coverage: coverage-clean check coverage-report
+-
+-coverage-force:
+-	\$(MAKE) \$(AM_MAKEFLAGS) coverage-clean
+-	\$(MAKE) \$(AM_MAKEFLAGS) check || :
+-	\$(MAKE) \$(AM_MAKEFLAGS) coverage-report
+-EOS
+-      fi
+-    ],
+-    [ac_check_coverage_makefile="$ac_check_coverage_makefile"])
+-  fi
+-])
+-
+-AC_DEFUN([AC_CHECK_CUTTER],
+-[
+-  AC_ARG_WITH([cutter],
+-              AS_HELP_STRING([--with-cutter],
+-                             [Use Cutter (default: auto)]),
+-              [cutter_with_value=$withval],
+-              [cutter_with_value=auto])
+-  if test -z "$cutter_use_cutter"; then
+-    if test "x$cutter_with_value" = "xno"; then
+-      cutter_use_cutter=no
+-    else
+-      PKG_CHECK_MODULES(CUTTER, cutter $1,
+-                        [cutter_use_cutter=yes],
+-                        [cutter_use_cutter=no])
+-    fi
+-  fi
+-  if test "$cutter_use_cutter" != "no"; then
+-    _PKG_CONFIG(CUTTER, variable=cutter, cutter)
+-    CUTTER=$pkg_cv_CUTTER
+-  fi
+-  ac_cv_use_cutter="$cutter_use_cutter" # for backward compatibility
+-  AC_SUBST([CUTTER_CFLAGS])
+-  AC_SUBST([CUTTER_LIBS])
+-  AC_SUBST([CUTTER])
+-])
+-
+-AC_DEFUN([AC_CHECK_GCUTTER],
+-[
+-  AC_CHECK_CUTTER($1)
+-  if test "$cutter_use_cutter" = "no"; then
+-    cutter_use_gcutter=no
+-  fi
+-  if test "x$cutter_use_gcutter" = "x"; then
+-    PKG_CHECK_MODULES(GCUTTER, gcutter $1,
+-                      [cutter_use_gcutter=yes],
+-                      [cutter_use_gcutter=no])
+-  fi
+-  ac_cv_use_gcutter="$cutter_use_gcutter" # for backward compatibility
+-  AC_SUBST([GCUTTER_CFLAGS])
+-  AC_SUBST([GCUTTER_LIBS])
+-])
+-
+-AC_DEFUN([AC_CHECK_CPPCUTTER],
+-[
+-  AC_CHECK_CUTTER($1)
+-  if test "$cutter_use_cutter" = "no"; then
+-    cutter_use_cppcutter=no
+-  fi
+-  if test "x$cutter_use_cppcutter" = "x"; then
+-    PKG_CHECK_MODULES(CPPCUTTER, cppcutter $1,
+-                      [cutter_use_cppcutter=yes],
+-                      [cutter_use_cppcutter=no])
+-  fi
+-  ac_cv_use_cppcutter="$cutter_use_cppcutter" # for backward compatibility
+-  AC_SUBST([CPPCUTTER_CFLAGS])
+-  AC_SUBST([CPPCUTTER_LIBS])
+-])
+-
+-AC_DEFUN([AC_CHECK_GDKCUTTER_PIXBUF],
+-[
+-  AC_CHECK_GCUTTER($1)
+-  if test "$cutter_use_cutter" = "no"; then
+-    cutter_use_gdkcutter_pixbuf=no
+-  fi
+-  if test "x$cutter_use_gdkcutter_pixbuf" = "x"; then
+-    PKG_CHECK_MODULES(GDKCUTTER_PIXBUF, gdkcutter-pixbuf $1,
+-                      [cutter_use_gdkcutter_pixbuf=yes],
+-                      [cutter_use_gdkcutter_pixbuf=no])
+-  fi
+-  ac_cv_use_gdkcutter_pixbuf="$cutter_use_gdkcutter_pixbuf" # for backward compatibility
+-  AC_SUBST([GDKCUTTER_PIXBUF_CFLAGS])
+-  AC_SUBST([GDKCUTTER_PIXBUF_LIBS])
+-])
+-
+-AC_DEFUN([AC_CHECK_SOUPCUTTER],
+-[
+-  AC_CHECK_GCUTTER($1)
+-  if test "$cutter_use_cutter" = "no"; then
+-    cutter_use_soupcutter=no
+-  fi
+-  if test "$cutter_use_soupcutter" != "no"; then
+-    PKG_CHECK_MODULES(SOUPCUTTER, soupcutter $1,
+-                      [cutter_use_soupcutter=yes],
+-		      [cutter_use_soupcutter=no])
+-  fi
+-  ac_cv_use_soupcutter="$cutter_use_soupcutter" # for backward compatibility
+-  AC_SUBST([SOUPCUTTER_CFLAGS])
+-  AC_SUBST([SOUPCUTTER_LIBS])
+-])
+-
+ # pkg.m4 - Macros to locate and utilise pkg-config.            -*- Autoconf -*-
+ # serial 1 (pkg-config-0.24)
+ # 
+@@ -350,7 +156,7 @@ $$1_PKG_ERRORS
+ Consider adjusting the PKG_CONFIG_PATH environment variable if you
+ installed software in a non-standard prefix.
+ 
+-_PKG_TEXT])dnl
++_PKG_TEXT])[]dnl
+         ])
+ elif test $pkg_failed = untried; then
+      	AC_MSG_RESULT([no])
+@@ -361,7 +167,7 @@ path to pkg-config.
+ 
+ _PKG_TEXT
+ 
+-To get pkg-config, see <http://pkg-config.freedesktop.org/>.])dnl
++To get pkg-config, see <http://pkg-config.freedesktop.org/>.])[]dnl
+         ])
+ else
+ 	$1[]_CFLAGS=$pkg_cv_[]$1[]_CFLAGS
+--- libnfc-1.4.2.orig/Makefile.in
++++ libnfc-1.4.2/Makefile.in
+@@ -150,9 +150,6 @@ CCDEPMODE = @CCDEPMODE@
+ CFLAGS = @CFLAGS@
+ CPP = @CPP@
+ CPPFLAGS = @CPPFLAGS@
+-CUTTER = @CUTTER@
+-CUTTER_CFLAGS = @CUTTER_CFLAGS@
+-CUTTER_LIBS = @CUTTER_LIBS@
+ CYGPATH_W = @CYGPATH_W@
+ DEFS = @DEFS@
+ DEPDIR = @DEPDIR@
+--- libnfc-1.4.2.orig/configure
++++ libnfc-1.4.2/configure
+@@ -750,9 +750,6 @@ READLINE_INCLUDES
+ READLINE_LIBS
+ WITH_CUTTER_FALSE
+ WITH_CUTTER_TRUE
+-CUTTER
+-CUTTER_LIBS
+-CUTTER_CFLAGS
+ PCSC_ENABLED_FALSE
+ PCSC_ENABLED_TRUE
+ LIBUSB_ENABLED_FALSE
+@@ -910,7 +907,6 @@ with_drivers
+ enable_serial_autoprobe
+ enable_doc
+ with_libusb_win32
+-with_cutter
+ with_readline
+ '
+       ac_precious_vars='build_alias
+@@ -928,9 +924,7 @@ PKG_CONFIG_LIBDIR
+ libusb_CFLAGS
+ libusb_LIBS
+ libpcsclite_CFLAGS
+-libpcsclite_LIBS
+-CUTTER_CFLAGS
+-CUTTER_LIBS'
++libpcsclite_LIBS'
+ 
+ 
+ # Initialize some variables set by options.
+@@ -1580,7 +1574,6 @@ Optional Packages:
+                           The special driver set 'all' compile all available
+                           drivers.
+   --with-libusb-win32     use libusb-win32 from the following location
+-  --with-cutter           Use Cutter (default: auto)
+   --with-readline[=dir]   Compile with readline/locate base dir
+ 
+ Some influential environment variables:
+@@ -1604,9 +1597,6 @@ Some influential environment variables:
+               C compiler flags for libpcsclite, overriding pkg-config
+   libpcsclite_LIBS
+               linker flags for libpcsclite, overriding pkg-config
+-  CUTTER_CFLAGS
+-              C compiler flags for CUTTER, overriding pkg-config
+-  CUTTER_LIBS linker flags for CUTTER, overriding pkg-config
+ 
+ Use these variables to override the choices made by `configure' or to help
+ it to find libraries and programs with nonstandard names/locations.
+@@ -2580,7 +2570,7 @@ ac_config_headers="$ac_config_headers co
+ 
+ # SVN revison
+ 
+-SVN_REVISION=891
++SVN_REVISION=exported
+ 
+ cat >>confdefs.h <<_ACEOF
+ #define SVN_REVISION "$SVN_REVISION"
+@@ -4807,13 +4797,13 @@ if test "${lt_cv_nm_interface+set}" = se
+ else
+   lt_cv_nm_interface="BSD nm"
+   echo "int some_variable = 0;" > conftest.$ac_ext
+-  (eval echo "\"\$as_me:4810: $ac_compile\"" >&5)
++  (eval echo "\"\$as_me:4800: $ac_compile\"" >&5)
+   (eval "$ac_compile" 2>conftest.err)
+   cat conftest.err >&5
+-  (eval echo "\"\$as_me:4813: $NM \\\"conftest.$ac_objext\\\"\"" >&5)
++  (eval echo "\"\$as_me:4803: $NM \\\"conftest.$ac_objext\\\"\"" >&5)
+   (eval "$NM \"conftest.$ac_objext\"" 2>conftest.err > conftest.out)
+   cat conftest.err >&5
+-  (eval echo "\"\$as_me:4816: output\"" >&5)
++  (eval echo "\"\$as_me:4806: output\"" >&5)
+   cat conftest.out >&5
+   if $GREP 'External.*some_variable' conftest.out > /dev/null; then
+     lt_cv_nm_interface="MS dumpbin"
+@@ -6019,7 +6009,7 @@ ia64-*-hpux*)
+   ;;
+ *-*-irix6*)
+   # Find out which ABI we are using.
+-  echo '#line 6022 "configure"' > conftest.$ac_ext
++  echo '#line 6012 "configure"' > conftest.$ac_ext
+   if { { eval echo "\"\$as_me\":${as_lineno-$LINENO}: \"$ac_compile\""; } >&5
+   (eval $ac_compile) 2>&5
+   ac_status=$?
+@@ -7548,11 +7538,11 @@ else
+    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
+    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
+    -e 's:$: $lt_compiler_flag:'`
+-   (eval echo "\"\$as_me:7551: $lt_compile\"" >&5)
++   (eval echo "\"\$as_me:7541: $lt_compile\"" >&5)
+    (eval "$lt_compile" 2>conftest.err)
+    ac_status=$?
+    cat conftest.err >&5
+-   echo "$as_me:7555: \$? = $ac_status" >&5
++   echo "$as_me:7545: \$? = $ac_status" >&5
+    if (exit $ac_status) && test -s "$ac_outfile"; then
+      # The compiler can only warn and ignore the option if not recognized
+      # So say no if there are warnings other than the usual output.
+@@ -7887,11 +7877,11 @@ else
+    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
+    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
+    -e 's:$: $lt_compiler_flag:'`
+-   (eval echo "\"\$as_me:7890: $lt_compile\"" >&5)
++   (eval echo "\"\$as_me:7880: $lt_compile\"" >&5)
+    (eval "$lt_compile" 2>conftest.err)
+    ac_status=$?
+    cat conftest.err >&5
+-   echo "$as_me:7894: \$? = $ac_status" >&5
++   echo "$as_me:7884: \$? = $ac_status" >&5
+    if (exit $ac_status) && test -s "$ac_outfile"; then
+      # The compiler can only warn and ignore the option if not recognized
+      # So say no if there are warnings other than the usual output.
+@@ -7992,11 +7982,11 @@ else
+    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
+    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
+    -e 's:$: $lt_compiler_flag:'`
+-   (eval echo "\"\$as_me:7995: $lt_compile\"" >&5)
++   (eval echo "\"\$as_me:7985: $lt_compile\"" >&5)
+    (eval "$lt_compile" 2>out/conftest.err)
+    ac_status=$?
+    cat out/conftest.err >&5
+-   echo "$as_me:7999: \$? = $ac_status" >&5
++   echo "$as_me:7989: \$? = $ac_status" >&5
+    if (exit $ac_status) && test -s out/conftest2.$ac_objext
+    then
+      # The compiler can only warn and ignore the option if not recognized
+@@ -8047,11 +8037,11 @@ else
+    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
+    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
+    -e 's:$: $lt_compiler_flag:'`
+-   (eval echo "\"\$as_me:8050: $lt_compile\"" >&5)
++   (eval echo "\"\$as_me:8040: $lt_compile\"" >&5)
+    (eval "$lt_compile" 2>out/conftest.err)
+    ac_status=$?
+    cat out/conftest.err >&5
+-   echo "$as_me:8054: \$? = $ac_status" >&5
++   echo "$as_me:8044: \$? = $ac_status" >&5
+    if (exit $ac_status) && test -s out/conftest2.$ac_objext
+    then
+      # The compiler can only warn and ignore the option if not recognized
+@@ -10431,7 +10421,7 @@ else
+   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
+   lt_status=$lt_dlunknown
+   cat > conftest.$ac_ext <<_LT_EOF
+-#line 10434 "configure"
++#line 10424 "configure"
+ #include "confdefs.h"
+ 
+ #if HAVE_DLFCN_H
+@@ -10527,7 +10517,7 @@ else
+   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
+   lt_status=$lt_dlunknown
+   cat > conftest.$ac_ext <<_LT_EOF
+-#line 10530 "configure"
++#line 10520 "configure"
+ #include "confdefs.h"
+ 
+ #if HAVE_DLFCN_H
+@@ -11991,114 +11981,7 @@ fi
+ 
+ 
+ CUTTER_REQUIRED_VERSION=1.1.2
+-
+-
+-# Check whether --with-cutter was given.
+-if test "${with_cutter+set}" = set; then :
+-  withval=$with_cutter; cutter_with_value=$withval
+-else
+-  cutter_with_value=auto
+-fi
+-
+-  if test -z "$cutter_use_cutter"; then
+-    if test "x$cutter_with_value" = "xno"; then
+-      cutter_use_cutter=no
+-    else
+-
+-pkg_failed=no
+-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for CUTTER" >&5
+-$as_echo_n "checking for CUTTER... " >&6; }
+-
+-if test -n "$CUTTER_CFLAGS"; then
+-    pkg_cv_CUTTER_CFLAGS="$CUTTER_CFLAGS"
+- elif test -n "$PKG_CONFIG"; then
+-    if test -n "$PKG_CONFIG" && \
+-    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"cutter >= \$CUTTER_REQUIRED_VERSION\""; } >&5
+-  ($PKG_CONFIG --exists --print-errors "cutter >= $CUTTER_REQUIRED_VERSION") 2>&5
+-  ac_status=$?
+-  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+-  test $ac_status = 0; }; then
+-  pkg_cv_CUTTER_CFLAGS=`$PKG_CONFIG --cflags "cutter >= $CUTTER_REQUIRED_VERSION" 2>/dev/null`
+-else
+-  pkg_failed=yes
+-fi
+- else
+-    pkg_failed=untried
+-fi
+-if test -n "$CUTTER_LIBS"; then
+-    pkg_cv_CUTTER_LIBS="$CUTTER_LIBS"
+- elif test -n "$PKG_CONFIG"; then
+-    if test -n "$PKG_CONFIG" && \
+-    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"cutter >= \$CUTTER_REQUIRED_VERSION\""; } >&5
+-  ($PKG_CONFIG --exists --print-errors "cutter >= $CUTTER_REQUIRED_VERSION") 2>&5
+-  ac_status=$?
+-  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+-  test $ac_status = 0; }; then
+-  pkg_cv_CUTTER_LIBS=`$PKG_CONFIG --libs "cutter >= $CUTTER_REQUIRED_VERSION" 2>/dev/null`
+-else
+-  pkg_failed=yes
+-fi
+- else
+-    pkg_failed=untried
+-fi
+-
+-
+-
+-if test $pkg_failed = yes; then
+-   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+-$as_echo "no" >&6; }
+-
+-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+-        _pkg_short_errors_supported=yes
+-else
+-        _pkg_short_errors_supported=no
+-fi
+-        if test $_pkg_short_errors_supported = yes; then
+-	        CUTTER_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors "cutter >= $CUTTER_REQUIRED_VERSION" 2>&1`
+-        else
+-	        CUTTER_PKG_ERRORS=`$PKG_CONFIG --print-errors "cutter >= $CUTTER_REQUIRED_VERSION" 2>&1`
+-        fi
+-	# Put the nasty error message in config.log where it belongs
+-	echo "$CUTTER_PKG_ERRORS" >&5
+-
+-	cutter_use_cutter=no
+-elif test $pkg_failed = untried; then
+-     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+-$as_echo "no" >&6; }
+-	cutter_use_cutter=no
+-else
+-	CUTTER_CFLAGS=$pkg_cv_CUTTER_CFLAGS
+-	CUTTER_LIBS=$pkg_cv_CUTTER_LIBS
+-        { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+-$as_echo "yes" >&6; }
+-	cutter_use_cutter=yes
+-fi
+-    fi
+-  fi
+-  if test "$cutter_use_cutter" != "no"; then
+-    if test -n "$CUTTER"; then
+-    pkg_cv_CUTTER="$CUTTER"
+- elif test -n "$PKG_CONFIG"; then
+-    if test -n "$PKG_CONFIG" && \
+-    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"cutter\""; } >&5
+-  ($PKG_CONFIG --exists --print-errors "cutter") 2>&5
+-  ac_status=$?
+-  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+-  test $ac_status = 0; }; then
+-  pkg_cv_CUTTER=`$PKG_CONFIG --variable=cutter "cutter" 2>/dev/null`
+-else
+-  pkg_failed=yes
+-fi
+- else
+-    pkg_failed=untried
+-fi
+-    CUTTER=$pkg_cv_CUTTER
+-  fi
+-  ac_cv_use_cutter="$cutter_use_cutter" # for backward compatibility
+-
+-
+-
+-
++ac_cv_use_cutter="no"
+ if test x$ac_cv_with_cutter = xyes -a x$ac_cv_use_cutter = xno; then
+   as_fn_error $? "cutter >= $CUTTER_REQUIRED_VERSION is mandatory." "$LINENO" 5
+ fi
+--- libnfc-1.4.2.orig/cmake_modules/Makefile.in
++++ libnfc-1.4.2/cmake_modules/Makefile.in
+@@ -70,9 +70,6 @@ CCDEPMODE = @CCDEPMODE@
+ CFLAGS = @CFLAGS@
+ CPP = @CPP@
+ CPPFLAGS = @CPPFLAGS@
+-CUTTER = @CUTTER@
+-CUTTER_CFLAGS = @CUTTER_CFLAGS@
+-CUTTER_LIBS = @CUTTER_LIBS@
+ CYGPATH_W = @CYGPATH_W@
+ DEFS = @DEFS@
+ DEPDIR = @DEPDIR@
+--- libnfc-1.4.2.orig/examples/Makefile.in
++++ libnfc-1.4.2/examples/Makefile.in
+@@ -257,9 +257,6 @@ CCDEPMODE = @CCDEPMODE@
+ CFLAGS = @CFLAGS@
+ CPP = @CPP@
+ CPPFLAGS = @CPPFLAGS@
+-CUTTER = @CUTTER@
+-CUTTER_CFLAGS = @CUTTER_CFLAGS@
+-CUTTER_LIBS = @CUTTER_LIBS@
+ CYGPATH_W = @CYGPATH_W@
+ DEFS = @DEFS@
+ DEPDIR = @DEPDIR@
+--- libnfc-1.4.2.orig/examples/pn53x-tamashell-scripts/Makefile.in
++++ libnfc-1.4.2/examples/pn53x-tamashell-scripts/Makefile.in
+@@ -70,9 +70,6 @@ CCDEPMODE = @CCDEPMODE@
+ CFLAGS = @CFLAGS@
+ CPP = @CPP@
+ CPPFLAGS = @CPPFLAGS@
+-CUTTER = @CUTTER@
+-CUTTER_CFLAGS = @CUTTER_CFLAGS@
+-CUTTER_LIBS = @CUTTER_LIBS@
+ CYGPATH_W = @CYGPATH_W@
+ DEFS = @DEFS@
+ DEPDIR = @DEPDIR@
+--- libnfc-1.4.2.orig/contrib/Makefile.in
++++ libnfc-1.4.2/contrib/Makefile.in
+@@ -110,9 +110,6 @@ CCDEPMODE = @CCDEPMODE@
+ CFLAGS = @CFLAGS@
+ CPP = @CPP@
+ CPPFLAGS = @CPPFLAGS@
+-CUTTER = @CUTTER@
+-CUTTER_CFLAGS = @CUTTER_CFLAGS@
+-CUTTER_LIBS = @CUTTER_LIBS@
+ CYGPATH_W = @CYGPATH_W@
+ DEFS = @DEFS@
+ DEPDIR = @DEPDIR@
+--- libnfc-1.4.2.orig/contrib/win32/Makefile.in
++++ libnfc-1.4.2/contrib/win32/Makefile.in
+@@ -70,9 +70,6 @@ CCDEPMODE = @CCDEPMODE@
+ CFLAGS = @CFLAGS@
+ CPP = @CPP@
+ CPPFLAGS = @CPPFLAGS@
+-CUTTER = @CUTTER@
+-CUTTER_CFLAGS = @CUTTER_CFLAGS@
+-CUTTER_LIBS = @CUTTER_LIBS@
+ CYGPATH_W = @CYGPATH_W@
+ DEFS = @DEFS@
+ DEPDIR = @DEPDIR@
+--- libnfc-1.4.2.orig/libnfc/Makefile.in
++++ libnfc-1.4.2/libnfc/Makefile.in
+@@ -175,9 +175,6 @@ CCDEPMODE = @CCDEPMODE@
+ CFLAGS = @CFLAGS@
+ CPP = @CPP@
+ CPPFLAGS = @CPPFLAGS@
+-CUTTER = @CUTTER@
+-CUTTER_CFLAGS = @CUTTER_CFLAGS@
+-CUTTER_LIBS = @CUTTER_LIBS@
+ CYGPATH_W = @CYGPATH_W@
+ DEFS = @DEFS@
+ DEPDIR = @DEPDIR@
+--- libnfc-1.4.2.orig/libnfc/buses/Makefile.in
++++ libnfc-1.4.2/libnfc/buses/Makefile.in
+@@ -107,9 +107,6 @@ CCDEPMODE = @CCDEPMODE@
+ CFLAGS = @CFLAGS@
+ CPP = @CPP@
+ CPPFLAGS = @CPPFLAGS@
+-CUTTER = @CUTTER@
+-CUTTER_CFLAGS = @CUTTER_CFLAGS@
+-CUTTER_LIBS = @CUTTER_LIBS@
+ CYGPATH_W = @CYGPATH_W@
+ DEFS = @DEFS@
+ DEPDIR = @DEPDIR@
+--- libnfc-1.4.2.orig/libnfc/drivers/Makefile.in
++++ libnfc-1.4.2/libnfc/drivers/Makefile.in
+@@ -133,9 +133,6 @@ CCDEPMODE = @CCDEPMODE@
+ CFLAGS = @CFLAGS@
+ CPP = @CPP@
+ CPPFLAGS = @CPPFLAGS@
+-CUTTER = @CUTTER@
+-CUTTER_CFLAGS = @CUTTER_CFLAGS@
+-CUTTER_LIBS = @CUTTER_LIBS@
+ CYGPATH_W = @CYGPATH_W@
+ DEFS = @DEFS@
+ DEPDIR = @DEPDIR@
+--- libnfc-1.4.2.orig/libnfc/chips/Makefile.in
++++ libnfc-1.4.2/libnfc/chips/Makefile.in
+@@ -107,9 +107,6 @@ CCDEPMODE = @CCDEPMODE@
+ CFLAGS = @CFLAGS@
+ CPP = @CPP@
+ CPPFLAGS = @CPPFLAGS@
+-CUTTER = @CUTTER@
+-CUTTER_CFLAGS = @CUTTER_CFLAGS@
+-CUTTER_LIBS = @CUTTER_LIBS@
+ CYGPATH_W = @CYGPATH_W@
+ DEFS = @DEFS@
+ DEPDIR = @DEPDIR@
+--- libnfc-1.4.2.orig/include/Makefile.in
++++ libnfc-1.4.2/include/Makefile.in
+@@ -110,9 +110,6 @@ CCDEPMODE = @CCDEPMODE@
+ CFLAGS = @CFLAGS@
+ CPP = @CPP@
+ CPPFLAGS = @CPPFLAGS@
+-CUTTER = @CUTTER@
+-CUTTER_CFLAGS = @CUTTER_CFLAGS@
+-CUTTER_LIBS = @CUTTER_LIBS@
+ CYGPATH_W = @CYGPATH_W@
+ DEFS = @DEFS@
+ DEPDIR = @DEPDIR@
+--- libnfc-1.4.2.orig/include/nfc/Makefile.in
++++ libnfc-1.4.2/include/nfc/Makefile.in
+@@ -97,9 +97,6 @@ CCDEPMODE = @CCDEPMODE@
+ CFLAGS = @CFLAGS@
+ CPP = @CPP@
+ CPPFLAGS = @CPPFLAGS@
+-CUTTER = @CUTTER@
+-CUTTER_CFLAGS = @CUTTER_CFLAGS@
+-CUTTER_LIBS = @CUTTER_LIBS@
+ CYGPATH_W = @CYGPATH_W@
+ DEFS = @DEFS@
+ DEPDIR = @DEPDIR@
+--- libnfc-1.4.2.orig/test/Makefile.in
++++ libnfc-1.4.2/test/Makefile.in
+@@ -129,9 +129,6 @@ CCDEPMODE = @CCDEPMODE@
+ CFLAGS = @CFLAGS@
+ CPP = @CPP@
+ CPPFLAGS = @CPPFLAGS@
+-CUTTER = @CUTTER@
+-CUTTER_CFLAGS = @CUTTER_CFLAGS@
+-CUTTER_LIBS = @CUTTER_LIBS@
+ CYGPATH_W = @CYGPATH_W@
+ DEFS = @DEFS@
+ DEPDIR = @DEPDIR@

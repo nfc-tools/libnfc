@@ -1,8 +1,23 @@
+libnfc (1.5.0pre1-1) unstable; urgency=low
+  
+  * Change name of lib to libnfc1 to match SONAME major version 1.
+  * Change section and priority.
+  * Don't depend on automake which doesn't get run on build.
+    (Instead, automake-generated files are included in patches/.)
+  * Set debian/source/format contents to "3.0 (quilt)"
+  * chmod ugo+x ./configure in debian/rules.
+  * Depend on debhelper (>= 7) to match debian/compat.
+  * Make the following changes that were suggested by lintian.
+  * Depend on ${misc:Depends} since we use debhelper.
+  * Use dh_prep instead of dh_clean -k.
+
+ -- Thomas Hood <jdthood@gmail.com>  Mon, 10 May 2011 12:00:00 +0100
+
 libnfc (1.5.0-0) unstable; urgency=low
   
-  * Experimental not-released trunk version.
+  * Experimental released version (r1019).
 
- -- Romuald Conty <rconty@il4p.fr>  Mon, 4 Apr 2011 11:42:42 +0100
+ -- Romuald Conty <rconty@il4p.fr>  Mon, 29 Apr 2011 11:42:42 +0100
 
 libnfc (1.4.2-0ppa3~natty) natty; urgency=low
 

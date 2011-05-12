@@ -1,27 +1,32 @@
-This package was debianized by Romuald Conty <romuald.conty@free.fr> on
-Wed, 22 Apr 2009 10:42:42 +0100.
+Format: http://dep.debian.net/deps/dep5
+Upstream-Name: libnfc
+Source: http://www.libnfc.org/
 
-It was downloaded from: http://www.libnfc.org/
+Files: *
+Copyright: 2009, Roel Verdult <roel@libnfc.org>
+License: LGPL-3
+ This program is free software; you can redistribute it and/or modify
+ it under the terms of the GNU Lesser General Public License version 3 
+ as published by the Free Software Foundation
+ .
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+ .
+ You should have received a copy of the GNU General Public License
+ along with this program; if not, see <http://www.gnu.org/licenses/>.
+ .
+ On Debian GNU/Linux systems, the complete text of the GNU General
+ Public License, version 3, can be found in the file
+ /usr/share/common-licenses/LGPL-3.
 
-Copyright (C) 2009 by Roel Verdult <roel@libnfc.org>
-
-License: GNU Lesser General Public License version 3
-
-  This program is free software; you can redistribute it and/or modify
-  it under the terms of the GNU Lesser General Public License version 3 
-  as published by the Free Software Foundation
-
-  This program is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details.
-
-  You should have received a copy of the GNU General Public License
-  along with this program; if not, see <http://www.gnu.org/licenses/>.
-
-On Debian GNU/Linux systems, the complete text of the GNU General Public
-License, version 3, can be found in `/usr/share/common-licenses/LGPL-3'.
-
-The Debian packaging is copyright 2009, Romuald Conty <romuald.conty@free.fr>
-and Thomas Hood <jdthood@gmail.com> is licensed under the GPL, version 2.
-See `/usr/share/common-licenses/GPL-2'.
+Files: debian/*
+Copyright: 2009-2011, Romuald Conty <romuald.conty@free.fr>
+Copyright: 2011, Thomas Hood <jdthood@gmail.com>
+License: GPL-2
+ The Debian packaging is licensed under the GPL, version 2.
+ .
+ On Debian GNU/Linux systems, the complete text of the GNU General
+ Public License, version 2, can be found in the file
+ /usr/share/common-licenses/GPL-2.

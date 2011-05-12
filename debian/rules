@@ -45,6 +45,7 @@ endif
 ifneq "$(wildcard /usr/share/misc/config.guess)" ""
 	cp -f /usr/share/misc/config.guess config.guess
 endif
+	chmod ugo+x ./configure
 	./configure $(CROSS) --enable-serial-autoprobe --prefix=/usr --mandir=\$${prefix}/share/man --infodir=\$${prefix}/share/info CFLAGS="$(CFLAGS) $(CROSS_CFLAGS)" LDFLAGS="-Wl,-z,defs $(LDFLAGS)"
 
 
