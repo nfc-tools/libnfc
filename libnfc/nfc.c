@@ -560,6 +560,12 @@ nfc_initiator_transceive_bits (nfc_device_t * pnd, const byte_t * pbtTx, const s
  * - It only supports mode with \a NDO_EASY_FRAMING option disabled.
  * - Overall communication with the host is heavier and slower.
  *
+ * Timer control:
+ * By default timer can count up to 65535 cycles, so about 4.8ms, with a precision of about 73ns.
+ * - If you're ok with the defaults, set *cycles = 0 before calling this function.
+ * - If you need to count more cycles, set *cycles to the maximum you expect but don't forget
+ *   you'll loose in precision and it'll take more time before timeout, so don't abuse!
+ *
  * @warning The configuration option \a NDO_EASY_FRAMING must be set to \c false.
  * @warning The configuration option \a NDO_HANDLE_PARITY must be set to \c true (the default value).
  */
@@ -578,6 +584,12 @@ nfc_initiator_transceive_bytes_timed (nfc_device_t * pnd, const byte_t * pbtTx, 
  * - A precise cycles counter will indicate the number of cycles between emission & reception of frames.
  * - It only supports mode with \a NDO_EASY_FRAMING option disabled and CRC must be handled manually.
  * - Overall communication with the host is heavier and slower.
+ *
+ * Timer control:
+ * By default timer can count up to 65535 cycles, so about 4.8ms, with a precision of about 73ns.
+ * - If you're ok with the defaults, set *cycles = 0 before calling this function.
+ * - If you need to count more cycles, set *cycles to the maximum you expect but don't forget
+ *   you'll loose in precision and it'll take more time before timeout, so don't abuse!
  *
  * @warning The configuration option \a NDO_EASY_FRAMING must be set to \c false.
  * @warning The configuration option \a NDO_HANDLE_CRC must be set to \c false.

@@ -1109,7 +1109,7 @@ pn53x_initiator_transceive_bytes (nfc_device_t * pnd, const byte_t * pbtTx, cons
   return true;
 }
 
-void __pn53x_init_timer(nfc_device_t * pnd)
+void __pn53x_init_timer(nfc_device_t * pnd, const uint32_t max_cycles)
 {
 // The prescaler will dictate what will be the precision and
 // the largest delay to measure before saturation. Some examples:
@@ -1117,7 +1117,11 @@ void __pn53x_init_timer(nfc_device_t * pnd)
 // prescaler =  1 => precision: ~221ns  timer saturates at   ~15ms
 // prescaler =  2 => precision: ~369ns  timer saturates at   ~25ms
 // prescaler = 10 => precision: ~1.5us  timer saturates at  ~100ms
-  CHIP_DATA (pnd)->timer_prescaler = 0;
+  if (max_cycles > 0xFFFF) {
+      CHIP_DATA (pnd)->timer_prescaler = ((max_cycles/0xFFFF)-1)/2;
+  } else {
+      CHIP_DATA (pnd)->timer_prescaler = 0;
+  }
   uint16_t reloadval = 0xFFFF;
   // Initialize timer
   pn53x_write_register (pnd, PN53X_REG_CIU_TMode, 0xFF, SYMBOL_TAUTO | ((CHIP_DATA (pnd)->timer_prescaler >> 8) & SYMBOL_TPRESCALERHI));
@@ -1213,7 +1217,7 @@ pn53x_initiator_transceive_bits_timed (nfc_device_t * pnd, const byte_t * pbtTx,
     return false;
   }
 
-  __pn53x_init_timer(pnd);
+  __pn53x_init_timer(pnd, *cycles);
 
   // Once timer is started, we cannot use Tama commands anymore.
   // E.g. on SCL3711 timer settings are reset by 0x42 InCommunicateThru command to:
@@ -1308,7 +1312,7 @@ pn53x_initiator_transceive_bytes_timed (nfc_device_t * pnd, const byte_t * pbtTx
     return false;
   }
 
-  __pn53x_init_timer(pnd);
+  __pn53x_init_timer(pnd, *cycles);
 
   // Once timer is started, we cannot use Tama commands anymore.
   // E.g. on SCL3711 timer settings are reset by 0x42 InCommunicateThru command to:
