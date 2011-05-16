@@ -6,7 +6,7 @@ Build-Depends: debhelper (>= 7), libtool, pkg-config, libusb-dev, libpcsclite-de
 Standards-Version: 3.9.2
 Homepage: http://www.libnfc.org/
 
-Package: libnfc1
+Package: libnfc2
 Section: libs
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, libusb-0.1-4, libpcsclite1 (>= 1.5), libccid (>= 1.3.10), pcscd (>= 1.5)
@@ -18,7 +18,7 @@ Description: Near Field Communication (NFC) library
 Package: libnfc-dev
 Section: libdevel
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, libnfc1 (= ${binary:Version}), libusb-dev, libpcsclite-dev
+Depends: ${misc:Depends}, libnfc2 (= ${binary:Version}), libusb-dev, libpcsclite-dev
 Description: Near Field Communication library (development files)
  libnfc is a free software library for near-field communication.
  It supports most hardware based on the NXP PN531, PN532 or PN533
@@ -27,7 +27,7 @@ Description: Near Field Communication library (development files)
 Package: libnfc-bin
 Section: utils
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, libnfc1 (>= ${binary:Version})
+Depends: ${shlibs:Depends}, ${misc:Depends}, libnfc2 (>= ${binary:Version})
 Description: Near Field Communication binaries
  Some binaries are provided with libnfc useful for development
  purposes (nfc-list, nfc-mfclassic, nfc-mfultralight, etc.).
@@ -35,7 +35,7 @@ Description: Near Field Communication binaries
 Package: libnfc-examples
 Section: utils
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, libnfc1 (>= ${binary:Version})
+Depends: ${shlibs:Depends}, ${misc:Depends}, libnfc2 (>= ${binary:Version})
 Description: Near Field Communication examples
  Some examples are provided with libnfc for debugging and/or
  educational purposes (nfc-anticol, nfc-emulate, etc.).
@@ -43,7 +43,7 @@ Description: Near Field Communication examples
 Package: libnfc-pn53x-examples
 Section: utils
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, libnfc1 (>= ${binary:Version})
+Depends: ${shlibs:Depends}, ${misc:Depends}, libnfc2 (>= ${binary:Version})
 Description: Near Field Communication examples for PN53x chips only
  Some PN53x-only examples are provided with libnfc for debugging
  and/or educational purposes (pn53x-sam, pn53x-tamashell, etc.).
