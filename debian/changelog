@@ -1,4 +1,4 @@
-libnfc (1.5.0pre1-1) unstable; urgency=low
+libnfc (1.5.0pre2-0) unstable; urgency=low
   
   * Change name of lib to libnfc2 to match SONAME major version 2.
 
@@ -24,12 +24,6 @@ libnfc (1.5.0-0) unstable; urgency=low
   * Experimental released version (r1019).
 
  -- Romuald Conty <rconty@il4p.fr>  Mon, 29 Apr 2011 11:42:42 +0100
-
-libnfc (1.4.2-0ppa3~natty) natty; urgency=low
-
-  * First upload to Ubuntu PPA
-
- -- Thomas Hood <jdthood@gmail.com>  Thu, 05 May 2011 10:00:00 +0200
 
 libnfc (1.4.2-0) unstable; urgency=low
   
