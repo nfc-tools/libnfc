@@ -94,7 +94,12 @@ int
 pn53x_usb_bulk_write (struct pn53x_usb_data *data, byte_t abtTx[], const size_t szTx)
 {
   PRINT_HEX ("TX", abtTx, szTx);
-  return usb_bulk_write (data->pudh, data->uiEndPointOut, (char *) abtTx, szTx, USB_TIMEOUT);
+  int res = usb_bulk_write (data->pudh, data->uiEndPointOut, (char *) abtTx, szTx, USB_TIMEOUT);
+  // HACK This little hack is a well know problem of USB, see http://www.libusb.org/ticket/6 for more details
+  if ((res % data->uiMaxPacketSize) == 0) {
+    usb_bulk_write (data->pudh, data->uiEndPointOut, "\0", 0, USB_TIMEOUT);
+  }
+  return res;
 }
 
 struct pn53x_usb_supported_device {
@@ -108,7 +113,7 @@ const struct pn53x_usb_supported_device pn53x_usb_supported_devices[] = {
   { 0x04CC, 0x0531, NXP_PN531,   "Philips / PN531" },
   { 0x04CC, 0x2533, NXP_PN533,   "NXP / PN533" },
   { 0x04E6, 0x5591, SCM_SCL3711, "SCM Micro / SCL3711-NFC&RW" },
-  { 0x054c, 0x0193, SONY_PN531,   "Sony / PN531" },
+  { 0x054c, 0x0193, SONY_PN531,  "Sony / PN531" },
   { 0x1FD3, 0x0608, ASK_LOGO,    "ASK / LoGO" }
 };
 
@@ -126,6 +131,7 @@ pn53x_usb_get_device_model (uint16_t vendor_id, uint16_t product_id)
 
 // TODO Move this HACK1 into an upper level in order to benefit to other devices that use PN53x
 static const byte_t ack_frame[] = { 0x00, 0x00, 0xff, 0x00, 0xff, 0x00 };
+static const byte_t nack_frame[] = { 0x00, 0x00, 0xff, 0xff, 0x00, 0x00 };
 
 int  pn53x_usb_ack (nfc_device_t * pnd);
 
@@ -372,10 +378,6 @@ pn53x_usb_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szData)
   pn53x_build_frame (abtFrame, &szFrame, pbtData, szData);
 
   int res = pn53x_usb_bulk_write (DRIVER_DATA (pnd), abtFrame, szFrame);
-  // HACK This little hack is a well know problem of USB, see http://www.libusb.org/ticket/6 for more details
-  if ((res % DRIVER_DATA (pnd)->uiMaxPacketSize) == 0) {
-    usb_bulk_write (DRIVER_DATA (pnd)->pudh, DRIVER_DATA(pnd)->uiEndPointOut, "\0", 0, USB_TIMEOUT);
-  }
 
   if (res < 0) {
     DBG ("usb_bulk_write failed with error %d", res);
@@ -396,7 +398,20 @@ pn53x_usb_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szData)
   if (pn53x_check_ack_frame (pnd, abtRxBuf, res)) {
     // The PN53x is running the sent command
   } else {
-    return false;
+    // For some reasons (eg. send another command while a previous one is
+    // running), the PN533 sometimes directly replies the response packet
+    // instead of ACK frame, so we send a NACK frame to force PN533 to resend
+    // response packet. With this hack, the nextly executed function (ie.
+    // pn53x_usb_receive()) will be able to retreive the correct response
+    // packet.
+    int res = pn53x_usb_bulk_write (DRIVER_DATA (pnd), (byte_t *)nack_frame, sizeof(nack_frame));
+    if (res < 0) {
+      DBG ("usb_bulk_write failed with error %d", res);
+      pnd->iLastError = DEIO;
+      // try to interrupt current device state
+      pn53x_usb_ack(pnd);
+      return false;
+    }
   }
 
   return true;
