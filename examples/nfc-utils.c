@@ -634,6 +634,7 @@ print_nfc_iso14443bi_info (const nfc_iso14443bi_info_t nii, bool verbose)
 void
 print_nfc_iso14443b2sr_info (const nfc_iso14443b2sr_info_t nsi, bool verbose)
 {
+  (void) verbose;
   printf ("                UID: ");
   print_hex (nsi.abtUID, 8);
 }
@@ -641,6 +642,7 @@ print_nfc_iso14443b2sr_info (const nfc_iso14443b2sr_info_t nsi, bool verbose)
 void
 print_nfc_iso14443b2ct_info (const nfc_iso14443b2ct_info_t nci, bool verbose)
 {
+  (void) verbose;
   uint32_t uid;
   uid = (nci.abtUID[3] << 24) + (nci.abtUID[2] << 16) + (nci.abtUID[1] << 8) + nci.abtUID[0];
   printf ("                UID: ");
