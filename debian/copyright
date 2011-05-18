@@ -3,7 +3,8 @@ Upstream-Name: libnfc
 Source: http://www.libnfc.org/
 
 Files: *
-Copyright: 2009, Roel Verdult <roel@libnfc.org>
+Copyright: 2009, Roel Verdult <roel@libnfc.org>, Romuald Conty <romuald@libnfc.org>
+           2010-2011, Romain Tartière <romain@libnfc.org>, Romuald Conty <romuald@libnfc.org>
 License: LGPL-3
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU Lesser General Public License version 3 
@@ -21,9 +22,34 @@ License: LGPL-3
  Public License, version 3, can be found in the file
  /usr/share/common-licenses/LGPL-3.
 
+Files: examples/*
+Copyright: 2009, Roel Verdult <roel@libnfc.org>, Romuald Conty <romuald@libnfc.org>
+           2010-2011, Romain Tartière <romain@libnfc.org>, Romuald Conty <romuald@libnfc.org>
+License: BSD-2-clause
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions
+ are met:
+ 1. Redistributions of source code must retain the above copyright
+    notice, this list of conditions and the following disclaimer.
+ 2. Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in the
+    documentation and/or other materials provided with the distribution.
+ .
+ THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+ INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+ IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ POSSIBILITY OF SUCH DAMAGE.
+
 Files: debian/*
-Copyright: 2009-2011, Romuald Conty <romuald.conty@free.fr>
-Copyright: 2011, Thomas Hood <jdthood@gmail.com>
+Copyright: 2009-2011, Romuald Conty <romuald@libnfc.org>
+           2011, Thomas Hood <jdthood@gmail.com>
 License: GPL-2
  The Debian packaging is licensed under the GPL, version 2.
  .
