@@ -77,7 +77,8 @@ int
 pn53x_usb_bulk_read (struct pn53x_usb_data *data, byte_t abtRx[], const size_t szRx)
 {
   int res = usb_bulk_read (data->pudh, data->uiEndPointIn, (char *) abtRx, szRx, USB_TIMEOUT);
-  PRINT_HEX ("RX", abtRx, res);
+  if (res > 0)
+      PRINT_HEX ("RX", abtRx, res);
   return res;
 }
 int
