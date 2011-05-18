@@ -1,10 +1,10 @@
-libnfc (1.5.0pre2-0) unstable; urgency=low
+libnfc (1.5.0pre1.2-0) unstable; urgency=low
   
   * Change name of lib to libnfc2 to match SONAME major version 2.
 
  -- Thomas Hood <jdthood@gmail.com>  Fri, 13 May 2011 12:00:00 +0100
 
-libnfc (1.5.0pre1-0) unstable; urgency=low
+libnfc (1.5.0pre1.1-0) unstable; urgency=low
   
   * Change name of lib to libnfc1 to match SONAME major version 1.
   * Change section and priority.
