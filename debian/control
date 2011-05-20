@@ -2,7 +2,7 @@ Source: libnfc
 Section: libs
 Priority: extra
 Maintainer: Thomas Hood <jdthood@gmail.com>
-Build-Depends: debhelper (>= 7), libtool, pkg-config, libusb-dev, libpcsclite-dev
+Build-Depends: debhelper (>= 7), dh-autoreconf, libtool, pkg-config, libusb-dev, libpcsclite-dev
 Standards-Version: 3.9.2
 Homepage: http://www.libnfc.org/
 
