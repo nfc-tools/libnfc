@@ -52,5 +52,5 @@ nfc_emulate_target (nfc_device_t* pnd, struct nfc_emulator *emulator)
       }
     }
   }
-  return 0;
+  return (res < 0) ? res : 0;
 }

@@ -41,10 +41,14 @@ nfc_device_new (void)
     err (EXIT_FAILURE, "nfc_device_new: malloc");
   }
 
-  res->bCrc = true;
-  res->bPar = true;
-  res->bEasyFraming    = true;
-  res->bAutoIso14443_4 = true;
+  // Variables initiatialization
+  // Note: Actually, these initialization will be overwritten while the device
+  // will be setup. Putting them to _false_ while the default is _true_ ensure we
+  // send the command to the chip
+  res->bCrc = false;
+  res->bPar = false;
+  res->bEasyFraming    = false;
+  res->bAutoIso14443_4 = false;
   res->iLastError  = 0;
   res->driver_data = NULL;
   res->chip_data   = NULL;

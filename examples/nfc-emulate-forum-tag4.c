@@ -118,11 +118,10 @@ nfcforum_tag4_io (struct nfc_emulator *emulator, const byte_t *data_in, const si
     print_hex (data_in, data_in_len);
   }
 
-  /*
-   * The PN532 already handle RATS
-   */
-  if ((data_in_len == 2) && (data_in[0] == ISO144434A_RATS))
-      return res;
+  if ((data_in_len == 2) && (data_in[0] == ISO144434A_RATS)) {
+    // The PN532 already handle RATS, so there is nothing to do
+    return res;
+  }
 
   if(data_in_len >= 4) {
     if (data_in[CLA] != 0x00)
@@ -352,7 +351,9 @@ main (int argc, char *argv[])
   printf ("Connected to NFC device: %s\n", pnd->acName);
   printf ("Emulating NDEF tag now, please touch it with a second NFC device\n");
 
-  nfc_emulate_target (pnd, &emulator); // contains already nfc_target_init() call
+  if (0 != nfc_emulate_target (pnd, &emulator)) { // contains already nfc_target_init() call
+    nfc_perror (pnd, "nfc_emulate_target");
+  }
 
   nfc_disconnect(pnd);
 

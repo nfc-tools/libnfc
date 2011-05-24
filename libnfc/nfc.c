@@ -625,6 +625,7 @@ nfc_initiator_transceive_bits_timed (nfc_device_t * pnd, const byte_t * pbtTx, c
  * - Crc is handled by the device (NDO_HANDLE_CRC = true)
  * - Parity is handled the device (NDO_HANDLE_PARITY = true)
  * - Cryto1 cipher is disabled (NDO_ACTIVATE_CRYPTO1 = false)
+ * - Auto-switching in ISO14443-4 mode is enabled (NDO_AUTO_ISO14443_4 = true)
  * - Easy framing is disabled (NDO_EASY_FRAMING = false)
  * - Invalid frames are not accepted (NDO_ACCEPT_INVALID_FRAMES = false)
  * - Multiple frames are not accepted (NDO_ACCEPT_MULTIPLE_FRAMES = false)
@@ -648,6 +649,9 @@ nfc_target_init (nfc_device_t * pnd, nfc_target_t * pnt, byte_t * pbtRx, size_t 
   if (!nfc_configure (pnd, NDO_HANDLE_CRC, true))
     return false;
   if (!nfc_configure (pnd, NDO_HANDLE_PARITY, true))
+    return false;
+  // Activate auto ISO14443-4 switching by default
+  if (!nfc_configure (pnd, NDO_AUTO_ISO14443_4, true))
     return false;
   // Activate "easy framing" feature by default
   if (!nfc_configure (pnd, NDO_EASY_FRAMING, true))
