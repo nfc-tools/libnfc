@@ -280,7 +280,7 @@ pn53x_usb_connect (const nfc_device_desc_t *pndd)
           }
           usb_close (data.pudh);
           // we failed to use the specified device
-          return NULL;
+          continue;
         }
 
         res = usb_claim_interface (data.pudh, 0);
@@ -288,7 +288,7 @@ pn53x_usb_connect (const nfc_device_desc_t *pndd)
           DBG ("Can't claim interface (%s)", strerror (-res));
           usb_close (data.pudh);
           // we failed to use the specified device
-          return NULL;
+          continue;
         }
         data.model = pn53x_usb_get_device_model (dev->descriptor.idVendor, dev->descriptor.idProduct);
         // Allocate memory for the device info and specification, fill it and return the info
