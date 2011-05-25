@@ -365,6 +365,7 @@ pn53x_usb_disconnect (nfc_device_t * pnd)
   if ((res = usb_close (DRIVER_DATA (pnd)->pudh)) < 0) {
     ERR ("usb_close failed (%i)", res);
   }
+  pn53x_data_free (pnd);
   nfc_device_free (pnd);
 }
 

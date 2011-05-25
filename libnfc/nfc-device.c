@@ -61,7 +61,6 @@ nfc_device_free (nfc_device_t *nfc_device)
 {
   if (nfc_device) {
     free (nfc_device->driver_data);
-    free (nfc_device->chip_data);
     free (nfc_device);
   }
 }

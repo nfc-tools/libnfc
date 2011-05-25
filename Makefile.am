@@ -10,7 +10,6 @@ pkgconfig_DATA = libnfc.pc
 EXTRA_DIST = \
 	CMakeLists.txt \
 	Doxyfile \
-	LICENSE \
 	README-Windows.txt \
 	pn53x.conf \
 	pn53x.rules

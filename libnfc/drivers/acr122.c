@@ -245,6 +245,7 @@ acr122_disconnect (nfc_device_t * pnd)
   SCardDisconnect (DRIVER_DATA (pnd)->hCard, SCARD_LEAVE_CARD);
   acr122_free_scardcontext ();
 
+  pn53x_data_free (pnd);
   nfc_device_free (pnd);
 }
 

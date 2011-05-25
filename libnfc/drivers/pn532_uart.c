@@ -163,10 +163,11 @@ pn532_uart_connect (const nfc_device_desc_t * pndd)
 
   pnd->driver_data = malloc(sizeof(struct pn532_uart_data));
   DRIVER_DATA(pnd)->port = sp;
-  pnd->chip_data = malloc(sizeof(struct pn53x_data));
-  CHIP_DATA(pnd)->type = PN532;
+  // Alloc and init chip's data
+  pn53x_data_new (pnd, &pn532_uart_io);
+  // This device starts in LowVBat mode
   CHIP_DATA(pnd)->power_mode = LOWVBAT;
-  CHIP_DATA(pnd)->io = &pn532_uart_io;
+
   // empirical tuning
   CHIP_DATA(pnd)->timer_correction = 48;
   pnd->driver = &pn532_uart_driver;

@@ -2467,3 +2467,12 @@ pn53x_data_new (nfc_device_t * pnd, const struct pn53x_io* io)
   CHIP_DATA (pnd)->wb_trigged = false;
   memset (CHIP_DATA (pnd)->wb_mask, 0x00, PN53X_CACHE_REGISTER_SIZE);
 }
+
+void
+pn53x_data_free (nfc_device_t * pnd)
+{
+  if (CHIP_DATA (pnd)->current_target) {
+    free (CHIP_DATA (pnd)->current_target);
+  }
+  free (pnd->chip_data);
+}

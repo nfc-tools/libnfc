@@ -175,11 +175,13 @@ arygon_connect (const nfc_device_desc_t * pndd)
 
   pnd->driver_data = malloc(sizeof(struct arygon_data));
   DRIVER_DATA (pnd)->port = sp;
-  pnd->chip_data = malloc(sizeof(struct pn53x_data));
+  
+  // Alloc and init chip's data
+  pn53x_data_new (pnd, &arygon_tama_io);
 
-  // The PN53x chip connected to ARYGON MCU doesn't seems to be in SLEEP mode
+  // The PN53x chip connected to ARYGON MCU doesn't seems to be in LowVBat mode
   CHIP_DATA (pnd)->power_mode = NORMAL;
-  CHIP_DATA (pnd)->io = &arygon_tama_io;
+
   // empirical tuning
   CHIP_DATA (pnd)->timer_correction = 46;
   pnd->driver = &arygon_driver;
@@ -220,6 +222,7 @@ arygon_disconnect (nfc_device_t * pnd)
   close (DRIVER_DATA (pnd)->iAbortFds[1]);
 #endif
 
+  pn53x_data_free(pnd);
   nfc_device_free (pnd);
 }
 

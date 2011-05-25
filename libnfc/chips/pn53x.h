@@ -337,5 +337,6 @@ bool    pn53x_check_error_frame (nfc_device_t * pnd, const byte_t * pbtRxFrame, 
 bool    pn53x_build_frame (byte_t * pbtFrame, size_t * pszFrame, const byte_t * pbtData, const size_t szData);
 
 void    pn53x_data_new (nfc_device_t * pnd, const struct pn53x_io* io);
+void    pn53x_data_free (nfc_device_t * pnd);
 
 #endif // __NFC_CHIPS_PN53X_H__
