@@ -111,6 +111,8 @@ arygon_probe (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * pszDev
     DBG ("Trying to find ARYGON device on serial port: %s at %d bauds.", pcPort, ARYGON_DEFAULT_SPEED);
 
     if ((sp != INVALID_SERIAL_PORT) && (sp != CLAIMED_SERIAL_PORT)) {
+      // We need to flush input to be sure first reply does not comes from older byte transceive
+      uart_flush_input (sp);
       uart_set_speed (sp, ARYGON_DEFAULT_SPEED);
 
       nfc_device_t *pnd = nfc_device_new ();
@@ -167,6 +169,8 @@ arygon_connect (const nfc_device_desc_t * pndd)
   if ((sp == CLAIMED_SERIAL_PORT) || (sp == INVALID_SERIAL_PORT))
     return NULL;
 
+  // We need to flush input to be sure first reply does not comes from older byte transceive
+  uart_flush_input (sp);
   uart_set_speed (sp, pndd->uiSpeed);
 
   // We have a connection
@@ -231,6 +235,9 @@ arygon_disconnect (nfc_device_t * pnd)
 bool
 arygon_tama_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szData)
 {
+  // Before sending anything, we need to discard from any junk bytes
+  uart_flush_input (DRIVER_DATA(pnd)->port);
+
   byte_t abtFrame[ARYGON_TX_BUFFER_LEN] = { DEV_ARYGON_PROTOCOL_TAMA, 0x00, 0x00, 0xff };     // Every packet must start with "0x32 0x00 0x00 0xff"
 
   size_t szFrame = 0;

@@ -90,6 +90,8 @@ pn532_uart_probe (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * ps
     DBG ("Trying to find PN532 device on serial port: %s at %d bauds.", pcPort, PN532_UART_DEFAULT_SPEED);
 
     if ((sp != INVALID_SERIAL_PORT) && (sp != CLAIMED_SERIAL_PORT)) {
+      // We need to flush input to be sure first reply does not comes from older byte transceive
+      uart_flush_input (sp);
       // Serial port claimed but we need to check if a PN532_UART is connected.
       uart_set_speed (sp, PN532_UART_DEFAULT_SPEED);
 
@@ -154,6 +156,8 @@ pn532_uart_connect (const nfc_device_desc_t * pndd)
   if ((sp == CLAIMED_SERIAL_PORT) || (sp == INVALID_SERIAL_PORT))
     return NULL;
 
+  // We need to flush input to be sure first reply does not comes from older byte transceive
+  uart_flush_input (sp);
   uart_set_speed (sp, pndd->uiSpeed);
 
   // We have a connection
@@ -219,6 +223,9 @@ pn532_uart_wakeup (nfc_device_t * pnd)
 bool
 pn532_uart_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szData)
 {
+  // Before sending anything, we need to discard from any junk bytes
+  uart_flush_input (DRIVER_DATA(pnd)->port);
+
   switch (CHIP_DATA(pnd)->power_mode) {
     case LOWVBAT: {
       /** PN532C106 wakeup. */

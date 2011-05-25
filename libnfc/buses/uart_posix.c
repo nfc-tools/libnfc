@@ -100,14 +100,34 @@ uart_open (const char *pcPortName)
   sp->tiNew.c_cc[VMIN] = 0;     // block until n bytes are received
   sp->tiNew.c_cc[VTIME] = 0;    // block until a timer expires (n * 100 mSec.)
 
-  // This line seems to produce absolutely no effect on my system (GNU/Linux 2.6.35)
-  tcflush (sp->fd, TCIFLUSH);
-
   if (tcsetattr (sp->fd, TCSANOW, &sp->tiNew) == -1) {
     uart_close (sp);
     return INVALID_SERIAL_PORT;
   }
   return sp;
+}
+
+void
+uart_flush_input (serial_port sp)
+{
+  // This line seems to produce absolutely no effect on my system (GNU/Linux 2.6.35)
+  tcflush (((serial_port_unix *) sp)->fd, TCIFLUSH);
+  // So, I wrote this byte-eater
+  // Retrieve the count of the incoming bytes
+  int available_bytes_count = 0;
+  int res;
+  res = ioctl (((serial_port_unix *) sp)->fd, FIONREAD, &available_bytes_count);
+  if (res != 0) {
+    return;
+  }
+  if (available_bytes_count == 0) {
+    return;
+  }
+  char* rx = malloc (available_bytes_count);
+  // There is something available, read the data
+  res = read (((serial_port_unix *) sp)->fd, rx, available_bytes_count);
+  DBG ("%d bytes have eatten.", available_bytes_count);
+  free (rx);
 }
 
 void

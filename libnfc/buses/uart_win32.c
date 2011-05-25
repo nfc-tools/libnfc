@@ -88,6 +88,12 @@ uart_close (const serial_port sp)
 }
 
 void
+uart_flush_input (const serial_port sp)
+{
+  // TODO: Implement me
+}
+
+void
 uart_set_speed (serial_port sp, const uint32_t uiPortSpeed)
 {
   serial_port_windows *spw;

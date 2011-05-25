@@ -42,6 +42,7 @@ typedef void *serial_port;
 
 serial_port uart_open (const char *pcPortName);
 void    uart_close (const serial_port sp);
+void    uart_flush_input (const serial_port sp);
 
 void    uart_set_speed (serial_port sp, const uint32_t uiPortSpeed);
 uint32_t uart_get_speed (const serial_port sp);
