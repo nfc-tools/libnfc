@@ -128,7 +128,7 @@ main (int argc, const char *argv[])
 
   // Display libnfc version
   const char *acLibnfcVersion = nfc_version ();
-  printf ("%s use libnfc %s\n", argv[0], acLibnfcVersion);
+  printf ("%s uses libnfc %s\n", argv[0], acLibnfcVersion);
 
   // Connect using the first available NFC device
   pnd = nfc_connect (NULL);

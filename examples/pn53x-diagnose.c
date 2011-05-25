@@ -64,7 +64,7 @@ main (int argc, const char *argv[])
   }
   // Display libnfc version
   acLibnfcVersion = nfc_version ();
-  printf ("%s use libnfc %s\n", argv[0], acLibnfcVersion);
+  printf ("%s uses libnfc %s\n", argv[0], acLibnfcVersion);
 
   if (!(pnddDevices = malloc (MAX_DEVICE_COUNT * sizeof (*pnddDevices)))) {
     fprintf (stderr, "malloc() failed\n");

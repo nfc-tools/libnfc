@@ -64,7 +64,7 @@ bool
 pn53x_init(nfc_device_t * pnd)
 {
   // GetFirmwareVersion command is used to set PN53x chips type (PN531, PN532 or PN533)
-  char abtFirmwareText[18];
+  char abtFirmwareText[22];
   if (!pn53x_get_firmware_version (pnd, abtFirmwareText)) {
     return false;
   }
@@ -579,7 +579,7 @@ pn53x_writeback_register (nfc_device_t * pnd)
 }
 
 bool
-pn53x_get_firmware_version (nfc_device_t * pnd, char abtFirmwareText[18])
+pn53x_get_firmware_version (nfc_device_t * pnd, char abtFirmwareText[22])
 {
   const byte_t abtCmd[] = { GetFirmwareVersion };
   byte_t  abtFw[4];
@@ -606,15 +606,15 @@ pn53x_get_firmware_version (nfc_device_t * pnd, char abtFirmwareText[18])
   // Convert firmware info in text, PN531 gives 2 bytes info, but PN532 and PN533 gives 4
   switch (CHIP_DATA(pnd)->type) {
     case PN531:
-      snprintf (abtFirmwareText, 18, "PN531 v%d.%d", abtFw[0], abtFw[1]);
+      snprintf (abtFirmwareText, 22, "PN531 v%d.%d", abtFw[0], abtFw[1]);
       pnd->btSupportByte = SUPPORT_ISO14443A | SUPPORT_ISO18092;
       break;
     case PN532:
-      snprintf (abtFirmwareText, 18, "PN532 v%d.%d (0x%02x)", abtFw[1], abtFw[2], abtFw[3]);
+      snprintf (abtFirmwareText, 22, "PN532 v%d.%d (0x%02x)", abtFw[1], abtFw[2], abtFw[3]);
       pnd->btSupportByte = abtFw[3];
       break;
     case PN533:
-      snprintf (abtFirmwareText, 18, "PN533 v%d.%d (0x%02x)", abtFw[1], abtFw[2], abtFw[3]);
+      snprintf (abtFirmwareText, 22, "PN533 v%d.%d (0x%02x)", abtFw[1], abtFw[2], abtFw[3]);
       pnd->btSupportByte = abtFw[3];
       break;
   }

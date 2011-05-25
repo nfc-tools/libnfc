@@ -195,7 +195,7 @@ main (int argc, char *argv[])
   }
 
   // Display libnfc version
-  printf ("%s use libnfc %s\n", argv[0], acLibnfcVersion);
+  printf ("%s uses libnfc %s\n", argv[0], acLibnfcVersion);
 
 #ifdef WIN32
   signal (SIGINT, (void (__cdecl *) (int)) intr_hdlr);

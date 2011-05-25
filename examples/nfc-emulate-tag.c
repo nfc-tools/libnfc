@@ -184,7 +184,7 @@ main (int argc, char *argv[])
 
   // Display libnfc version
   acLibnfcVersion = nfc_version ();
-  printf ("%s use libnfc %s\n", argv[0], acLibnfcVersion);
+  printf ("%s uses libnfc %s\n", argv[0], acLibnfcVersion);
 
   if (pnd == NULL) {
     ERR("Unable to connect to NFC device");

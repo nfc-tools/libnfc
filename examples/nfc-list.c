@@ -71,7 +71,7 @@ main (int argc, const char *argv[])
 
   // Display libnfc version
   acLibnfcVersion = nfc_version ();
-  printf ("%s use libnfc %s\n", argv[0], acLibnfcVersion);
+  printf ("%s uses libnfc %s\n", argv[0], acLibnfcVersion);
 
   pnddDevices = parse_args (argc, argv, &szDeviceFound, &verbose);
 #ifdef HAVE_LIBUSB

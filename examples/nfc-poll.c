@@ -81,7 +81,7 @@ main (int argc, const char *argv[])
     errx (1, "usage: %s", argv[0]);
   }
 
-  printf ("%s use libnfc %s\n", argv[0], acLibnfcVersion);
+  printf ("%s uses libnfc %s\n", argv[0], acLibnfcVersion);
 
   if (szFound == 0) {
     if (!(pnddDevices = malloc (MAX_DEVICE_COUNT * sizeof (*pnddDevices)))) {
