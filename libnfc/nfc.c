@@ -154,6 +154,7 @@ nfc_pick_device (void)
         DBG ("No %s device found", ndr->name);
         free (pndd);
       } else {
+        DBG ("One %s device found", ndr->name);
         return pndd;
       }
     }

@@ -202,6 +202,15 @@ pn53x_usb_probe (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * psz
           }
 
           usb_dev_handle *udev = usb_open (dev);
+
+          // Set configuration
+          int res = usb_set_configuration (udev, 1);
+          if (res < 0) {
+            usb_close (udev);
+            // we failed to use the device
+            continue;
+          }
+
           pn53x_usb_get_usb_device_name (dev, udev, pnddDevices[*pszDeviceFound].acDevice, sizeof (pnddDevices[*pszDeviceFound].acDevice));
           usb_close (udev);
           pnddDevices[*pszDeviceFound].pcDriver = PN53X_USB_DRIVER_NAME;
@@ -280,7 +289,7 @@ pn53x_usb_connect (const nfc_device_desc_t *pndd)
           }
           usb_close (data.pudh);
           // we failed to use the specified device
-          continue;
+          return NULL;
         }
 
         res = usb_claim_interface (data.pudh, 0);
@@ -288,7 +297,7 @@ pn53x_usb_connect (const nfc_device_desc_t *pndd)
           DBG ("Can't claim interface (%s)", strerror (-res));
           usb_close (data.pudh);
           // we failed to use the specified device
-          continue;
+          return NULL;
         }
         data.model = pn53x_usb_get_device_model (dev->descriptor.idVendor, dev->descriptor.idProduct);
         // Allocate memory for the device info and specification, fill it and return the info
