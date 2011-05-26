@@ -126,35 +126,29 @@ authenticate (uint32_t uiBlock)
   uint32_t uiTrailerBlock;
   size_t  key_index;
 
+  // Set the authentication information (uid)
+  memcpy (mp.mpa.abtUid, nt.nti.nai.abtUid + nt.nti.nai.szUidLen - 4, 4);
+
+  // Should we use key A or B?
+  mc = (bUseKeyA) ? MC_AUTH_A : MC_AUTH_B;
+
   // Key file authentication.
   if (bUseKeyFile) {
-    // Set the authentication information (uid)
-    memcpy (mp.mpa.abtUid, nt.nti.nai.abtUid, 4);
 
     // Locate the trailer (with the keys) used for this sector
     uiTrailerBlock = get_trailer_block (uiBlock);
 
-    // Determin if we should use the a or the b key
-    if (bUseKeyA) {
-      mc = MC_AUTH_A;
+    // Extract the right key from dump file
+    if (bUseKeyA)
       memcpy (mp.mpa.abtKey, mtKeys.amb[uiTrailerBlock].mbt.abtKeyA, 6);
-    } else {
-      mc = MC_AUTH_B;
+    else
       memcpy (mp.mpa.abtKey, mtKeys.amb[uiTrailerBlock].mbt.abtKeyB, 6);
-    }
 
     // Try to authenticate for the current sector
     if (nfc_initiator_mifare_cmd (pnd, mc, uiBlock, &mp))
       return true;
-  }
-  // Auto authentication.
-  else {
-    // Determin if we should use the a or the b key
-    mc = (bUseKeyA) ? MC_AUTH_A : MC_AUTH_B;
-
-    // Set the authentication information (uid)
-    memcpy (mp.mpa.abtUid, nt.nti.nai.abtUid, 4);
-
+  } else {
+    // Try to guess the right key
     for (key_index = 0; key_index < num_keys; key_index++) {
       memcpy (mp.mpa.abtKey, keys + (key_index * 6), 6);
       if (nfc_initiator_mifare_cmd (pnd, mc, uiBlock, &mp)) {
@@ -162,11 +156,9 @@ authenticate (uint32_t uiBlock)
           memcpy (mtKeys.amb[uiBlock].mbt.abtKeyA, &mp.mpa.abtKey, 6);
         else
           memcpy (mtKeys.amb[uiBlock].mbt.abtKeyB, &mp.mpa.abtKey, 6);
-
         return true;
       }
-
-      nfc_initiator_select_passive_target (pnd, nmMifare, mp.mpa.abtUid, 4, NULL);
+      nfc_initiator_select_passive_target (pnd, nmMifare, nt.nti.nai.abtUid, nt.nti.nai.szUidLen, NULL);
     }
   }
 
@@ -351,7 +343,6 @@ print_usage (const char *pcProgramName)
 int
 main (int argc, const char *argv[])
 {
-  bool    b4K;
   action_t atAction = ACTION_USAGE;
   byte_t *pbtUID;
   FILE   *pfKeys = NULL;
@@ -454,29 +445,36 @@ main (int argc, const char *argv[])
     }
     // Test if we are dealing with a MIFARE compatible tag
     if ((nt.nti.nai.btSak & 0x08) == 0) {
-      printf ("Error: tag is not a MIFARE Classic card\n");
-      nfc_disconnect (pnd);
-      exit (EXIT_FAILURE);
+      printf ("Warning: tag is probably not a MFC!\n");
     }
 
-    if (bUseKeyFile) {
-      // Get the info from the key dump
-      b4K = (mtKeys.amb[0].mbm.abtATQA[1] == 0x02);
-      pbtUID = mtKeys.amb[0].mbm.abtUID;
-
-      // Compare if key dump UID is the same as the current tag UID
-      if (memcmp (nt.nti.nai.abtUid, pbtUID, 4) != 0) {
-        printf ("Expected MIFARE Classic %ck card with UID: %02x%02x%02x%02x\n", b4K ? '4' : '1', pbtUID[0], pbtUID[1],
-                pbtUID[2], pbtUID[3]);
-      }
-    }
     // Get the info from the current tag
     pbtUID = nt.nti.nai.abtUid;
-    b4K = (nt.nti.nai.abtAtqa[1] == 0x02);
-    printf ("Found MIFARE Classic %ck card:\n", b4K ? '4' : '1');
+
+    if (bUseKeyFile) {
+      byte_t fileUid[4];
+      memcpy (fileUid, mtKeys.amb[0].mbm.abtUID, 4);
+      // Compare if key dump UID is the same as the current tag UID, at least for the first 4 bytes
+      if (memcmp (nt.nti.nai.abtUid, fileUid, 4) != 0) {
+        printf ("Expected MIFARE Classic card with UID starting as: %02x%02x%02x%02x\n",
+                fileUid[0], fileUid[1], fileUid[2], fileUid[3]);
+      }
+    }
+    printf ("Found MIFARE Classic card:\n");
     print_nfc_iso14443a_info (nt.nti.nai, false);
 
-    uiBlocks = (b4K) ? 0xff : 0x3f;
+    // Guessing size
+    if ((nt.nti.nai.abtAtqa[1] & 0x02) == 0x02)
+      // 4K
+      uiBlocks = 0xff;
+    else if ((nt.nti.nai.btSak & 0x01) == 0x01)
+      // 320b
+      uiBlocks = 0x13;
+    else
+      // 1K
+      // TODO: for MFP it is 0x7f (2K) but how to be sure it's a MFP? Try to get RATS?
+      uiBlocks = 0x3f;
+    printf ("Guessing size: seems to be a %i-byte card\n", (uiBlocks + 1) * 16);
 
     if (atAction == ACTION_READ) {
       if (read_card ()) {
