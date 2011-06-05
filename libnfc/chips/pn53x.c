@@ -593,8 +593,12 @@ pn53x_get_firmware_version (nfc_device_t * pnd, char abtFirmwareText[22])
   } else if (szFwLen == 4) {
     if (abtFw[0] == 0x32) { // PN532 version IC
       CHIP_DATA(pnd)->type = PN532;
-    } else if (abtFw[0] == 0x33)  { // PN532 version IC
-      CHIP_DATA(pnd)->type = PN533;
+    } else if (abtFw[0] == 0x33)  { // PN533 version IC
+      if (abtFw[1] == 0x01) { // Sony ROM code
+        CHIP_DATA(pnd)->type = S330;
+      } else {
+        CHIP_DATA(pnd)->type = PN533;
+      }
     } else {
       // Unknown version IC
       return false;
@@ -614,6 +618,7 @@ pn53x_get_firmware_version (nfc_device_t * pnd, char abtFirmwareText[22])
       pnd->btSupportByte = abtFw[3];
       break;
     case PN533:
+    case S330:
       snprintf (abtFirmwareText, 22, "PN533 v%d.%d (0x%02x)", abtFw[1], abtFw[2], abtFw[3]);
       pnd->btSupportByte = abtFw[3];
       break;
@@ -1838,6 +1843,11 @@ pn53x_strerror (const nfc_device_t * pnd)
 bool
 pn53x_SetParameters (nfc_device_t * pnd, const uint8_t ui8Value)
 {
+  if (CHIP_DATA (pnd)->type == S330) {
+    // TODO add support for S330
+    return true;
+  }
+
   byte_t  abtCmd[] = { SetParameters, ui8Value };
 
   if(!pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, NULL)) {
@@ -1955,6 +1965,10 @@ pn53x_InListPassiveTarget (nfc_device_t * pnd,
 bool
 pn53x_InDeselect (nfc_device_t * pnd, const uint8_t ui8Target)
 {
+  if (CHIP_DATA(pnd)->type == S330) {
+    // TODO Add support for S330
+    return true;
+  }
   byte_t  abtCmd[] = { InDeselect, ui8Target };
 
   return (pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, NULL));
@@ -1963,6 +1977,10 @@ pn53x_InDeselect (nfc_device_t * pnd, const uint8_t ui8Target)
 bool
 pn53x_InRelease (nfc_device_t * pnd, const uint8_t ui8Target)
 {
+  if (CHIP_DATA(pnd)->type == S330) {
+    // TODO Add support for S330
+    return true;
+  }
   byte_t  abtCmd[] = { InRelease, ui8Target };
 
   return (pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, NULL));

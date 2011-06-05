@@ -57,7 +57,8 @@ typedef enum {
   SONY_PN531,
   NXP_PN533,
   ASK_LOGO,
-  SCM_SCL3711
+  SCM_SCL3711,
+  SONY_S330
 } pn53x_usb_model;
 
 struct pn53x_usb_data {
@@ -115,7 +116,8 @@ const struct pn53x_usb_supported_device pn53x_usb_supported_devices[] = {
   { 0x04CC, 0x2533, NXP_PN533,   "NXP / PN533" },
   { 0x04E6, 0x5591, SCM_SCL3711, "SCM Micro / SCL3711-NFC&RW" },
   { 0x054c, 0x0193, SONY_PN531,  "Sony / PN531" },
-  { 0x1FD3, 0x0608, ASK_LOGO,    "ASK / LoGO" }
+  { 0x1FD3, 0x0608, ASK_LOGO,    "ASK / LoGO" },
+  { 0x054C, 0x02E1, SONY_S330,   "Sony / FeliCa S330 [PaSoRi]" }
 };
 
 pn53x_usb_model
@@ -568,7 +570,9 @@ bool
 pn53x_usb_init (nfc_device_t *pnd)
 {
   // Sometimes PN53x USB doesn't reply ACK one the first frame, so we need to send a dummy one...
-  pn53x_check_communication (pnd);
+  //pn53x_check_communication (pnd); // Sony S330 doesn't support this command for now so let's use a get_firmware_version instead:
+  const byte_t abtCmd[] = { GetFirmwareVersion };
+  pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, NULL);
   // ...and we don't care about error
   pnd->iLastError = 0;
 

@@ -119,7 +119,8 @@ typedef struct {
 typedef enum {
   PN531 = 0x01,
   PN532 = 0x02,
-  PN533 = 0x04
+  PN533 = 0x04,
+  S330  = 0x08
 } pn53x_type;
 
 #ifndef DEBUG
@@ -141,7 +142,7 @@ typedef enum {
 static const pn53x_command pn53x_commands[] = {
   // Miscellaneous
   PNCMD( Diagnose, PN531|PN532|PN533 ),
-  PNCMD( GetFirmwareVersion, PN531|PN532|PN533 ),
+  PNCMD( GetFirmwareVersion, PN531|PN532|PN533|S330 ),
   PNCMD( GetGeneralStatus, PN531|PN532|PN533 ),
   PNCMD( ReadRegister, PN531|PN532|PN533 ),
   PNCMD( WriteRegister, PN531|PN532|PN533 ),
@@ -203,12 +204,6 @@ typedef struct {
   const char * abtRegisterDescription;
 } pn53x_register;
 #endif
-
-/*
-#define PN531 0x01
-#define PN532 0x02
-#define PN533 0X04
-*/
 
 #ifndef DEBUG
 #  define PNREG_DBG( X ) do { \
