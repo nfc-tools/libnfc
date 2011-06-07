@@ -57,10 +57,14 @@ static size_t szRx = sizeof(abtRx);
 static byte_t abtRawUid[12];
 static byte_t abtAtqa[2];
 static byte_t abtSak;
+static byte_t abtAts[MAX_FRAME_LEN];
+static byte_t szAts = 0;
 static size_t szCL = 1;//Always start with Cascade Level 1 (CL1)
 static nfc_device_t *pnd;
 
 bool    quiet_output = false;
+bool    force_rats = false;
+bool    iso_ats_supported = false;
 
 // ISO14443A Anti-Collision Commands
 byte_t  abtReqa[1] = { 0x26 };
@@ -120,6 +124,7 @@ print_usage (char *argv[])
   printf ("Options:\n");
   printf ("\t-h\tHelp. Print this message.\n");
   printf ("\t-q\tQuiet mode. Suppress output of READER and EMULATOR data (improves timing).\n");
+  printf ("\t-f\tForce RATS.\n");
 }
 
 int
@@ -134,6 +139,8 @@ main (int argc, char *argv[])
       exit(EXIT_SUCCESS);
     } else if (0 == strcmp (argv[arg], "-q")) {
       quiet_output = true;
+    } else if (0 == strcmp (argv[arg], "-f")) {
+      force_rats = true;
     } else {
       ERR ("%s is not supported option.", argv[arg]);
       print_usage (argv);
@@ -263,8 +270,14 @@ main (int argc, char *argv[])
 
   // Request ATS, this only applies to tags that support ISO 14443A-4
   if (abtRx[0] & SAK_FLAG_ATS_SUPPORTED) {
+        iso_ats_supported = true;
+  }
+  if ((abtRx[0] & SAK_FLAG_ATS_SUPPORTED) || force_rats) {
     iso14443a_crc_append(abtRats, 2);
-    transmit_bytes (abtRats, 4);
+    if (transmit_bytes (abtRats, 4)) {
+        memcpy (abtAts, abtRx, szRx);
+        szAts = szRx;
+    }
   }
 
   // Done, halt the tag now
@@ -288,6 +301,13 @@ main (int argc, char *argv[])
   }
   printf("\n");
   printf("ATQA: %02x%02x\n SAK: %02x\n", abtAtqa[1], abtAtqa[0], abtSak);
+  if (szAts > 1) { // if = 1, it's not actual ATS but error code
+      if (force_rats && ! iso_ats_supported) {
+          printf(" RATS forced\n");
+      }
+      printf(" ATS: ");
+      print_hex (abtAts, szAts);
+  }
 
   nfc_disconnect (pnd);
   return 0;
