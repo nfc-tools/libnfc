@@ -58,7 +58,7 @@ typedef enum {
   NXP_PN533,
   ASK_LOGO,
   SCM_SCL3711,
-  SONY_S330
+  SONY_RCS360
 } pn53x_usb_model;
 
 struct pn53x_usb_data {
@@ -117,7 +117,7 @@ const struct pn53x_usb_supported_device pn53x_usb_supported_devices[] = {
   { 0x04E6, 0x5591, SCM_SCL3711, "SCM Micro / SCL3711-NFC&RW" },
   { 0x054c, 0x0193, SONY_PN531,  "Sony / PN531" },
   { 0x1FD3, 0x0608, ASK_LOGO,    "ASK / LoGO" },
-  { 0x054C, 0x02E1, SONY_S330,   "Sony / FeliCa S330 [PaSoRi]" }
+  { 0x054C, 0x02E1, SONY_RCS360, "Sony / FeliCa S360 [PaSoRi]" }
 };
 
 pn53x_usb_model
@@ -125,7 +125,7 @@ pn53x_usb_get_device_model (uint16_t vendor_id, uint16_t product_id)
 {
   for (size_t n = 0; n < sizeof (pn53x_usb_supported_devices) / sizeof (struct pn53x_usb_supported_device); n++) {
     if ((vendor_id == pn53x_usb_supported_devices[n].vendor_id) &&
-	(product_id == pn53x_usb_supported_devices[n].product_id))
+       (product_id == pn53x_usb_supported_devices[n].product_id))
       return pn53x_usb_supported_devices[n].model;
   }
   
@@ -570,11 +570,17 @@ bool
 pn53x_usb_init (nfc_device_t *pnd)
 {
   // Sometimes PN53x USB doesn't reply ACK one the first frame, so we need to send a dummy one...
-  //pn53x_check_communication (pnd); // Sony S330 doesn't support this command for now so let's use a get_firmware_version instead:
+  //pn53x_check_communication (pnd); // Sony RC-S360 doesn't support this command for now so let's use a get_firmware_version instead:
   const byte_t abtCmd[] = { GetFirmwareVersion };
   pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, NULL);
   // ...and we don't care about error
   pnd->iLastError = 0;
+  if (SONY_RCS360 == DRIVER_DATA (pnd)->model) {
+    DBG ("SONY RC-S360 initialization.");
+    const byte_t abtCmd2[] = { 0x18, 0x01 };
+    pn53x_transceive (pnd, abtCmd2, sizeof (abtCmd2), NULL, NULL);
+    pn53x_usb_ack (pnd);
+  }
 
   if (!pn53x_init (pnd))
     return false;

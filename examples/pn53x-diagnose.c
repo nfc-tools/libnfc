@@ -89,7 +89,9 @@ main (int argc, const char *argv[])
 
     result = pn53x_transceive (pnd, pncmd_diagnose_communication_line_test, sizeof (pncmd_diagnose_communication_line_test), abtRx, &szRx);
     if (result) {
-      result = (memcmp (pncmd_diagnose_communication_line_test + 1, abtRx, sizeof (pncmd_diagnose_communication_line_test) - 1) == 0);
+      // Result of Diagnose ping for RC-S360 doesn't contain status byte so we've to handle both cases
+      result = (memcmp (pncmd_diagnose_communication_line_test + 1, abtRx, sizeof (pncmd_diagnose_communication_line_test) - 1) == 0) ||
+               (memcmp (pncmd_diagnose_communication_line_test + 2, abtRx, sizeof (pncmd_diagnose_communication_line_test) - 2) == 0);
     } else {
       nfc_perror (pnd, "pn53x_transceive");
     }

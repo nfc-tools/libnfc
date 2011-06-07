@@ -595,7 +595,7 @@ pn53x_get_firmware_version (nfc_device_t * pnd, char abtFirmwareText[22])
       CHIP_DATA(pnd)->type = PN532;
     } else if (abtFw[0] == 0x33)  { // PN533 version IC
       if (abtFw[1] == 0x01) { // Sony ROM code
-        CHIP_DATA(pnd)->type = S330;
+        CHIP_DATA(pnd)->type = RCS360;
       } else {
         CHIP_DATA(pnd)->type = PN533;
       }
@@ -618,7 +618,7 @@ pn53x_get_firmware_version (nfc_device_t * pnd, char abtFirmwareText[22])
       pnd->btSupportByte = abtFw[3];
       break;
     case PN533:
-    case S330:
+    case RCS360:
       snprintf (abtFirmwareText, 22, "PN533 v%d.%d (0x%02x)", abtFw[1], abtFw[2], abtFw[3]);
       pnd->btSupportByte = abtFw[3];
       break;
@@ -855,6 +855,10 @@ pn53x_initiator_select_passive_target (nfc_device_t * pnd,
   size_t  szTargetsData = sizeof(abtTargetsData);
 
   if (nm.nmt == NMT_ISO14443BI || nm.nmt == NMT_ISO14443B2SR || nm.nmt == NMT_ISO14443B2CT) {
+    if (CHIP_DATA(pnd)->type == RCS360) {
+      // TODO add support for RC-S360, at the moment it refuses to send raw frames without a first select
+      return false;
+    }
     // No native support in InListPassiveTarget so we do discovery by hand
     if (!nfc_configure (pnd, NDO_FORCE_ISO14443_B, true)) {
       return false;
@@ -1843,11 +1847,6 @@ pn53x_strerror (const nfc_device_t * pnd)
 bool
 pn53x_SetParameters (nfc_device_t * pnd, const uint8_t ui8Value)
 {
-  if (CHIP_DATA (pnd)->type == S330) {
-    // TODO add support for S330
-    return true;
-  }
-
   byte_t  abtCmd[] = { SetParameters, ui8Value };
 
   if(!pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, NULL)) {
@@ -1965,8 +1964,8 @@ pn53x_InListPassiveTarget (nfc_device_t * pnd,
 bool
 pn53x_InDeselect (nfc_device_t * pnd, const uint8_t ui8Target)
 {
-  if (CHIP_DATA(pnd)->type == S330) {
-    // TODO Add support for S330
+  if (CHIP_DATA(pnd)->type == RCS360) {
+    // TODO Add support for RC-S360
     return true;
   }
   byte_t  abtCmd[] = { InDeselect, ui8Target };
@@ -1977,8 +1976,8 @@ pn53x_InDeselect (nfc_device_t * pnd, const uint8_t ui8Target)
 bool
 pn53x_InRelease (nfc_device_t * pnd, const uint8_t ui8Target)
 {
-  if (CHIP_DATA(pnd)->type == S330) {
-    // TODO Add support for S330
+  if (CHIP_DATA(pnd)->type == RCS360) {
+    // TODO Add support for RC-S360
     return true;
   }
   byte_t  abtCmd[] = { InRelease, ui8Target };
