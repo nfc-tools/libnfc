@@ -145,16 +145,13 @@ pn53x_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, b
   }
 
   *pszRx = (size_t) res;
-
   switch (pbtTx[0]) {
     case PowerDown:
     case InDataExchange:
     case InCommunicateThru:
-    case InDeselect:
     case InJumpForPSL:
     case InPSL:
     case InATR:
-    case InRelease:
     case InSelect:
     case InJumpForDEP:
     case TgGetData:
@@ -163,6 +160,16 @@ pn53x_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, b
     case TgResponseToInitiator:
     case TgSetGeneralBytes:
     case TgSetMetaData:
+      pnd->iLastError = pbtRx[0] & 0x3f;
+      break;
+    case InDeselect:
+    case InRelease:
+      if (CHIP_DATA(pnd)->type == RCS360) {
+        // Error code is in pbtRx[1] but we ignore error code anyway
+        // because other PN53x chips always return 0 on those commands
+        pnd->iLastError = 0;
+        break;
+      }
       pnd->iLastError = pbtRx[0] & 0x3f;
       break;
     default:
@@ -766,7 +773,7 @@ pn53x_configure (nfc_device_t * pnd, const nfc_device_option_t ndo, const bool b
       break;
   }
 
-  // When we reach this, the configuration is completed and succesful
+  // When we reach this, the configuration is completed and successful
   return true;
 }
 
@@ -1965,11 +1972,21 @@ bool
 pn53x_InDeselect (nfc_device_t * pnd, const uint8_t ui8Target)
 {
   if (CHIP_DATA(pnd)->type == RCS360) {
-    // TODO Add support for RC-S360
-    return true;
+    // We should do act here *only* if a target was previsouly selected
+    byte_t  abtStatus[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
+    size_t  szStatus = sizeof(abtStatus);
+    byte_t  abtCmdGetStatus[] = { GetGeneralStatus };
+    if (!pn53x_transceive (pnd, abtCmdGetStatus, sizeof (abtCmdGetStatus), abtStatus, &szStatus)) {
+      return false;
+    }
+    if ((szStatus < 3) || (abtStatus[2] == 0)) {
+      return true;
+    }
+    // No much choice what to deselect actually...
+    byte_t  abtCmdRcs360[] = { InDeselect, 0x01, 0x01 };
+    return (pn53x_transceive (pnd, abtCmdRcs360, sizeof (abtCmdRcs360), NULL, NULL));
   }
   byte_t  abtCmd[] = { InDeselect, ui8Target };
-
   return (pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, NULL));
 }
 
@@ -1977,11 +1994,21 @@ bool
 pn53x_InRelease (nfc_device_t * pnd, const uint8_t ui8Target)
 {
   if (CHIP_DATA(pnd)->type == RCS360) {
-    // TODO Add support for RC-S360
-    return true;
+    // We should do act here *only* if a target was previsouly selected
+    byte_t  abtStatus[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
+    size_t  szStatus = sizeof(abtStatus);
+    byte_t  abtCmdGetStatus[] = { GetGeneralStatus };
+    if (!pn53x_transceive (pnd, abtCmdGetStatus, sizeof (abtCmdGetStatus), abtStatus, &szStatus)) {
+      return false;
+    }
+    if ((szStatus < 3) || (abtStatus[2] == 0)) {
+      return true;
+    }
+    // No much choice what to release actually...
+    byte_t  abtCmdRcs360[] = { InRelease, 0x01, 0x01 };
+    return (pn53x_transceive (pnd, abtCmdRcs360, sizeof (abtCmdRcs360), NULL, NULL));
   }
   byte_t  abtCmd[] = { InRelease, ui8Target };
-
   return (pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, NULL));
 }
 
