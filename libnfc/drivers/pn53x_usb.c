@@ -36,7 +36,20 @@ Thanks to d18c7db and Okko for example code
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <usb.h>
+
+#ifndef _WIN32
+  // Under POSIX system, we use libusb (>= 0.1.12)
+  #include <usb.h>
+  #define USB_TIMEOUT   0
+  #define _usb_strerror( X ) strerror(-X)
+#else
+  // Under Windows we use libusb-win32 (>= 1.2.4)
+  #include <lusb0_usb.h>
+  // libusb-win32's bug workaround: 0 as timeout does not means infite as expected
+  #define USB_TIMEOUT   10
+  #define _usb_strerror( X ) usb_strerror()
+#endif
+
 #include <string.h>
 
 #include <nfc/nfc.h>
@@ -47,7 +60,6 @@ Thanks to d18c7db and Okko for example code
 #include "drivers/pn53x_usb.h"
 
 #define PN53X_USB_DRIVER_NAME "PN53x USB"
-#define USB_TIMEOUT   0
 
 #define DRIVER_DATA(pnd) ((struct pn53x_usb_data*)(pnd->driver_data))
 
@@ -78,8 +90,11 @@ int
 pn53x_usb_bulk_read (struct pn53x_usb_data *data, byte_t abtRx[], const size_t szRx)
 {
   int res = usb_bulk_read (data->pudh, data->uiEndPointIn, (char *) abtRx, szRx, USB_TIMEOUT);
-  if (res > 0)
-      PRINT_HEX ("RX", abtRx, res);
+  if (res > 0) {
+    PRINT_HEX ("RX", abtRx, res);
+  } else if (res < 0) {
+    ERR ("Unable to read from USB (%s", _usb_strerror (res));
+  }
   return res;
 }
 int
@@ -87,8 +102,13 @@ int
 pn53x_usb_bulk_read_ex (struct pn53x_usb_data *data, byte_t abtRx[], const size_t szRx, int timeout)
 {
   int res = usb_bulk_read (data->pudh, data->uiEndPointIn, (char *) abtRx, szRx, timeout);
-  if (res > 0)
-      PRINT_HEX ("RX", abtRx, res);
+  if (res > 0) {
+    PRINT_HEX ("RX", abtRx, res);
+  } else if (res < 0) {
+    if (-res != ETIMEDOUT) {
+      ERR ("Unable to read from USB (%s)", _usb_strerror (res));
+    }
+  }
   return res;
 }
 
@@ -97,9 +117,13 @@ pn53x_usb_bulk_write (struct pn53x_usb_data *data, byte_t abtTx[], const size_t 
 {
   PRINT_HEX ("TX", abtTx, szTx);
   int res = usb_bulk_write (data->pudh, data->uiEndPointOut, (char *) abtTx, szTx, USB_TIMEOUT);
-  // HACK This little hack is a well know problem of USB, see http://www.libusb.org/ticket/6 for more details
-  if ((res % data->uiMaxPacketSize) == 0) {
-    usb_bulk_write (data->pudh, data->uiEndPointOut, "\0", 0, USB_TIMEOUT);
+  if (res > 0) {
+    // HACK This little hack is a well know problem of USB, see http://www.libusb.org/ticket/6 for more details
+    if ((res % data->uiMaxPacketSize) == 0) {
+      usb_bulk_write (data->pudh, data->uiEndPointOut, "\0", 0, USB_TIMEOUT);
+    }
+  } else {
+    ERR ("Unable to write to USB (%s)", _usb_strerror (res));
   }
   return res;
 }
@@ -174,12 +198,20 @@ pn53x_usb_probe (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * psz
   usb_init ();
 
   int res;
-  // usb_find_busses will find all of the busses on the system. Returns the number of changes since previous call to this function (total of new busses and busses removed).
-  if ((res = usb_find_busses () < 0))
+  // usb_find_busses will find all of the busses on the system. Returns the
+  // number of changes since previous call to this function (total of new
+  // busses and busses removed).
+  if ((res = usb_find_busses () < 0)) {
+    ERR ("Unable to find USB busses (%s)", _usb_strerror (res));
     return false;
-  // usb_find_devices will find all of the devices on each bus. This should be called after usb_find_busses. Returns the number of changes since the previous call to this function (total of new device and devices removed).
-  if ((res = usb_find_devices () < 0))
+  }
+  // usb_find_devices will find all of the devices on each bus. This should be
+  // called after usb_find_busses. Returns the number of changes since the
+  // previous call to this function (total of new device and devices removed).
+  if ((res = usb_find_devices () < 0)) {
+    ERR ("Unable to find USB devices (%s)", _usb_strerror (res));
     return false;
+  }
 
   *pszDeviceFound = 0;
 
@@ -187,9 +219,10 @@ pn53x_usb_probe (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * psz
   struct usb_bus *bus;
   for (bus = usb_get_busses (); bus; bus = bus->next) {
     struct usb_device *dev;
+
     for (dev = bus->devices; dev; dev = dev->next, uiBusIndex++) {
       for (size_t n = 0; n < sizeof (pn53x_usb_supported_devices) / sizeof (struct pn53x_usb_supported_device); n++) {
-        // DBG("Checking device %04x:%04x (%04x:%04x)",dev->descriptor.idVendor,dev->descriptor.idProduct,candidates[i].idVendor,candidates[i].idProduct);
+        //DBG("Checking device %04x:%04x (%04x:%04x)",dev->descriptor.idVendor,dev->descriptor.idProduct);
         if ((pn53x_usb_supported_devices[n].vendor_id == dev->descriptor.idVendor) &&
             (pn53x_usb_supported_devices[n].product_id == dev->descriptor.idProduct)) {
           // Make sure there are 2 endpoints available
@@ -208,6 +241,7 @@ pn53x_usb_probe (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * psz
           // Set configuration
           int res = usb_set_configuration (udev, 1);
           if (res < 0) {
+            ERR ("Unable to set USB configuration (%s)", _usb_strerror (res));
             usb_close (udev);
             // we failed to use the device
             continue;
@@ -285,7 +319,7 @@ pn53x_usb_connect (const nfc_device_desc_t *pndd)
         // Set configuration
         int res = usb_set_configuration (data.pudh, 1);
         if (res < 0) {
-          ERR ("Unable to set USB configuration (%s)", strerror (-res));
+          ERR ("Unable to set USB configuration (%s)", _usb_strerror (res));
           if (EPERM == -res) {
             WARN ("Please double check USB permissions for device %04x:%04x", dev->descriptor.idVendor, dev->descriptor.idProduct);
           }
@@ -296,7 +330,7 @@ pn53x_usb_connect (const nfc_device_desc_t *pndd)
 
         res = usb_claim_interface (data.pudh, 0);
         if (res < 0) {
-          DBG ("Can't claim interface (%s)", strerror (-res));
+          ERR ("Unable to claim USB interface (%s)", _usb_strerror (res));
           usb_close (data.pudh);
           // we failed to use the specified device
           return NULL;
@@ -370,11 +404,11 @@ pn53x_usb_disconnect (nfc_device_t * pnd)
 
   int res;
   if ((res = usb_release_interface (DRIVER_DATA (pnd)->pudh, 0)) < 0) {
-    ERR ("usb_release_interface failed (%i)", res);
+    ERR ("Unable to release USB interface (%s)", _usb_strerror (res));
   }
 
   if ((res = usb_close (DRIVER_DATA (pnd)->pudh)) < 0) {
-    ERR ("usb_close failed (%i)", res);
+    ERR ("Unable to close USB connection (%s)", _usb_strerror (res));
   }
   pn53x_data_free (pnd);
   nfc_device_free (pnd);
@@ -393,7 +427,6 @@ pn53x_usb_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szData)
   int res = pn53x_usb_bulk_write (DRIVER_DATA (pnd), abtFrame, szFrame);
 
   if (res < 0) {
-    DBG ("usb_bulk_write failed with error %d", res);
     pnd->iLastError = DEIO;
     return false;
   }
@@ -401,7 +434,6 @@ pn53x_usb_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szData)
   byte_t abtRxBuf[PN53X_USB_BUFFER_LEN];
   res = pn53x_usb_bulk_read (DRIVER_DATA (pnd), abtRxBuf, sizeof (abtRxBuf));
   if (res < 0) {
-    DBG ("usb_bulk_read failed with error %d", res);
     pnd->iLastError = DEIO;
     // try to interrupt current device state
     pn53x_usb_ack(pnd);
@@ -419,7 +451,6 @@ pn53x_usb_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szData)
     // packet.
     int res = pn53x_usb_bulk_write (DRIVER_DATA (pnd), (byte_t *)nack_frame, sizeof(nack_frame));
     if (res < 0) {
-      DBG ("usb_bulk_write failed with error %d", res);
       pnd->iLastError = DEIO;
       // try to interrupt current device state
       pn53x_usb_ack(pnd);
@@ -466,7 +497,6 @@ read:
   }
 
   if (res < 0) {
-    DBG ("usb_bulk_read failed with error %d (%s)", res, strerror(-res));
     pnd->iLastError = DEIO;
     // try to interrupt current device state
     pn53x_usb_ack(pnd);
