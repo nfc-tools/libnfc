@@ -2199,7 +2199,7 @@ pn53x_TgInitAsTarget (nfc_device_t * pnd, pn53x_target_mode_t ptm,
     memcpy(abtCmd+26, pbtNFCID3t, 10);
   }
   // General Bytes (ISO/IEC 18092)
-  if (CHIP_DATA(pnd)->type == PN531) {
+  if ((CHIP_DATA(pnd)->type == PN531) || (CHIP_DATA(pnd)->type == RCS360)) {
     if (szGBt) {
       memcpy (abtCmd+36, pbtGBt, szGBt);
       szOptionalBytes = szGBt;
@@ -2212,7 +2212,7 @@ pn53x_TgInitAsTarget (nfc_device_t * pnd, pn53x_target_mode_t ptm,
     szOptionalBytes = szGBt + 1;
   }
   // Historical bytes (ISO/IEC 14443-4)
-  if (CHIP_DATA(pnd)->type != PN531) { // PN531 does not handle Historical Bytes
+  if ((CHIP_DATA(pnd)->type != PN531) && (CHIP_DATA(pnd)->type != RCS360)) { // PN531 does not handle Historical Bytes
     abtCmd[36+szOptionalBytes] = (byte_t)(szTkt);
     if (szTkt) {
       memcpy (abtCmd+37+szOptionalBytes, pbtTkt, szTkt);

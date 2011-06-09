@@ -38,6 +38,7 @@
 #define SAMConfiguration 0x14
 #define PowerDown 0x16
 #define AlparCommandForTDA 0x18
+// RC-S360 has another command 0x18 for reset &..?
 
 // RF communication
 #define RFConfiguration 0x32
@@ -141,34 +142,34 @@ typedef enum {
 
 static const pn53x_command pn53x_commands[] = {
   // Miscellaneous
-  PNCMD( Diagnose, PN531|PN532|PN533 ),
+  PNCMD( Diagnose, PN531|PN532|PN533|RCS360 ),
   PNCMD( GetFirmwareVersion, PN531|PN532|PN533|RCS360 ),
-  PNCMD( GetGeneralStatus, PN531|PN532|PN533 ),
-  PNCMD( ReadRegister, PN531|PN532|PN533 ),
-  PNCMD( WriteRegister, PN531|PN532|PN533 ),
+  PNCMD( GetGeneralStatus, PN531|PN532|PN533|RCS360 ),
+  PNCMD( ReadRegister, PN531|PN532|PN533|RCS360 ),
+  PNCMD( WriteRegister, PN531|PN532|PN533|RCS360 ),
   PNCMD( ReadGPIO, PN531|PN532|PN533 ),
   PNCMD( WriteGPIO, PN531|PN532|PN533 ),
   PNCMD( SetSerialBaudRate, PN531|PN532|PN533 ),
-  PNCMD( SetParameters, PN531|PN532|PN533 ),
+  PNCMD( SetParameters, PN531|PN532|PN533|RCS360 ),
   PNCMD( SAMConfiguration, PN531|PN532 ),
   PNCMD( PowerDown, PN531|PN532 ),
-  PNCMD( AlparCommandForTDA, PN533 ),
+  PNCMD( AlparCommandForTDA, PN533|RCS360 ), // Has another usage on RC-S360...
   
   // RF communication
-  PNCMD( RFConfiguration, PN531|PN532|PN533 ),
+  PNCMD( RFConfiguration, PN531|PN532|PN533|RCS360 ),
   PNCMD( RFRegulationTest, PN531|PN532|PN533 ),
 
   // Initiator
-  PNCMD( InJumpForDEP, PN531|PN532|PN533 ),
+  PNCMD( InJumpForDEP, PN531|PN532|PN533|RCS360 ),
   PNCMD( InJumpForPSL, PN531|PN532|PN533 ),
-  PNCMD( InListPassiveTarget, PN531|PN532|PN533 ),
+  PNCMD( InListPassiveTarget, PN531|PN532|PN533|RCS360 ),
   PNCMD( InATR, PN531|PN532|PN533 ),
   PNCMD( InPSL, PN531|PN532|PN533 ),
   PNCMD( InDataExchange, PN531|PN532|PN533 ),
-  PNCMD( InCommunicateThru, PN531|PN532|PN533 ),
+  PNCMD( InCommunicateThru, PN531|PN532|PN533|RCS360 ),
   PNCMD( InQuartetByteExchange, PN533 ),
-  PNCMD( InDeselect, PN531|PN532|PN533 ),
-  PNCMD( InRelease, PN531|PN532|PN533 ),
+  PNCMD( InDeselect, PN531|PN532|PN533|RCS360 ),
+  PNCMD( InRelease, PN531|PN532|PN533|RCS360 ),
   PNCMD( InSelect, PN531|PN532|PN533 ),
   PNCMD( InAutoPoll, PN532 ),
   PNCMD( InActivateDeactivatePaypass, PN533 ),
