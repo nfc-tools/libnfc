@@ -40,13 +40,13 @@ Thanks to d18c7db and Okko for example code
 #ifndef _WIN32
   // Under POSIX system, we use libusb (>= 0.1.12)
   #include <usb.h>
-  #define USB_TIMEOUT   0
+  #define USB_INFINITE_TIMEOUT   0
   #define _usb_strerror( X ) strerror(-X)
 #else
   // Under Windows we use libusb-win32 (>= 1.2.4)
   #include <lusb0_usb.h>
   // libusb-win32's bug workaround: 0 as timeout does not means infite as expected
-  #define USB_TIMEOUT   10
+  #define USB_INFINITE_TIMEOUT   100
   #define _usb_strerror( X ) usb_strerror()
 #endif
 
@@ -89,7 +89,7 @@ bool pn53x_usb_init (nfc_device_t *pnd);
 int
 pn53x_usb_bulk_read (struct pn53x_usb_data *data, byte_t abtRx[], const size_t szRx)
 {
-  int res = usb_bulk_read (data->pudh, data->uiEndPointIn, (char *) abtRx, szRx, USB_TIMEOUT);
+  int res = usb_bulk_read (data->pudh, data->uiEndPointIn, (char *) abtRx, szRx, USB_INFINITE_TIMEOUT);
   if (res > 0) {
     PRINT_HEX ("RX", abtRx, res);
   } else if (res < 0) {
@@ -116,11 +116,11 @@ int
 pn53x_usb_bulk_write (struct pn53x_usb_data *data, byte_t abtTx[], const size_t szTx)
 {
   PRINT_HEX ("TX", abtTx, szTx);
-  int res = usb_bulk_write (data->pudh, data->uiEndPointOut, (char *) abtTx, szTx, USB_TIMEOUT);
+  int res = usb_bulk_write (data->pudh, data->uiEndPointOut, (char *) abtTx, szTx, USB_INFINITE_TIMEOUT);
   if (res > 0) {
     // HACK This little hack is a well know problem of USB, see http://www.libusb.org/ticket/6 for more details
     if ((res % data->uiMaxPacketSize) == 0) {
-      usb_bulk_write (data->pudh, data->uiEndPointOut, "\0", 0, USB_TIMEOUT);
+      usb_bulk_write (data->pudh, data->uiEndPointOut, "\0", 0, USB_INFINITE_TIMEOUT);
     }
   } else {
     ERR ("Unable to write to USB (%s)", _usb_strerror (res));
@@ -483,7 +483,7 @@ pn53x_usb_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen)
   int res;
 
 read:
-  res = pn53x_usb_bulk_read_ex (DRIVER_DATA (pnd), abtRxBuf, sizeof (abtRxBuf), delayed_reply ? 250 : 0);
+  res = pn53x_usb_bulk_read_ex (DRIVER_DATA (pnd), abtRxBuf, sizeof (abtRxBuf), delayed_reply ? 250 : USB_INFINITE_TIMEOUT);
 
   if (delayed_reply && (res == -ETIMEDOUT)) {
     if (DRIVER_DATA (pnd)->abort_flag) {
