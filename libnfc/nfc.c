@@ -409,7 +409,7 @@ nfc_initiator_list_passive_targets (nfc_device_t * pnd,
     if (szTargets == szTargetFound) {
       break;
     }
-    int i;
+    size_t i;
     bool seen = false;
     // Check if we've already seen this tag
     for (i = 0; i < szTargetFound; i++) {
