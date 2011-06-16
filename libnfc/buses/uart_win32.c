@@ -90,7 +90,7 @@ uart_close (const serial_port sp)
 void
 uart_flush_input (const serial_port sp)
 {
-  // TODO: Implement me
+  PurgeComm(((serial_port_windows *) sp)->hPort, PURGE_RXABORT | PURGE_RXCLEAR);
 }
 
 void
@@ -191,21 +191,37 @@ uart_send (serial_port sp, const byte_t * pbtTx, const size_t szTx)
   return 0;
 }
 
+BOOL is_port_available(int nPort)
+{
+  TCHAR szPort[15];
+  COMMCONFIG cc;
+  DWORD dwCCSize;
+
+  sprintf(szPort, "COM%d", nPort);
+
+  // Check if this port is available
+  dwCCSize = sizeof(cc);
+  return GetDefaultCommConfig(szPort, &cc, &dwCCSize);
+}
+
 // Path to the serial port is OS-dependant.
 // Try to guess what we should use.
-#define NUM_SERIAL_PORTS 8
+#define MAX_SERIAL_PORT_WIN 255
 char **
 uart_list_ports (void)
 {
-  // TODO: Wrote an automatic detection of Windows serial ports
-
-  char ** availablePorts = malloc((1 + NUM_SERIAL_PORTS) * sizeof(char*));
+  char ** availablePorts = malloc((1 + MAX_SERIAL_PORT_WIN) * sizeof(char*));
+  int curIndex = 0;
   int i;
-  for (i = 0; i < NUM_SERIAL_PORTS; i++) {
-    availablePorts[i] = (char*)malloc(10);
-    sprintf(availablePorts[i], "COM%d", i+1);
+  for (i = 1; i <= MAX_SERIAL_PORT_WIN; i++) {
+    if (is_port_available(i)) {
+      availablePorts[curIndex] = (char*)malloc(10);
+      sprintf(availablePorts[curIndex], "COM%d", i);
+      // printf("found candidate port: %s\n", availablePorts[curIndex]);
+      curIndex++;
+    }
   }
-  availablePorts[i] = NULL;
+  availablePorts[curIndex] = NULL;
 
   return availablePorts;
 }
