@@ -48,22 +48,11 @@
 #include <string.h>
 #include <signal.h>
 
+#include <unistd.h>
+
 #include <nfc/nfc.h>
 
 #include "nfc-utils.h"
-
-// TODO Move this Windows conditional code in contrib/win32/ or contrib/windows.h
-#ifndef _WIN32
-// Needed by sleep() under Unix
-#  include <unistd.h>
-#  define sleep sleep
-#  define SUSP_TIME 1           // secs.
-#else
-// Needed by Sleep() under Windows
-#  include <winbase.h>
-#  define sleep Sleep
-#  define SUSP_TIME 1000        // msecs.
-#endif
 
 #define MAX_FRAME_LEN 264
 #define MAX_DEVICE_COUNT 2
@@ -432,7 +421,7 @@ main (int argc, char *argv[])
         if (!quiet_output) {
           printf ("Waiting %is to simulate longer relay...\n", waiting_time);
         }
-        sleep(waiting_time * SUSP_TIME);
+        sleep(waiting_time);
       }
       // Show transmitted response
       if (!quiet_output) {
