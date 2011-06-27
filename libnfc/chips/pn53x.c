@@ -1629,6 +1629,12 @@ pn53x_target_init (nfc_device_t * pnd, nfc_target_t * pnt, byte_t * pbtRx, size_
       }
       CHIP_DATA (pnd)->current_target = malloc (sizeof(nfc_target_t));
       memcpy (CHIP_DATA (pnd)->current_target, pnt, sizeof(nfc_target_t));
+
+      if (ptm & PTM_ISO14443_4_PICC_ONLY) {
+	// When PN532 is in PICC target mode, it automatically reply to RATS so
+	// we don't need to forward this command
+        *pszRx = 0;
+      }
     }
   }
 

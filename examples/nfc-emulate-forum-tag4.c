@@ -112,15 +112,15 @@ nfcforum_tag4_io (struct nfc_emulator *emulator, const byte_t *data_in, const si
   struct nfcforum_tag4_ndef_data *ndef_data = (struct nfcforum_tag4_ndef_data *)(emulator->user_data);
   struct nfcforum_tag4_state_machine_data *state_machine_data = (struct nfcforum_tag4_state_machine_data *)(emulator->state_machine->data);
 
+  if (data_in_len == 0) {
+    // No input data, nothing to do
+    return res;
+  }
+
   // Show transmitted command
   if (!quiet_output) {
     printf ("    In: ");
     print_hex (data_in, data_in_len);
-  }
-
-  if ((data_in_len == 2) && (data_in[0] == ISO144434A_RATS)) {
-    // The PN532 already handle RATS, so there is nothing to do
-    return res;
   }
 
   if(data_in_len >= 4) {
@@ -168,7 +168,6 @@ nfcforum_tag4_io (struct nfc_emulator *emulator, const byte_t *data_in, const si
         return -ENOTSUP;
       }
 
-
       break;
     case ISO7816_READ_BINARY:
       if ((size_t)(data_in[LC] + 2) > data_out_len) {
@@ -210,11 +209,12 @@ nfcforum_tag4_io (struct nfc_emulator *emulator, const byte_t *data_in, const si
 
   // Show transmitted command
   if (!quiet_output) {
-    printf ("    Out: ");
-    if (res < 0)
-      printf ("No data (returning with an error %d)\n", res);
-    else
+    if (res < 0) {
+      ERR ("%s (%d)", strerror (-res), -res);
+    } else {
+      printf ("    Out: ");
       print_hex (data_out, res);
+    }
   }
   return res;
 }
