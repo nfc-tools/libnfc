@@ -299,30 +299,9 @@ nfc_initiator_select_passive_target (nfc_device_t * pnd,
   byte_t  abtInit[MAX(12, szInitData)];
   size_t  szInit;
 
-  // TODO Put this in a function: this part is defined by ISO14443-3 (UID and Cascade levels)
   switch (nm.nmt) {
   case NMT_ISO14443A:
-    switch (szInitData) {
-    case 7:
-      abtInit[0] = 0x88;
-      memcpy (abtInit + 1, pbtInitData, 7);
-      szInit = 8;
-      break;
-
-    case 10:
-      abtInit[0] = 0x88;
-      memcpy (abtInit + 1, pbtInitData, 3);
-      abtInit[4] = 0x88;
-      memcpy (abtInit + 5, pbtInitData + 3, 7);
-      szInit = 12;
-      break;
-
-    case 4:
-    default:
-      memcpy (abtInit, pbtInitData, szInitData);
-      szInit = szInitData;
-      break;
-    }
+    iso14443_cascade_uid (pbtInitData, szInitData, abtInit, &szInit);
     break;
 
   default:

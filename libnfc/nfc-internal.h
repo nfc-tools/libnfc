@@ -213,5 +213,6 @@ struct nfc_driver_t {
 nfc_device_t  *nfc_device_new (void);
 void           nfc_device_free (nfc_device_t *nfc_device);
 
+void 	iso14443_cascade_uid (const byte_t abtUID[], const size_t szUID, byte_t * pbtCascadedUID, size_t * pszCascadedUID);
 
 #endif // __NFC_INTERNAL_H__
