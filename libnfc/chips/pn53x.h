@@ -230,6 +230,13 @@ typedef enum {
   PTT_DEP_ACTIVE_424 = 0x82,
 } pn53x_target_type_t;
 
+typedef enum {
+  PSM_NORMAL = 0x01,
+  PSM_VIRTUAL_CARD = 0x02,
+  PSM_WIRED_CARD = 0x03,
+  PSM_DUAL_CARD = 0x04
+} pn532_sam_mode;
+
 /**
  * @enum pn53x_target_mode_t
  * @brief PN53x target mode enumeration
@@ -306,7 +313,7 @@ const char *pn53x_strerror (const nfc_device_t * pnd);
 
 // C wrappers for PN53x commands
 bool    pn53x_SetParameters (nfc_device_t * pnd, const uint8_t ui8Value);
-bool    pn53x_SAMConfiguration (nfc_device_t * pnd, const uint8_t ui8Mode);
+bool    pn53x_SAMConfiguration (nfc_device_t * pnd, const pn532_sam_mode mode);
 bool    pn53x_PowerDown (nfc_device_t * pnd);
 bool    pn53x_InListPassiveTarget (nfc_device_t * pnd, const pn53x_modulation_t pmInitModulation,
                                    const byte_t szMaxTargets, const byte_t * pbtInitiatorData,

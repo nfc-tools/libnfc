@@ -30,6 +30,8 @@
 /**
  * @file pn53x-sam.c
  * @brief Configures the NFC device to communicate with a SAM (Secure Access Module).
+ * @note This example requiers a PN532 with SAM connected using S2C interface
+ * @see PN532 User manual
  */
 
 #ifdef HAVE_CONFIG_H
@@ -39,18 +41,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-
-#ifndef _WIN32
-// Needed by sleep() under Unix
-#  include <unistd.h>
-#  define sleep sleep
-#  define SUSP_TIME 1           // secs.
-#else
-// Needed by Sleep() under Windows
-#  include <winbase.h>
-#  define sleep Sleep
-#  define SUSP_TIME 1000        // msecs.
-#endif
+#include <unistd.h>
 
 #include <nfc/nfc.h>
 
@@ -59,46 +50,6 @@
 
 #define MAX_FRAME_LEN 264
 #define TIMEOUT 60              // secs.
-
-#define NORMAL_MODE 1
-#define VIRTUAL_CARD_MODE 2
-#define WIRED_CARD_MODE 3
-#define DUAL_CARD_MODE 4
-
-bool
-sam_connection (nfc_device_t * pnd, int mode)
-{
-  byte_t  pncmd_sam_config[] = { 0x14, 0x00, 0x00 };
-  size_t  szCmd = 0;
-
-  byte_t  abtRx[MAX_FRAME_LEN];
-  size_t  szRx = sizeof(abtRx);
-
-  pncmd_sam_config[1] = mode;
-
-  switch (mode) {
-  case VIRTUAL_CARD_MODE:
-    {
-      // Only the VIRTUAL_CARD_MODE requires 3 bytes.
-      szCmd = sizeof (pncmd_sam_config);
-    }
-    break;
-
-  default:
-    {
-      szCmd = sizeof (pncmd_sam_config) - 1;
-    }
-    break;
-  }
-
-  if (!pn53x_transceive (pnd, pncmd_sam_config, szCmd, abtRx, &szRx)) {
-    nfc_perror(pnd, "pn53x_transceive");
-    ERR ("%s %d", "Unable to execute SAMConfiguration command with mode byte:", mode);
-    return false;
-  }
-
-  return true;
-}
 
 void
 wait_one_minute ()
@@ -109,7 +60,7 @@ wait_one_minute ()
   fflush (stdout);
 
   while (secs < TIMEOUT) {
-    sleep (SUSP_TIME);
+    sleep (1);
     secs++;
     printf (".");
     fflush (stdout);
@@ -149,25 +100,29 @@ main (int argc, const char *argv[])
 
   // Take user's choice
   char    input = getchar ();
-  int     mode = input - '0' + 1;
+  int iMode = input - '0' + 1;
   printf ("\n");
-  if (mode < VIRTUAL_CARD_MODE || mode > DUAL_CARD_MODE) {
+  if (iMode < 1 || iMode > 3) {
     ERR ("%s", "Invalid selection.");
-    return EXIT_FAILURE;
+    exit (EXIT_FAILURE);
   }
+  pn532_sam_mode mode = iMode;
+
   // Connect with the SAM
-  sam_connection (pnd, mode);
+  if (!pn53x_SAMConfiguration (pnd, mode)) {
+    nfc_perror (pnd, "pn53x_SAMConfiguration");
+    exit (EXIT_FAILURE);
+  }
 
   switch (mode) {
-  case VIRTUAL_CARD_MODE:
+  case PSM_VIRTUAL_CARD:
     {
-      // FIXME after the loop the device doesn't respond to host commands...
       printf ("Now the SAM is readable for 1 minute from an external reader.\n");
       wait_one_minute ();
     }
     break;
 
-  case WIRED_CARD_MODE:
+  case PSM_WIRED_CARD:
     {
       nfc_target_t nt;
 
@@ -187,15 +142,15 @@ main (int argc, const char *argv[])
       if (!nfc_initiator_select_passive_target (pnd, nmSAM, NULL, 0, &nt)) {
         nfc_perror (pnd, "nfc_initiator_select_passive_target");
         ERR ("%s", "Reading of SAM info failed.");
-        return EXIT_FAILURE;
+        exit (EXIT_FAILURE);
       }
 
-      printf ("The following ISO14443A tag (SAM) was found:\n\n");
+      printf ("The following ISO14443A tag (SAM) was found:\n");
       print_nfc_iso14443a_info (nt.nti.nai, true);
     }
     break;
 
-  case DUAL_CARD_MODE:
+  case PSM_DUAL_CARD:
     {
       byte_t  abtRx[MAX_FRAME_LEN];
       size_t  szRx = sizeof(abtRx);
@@ -224,13 +179,15 @@ main (int argc, const char *argv[])
       // wait_one_minute ();
     }
     break;
+  default:
+    break;
   }
 
   // Disconnect from the SAM
-  sam_connection (pnd, NORMAL_MODE);
+  pn53x_SAMConfiguration (pnd, PSM_NORMAL);
 
   // Disconnect from NFC device
   nfc_disconnect (pnd);
 
-  return EXIT_SUCCESS;
+  exit (EXIT_SUCCESS);
 }

@@ -93,13 +93,14 @@ pn532_uart_probe (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * ps
       uart_set_speed (sp, PN532_UART_DEFAULT_SPEED);
 
       nfc_device_t *pnd = nfc_device_new ();
-      pnd->iLastError = 0;
       pnd->driver = &pn532_uart_driver;
       pnd->driver_data = malloc(sizeof(struct pn532_uart_data));
       DRIVER_DATA (pnd)->port = sp;
 
       // Alloc and init chip's data
       pn53x_data_new (pnd, &pn532_uart_io);
+      // SAMConfiguration command if needed to wakeup the chip and pn53x_SAMConfiguration check if the chip is a PN532
+      CHIP_DATA (pnd)->type = PN532;
       // This device starts in LowVBat power mode
       CHIP_DATA (pnd)->power_mode = LOWVBAT;
 
@@ -166,6 +167,8 @@ pn532_uart_connect (const nfc_device_desc_t * pndd)
   DRIVER_DATA(pnd)->port = sp;
   // Alloc and init chip's data
   pn53x_data_new (pnd, &pn532_uart_io);
+  // SAMConfiguration command if needed to wakeup the chip and pn53x_SAMConfiguration check if the chip is a PN532
+  CHIP_DATA (pnd)->type = PN532;
   // This device starts in LowVBat mode
   CHIP_DATA(pnd)->power_mode = LOWVBAT;
 

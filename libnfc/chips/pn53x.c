@@ -1861,28 +1861,27 @@ pn53x_SetParameters (nfc_device_t * pnd, const uint8_t ui8Value)
   return true;
 }
 
-/*
- typedef enum {
-     NORMAL = 0x01,
-     VIRTUAL_CARD = 0x02,
-     WIRED_MODE = 0x03,
-     DUAL_CARD = 0x04
- } pn532_sam_mode;
- */
-
 bool
-pn53x_SAMConfiguration (nfc_device_t * pnd, const uint8_t ui8Mode)
+pn53x_SAMConfiguration (nfc_device_t * pnd, const pn532_sam_mode ui8Mode)
 {
   byte_t  abtCmd[] = { SAMConfiguration, ui8Mode, 0x00, 0x00 };
   size_t szCmd = sizeof(abtCmd);
+
+  if (CHIP_DATA(pnd)->type != PN532) {
+    // This function is not supported by pn531 neither pn533
+    pnd->iLastError = EDEVNOTSUP;
+    return false;
+  }
+
   switch (ui8Mode) {
-    case 0x01: // Normal mode
+    case PSM_NORMAL: // Normal mode
       szCmd = 2;
       break;
-    case 0x02: // Virtual card mode
-    case 0x03: // Wired card mode
-    case 0x04: // Dual card mode
-    // TODO: Handle these SAM mode
+    case PSM_VIRTUAL_CARD: // Virtual card mode
+    case PSM_WIRED_CARD: // Wired card mode
+    case PSM_DUAL_CARD: // Dual card mode
+      // TODO Implement timeout handling
+      szCmd = 3;
       break;
     default:
       pnd->iLastError = EINVALARG;
