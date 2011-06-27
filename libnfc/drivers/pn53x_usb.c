@@ -156,10 +156,6 @@ pn53x_usb_get_device_model (uint16_t vendor_id, uint16_t product_id)
   return UNKNOWN;
 }
 
-// TODO Move this HACK1 into an upper level in order to benefit to other devices that use PN53x
-static const byte_t ack_frame[] = { 0x00, 0x00, 0xff, 0x00, 0xff, 0x00 };
-static const byte_t nack_frame[] = { 0x00, 0x00, 0xff, 0xff, 0x00, 0x00 };
-
 int  pn53x_usb_ack (nfc_device_t * pnd);
 
 // Find transfer endpoints for bulk transfers
@@ -449,7 +445,7 @@ pn53x_usb_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szData)
     // response packet. With this hack, the nextly executed function (ie.
     // pn53x_usb_receive()) will be able to retreive the correct response
     // packet.
-    int res = pn53x_usb_bulk_write (DRIVER_DATA (pnd), (byte_t *)nack_frame, sizeof(nack_frame));
+    int res = pn53x_usb_bulk_write (DRIVER_DATA (pnd), (byte_t *)pn53x_nack_frame, sizeof(pn53x_nack_frame));
     if (res < 0) {
       pnd->iLastError = DEIO;
       // try to interrupt current device state
@@ -593,7 +589,7 @@ read:
 int
 pn53x_usb_ack (nfc_device_t * pnd)
 {
-  return pn53x_usb_bulk_write (DRIVER_DATA (pnd), (byte_t *) ack_frame, sizeof (ack_frame));
+  return pn53x_usb_bulk_write (DRIVER_DATA (pnd), (byte_t *) pn53x_ack_frame, sizeof (pn53x_ack_frame));
 }
 
 bool

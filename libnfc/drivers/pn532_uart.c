@@ -46,9 +46,6 @@
 #define PN532_UART_DEFAULT_SPEED 115200
 #define PN532_UART_DRIVER_NAME "PN532_UART"
 
-// TODO Move this one level up for libnfc-1.6
-static const byte_t ack_frame[] = { 0x00, 0x00, 0xff, 0x00, 0xff, 0x00 };
-
 int     pn532_uart_ack (nfc_device_t * pnd);
 int     pn532_uart_wakeup (nfc_device_t * pnd);
 
@@ -422,7 +419,7 @@ pn532_uart_ack (nfc_device_t * pnd)
       return -1;
     }
   }
-  return (0 == uart_send (DRIVER_DATA(pnd)->port, ack_frame, sizeof (ack_frame))) ? 0 : -1;
+  return (0 == uart_send (DRIVER_DATA(pnd)->port, pn53x_ack_frame, sizeof (pn53x_ack_frame))) ? 0 : -1;
 }
 
 bool 
