@@ -254,7 +254,7 @@ acr122_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szData)
 {
   // Make sure the command does not overflow the send buffer
   if (szData > ACR122_COMMAND_LEN) {
-    pnd->iLastError = DEIO;
+    pnd->iLastError = EINVALARG;
     return false;
   }
 
@@ -283,7 +283,7 @@ acr122_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szData)
      * field.
      */
     if (SCardControl (DRIVER_DATA (pnd)->hCard, IOCTL_CCID_ESCAPE_SCARD_CTL_CODE, abtTxBuf, szTxBuf, DRIVER_DATA (pnd)->abtRx, ACR122_RESPONSE_LEN, &dwRxLen) != SCARD_S_SUCCESS) {
-      pnd->iLastError = DEIO;
+      pnd->iLastError = ECOMIO;
       return false;
     }
   } else {
@@ -292,7 +292,7 @@ acr122_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szData)
      * receive the response from the PN532.
      */
     if (SCardTransmit (DRIVER_DATA (pnd)->hCard, &(DRIVER_DATA (pnd)->ioCard), abtTxBuf, szTxBuf, NULL, DRIVER_DATA (pnd)->abtRx, &dwRxLen) != SCARD_S_SUCCESS) {
-      pnd->iLastError = DEIO;
+      pnd->iLastError = ECOMIO;
       return false;
     }
   }
@@ -304,12 +304,12 @@ acr122_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szData)
 
     // Make sure we received the byte-count we expected
     if (dwRxLen != 2) {
-      pnd->iLastError = DEIO;
+      pnd->iLastError = ECOMIO;
       return false;
     }
     // Check if the operation was successful, so an answer is available
     if (DRIVER_DATA (pnd)->abtRx[0] == SCARD_OPERATION_ERROR) {
-      pnd->iLastError = DEISERRFRAME;
+      pnd->iLastError = EFRAISERRFRAME;
       return false;
     }
   } else {
@@ -332,7 +332,7 @@ acr122_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szData)
     DWORD dwRxLen = sizeof (DRIVER_DATA (pnd)->abtRx);
     abtRxCmd[4] = DRIVER_DATA (pnd)->abtRx[1];
     if (SCardTransmit (DRIVER_DATA (pnd)->hCard, &(DRIVER_DATA (pnd)->ioCard), abtRxCmd, sizeof (abtRxCmd), NULL, DRIVER_DATA (pnd)->abtRx, &dwRxLen) != SCARD_S_SUCCESS) {
-      pnd->iLastError = DEIO;
+      pnd->iLastError = ECOMIO;
       return -1;
     }
     DRIVER_DATA (pnd)->szRx = dwRxLen;
@@ -347,7 +347,7 @@ acr122_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szData)
 
   // Make sure we have an emulated answer that fits the return buffer
   if (DRIVER_DATA (pnd)->szRx < 4 || (DRIVER_DATA (pnd)->szRx - 4) > szData) {
-    pnd->iLastError = DEIO;
+    pnd->iLastError = ECOMIO;
     return -1;
   }
   // Wipe out the 4 APDU emulation bytes: D5 4B .. .. .. 90 00

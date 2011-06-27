@@ -131,14 +131,20 @@ extern  "C" {
 #define EOVCURRENT	0x2d
 #define ENAD		0x2e
 
-/* Software level errors */
-#define ETGUIDNOTSUP    0x0100  /* Target UID not supported */
+/* PN53x framing-level errors */
+#define EFRAACKMISMATCH   0x0100  /* Unexpected data */
+#define EFRAISERRFRAME    0x0101  /* Error frame */
 
-/* Common device-level errors */
-#define DEIO            0x1000  /* Input/output error */
-#define DEINVAL         0x2000  /* Invalid argument */
-#define DETIMEOUT       0x3000  /* Operation timeout */
-#define DEABORT         0x4000  /* Operation aborted */
+/* Communication-level errors */
+#define ECOMIO            0x1000  /* Input/output error */
+#define ECOMTIMEOUT       0x1001  /* Operation timeout */
+
+/* Software level errors */
+#define ETGUIDNOTSUP      0xFF00  /* Target UID not supported */
+#define EOPABORT          0xFF01  /* Operation aborted */
+#define EINVALARG         0xFF02  /* Invalid argument */
+#define EDEVNOTSUP        0xFF03  /* Not supported by device */
+#define ENOTIMPL          0xFF04  /* Not (yet) implemented in libnfc */
 
 #  ifdef __cplusplus
 }

@@ -165,18 +165,18 @@ uart_receive (serial_port sp, byte_t * pbtRx, const size_t szRx, void * abort_p)
 
     if (!res) {
       WARN("ReadFile returned error\n");
-      return DEIO;
+      return ECOMIO;
     }
     if (((DWORD)szRx) > dwTotalBytesReceived) {
       dwBytesToGet -= dwBytesReceived;
     }
 
     if (abort_flag_p != NULL && (*abort_flag_p) && dwTotalBytesReceived == 0) {
-      return DEABORT;
+      return EOPABORT;
     }
   } while (((DWORD)szRx) > dwTotalBytesReceived);
 
-  return (dwTotalBytesReceived == (DWORD) szRx) ? 0 : DEIO;
+  return (dwTotalBytesReceived == (DWORD) szRx) ? 0 : ECOMIO;
 }
 
 int
@@ -184,10 +184,10 @@ uart_send (serial_port sp, const byte_t * pbtTx, const size_t szTx)
 {
   DWORD   dwTxLen = 0;
   if (!WriteFile (((serial_port_windows *) sp)->hPort, pbtTx, szTx, &dwTxLen, NULL)) {
-    return DEIO;
+    return ECOMIO;
   }
   if (!dwTxLen)
-    return DEIO;
+    return ECOMIO;
   return 0;
 }
 

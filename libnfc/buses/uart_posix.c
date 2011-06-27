@@ -276,32 +276,32 @@ select:
     // Read error
     if (res < 0) {
       DBG ("%s", "RX error.");
-      return DEIO;
+      return ECOMIO;
     }
     // Read time-out
     if (res == 0) {
       DBG ("Timeout!");
-      return DETIMEOUT;
+      return ECOMTIMEOUT;
     }
 
     if (FD_ISSET (iAbortFd, &rfds)) {
       // Abort requested
       DBG ("Abort!");
       close (iAbortFd);
-      return DEABORT;
+      return EOPABORT;
     }
 
     // Retrieve the count of the incoming bytes
     res = ioctl (((serial_port_unix *) sp)->fd, FIONREAD, &available_bytes_count);
     if (res != 0) {
-      return DEIO;
+      return ECOMIO;
     }
     // There is something available, read the data
     // DBG ("expected bytes: %zu, received bytes: %d, available bytes: %d", szRx, received_bytes_count, available_bytes_count);
     res = read (((serial_port_unix *) sp)->fd, pbtRx + received_bytes_count, MIN(available_bytes_count, (expected_bytes_count - received_bytes_count)));
     // Stop if the OS has some troubles reading the data
     if (res <= 0) {
-      return DEIO;
+      return ECOMIO;
     }
     received_bytes_count += res;
 
@@ -322,7 +322,7 @@ uart_send (serial_port sp, const byte_t * pbtTx, const size_t szTx)
   if ((int) szTx == write (((serial_port_unix *) sp)->fd, pbtTx, szTx))
     return 0;
   else
-    return DEIO;
+    return ECOMIO;
 }
 
 char **

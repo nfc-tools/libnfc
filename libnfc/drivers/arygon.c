@@ -244,12 +244,12 @@ arygon_tama_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szDat
   if (szData > PN53x_NORMAL_FRAME__DATA_MAX_LEN) {
     // ARYGON Reader with PN532 equipped does not support extended frame (bug in ARYGON firmware?)
     DBG ("ARYGON device does not support more than %d bytes as payload (requested: %zd)", PN53x_NORMAL_FRAME__DATA_MAX_LEN, szData);
-    pnd->iLastError = DEINVAL;
+    pnd->iLastError = EDEVNOTSUP;
     return false;
   }
 
   if (!pn53x_build_frame (abtFrame + 1, &szFrame, pbtData, szData)) {
-    pnd->iLastError = DEINVAL;
+    pnd->iLastError = EINVALARG;
     return false;
   }
 
@@ -319,11 +319,11 @@ arygon_tama_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLe
 
   pnd->iLastError = uart_receive (DRIVER_DATA (pnd)->port, abtRxBuf, 5, abort_p);
 
-  if (abort_p && (DEABORT == pnd->iLastError)) {
+  if (abort_p && (EOPABORT == pnd->iLastError)) {
     arygon_abort (pnd);
 
     /* iLastError got reset by arygon_abort() */
-    pnd->iLastError = DEABORT;
+    pnd->iLastError = EOPABORT;
     return -1;
   }
 
@@ -335,7 +335,7 @@ arygon_tama_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLe
   const byte_t pn53x_preamble[3] = { 0x00, 0x00, 0xff };
   if (0 != (memcmp (abtRxBuf, pn53x_preamble, 3))) {
     ERR ("%s", "Frame preamble+start code mismatch");
-    pnd->iLastError = DEIO;
+    pnd->iLastError = ECOMIO;
     return -1;
   }
 
@@ -343,7 +343,7 @@ arygon_tama_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLe
     // Error frame
     uart_receive (DRIVER_DATA (pnd)->port, abtRxBuf, 3, 0);
     ERR ("%s", "Application level error detected");
-    pnd->iLastError = DEISERRFRAME;
+    pnd->iLastError = EFRAISERRFRAME;
     return -1;
   } else if ((0xff == abtRxBuf[3]) && (0xff == abtRxBuf[4])) {
     // Extended frame
@@ -354,7 +354,7 @@ arygon_tama_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLe
     if (256 != (abtRxBuf[3] + abtRxBuf[4])) {
       // TODO: Retry
       ERR ("%s", "Length checksum mismatch");
-      pnd->iLastError = DEIO;
+      pnd->iLastError = ECOMIO;
       return -1;
     }
 
@@ -364,7 +364,7 @@ arygon_tama_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLe
 
   if (len > szDataLen) {
     ERR ("Unable to receive data: buffer too small. (szDataLen: %zu, len: %zu)", szDataLen, len);
-    pnd->iLastError = DEIO;
+    pnd->iLastError = ECOMIO;
     return -1;
   }
 
@@ -377,13 +377,13 @@ arygon_tama_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLe
 
   if (abtRxBuf[0] != 0xD5) {
     ERR ("%s", "TFI Mismatch");
-    pnd->iLastError = DEIO;
+    pnd->iLastError = ECOMIO;
     return -1;
   }
 
   if (abtRxBuf[1] != CHIP_DATA (pnd)->ui8LastCommand + 1) {
     ERR ("%s", "Command Code verification failed");
-    pnd->iLastError = DEIO;
+    pnd->iLastError = ECOMIO;
     return -1;
   }
 
@@ -409,13 +409,13 @@ arygon_tama_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLe
 
   if (btDCS != abtRxBuf[0]) {
     ERR ("%s", "Data checksum mismatch");
-    pnd->iLastError = DEIO;
+    pnd->iLastError = ECOMIO;
     return -1;
   }
 
   if (0x00 != abtRxBuf[1]) {
     ERR ("%s", "Frame postamble mismatch");
-    pnd->iLastError = DEIO;
+    pnd->iLastError = ECOMIO;
     return -1;
   }
   // The PN53x command is done and we successfully received the reply

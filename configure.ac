@@ -52,8 +52,7 @@ AC_CHECK_FUNCS([memmove memset select strdup strerror strstr strtol usleep],
 AC_DEFINE(_NETBSD_SOURCE, 1, [Define on NetBSD to activate all library features])
 AC_DEFINE(_DARWIN_C_SOURCE, 1, [Define on Darwin to activate all library features])
 
-# XXX malloc function should be tested
-# but it produces some error while cross-compiling with MinGW
+# Note: malloc function should be tested but it produces some error while cross-compiling with MinGW
 # AC_FUNC_MALLOC
 
 # Checks for types

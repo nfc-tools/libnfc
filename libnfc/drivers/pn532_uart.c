@@ -250,7 +250,7 @@ pn532_uart_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szData
   size_t szFrame = 0;
 
   if (!pn53x_build_frame (abtFrame, &szFrame, pbtData, szData)) {
-    pnd->iLastError = DEINVAL;
+    pnd->iLastError = EINVALARG;
     return false;
   }
 
@@ -302,7 +302,7 @@ pn532_uart_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen
 
   pnd->iLastError = uart_receive (DRIVER_DATA(pnd)->port, abtRxBuf, 5, abort_p);
 
-  if (abort_p && (DEABORT == pnd->iLastError)) {
+  if (abort_p && (EOPABORT == pnd->iLastError)) {
     pn532_uart_ack (pnd);
     return -1;
   }
@@ -315,7 +315,7 @@ pn532_uart_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen
   const byte_t pn53x_preamble[3] = { 0x00, 0x00, 0xff };
   if (0 != (memcmp (abtRxBuf, pn53x_preamble, 3))) {
     ERR ("%s", "Frame preamble+start code mismatch");
-    pnd->iLastError = DEIO;
+    pnd->iLastError = ECOMIO;
     return -1;
   }
 
@@ -323,7 +323,7 @@ pn532_uart_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen
     // Error frame
     uart_receive (DRIVER_DATA(pnd)->port, abtRxBuf, 3, 0);
     ERR ("%s", "Application level error detected");
-    pnd->iLastError = DEISERRFRAME;
+    pnd->iLastError = EFRAISERRFRAME;
     return -1;
   } else if ((0xff == abtRxBuf[3]) && (0xff == abtRxBuf[4])) {
     // Extended frame
@@ -335,7 +335,7 @@ pn532_uart_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen
     if (((abtRxBuf[0] + abtRxBuf[1] + abtRxBuf[2]) % 256) != 0) {
       // TODO: Retry
       ERR ("%s", "Length checksum mismatch");
-      pnd->iLastError = DEIO;
+      pnd->iLastError = ECOMIO;
       return -1;
     }
   } else {
@@ -343,7 +343,7 @@ pn532_uart_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen
     if (256 != (abtRxBuf[3] + abtRxBuf[4])) {
       // TODO: Retry
       ERR ("%s", "Length checksum mismatch");
-      pnd->iLastError = DEIO;
+      pnd->iLastError = ECOMIO;
       return -1;
     }
 
@@ -353,7 +353,7 @@ pn532_uart_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen
 
   if (len > szDataLen) {
     ERR ("Unable to receive data: buffer too small. (szDataLen: %zu, len: %zu)", szDataLen, len);
-    pnd->iLastError = DEIO;
+    pnd->iLastError = ECOMIO;
     return -1;
   }
 
@@ -366,13 +366,13 @@ pn532_uart_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen
 
   if (abtRxBuf[0] != 0xD5) {
     ERR ("%s", "TFI Mismatch");
-    pnd->iLastError = DEIO;
+    pnd->iLastError = ECOMIO;
     return -1;
   }
 
   if (abtRxBuf[1] != CHIP_DATA (pnd)->ui8LastCommand + 1) {
     ERR ("%s", "Command Code verification failed");
-    pnd->iLastError = DEIO;
+    pnd->iLastError = ECOMIO;
     return -1;
   }
 
@@ -398,13 +398,13 @@ pn532_uart_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen
 
   if (btDCS != abtRxBuf[0]) {
     ERR ("%s", "Data checksum mismatch");
-    pnd->iLastError = DEIO;
+    pnd->iLastError = ECOMIO;
     return -1;
   }
 
   if (0x00 != abtRxBuf[1]) {
     ERR ("%s", "Frame postamble mismatch");
-    pnd->iLastError = DEIO;
+    pnd->iLastError = ECOMIO;
     return -1;
   }
   // The PN53x command is done and we successfully received the reply

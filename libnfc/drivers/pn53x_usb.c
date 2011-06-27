@@ -423,14 +423,14 @@ pn53x_usb_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szData)
   int res = pn53x_usb_bulk_write (DRIVER_DATA (pnd), abtFrame, szFrame);
 
   if (res < 0) {
-    pnd->iLastError = DEIO;
+    pnd->iLastError = ECOMIO;
     return false;
   }
 
   byte_t abtRxBuf[PN53X_USB_BUFFER_LEN];
   res = pn53x_usb_bulk_read (DRIVER_DATA (pnd), abtRxBuf, sizeof (abtRxBuf));
   if (res < 0) {
-    pnd->iLastError = DEIO;
+    pnd->iLastError = ECOMIO;
     // try to interrupt current device state
     pn53x_usb_ack(pnd);
     return false;
@@ -447,7 +447,7 @@ pn53x_usb_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szData)
     // packet.
     int res = pn53x_usb_bulk_write (DRIVER_DATA (pnd), (byte_t *)pn53x_nack_frame, sizeof(pn53x_nack_frame));
     if (res < 0) {
-      pnd->iLastError = DEIO;
+      pnd->iLastError = ECOMIO;
       // try to interrupt current device state
       pn53x_usb_ack(pnd);
       return false;
@@ -485,7 +485,7 @@ read:
     if (DRIVER_DATA (pnd)->abort_flag) {
       DRIVER_DATA (pnd)->abort_flag = false;
       pn53x_usb_ack (pnd);
-      pnd->iLastError = DEABORT;
+      pnd->iLastError = EOPABORT;
       return -1;
     } else {
       goto read;
@@ -493,7 +493,7 @@ read:
   }
 
   if (res < 0) {
-    pnd->iLastError = DEIO;
+    pnd->iLastError = ECOMIO;
     // try to interrupt current device state
     pn53x_usb_ack(pnd);
     return -1;
@@ -502,7 +502,7 @@ read:
   const byte_t pn53x_preamble[3] = { 0x00, 0x00, 0xff };
   if (0 != (memcmp (abtRxBuf, pn53x_preamble, 3))) {
     ERR ("%s", "Frame preamble+start code mismatch");
-    pnd->iLastError = DEIO;
+    pnd->iLastError = ECOMIO;
     return -1;
   }
   offset += 3;
@@ -510,7 +510,7 @@ read:
   if ((0x01 == abtRxBuf[offset]) && (0xff == abtRxBuf[offset + 1])) {
     // Error frame
     ERR ("%s", "Application level error detected");
-    pnd->iLastError = DEISERRFRAME;
+    pnd->iLastError = EFRAISERRFRAME;
     return -1;
   } else if ((0xff == abtRxBuf[offset]) && (0xff == abtRxBuf[offset + 1])) {
     // Extended frame
@@ -521,7 +521,7 @@ read:
     if (((abtRxBuf[offset] + abtRxBuf[offset + 1] + abtRxBuf[offset + 2]) % 256) != 0) {
       // TODO: Retry
       ERR ("%s", "Length checksum mismatch");
-      pnd->iLastError = DEIO;
+      pnd->iLastError = ECOMIO;
       return -1;
     }
     offset += 3;
@@ -530,7 +530,7 @@ read:
     if (256 != (abtRxBuf[offset] + abtRxBuf[offset + 1])) {
       // TODO: Retry
       ERR ("%s", "Length checksum mismatch");
-      pnd->iLastError = DEIO;
+      pnd->iLastError = ECOMIO;
       return -1;
     }
 
@@ -541,21 +541,21 @@ read:
 
   if (len > szDataLen) {
     ERR ("Unable to receive data: buffer too small. (szDataLen: %zu, len: %zu)", szDataLen, len);
-    pnd->iLastError = DEIO;
+    pnd->iLastError = ECOMIO;
     return -1;
   }
 
   // TFI + PD0 (CC+1)
   if (abtRxBuf[offset] != 0xD5) {
     ERR ("%s", "TFI Mismatch");
-    pnd->iLastError = DEIO;
+    pnd->iLastError = ECOMIO;
     return -1;
   }
   offset += 1;
 
   if (abtRxBuf[offset] != CHIP_DATA (pnd)->ui8LastCommand + 1) {
     ERR ("%s", "Command Code verification failed");
-    pnd->iLastError = DEIO;
+    pnd->iLastError = ECOMIO;
     return -1;
   }
   offset += 1;
@@ -571,14 +571,14 @@ read:
 
   if (btDCS != abtRxBuf[offset]) {
     ERR ("%s", "Data checksum mismatch");
-    pnd->iLastError = DEIO;
+    pnd->iLastError = ECOMIO;
     return -1;
   }
   offset += 1;
 
   if (0x00 != abtRxBuf[offset]) {
     ERR ("%s", "Frame postamble mismatch");
-    pnd->iLastError = DEIO;
+    pnd->iLastError = ECOMIO;
     return -1;
   }
   // The PN53x command is done and we successfully received the reply

@@ -29,9 +29,6 @@
 #  include <stdbool.h>
 #  include <err.h>
 
-// TODO: Put generic errors here
-#  define DENOTSUP        0x0400/* Not supported */
-
 /**
  * @macro PRINT_HEX
  * @brief Print a byte-array in hexadecimal format (only in DEBUG mode)
@@ -96,7 +93,7 @@
   if (pnd->driver->FUNCTION) { \
     return pnd->driver->FUNCTION( __VA_ARGS__ ); \
   } else { \
-    pnd->iLastError = DENOTSUP; \
+    pnd->iLastError = EDEVNOTSUP; \
     return false; \
   }
 

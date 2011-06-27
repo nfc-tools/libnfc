@@ -935,7 +935,7 @@ pn53x_initiator_select_passive_target (nfc_device_t * pnd,
 
   const pn53x_modulation_t pm = pn53x_nm_to_pm(nm);
   if (PM_UNDEFINED == pm) {
-    pnd->iLastError = DENOTSUP;
+    pnd->iLastError = EINVALARG;
     return false;
   }
 
@@ -968,7 +968,7 @@ pn53x_initiator_poll_targets (nfc_device_t * pnd,
   for (size_t n=0; n<szModulations; n++) {
     const pn53x_target_type_t ptt = pn53x_nm_to_ptt(pnmModulations[n]);
     if (PTT_UNDEFINED == ptt) {
-      pnd->iLastError = DENOTSUP;
+      pnd->iLastError = EINVALARG;
       return false;
     }
     apttTargetTypes[szTargetTypes] = ptt;
@@ -1084,7 +1084,7 @@ pn53x_initiator_transceive_bytes (nfc_device_t * pnd, const byte_t * pbtTx, cons
 
   // We can not just send bytes without parity if while the PN53X expects we handled them
   if (!pnd->bPar) {
-    pnd->iLastError = DENOTSUP;
+    pnd->iLastError = EINVALARG;
     return false;
   }
 
@@ -1215,18 +1215,17 @@ pn53x_initiator_transceive_bits_timed (nfc_device_t * pnd, const byte_t * pbtTx,
 
   // Sorry, no arbitrary parity bits support for now
   if (!pnd->bPar) {
-    pnd->iLastError = DENOTSUP;
+    pnd->iLastError = ENOTIMPL;
     return false;
   }
   // Sorry, no easy framing support
   if (pnd->bEasyFraming) {
-    pnd->iLastError = DENOTSUP;
+    pnd->iLastError = ENOTIMPL;
     return false;
   }
-  // Sorry, no CRC support
-  // TODO but it probably doesn't make sense for (szTxBits % 8 != 0) ...
+  // TODO CRC support but it probably doesn't make sense for (szTxBits % 8 != 0) ...
   if (pnd->bCrc) {
-    pnd->iLastError = DENOTSUP;
+    pnd->iLastError = ENOTIMPL;
     return false;
   }
 
@@ -1315,13 +1314,13 @@ pn53x_initiator_transceive_bytes_timed (nfc_device_t * pnd, const byte_t * pbtTx
 
   // We can not just send bytes without parity while the PN53X expects we handled them
   if (!pnd->bPar) {
-    pnd->iLastError = DENOTSUP;
+    pnd->iLastError = EINVALARG;
     return false;
   }
   // Sorry, no easy framing support
-  // TODO: to be changed once we'll provide easy framing support from libnfc itself...
+  // TODO to be changed once we'll provide easy framing support from libnfc itself...
   if (pnd->bEasyFraming) {
-    pnd->iLastError = DENOTSUP;
+    pnd->iLastError = ENOTIMPL;
     return false;
   }
 
@@ -1459,7 +1458,7 @@ pn53x_target_init (nfc_device_t * pnd, nfc_target_t * pnt, byte_t * pbtRx, size_
     case NMT_ISO14443B2SR:
     case NMT_ISO14443B2CT:
     case NMT_JEWEL:
-      pnd->iLastError = DENOTSUP;
+      pnd->iLastError = EDEVNOTSUP;
       return false;
     break;
   }
@@ -1561,7 +1560,7 @@ pn53x_target_init (nfc_device_t * pnd, nfc_target_t * pnt, byte_t * pbtRx, size_
     case NMT_ISO14443B2SR:
     case NMT_ISO14443B2CT:
     case NMT_JEWEL:
-      pnd->iLastError = DENOTSUP;
+      pnd->iLastError = EDEVNOTSUP;
       return false;
     break;
   }
@@ -1686,7 +1685,7 @@ pn53x_target_receive_bytes (nfc_device_t * pnd, byte_t * pbtRx, size_t * pszRx)
       abtCmd[0] = TgGetData;
     } else {
       // TODO Support EasyFraming for other cases by software
-      pnd->iLastError = DENOTSUP;
+      pnd->iLastError = ENOTIMPL;
       return false;
     }
   } else {
@@ -1701,8 +1700,6 @@ pn53x_target_receive_bytes (nfc_device_t * pnd, byte_t * pbtRx, size_t * pszRx)
 
   // Save the received byte count
   *pszRx = szRx - 1;
-
-  // FIXME szRx can be 0
 
   // Copy the received bytes
   memcpy (pbtRx, abtRx + 1, *pszRx);
@@ -1766,7 +1763,7 @@ pn53x_target_send_bytes (nfc_device_t * pnd, const byte_t * pbtTx, const size_t 
       abtCmd[0] = TgSetData;
     } else {
       // TODO Support EasyFraming for other cases by software
-      pnd->iLastError = DENOTSUP;
+      pnd->iLastError = ENOTIMPL;
       return false;
     }
   } else {
@@ -1788,7 +1785,7 @@ static struct sErrorMessage {
   int     iErrorCode;
   const char *pcErrorMsg;
 } sErrorMessages[] = {
-  /* Chip-level errors */
+  /* Chip-level errors (internal errors, RF errors, etc.) */
   { 0x00, "Success" },
   { ETIMEOUT, "Timeout" },      // Time Out, the target has not answered
   { ECRC,     "CRC Error" },      // A CRC error has been detected by the CIU
@@ -1803,39 +1800,36 @@ static struct sErrorMessage {
   { EOVHEAT, "Chip Overheating" },    // Temperature error: the internal temperature sensor has detected overheating, and therefore has automatically switched off the antenna drivers
   { EINBUFOVF, "Internal Buffer overflow."},  // Internal buffer overflow
   { EINVPARAM, "Invalid Parameter"},    // Invalid parameter (range, format, …)
-  /* DEP Errors */
+  { EOPNOTALL, "Operation Not Allowed" }, // Operation not allowed in this configuration (host controller interface)
+  { ECMD, "Command Not Acceptable" },   // Command is not acceptable due to the current context
+  { EOVCURRENT, "Over Current"  },
+  /* DEP errors */
   { EDEPUNKCMD, "Unknown DEP Command" },
+  { EDEPINVSTATE, "Invalid DEP State" },  // DEP Protocol: Invalid device state, the system is in a state which does not allow the operation
+  { ENAD, "NAD Missing in DEP Frame" },
   /* MIFARE */
   { EMFAUTH, "Mifare Authentication Error" },
-  /*  */
+  /* Misc */
   { EINVRXFRAM, "Invalid Received Frame" }, // DEP Protocol, Mifare or ISO/IEC14443-4: The data format does not match to the specification.
   { ENSECNOTSUPP, "NFC Secure not supported" }, // Target or Initiator does not support NFC Secure
   { EBCC, "Wrong UID Check Byte (BCC)" }, // ISO/IEC14443-3: UID Check byte is wrong
-  { EDEPINVSTATE, "Invalid DEP State" },  // DEP Protocol: Invalid device state, the system is in a state which does not allow the operation
-  { EOPNOTALL, "Operation Not Allowed" }, // Operation not allowed in this configuration (host controller interface)
-  { ECMD, "Command Not Acceptable" },   // Command is not acceptable due to the current context
   { ETGREL, "Target Released" },    // Target have been released by initiator
-  // FIXME: Errors can be grouped (DEP-related, MIFARE-related, ISO14443B-related, etc.)
-  // Purposal: Use prefix/suffix to identify them
   { ECID, "Card ID Mismatch" },     // ISO14443 type B: Card ID mismatch, meaning that the expected card has been exchanged with another one.
   { ECDISCARDED, "Card Discarded" },    // ISO/IEC14443 type B: the card previously activated has disappeared.
   { ENFCID3, "NFCID3 Mismatch" },
-  { EOVCURRENT, "Over Current"  },
-  { ENAD, "NAD Missing in DEP Frame" },
   /* Software level errors */
   { ETGUIDNOTSUP, "Target UID not supported" }, // In target mode, PN53x only support 4 bytes UID and the first byte must start with 0x08
-  /* Driver-level errors */
-  { DENACK, "Received NACK" },
-  { DEACKMISMATCH, "Expected ACK/NACK" },
-  { DEISERRFRAME, "Received an error frame" },
-  // TODO: Move me in more generic code for libnfc 1.6
-  // FIXME: Driver-errors and Device-errors have the same prefix (DE*)
-  // eg. DENACK means Driver Error NACK while DEIO means Device Error I/O
-  { DEINVAL, "Invalid argument" },
-  { DEIO, "Input/output error" },
-  { DETIMEOUT, "Operation timed-out" },
-  { DEABORT, "Operation aborted" },
-  { DENOTSUP, "Operation not supported" }
+  { EOPABORT, "Operation aborted" },  // Error used to catch a user-requested command abort
+  { EINVALARG, "Invalid argument" },  // Function called with invalid argument(s)
+  { ENOTIMPL, "Not (yet) implemented in library" },
+  /* Framming-level errors */
+  { EFRAACKMISMATCH, "Expected ACK frame" },
+  { EFRAISERRFRAME, "Received an error frame" },
+  /* Communication-level errors */
+  { ECOMIO, "Input/output error" },  // Communication I/O errors: connection broken, read/write failure, unreacheable device, etc.
+  { ECOMTIMEOUT, "Operation timed-out" },  // A timeout occured while reading device's reply
+  /* Device-level errors */
+  { EDEVNOTSUP, "Operation not supported by device" }  // Requested task can not be done by current device
 };
 
 const char *
@@ -1891,7 +1885,7 @@ pn53x_SAMConfiguration (nfc_device_t * pnd, const uint8_t ui8Mode)
     // TODO: Handle these SAM mode
       break;
     default:
-      pnd->iLastError = DENOTSUP;
+      pnd->iLastError = EINVALARG;
       return false;
   }
   return (pn53x_transceive (pnd, abtCmd, szCmd, NULL, NULL));
@@ -1938,14 +1932,14 @@ pn53x_InListPassiveTarget (nfc_device_t * pnd,
     case PM_ISO14443B_106:
       if (!(pnd->btSupportByte & SUPPORT_ISO14443B)) {
         // Eg. Some PN532 doesn't support type B!
-        pnd->iLastError = DENOTSUP;
+        pnd->iLastError = EDEVNOTSUP;
         return false;
       }
       break;
     case PM_JEWEL_106:
       if(CHIP_DATA(pnd)->type == PN531) {
         // These modulations are not supported by pn531
-        pnd->iLastError = DENOTSUP;
+        pnd->iLastError = EDEVNOTSUP;
         return false;
       }
       break;
@@ -1954,12 +1948,12 @@ pn53x_InListPassiveTarget (nfc_device_t * pnd,
     case PM_ISO14443B_847:
       if((CHIP_DATA(pnd)->type != PN533) || (!(pnd->btSupportByte & SUPPORT_ISO14443B))) {
         // These modulations are not supported by pn531 neither pn532
-        pnd->iLastError = DENOTSUP;
+        pnd->iLastError = EDEVNOTSUP;
         return false;
       }
       break;
     default:
-      pnd->iLastError = DENOTSUP;
+      pnd->iLastError = EINVALARG;
       return false;
   }
   abtCmd[2] = pmInitModulation; // BrTy, the type of init modulation used for polling a passive tag
@@ -2022,7 +2016,7 @@ pn53x_InAutoPoll (nfc_device_t * pnd,
 {
   if (CHIP_DATA(pnd)->type != PN532) {
     // This function is not supported by pn531 neither pn533
-    pnd->iLastError = DENOTSUP;
+    pnd->iLastError = EDEVNOTSUP;
     return false;
   }
 
@@ -2103,7 +2097,7 @@ pn53x_InJumpForDEP (nfc_device_t * pnd,
     break;
     case NBR_847:
     case NBR_UNDEFINED:
-      pnd->iLastError = DENOTSUP;
+      pnd->iLastError = EINVALARG;
       return false;
     break;
   }
@@ -2123,7 +2117,7 @@ pn53x_InJumpForDEP (nfc_device_t * pnd,
       break;
       case NBR_847:
       case NBR_UNDEFINED:
-        pnd->iLastError = DENOTSUP;
+        pnd->iLastError = EINVALARG;
         return false;
       break;
     }
@@ -2251,7 +2245,7 @@ pn53x_check_ack_frame (nfc_device_t * pnd, const byte_t * pbtRxFrame, const size
       return true;
     }
   }
-  pnd->iLastError = DEACKMISMATCH;
+  pnd->iLastError = EFRAACKMISMATCH;
   ERR ("%s", "Unexpected PN53x reply!");
   return false;
 }
@@ -2262,7 +2256,7 @@ pn53x_check_error_frame (nfc_device_t * pnd, const byte_t * pbtRxFrame, const si
   if (szRxFrameLen >= sizeof (pn53x_error_frame)) {
     if (0 == memcmp (pbtRxFrame, pn53x_error_frame, sizeof (pn53x_error_frame))) {
       DBG ("%s", "PN53x sent an error frame");
-      pnd->iLastError = DEISERRFRAME;
+      pnd->iLastError = EFRAISERRFRAME;
       return false;
     }
   }

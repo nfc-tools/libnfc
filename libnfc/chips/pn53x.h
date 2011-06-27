@@ -114,11 +114,6 @@
 #  define RFCI_ANALOG_TYPE_B          0x0C      //  3
 #  define RFCI_ANALOG_TYPE_14443_4    0x0D      //  9
 
-/* PN53x specific device-level errors */
-#  define DENACK          0x0100/* NACK */
-#  define DEACKMISMATCH   0x0200/* Unexpected data */
-#  define DEISERRFRAME    0x0300/* Error frame */
-
 typedef enum {
   NORMAL,	// In that case, there is no power saved but the PN53x reacts as fast as possible on the host controller interface.
   POWERDOWN,	// Only on PN532, need to be wake up to process commands with a long preamble
