@@ -45,9 +45,6 @@
 
 #include <sys/param.h>
 
-// TODO: Count max bytes for InJumpForDEP reply
-const byte_t pncmd_initiator_jump_for_dep[68] = { 0xD4, 0x56 };
-
 const byte_t pn53x_ack_frame[] = { 0x00, 0x00, 0xff, 0x00, 0xff, 0x00 };
 const byte_t pn53x_nack_frame[] = { 0x00, 0x00, 0xff, 0xff, 0x00, 0x00 };
 static const byte_t pn53x_error_frame[] = { 0x00, 0x00, 0xff, 0x01, 0xff, 0x7f, 0x81, 0x00 };
@@ -2089,7 +2086,8 @@ pn53x_InJumpForDEP (nfc_device_t * pnd,
                     const byte_t * pbtGBi, const size_t szGBi,
                     nfc_target_t * pnt)
 {
-  byte_t  abtCmd[PN53x_EXTENDED_FRAME__DATA_MAX_LEN] = { InJumpForDEP, (ndm == NDM_ACTIVE) ? 0x01 : 0x00 };
+  // Max frame size = 1 (Command) + 1 (ActPass) + 1 (Baud rate) + 1 (Next) + 5 (PassiveInitiatorData) + 10 (NFCID3) + 48 (General bytes) = 67 bytes
+  byte_t  abtCmd[67] = { InJumpForDEP, (ndm == NDM_ACTIVE) ? 0x01 : 0x00 };
 
   size_t offset = 4; // 1 byte for command, 1 byte for DEP mode (Active/Passive), 1 byte for baud rate, 1 byte for following parameters flag
 
@@ -2105,7 +2103,6 @@ pn53x_InJumpForDEP (nfc_device_t * pnd,
     break;
     case NBR_847:
     case NBR_UNDEFINED:
-      // XXX Maybe we should put a "syntax error" or sth like that
       pnd->iLastError = DENOTSUP;
       return false;
     break;
@@ -2126,7 +2123,6 @@ pn53x_InJumpForDEP (nfc_device_t * pnd,
       break;
       case NBR_847:
       case NBR_UNDEFINED:
-        // XXX Maybe we should put a "syntax error" or sth like that
         pnd->iLastError = DENOTSUP;
         return false;
       break;
