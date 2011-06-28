@@ -43,8 +43,6 @@
 
 #include <sys/param.h>
 
-nfc_device_desc_t *nfc_pick_device (void);
-
 const struct nfc_driver_t *nfc_drivers[] = {
 #  if defined (DRIVER_PN53X_USB_ENABLED)
   &pn53x_usb_driver,
@@ -82,8 +80,14 @@ nfc_connect (nfc_device_desc_t * pndd)
 {
   nfc_device_t *pnd = NULL;
 
-  if (pndd == NULL)
-      pndd = nfc_pick_device ();
+  if (pndd == NULL) {
+    size_t szDeviceFound;
+    nfc_device_desc_t ndd[1];
+    nfc_list_devices (ndd, 1, &szDeviceFound);
+    if (szDeviceFound) {
+      pndd = &ndd[0];
+    }
+  }
 
   if (pndd == NULL)
       return NULL;
@@ -128,41 +132,6 @@ nfc_disconnect (nfc_device_t * pnd)
     // Disconnect, clean up and release the device 
     pnd->driver->disconnect (pnd);
   }
-}
-
-/**
- * @brief Probe for the first discoverable supported devices (ie. only available for some drivers)
- * @return \a nfc_device_desc_t struct pointer
- */
-nfc_device_desc_t *
-nfc_pick_device (void)
-{
-  const struct nfc_driver_t *ndr;
-  const struct nfc_driver_t **pndr = nfc_drivers;
-  while ((ndr = *pndr)) {
-    nfc_device_desc_t *pndd;
-
-    if ((pndd = malloc (sizeof (*pndd)))) {
-      size_t  szN;
-
-      if (!ndr->probe (pndd, 1, &szN)) {
-        DBG ("%s probe failed", ndr->name);
-        szN = 0;
-      }
-
-      if (szN == 0) {
-        DBG ("No %s device found", ndr->name);
-        free (pndd);
-      } else {
-        DBG ("One %s device found", ndr->name);
-        return pndd;
-      }
-    }
-    pndr++;
-  }
-
-  DBG ("%s", "No device found with any driver :-(");
-  return NULL;
 }
 
 /**

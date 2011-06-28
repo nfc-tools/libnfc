@@ -169,14 +169,17 @@ pn53x_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, b
       }
       pnd->iLastError = pbtRx[0] & 0x3f;
       break;
+    case ReadRegister:
+    case WriteRegister:
+      if (CHIP_DATA(pnd)->type == PN533) {
+        // PN533 prepends its answer by the status byte
+        pnd->iLastError = pbtRx[0] & 0x3f;
+      } else {
+        pnd->iLastError = 0;
+      }
+      break;
     default:
       pnd->iLastError = 0;
-  }
-  if (CHIP_DATA(pnd)->type == PN533) {
-    if ((pbtTx[0] == ReadRegister) || (pbtTx[0] == WriteRegister)) {
-      // PN533 prepends its answer by a status byte
-      pnd->iLastError = pbtRx[0] & 0x3f;
-    }
   }
   return (0 == pnd->iLastError);
 }
@@ -626,6 +629,9 @@ pn53x_get_firmware_version (nfc_device_t * pnd, char abtFirmwareText[22])
       snprintf (abtFirmwareText, 22, "PN533 v%d.%d (0x%02x)", abtFw[1], abtFw[2], abtFw[3]);
       pnd->btSupportByte = abtFw[3];
       break;
+    case PN53X:
+      // Could not happend
+      break;
   }
   return true;
 }
@@ -861,6 +867,7 @@ pn53x_initiator_select_passive_target (nfc_device_t * pnd,
   if (nm.nmt == NMT_ISO14443BI || nm.nmt == NMT_ISO14443B2SR || nm.nmt == NMT_ISO14443B2CT) {
     if (CHIP_DATA(pnd)->type == RCS360) {
       // TODO add support for RC-S360, at the moment it refuses to send raw frames without a first select
+      pnd->iLastError = ENOTIMPL;
       return false;
     }
     // No native support in InListPassiveTarget so we do discovery by hand
@@ -1921,7 +1928,6 @@ pn53x_InListPassiveTarget (nfc_device_t * pnd,
 
   abtCmd[1] = szMaxTargets;     // MaxTg
 
-  // XXX Is there a better way to do handle supported modulations ?
   switch(pmInitModulation) {
     case PM_ISO14443A_106:
     case PM_FELICA_212:
@@ -2491,6 +2497,9 @@ pn53x_data_new (nfc_device_t * pnd, const struct pn53x_io* io)
 
   // Keep I/O functions
   CHIP_DATA (pnd)->io = io;
+
+  // Set type to generic (means unknown)
+  CHIP_DATA (pnd)->type = PN53X;
 
   // Set power mode to normal, if your device starts in LowVBat (ie. PN532
   // UART) the driver layer have to correctly set it.

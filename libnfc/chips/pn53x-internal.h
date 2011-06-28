@@ -118,6 +118,7 @@ typedef struct {
 } pn53x_command;
 
 typedef enum {
+  PN53X = 0x00, // Unknown PN53x chip type
   PN531 = 0x01,
   PN532 = 0x02,
   PN533 = 0x04,
