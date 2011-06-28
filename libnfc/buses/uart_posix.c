@@ -56,15 +56,16 @@ char *serial_ports_device_radix[] = { "ttyUSB", "ttyS", NULL };
 #    error "Can't determine serial string for your system"
 #  endif
 
-typedef struct termios term_info;
-typedef struct {
-  int     fd;                   // Serial port file descriptor
-  term_info tiOld;              // Terminal info before using the port
-  term_info tiNew;              // Terminal info during the transaction
-} serial_port_unix;
-
 // Work-around to claim uart interface using the c_iflag (software input processing) from the termios struct
 #  define CCLAIMED 0x80000000
+
+typedef struct {
+  int 			fd; 			// Serial port file descriptor
+  struct termios 	termios_backup; 	// Terminal info before using the port
+  struct termios 	termios_new; 		// Terminal info during the transaction
+} serial_port_unix;
+
+void uart_close_ext (const serial_port sp, const bool restore_termios);
 
 serial_port
 uart_open (const char *pcPortName)
@@ -76,32 +77,32 @@ uart_open (const char *pcPortName)
 
   sp->fd = open (pcPortName, O_RDWR | O_NOCTTY | O_NONBLOCK);
   if (sp->fd == -1) {
-    uart_close (sp);
+    uart_close_ext (sp, false);
     return INVALID_SERIAL_PORT;
   }
 
-  if (tcgetattr (sp->fd, &sp->tiOld) == -1) {
-    uart_close (sp);
+  if (tcgetattr (sp->fd, &sp->termios_backup) == -1) {
+    uart_close_ext (sp, false);
     return INVALID_SERIAL_PORT;
   }
   // Make sure the port is not claimed already
-  if (sp->tiOld.c_iflag & CCLAIMED) {
-    uart_close (sp);
+  if (sp->termios_backup.c_iflag & CCLAIMED) {
+    uart_close_ext (sp, false);
     return CLAIMED_SERIAL_PORT;
   }
   // Copy the old terminal info struct
-  sp->tiNew = sp->tiOld;
+  sp->termios_new = sp->termios_backup;
 
-  sp->tiNew.c_cflag = CS8 | CLOCAL | CREAD;
-  sp->tiNew.c_iflag = CCLAIMED | IGNPAR;
-  sp->tiNew.c_oflag = 0;
-  sp->tiNew.c_lflag = 0;
+  sp->termios_new.c_cflag = CS8 | CLOCAL | CREAD;
+  sp->termios_new.c_iflag = CCLAIMED | IGNPAR;
+  sp->termios_new.c_oflag = 0;
+  sp->termios_new.c_lflag = 0;
 
-  sp->tiNew.c_cc[VMIN] = 0;     // block until n bytes are received
-  sp->tiNew.c_cc[VTIME] = 0;    // block until a timer expires (n * 100 mSec.)
+  sp->termios_new.c_cc[VMIN] = 0;     // block until n bytes are received
+  sp->termios_new.c_cc[VTIME] = 0;    // block until a timer expires (n * 100 mSec.)
 
-  if (tcsetattr (sp->fd, TCSANOW, &sp->tiNew) == -1) {
-    uart_close (sp);
+  if (tcsetattr (sp->fd, TCSANOW, &sp->termios_new) == -1) {
+    uart_close_ext (sp, true);
     return INVALID_SERIAL_PORT;
   }
   return sp;
@@ -134,7 +135,7 @@ void
 uart_set_speed (serial_port sp, const uint32_t uiPortSpeed)
 {
   DBG ("Serial port speed requested to be set to %d bauds.", uiPortSpeed);
-  const serial_port_unix *spu = (serial_port_unix *) sp;
+  serial_port_unix *spu = (serial_port_unix *) sp;
 
   // Portability note: on some systems, B9600 != 9600 so we have to do
   // uint32_t <=> speed_t associations by hand.
@@ -176,9 +177,9 @@ uart_set_speed (serial_port sp, const uint32_t uiPortSpeed)
   };
 
   // Set port speed (Input and Output)
-  cfsetispeed ((struct termios *) &(spu->tiNew), stPortSpeed);
-  cfsetospeed ((struct termios *) &(spu->tiNew), stPortSpeed);
-  if (tcsetattr (spu->fd, TCSADRAIN, &(spu->tiNew)) == -1) {
+  cfsetispeed (&(spu->termios_new), stPortSpeed);
+  cfsetospeed (&(spu->termios_new), stPortSpeed);
+  if (tcsetattr (spu->fd, TCSADRAIN, &(spu->termios_new)) == -1) {
     ERR ("%s", "Unable to apply new speed settings.");
   }
 }
@@ -188,7 +189,7 @@ uart_get_speed (serial_port sp)
 {
   uint32_t uiPortSpeed = 0;
   const serial_port_unix *spu = (serial_port_unix *) sp;
-  switch (cfgetispeed (&spu->tiNew)) {
+  switch (cfgetispeed (&spu->termios_new)) {
   case B9600:
     uiPortSpeed = 9600;
     break;
@@ -224,13 +225,20 @@ uart_get_speed (serial_port sp)
 }
 
 void
-uart_close (const serial_port sp)
+uart_close_ext (const serial_port sp, const bool restore_termios)
 {
   if (((serial_port_unix *) sp)->fd >= 0) {
-    tcsetattr (((serial_port_unix *) sp)->fd, TCSANOW, &((serial_port_unix *) sp)->tiOld);
+    if (restore_termios)
+      tcsetattr (((serial_port_unix *) sp)->fd, TCSANOW, &((serial_port_unix *) sp)->termios_backup);
     close (((serial_port_unix *) sp)->fd);
   }
   free (sp);
+}
+
+void
+uart_close (const serial_port sp)
+{
+  uart_close_ext (sp, true);
 }
 
 static const struct timeval tvTimeout = {

@@ -696,8 +696,7 @@ parse_args (int argc, const char *argv[], size_t * szFound, bool * verbose)
         strcpy (pndd->pcDriver, strtok (buffer, ":"));
 
         // Port.
-        pndd->pcPort = (char *) malloc (256);
-        strcpy (pndd->pcPort, strtok (NULL, ":"));
+        strcpy (pndd->acPort, strtok (NULL, ":"));
 
         // Speed.
         sscanf (strtok (NULL, ":"), "%u", &pndd->uiSpeed);

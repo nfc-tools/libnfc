@@ -78,13 +78,13 @@ pn532_uart_probe (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * ps
   *pszDeviceFound = 0;
 
   serial_port sp;
-  char **pcPorts = uart_list_ports ();
-  const char *pcPort;
+  char **acPorts = uart_list_ports ();
+  const char *acPort;
   int     iDevice = 0;
 
-  while ((pcPort = pcPorts[iDevice++])) {
-    sp = uart_open (pcPort);
-    DBG ("Trying to find PN532 device on serial port: %s at %d bauds.", pcPort, PN532_UART_DEFAULT_SPEED);
+  while ((acPort = acPorts[iDevice++])) {
+    sp = uart_open (acPort);
+    DBG ("Trying to find PN532 device on serial port: %s at %d bauds.", acPort, PN532_UART_DEFAULT_SPEED);
 
     if ((sp != INVALID_SERIAL_PORT) && (sp != CLAIMED_SERIAL_PORT)) {
       // We need to flush input to be sure first reply does not comes from older byte transceive
@@ -109,15 +109,16 @@ pn532_uart_probe (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * ps
       if(!res) {
         nfc_perror (pnd, "pn53x_check_communication");
       }
+      pn53x_data_free (pnd);
       nfc_device_free (pnd);
       uart_close (sp);
       if(!res) {
         continue;
       }
 
-      snprintf (pnddDevices[*pszDeviceFound].acDevice, DEVICE_NAME_LENGTH - 1, "%s (%s)", "PN532", pcPort);
+      snprintf (pnddDevices[*pszDeviceFound].acDevice, DEVICE_NAME_LENGTH - 1, "%s (%s)", "PN532", acPort);
       pnddDevices[*pszDeviceFound].pcDriver = PN532_UART_DRIVER_NAME;
-      pnddDevices[*pszDeviceFound].pcPort = strdup (pcPort);
+      strncpy (pnddDevices[*pszDeviceFound].acPort, acPort, DEVICE_PORT_LENGTH - 1); pnddDevices[*pszDeviceFound].acPort[DEVICE_PORT_LENGTH - 1] = '\0';
       pnddDevices[*pszDeviceFound].uiSpeed = PN532_UART_DEFAULT_SPEED;
       (*pszDeviceFound)++;
 
@@ -127,13 +128,18 @@ pn532_uart_probe (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * ps
     }
 #  ifdef DEBUG
     if (sp == INVALID_SERIAL_PORT)
-      DBG ("Invalid serial port: %s", pcPort);
+      DBG ("Invalid serial port: %s", acPort);
     if (sp == CLAIMED_SERIAL_PORT)
-      DBG ("Serial port already claimed: %s", pcPort);
+      DBG ("Serial port already claimed: %s", acPort);
 #  endif
        /* DEBUG */
   }
-  free (pcPorts);
+
+  iDevice = 0;
+  while ((acPort = acPorts[iDevice++])) {
+    free ((void*)acPort);
+  }
+  free (acPorts);
 #endif /* SERIAL_AUTOPROBE_ENABLED */
   return true;
 }
@@ -144,13 +150,13 @@ pn532_uart_connect (const nfc_device_desc_t * pndd)
   serial_port sp;
   nfc_device_t *pnd = NULL;
 
-  DBG ("Attempt to connect to: %s at %d bauds.", pndd->pcPort, pndd->uiSpeed);
-  sp = uart_open (pndd->pcPort);
+  DBG ("Attempt to connect to: %s at %d bauds.", pndd->acPort, pndd->uiSpeed);
+  sp = uart_open (pndd->acPort);
 
   if (sp == INVALID_SERIAL_PORT)
-    ERR ("Invalid serial port: %s", pndd->pcPort);
+    ERR ("Invalid serial port: %s", pndd->acPort);
   if (sp == CLAIMED_SERIAL_PORT)
-    ERR ("Serial port already claimed: %s", pndd->pcPort);
+    ERR ("Serial port already claimed: %s", pndd->acPort);
   if ((sp == CLAIMED_SERIAL_PORT) || (sp == INVALID_SERIAL_PORT))
     return NULL;
 
@@ -159,7 +165,7 @@ pn532_uart_connect (const nfc_device_desc_t * pndd)
   uart_set_speed (sp, pndd->uiSpeed);
 
   // We have a connection
-  pnd = malloc (sizeof (nfc_device_t));
+  pnd = nfc_device_new ();
   strncpy (pnd->acName, pndd->acDevice, DEVICE_NAME_LENGTH - 1);
   pnd->acName[DEVICE_NAME_LENGTH - 1] = '\0';
 
@@ -206,6 +212,7 @@ pn532_uart_disconnect (nfc_device_t * pnd)
   close (DRIVER_DATA (pnd)->iAbortFds[1]);
 #endif
 
+  pn53x_data_free (pnd);
   nfc_device_free (pnd);
 }
 

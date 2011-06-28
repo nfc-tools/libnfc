@@ -35,6 +35,8 @@
 typedef uint8_t byte_t;
 
 #  define DEVICE_NAME_LENGTH  256
+#  define DEVICE_PORT_LENGTH  64
+
 /**
  * @struct nfc_device_t
  * @brief NFC device information
@@ -81,7 +83,7 @@ typedef struct {
   /** Driver name (e.g. "PN532_UART")*/
   char   *pcDriver;
   /** Port (e.g. "/dev/ttyUSB0") */
-  char   *pcPort;
+  char    acPort[DEVICE_PORT_LENGTH];
   /** Port speed (e.g. "115200") */
   uint32_t uiSpeed;
   /** Device index for backward compatibility (used to choose one specific device in USB or PSCS devices list) */
