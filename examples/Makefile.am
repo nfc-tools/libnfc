@@ -4,6 +4,7 @@ bin_PROGRAMS = \
 		nfc-anticol \
 		nfc-dep-initiator \
 		nfc-dep-target \
+		nfc-emulate-forum-tag2 \
 		nfc-emulate-forum-tag4 \
 		nfc-emulate-tag \
 		nfc-emulate-uid \
@@ -57,6 +58,10 @@ nfc_relay_LDADD = $(top_builddir)/libnfc/libnfc.la \
 nfc_relay_picc_SOURCES = nfc-relay-picc.c
 nfc_relay_picc_LDADD = $(top_builddir)/libnfc/libnfc.la \
 		  libnfcutils.la
+
+nfc_emulate_forum_tag2_SOURCES = nfc-emulate-forum-tag2.c
+nfc_emulate_forum_tag2_LDADD = $(top_builddir)/libnfc/libnfc.la \
+			       libnfcutils.la
 
 nfc_emulate_forum_tag4_SOURCES = nfc-emulate-forum-tag4.c
 nfc_emulate_forum_tag4_LDADD = $(top_builddir)/libnfc/libnfc.la \
