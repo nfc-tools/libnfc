@@ -33,6 +33,15 @@
  * @brief Emulates a NFC Forum Tag Type 4 with a NDEF message
  */
 
+/*
+ * This implementation was written based on information provided by the
+ * following documents:
+ *
+ * NFC Forum Type 4 Tag Operation
+ *  Technical Specification
+ *  NFCForum-TS-Type-4-Tag_1.0 - 2007-03-13
+ */
+
 // Notes & differences with nfc-emulate-tag:
 // - This example only works with PN532 because it relies on
 //   its internal handling of ISO14443-4 specificities.
@@ -58,7 +67,6 @@
 #include <nfc/nfc-emulation.h>
 
 #include "nfc-utils.h"
-
 
 static nfc_device_t *pnd;
 static bool quiet_output = false;
