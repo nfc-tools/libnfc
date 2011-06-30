@@ -154,6 +154,8 @@ nfc_list_devices (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * ps
     if (ndr->probe (pnddDevices + (*pszDeviceFound), szDevices - (*pszDeviceFound), &szN)) {
       *pszDeviceFound += szN;
       DBG ("%ld device(s) found using %s driver", (unsigned long) szN, ndr->name);
+      if (*pszDeviceFound == szDevices)
+	  break;
     }
     pndr++;
   }
