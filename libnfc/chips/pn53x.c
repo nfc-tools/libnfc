@@ -1684,16 +1684,29 @@ pn53x_target_receive_bytes (nfc_device_t * pnd, byte_t * pbtRx, size_t * pszRx)
 {
   byte_t  abtCmd[1];
 
+  // XXX I think this is not a clean way to provide some kind of "EasyFraming"
+  // but at the moment I have no more better than this
   if (pnd->bEasyFraming) {
-    if ((CHIP_DATA (pnd)->current_target->nm.nmt == NMT_DEP) || // If DEP mode
-    ((CHIP_DATA(pnd)->type == PN532) && (pnd->bAutoIso14443_4) &&
-    (CHIP_DATA (pnd)->current_target->nm.nmt == NMT_ISO14443A) && (CHIP_DATA (pnd)->current_target->nti.nai.btSak & SAK_ISO14443_4_COMPLIANT)) // If ISO14443-4 PICC emulation
-    ) {
-      abtCmd[0] = TgGetData;
-    } else {
-      // TODO Support EasyFraming for other cases by software
-      pnd->iLastError = ENOTIMPL;
-      return false;
+    switch (CHIP_DATA (pnd)->current_target->nm.nmt) {
+      case NMT_DEP:
+        abtCmd[0] = TgGetData;
+        break;
+      case NMT_ISO14443A:
+        if (CHIP_DATA (pnd)->current_target->nti.nai.btSak & SAK_ISO14443_4_COMPLIANT) {
+          // We are dealing with a ISO/IEC 14443-4 compliant target
+          if ((CHIP_DATA(pnd)->type == PN532) &&  (pnd->bAutoIso14443_4)) {
+            // We are using ISO/IEC 14443-4 PICC emulation capability from the PN532
+            abtCmd[0] = TgGetData;
+            break;
+          } else {
+            // TODO Support EasyFraming for other cases by software
+            pnd->iLastError = ENOTIMPL;
+            return false;
+          }
+        }
+      default:
+        abtCmd[0] = TgGetInitiatorCommand;
+        break;
     }
   } else {
     abtCmd[0] = TgGetInitiatorCommand;
@@ -1762,16 +1775,29 @@ pn53x_target_send_bytes (nfc_device_t * pnd, const byte_t * pbtTx, const size_t 
   if (!pnd->bPar)
     return false;
 
+  // XXX I think this is not a clean way to provide some kind of "EasyFraming"
+  // but at the moment I have no more better than this
   if (pnd->bEasyFraming) {
-    if ((CHIP_DATA (pnd)->current_target->nm.nmt == NMT_DEP) || // If DEP mode
-    ((CHIP_DATA(pnd)->type == PN532) && (pnd->bAutoIso14443_4) &&
-    (CHIP_DATA (pnd)->current_target->nm.nmt == NMT_ISO14443A) && (CHIP_DATA (pnd)->current_target->nti.nai.btSak & SAK_ISO14443_4_COMPLIANT)) // If ISO14443-4 PICC emulation
-    ) {
-      abtCmd[0] = TgSetData;
-    } else {
-      // TODO Support EasyFraming for other cases by software
-      pnd->iLastError = ENOTIMPL;
-      return false;
+    switch (CHIP_DATA (pnd)->current_target->nm.nmt) {
+      case NMT_DEP:
+        abtCmd[0] = TgSetData;
+        break;
+      case NMT_ISO14443A:
+        if (CHIP_DATA (pnd)->current_target->nti.nai.btSak & SAK_ISO14443_4_COMPLIANT) {
+          // We are dealing with a ISO/IEC 14443-4 compliant target
+          if ((CHIP_DATA(pnd)->type == PN532) &&  (pnd->bAutoIso14443_4)) {
+            // We are using ISO/IEC 14443-4 PICC emulation capability from the PN532
+            abtCmd[0] = TgSetData;
+            break;
+          } else {
+            // TODO Support EasyFraming for other cases by software
+            pnd->iLastError = ENOTIMPL;
+            return false;
+          }
+        }
+      default:
+        abtCmd[0] = TgResponseToInitiator;
+        break;
     }
   } else {
     abtCmd[0] = TgResponseToInitiator;
