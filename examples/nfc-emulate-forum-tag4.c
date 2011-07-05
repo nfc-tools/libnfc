@@ -272,7 +272,7 @@ ndef_message_save (char *filename, struct nfcforum_tag4_ndef_data *tag_data)
     err (EXIT_FAILURE, "fopen (%s, w)", filename);
 
   if (1 != fwrite (tag_data->ndef_file + 2, tag_data->ndef_file_len - 2, 1, F)) {
-    err (EXIT_FAILURE, "fwrite (%lu)", tag_data->ndef_file_len -2);
+    err (EXIT_FAILURE, "fwrite (%d)", (int) tag_data->ndef_file_len -2);
   }
 
   fclose (F);
