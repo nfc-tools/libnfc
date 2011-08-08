@@ -7,12 +7,12 @@ Requirements
 ============
 
 - MinGW-w64 compiler toolchain [1]
-- LibUsb-Win32 1.2.4.6 (or greater) [2]
+- LibUsb-Win32 1.2.5.0 (or greater) [2]
 - CMake 2.8 [3]
 
 This was tested on Windows 7 64 bit, but should work on Windows Vista and
 Windows XP and 32 bit as well. 
-Only the ACS ACR122 reader is tested at the moment, so any feedback about other devices is very welcome.
+Only the ACS ACR122 and the ASK Logo readers are tested at the moment, so any feedback about other devices is very welcome.
 
 Community forum: http://www.libnfc.org/community/
 
@@ -53,5 +53,5 @@ References
 [1] the easiest way is to use the TDM-GCC installer. 
         Make sure to select MinGW-w64 in the installer, the regular MinGW does not contain headers for PCSC.
         http://sourceforge.net/projects/tdm-gcc/files/TDM-GCC%20Installer/tdm64-gcc-4.5.1.exe/download
-[2] http://sourceforge.net/projects/libusb-win32/files/libusb-win32-snapshots/20110512/libusb-win32-snapshot-1.2.4.6.zip/download
+[2] http://sourceforge.net/projects/libusb-win32/files/
 [3] http://www.cmake.org

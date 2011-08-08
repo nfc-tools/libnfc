@@ -40,13 +40,12 @@ Thanks to d18c7db and Okko for example code
 #ifndef _WIN32
   // Under POSIX system, we use libusb (>= 0.1.12)
   #include <usb.h>
-  #define USB_INFINITE_TIMEOUT   0
+  #define USB_TIMEDOUT ETIMEDOUT
   #define _usb_strerror( X ) strerror(-X)
 #else
-  // Under Windows we use libusb-win32 (>= 1.2.4)
+  // Under Windows we use libusb-win32 (>= 1.2.5)
   #include <lusb0_usb.h>
-  // libusb-win32's bug workaround: 0 as timeout does not means infite as expected
-  #define USB_INFINITE_TIMEOUT   100
+  #define USB_TIMEDOUT 116
   #define _usb_strerror( X ) usb_strerror()
 #endif
 
@@ -60,6 +59,8 @@ Thanks to d18c7db and Okko for example code
 #include "drivers/pn53x_usb.h"
 
 #define PN53X_USB_DRIVER_NAME "PN53x USB"
+
+#define USB_INFINITE_TIMEOUT   0
 
 #define DRIVER_DATA(pnd) ((struct pn53x_usb_data*)(pnd->driver_data))
 
@@ -105,7 +106,7 @@ pn53x_usb_bulk_read_ex (struct pn53x_usb_data *data, byte_t abtRx[], const size_
   if (res > 0) {
     PRINT_HEX ("RX", abtRx, res);
   } else if (res < 0) {
-    if (-res != ETIMEDOUT) {
+    if (-res != USB_TIMEDOUT) {
       ERR ("Unable to read from USB (%s)", _usb_strerror (res));
     }
   }
@@ -481,7 +482,7 @@ pn53x_usb_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen)
 read:
   res = pn53x_usb_bulk_read_ex (DRIVER_DATA (pnd), abtRxBuf, sizeof (abtRxBuf), delayed_reply ? 250 : USB_INFINITE_TIMEOUT);
 
-  if (delayed_reply && (res == -ETIMEDOUT)) {
+  if (delayed_reply && (res == -USB_TIMEDOUT)) {
     if (DRIVER_DATA (pnd)->abort_flag) {
       DRIVER_DATA (pnd)->abort_flag = false;
       pn53x_usb_ack (pnd);
