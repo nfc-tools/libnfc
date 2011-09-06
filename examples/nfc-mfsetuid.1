@@ -3,12 +3,20 @@
 nfc-mfsetuid \- MIFARE 1K special card UID setting and recovery tool
 .SH SYNOPSIS
 .B nfc-mfsetuid
+[UID]
 
 .SH DESCRIPTION
 .B nfc-mfsetuid
 is a MIFARE tool that allows setting of UID on special versions (Chinese clones) of Mifare 1K cards. It will also recover
 damaged cards that have had invalid data written to block 0 (e.g. wrong BCC). Currently only 4 Byte UID is supported.
+Specify an eight hex character UID or leave blank for the default '01234567'.
 
+.SH OPTIONS
+.B -f
+Format. Wipe all data (set to 0xFF) and reset ACLs to defaults.
+
+.B -q
+Quiet. Suppress output of commands and responses.
 .SH BUGS
 Please report any bugs on the
 .B libnfc

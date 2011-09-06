@@ -3,7 +3,7 @@
 nfc-mfclassic \- MIFARE Classic command line tool
 .SH SYNOPSIS
 .B nfc-mfclassic
-.RI \fR\fBr\fR|\fBw\fR\fR|\fBu\fR
+.RI \fR\fBr\fR|\fR\fBR\fR|\fBw\fR\fR|\fBW\fR
 .RI \fR\fBa\fR|\fBb\fR
 .IR DUMP
 .IR [KEYS]
@@ -27,18 +27,25 @@ to store the keys and data for all sectors.
 Be cautious that some parts of a Mifare Classic memory are used for r/w access
 of the rest of the memory, so please read the tag documentation before experimenting too much!
 
-The 'u' option allows writing of special Mifare cards that can be 'unlocked' to allow block 0
+The 'W' option allows writing of special Mifare cards that can be 'unlocked' to allow block 0
 to be overwritten. This includes UID and manufacturer data. Take care when amending UIDs to set
 the correct BCC (UID checksum). Currently only 4 byte UIDs are supported.
 
+Similarly, the 'R' option allows an 'unlocked' read. This bypasses authentication and allows 
+reading of the Key A and Key B data regardless of ACLs.
+
+*** Note that 'W' and 'R' options only work on special versions of Mifare 1K cards (Chinese clones).
+
 .SH OPTIONS
-.BR r " | " w " | " u
+.BR r " | " R " | " w " | " W
 Perform read from (
 .B r
+) or unlocked read from (
+.B R
 ) or write to (
 .B w
 ) or unlocked write to (
-.B u
+.B W
 ) card.
 .TP
 .BR a " | " b
@@ -65,6 +72,7 @@ are covered by the GNU Lesser General Public License (LGPL), version 3.
 Roel Verdult <roel@libnfc.org>
 Romuald Conty <romuald@libnfc.org>
 Romain Tartière <romain@blogreen.org>
+Adam Laurie <adam@algroup.co.uk>
 .PP
 This manual page was written by Romuald Conty <romuald@libnfc.org>.
 It is licensed under the terms of the GNU GPL (version 2 or later).

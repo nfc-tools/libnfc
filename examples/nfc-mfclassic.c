@@ -213,12 +213,59 @@ authenticate (uint32_t uiBlock)
   return false;
 }
 
+static bool
+unlock_card()
+{
+  printf ("Unlocking card\n");
+
+  // Configure the CRC
+  if (!nfc_configure (pnd, NDO_HANDLE_CRC, false)) {
+    nfc_perror (pnd, "nfc_configure");
+    exit (EXIT_FAILURE);
+  }
+  // Use raw send/receive methods
+  if (!nfc_configure (pnd, NDO_EASY_FRAMING, false)) {
+    nfc_perror (pnd, "nfc_configure");
+    exit (EXIT_FAILURE);
+  }
+
+  iso14443a_crc_append(abtHalt, 2);
+  transmit_bytes (abtHalt, 4);
+  // now send unlock
+  if (!transmit_bits (abtUnlock1, 7)) {
+    printf("unlock failure!\n");
+    return false;
+  }
+  if (!transmit_bytes (abtUnlock2, 1)) {
+    printf("unlock failure!\n");
+    return false;
+  }
+
+  // reset reader
+  // Configure the CRC
+  if (!nfc_configure (pnd, NDO_HANDLE_CRC, true)) {
+    nfc_perror (pnd, "nfc_configure");
+    exit (EXIT_FAILURE);
+  }
+  // Switch off raw send/receive methods
+  if (!nfc_configure (pnd, NDO_EASY_FRAMING, true)) {
+    nfc_perror (pnd, "nfc_configure");
+    exit (EXIT_FAILURE);
+  }
+  return true;
+}
+
 static  bool
-read_card (void)
+read_card (int read_unlocked)
 {
   int32_t iBlock;
   bool    bFailure = false;
   uint32_t uiReadBlocks = 0;
+
+  if(read_unlocked)
+    if (!unlock_card())
+      return false;
+
 
   printf ("Reading out %d blocks |", uiBlocks + 1);
 
@@ -243,7 +290,7 @@ read_card (void)
       fflush (stdout);
 
       // Try to authenticate for the current sector
-      if (!authenticate (iBlock)) {
+      if (!read_unlocked && !authenticate (iBlock)) {
         printf ("!\nError: authentication failed for block 0x%02x\n", iBlock);
         return false;
       }
@@ -286,46 +333,9 @@ write_card (int write_block_zero)
   uint32_t uiWriteBlocks = 0;
 
 
-  if(write_block_zero) {
-    printf ("Unlocking card\n");
-
-    // Configure the CRC
-    if (!nfc_configure (pnd, NDO_HANDLE_CRC, false)) {
-      nfc_perror (pnd, "nfc_configure");
-      exit (EXIT_FAILURE);
-    }
-    // Use raw send/receive methods
-    if (!nfc_configure (pnd, NDO_EASY_FRAMING, false)) {
-      nfc_perror (pnd, "nfc_configure");
-      exit (EXIT_FAILURE);
-    }
-
-    iso14443a_crc_append(abtHalt, 2);
-    transmit_bytes (abtHalt, 4);
-    // now send unlock
-    if (!transmit_bits (abtUnlock1, 7)) {
-      printf("unlock failure!\n");
+  if(write_block_zero)
+    if (!unlock_card())
       return false;
-    }
-    if (!transmit_bytes (abtUnlock2, 1)) {
-      printf("unlock failure!\n");
-      return false;
-    }
-
-    // reset reader
-    // Configure the CRC
-    if (!nfc_configure (pnd, NDO_HANDLE_CRC, true)) {
-      nfc_perror (pnd, "nfc_configure");
-      exit (EXIT_FAILURE);
-    }
-    // Switch off raw send/receive methods
-    if (!nfc_configure (pnd, NDO_EASY_FRAMING, true)) {
-      nfc_perror (pnd, "nfc_configure");
-      exit (EXIT_FAILURE);
-    }
-  }
-
-
 
   printf ("Writing %d blocks |", uiBlocks + 1);
   // Write the card from begin to end;
@@ -418,18 +428,18 @@ typedef enum {
   ACTION_READ,
   ACTION_WRITE,
   ACTION_EXTRACT,
-  ACTION_USAGE,
-  ACTION_WRITE_UNLOCKED
+  ACTION_USAGE
 } action_t;
 
 static void
 print_usage (const char *pcProgramName)
 {
   printf ("Usage: ");
-  printf ("%s r|w|u a|b <dump.mfd> [<keys.mfd>]\n", pcProgramName);
-  printf ("  r|w|u         - Perform read from (r) or write to (w) or unlocked write to (u) card\n");
+  printf ("%s r|R|w|W a|b <dump.mfd> [<keys.mfd>]\n", pcProgramName);
+  printf ("  r|R|w|W       - Perform read from (r) or unlocked read from (R) or write to (w) or unlocked write to (W) card\n");
   printf ("                  *** note that unlocked write will attempt to overwrite block 0 including UID\n");
-  printf ("                  *** and only works with special Mifare 1K cards (Chinese clones)\n");
+  printf ("                  *** unlocked read does not require authentication and will reveal A and B keys\n");
+  printf ("                  *** unlocking only works with special Mifare 1K cards (Chinese clones)\n");
   printf ("  a|b           - Use A or B keys for action\n");
   printf ("  <dump.mfd>    - MiFare Dump (MFD) used to write (card to MFD) or (MFD to card)\n");
   printf ("  <keys.mfd>    - MiFare Dump (MFD) that contain the keys (optional)\n");
@@ -447,6 +457,7 @@ main (int argc, const char *argv[])
   byte_t *pbtUID;
   FILE   *pfKeys = NULL;
   FILE   *pfDump = NULL;
+  int    unlock= 0;
 
   if (argc < 2) {
     print_usage (argv[0]);
@@ -454,22 +465,24 @@ main (int argc, const char *argv[])
   }
   const char *command = argv[1];
 
-  if (strcmp (command, "r") == 0) {
+  if (strcmp (command, "r") == 0 || strcmp (command, "R") == 0) {
     if (argc < 4) {
       print_usage (argv[0]);
       exit (EXIT_FAILURE);
     }
     atAction = ACTION_READ;
+    if (strcmp (command, "R") == 0)
+      unlock= 1;
     bUseKeyA = tolower ((int) ((unsigned char) *(argv[2]))) == 'a';
     bUseKeyFile = (argc > 4);
-  } else if (strcmp (command, "w") == 0 || strcmp (command, "u") == 0) {
+  } else if (strcmp (command, "w") == 0 || strcmp (command, "W") == 0) {
     if (argc < 4) {
       print_usage (argv[0]);
       exit (EXIT_FAILURE);
     }
     atAction = ACTION_WRITE;
-    if (strcmp (command, "u") == 0)
-      atAction = ACTION_WRITE_UNLOCKED;
+    if (strcmp (command, "W") == 0)
+      unlock= 1;
     bUseKeyA = tolower ((int) ((unsigned char) *(argv[2]))) == 'a';
     bUseKeyFile = (argc > 4);
   } else if (strcmp (command, "x") == 0) {
@@ -487,7 +500,6 @@ main (int argc, const char *argv[])
     break;
   case ACTION_READ:
   case ACTION_WRITE:
-  case ACTION_WRITE_UNLOCKED:
     if (bUseKeyFile) {
       pfKeys = fopen (argv[4], "rb");
       if (pfKeys == NULL) {
@@ -580,7 +592,7 @@ main (int argc, const char *argv[])
     printf ("Guessing size: seems to be a %i-byte card\n", (uiBlocks + 1) * 16);
 
     if (atAction == ACTION_READ) {
-      if (read_card ()) {
+      if (read_card (unlock)) {
         printf ("Writing data to file: %s ...", argv[3]);
         fflush (stdout);
         pfDump = fopen (argv[3], "wb");
@@ -596,10 +608,7 @@ main (int argc, const char *argv[])
         fclose (pfDump);
       }
     } else if (atAction == ACTION_WRITE) {
-      write_card (0);
-    }
-     else if (atAction == ACTION_WRITE_UNLOCKED) {
-      write_card (1);
+      write_card (unlock);
     }
 
     nfc_disconnect (pnd);

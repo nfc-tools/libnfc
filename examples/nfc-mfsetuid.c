@@ -81,8 +81,10 @@ byte_t  abtHalt[4] = { 0x50, 0x00, 0x00, 0x00 };
 // special unlock command
 byte_t  abtUnlock1[1] = { 0x40 };
 byte_t  abtUnlock2[1] = { 0x43 };
+byte_t  abtWipe[1] = { 0x41 };
 byte_t abtWrite[4] = { 0xa0,  0x00,  0x5f,  0xb1 };
 byte_t abtData[18] = { 0x01,  0x23,  0x45,  0x67,  0x00,  0x08,  0x04,  0x00,  0x46,  0x59,  0x25,  0x58,  0x49,  0x10,  0x23,  0x02,  0x23,  0xeb };
+byte_t abtBlank[18] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x07, 0x80, 0x69, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x36, 0xCC };
 
 
 static  bool
@@ -134,7 +136,8 @@ print_usage (char *argv[])
   printf ("Usage: %s [OPTIONS] [UID]\n", argv[0]);
   printf ("Options:\n");
   printf ("\t-h\tHelp. Print this message.\n");
-  printf ("\t-q\tQuiet mode. Suppress output of READER and EMULATOR data (improves timing).\n");
+  printf ("\t-f\tFormat. Delete all data (set to 0xFF) and reset ACLs to default.\n");
+  printf ("\t-q\tQuiet mode. Suppress output of READER and CARD data (improves timing).\n");
   printf ("\n\tSpecify UID (4 HEX bytes) to set UID, or leave blank for default '01234567'.\n");
   printf ("\tThis utility can be used to recover cards that have been damaged by writing bad\n");
   printf ("\tdata (e.g. wrong BCC), thus making them non-selectable by most tools/readers.\n");
@@ -144,15 +147,19 @@ print_usage (char *argv[])
 int
 main (int argc, char *argv[])
 {
-  int     arg, i;
+  int      arg, i;
+  bool     format= false;
   unsigned int c;
-  char    tmp[3]= { 0x00, 0x00, 0x00 };
+  char     tmp[3]= { 0x00, 0x00, 0x00 };
+
 
   // Get commandline options
   for (arg = 1; arg < argc; arg++) {
     if (0 == strcmp (argv[arg], "-h")) {
       print_usage (argv);
       exit(EXIT_SUCCESS);
+    } else if (0 == strcmp (argv[arg], "-f")) {
+      format= true;
     } else if (0 == strcmp (argv[arg], "-q")) {
       quiet_output = true;
     } else if (strlen(argv[arg]) == 8) {
@@ -322,9 +329,22 @@ main (int argc, char *argv[])
   iso14443a_crc_append(abtHalt, 2);
   transmit_bytes (abtHalt, 4);
   transmit_bits (abtUnlock1,7);
+  if(format) {
+    transmit_bytes (abtWipe,1);
+    transmit_bytes (abtHalt, 4);
+    transmit_bits (abtUnlock1,7);
+  }
   transmit_bytes (abtUnlock2,1);
   transmit_bytes (abtWrite,4);
   transmit_bytes (abtData,18);
+  if(format) {
+    for(i= 3 ; i < 64 ; i += 4) {
+      abtWrite[1]= (char) i;
+      iso14443a_crc_append (abtWrite, 2);
+      transmit_bytes (abtWrite,4);
+      transmit_bytes (abtBlank,18);
+    }
+  }
 
 
   nfc_disconnect (pnd);
