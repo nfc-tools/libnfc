@@ -429,6 +429,7 @@ print_usage (const char *pcProgramName)
   printf ("%s r|w|u a|b <dump.mfd> [<keys.mfd>]\n", pcProgramName);
   printf ("  r|w|u         - Perform read from (r) or write to (w) or unlocked write to (u) card\n");
   printf ("                  *** note that unlocked write will attempt to overwrite block 0 including UID\n");
+  printf ("                  *** and only works with special Mifare 1K cards (Chinese clones)\n");
   printf ("  a|b           - Use A or B keys for action\n");
   printf ("  <dump.mfd>    - MiFare Dump (MFD) used to write (card to MFD) or (MFD to card)\n");
   printf ("  <keys.mfd>    - MiFare Dump (MFD) that contain the keys (optional)\n");

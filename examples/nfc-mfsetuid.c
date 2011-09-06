@@ -137,7 +137,8 @@ print_usage (char *argv[])
   printf ("\t-q\tQuiet mode. Suppress output of READER and EMULATOR data (improves timing).\n");
   printf ("\n\tSpecify UID (4 HEX bytes) to set UID, or leave blank for default '01234567'.\n");
   printf ("\tThis utility can be used to recover cards that have been damaged by writing bad\n");
-  printf ("\tdata (e.g. wrong BCC), thus making them non-selectable by most tools/readers.\n\n");
+  printf ("\tdata (e.g. wrong BCC), thus making them non-selectable by most tools/readers.\n");
+  printf ("\n\t*** Note: this utility only works with special Mifare 1K cards (Chinese clones).\n\n");
 }
 
 int
