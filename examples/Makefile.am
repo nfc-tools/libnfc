@@ -110,6 +110,7 @@ dist_man_MANS = \
 		nfc-emulate-uid.1 \
 		nfc-list.1 \
 		nfc-mfclassic.1 \
+		nfc-mfsetuid.1 \
 		nfc-mfultralight.1 \
 		nfc-poll.1 \
 		nfc-relay.1 \
