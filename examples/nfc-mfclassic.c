@@ -296,10 +296,14 @@ read_card (int read_unlocked)
       }
       // Try to read out the trailer
       if (nfc_initiator_mifare_cmd (pnd, MC_READ, iBlock, &mp)) {
-        // Copy the keys over from our key dump and store the retrieved access bits
-        memcpy (mtDump.amb[iBlock].mbt.abtKeyA, mtKeys.amb[iBlock].mbt.abtKeyA, 6);
-        memcpy (mtDump.amb[iBlock].mbt.abtAccessBits, mp.mpd.abtData + 6, 4);
-        memcpy (mtDump.amb[iBlock].mbt.abtKeyB, mtKeys.amb[iBlock].mbt.abtKeyB, 6);
+        if(read_unlocked) {
+          memcpy (mtDump.amb[iBlock].mbd.abtData, mp.mpd.abtData, 16);
+        } else {
+          // Copy the keys over from our key dump and store the retrieved access bits
+          memcpy (mtDump.amb[iBlock].mbt.abtKeyA, mtKeys.amb[iBlock].mbt.abtKeyA, 6);
+          memcpy (mtDump.amb[iBlock].mbt.abtAccessBits, mp.mpd.abtData + 6, 4);
+          memcpy (mtDump.amb[iBlock].mbt.abtKeyB, mtKeys.amb[iBlock].mbt.abtKeyB, 6);
+        }
       } else {
         printf ("!\nError: unable to read trailer block 0x%02x\n", iBlock);
       }
