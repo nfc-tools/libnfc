@@ -36,6 +36,7 @@
 #include <stdlib.h>
 
 #include <nfc/nfc.h>
+#include <sys/param.h>
 
 #include "pn53x.h"
 #include "pn53x-internal.h"
@@ -43,7 +44,7 @@
 #include "mirror-subr.h"
 #include "nfc-internal.h"
 
-#include <sys/param.h>
+#define LOG_CATEGORY "libnfc.chip.pn53x"
 
 const byte_t pn53x_ack_frame[] = { 0x00, 0x00, 0xff, 0x00, 0xff, 0x00 };
 const byte_t pn53x_nack_frame[] = { 0x00, 0x00, 0xff, 0xff, 0x00, 0x00 };
@@ -60,6 +61,8 @@ pn53x_target_type_t pn53x_nm_to_ptt (const nfc_modulation_t nm);
 bool
 pn53x_init(nfc_device_t * pnd)
 {
+  log_put ("LOG_CATEGORY", NFC_PRIORITY_TRACE, "%s", "pn53x_init");
+
   // GetFirmwareVersion command is used to set PN53x chips type (PN531, PN532 or PN533)
   char abtFirmwareText[22];
   if (!pn53x_get_firmware_version (pnd, abtFirmwareText)) {
@@ -107,7 +110,7 @@ pn53x_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, b
     }
   }
 
-  PNCMD_DBG (pbtTx[0]);
+  PNCMD_TRACE (pbtTx[0]);
   byte_t  abtRx[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
   size_t  szRx = sizeof(abtRx);
 
@@ -463,7 +466,7 @@ pn53x_ReadRegister (nfc_device_t * pnd, uint16_t ui16RegisterAddress, uint8_t * 
   byte_t  abtRegValue[2];
   size_t  szRegValue = sizeof (abtRegValue);
 
-  DBG ("ReadRegister (%04x)", ui16RegisterAddress);
+  PNREG_TRACE (ui16RegisterAddress);
   if (!pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), abtRegValue, &szRegValue)) {
     return false;
   }
@@ -485,8 +488,7 @@ bool
 pn53x_WriteRegister (nfc_device_t * pnd, const uint16_t ui16RegisterAddress, const uint8_t ui8Value)
 {
   byte_t  abtCmd[] = { WriteRegister, ui16RegisterAddress >> 8, ui16RegisterAddress & 0xff, ui8Value };
-  PNREG_DBG (ui16RegisterAddress);
-  DBG ("WriteRegister (%04x, %02x)", ui16RegisterAddress, ui8Value);
+  PNREG_TRACE (ui16RegisterAddress);
   return pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, NULL);
 }
 
@@ -512,7 +514,6 @@ pn53x_write_register (nfc_device_t * pnd, const uint16_t ui16RegisterAddress, co
     CHIP_DATA (pnd)->wb_data[internal_address] = (CHIP_DATA (pnd)->wb_data[internal_address] & CHIP_DATA (pnd)->wb_mask[internal_address] & (~ui8SymbolMask)) | (ui8Value & ui8SymbolMask);
     CHIP_DATA (pnd)->wb_mask[internal_address] = CHIP_DATA (pnd)->wb_mask[internal_address] | ui8SymbolMask;
     CHIP_DATA (pnd)->wb_trigged = true;
-    DBG ("WriteBackRegister (%04x, %02x, %02x)", ui16RegisterAddress, CHIP_DATA (pnd)->wb_data[internal_address], CHIP_DATA (pnd)->wb_mask[internal_address]);
   }
   return true;
 }
@@ -567,10 +568,10 @@ pn53x_writeback_register (nfc_device_t * pnd)
   for (size_t n = 0; n < PN53X_CACHE_REGISTER_SIZE; n++) {
     if (CHIP_DATA (pnd)->wb_mask[n] == 0xff) {
       const uint16_t pn53x_register_address = PN53X_CACHE_REGISTER_MIN_ADDRESS + n;
+      PNREG_TRACE (pn53x_register_address);
       BUFFER_APPEND (abtWriteRegisterCmd, pn53x_register_address  >> 8);
       BUFFER_APPEND (abtWriteRegisterCmd, pn53x_register_address & 0xff);
       BUFFER_APPEND (abtWriteRegisterCmd, CHIP_DATA (pnd)->wb_data[n]);
-      DBG ("WriteBackRegister will write (%04x, %02x)", pn53x_register_address, CHIP_DATA (pnd)->wb_data[n]);
       // This register is handled, we reset the mask to prevent
       CHIP_DATA (pnd)->wb_mask[n] = 0x00;
     }
@@ -2000,7 +2001,7 @@ bool
 pn53x_InDeselect (nfc_device_t * pnd, const uint8_t ui8Target)
 {
   if (CHIP_DATA(pnd)->type == RCS360) {
-    // We should do act here *only* if a target was previsouly selected
+    // We should do act here *only* if a target was previously selected
     byte_t  abtStatus[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
     size_t  szStatus = sizeof(abtStatus);
     byte_t  abtCmdGetStatus[] = { GetGeneralStatus };
@@ -2022,7 +2023,7 @@ bool
 pn53x_InRelease (nfc_device_t * pnd, const uint8_t ui8Target)
 {
   if (CHIP_DATA(pnd)->type == RCS360) {
-    // We should do act here *only* if a target was previsouly selected
+    // We should do act here *only* if a target was previously selected
     byte_t  abtStatus[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
     size_t  szStatus = sizeof(abtStatus);
     byte_t  abtCmdGetStatus[] = { GetGeneralStatus };
@@ -2272,12 +2273,12 @@ pn53x_check_ack_frame (nfc_device_t * pnd, const byte_t * pbtRxFrame, const size
 {
   if (szRxFrameLen >= sizeof (pn53x_ack_frame)) {
     if (0 == memcmp (pbtRxFrame, pn53x_ack_frame, sizeof (pn53x_ack_frame))) {
-      // DBG ("%s", "PN53x ACKed");
+      log_put ("LOG_CATEGORY", NFC_PRIORITY_TRACE, "PN53x ACKed");
       return true;
     }
   }
   pnd->iLastError = EFRAACKMISMATCH;
-  ERR ("%s", "Unexpected PN53x reply!");
+  log_put ("LOG_CATEGORY", NFC_PRIORITY_ERROR, "Unexpected PN53x reply!");
   return false;
 }
 
@@ -2286,7 +2287,7 @@ pn53x_check_error_frame (nfc_device_t * pnd, const byte_t * pbtRxFrame, const si
 {
   if (szRxFrameLen >= sizeof (pn53x_error_frame)) {
     if (0 == memcmp (pbtRxFrame, pn53x_error_frame, sizeof (pn53x_error_frame))) {
-      DBG ("%s", "PN53x sent an error frame");
+      log_put ("LOG_CATEGORY", NFC_PRIORITY_TRACE, "PN53x sent an error frame");
       pnd->iLastError = EFRAISERRFRAME;
       return false;
     }
@@ -2351,7 +2352,7 @@ pn53x_build_frame (byte_t * pbtFrame, size_t * pszFrame, const byte_t * pbtData,
 
     (*pszFrame) = szData + PN53x_EXTENDED_FRAME__OVERHEAD;
   } else {
-    ERR ("We can't send more than %d bytes in a raw (requested: %zd)", PN53x_EXTENDED_FRAME__DATA_MAX_LEN, szData);
+    log_put ("LOG_CATEGORY", NFC_PRIORITY_ERROR, "We can't send more than %d bytes in a raw (requested: %zd)", PN53x_EXTENDED_FRAME__DATA_MAX_LEN, szData);
     return false;
   }
   return true;

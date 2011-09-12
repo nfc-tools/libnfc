@@ -69,6 +69,17 @@ AC_TYPE_SIGNAL
 LIBNFC_CFLAGS='-I$(top_srcdir)/libnfc -I$(top_builddir)/include -I$(top_srcdir)/include'
 AC_SUBST(LIBNFC_CFLAGS)
 
+# Checks for log4c
+AC_PATH_PROG([LOG4C_CONFIG], [log4c-config])
+if test x"$LOG4C_CONFIG" != x""; then
+    log4c_CFLAGS=`$LOG4C_CONFIG --cflags`
+    log4c_LIBS=`$LOG4C_CONFIG --libs`
+    AC_SUBST([log4c_CFLAGS])
+    AC_SUBST([log4c_LIBS])
+    AC_DEFINE([HAS_LOG4C], [1], [Define to 1 if log4c is available.])
+fi
+AM_CONDITIONAL(HAS_LOG4C, [test x"$LOG4C_CONFIG" != x""])
+
 # Debug support (default:no)
 AC_ARG_ENABLE([debug],AS_HELP_STRING([--enable-debug],[Enable debug output]),[enable_debug=$enableval],[enable_debug="no"])
  

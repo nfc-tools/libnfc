@@ -6,6 +6,7 @@ INCLUDES = $(all_includes) $(LIBNFC_CFLAGS)
 noinst_HEADERS = \
 		 drivers.h \
 		 iso7816.h \
+		 log.h \
 		 mirror-subr.h \
 		 nfc-internal.h
 lib_LTLIBRARIES = libnfc.la
@@ -30,6 +31,13 @@ endif
 if LIBUSB_ENABLED
   libnfc_la_CFLAGS += @libusb_CFLAGS@ -DHAVE_LIBUSB
   libnfc_la_LIBADD  += @libusb_LIBS@
+endif
+
+if HAS_LOG4C
+  libnfc_la_CFLAGS += $(log4c_CFLAGS)
+  libnfc_la_LIBADD += $(log4c_LIBS)
+
+  libnfc_la_SOURCES += log.c
 endif
 
 EXTRA_DIST = CMakeLists.txt

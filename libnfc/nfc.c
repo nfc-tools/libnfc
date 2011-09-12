@@ -38,10 +38,12 @@
 
 #include <nfc/nfc.h>
 
-#include "drivers.h"
 #include "nfc-internal.h"
+#include "drivers.h"
 
 #include <sys/param.h>
+
+#define LOG_CATEGORY "libnfc.general"
 
 const struct nfc_driver_t *nfc_drivers[] = {
 #  if defined (DRIVER_PN53X_USB_ENABLED)
@@ -92,6 +94,7 @@ nfc_connect (nfc_device_desc_t * pndd)
   if (pndd == NULL)
       return NULL;
 
+  log_init ();
   // Search through the device list for an available device
   const struct nfc_driver_t *ndr;
   const struct nfc_driver_t **pndr = nfc_drivers;
@@ -106,13 +109,14 @@ nfc_connect (nfc_device_desc_t * pndd)
 
     // Test if the connection was successful
     if (pnd != NULL) {
-      DBG ("[%s] has been claimed.", pnd->acName);
+      log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "[%s] has been claimed.", pnd->acName);
       return pnd;
     } else {
-      DBG ("No device found using driver: %s", ndr->name);
+      log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "No device found using driver: %s", ndr->name);
     }
     pndr++;
   }
+  log_fini ();
   // Too bad, no reader is ready to be claimed
   return NULL;
 }
@@ -131,6 +135,8 @@ nfc_disconnect (nfc_device_t * pnd)
     nfc_idle (pnd);
     // Disconnect, clean up and release the device 
     pnd->driver->disconnect (pnd);
+    
+    log_fini ();
   }
 }
 
@@ -144,21 +150,22 @@ void
 nfc_list_devices (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * pszDeviceFound)
 {
   size_t  szN;
-
   *pszDeviceFound = 0;
-
   const struct nfc_driver_t *ndr;
   const struct nfc_driver_t **pndr = nfc_drivers;
+
+  log_init ();
   while ((ndr = *pndr)) {
     szN = 0;
     if (ndr->probe (pnddDevices + (*pszDeviceFound), szDevices - (*pszDeviceFound), &szN)) {
       *pszDeviceFound += szN;
-      DBG ("%ld device(s) found using %s driver", (unsigned long) szN, ndr->name);
+      log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "%ld device(s) found using %s driver", (unsigned long) szN, ndr->name);
       if (*pszDeviceFound == szDevices)
 	  break;
     }
     pndr++;
   }
+  log_fini ();
 }
 
 /**

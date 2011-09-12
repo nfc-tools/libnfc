@@ -45,6 +45,8 @@
 
 #include "nfc-internal.h"
 
+#define LOG_CATEGORY "libnfc.bus.uart"
+
 #  if defined(__APPLE__)
   // FIXME: find UART connection string for PN53X device on Mac OS X when multiples devices are used
 char *serial_ports_device_radix[] = { "tty.SLAB_USBtoUART", NULL };
@@ -127,14 +129,14 @@ uart_flush_input (serial_port sp)
   char* rx = malloc (available_bytes_count);
   // There is something available, read the data
   res = read (((serial_port_unix *) sp)->fd, rx, available_bytes_count);
-  DBG ("%d bytes have eatten.", available_bytes_count);
+  log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "%d bytes have eatten.", available_bytes_count);
   free (rx);
 }
 
 void
 uart_set_speed (serial_port sp, const uint32_t uiPortSpeed)
 {
-  DBG ("Serial port speed requested to be set to %d bauds.", uiPortSpeed);
+  log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "Serial port speed requested to be set to %d bauds.", uiPortSpeed);
   serial_port_unix *spu = (serial_port_unix *) sp;
 
   // Portability note: on some systems, B9600 != 9600 so we have to do
@@ -171,7 +173,7 @@ uart_set_speed (serial_port sp, const uint32_t uiPortSpeed)
     break;
 #  endif
   default:
-    ERR ("Unable to set serial port speed to %d bauds. Speed value must be one of those defined in termios(3).",
+    log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to set serial port speed to %d bauds. Speed value must be one of those defined in termios(3).",
          uiPortSpeed);
     return;
   };
@@ -180,7 +182,7 @@ uart_set_speed (serial_port sp, const uint32_t uiPortSpeed)
   cfsetispeed (&(spu->termios_new), stPortSpeed);
   cfsetospeed (&(spu->termios_new), stPortSpeed);
   if (tcsetattr (spu->fd, TCSADRAIN, &(spu->termios_new)) == -1) {
-    ERR ("%s", "Unable to apply new speed settings.");
+    log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Unable to apply new speed settings.");
   }
 }
 
@@ -283,18 +285,18 @@ select:
 
     // Read error
     if (res < 0) {
-      DBG ("%s", "RX error.");
+      log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "%s", "RX error.");
       return ECOMIO;
     }
     // Read time-out
     if (res == 0) {
-      DBG ("Timeout!");
+      log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "Timeout!");
       return ECOMTIMEOUT;
     }
 
     if (FD_ISSET (iAbortFd, &rfds)) {
       // Abort requested
-      DBG ("Abort!");
+      log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "Abort!");
       close (iAbortFd);
       return EOPABORT;
     }
@@ -305,7 +307,6 @@ select:
       return ECOMIO;
     }
     // There is something available, read the data
-    // DBG ("expected bytes: %zu, received bytes: %d, available bytes: %d", szRx, received_bytes_count, available_bytes_count);
     res = read (((serial_port_unix *) sp)->fd, pbtRx + received_bytes_count, MIN(available_bytes_count, (expected_bytes_count - received_bytes_count)));
     // Stop if the OS has some troubles reading the data
     if (res <= 0) {
@@ -314,7 +315,7 @@ select:
     received_bytes_count += res;
 
   } while (expected_bytes_count > received_bytes_count);
-  PRINT_HEX ("RX", pbtRx, szRx);
+  LOG_HEX ("RX", pbtRx, szRx);
   return 0;
 }
 
@@ -326,7 +327,7 @@ select:
 int
 uart_send (serial_port sp, const byte_t * pbtTx, const size_t szTx)
 {
-  PRINT_HEX ("TX", pbtTx, szTx);
+  LOG_HEX ("TX", pbtTx, szTx);
   if ((int) szTx == write (((serial_port_unix *) sp)->fd, pbtTx, szTx))
     return 0;
   else

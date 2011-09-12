@@ -25,6 +25,8 @@
 #ifndef __PN53X_INTERNAL_H__
 #define __PN53X_INTERNAL_H__
 
+#include "log.h"
+
 // Miscellaneous
 #define Diagnose 0x00
 #define GetFirmwareVersion 0x02
@@ -112,7 +114,7 @@
 typedef struct {
   uint8_t ui8Code;
   uint8_t ui8CompatFlags;
-#ifdef DEBUG
+#ifdef LOGGING
   const char * abtCommandText;
 #endif
 } pn53x_command;
@@ -125,16 +127,15 @@ typedef enum {
   RCS360  = 0x08
 } pn53x_type;
 
-#ifndef DEBUG
+#ifndef LOGGING
 #  define PNCMD( X, Y ) { X , Y }
-#  define PNCMD_DBG( X ) do { \
-   } while(0)
+#  define PNCMD_TRACE( X ) do {} while(0)
 #else
 #  define PNCMD( X, Y ) { X , Y, #X }
-#  define PNCMD_DBG( X ) do { \
+#  define PNCMD_TRACE( X ) do { \
      for (size_t i=0; i<(sizeof(pn53x_commands)/sizeof(pn53x_command)); i++) { \
        if ( X == pn53x_commands[i].ui8Code ) { \
-         DBG( "%s", pn53x_commands[i].abtCommandText ); \
+         log_put( LOG_CATEGORY, NFC_PRIORITY_TRACE, "%s", pn53x_commands[i].abtCommandText ); \
          break; \
        } \
      } \
@@ -199,23 +200,26 @@ static const pn53x_command pn53x_commands[] = {
 #define P35 5
 
 // Registers part
-#ifdef DEBUG
+#ifdef LOGGING
 typedef struct {
   uint16_t ui16Address;
   const char * abtRegisterText;
   const char * abtRegisterDescription;
 } pn53x_register;
-#endif
 
-#ifndef DEBUG
-#  define PNREG_DBG( X ) do { \
+#  define PNREG( X, Y ) { X , #X, Y }
+
+#endif /* LOGGING */
+
+
+#ifndef LOGGING
+#  define PNREG_TRACE( X ) do { \
    } while(0)
 #else
-#  define PNREG( X, Y ) { X , #X, Y }
-#  define PNREG_DBG( X ) do { \
+#  define PNREG_TRACE( X ) do { \
      for (size_t i=0; i<(sizeof(pn53x_registers)/sizeof(pn53x_register)); i++) { \
        if ( X == pn53x_registers[i].ui16Address ) { \
-         DBG( "%s (%s)", pn53x_registers[i].abtRegisterText, pn53x_registers[i].abtRegisterDescription ); \
+         log_put( LOG_CATEGORY, NFC_PRIORITY_TRACE, "%s (%s)", pn53x_registers[i].abtRegisterText, pn53x_registers[i].abtRegisterDescription ); \
          break; \
        } \
      } \
@@ -296,7 +300,7 @@ typedef struct {
 #define PN53X_SFR_P7 0xFFF7
 
 
-#ifdef DEBUG
+#ifdef LOGGING
 static const pn53x_register pn53x_registers[] = {
   PNREG (PN53X_REG_CIU_Mode, "Defines general modes for transmitting and receiving"),
   PNREG (PN53X_REG_CIU_TxMode, "Defines the transmission data rate and framing during transmission"),

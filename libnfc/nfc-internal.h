@@ -29,66 +29,12 @@
 #  include <stdbool.h>
 #  include <err.h>
 
-/**
- * @macro PRINT_HEX
- * @brief Print a byte-array in hexadecimal format (only in DEBUG mode)
- */
-#  ifdef DEBUG
-#    define PRINT_HEX(pcTag, pbtData, szBytes) do { \
-    size_t __szPos; \
-    fprintf(stderr, " %s: ", pcTag); \
-    for (__szPos=0; __szPos < (size_t)(szBytes); __szPos++) { \
-      fprintf(stderr, "%02x  ",((uint8_t *)(pbtData))[__szPos]); \
-    } \
-    fprintf(stderr, "\n"); \
-  } while (0);
-#  else
-#    define PRINT_HEX(pcTag, pbtData, szBytes) do { \
-    (void) pcTag; \
-    (void) pbtData; \
-    (void) szBytes; \
-  } while (0);
-#  endif
+#include "log.h"
 
 /**
- * @macro DBG
- * @brief Print a message of standard output only in DEBUG mode
+ * @macro HAL
+ * @brief Execute corresponding driver function if exists.
  */
-#ifdef DEBUG
-#  define DBG(...) do { \
-    warnx ("DBG %s:%d", __FILE__, __LINE__); \
-    warnx ("    " __VA_ARGS__ ); \
-  } while (0)
-#else
-#  define DBG(...) {}
-#endif
-
-/**
- * @macro WARN
- * @brief Print a warn message
- */
-#ifdef DEBUG
-#  define WARN(...) do { \
-    warnx ("WARNING %s:%d", __FILE__, __LINE__); \
-    warnx ("    " __VA_ARGS__ ); \
-  } while (0)
-#else
-#  define WARN(...) warnx ("WARNING: " __VA_ARGS__ )
-#endif
-
-/**
- * @macro ERR
- * @brief Print a error message
- */
-#ifdef DEBUG
-#  define ERR(...) do { \
-    warnx ("ERROR %s:%d", __FILE__, __LINE__); \
-    warnx ("    " __VA_ARGS__ ); \
-  } while (0)
-#else
-#  define ERR(...)  warnx ("ERROR: " __VA_ARGS__ )
-#endif
-
 #define HAL( FUNCTION, ... ) pnd->iLastError = 0; \
   if (pnd->driver->FUNCTION) { \
     return pnd->driver->FUNCTION( __VA_ARGS__ ); \

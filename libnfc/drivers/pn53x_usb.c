@@ -59,6 +59,7 @@ Thanks to d18c7db and Okko for example code
 #include "drivers/pn53x_usb.h"
 
 #define PN53X_USB_DRIVER_NAME "PN53x USB"
+#define LOG_CATEGORY "libnfc.driver.pn53x_usb"
 
 #define USB_INFINITE_TIMEOUT   0
 
@@ -92,9 +93,9 @@ pn53x_usb_bulk_read (struct pn53x_usb_data *data, byte_t abtRx[], const size_t s
 {
   int res = usb_bulk_read (data->pudh, data->uiEndPointIn, (char *) abtRx, szRx, USB_INFINITE_TIMEOUT);
   if (res > 0) {
-    PRINT_HEX ("RX", abtRx, res);
+    LOG_HEX ("RX", abtRx, res);
   } else if (res < 0) {
-    ERR ("Unable to read from USB (%s", _usb_strerror (res));
+    log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to read from USB (%s", _usb_strerror (res));
   }
   return res;
 }
@@ -104,10 +105,10 @@ pn53x_usb_bulk_read_ex (struct pn53x_usb_data *data, byte_t abtRx[], const size_
 {
   int res = usb_bulk_read (data->pudh, data->uiEndPointIn, (char *) abtRx, szRx, timeout);
   if (res > 0) {
-    PRINT_HEX ("RX", abtRx, res);
+    LOG_HEX ("RX", abtRx, res);
   } else if (res < 0) {
     if (-res != USB_TIMEDOUT) {
-      ERR ("Unable to read from USB (%s)", _usb_strerror (res));
+      log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to read from USB (%s)", _usb_strerror (res));
     }
   }
   return res;
@@ -116,7 +117,7 @@ pn53x_usb_bulk_read_ex (struct pn53x_usb_data *data, byte_t abtRx[], const size_
 int
 pn53x_usb_bulk_write (struct pn53x_usb_data *data, byte_t abtTx[], const size_t szTx)
 {
-  PRINT_HEX ("TX", abtTx, szTx);
+  LOG_HEX ("TX", abtTx, szTx);
   int res = usb_bulk_write (data->pudh, data->uiEndPointOut, (char *) abtTx, szTx, USB_INFINITE_TIMEOUT);
   if (res > 0) {
     // HACK This little hack is a well know problem of USB, see http://www.libusb.org/ticket/6 for more details
@@ -124,7 +125,7 @@ pn53x_usb_bulk_write (struct pn53x_usb_data *data, byte_t abtTx[], const size_t 
       usb_bulk_write (data->pudh, data->uiEndPointOut, "\0", 0, USB_INFINITE_TIMEOUT);
     }
   } else {
-    ERR ("Unable to write to USB (%s)", _usb_strerror (res));
+    log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to write to USB (%s)", _usb_strerror (res));
   }
   return res;
 }
@@ -199,14 +200,14 @@ pn53x_usb_probe (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * psz
   // number of changes since previous call to this function (total of new
   // busses and busses removed).
   if ((res = usb_find_busses () < 0)) {
-    ERR ("Unable to find USB busses (%s)", _usb_strerror (res));
+    log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to find USB busses (%s)", _usb_strerror (res));
     return false;
   }
   // usb_find_devices will find all of the devices on each bus. This should be
   // called after usb_find_busses. Returns the number of changes since the
   // previous call to this function (total of new device and devices removed).
   if ((res = usb_find_devices () < 0)) {
-    ERR ("Unable to find USB devices (%s)", _usb_strerror (res));
+    log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to find USB devices (%s)", _usb_strerror (res));
     return false;
   }
 
@@ -219,7 +220,6 @@ pn53x_usb_probe (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * psz
 
     for (dev = bus->devices; dev; dev = dev->next, uiBusIndex++) {
       for (size_t n = 0; n < sizeof (pn53x_usb_supported_devices) / sizeof (struct pn53x_usb_supported_device); n++) {
-        //DBG("Checking device %04x:%04x (%04x:%04x)",dev->descriptor.idVendor,dev->descriptor.idProduct);
         if ((pn53x_usb_supported_devices[n].vendor_id == dev->descriptor.idVendor) &&
             (pn53x_usb_supported_devices[n].product_id == dev->descriptor.idProduct)) {
           // Make sure there are 2 endpoints available
@@ -238,7 +238,7 @@ pn53x_usb_probe (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * psz
           // Set configuration
           int res = usb_set_configuration (udev, 1);
           if (res < 0) {
-            ERR ("Unable to set USB configuration (%s)", _usb_strerror (res));
+            log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to set USB configuration (%s)", _usb_strerror (res));
             usb_close (udev);
             // we failed to use the device
             continue;
@@ -307,7 +307,7 @@ pn53x_usb_connect (const nfc_device_desc_t *pndd)
 
   for (bus = usb_get_busses (); bus; bus = bus->next) {
     for (dev = bus->devices; dev; dev = dev->next, uiBusIndex--) {
-      DBG ("Checking device %04x:%04x", dev->descriptor.idVendor, dev->descriptor.idProduct);
+      log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "Checking device %04x:%04x", dev->descriptor.idVendor, dev->descriptor.idProduct);
       if (uiBusIndex == 0) {
         // Open the USB device
         data.pudh = usb_open (dev);
@@ -316,9 +316,9 @@ pn53x_usb_connect (const nfc_device_desc_t *pndd)
         // Set configuration
         int res = usb_set_configuration (data.pudh, 1);
         if (res < 0) {
-          ERR ("Unable to set USB configuration (%s)", _usb_strerror (res));
+          log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to set USB configuration (%s)", _usb_strerror (res));
           if (EPERM == -res) {
-            WARN ("Please double check USB permissions for device %04x:%04x", dev->descriptor.idVendor, dev->descriptor.idProduct);
+            log_put (LOG_CATEGORY, NFC_PRIORITY_WARN, "Please double check USB permissions for device %04x:%04x", dev->descriptor.idVendor, dev->descriptor.idProduct);
           }
           usb_close (data.pudh);
           // we failed to use the specified device
@@ -327,7 +327,7 @@ pn53x_usb_connect (const nfc_device_desc_t *pndd)
 
         res = usb_claim_interface (data.pudh, 0);
         if (res < 0) {
-          ERR ("Unable to claim USB interface (%s)", _usb_strerror (res));
+          log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to claim USB interface (%s)", _usb_strerror (res));
           usb_close (data.pudh);
           // we failed to use the specified device
           return NULL;
@@ -401,11 +401,11 @@ pn53x_usb_disconnect (nfc_device_t * pnd)
 
   int res;
   if ((res = usb_release_interface (DRIVER_DATA (pnd)->pudh, 0)) < 0) {
-    ERR ("Unable to release USB interface (%s)", _usb_strerror (res));
+    log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to release USB interface (%s)", _usb_strerror (res));
   }
 
   if ((res = usb_close (DRIVER_DATA (pnd)->pudh)) < 0) {
-    ERR ("Unable to close USB connection (%s)", _usb_strerror (res));
+    log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to close USB connection (%s)", _usb_strerror (res));
   }
   pn53x_data_free (pnd);
   nfc_device_free (pnd);
@@ -502,7 +502,7 @@ read:
 
   const byte_t pn53x_preamble[3] = { 0x00, 0x00, 0xff };
   if (0 != (memcmp (abtRxBuf, pn53x_preamble, 3))) {
-    ERR ("%s", "Frame preamble+start code mismatch");
+    log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Frame preamble+start code mismatch");
     pnd->iLastError = ECOMIO;
     return -1;
   }
@@ -510,7 +510,7 @@ read:
 
   if ((0x01 == abtRxBuf[offset]) && (0xff == abtRxBuf[offset + 1])) {
     // Error frame
-    ERR ("%s", "Application level error detected");
+    log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Application level error detected");
     pnd->iLastError = EFRAISERRFRAME;
     return -1;
   } else if ((0xff == abtRxBuf[offset]) && (0xff == abtRxBuf[offset + 1])) {
@@ -521,7 +521,7 @@ read:
     len = (abtRxBuf[offset] << 8) + abtRxBuf[offset + 1] - 2;
     if (((abtRxBuf[offset] + abtRxBuf[offset + 1] + abtRxBuf[offset + 2]) % 256) != 0) {
       // TODO: Retry
-      ERR ("%s", "Length checksum mismatch");
+      log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Length checksum mismatch");
       pnd->iLastError = ECOMIO;
       return -1;
     }
@@ -530,7 +530,7 @@ read:
     // Normal frame
     if (256 != (abtRxBuf[offset] + abtRxBuf[offset + 1])) {
       // TODO: Retry
-      ERR ("%s", "Length checksum mismatch");
+      log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Length checksum mismatch");
       pnd->iLastError = ECOMIO;
       return -1;
     }
@@ -541,21 +541,21 @@ read:
   }
 
   if (len > szDataLen) {
-    ERR ("Unable to receive data: buffer too small. (szDataLen: %zu, len: %zu)", szDataLen, len);
+    log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to receive data: buffer too small. (szDataLen: %zu, len: %zu)", szDataLen, len);
     pnd->iLastError = ECOMIO;
     return -1;
   }
 
   // TFI + PD0 (CC+1)
   if (abtRxBuf[offset] != 0xD5) {
-    ERR ("%s", "TFI Mismatch");
+    log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "TFI Mismatch");
     pnd->iLastError = ECOMIO;
     return -1;
   }
   offset += 1;
 
   if (abtRxBuf[offset] != CHIP_DATA (pnd)->ui8LastCommand + 1) {
-    ERR ("%s", "Command Code verification failed");
+    log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Command Code verification failed");
     pnd->iLastError = ECOMIO;
     return -1;
   }
@@ -571,14 +571,14 @@ read:
   }
 
   if (btDCS != abtRxBuf[offset]) {
-    ERR ("%s", "Data checksum mismatch");
+    log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Data checksum mismatch");
     pnd->iLastError = ECOMIO;
     return -1;
   }
   offset += 1;
 
   if (0x00 != abtRxBuf[offset]) {
-    ERR ("%s", "Frame postamble mismatch");
+    log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Frame postamble mismatch");
     pnd->iLastError = ECOMIO;
     return -1;
   }
@@ -603,7 +603,7 @@ pn53x_usb_init (nfc_device_t *pnd)
   // ...and we don't care about error
   pnd->iLastError = 0;
   if (SONY_RCS360 == DRIVER_DATA (pnd)->model) {
-    DBG ("SONY RC-S360 initialization.");
+    log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "SONY RC-S360 initialization.");
     const byte_t abtCmd2[] = { 0x18, 0x01 };
     pn53x_transceive (pnd, abtCmd2, sizeof (abtCmd2), NULL, NULL);
     pn53x_usb_ack (pnd);
@@ -613,7 +613,7 @@ pn53x_usb_init (nfc_device_t *pnd)
     return false;
 
   if (ASK_LOGO == DRIVER_DATA (pnd)->model) {
-    DBG ("ASK LoGO initialization.");
+    log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "ASK LoGO initialization.");
     /* Internal registers */
     /* Disable 100mA current limit, Power on Secure IC (SVDD) */
     pn53x_write_register (pnd, PN53X_REG_Control_switch_rng, 0xFF, SYMBOL_CURLIMOFF | SYMBOL_SIC_SWITCH_EN | SYMBOL_RANDOM_DATAREADY);
@@ -660,7 +660,7 @@ pn53x_usb_configure (nfc_device_t * pnd, const nfc_device_option_t ndo, const bo
     case ASK_LOGO:
       if (NDO_ACTIVATE_FIELD == ndo) {
         /* Switch on/off LED2 and Progressive Field GPIO according to ACTIVATE_FIELD option */
-        DBG ("Switch progressive field %s", bEnable ? "On" : "Off");
+        log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "Switch progressive field %s", bEnable ? "On" : "Off");
         if (!pn53x_write_register (pnd, PN53X_SFR_P3, _BV(P31) | _BV(P34), bEnable ? _BV (P34) : _BV (P31)))
           return false;
       }
