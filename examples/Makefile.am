@@ -119,4 +119,9 @@ dist_man_MANS = \
 		pn53x-sam.1 \
 		pn53x-tamashell.1
 
+if HAS_LOG4C
+  AM_CFLAGS += @log4c_CFLAGS@
+  LIBADD = @log4c_LIBS@
+endif
+
 EXTRA_DIST = CMakeLists.txt

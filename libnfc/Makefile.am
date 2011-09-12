@@ -34,8 +34,8 @@ if LIBUSB_ENABLED
 endif
 
 if HAS_LOG4C
-  libnfc_la_CFLAGS += $(log4c_CFLAGS)
-  libnfc_la_LIBADD += $(log4c_LIBS)
+  libnfc_la_CFLAGS += @log4c_CFLAGS@
+  libnfc_la_LIBADD += @log4c_LIBS@
 
   libnfc_la_SOURCES += log.c
 endif

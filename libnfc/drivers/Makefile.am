@@ -34,3 +34,8 @@ if LIBUSB_ENABLED
   libnfcdrivers_la_LIBADD  += @libusb_LIBS@
 endif
 
+if HAS_LOG4C
+  libnfcdrivers_la_CFLAGS += @log4c_CFLAGS@
+  libnfcdrivers_la_LIBADD += @log4c_LIBS@
+endif
+
