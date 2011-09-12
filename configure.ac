@@ -132,7 +132,7 @@ AC_SUBST(PKG_CONFIG_REQUIRES)
 AM_CONDITIONAL(LIBUSB_ENABLED, [test "$HAVE_LIBUSB" = "1"])
 AM_CONDITIONAL(PCSC_ENABLED, [test "$HAVE_PCSC" = "1"])
 
-CUTTER_REQUIRED_VERSION=1.1.2
+CUTTER_REQUIRED_VERSION=1.1.8
 m4_ifdef([AC_CHECK_CUTTER], [AC_CHECK_CUTTER([>= $CUTTER_REQUIRED_VERSION])], [ac_cv_use_cutter="no"])
 if test x$ac_cv_with_cutter = xyes -a x$ac_cv_use_cutter = xno; then
   AC_MSG_ERROR([cutter >= $CUTTER_REQUIRED_VERSION is mandatory.])
