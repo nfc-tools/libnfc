@@ -31,6 +31,13 @@
  * @file pn53x-diagnose.c
  * @brief Small application to diagnose PN53x using dedicated commands
  */
+
+/* vim:set ts=2 sw=2 et: */
+
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif // HAVE_CONFIG_H
+
 #include <err.h>
 #include <stdlib.h>
 #include <string.h>
@@ -39,7 +46,6 @@
 
 #include "nfc-utils.h"
 #include "chips/pn53x.h"
-#include "chips/pn53x-internal.h"
 
 #define MAX_DEVICE_COUNT 16
 
