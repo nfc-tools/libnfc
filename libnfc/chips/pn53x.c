@@ -61,7 +61,7 @@ pn53x_target_type_t pn53x_nm_to_ptt (const nfc_modulation_t nm);
 bool
 pn53x_init(nfc_device_t * pnd)
 {
-  log_put ("LOG_CATEGORY", NFC_PRIORITY_TRACE, "%s", "pn53x_init");
+  log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "%s", "pn53x_init");
 
   // GetFirmwareVersion command is used to set PN53x chips type (PN531, PN532 or PN533)
   char abtFirmwareText[22];
@@ -184,6 +184,7 @@ pn53x_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, b
     default:
       pnd->iLastError = 0;
   }
+  log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "Last command status: %s", pn53x_strerror(pnd));
   return (0 == pnd->iLastError);
 }
 
@@ -2273,12 +2274,12 @@ pn53x_check_ack_frame (nfc_device_t * pnd, const byte_t * pbtRxFrame, const size
 {
   if (szRxFrameLen >= sizeof (pn53x_ack_frame)) {
     if (0 == memcmp (pbtRxFrame, pn53x_ack_frame, sizeof (pn53x_ack_frame))) {
-      log_put ("LOG_CATEGORY", NFC_PRIORITY_TRACE, "PN53x ACKed");
+      log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "PN53x ACKed");
       return true;
     }
   }
   pnd->iLastError = EFRAACKMISMATCH;
-  log_put ("LOG_CATEGORY", NFC_PRIORITY_ERROR, "Unexpected PN53x reply!");
+  log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unexpected PN53x reply!");
   return false;
 }
 
@@ -2287,7 +2288,7 @@ pn53x_check_error_frame (nfc_device_t * pnd, const byte_t * pbtRxFrame, const si
 {
   if (szRxFrameLen >= sizeof (pn53x_error_frame)) {
     if (0 == memcmp (pbtRxFrame, pn53x_error_frame, sizeof (pn53x_error_frame))) {
-      log_put ("LOG_CATEGORY", NFC_PRIORITY_TRACE, "PN53x sent an error frame");
+      log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "PN53x sent an error frame");
       pnd->iLastError = EFRAISERRFRAME;
       return false;
     }
@@ -2352,7 +2353,7 @@ pn53x_build_frame (byte_t * pbtFrame, size_t * pszFrame, const byte_t * pbtData,
 
     (*pszFrame) = szData + PN53x_EXTENDED_FRAME__OVERHEAD;
   } else {
-    log_put ("LOG_CATEGORY", NFC_PRIORITY_ERROR, "We can't send more than %d bytes in a raw (requested: %zd)", PN53x_EXTENDED_FRAME__DATA_MAX_LEN, szData);
+    log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "We can't send more than %d bytes in a raw (requested: %zd)", PN53x_EXTENDED_FRAME__DATA_MAX_LEN, szData);
     return false;
   }
   return true;
