@@ -336,6 +336,12 @@ bool	pn53x_TgInitAsTarget (nfc_device_t * pnd, pn53x_target_mode_t ptm,
                               const byte_t * pbtNFCID3t, const byte_t * pbtGB, const size_t szGB,
                               byte_t * pbtRx, size_t * pszRx, byte_t * pbtModeByte);
 
+// RFConfiguration
+bool    pn53x_RFConfiguration__RF_field (nfc_device_t * pnd, bool bEnable);
+bool    pn53x_RFConfiguration__Various_timings (nfc_device_t * pnd, const uint8_t fATR_RES_Timeout, const uint8_t fRetryTimeout);
+bool    pn53x_RFConfiguration__MaxRtyCOM (nfc_device_t * pnd, const uint8_t MaxRtyCOM);
+bool    pn53x_RFConfiguration__MaxRetries (nfc_device_t * pnd, const uint8_t MxRtyATR, const uint8_t MxRtyPSL, const uint8_t MxRtyPassiveActivation);
+
 // Misc
 bool    pn53x_check_ack_frame (nfc_device_t * pnd, const byte_t * pbtRxFrame, const size_t szRxFrameLen);
 bool    pn53x_check_error_frame (nfc_device_t * pnd, const byte_t * pbtRxFrame, const size_t szRxFrameLen);

@@ -675,9 +675,7 @@ pn53x_configure (nfc_device_t * pnd, const nfc_device_option_t ndo, const bool b
 
     case NDO_ACTIVATE_FIELD:
     {
-      byte_t  abtCmd[] = { RFConfiguration, RFCI_FIELD, (bEnable) ? 0x01 : 0x00 };
-      if (!pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, NULL))
-        return false;
+      return pn53x_RFConfiguration__RF_field (pnd, bEnable);
     }
     break;
 
@@ -692,16 +690,11 @@ pn53x_configure (nfc_device_t * pnd, const nfc_device_option_t ndo, const bool b
       // TODO Made some research around this point:
       // timings could be tweak better than this, and maybe we can tweak timings
       // to "gain" a sort-of hardware polling (ie. like PN532 does)
-      // Retry format: 0x00 means only 1 try, 0xff means infinite
-      byte_t  abtCmd[] = {
-        RFConfiguration,
-        RFCI_RETRY_SELECT,
+      return pn53x_RFConfiguration__MaxRetries (pnd, 
         (bEnable) ? 0xff : 0x00,        // MxRtyATR, default: active = 0xff, passive = 0x02
         (bEnable) ? 0xff : 0x00,        // MxRtyPSL, default: 0x01
         (bEnable) ? 0xff : 0x02         // MxRtyPassiveActivation, default: 0xff (0x00 leads to problems with PN531)
-      };
-      if (!pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, NULL))
-        return false;
+      );
     }
     break;
 
@@ -1881,6 +1874,51 @@ pn53x_strerror (const nfc_device_t * pnd)
   }
 
   return pcRes;
+}
+
+bool
+pn53x_RFConfiguration__RF_field (nfc_device_t * pnd, bool bEnable)
+{
+  byte_t  abtCmd[] = { RFConfiguration, RFCI_FIELD, (bEnable) ? 0x01 : 0x00 };
+  return pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, NULL);
+}
+
+bool
+pn53x_RFConfiguration__Various_timings (nfc_device_t * pnd, const uint8_t fATR_RES_Timeout, const uint8_t fRetryTimeout)
+{
+  byte_t  abtCmd[] = {
+    RFConfiguration,
+    RFCI_TIMING,
+    0x00,		 // RFU
+    fATR_RES_Timeout,	 // ATR_RES timeout (default: 0x0B 102.4 ms)
+    fRetryTimeout	 // TimeOut during non-DEP communications (default: 0x0A 51.2 ms)
+  };
+  return pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, NULL);
+}
+
+bool
+pn53x_RFConfiguration__MaxRtyCOM (nfc_device_t * pnd, const uint8_t MaxRtyCOM)
+{
+  byte_t  abtCmd[] = {
+    RFConfiguration,
+    RFCI_RETRY_DATA,
+    MaxRtyCOM         // MaxRtyCOM, default: 0x00 (no retry, only one try), inifite: 0xff
+  };
+  return pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, NULL);
+}
+
+bool
+pn53x_RFConfiguration__MaxRetries (nfc_device_t * pnd, const uint8_t MxRtyATR, const uint8_t MxRtyPSL, const uint8_t MxRtyPassiveActivation)
+{
+  // Retry format: 0x00 means only 1 try, 0xff means infinite
+  byte_t  abtCmd[] = {
+    RFConfiguration,
+    RFCI_RETRY_SELECT,
+    MxRtyATR,        // MxRtyATR, default: active = 0xff, passive = 0x02
+    MxRtyPSL,        // MxRtyPSL, default: 0x01
+    MxRtyPassiveActivation         // MxRtyPassiveActivation, default: 0xff (0x00 leads to problems with PN531)
+  };
+  return pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, NULL);
 }
 
 bool
