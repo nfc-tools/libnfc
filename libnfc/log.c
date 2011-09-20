@@ -19,22 +19,14 @@
 
 #include <fcntl.h>
 #include <log4c.h>
-#include <semaphore.h>
 
 #include "log.h"
-
-sem_t *__log_sem;
-const char *__sem_name = "/libnfc";
 
 static uint8_t __log_init_counter = 0;
 
 int
 log_init (void)
 {
-  if ((__log_sem = sem_open (__sem_name, O_CREAT, 0666, 1)) == SEM_FAILED) {
-    perror ("sem_open");
-    return -1;
-  }
   int res = 0;
 
   if (__log_init_counter == 0) {
@@ -52,8 +44,6 @@ log_fini (void)
   int res = 0;
   if (__log_init_counter >= 1) {
     if (__log_init_counter == 1) {
-      sem_close (__log_sem);
-      sem_unlink (__sem_name);
       res = log4c_fini ();
     }
     __log_init_counter--;
@@ -66,14 +56,10 @@ log_fini (void)
 void
 log_put (char *category, int priority, char *format, ...)
 {
-  sem_wait (__log_sem);
-
   const log4c_category_t *cat = log4c_category_get (category);
   if (log4c_category_is_priority_enabled (cat, priority)) {
     va_list va;
     va_start (va, format);
     log4c_category_vlog (cat, priority, format, va);
   }
-
-  sem_post (__log_sem);
 }
