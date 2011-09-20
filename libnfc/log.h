@@ -18,10 +18,6 @@
 #ifndef __LOG_H__
 #define __LOG_H__
 
-#include <semaphore.h>
-
-extern sem_t *log_sem;
-
 #ifdef HAS_LOG4C
 
 #define LOGGING 1
