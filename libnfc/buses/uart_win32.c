@@ -23,6 +23,10 @@
  * @brief Windows UART driver
  */
 
+#include "log.h"
+
+#define LOG_CATEGORY "libnfc.bus.uart_win32"
+
 // Handle platform specific includes
 #include "contrib/windows.h"
 #define delay_ms( X ) Sleep( X )
@@ -98,7 +102,7 @@ uart_set_speed (serial_port sp, const uint32_t uiPortSpeed)
 {
   serial_port_windows *spw;
 
-  DBG ("Serial port speed requested to be set to %d bauds.", uiPortSpeed);
+  log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "Serial port speed requested to be set to %d bauds.", uiPortSpeed);
   // Set port speed (Input and Output)
   switch (uiPortSpeed) {
   case 9600:
@@ -110,7 +114,7 @@ uart_set_speed (serial_port sp, const uint32_t uiPortSpeed)
   case 460800:
     break;
   default:
-    ERR("Unable to set serial port speed to %d bauds. Speed value must be one of these constants: 9600 (default), 19200, 38400, 57600, 115200, 230400 or 460800.", uiPortSpeed);
+    log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to set serial port speed to %d bauds. Speed value must be one of these constants: 9600 (default), 19200, 38400, 57600, 115200, 230400 or 460800.", uiPortSpeed);
     return;
   };
   spw = (serial_port_windows *) sp;
@@ -124,14 +128,14 @@ uart_set_speed (serial_port sp, const uint32_t uiPortSpeed)
   spw->ct.WriteTotalTimeoutConstant = 0;
 
   if (!SetCommTimeouts (spw->hPort, &spw->ct)) {
-    ERR ("Unable to apply new timeout settings.");
+    log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to apply new timeout settings.");
     return;
   }
 
   // Set baud rate
   spw->dcb.BaudRate = uiPortSpeed;
   if (!SetCommState (spw->hPort, &spw->dcb)) {
-    ERR ("Unable to apply new speed settings.");
+    log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Unable to apply new speed settings.");
     return;
   }
   PurgeComm (spw->hPort, PURGE_RXABORT | PURGE_RXCLEAR);
@@ -164,7 +168,7 @@ uart_receive (serial_port sp, byte_t * pbtRx, const size_t szRx, void * abort_p)
     dwTotalBytesReceived += dwBytesReceived;
 
     if (!res) {
-      WARN("ReadFile returned error\n");
+      log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "ReadFile error");
       return ECOMIO;
     }
     if (((DWORD)szRx) > dwTotalBytesReceived) {
