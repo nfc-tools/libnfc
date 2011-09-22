@@ -29,7 +29,7 @@ AC_DEFUN([LIBNFC_CHECK_PCSC],
       ;;
       *)
         if test x"$HAVE_PCSC" = "x0" ; then
-          AC_MSG_ERROR([libpcsclite is mandatory.])
+          AC_MSG_ERROR([libpcsclite is required for building the acr122 driver.])
         fi
       ;;
     esac
