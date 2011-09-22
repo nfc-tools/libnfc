@@ -65,6 +65,37 @@ Thanks to d18c7db and Okko for example code
 
 #define DRIVER_DATA(pnd) ((struct pn53x_usb_data*)(pnd->driver_data))
 
+/* This modified from some GNU example _not_ to overwrite y */
+int timeval_subtract(struct timeval *result,
+		     const struct timeval *x,
+		     const struct timeval *y)
+{
+  struct timeval tmp;
+
+  tmp.tv_sec = y->tv_sec;
+  tmp.tv_usec = y->tv_usec;
+
+  /* Perform the carry for the later subtraction */
+  if (x->tv_usec < y->tv_usec) {
+    int nsec = (y->tv_usec - x->tv_usec) / 1000000 + 1;
+    tmp.tv_usec -= 1000000 * nsec;
+    tmp.tv_sec += nsec;
+  }
+  if (x->tv_usec - y->tv_usec > 1000000) {
+    int nsec = (x->tv_usec - y->tv_usec) / 1000000;
+    tmp.tv_usec += 1000000 * nsec;
+    tmp.tv_sec -= nsec;
+  }
+     
+  /* Compute the time remaining to wait.
+     tv_usec is certainly positive. */
+  result->tv_sec = x->tv_sec - tmp.tv_sec;
+  result->tv_usec = x->tv_usec - tmp.tv_usec;
+     
+  /* Return 1 if result is negative. */
+  return x->tv_sec < tmp.tv_sec;
+}
+
 typedef enum {
   UNKNOWN,
   NXP_PN531,
@@ -99,7 +130,8 @@ pn53x_usb_bulk_read (struct pn53x_usb_data *data, byte_t abtRx[], const size_t s
   if (res > 0) {
     LOG_HEX ("RX", abtRx, res);
   } else if (res < 0) {
-    log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to read from USB (%s)", _usb_strerror (res));
+    if (res != -USB_TIMEDOUT)
+      log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to read from USB (%s)", _usb_strerror (res));
   }
   return res;
 }
@@ -462,9 +494,6 @@ pn53x_usb_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen,
   switch (CHIP_DATA (pnd)->ui8LastCommand) {
   case InDataExchange:
   case TgGetData:
-    if (!timeout)
-      delayed_reply = true;
-    break;
   case InJumpForDEP:
   case TgInitAsTarget:
     delayed_reply = true;
@@ -480,12 +509,33 @@ pn53x_usb_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen,
    * If no timeout is specified but the command is blocking, force a 250ms
    * timeout to allow breaking the loop if the user wants to stop it.
    */
-  struct timeval fixed_timeout = {
+  const struct timeval fixed_timeout = {
       .tv_sec = 0,
       .tv_usec = 250000,
   };
+
+  struct timeval remaining_time, usb_timeout;
+  if (timeout) {
+    remaining_time = *timeout;
+  }
 read:
-  res = pn53x_usb_bulk_read (DRIVER_DATA (pnd), abtRxBuf, sizeof (abtRxBuf), (delayed_reply && !timeout) ? &fixed_timeout : timeout);
+  if (timeout) {
+    // A user-provided timeout is set, we have to cut it in multiple chunk to be able to keep an nfc_abort_command() mecanism
+    struct timeval tmp;
+    if (1 == timeval_subtract (&tmp, &remaining_time, &fixed_timeout)) {
+      // The subtraction result is negative
+      usb_timeout = remaining_time;
+      remaining_time.tv_sec = 0;
+      remaining_time.tv_usec = 0;
+    } else {
+      usb_timeout = fixed_timeout;
+      remaining_time = tmp;
+    }
+  } else {
+    // No user-provided timeout, we will wait infinitely but we need nfc_abort_command() mecanism.
+    usb_timeout = fixed_timeout;
+  }
+  res = pn53x_usb_bulk_read (DRIVER_DATA (pnd), abtRxBuf, sizeof (abtRxBuf), &usb_timeout);
 
   if (delayed_reply && (res == -USB_TIMEDOUT)) {
     if (DRIVER_DATA (pnd)->abort_flag) {
