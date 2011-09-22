@@ -252,8 +252,11 @@ acr122_disconnect (nfc_device_t * pnd)
 }
 
 bool
-acr122_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szData)
+acr122_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szData, struct timeval *timeout)
 {
+  // FIXME: timeout is not handled
+  (void) timeout;
+
   // Make sure the command does not overflow the send buffer
   if (szData > ACR122_COMMAND_LEN) {
     pnd->iLastError = EINVALARG;
@@ -320,8 +323,11 @@ acr122_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szData)
 }
 
 int
-acr122_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szData)
+acr122_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szData, struct timeval *timeout)
 {
+  // FIXME: timeout is not handled
+  (void) timeout;
+
   int len;
   byte_t  abtRxCmd[5] = { 0xFF, 0xC0, 0x00, 0x00 };
 

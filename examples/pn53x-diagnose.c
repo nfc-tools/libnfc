@@ -93,7 +93,7 @@ main (int argc, const char *argv[])
 
     printf ("NFC device [%s] connected.\n", pnd->acName);
 
-    result = pn53x_transceive (pnd, pncmd_diagnose_communication_line_test, sizeof (pncmd_diagnose_communication_line_test), abtRx, &szRx);
+    result = pn53x_transceive (pnd, pncmd_diagnose_communication_line_test, sizeof (pncmd_diagnose_communication_line_test), abtRx, &szRx, NULL);
     if (result) {
       // Result of Diagnose ping for RC-S360 doesn't contain status byte so we've to handle both cases
       result = (memcmp (pncmd_diagnose_communication_line_test + 1, abtRx, sizeof (pncmd_diagnose_communication_line_test) - 1) == 0) ||
@@ -103,7 +103,7 @@ main (int argc, const char *argv[])
     }
     printf (" Communication line test: %s\n", result ? "OK" : "Failed");
 
-    result = pn53x_transceive (pnd, pncmd_diagnose_rom_test, sizeof (pncmd_diagnose_rom_test), abtRx, &szRx);
+    result = pn53x_transceive (pnd, pncmd_diagnose_rom_test, sizeof (pncmd_diagnose_rom_test), abtRx, &szRx, NULL);
     if (result) {
       result = ((szRx == 1) && (abtRx[0] == 0x00));
     } else {
@@ -111,7 +111,7 @@ main (int argc, const char *argv[])
     }
     printf (" ROM test: %s\n", result ? "OK" : "Failed");
 
-    result = pn53x_transceive (pnd, pncmd_diagnose_ram_test, sizeof (pncmd_diagnose_ram_test), abtRx, &szRx);
+    result = pn53x_transceive (pnd, pncmd_diagnose_ram_test, sizeof (pncmd_diagnose_ram_test), abtRx, &szRx, NULL);
     if (result) {
       result = ((szRx == 1) && (abtRx[0] == 0x00));
     } else {

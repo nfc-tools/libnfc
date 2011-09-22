@@ -136,14 +136,14 @@ struct nfc_driver_t {
   bool (*initiator_poll_targets) (nfc_device_t * pnd, const nfc_modulation_t * pnmModulations, const size_t szModulations, const byte_t btPollNr, const byte_t btPeriod, nfc_target_t * pntTargets, size_t * pszTargetFound);
   bool (*initiator_select_dep_target) (nfc_device_t * pnd, const nfc_dep_mode_t ndm, const nfc_baud_rate_t nbr, const nfc_dep_info_t * pndiInitiator, nfc_target_t * pnt);
   bool (*initiator_deselect_target) (nfc_device_t * pnd);
-  bool (*initiator_transceive_bytes) (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, byte_t * pbtRx, size_t * pszRx);
+  bool (*initiator_transceive_bytes) (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, byte_t * pbtRx, size_t * pszRx, struct timeval *timeout);
   bool (*initiator_transceive_bits) (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxBits, const byte_t * pbtTxPar, byte_t * pbtRx, size_t * pszRxBits, byte_t * pbtRxPar);
   bool (*initiator_transceive_bytes_timed) (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, byte_t * pbtRx, size_t * pszRx, uint32_t * cycles);
   bool (*initiator_transceive_bits_timed) (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxBits, const byte_t * pbtTxPar, byte_t * pbtRx, size_t * pszRxBits, byte_t * pbtRxPar, uint32_t * cycles);
 
   bool (*target_init) (nfc_device_t * pnd, nfc_target_t * pnt, byte_t * pbtRx, size_t * pszRx);
-  bool (*target_send_bytes) (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx);
-  bool (*target_receive_bytes) (nfc_device_t * pnd, byte_t * pbtRx, size_t * pszRx);
+  bool (*target_send_bytes) (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, struct timeval *timeout);
+  bool (*target_receive_bytes) (nfc_device_t * pnd, byte_t * pbtRx, size_t * pszRx, struct timeval *timeout);
   bool (*target_send_bits) (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxBits, const byte_t * pbtTxPar);
   bool (*target_receive_bits) (nfc_device_t * pnd, byte_t * pbtRx, size_t * pszRxBits, byte_t * pbtRxPar);
 

@@ -236,7 +236,7 @@ arygon_disconnect (nfc_device_t * pnd)
 #define ARYGON_TX_BUFFER_LEN (PN53x_NORMAL_FRAME__DATA_MAX_LEN + PN53x_NORMAL_FRAME__OVERHEAD + 1)
 #define ARYGON_RX_BUFFER_LEN (PN53x_EXTENDED_FRAME__DATA_MAX_LEN + PN53x_EXTENDED_FRAME__OVERHEAD)
 bool
-arygon_tama_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szData)
+arygon_tama_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szData, struct timeval *timeout)
 {
   // Before sending anything, we need to discard from any junk bytes
   uart_flush_input (DRIVER_DATA(pnd)->port);
@@ -256,7 +256,7 @@ arygon_tama_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szDat
     return false;
   }
 
-  int res = uart_send (DRIVER_DATA (pnd)->port, abtFrame, szFrame + 1);
+  int res = uart_send (DRIVER_DATA (pnd)->port, abtFrame, szFrame + 1, timeout);
   if (res != 0) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Unable to transmit data. (TX)");
     pnd->iLastError = res;
@@ -264,7 +264,7 @@ arygon_tama_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szDat
   }
 
   byte_t abtRxBuf[6];
-  res = uart_receive (DRIVER_DATA (pnd)->port, abtRxBuf, sizeof (abtRxBuf), 0);
+  res = uart_receive (DRIVER_DATA (pnd)->port, abtRxBuf, sizeof (abtRxBuf), 0, timeout);
   if (res != 0) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Unable to read ACK");
     pnd->iLastError = res;
@@ -277,7 +277,7 @@ arygon_tama_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szDat
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR,  "Bad frame format." );
     // We have already read 6 bytes and arygon_error_unknown_mode is 10 bytes long
     // so we have to read 4 remaining bytes to be synchronized at the next receiving pass.
-    uart_receive (DRIVER_DATA (pnd)->port, abtRxBuf, 4, 0);
+    uart_receive (DRIVER_DATA (pnd)->port, abtRxBuf, 4, 0, timeout);
     return false;
   } else {
     return false;
@@ -291,14 +291,14 @@ arygon_abort (nfc_device_t *pnd)
   // Send a valid TAMA packet to wakup the PN53x (we will not have an answer, according to Arygon manual)
   byte_t dummy[] = { 0x32, 0x00, 0x00, 0xff, 0x09, 0xf7, 0xd4, 0x00, 0x00, 0x6c, 0x69, 0x62, 0x6e, 0x66, 0x63, 0xbe, 0x00 };
 
-  uart_send (DRIVER_DATA (pnd)->port, dummy, sizeof (dummy));
+  uart_send (DRIVER_DATA (pnd)->port, dummy, sizeof (dummy), NULL);
 
   // Using Arygon device we can't send ACK frame to abort the running command
   return (pn53x_check_communication (pnd)) ? 0 : -1;
 }
 
 int
-arygon_tama_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen)
+arygon_tama_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen, struct timeval *timeout)
 {
   byte_t  abtRxBuf[5];
   size_t len;
@@ -320,7 +320,7 @@ arygon_tama_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLe
     break;
   }
 
-  pnd->iLastError = uart_receive (DRIVER_DATA (pnd)->port, abtRxBuf, 5, abort_p);
+  pnd->iLastError = uart_receive (DRIVER_DATA (pnd)->port, abtRxBuf, 5, abort_p, timeout);
 
   if (abort_p && (EOPABORT == pnd->iLastError)) {
     arygon_abort (pnd);
@@ -344,7 +344,7 @@ arygon_tama_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLe
 
   if ((0x01 == abtRxBuf[3]) && (0xff == abtRxBuf[4])) {
     // Error frame
-    uart_receive (DRIVER_DATA (pnd)->port, abtRxBuf, 3, 0);
+    uart_receive (DRIVER_DATA (pnd)->port, abtRxBuf, 3, 0, timeout);
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Application level error detected");
     pnd->iLastError = EFRAISERRFRAME;
     return -1;
@@ -372,7 +372,7 @@ arygon_tama_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLe
   }
 
   // TFI + PD0 (CC+1)
-  pnd->iLastError = uart_receive (DRIVER_DATA (pnd)->port, abtRxBuf, 2, 0);
+  pnd->iLastError = uart_receive (DRIVER_DATA (pnd)->port, abtRxBuf, 2, 0, timeout);
   if (pnd->iLastError != 0) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Unable to receive data. (RX)");
     return -1;
@@ -391,14 +391,14 @@ arygon_tama_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLe
   }
 
   if (len) {
-    pnd->iLastError = uart_receive (DRIVER_DATA (pnd)->port, pbtData, len, 0);
+    pnd->iLastError = uart_receive (DRIVER_DATA (pnd)->port, pbtData, len, 0, timeout);
     if (pnd->iLastError != 0) {
       log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Unable to receive data. (RX)");
       return -1;
     }
   }
 
-  pnd->iLastError = uart_receive (DRIVER_DATA (pnd)->port, abtRxBuf, 2, 0);
+  pnd->iLastError = uart_receive (DRIVER_DATA (pnd)->port, abtRxBuf, 2, 0, timeout);
   if (pnd->iLastError != 0) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Unable to receive data. (RX)");
     return -1;
@@ -428,17 +428,17 @@ arygon_tama_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLe
 void
 arygon_firmware (nfc_device_t * pnd, char * str)
 {
-  const byte_t arygon_firmware_version_cmd[] = { DEV_ARYGON_PROTOCOL_ARYGON_ASCII, 'a', 'v' }; 
+  const byte_t arygon_firmware_version_cmd[] = { DEV_ARYGON_PROTOCOL_ARYGON_ASCII, 'a', 'v' };
   byte_t abtRx[16];
   size_t szRx = sizeof(abtRx);
 
 
-  int res = uart_send (DRIVER_DATA (pnd)->port, arygon_firmware_version_cmd, sizeof (arygon_firmware_version_cmd));
+  int res = uart_send (DRIVER_DATA (pnd)->port, arygon_firmware_version_cmd, sizeof (arygon_firmware_version_cmd), NULL);
   if (res != 0) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "Unable to send ARYGON firmware command.");
     return;
   }
-  res = uart_receive (DRIVER_DATA (pnd)->port, abtRx, szRx, 0);
+  res = uart_receive (DRIVER_DATA (pnd)->port, abtRx, szRx, 0, NULL);
   if (res != 0) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "Unable to retrieve ARYGON firmware version.");
     return;
@@ -461,11 +461,11 @@ arygon_reset_tama (nfc_device_t * pnd)
   size_t szRx = sizeof(abtRx);
   int res;
 
-  uart_send (DRIVER_DATA (pnd)->port, arygon_reset_tama_cmd, sizeof (arygon_reset_tama_cmd));
+  uart_send (DRIVER_DATA (pnd)->port, arygon_reset_tama_cmd, sizeof (arygon_reset_tama_cmd), NULL);
 
   // Two reply are possible from ARYGON device: arygon_error_none (ie. in case the byte is well-sent)
   // or arygon_error_unknown_mode (ie. in case of the first byte was bad-transmitted)
-  res = uart_receive (DRIVER_DATA (pnd)->port, abtRx, szRx, 0);
+  res = uart_receive (DRIVER_DATA (pnd)->port, abtRx, szRx, 0, NULL);
   if (res != 0) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "No reply to 'reset TAMA' command.");
     return false;

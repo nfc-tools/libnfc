@@ -100,7 +100,7 @@ nfc_initiator_mifare_cmd (nfc_device_t * pnd, const mifare_cmd mc, const uint8_t
     return false;
   }
   // Fire the mifare command
-  if (!nfc_initiator_transceive_bytes (pnd, abtCmd, 2 + szParamLen, abtRx, &szRx)) {
+  if (!nfc_initiator_transceive_bytes (pnd, abtCmd, 2 + szParamLen, abtRx, &szRx, NULL)) {
     if (pnd->iLastError == EINVRXFRAM) {
       // "Invalid received frame" AKA EINVRXFRAM,  usual means we are
       // authenticated on a sector but the requested MIFARE cmd (read, write)

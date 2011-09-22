@@ -25,14 +25,16 @@
 #ifndef __NFC_DRIVER_PN532_UART_H__
 #  define __NFC_DRIVER_PN532_UART_H__
 
+#  include <sys/time.h>
+
 #  include <nfc/nfc-types.h>
 
 bool    pn532_uart_probe (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * pszDeviceFound);
 
 nfc_device_t *pn532_uart_connect (const nfc_device_desc_t * pndd);
 void    pn532_uart_disconnect (nfc_device_t * pnd);
-bool    pn532_uart_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szData);
-int     pn532_uart_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szData);
+bool    pn532_uart_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szData, struct timeval *timeout);
+int     pn532_uart_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szData, struct timeval *timeout);
 
 extern const struct nfc_driver_t pn532_uart_driver;
 

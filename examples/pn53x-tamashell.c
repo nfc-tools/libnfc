@@ -179,7 +179,7 @@ int main(int argc, const char* argv[])
     print_hex((byte_t*)abtTx,szTx);
 
     szRx = sizeof(abtRx);
-    if (!pn53x_transceive (pnd, abtTx, szTx, abtRx, &szRx)) {
+    if (!pn53x_transceive (pnd, abtTx, szTx, abtRx, &szRx, NULL)) {
       free(cmd);
       nfc_perror (pnd, "Rx");
       continue;

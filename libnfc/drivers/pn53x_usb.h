@@ -25,12 +25,14 @@
 #ifndef __NFC_DRIVER_PN53X_USB_H__
 #  define __NFC_DRIVER_PN53X_USB_H__
 
+#  include <sys/time.h>
+
 #  include <nfc/nfc-types.h>
 
 bool    pn53x_usb_probe (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * pszDeviceFound);
 nfc_device_t *pn53x_usb_connect (const nfc_device_desc_t * pndd);
-bool    pn53x_usb_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szData);
-int     pn53x_usb_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szData);
+bool    pn53x_usb_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szData, struct timeval *timeout);
+int     pn53x_usb_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szData, struct timeval *timeout);
 void    pn53x_usb_disconnect (nfc_device_t * pnd);
 
 extern const struct nfc_driver_t pn53x_usb_driver;

@@ -14,7 +14,7 @@ EXTRA_DIST = \
 	pn53x.conf \
 	pn53x.rules
 
-CLEANFILES = Doxygen.log coverage.info
+CLEANFILES = Doxygen.log coverage.info libnfc.pc
 
 clean-local: clean-local-doc clean-local-coverage
 

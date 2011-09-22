@@ -125,7 +125,7 @@ main (int argc, const char *argv[])
   }
 
   printf("Initiator request received. Waiting for data...\n");
-  if (!nfc_target_receive_bytes (pnd, abtRx, &szRx)) {
+  if (!nfc_target_receive_bytes (pnd, abtRx, &szRx, NULL)) {
     nfc_perror(pnd, "nfc_target_receive_bytes");
     goto error;
   }
@@ -133,7 +133,7 @@ main (int argc, const char *argv[])
   printf ("Received: %s\n", abtRx);
 
   printf ("Sending: %s\n", abtTx);
-  if (!nfc_target_send_bytes (pnd, abtTx, sizeof(abtTx))) {
+  if (!nfc_target_send_bytes (pnd, abtTx, sizeof(abtTx), NULL)) {
     nfc_perror(pnd, "nfc_target_send_bytes");
     goto error;
   }

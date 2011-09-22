@@ -18,7 +18,7 @@
 #ifndef __LOG_H__
 #define __LOG_H__
 
-#ifdef HAS_LOG4C
+#if defined(HAS_LOG4C) && HAS_LOG4C
 
 #define LOGGING 1
 
@@ -67,6 +67,12 @@ void	 log_put (char *category, int priority, char *format, ...);
     size_t	 __szPos; \
     char	 __acBuf[1024]; \
     size_t	 __szBuf = 0; \
+    if ((int)szBytes < 0) { \
+      fprintf (stderr, "%s:%d: Attempt to print %d bytes!\n", __FILE__, __LINE__, (int)szBytes); \
+      log_put (LOG_CATEGORY, NFC_PRIORITY_FATAL, "%s:%d: Attempt to print %d bytes!\n", __FILE__, __LINE__, (int)szBytes); \
+      abort(); \
+      break; \
+    } \
     snprintf (__acBuf + __szBuf, sizeof(__acBuf) - __szBuf, "%s: ", pcTag); \
     __szBuf += strlen (pcTag) + 2; \
     for (__szPos=0; __szPos < (size_t)(szBytes); __szPos++) { \

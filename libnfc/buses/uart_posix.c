@@ -254,10 +254,14 @@ static const struct timeval tvTimeout = {
  * @return 0 on success, otherwise driver error code
  */
 int
-uart_receive (serial_port sp, byte_t * pbtRx, const size_t szRx, void * abort_p)
+uart_receive (serial_port sp, byte_t * pbtRx, const size_t szRx, void * abort_p, struct timeval *timeout)
 {
   int iAbortFd = abort_p ? *((int*)abort_p) : 0;
-  struct timeval tv = tvTimeout;
+  struct timeval tv;
+  if (timeout)
+      tv = *timeout;
+  else
+      tv = tvTimeout;
   struct timeval *ptv = &tv;
   int received_bytes_count = 0;
   int available_bytes_count = 0;
@@ -275,6 +279,7 @@ select:
       ptv = NULL;
     }
 
+    log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "timeout = %p", ptv);
     res = select (MAX(((serial_port_unix *) sp)->fd, iAbortFd) + 1, &rfds, NULL, NULL, ptv);
 
     if ((res < 0) && (EINTR == errno)) {
@@ -325,8 +330,9 @@ select:
  * @return 0 on success, otherwise a driver error is returned
  */
 int
-uart_send (serial_port sp, const byte_t * pbtTx, const size_t szTx)
+uart_send (serial_port sp, const byte_t * pbtTx, const size_t szTx, struct timeval *timeout)
 {
+  (void) timeout;
   LOG_HEX ("TX", pbtTx, szTx);
   if ((int) szTx == write (((serial_port_unix *) sp)->fd, pbtTx, szTx))
     return 0;

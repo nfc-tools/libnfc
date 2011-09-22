@@ -105,7 +105,7 @@ transmit_bytes (const byte_t * pbtTx, const size_t szTx)
     print_hex (pbtTx, szTx);
   }
   // Transmit the command bytes
-  if (!nfc_initiator_transceive_bytes (pnd, pbtTx, szTx, abtRx, &szRx))
+  if (!nfc_initiator_transceive_bytes (pnd, pbtTx, szTx, abtRx, &szRx, NULL))
     return false;
 
   // Show received answer

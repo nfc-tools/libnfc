@@ -28,6 +28,8 @@
 #ifndef _LIBNFC_H_
 #  define _LIBNFC_H_
 
+#  include <sys/time.h>
+
 #  include <stdint.h>
 #  include <stdbool.h>
 
@@ -75,15 +77,15 @@ extern  "C" {
   NFC_EXPORT bool nfc_initiator_poll_targets (nfc_device_t * pnd, const nfc_modulation_t * pnmTargetTypes, const size_t szTargetTypes, const byte_t btPollNr, const byte_t btPeriod, nfc_target_t * pntTargets, size_t * pszTargetFound);
   NFC_EXPORT bool nfc_initiator_select_dep_target (nfc_device_t * pnd, const nfc_dep_mode_t ndm, const nfc_baud_rate_t nbr, const nfc_dep_info_t * pndiInitiator, nfc_target_t * pnt);
   NFC_EXPORT bool nfc_initiator_deselect_target (nfc_device_t * pnd);
-  NFC_EXPORT bool nfc_initiator_transceive_bytes (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, byte_t * pbtRx, size_t * pszRx);
+  NFC_EXPORT bool nfc_initiator_transceive_bytes (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, byte_t * pbtRx, size_t * pszRx, struct timeval *timeout);
   NFC_EXPORT bool nfc_initiator_transceive_bits (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxBits, const byte_t * pbtTxPar, byte_t * pbtRx, size_t * pszRxBits, byte_t * pbtRxPar);
   NFC_EXPORT bool nfc_initiator_transceive_bytes_timed (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, byte_t * pbtRx, size_t * pszRx, uint32_t * cycles);
   NFC_EXPORT bool nfc_initiator_transceive_bits_timed (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxBits, const byte_t * pbtTxPar, byte_t * pbtRx, size_t * pszRxBits, byte_t * pbtRxPar, uint32_t * cycles);
 
 /* NFC target: act as tag (i.e. MIFARE Classic) or NFC target device. */
   NFC_EXPORT bool nfc_target_init (nfc_device_t * pnd, nfc_target_t * pnt, byte_t * pbtRx, size_t * pszRx);
-  NFC_EXPORT bool nfc_target_send_bytes (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx);
-  NFC_EXPORT bool nfc_target_receive_bytes (nfc_device_t * pnd, byte_t * pbtRx, size_t * pszRx);
+  NFC_EXPORT bool nfc_target_send_bytes (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, struct timeval *timout);
+  NFC_EXPORT bool nfc_target_receive_bytes (nfc_device_t * pnd, byte_t * pbtRx, size_t * pszRx, struct timeval *timout);
   NFC_EXPORT bool nfc_target_send_bits (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxBits, const byte_t * pbtTxPar);
   NFC_EXPORT bool nfc_target_receive_bits (nfc_device_t * pnd, byte_t * pbtRx, size_t * pszRxBits, byte_t * pbtRxPar);
 

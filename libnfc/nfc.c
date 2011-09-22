@@ -472,9 +472,9 @@ nfc_initiator_deselect_target (nfc_device_t * pnd)
  */
 bool
 nfc_initiator_transceive_bytes (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, byte_t * pbtRx,
-                                size_t * pszRx)
+                                size_t * pszRx, struct timeval *timeout)
 {
-  HAL (initiator_transceive_bytes, pnd, pbtTx, szTx, pbtRx, pszRx)
+  HAL (initiator_transceive_bytes, pnd, pbtTx, szTx, pbtRx, pszRx, timeout)
 }
 
 /**
@@ -679,9 +679,9 @@ nfc_abort_command (nfc_device_t * pnd)
  * (e.g. APDU responses) to the \e initiator.
  */
 bool
-nfc_target_send_bytes (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx)
+nfc_target_send_bytes (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, struct timeval *timeout)
 {
-  HAL (target_send_bytes, pnd, pbtTx, szTx);
+  HAL (target_send_bytes, pnd, pbtTx, szTx, timeout);
 }
 
 /**
@@ -694,9 +694,9 @@ nfc_target_send_bytes (nfc_device_t * pnd, const byte_t * pbtTx, const size_t sz
  * This function retrieves bytes frames (e.g. ADPU) sent by the \e initiator to the NFC device (configured as \e target).
  */
 bool
-nfc_target_receive_bytes (nfc_device_t * pnd, byte_t * pbtRx, size_t * pszRx)
+nfc_target_receive_bytes (nfc_device_t * pnd, byte_t * pbtRx, size_t * pszRx, struct timeval *timeout)
 {
-  HAL (target_receive_bytes, pnd, pbtRx, pszRx);
+  HAL (target_receive_bytes, pnd, pbtRx, pszRx, timeout);
 }
 
 /**

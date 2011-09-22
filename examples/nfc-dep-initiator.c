@@ -93,7 +93,7 @@ main (int argc, const char *argv[])
   print_nfc_target (nt, false);
 
   printf ("Sending: %s\n", abtTx);
-  if (!nfc_initiator_transceive_bytes (pnd, abtTx, sizeof(abtTx), abtRx, &szRx)) {
+  if (!nfc_initiator_transceive_bytes (pnd, abtTx, sizeof(abtTx), abtRx, &szRx, NULL)) {
     nfc_perror(pnd, "nfc_initiator_transceive_bytes");
     goto error;
   }

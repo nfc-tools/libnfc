@@ -1,4 +1,14 @@
+Sept 21, 2011 - 1.5.1 (unstable)
 -------------------------------
+
+Improvements:
+ - libnfc: add logging facility using log4c.
+
+Changes:
+ - libnfc: add 'struct timeval *timeout' parameter for pn53x_transceive(), pn53x_target_receive_bytes() and pn53x_target_send_bytes().
+
+
+
 Apr 29, 2011 - 1.5.0 (unstable)
 -------------------------------
 
@@ -64,7 +74,8 @@ Changes:
  - drivers/pn53x_usb: pn531_usb and pn533_usb drivers are now merged and use the pn53x IC version autodetection
  - buses/uart: use a smart way to determine available ports on POSIX systems (tested on Linux and FreeBSD)
 
---------------------
+
+
 Feb 21, 2011 - 1.4.2
 --------------------
 
@@ -85,6 +96,7 @@ Improvements:
  - pn53x-tamashell: add pause command & doc
  - documentation: add a README-Windows.txt file
  - documentation: add more pcsc-lite related instruction in README
+
 
 
 Feb 1, 2011 - 1.4.1
@@ -108,6 +120,7 @@ Improvements:
  - tests: add register access test
 
 Experimental: Windows platform support (Thanks to Glenn Ergeerts)
+
 
 
 Nov 17, 2010 - 1.4.0
@@ -161,6 +174,7 @@ Changes:
  - examples: nfc-sam renamed to pn53x-sam
  - examples: nfc-emulate renamed to nfc-emulate-uid
  - examples: change examples license for the sake of consistency: LGPL covers library, re-usable examples code is now under BSD license.
+
 
 
 Aug 31, 2010 - 1.3.9
@@ -268,7 +282,7 @@ Fixes:
  - libnfc: Fix tag re-selection with UID length > 4 bytes (like DESFire or Ultralight);
  - nfc-mfclassic: Fix authenticated only with KEYA;
 
-Improvments:
+Improvements:
  - build: Build on FreeBSD;
  - build: Add alternative build system (CMake);
  - build: Add new files usefull for desktop GNU/Linux users: some rules for udev to allow non-root access to PN53x USB devices;

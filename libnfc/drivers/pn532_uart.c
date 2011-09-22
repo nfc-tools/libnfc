@@ -215,14 +215,14 @@ pn532_uart_wakeup (nfc_device_t * pnd)
 {
   /* High Speed Unit (HSU) wake up consist to send 0x55 and wait a "long" delay for PN532 being wakeup. */
   const byte_t pn532_wakeup_preamble[] = { 0x55, 0x55, 0x00, 0x00, 0x00 };
-  int res = uart_send (DRIVER_DATA(pnd)->port, pn532_wakeup_preamble, sizeof (pn532_wakeup_preamble));
+  int res = uart_send (DRIVER_DATA(pnd)->port, pn532_wakeup_preamble, sizeof (pn532_wakeup_preamble), NULL);
   CHIP_DATA(pnd)->power_mode = NORMAL; // PN532 should now be awake
   return res;
 }
 
 #define PN532_BUFFER_LEN (PN53x_EXTENDED_FRAME__DATA_MAX_LEN + PN53x_EXTENDED_FRAME__OVERHEAD)
 bool
-pn532_uart_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szData)
+pn532_uart_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szData, struct timeval *timeout)
 {
   // Before sending anything, we need to discard from any junk bytes
   uart_flush_input (DRIVER_DATA(pnd)->port);
@@ -258,7 +258,7 @@ pn532_uart_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szData
     return false;
   }
 
-  int res = uart_send (DRIVER_DATA(pnd)->port, abtFrame, szFrame);
+  int res = uart_send (DRIVER_DATA(pnd)->port, abtFrame, szFrame, timeout);
   if (res != 0) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Unable to transmit data. (TX)");
     pnd->iLastError = res;
@@ -266,7 +266,7 @@ pn532_uart_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szData
   }
 
   byte_t abtRxBuf[6];
-  res = uart_receive (DRIVER_DATA(pnd)->port, abtRxBuf, 6, 0);
+  res = uart_receive (DRIVER_DATA(pnd)->port, abtRxBuf, 6, 0, timeout);
   if (res != 0) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Unable to read ACK");
     pnd->iLastError = res;
@@ -282,7 +282,7 @@ pn532_uart_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szData
 }
 
 int
-pn532_uart_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen)
+pn532_uart_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen, struct timeval *timeout)
 {
   byte_t  abtRxBuf[5];
   size_t len;
@@ -304,7 +304,7 @@ pn532_uart_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen
     break;
   }
 
-  pnd->iLastError = uart_receive (DRIVER_DATA(pnd)->port, abtRxBuf, 5, abort_p);
+  pnd->iLastError = uart_receive (DRIVER_DATA(pnd)->port, abtRxBuf, 5, abort_p, timeout);
 
   if (abort_p && (EOPABORT == pnd->iLastError)) {
     pn532_uart_ack (pnd);
@@ -325,13 +325,13 @@ pn532_uart_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen
 
   if ((0x01 == abtRxBuf[3]) && (0xff == abtRxBuf[4])) {
     // Error frame
-    uart_receive (DRIVER_DATA(pnd)->port, abtRxBuf, 3, 0);
+    uart_receive (DRIVER_DATA(pnd)->port, abtRxBuf, 3, 0, timeout);
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Application level error detected");
     pnd->iLastError = EFRAISERRFRAME;
     return -1;
   } else if ((0xff == abtRxBuf[3]) && (0xff == abtRxBuf[4])) {
     // Extended frame
-    pnd->iLastError = uart_receive (DRIVER_DATA(pnd)->port, abtRxBuf, 3, 0);
+    pnd->iLastError = uart_receive (DRIVER_DATA(pnd)->port, abtRxBuf, 3, 0, timeout);
     if (pnd->iLastError) return -1;
 
     // (abtRxBuf[0] << 8) + abtRxBuf[1] (LEN) include TFI + (CC+1)
@@ -362,7 +362,7 @@ pn532_uart_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen
   }
 
   // TFI + PD0 (CC+1)
-  pnd->iLastError = uart_receive (DRIVER_DATA(pnd)->port, abtRxBuf, 2, 0);
+  pnd->iLastError = uart_receive (DRIVER_DATA(pnd)->port, abtRxBuf, 2, 0, timeout);
   if (pnd->iLastError != 0) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Unable to receive data. (RX)");
     return -1;
@@ -381,14 +381,14 @@ pn532_uart_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen
   }
 
   if (len) {
-    pnd->iLastError = uart_receive (DRIVER_DATA(pnd)->port, pbtData, len, 0);
+    pnd->iLastError = uart_receive (DRIVER_DATA(pnd)->port, pbtData, len, 0, timeout);
     if (pnd->iLastError != 0) {
       log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Unable to receive data. (RX)");
       return -1;
     }
   }
 
-  pnd->iLastError = uart_receive (DRIVER_DATA(pnd)->port, abtRxBuf, 2, 0);
+  pnd->iLastError = uart_receive (DRIVER_DATA(pnd)->port, abtRxBuf, 2, 0, timeout);
   if (pnd->iLastError != 0) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Unable to receive data. (RX)");
     return -1;
@@ -423,10 +423,10 @@ pn532_uart_ack (nfc_device_t * pnd)
       return -1;
     }
   }
-  return (0 == uart_send (DRIVER_DATA(pnd)->port, pn53x_ack_frame, sizeof (pn53x_ack_frame))) ? 0 : -1;
+  return (0 == uart_send (DRIVER_DATA(pnd)->port, pn53x_ack_frame, sizeof (pn53x_ack_frame),  NULL)) ? 0 : -1;
 }
 
-bool 
+bool
 pn532_uart_abort_command (nfc_device_t * pnd)
 {
   if (pnd) {

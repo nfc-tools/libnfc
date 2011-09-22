@@ -89,40 +89,34 @@ bool pn53x_usb_get_usb_device_name (struct usb_device *dev, usb_dev_handle *udev
 bool pn53x_usb_init (nfc_device_t *pnd);
 
 int
-pn53x_usb_bulk_read (struct pn53x_usb_data *data, byte_t abtRx[], const size_t szRx)
+pn53x_usb_bulk_read (struct pn53x_usb_data *data, byte_t abtRx[], const size_t szRx, struct timeval *timeout)
 {
-  int res = usb_bulk_read (data->pudh, data->uiEndPointIn, (char *) abtRx, szRx, USB_INFINITE_TIMEOUT);
-  if (res > 0) {
-    LOG_HEX ("RX", abtRx, res);
-  } else if (res < 0) {
-    log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to read from USB (%s", _usb_strerror (res));
-  }
-  return res;
-}
-int
+  int timeout_ms = USB_INFINITE_TIMEOUT;
+  if (timeout)
+      timeout_ms = timeout->tv_sec * 1000 + timeout->tv_usec / 1000;
 
-pn53x_usb_bulk_read_ex (struct pn53x_usb_data *data, byte_t abtRx[], const size_t szRx, int timeout)
-{
-  int res = usb_bulk_read (data->pudh, data->uiEndPointIn, (char *) abtRx, szRx, timeout);
+  int res = usb_bulk_read (data->pudh, data->uiEndPointIn, (char *) abtRx, szRx, timeout_ms);
   if (res > 0) {
     LOG_HEX ("RX", abtRx, res);
   } else if (res < 0) {
-    if (-res != USB_TIMEDOUT) {
-      log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to read from USB (%s)", _usb_strerror (res));
-    }
+    log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to read from USB (%s)", _usb_strerror (res));
   }
   return res;
 }
 
 int
-pn53x_usb_bulk_write (struct pn53x_usb_data *data, byte_t abtTx[], const size_t szTx)
+pn53x_usb_bulk_write (struct pn53x_usb_data *data, byte_t abtTx[], const size_t szTx, struct timeval *timeout)
 {
   LOG_HEX ("TX", abtTx, szTx);
-  int res = usb_bulk_write (data->pudh, data->uiEndPointOut, (char *) abtTx, szTx, USB_INFINITE_TIMEOUT);
+  int timeout_ms = USB_INFINITE_TIMEOUT;
+  if (timeout)
+      timeout_ms = timeout->tv_sec * 1000 + timeout->tv_usec / 1000;
+
+  int res = usb_bulk_write (data->pudh, data->uiEndPointOut, (char *) abtTx, szTx, timeout_ms);
   if (res > 0) {
     // HACK This little hack is a well know problem of USB, see http://www.libusb.org/ticket/6 for more details
     if ((res % data->uiMaxPacketSize) == 0) {
-      usb_bulk_write (data->pudh, data->uiEndPointOut, "\0", 0, USB_INFINITE_TIMEOUT);
+      usb_bulk_write (data->pudh, data->uiEndPointOut, "\0", 0, timeout_ms);
     }
   } else {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to write to USB (%s)", _usb_strerror (res));
@@ -154,7 +148,7 @@ pn53x_usb_get_device_model (uint16_t vendor_id, uint16_t product_id)
        (product_id == pn53x_usb_supported_devices[n].product_id))
       return pn53x_usb_supported_devices[n].model;
   }
-  
+
   return UNKNOWN;
 }
 
@@ -414,14 +408,14 @@ pn53x_usb_disconnect (nfc_device_t * pnd)
 #define PN53X_USB_BUFFER_LEN (PN53x_EXTENDED_FRAME__DATA_MAX_LEN + PN53x_EXTENDED_FRAME__OVERHEAD)
 
 bool
-pn53x_usb_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szData)
+pn53x_usb_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szData, struct timeval *timeout)
 {
   byte_t  abtFrame[PN53X_USB_BUFFER_LEN] = { 0x00, 0x00, 0xff };  // Every packet must start with "00 00 ff"
   size_t szFrame = 0;
 
   pn53x_build_frame (abtFrame, &szFrame, pbtData, szData);
 
-  int res = pn53x_usb_bulk_write (DRIVER_DATA (pnd), abtFrame, szFrame);
+  int res = pn53x_usb_bulk_write (DRIVER_DATA (pnd), abtFrame, szFrame, timeout);
 
   if (res < 0) {
     pnd->iLastError = ECOMIO;
@@ -429,7 +423,7 @@ pn53x_usb_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szData)
   }
 
   byte_t abtRxBuf[PN53X_USB_BUFFER_LEN];
-  res = pn53x_usb_bulk_read (DRIVER_DATA (pnd), abtRxBuf, sizeof (abtRxBuf));
+  res = pn53x_usb_bulk_read (DRIVER_DATA (pnd), abtRxBuf, sizeof (abtRxBuf), timeout);
   if (res < 0) {
     pnd->iLastError = ECOMIO;
     // try to interrupt current device state
@@ -446,7 +440,7 @@ pn53x_usb_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szData)
     // response packet. With this hack, the nextly executed function (ie.
     // pn53x_usb_receive()) will be able to retreive the correct response
     // packet.
-    int res = pn53x_usb_bulk_write (DRIVER_DATA (pnd), (byte_t *)pn53x_nack_frame, sizeof(pn53x_nack_frame));
+    int res = pn53x_usb_bulk_write (DRIVER_DATA (pnd), (byte_t *)pn53x_nack_frame, sizeof(pn53x_nack_frame), timeout);
     if (res < 0) {
       pnd->iLastError = ECOMIO;
       // try to interrupt current device state
@@ -459,7 +453,7 @@ pn53x_usb_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szData)
 }
 
 int
-pn53x_usb_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen)
+pn53x_usb_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen, struct timeval *timeout)
 {
   size_t len;
   off_t offset = 0;
@@ -467,8 +461,11 @@ pn53x_usb_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen)
 
   switch (CHIP_DATA (pnd)->ui8LastCommand) {
   case InDataExchange:
-  case InJumpForDEP:
   case TgGetData:
+    if (!timeout)
+      delayed_reply = true;
+    break;
+  case InJumpForDEP:
   case TgInitAsTarget:
     delayed_reply = true;
     break;
@@ -479,8 +476,16 @@ pn53x_usb_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen)
   byte_t  abtRxBuf[PN53X_USB_BUFFER_LEN];
   int res;
 
+  /*
+   * If no timeout is specified but the command is blocking, force a 250ms
+   * timeout to allow breaking the loop if the user wants to stop it.
+   */
+  struct timeval fixed_timeout = {
+      .tv_sec = 0,
+      .tv_usec = 250000,
+  };
 read:
-  res = pn53x_usb_bulk_read_ex (DRIVER_DATA (pnd), abtRxBuf, sizeof (abtRxBuf), delayed_reply ? 250 : USB_INFINITE_TIMEOUT);
+  res = pn53x_usb_bulk_read (DRIVER_DATA (pnd), abtRxBuf, sizeof (abtRxBuf), (delayed_reply && !timeout) ? &fixed_timeout : timeout);
 
   if (delayed_reply && (res == -USB_TIMEDOUT)) {
     if (DRIVER_DATA (pnd)->abort_flag) {
@@ -590,7 +595,7 @@ read:
 int
 pn53x_usb_ack (nfc_device_t * pnd)
 {
-  return pn53x_usb_bulk_write (DRIVER_DATA (pnd), (byte_t *) pn53x_ack_frame, sizeof (pn53x_ack_frame));
+  return pn53x_usb_bulk_write (DRIVER_DATA (pnd), (byte_t *) pn53x_ack_frame, sizeof (pn53x_ack_frame), NULL);
 }
 
 bool
@@ -599,13 +604,13 @@ pn53x_usb_init (nfc_device_t *pnd)
   // Sometimes PN53x USB doesn't reply ACK one the first frame, so we need to send a dummy one...
   //pn53x_check_communication (pnd); // Sony RC-S360 doesn't support this command for now so let's use a get_firmware_version instead:
   const byte_t abtCmd[] = { GetFirmwareVersion };
-  pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, NULL);
+  pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, NULL, NULL);
   // ...and we don't care about error
   pnd->iLastError = 0;
   if (SONY_RCS360 == DRIVER_DATA (pnd)->model) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "SONY RC-S360 initialization.");
     const byte_t abtCmd2[] = { 0x18, 0x01 };
-    pn53x_transceive (pnd, abtCmd2, sizeof (abtCmd2), NULL, NULL);
+    pn53x_transceive (pnd, abtCmd2, sizeof (abtCmd2), NULL, NULL, NULL);
     pn53x_usb_ack (pnd);
   }
 
