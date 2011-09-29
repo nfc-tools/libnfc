@@ -831,7 +831,11 @@ pn53x_check_communication (nfc_device_t *pnd)
   byte_t abtRx[sizeof(abtExpectedRx)];
   size_t szRx = sizeof (abtRx);
 
-  if (!pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), abtRx, &szRx, NULL))
+  struct timeval timeout;
+  timeout.tv_sec = 1;
+  timeout.tv_usec = 0;
+
+  if (!pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), abtRx, &szRx, &timeout))
     return false;
 
   return ((sizeof(abtExpectedRx) == szRx) && (0 == memcmp (abtRx, abtExpectedRx, sizeof(abtExpectedRx))));
@@ -1935,7 +1939,7 @@ pn53x_SetParameters (nfc_device_t * pnd, const uint8_t ui8Value)
 }
 
 bool
-pn53x_SAMConfiguration (nfc_device_t * pnd, const pn532_sam_mode ui8Mode)
+pn53x_SAMConfiguration (nfc_device_t * pnd, const pn532_sam_mode ui8Mode, struct timeval *timeout)
 {
   byte_t  abtCmd[] = { SAMConfiguration, ui8Mode, 0x00, 0x00 };
   size_t szCmd = sizeof(abtCmd);
@@ -1960,7 +1964,7 @@ pn53x_SAMConfiguration (nfc_device_t * pnd, const pn532_sam_mode ui8Mode)
       pnd->iLastError = EINVALARG;
       return false;
   }
-  return (pn53x_transceive (pnd, abtCmd, szCmd, NULL, NULL, NULL));
+  return (pn53x_transceive (pnd, abtCmd, szCmd, NULL, NULL, timeout));
 }
 
 bool

@@ -243,11 +243,6 @@ uart_close (const serial_port sp)
   uart_close_ext (sp, true);
 }
 
-static const struct timeval tvTimeout = {
-  .tv_sec = 1,
-  .tv_usec = 0
-};
-
 /**
  * @brief Receive data from UART and copy data to \a pbtRx
  *
@@ -257,12 +252,6 @@ int
 uart_receive (serial_port sp, byte_t * pbtRx, const size_t szRx, void * abort_p, struct timeval *timeout)
 {
   int iAbortFd = abort_p ? *((int*)abort_p) : 0;
-  struct timeval tv;
-  if (timeout)
-      tv = *timeout;
-  else
-      tv = tvTimeout;
-  struct timeval *ptv = &tv;
   int received_bytes_count = 0;
   int available_bytes_count = 0;
   const int expected_bytes_count = (int)szRx;
@@ -276,11 +265,9 @@ select:
 
     if (iAbortFd) {
       FD_SET (iAbortFd, &rfds);
-      ptv = NULL;
     }
 
-    log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "timeout = %p", ptv);
-    res = select (MAX(((serial_port_unix *) sp)->fd, iAbortFd) + 1, &rfds, NULL, NULL, ptv);
+    res = select (MAX(((serial_port_unix *) sp)->fd, iAbortFd) + 1, &rfds, NULL, NULL, timeout);
 
     if ((res < 0) && (EINTR == errno)) {
       // The system call was interupted by a signal and a signal handler was

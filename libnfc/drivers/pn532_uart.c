@@ -105,6 +105,13 @@ pn532_uart_probe (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * ps
       // This device starts in LowVBat power mode
       CHIP_DATA (pnd)->power_mode = LOWVBAT;
 
+#ifndef WIN32
+      // pipe-based abort mecanism
+      pipe (DRIVER_DATA (pnd)->iAbortFds);
+#else
+      DRIVER_DATA (pnd)->abort_flag = false;
+#endif
+
       // Check communication using "Diagnose" command, with "Communication test" (0x00)
       bool res = pn53x_check_communication (pnd);
       if(!res) {
@@ -176,19 +183,19 @@ pn532_uart_connect (const nfc_device_desc_t * pndd)
   CHIP_DATA(pnd)->timer_correction = 48;
   pnd->driver = &pn532_uart_driver;
 
-  // Check communication using "Diagnose" command, with "Communication test" (0x00)
-  if (!pn53x_check_communication (pnd)) {
-    nfc_perror (pnd, "pn53x_check_communication");
-    pn532_uart_disconnect(pnd);
-    return NULL;
-  }
-
 #ifndef WIN32
   // pipe-based abort mecanism
   pipe (DRIVER_DATA (pnd)->iAbortFds);
 #else
   DRIVER_DATA (pnd)->abort_flag = false;
 #endif
+
+  // Check communication using "Diagnose" command, with "Communication test" (0x00)
+  if (!pn53x_check_communication (pnd)) {
+    nfc_perror (pnd, "pn53x_check_communication");
+    pn532_uart_disconnect(pnd);
+    return NULL;
+  }
 
   pn53x_init(pnd);
   return pnd;
@@ -234,7 +241,10 @@ pn532_uart_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szData
         return false;
       }
       // According to PN532 application note, C106 appendix: to go out Low Vbat mode and enter in normal mode we need to send a SAMConfiguration command
-      if (!pn53x_SAMConfiguration (pnd, 0x01)) {
+      struct timeval tv;
+      tv.tv_sec = 1;
+      tv.tv_usec = 0;
+      if (!pn53x_SAMConfiguration (pnd, 0x01, &tv)) {
         return false;
       }
     }
@@ -288,21 +298,11 @@ pn532_uart_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen
   size_t len;
   void * abort_p = NULL;
 
-  switch (CHIP_DATA (pnd)->ui8LastCommand) {
-  case InAutoPoll:
-  case InDataExchange:
-  case InJumpForDEP:
-  case TgGetData:
-  case TgInitAsTarget:
 #ifndef WIN32
-    abort_p = &(DRIVER_DATA (pnd)->iAbortFds[1]);
+  abort_p = &(DRIVER_DATA (pnd)->iAbortFds[1]);
 #else
-    abort_p = (void*)&(DRIVER_DATA (pnd)->abort_flag);
+  abort_p = (void*)&(DRIVER_DATA (pnd)->abort_flag);
 #endif
-    break;
-  default:
-    break;
-  }
 
   pnd->iLastError = uart_receive (DRIVER_DATA(pnd)->port, abtRxBuf, 5, abort_p, timeout);
 

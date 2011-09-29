@@ -313,7 +313,7 @@ const char *pn53x_strerror (const nfc_device_t * pnd);
 
 // C wrappers for PN53x commands
 bool    pn53x_SetParameters (nfc_device_t * pnd, const uint8_t ui8Value);
-bool    pn53x_SAMConfiguration (nfc_device_t * pnd, const pn532_sam_mode mode);
+bool    pn53x_SAMConfiguration (nfc_device_t * pnd, const pn532_sam_mode mode, struct timeval *timeout);
 bool    pn53x_PowerDown (nfc_device_t * pnd);
 bool    pn53x_InListPassiveTarget (nfc_device_t * pnd, const pn53x_modulation_t pmInitModulation,
                                    const byte_t szMaxTargets, const byte_t * pbtInitiatorData,

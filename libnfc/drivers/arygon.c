@@ -124,6 +124,13 @@ arygon_probe (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * pszDev
       // Alloc and init chip's data
       pn53x_data_new (pnd, &arygon_tama_io);
 
+#ifndef WIN32
+      // pipe-based abort mecanism
+      pipe (DRIVER_DATA (pnd)->iAbortFds);
+#else
+      DRIVER_DATA (pnd)->abort_flag = false;
+#endif
+
       bool res = arygon_reset_tama (pnd);
       pn53x_data_free (pnd);
       nfc_device_free (pnd);
@@ -193,18 +200,18 @@ arygon_connect (const nfc_device_desc_t * pndd)
   CHIP_DATA (pnd)->timer_correction = 46;
   pnd->driver = &arygon_driver;
 
-  // Check communication using "Reset TAMA" command
-  if (!arygon_reset_tama(pnd)) {
-    nfc_device_free (pnd);
-    return NULL;
-  }
-
 #ifndef WIN32
   // pipe-based abort mecanism
   pipe (DRIVER_DATA (pnd)->iAbortFds);
 #else
   DRIVER_DATA (pnd)->abort_flag = false;
 #endif
+
+  // Check communication using "Reset TAMA" command
+  if (!arygon_reset_tama(pnd)) {
+    nfc_device_free (pnd);
+    return NULL;
+  }
 
   char arygon_firmware_version[10];
   arygon_firmware (pnd, arygon_firmware_version);
@@ -304,21 +311,11 @@ arygon_tama_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLe
   size_t len;
   void * abort_p = NULL;
 
-  switch (CHIP_DATA (pnd)->ui8LastCommand) {
-  case InAutoPoll:
-  case InDataExchange:
-  case InJumpForDEP:
-  case TgGetData:
-  case TgInitAsTarget:
 #ifndef WIN32
-    abort_p = &(DRIVER_DATA (pnd)->iAbortFds[1]);
+  abort_p = &(DRIVER_DATA (pnd)->iAbortFds[1]);
 #else
-    abort_p = &(DRIVER_DATA (pnd)->abort_flag);
+  abort_p = &(DRIVER_DATA (pnd)->abort_flag);
 #endif
-    break;
-  default:
-    break;
-  }
 
   pnd->iLastError = uart_receive (DRIVER_DATA (pnd)->port, abtRxBuf, 5, abort_p, timeout);
 
@@ -461,11 +458,15 @@ arygon_reset_tama (nfc_device_t * pnd)
   size_t szRx = sizeof(abtRx);
   int res;
 
-  uart_send (DRIVER_DATA (pnd)->port, arygon_reset_tama_cmd, sizeof (arygon_reset_tama_cmd), NULL);
+  struct timeval tv;
+  tv.tv_sec = 1;
+  tv.tv_usec = 0;
+
+  uart_send (DRIVER_DATA (pnd)->port, arygon_reset_tama_cmd, sizeof (arygon_reset_tama_cmd), &tv);
 
   // Two reply are possible from ARYGON device: arygon_error_none (ie. in case the byte is well-sent)
   // or arygon_error_unknown_mode (ie. in case of the first byte was bad-transmitted)
-  res = uart_receive (DRIVER_DATA (pnd)->port, abtRx, szRx, 0, NULL);
+  res = uart_receive (DRIVER_DATA (pnd)->port, abtRx, szRx, 0, &tv);
   if (res != 0) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "No reply to 'reset TAMA' command.");
     return false;

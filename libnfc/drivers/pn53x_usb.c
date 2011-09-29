@@ -489,18 +489,6 @@ pn53x_usb_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen,
 {
   size_t len;
   off_t offset = 0;
-  bool delayed_reply = false;
-
-  switch (CHIP_DATA (pnd)->ui8LastCommand) {
-  case InDataExchange:
-  case TgGetData:
-  case InJumpForDEP:
-  case TgInitAsTarget:
-    delayed_reply = true;
-    break;
-  default:
-    break;
-  }
 
   byte_t  abtRxBuf[PN53X_USB_BUFFER_LEN];
   int res;
@@ -537,7 +525,7 @@ read:
   }
   res = pn53x_usb_bulk_read (DRIVER_DATA (pnd), abtRxBuf, sizeof (abtRxBuf), &usb_timeout);
 
-  if (delayed_reply && (res == -USB_TIMEDOUT)) {
+  if (res == -USB_TIMEDOUT) {
     if (DRIVER_DATA (pnd)->abort_flag) {
       DRIVER_DATA (pnd)->abort_flag = false;
       pn53x_usb_ack (pnd);
