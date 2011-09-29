@@ -458,8 +458,15 @@ nfc_initiator_deselect_target (nfc_device_t * pnd)
  * @brief Send data to target then retrieve data from target
  * @return Returns \c true if action was successfully performed; otherwise returns \c false.
  *
+ * @param pbtTx contains a byte array of the frame that needs to be transmitted.
+ * @param szTx contains the length in bytes.
+ * @param timeout timeval struct pointer (NULL means infinite)
+ * 
  * The NFC device (configured as initiator) will transmit the supplied bytes (\a pbtTx) to the target.
  * It waits for the response and stores the received bytes in the \a pbtRx byte array.
+ *
+ * If timeout is not a null pointer, it specifies the maximum interval to wait for the function to be executed.
+ * If timeout is a null pointer, the function blocks indefinitely (until an error is raised or function is completed).
  *
  * If \a NDO_EASY_FRAMING option is disabled the frames will sent and received in raw mode: \e PN53x will not handle input neither output data.
  *
@@ -674,9 +681,13 @@ nfc_abort_command (nfc_device_t * pnd)
  * @param pnd \a nfc_device_t struct pointer that represent currently used device
  * @param pbtTx pointer to Tx buffer
  * @param szTx size of Tx buffer
+ * @param timeout timeval struct pointer (NULL means infinite)
  *
  * This function make the NFC device (configured as \e target) send byte frames
  * (e.g. APDU responses) to the \e initiator.
+ *
+ * If timeout is not a null pointer, it specifies the maximum interval to wait for the function to be executed.
+ * If timeout is a null pointer, the function blocks indefinitely (until an error is raised or function is completed).
  */
 bool
 nfc_target_send_bytes (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, struct timeval *timeout)
@@ -687,11 +698,16 @@ nfc_target_send_bytes (nfc_device_t * pnd, const byte_t * pbtTx, const size_t sz
 /**
  * @brief Receive bytes and APDU frames
  * @return Returns \c true if action was successfully performed; otherwise returns \c false.
+ * 
  * @param pnd \a nfc_device_t struct pointer that represent currently used device
  * @param[out] pbtRx pointer to Rx buffer
  * @param[out] pszRx received byte count
+ * @param timeout timeval struct pointer (NULL means infinite)
  *
  * This function retrieves bytes frames (e.g. ADPU) sent by the \e initiator to the NFC device (configured as \e target).
+ *
+ * If timeout is not a null pointer, it specifies the maximum interval to wait for the function to be executed.
+ * If timeout is a null pointer, the function blocks indefinitely (until an error is raised or function is completed).
  */
 bool
 nfc_target_receive_bytes (nfc_device_t * pnd, byte_t * pbtRx, size_t * pszRx, struct timeval *timeout)
