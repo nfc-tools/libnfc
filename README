@@ -96,6 +96,9 @@ Troubleshooting
 
 Touchatag/ACR122:
 -----------------
+If your Touchatag or ACR122 device fails being detected by libnfc, make sure
+that PCSC-lite daemon (pcscd) is installed and is running.
+
 If your Touchatag or ACR122 device fails being detected by PCSC-lite daemon
 (pcsc_scan doesn't see anything) then try removing the bogus firmware detection
 of libccid: edit libccid_Info.plist configuration file (usually
