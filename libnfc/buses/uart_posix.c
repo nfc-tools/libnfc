@@ -267,6 +267,16 @@ select:
       FD_SET (iAbortFd, &rfds);
     }
 
+    /*
+     * Some implementations (e.g. Linux) of select(2) will update *timeout.
+     * Make a copy so that it will be updated on these systems,
+     */
+    struct timeval fixed_timeout;
+    if (timeout) {
+	fixed_timeout = *timeout;
+	timeout = &fixed_timeout;
+    }
+
     res = select (MAX(((serial_port_unix *) sp)->fd, iAbortFd) + 1, &rfds, NULL, NULL, timeout);
 
     if ((res < 0) && (EINTR == errno)) {
