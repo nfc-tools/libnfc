@@ -150,7 +150,7 @@ acr122_probe (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * pszDev
 
   // Test if context succeeded
   if (!(pscc = acr122_get_scardcontext ())) {
-    log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "%s", "PCSC context not found");
+    log_put (LOG_CATEGORY, NFC_PRIORITY_WARN, "%s", "PCSC context not found (make sure PCSC daemon is running).");
     return false;
   }
   // Retrieve the string array of all available pcsc readers
