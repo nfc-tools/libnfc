@@ -119,19 +119,6 @@ uart_set_speed (serial_port sp, const uint32_t uiPortSpeed)
   };
   spw = (serial_port_windows *) sp;
 
-  // Set timeouts
-  int iTimeout = 200;
-  spw->ct.ReadIntervalTimeout = 2;
-  spw->ct.ReadTotalTimeoutMultiplier = 0;
-  spw->ct.ReadTotalTimeoutConstant = iTimeout;
-  spw->ct.WriteTotalTimeoutMultiplier = iTimeout;
-  spw->ct.WriteTotalTimeoutConstant = 0;
-
-  if (!SetCommTimeouts (spw->hPort, &spw->ct)) {
-    log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to apply new timeout settings.");
-    return;
-  }
-
   // Set baud rate
   spw->dcb.BaudRate = uiPortSpeed;
   if (!SetCommState (spw->hPort, &spw->dcb)) {
@@ -152,13 +139,29 @@ uart_get_speed (const serial_port sp)
 }
 
 int
-uart_receive (serial_port sp, byte_t * pbtRx, const size_t szRx, void * abort_p)
+uart_receive (serial_port sp, byte_t * pbtRx, const size_t szRx, void * abort_p, struct timeval *timeout)
 {
   DWORD dwBytesToGet = (DWORD)szRx;
   DWORD dwBytesReceived = 0;
   DWORD dwTotalBytesReceived = 0;
   BOOL res;
 
+  // XXX Put this part into uart_win32_timeouts () ?
+  COMMTIMEOUTS timeouts;
+  timeouts.ReadIntervalTimeout = 0;
+  timeouts.ReadTotalTimeoutMultiplier = 0;
+  timeouts.ReadTotalTimeoutConstant = timeout ? ((timeout.tv_sec * 1000) + (timeout.tv_usec / 1000)) : 0;
+  timeouts.WriteTotalTimeoutMultiplier = 0;
+  timeouts.WriteTotalTimeoutConstant = timeout ? ((timeout.tv_sec * 1000) + (timeout.tv_usec / 1000)) : 0;
+
+  if (!SetCommTimeouts (((serial_port_windows *) sp)->hPort, &timeouts)) {
+    log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to apply new timeout settings.");
+    return ECOMIO;
+  }
+
+  // TODO Enhance the reception method
+  // - According to MSDN, it could be better to implement nfc_abort_command() mecanism using Cancello()
+  // - ECOMTIMEOUT should be return is case of timeout (as of uart_posix implementation)
   volatile bool * abort_flag_p = (volatile bool *)abort_p;
   do {
     res = ReadFile (((serial_port_windows *) sp)->hPort, pbtRx + dwTotalBytesReceived,
@@ -168,7 +171,8 @@ uart_receive (serial_port sp, byte_t * pbtRx, const size_t szRx, void * abort_p)
     dwTotalBytesReceived += dwBytesReceived;
 
     if (!res) {
-      log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "ReadFile error");
+      DWORD err = GetLastError();
+      log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "ReadFile error: %u", err);
       return ECOMIO;
     }
     if (((DWORD)szRx) > dwTotalBytesReceived) {
@@ -184,9 +188,22 @@ uart_receive (serial_port sp, byte_t * pbtRx, const size_t szRx, void * abort_p)
 }
 
 int
-uart_send (serial_port sp, const byte_t * pbtTx, const size_t szTx)
+uart_send (serial_port sp, const byte_t * pbtTx, const size_t szTx, struct timeval *timeout)
 {
   DWORD   dwTxLen = 0;
+
+  COMMTIMEOUTS timeouts;
+  timeouts.ReadIntervalTimeout = 0;
+  timeouts.ReadTotalTimeoutMultiplier = 0;
+  timeouts.ReadTotalTimeoutConstant = timeout ? ((timeout.tv_sec * 1000) + (timeout.tv_usec / 1000)) : 0;
+  timeouts.WriteTotalTimeoutMultiplier = 0;
+  timeouts.WriteTotalTimeoutConstant = timeout ? ((timeout.tv_sec * 1000) + (timeout.tv_usec / 1000)) : 0;
+
+  if (!SetCommTimeouts (((serial_port_windows *) sp)->hPort, &timeouts)) {
+    log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to apply new timeout settings.");
+    return ECOMIO;
+  }
+
   if (!WriteFile (((serial_port_windows *) sp)->hPort, pbtTx, szTx, &dwTxLen, NULL)) {
     return ECOMIO;
   }
