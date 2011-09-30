@@ -49,7 +49,7 @@
 
 #include <nfc/nfc.h>
 
-#include "nfc-utils.h"
+#include "utils/nfc-utils.h"
 
 #define MAX_FRAME_LEN (264)
 #define SAK_ISO14443_4_COMPLIANT 0x20

@@ -1,16 +1,25 @@
-SET(EXAMPLES-SOURCES nfc-anticol nfc-dep-initiator nfc-dep-target nfc-emulate-tag nfc-emulate-uid nfc-poll nfc-relay pn53x-diagnose pn53x-sam pn53x-tamashell)
+SET(UTILS-SOURCES nfc-emulate-forum-tag2 nfc-emulate-forum-tag4 nfc-list nfc-relay-picc nfc-mfclassic nfc-mfultralight)
 
-INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/../libnfc)
+# XXX: Examples should not use private API!
+#INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/../libnfc)
 
 INCLUDE_DIRECTORIES(${LIBUSB_INCLUDE_DIRS} ${PCSC_INCLUDE_DIRS})
 LINK_DIRECTORIES(${LIBUSB_LIBRARY_DIRS} ${PCSC_LIBRARY_DIRS})
 
+ADD_LIBRARY(nfcutils STATIC 
+  nfc-utils.c
+)
+
 # Examples
-FOREACH(source ${EXAMPLES-SOURCES})
-  ADD_EXECUTABLE(${source} ${source}.c)
+FOREACH(source ${UTILS-SOURCES})
+  IF((${source} MATCHES "nfc-mfultralight") OR (${source} MATCHES "nfc-mfclassic"))
+    ADD_EXECUTABLE(${source} ${source}.c mifare)
+  ELSE()
+    ADD_EXECUTABLE(${source} ${source}.c)
+  ENDIF((${source} MATCHES "nfc-mfultralight") OR (${source} MATCHES "nfc-mfclassic"))
   TARGET_LINK_LIBRARIES(${source} nfc)
   TARGET_LINK_LIBRARIES(${source} nfcutils)
-  INSTALL(TARGETS ${source} RUNTIME DESTINATION bin COMPONENT examples)
+  INSTALL(TARGETS ${source} RUNTIME DESTINATION bin COMPONENT utils)
 ENDFOREACH(source)
 
 #install required libraries

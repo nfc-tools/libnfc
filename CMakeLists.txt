@@ -90,6 +90,7 @@ ENDIF(NOT WIN32)
 
 ADD_SUBDIRECTORY(libnfc)
 ADD_SUBDIRECTORY(include)
+ADD_SUBDIRECTORY(utils)
 ADD_SUBDIRECTORY(examples)
 
 # Binary Package

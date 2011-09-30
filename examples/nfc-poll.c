@@ -47,7 +47,7 @@
 #include <nfc/nfc.h>
 #include <nfc/nfc-types.h>
 
-#include "nfc-utils.h"
+#include "utils/nfc-utils.h"
 
 #define MAX_DEVICE_COUNT 16
 

@@ -44,8 +44,8 @@
 
 #include <nfc/nfc.h>
 
-#include "nfc-utils.h"
-#include "chips/pn53x.h"
+#include "utils/nfc-utils.h"
+#include "libnfc/chips/pn53x.h"
 
 #define MAX_DEVICE_COUNT 16
 

@@ -164,11 +164,11 @@ CFLAGS="$CFLAGS -Du_int8_t=uint8_t -Du_int16_t=uint16_t"
 AC_CONFIG_FILES([
 		Doxyfile
 		Makefile
+		cmake/Makefile
+		cmake/modules/Makefile
 		contrib/Makefile
 		contrib/win32/Makefile
 		contrib/win32/sys/Makefile
-		cmake/Makefile
-		cmake/modules/Makefile
 		examples/Makefile
 		examples/pn53x-tamashell-scripts/Makefile
 		include/Makefile
@@ -179,6 +179,7 @@ AC_CONFIG_FILES([
 		libnfc/chips/Makefile
 		libnfc/drivers/Makefile
 		test/Makefile
+		utils/Makefile
 		])
 
 AC_OUTPUT
