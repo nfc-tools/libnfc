@@ -147,23 +147,25 @@ uart_receive (serial_port sp, byte_t * pbtRx, const size_t szRx, void * abort_p,
   BOOL res;
 
   // XXX Put this part into uart_win32_timeouts () ?
+  DWORD timeout_ms = timeout ? ((timeout->tv_sec * 1000) + (timeout->tv_usec / 1000)) : 0;
   COMMTIMEOUTS timeouts;
   timeouts.ReadIntervalTimeout = 0;
   timeouts.ReadTotalTimeoutMultiplier = 0;
-  timeouts.ReadTotalTimeoutConstant = timeout ? ((timeout->tv_sec * 1000) + (timeout->tv_usec / 1000)) : 0;
+  timeouts.ReadTotalTimeoutConstant = timeout_ms;
   timeouts.WriteTotalTimeoutMultiplier = 0;
-  timeouts.WriteTotalTimeoutConstant = timeout ? ((timeout->tv_sec * 1000) + (timeout->tv_usec / 1000)) : 0;
+  timeouts.WriteTotalTimeoutConstant = timeout_ms;
 
   if (!SetCommTimeouts (((serial_port_windows *) sp)->hPort, &timeouts)) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to apply new timeout settings.");
     return ECOMIO;
   }
+  log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "Timeouts are set to %u ms", timeout_ms);
 
   // TODO Enhance the reception method
   // - According to MSDN, it could be better to implement nfc_abort_command() mecanism using Cancello()
-  // - ECOMTIMEOUT should be return is case of timeout (as of uart_posix implementation)
   volatile bool * abort_flag_p = (volatile bool *)abort_p;
   do {
+    log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "ReadFile");
     res = ReadFile (((serial_port_windows *) sp)->hPort, pbtRx + dwTotalBytesReceived,
       dwBytesToGet, 
       &dwBytesReceived, NULL);
@@ -174,7 +176,10 @@ uart_receive (serial_port sp, byte_t * pbtRx, const size_t szRx, void * abort_p,
       DWORD err = GetLastError();
       log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "ReadFile error: %u", err);
       return ECOMIO;
-    }
+    } else if (dwBytesReceived == 0) {
+	  return ECOMTIMEOUT;
+	}
+	
     if (((DWORD)szRx) > dwTotalBytesReceived) {
       dwBytesToGet -= dwBytesReceived;
     }
@@ -183,6 +188,7 @@ uart_receive (serial_port sp, byte_t * pbtRx, const size_t szRx, void * abort_p,
       return EOPABORT;
     }
   } while (((DWORD)szRx) > dwTotalBytesReceived);
+  LOG_HEX ("RX", pbtRx, szRx);
 
   return (dwTotalBytesReceived == (DWORD) szRx) ? 0 : ECOMIO;
 }
@@ -204,6 +210,7 @@ uart_send (serial_port sp, const byte_t * pbtTx, const size_t szTx, struct timev
     return ECOMIO;
   }
 
+  LOG_HEX ("TX", pbtTx, szTx);
   if (!WriteFile (((serial_port_windows *) sp)->hPort, pbtTx, szTx, &dwTxLen, NULL)) {
     return ECOMIO;
   }

@@ -1,11 +1,5 @@
 SET(UTILS-SOURCES nfc-emulate-forum-tag2 nfc-emulate-forum-tag4 nfc-list nfc-relay-picc nfc-mfclassic nfc-mfultralight)
 
-# XXX: Examples should not use private API!
-#INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/../libnfc)
-
-INCLUDE_DIRECTORIES(${LIBUSB_INCLUDE_DIRS} ${PCSC_INCLUDE_DIRS})
-LINK_DIRECTORIES(${LIBUSB_LIBRARY_DIRS} ${PCSC_LIBRARY_DIRS})
-
 ADD_LIBRARY(nfcutils STATIC 
   nfc-utils.c
 )

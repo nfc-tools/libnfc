@@ -1,9 +1,6 @@
-SET(EXAMPLES-SOURCES nfc-anticol nfc-dep-initiator nfc-dep-target nfc-emulate-tag nfc-emulate-uid nfc-poll nfc-relay pn53x-diagnose pn53x-sam pn53x-tamashell)
+SET(EXAMPLES-SOURCES nfc-anticol nfc-dep-initiator nfc-dep-target nfc-emulate-tag nfc-emulate-uid nfc-poll nfc-relay)
 
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/../libnfc)
-
-INCLUDE_DIRECTORIES(${LIBUSB_INCLUDE_DIRS} ${PCSC_INCLUDE_DIRS})
-LINK_DIRECTORIES(${LIBUSB_LIBRARY_DIRS} ${PCSC_LIBRARY_DIRS})
 
 # Examples
 FOREACH(source ${EXAMPLES-SOURCES})
