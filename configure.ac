@@ -122,16 +122,6 @@ then
 fi
 AM_CONDITIONAL(DOC_ENABLED, [test x"$enable_doc" = xyes])
 
-# The indent target require GNU indent
-AC_PATH_PROG([INDENT], [indent])
-AC_PATH_PROG([GINDENT], [gindent])
-if test x"$GINDENT" != x""; then
-  INDENT="$GINDENT"
-fi
-
-AC_SUBST(INDENT)
-AM_CONDITIONAL(HAS_INDENT, [test x"$INDENT" != x""])
-
 # Dependencies
 PKG_CONFIG_REQUIRES=""
 
