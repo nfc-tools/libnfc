@@ -17,9 +17,9 @@ bin_PROGRAMS += \
 endif
 
 # set the include path found by configure
-INCLUDES= $(all_includes) $(LIBNFC_CFLAGS)
+INCLUDES = $(all_includes) $(LIBNFC_CFLAGS)
 
-AM_CFLAGS = -I$(top_srcdir)/libnfc
+AM_CFLAGS = -I$(top_srcdir)/libnfc -I$(top_srcdir)
 
 nfc_poll_SOURCES = nfc-poll.c
 nfc_poll_LDADD = $(top_builddir)/libnfc/libnfc.la \
