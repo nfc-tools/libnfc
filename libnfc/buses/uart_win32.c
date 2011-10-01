@@ -150,9 +150,9 @@ uart_receive (serial_port sp, byte_t * pbtRx, const size_t szRx, void * abort_p,
   COMMTIMEOUTS timeouts;
   timeouts.ReadIntervalTimeout = 0;
   timeouts.ReadTotalTimeoutMultiplier = 0;
-  timeouts.ReadTotalTimeoutConstant = timeout ? ((timeout.tv_sec * 1000) + (timeout.tv_usec / 1000)) : 0;
+  timeouts.ReadTotalTimeoutConstant = timeout ? ((timeout->tv_sec * 1000) + (timeout->tv_usec / 1000)) : 0;
   timeouts.WriteTotalTimeoutMultiplier = 0;
-  timeouts.WriteTotalTimeoutConstant = timeout ? ((timeout.tv_sec * 1000) + (timeout.tv_usec / 1000)) : 0;
+  timeouts.WriteTotalTimeoutConstant = timeout ? ((timeout->tv_sec * 1000) + (timeout->tv_usec / 1000)) : 0;
 
   if (!SetCommTimeouts (((serial_port_windows *) sp)->hPort, &timeouts)) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to apply new timeout settings.");
@@ -195,9 +195,9 @@ uart_send (serial_port sp, const byte_t * pbtTx, const size_t szTx, struct timev
   COMMTIMEOUTS timeouts;
   timeouts.ReadIntervalTimeout = 0;
   timeouts.ReadTotalTimeoutMultiplier = 0;
-  timeouts.ReadTotalTimeoutConstant = timeout ? ((timeout.tv_sec * 1000) + (timeout.tv_usec / 1000)) : 0;
+  timeouts.ReadTotalTimeoutConstant = timeout ? ((timeout->tv_sec * 1000) + (timeout->tv_usec / 1000)) : 0;
   timeouts.WriteTotalTimeoutMultiplier = 0;
-  timeouts.WriteTotalTimeoutConstant = timeout ? ((timeout.tv_sec * 1000) + (timeout.tv_usec / 1000)) : 0;
+  timeouts.WriteTotalTimeoutConstant = timeout ? ((timeout->tv_sec * 1000) + (timeout->tv_usec / 1000)) : 0;
 
   if (!SetCommTimeouts (((serial_port_windows *) sp)->hPort, &timeouts)) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to apply new timeout settings.");
