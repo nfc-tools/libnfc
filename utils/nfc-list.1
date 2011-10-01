@@ -1,8 +1,11 @@
-.TH NFC-LIST 1 "June 26, 2009"
+.TH nfc-list 1 "June 26, 2009" "libnfc" "NFC Utilities"
 .SH NAME
-nfc-list \- List NFC targets
+nfc-list \- list NFC targets
 .SH SYNOPSIS
 .B nfc-list
+[
+.I options
+]
 .SH DESCRIPTION
 .B nfc-list
 is a utility for listing any available tags like ISO14443-A, FeliCa, Jewel
@@ -14,9 +17,13 @@ limitation of the number of tags the reader can discover.
 This tool displays all available information at selection time.
 
 .SH OPTIONS
-\fB-v\fP, \fB--verbose\fP
-    Verbose mode
-    Tries to interpret data
+.TP
+.B \-v, \-\-verbose
+Tells
+.I
+nfc-list
+to be verbose and display detailed information about the targets shown.
+This includes SAK decoding and fingerprinting is available.
 
 .SH EXAMPLE
 For an ISO/IEC 14443-A tag (i.e.Mifare DESFire):
@@ -29,16 +36,23 @@ For an ISO/IEC 14443-A tag (i.e.Mifare DESFire):
 .SH BUGS
 Please report any bugs on the
 .B libnfc
-forum at
-.BR http://www.libnfc.org/community/ "."
+issue tracker at:
+.br
+.BR http://code.google.com/p/libnfc/issues
 .SH LICENCE
 .B libnfc
+is licensed under the GNU Lesser General Public License (LGPL), version 3.
+.br
+.B libnfc-utils
 and
 .B libnfc-examples
-are covered by the GNU Lesser General Public License (LGPL), version 3.
+are covered by the the BSD 2-Clause license.
 .SH AUTHORS
-Roel Verdult <roel@libnfc.org>
-Romuald Conty <romuald@libnfc.org>
+Roel Verdult <roel@libnfc.org>, 
+.br
+Romain Tartière <romain@libnfc.org>, 
+.br
+Romuald Conty <romuald@libnfc.org>.
 .PP
 This manual page was written by Romuald Conty <romuald@libnfc.org>.
 It is licensed under the terms of the GNU GPL (version 2 or later).
