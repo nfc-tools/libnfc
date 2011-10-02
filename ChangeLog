@@ -1,8 +1,65 @@
 Sept 21, 2011 - 1.5.1 (unstable)
 -------------------------------
 
+Fixes:
+ - libnfc: fix invalid memory access when a new driver is probing for hardware and the number of requested devices was already reached
+ - chips/pn53x: fix bug in _timed fcts
+ - drivers/pn53x_usb: fix crash when usb_bulk_read() fails.
+ - drivers/pn53x_usb: continue to search a available device on usb errors (ie. Device Busy)
+ - drivers/pn53x_usb: make PN53x usb connection more stable
+ - examples/nfc-relay: fix UID problem
+ - windows: fix uart_receive() under Win32 platform
+
 Improvements:
  - libnfc: add logging facility using log4c.
+ - libnfc: abort mecanism is now implemented in driver layer, so it can use pipe-based mecanism (as PN532_UART or ARYGON driver does under POSIX system) or flag-based mecanism.
+ - libnfc: add ISO/IEC 14443 B' aka Type B' modulation partial support
+ - libnfc: add partial support (list) for ISO14443B-3 ST SRx & ASK CTx cards
+ - libnfc: compile unit tests only on demand unless using --enable-debug.
+ - libnfc: enhance logging system, libnfc now uses the flexible log4c library to log all messages
+ - libnfc: error handling improvements
+ - libnfc: new function nfc_idle() to set the NFC device in idle mode
+ - libnfc: add partial support for Sony S360 reader
+ - libnfc: some manual test reports have been added
+ - libnfc: list_targets support for ASK CTS512B (no anticol support yet)
+ - libnfc: nfc_disconnect() now switches NFC device into idle before disconnecting
+ - chips/pn53x: add pn53x_data_new() function to alloc and init pn53x_data structure
+ - chips/pn53x: add some SFR registers description
+ - chips/pn53x: implement WriteBack cache
+ - chips/pn53x: new pn53x_PowerDown wrapper for PowerDown (PN532) command
+ - chips/pn53x: prints a debug trace when reading PN53x registers
+ - chips/pn53x: set some parameters in ISO/IEC 14443A when using DEP mode (ie. SAK says ISO/IEC 18092 compliant) (Android NFC stack now detects the target as DEP)
+ - chips/pn53x: set ui8LastCommand in chip layer instead of driver layer
+ - chips/pn53x: some optimisations in registers initialisation
+ - chips/pn53x: list_passive_targets() fixed for TypeB on LoGO
+ - chips/pn53x: pn53x_data now have a operating_mode enum to know the current running mode (initiator, target or idle)
+ - drivers/*: all commands are now abortable
+ - drivers/pn532_uart,arygon: make valgrind happy with UART-based drivers
+ - drivers/pn53x*: use shared pn53x_ack_frame[] and pn53x_nack_frame[] instead of local declaration
+ - drivers/pn53x_usb: all USB errors are now reported in text format
+ - drivers/pn53x_usb: enable progressive field on init to allow pn53x-tamashell to works (note: it does not distrib progressive field enabling when nfc_list_passive_target() is used)
+ - drivers/pn53x_usb: implement PN53x extended information frames with USB devices
+ - drivers/pn53x_usb: use progressive field on/off only for ISO14443 Type B target listing
+ - buses/uart: now provides an abort mecanism for windows users
+ - buses/uart: UART based drivers could now use uart_flush_input() to discard junk bytes on input.
+ - examples/nfc-anticol: add -f option to force RATS
+ - examples/nfc-mfclassic: handle 7-byte UID cards & MFC Mini
+ - examples/nfc-anticol: now use nfc_abort_command()
+ - examples/nfc-dep-*: disconnect from NFC device on error.
+ - examples/nfc-emulate-forum-tag2: add new example to emulate a NFC Forum Tag Type 2
+ - examples/nfc-emulate-forum-tag4: add document references.
+ - examples/nfc-emulate-forum-tag4: this example now fails with ENOTSUPP when used with a non-PN532 chip.
+ - examples/nfc-mfclassic: write special Mifare 1K cards, including Block 0 / UID
+ - examples/nfc-mfsetuid: add a new example to set UID of special Mifare 1K cards
+ - examples/pn53x-tamashell-scripts: minor enhancements
+ - tests/test-dep: add a threaded DEP test to check DEP communication between two local devices
+ - debian: enable all drivers at compile time
+ - debian: improve debian packaging (Thanks to Thomas Hood)
+ - debian: use a numbering that allow to have libnfc pre-version and debian package pre-version too. (Thanks to Thomas Hood)
+ - freebsd: add FreeBSD devd(8) snippet configuration for Sony S330 readers.
+ - windows: implement abort mecanism in pn532_uart driver (Based on provided patch: many thanks to Edwin Evans)
+ - windows: USB drivers now relies on libusb-win32 with version >= 1.2.4.x (1.2.4.6 recommended) (Many thanks to Glenn)
+ - windows: implement automatic uart port detection and input flush (Thanks to Edwin Evans)
 
 Changes:
  - libnfc: add 'struct timeval *timeout' parameter for pn53x_transceive(), pn53x_target_receive_bytes() and pn53x_target_send_bytes().
@@ -16,10 +73,10 @@ Fixes:
  - libnfc: silent warnings with more strict CFLAGS
  - libnfc: update devd(8) rules file for FreeBSD
  - libnfc: make libnfc compile under Windows
- - libnfc: fix nfc_pick_device() when called from nfc_connect with NULL nfc_device_desc_t parameter (Fixes Issue 156)
+ - libnfc: fix nfc_pick_device() when called from nfc_connect with NULL nfc_device_desc_t parameter
  - chips/pn53x: fix a bug when value is larger than mask when using WriteRegister
  - chips/pn53x: adapt MaxRetries to avoid issue with 2 tags on PN531
- - examples/nfc-mfclassic: UID was shown reverse-ordered. (Fixes Issue 146)
+ - examples/nfc-mfclassic: UID was shown reverse-ordered
 
 Improvements:
  - libnfc: use a new way to handle drivers, introduce a real HAL
