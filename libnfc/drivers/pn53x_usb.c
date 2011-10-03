@@ -123,8 +123,13 @@ int
 pn53x_usb_bulk_read (struct pn53x_usb_data *data, byte_t abtRx[], const size_t szRx, struct timeval *timeout)
 {
   int timeout_ms = USB_INFINITE_TIMEOUT;
-  if (timeout)
-      timeout_ms = timeout->tv_sec * 1000 + timeout->tv_usec / 1000;
+  if (timeout) {
+    timeout_ms = timeout->tv_sec * 1000 + timeout->tv_usec / 1000;
+    if (timeout_ms == USB_INFINITE_TIMEOUT) {
+      // timeout < 1 ms
+      timeout_ms++;
+    }
+  }
 
   int res = usb_bulk_read (data->pudh, data->uiEndPointIn, (char *) abtRx, szRx, timeout_ms);
   if (res > 0) {
@@ -522,6 +527,10 @@ read:
   } else {
     // No user-provided timeout, we will wait infinitely but we need nfc_abort_command() mecanism.
     usb_timeout = fixed_timeout;
+  }
+  if ((usb_timeout.tv_sec == 0) && (usb_timeout.tv_usec == 0)) {
+    pnd->iLastError = ECOMTIMEOUT;
+    return -1;
   }
   res = pn53x_usb_bulk_read (DRIVER_DATA (pnd), abtRxBuf, sizeof (abtRxBuf), &usb_timeout);
 
