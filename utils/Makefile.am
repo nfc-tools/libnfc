@@ -49,7 +49,8 @@ dist_man_MANS = \
 		nfc-list.1 \
 		nfc-mfclassic.1 \
 		nfc-mfsetuid.1 \
-		nfc-mfultralight.1
+		nfc-mfultralight.1 \
+		nfc-relay-picc.1
 
 if HAS_LOG4C
   AM_CFLAGS += @log4c_CFLAGS@
