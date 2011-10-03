@@ -325,41 +325,7 @@ nfc_initiator_list_passive_targets (nfc_device_t * pnd,
     return false;
   }
 
-  switch (nm.nmt) {
-    case NMT_ISO14443B: {
-      // Application Family Identifier (AFI) must equals 0x00 in order to wakeup all ISO14443-B PICCs (see ISO/IEC 14443-3)
-      pbtInitData = (byte_t *) "\x00";
-      szInitDataLen = 1;
-    }
-    break;
-    case NMT_ISO14443BI: {
-      // APGEN
-      pbtInitData = (byte_t *) "\x01\x0b\x3f\x80";
-      szInitDataLen = 4;
-    }
-    break;
-    case NMT_ISO14443B2SR: {
-      // Get_UID
-      pbtInitData = (byte_t *) "\x0b";
-      szInitDataLen = 1;
-    }
-    break;
-    case NMT_ISO14443B2CT: {
-      // SELECT-ALL
-      pbtInitData = (byte_t *) "\x9F\xFF\xFF";
-      szInitDataLen = 3;
-    }
-    break;
-    case NMT_FELICA: {
-      // polling payload must be present (see ISO/IEC 18092 11.2.2.5)
-      pbtInitData = (byte_t *) "\x00\xff\xff\x01\x00";
-      szInitDataLen = 5;
-    }
-    break;
-    default:
-      // nothing to do
-    break;
-  }
+  prepare_initiator_data (nm, &pbtInitData, &szInitDataLen);
 
   while (nfc_initiator_select_passive_target (pnd, nm, pbtInitData, szInitDataLen, &nt)) {
     nfc_initiator_deselect_target (pnd);
@@ -397,19 +363,19 @@ nfc_initiator_list_passive_targets (nfc_device_t * pnd,
  * @param pnd \a nfc_device_t struct pointer that represent currently used device
  * @param ppttTargetTypes array of desired target types
  * @param szTargetTypes \e ppttTargetTypes count
- * @param btPollNr specifies the number of polling
+ * @param uiPollNr specifies the number of polling (0x01 – 0xFE: 1 up to 254 polling, 0xFF: Endless polling)
  * @note one polling is a polling for each desired target type
- * @param btPeriod indicates the polling period in units of 150 ms
- * @param[out] pntTargets pointer on array of 2 \a nfc_target_t (over)writables struct
- * @param[out] pszTargetFound found targets count
+ * @param uiPeriod indicates the polling period in units of 150 ms (0x01 – 0x0F: 150ms – 2.25s)
+ * @note e.g. if uiPeriod=10, it will poll each desired target type during 1.5s
+ * @param[out] pnt pointer on \a nfc_target_t (over)writable struct
  */
 bool
-nfc_initiator_poll_targets (nfc_device_t * pnd,
-                            const nfc_modulation_t * pnmModulations, const size_t szModulations,
-                            const byte_t btPollNr, const byte_t btPeriod,
-                            nfc_target_t * pntTargets, size_t * pszTargetFound)
+nfc_initiator_poll_target (nfc_device_t * pnd,
+                           const nfc_modulation_t * pnmModulations, const size_t szModulations,
+                           const uint8_t uiPollNr, const uint8_t uiPeriod,
+                           nfc_target_t * pnt)
 {
-  HAL (initiator_poll_targets, pnd, pnmModulations, szModulations, btPollNr, btPeriod, pntTargets, pszTargetFound);
+  HAL (initiator_poll_target, pnd, pnmModulations, szModulations, uiPollNr, uiPeriod, pnt);
 }
 
 

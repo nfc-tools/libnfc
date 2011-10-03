@@ -61,8 +61,6 @@ pn53x_target_type_t pn53x_nm_to_ptt (const nfc_modulation_t nm);
 bool
 pn53x_init(nfc_device_t * pnd)
 {
-  log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "%s", "pn53x_init");
-
   // GetFirmwareVersion command is used to set PN53x chips type (PN531, PN532 or PN533)
   char abtFirmwareText[22];
   if (!pn53x_get_firmware_version (pnd, abtFirmwareText)) {
@@ -111,6 +109,9 @@ pn53x_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, b
   }
 
   PNCMD_TRACE (pbtTx[0]);
+  if (timeout)
+    log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "Timeout values: %li s, %li us", timeout->tv_sec, timeout->tv_usec);
+
   byte_t  abtRx[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
   size_t  szRx = sizeof(abtRx);
 
@@ -855,10 +856,11 @@ pn53x_initiator_init (nfc_device_t * pnd)
 }
 
 bool
-pn53x_initiator_select_passive_target (nfc_device_t * pnd,
+pn53x_initiator_select_passive_target_ext (nfc_device_t * pnd,
                                        const nfc_modulation_t nm,
                                        const byte_t * pbtInitData, const size_t szInitData,
-                                       nfc_target_t * pnt)
+                                       nfc_target_t * pnt,
+                                       struct timeval* timeout)
 {
   byte_t  abtTargetsData[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
   size_t  szTargetsData = sizeof(abtTargetsData);
@@ -889,11 +891,11 @@ pn53x_initiator_select_passive_target (nfc_device_t * pnd,
       byte_t abtRx[1];
       size_t szRxLen = 1;
       // Getting random Chip_ID
-      if (!pn53x_initiator_transceive_bytes (pnd, abtInitiate, szInitiateLen, abtRx, &szRxLen, NULL)) {
+      if (!pn53x_initiator_transceive_bytes (pnd, abtInitiate, szInitiateLen, abtRx, &szRxLen, timeout)) {
         return false;
       }
       abtSelect[1] = abtRx[0];
-      if (!pn53x_initiator_transceive_bytes (pnd, abtSelect, szSelectLen, abtRx, &szRxLen, NULL)) {
+      if (!pn53x_initiator_transceive_bytes (pnd, abtSelect, szSelectLen, abtRx, &szRxLen, timeout)) {
         return false;
       }
     }
@@ -902,11 +904,11 @@ pn53x_initiator_select_passive_target (nfc_device_t * pnd,
       byte_t abtReqt[]="\x10";
       size_t szReqtLen = 1;
       // Getting product code / fab code & store it in output buffer after the serial nr we'll obtain later
-      if (!pn53x_initiator_transceive_bytes (pnd, abtReqt, szReqtLen, abtTargetsData+2, &szTargetsData, NULL) || szTargetsData != 2) {
+      if (!pn53x_initiator_transceive_bytes (pnd, abtReqt, szReqtLen, abtTargetsData+2, &szTargetsData, timeout) || szTargetsData != 2) {
         return false;
       }
     }
-    if (!pn53x_initiator_transceive_bytes (pnd, pbtInitData, szInitData, abtTargetsData, &szTargetsData, NULL)) {
+    if (!pn53x_initiator_transceive_bytes (pnd, pbtInitData, szInitData, abtTargetsData, &szTargetsData, timeout)) {
       return false;
     }
     if (nm.nmt == NMT_ISO14443B2CT) {
@@ -914,7 +916,7 @@ pn53x_initiator_select_passive_target (nfc_device_t * pnd,
         return false;
       byte_t abtRead[]="\xC4"; // Reading UID_MSB (Read address 4)
       size_t szReadLen = 1;
-      if (!pn53x_initiator_transceive_bytes (pnd, abtRead, szReadLen, abtTargetsData+4, &szTargetsData, NULL) || szTargetsData != 2) {
+      if (!pn53x_initiator_transceive_bytes (pnd, abtRead, szReadLen, abtTargetsData+4, &szTargetsData, timeout) || szTargetsData != 2) {
         return false;
       }
       szTargetsData = 6; // u16 UID_LSB, u8 prod code, u8 fab code, u16 UID_MSB
@@ -932,7 +934,7 @@ pn53x_initiator_select_passive_target (nfc_device_t * pnd,
       size_t szAttribLen = sizeof(abtAttrib);
       memcpy(abtAttrib, abtTargetsData, szAttribLen);
       abtAttrib[1] = 0x0f; // ATTRIB
-      if (!pn53x_initiator_transceive_bytes (pnd, abtAttrib, szAttribLen, NULL, NULL, NULL)) {
+      if (!pn53x_initiator_transceive_bytes (pnd, abtAttrib, szAttribLen, NULL, NULL, timeout)) {
         return false;
       }
     }
@@ -945,7 +947,7 @@ pn53x_initiator_select_passive_target (nfc_device_t * pnd,
     return false;
   }
 
-  if (!pn53x_InListPassiveTarget (pnd, pm, 1, pbtInitData, szInitData, abtTargetsData, &szTargetsData))
+  if (!pn53x_InListPassiveTarget (pnd, pm, 1, pbtInitData, szInitData, abtTargetsData, &szTargetsData, timeout))
     return false;
 
   // Make sure one tag has been found, the PN53X returns 0x00 if none was available
@@ -964,29 +966,76 @@ pn53x_initiator_select_passive_target (nfc_device_t * pnd,
 }
 
 bool
-pn53x_initiator_poll_targets (nfc_device_t * pnd,
-                              const nfc_modulation_t * pnmModulations, const size_t szModulations,
-                              const byte_t btPollNr, const byte_t btPeriod,
-                              nfc_target_t * pntTargets, size_t * pszTargetFound)
+pn53x_initiator_select_passive_target (nfc_device_t * pnd,
+                                       const nfc_modulation_t nm,
+                                       const byte_t * pbtInitData, const size_t szInitData,
+                                       nfc_target_t * pnt)
 {
-  size_t szTargetTypes = 0;
-  pn53x_target_type_t apttTargetTypes[32];
-  for (size_t n=0; n<szModulations; n++) {
-    const pn53x_target_type_t ptt = pn53x_nm_to_ptt(pnmModulations[n]);
-    if (PTT_UNDEFINED == ptt) {
-      pnd->iLastError = EINVALARG;
-      return false;
-    }
-    apttTargetTypes[szTargetTypes] = ptt;
-    if ((pnd->bAutoIso14443_4) && (ptt == PTT_MIFARE)) { // Hack to have ATS
-      apttTargetTypes[szTargetTypes] = PTT_ISO14443_4A_106;
-      szTargetTypes++;
-      apttTargetTypes[szTargetTypes] = PTT_MIFARE;
-    }
-    szTargetTypes++;
-  }
+  return pn53x_initiator_select_passive_target_ext (pnd, nm, pbtInitData, szInitData, pnt, NULL);
+}
 
-  return pn53x_InAutoPoll (pnd, apttTargetTypes, szTargetTypes, btPollNr, btPeriod, pntTargets, pszTargetFound);
+bool
+pn53x_initiator_poll_target (nfc_device_t * pnd,
+                              const nfc_modulation_t * pnmModulations, const size_t szModulations,
+                              const uint8_t uiPollNr, const uint8_t uiPeriod,
+                              nfc_target_t * pnt)
+{
+  if (CHIP_DATA(pnd)->type == PN532) {
+    size_t szTargetTypes = 0;
+    pn53x_target_type_t apttTargetTypes[32];
+    for (size_t n=0; n<szModulations; n++) {
+      const pn53x_target_type_t ptt = pn53x_nm_to_ptt(pnmModulations[n]);
+      if (PTT_UNDEFINED == ptt) {
+        pnd->iLastError = EINVALARG;
+        return false;
+      }
+      apttTargetTypes[szTargetTypes] = ptt;
+      if ((pnd->bAutoIso14443_4) && (ptt == PTT_MIFARE)) { // Hack to have ATS
+        apttTargetTypes[szTargetTypes] = PTT_ISO14443_4A_106;
+        szTargetTypes++;
+        apttTargetTypes[szTargetTypes] = PTT_MIFARE;
+      }
+      szTargetTypes++;
+    }
+    size_t szTargetFound = 0;
+    nfc_target_t ntTargets[2];
+    if (!pn53x_InAutoPoll (pnd, apttTargetTypes, szTargetTypes, uiPollNr, uiPeriod, ntTargets, &szTargetFound))
+      return false;
+    switch (szTargetFound) {
+      case 1:
+        *pnt = ntTargets[0];
+        return true;
+        break;
+      case 2:
+        *pnt = ntTargets[1]; // We keep the selected one
+        return true;
+        break;
+      default:
+        return false;
+      break;
+    }
+  } else {
+    pn53x_configure (pnd, NDO_INFINITE_SELECT, true);
+    for (size_t p=0; p<uiPollNr; p++) {
+      for (size_t n=0; n<szModulations; n++) {
+        byte_t *pbtInitiatorData;
+        size_t szInitiatorData;
+        prepare_initiator_data (pnmModulations[n], &pbtInitiatorData, &szInitiatorData);
+        const int timeout_ms = uiPeriod * 150;
+        struct timeval timeout;
+        timeout.tv_sec = timeout_ms / 1000;
+        timeout.tv_usec = (timeout_ms - (timeout.tv_sec * 1000)) * 1000;
+  
+        if (!pn53x_initiator_select_passive_target_ext (pnd, pnmModulations[n], pbtInitiatorData, szInitiatorData, pnt, &timeout)) {
+          if (pnd->iLastError != ECOMTIMEOUT)
+            return false;
+        } else {
+          return true;
+        }
+      }
+    }
+  }
+  return false;
 }
 
 bool
@@ -1992,7 +2041,8 @@ bool
 pn53x_InListPassiveTarget (nfc_device_t * pnd,
                            const pn53x_modulation_t pmInitModulation, const byte_t szMaxTargets,
                            const byte_t * pbtInitiatorData, const size_t szInitiatorData,
-                           byte_t * pbtTargetsData, size_t * pszTargetsData)
+                           byte_t * pbtTargetsData, size_t * pszTargetsData,
+                           struct timeval* timeout)
 {
   byte_t  abtCmd[15] = { InListPassiveTarget };
 
@@ -2037,7 +2087,7 @@ pn53x_InListPassiveTarget (nfc_device_t * pnd,
   if (pbtInitiatorData)
     memcpy (abtCmd + 3, pbtInitiatorData, szInitiatorData);
 
-  return pn53x_transceive (pnd, abtCmd, 3 + szInitiatorData, pbtTargetsData, pszTargetsData, NULL);
+  return pn53x_transceive (pnd, abtCmd, 3 + szInitiatorData, pbtTargetsData, pszTargetsData, timeout);
 }
 
 bool

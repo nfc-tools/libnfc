@@ -133,7 +133,7 @@ struct nfc_driver_t {
 
   bool (*initiator_init) (nfc_device_t * pnd);
   bool (*initiator_select_passive_target) (nfc_device_t * pnd,  const nfc_modulation_t nm, const byte_t * pbtInitData, const size_t szInitData, nfc_target_t * pnt);
-  bool (*initiator_poll_targets) (nfc_device_t * pnd, const nfc_modulation_t * pnmModulations, const size_t szModulations, const byte_t btPollNr, const byte_t btPeriod, nfc_target_t * pntTargets, size_t * pszTargetFound);
+  bool (*initiator_poll_target) (nfc_device_t * pnd, const nfc_modulation_t * pnmModulations, const size_t szModulations, const uint8_t uiPollNr, const uint8_t btPeriod, nfc_target_t * pnt);
   bool (*initiator_select_dep_target) (nfc_device_t * pnd, const nfc_dep_mode_t ndm, const nfc_baud_rate_t nbr, const nfc_dep_info_t * pndiInitiator, nfc_target_t * pnt);
   bool (*initiator_deselect_target) (nfc_device_t * pnd);
   bool (*initiator_transceive_bytes) (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, byte_t * pbtRx, size_t * pszRx, struct timeval *timeout);
@@ -157,5 +157,7 @@ nfc_device_t  *nfc_device_new (void);
 void           nfc_device_free (nfc_device_t *nfc_device);
 
 void 	iso14443_cascade_uid (const byte_t abtUID[], const size_t szUID, byte_t * pbtCascadedUID, size_t * pszCascadedUID);
+
+void 	prepare_initiator_data (const nfc_modulation_t nm, byte_t **ppbtInitiatorData, size_t * pszInitiatorData);
 
 #endif // __NFC_INTERNAL_H__

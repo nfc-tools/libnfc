@@ -415,7 +415,7 @@ const struct nfc_driver_t acr122_driver = {
 
   .initiator_init                   = pn53x_initiator_init,
   .initiator_select_passive_target  = pn53x_initiator_select_passive_target,
-  .initiator_poll_targets           = pn53x_initiator_poll_targets,
+  .initiator_poll_target            = pn53x_initiator_poll_target,
   .initiator_select_dep_target      = pn53x_initiator_select_dep_target,
   .initiator_deselect_target        = pn53x_initiator_deselect_target,
   .initiator_transceive_bytes       = pn53x_initiator_transceive_bytes,

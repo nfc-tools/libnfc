@@ -280,10 +280,10 @@ bool    pn53x_initiator_select_passive_target (nfc_device_t * pnd,
                                                const nfc_modulation_t nm,
                                                const byte_t * pbtInitData, const size_t szInitData,
                                                nfc_target_t * pnt);
-bool    pn53x_initiator_poll_targets (nfc_device_t * pnd,
-                                      const nfc_modulation_t * pnmModulations, const size_t szModulations,
-                                      const byte_t btPollNr, const byte_t btPeriod,
-                                      nfc_target_t * pntTargets, size_t * pszTargetFound);
+bool    pn53x_initiator_poll_target (nfc_device_t * pnd,
+                                     const nfc_modulation_t * pnmModulations, const size_t szModulations,
+                                     const uint8_t uiPollNr, const uint8_t uiPeriod,
+                                     nfc_target_t * pnt);
 bool    pn53x_initiator_select_dep_target (nfc_device_t * pnd,
                                            const nfc_dep_mode_t ndm, const nfc_baud_rate_t nbr,
                                            const nfc_dep_info_t * pndiInitiator, 
@@ -304,8 +304,7 @@ bool    pn53x_initiator_deselect_target (nfc_device_t * pnd);
 bool    pn53x_target_init (nfc_device_t * pnd, nfc_target_t * pnt, byte_t * pbtRx, size_t * pszRx);
 bool    pn53x_target_receive_bits (nfc_device_t * pnd, byte_t * pbtRx, size_t * pszRxBits, byte_t * pbtRxPar);
 bool    pn53x_target_receive_bytes (nfc_device_t * pnd, byte_t * pbtRx, size_t * pszRx, struct timeval *timeout);
-bool    pn53x_target_send_bits (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxBits,
-                                const byte_t * pbtTxPar);
+bool    pn53x_target_send_bits (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxBits, const byte_t * pbtTxPar);
 bool    pn53x_target_send_bytes (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, struct timeval *timeout);
 
 // Error handling functions
@@ -317,7 +316,8 @@ bool    pn53x_SAMConfiguration (nfc_device_t * pnd, const pn532_sam_mode mode, s
 bool    pn53x_PowerDown (nfc_device_t * pnd);
 bool    pn53x_InListPassiveTarget (nfc_device_t * pnd, const pn53x_modulation_t pmInitModulation,
                                    const byte_t szMaxTargets, const byte_t * pbtInitiatorData,
-                                   const size_t szInitiatorDataLen, byte_t * pbtTargetsData, size_t * pszTargetsData);
+                                   const size_t szInitiatorDataLen, byte_t * pbtTargetsData, size_t * pszTargetsData,
+                                   struct timeval *timeout);
 bool    pn53x_InDeselect (nfc_device_t * pnd, const uint8_t ui8Target);
 bool    pn53x_InRelease (nfc_device_t * pnd, const uint8_t ui8Target);
 bool    pn53x_InAutoPoll (nfc_device_t * pnd, const pn53x_target_type_t * ppttTargetTypes, const size_t szTargetTypes,

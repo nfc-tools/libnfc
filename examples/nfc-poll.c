@@ -97,9 +97,8 @@ main (int argc, const char *argv[])
   }
 
   for (i = 0; i < szFound; i++) {
-
-    const byte_t btPollNr = 20;
-    const byte_t btPeriod = 2;
+    const uint8_t uiPollNr = 20;
+    const uint8_t uiPeriod = 2;
     const nfc_modulation_t nmModulations[5] = {
       { .nmt = NMT_ISO14443A, .nbr = NBR_106 },
       { .nmt = NMT_ISO14443B, .nbr = NBR_106 },
@@ -109,8 +108,7 @@ main (int argc, const char *argv[])
     };
     const size_t szModulations = 5;
 
-    nfc_target_t antTargets[2];
-    size_t  szTargetFound;
+    nfc_target_t nt;
     bool    res;
 
     pnd = nfc_connect (&(pnddDevices[i]));
@@ -121,28 +119,19 @@ main (int argc, const char *argv[])
     }
     nfc_initiator_init (pnd);
 
-    // Let the reader only try once to find a tag
-    if (!nfc_configure (pnd, NDO_INFINITE_SELECT, false)) {
-      nfc_perror (pnd, "nfc_configure");
-      exit (EXIT_FAILURE);
-    }
-
     printf ("Connected to NFC reader: %s\n", pnd->acName);
-
-    printf ("PN532 will poll during %ld ms\n", (unsigned long) btPollNr * szModulations * btPeriod * 150);
-    res = nfc_initiator_poll_targets (pnd, nmModulations, szModulations, btPollNr, btPeriod, antTargets, &szTargetFound);
+    printf ("NFC device will poll during %ld ms (%u pollings of %lu ms for %zd modulations)\n", (unsigned long) uiPollNr * szModulations * uiPeriod * 150, uiPollNr, (unsigned long) uiPeriod * 150, szModulations);
+    res = nfc_initiator_poll_target (pnd, nmModulations, szModulations, uiPollNr, uiPeriod, &nt);
     if (res) {
-      uint8_t n;
-      printf ("%ld target(s) have been found.\n", (unsigned long) szTargetFound);
-      for (n = 0; n < szTargetFound; n++) {
-        printf ("T%d: ", n + 1);
-        print_nfc_target ( antTargets[n], verbose );
-
-      }
+      print_nfc_target ( nt, verbose );
     } else {
-      nfc_perror (pnd, "nfc_initiator_poll_targets");
-      nfc_disconnect (pnd);
-      exit (EXIT_FAILURE);
+      if (pnd->iLastError) {
+        nfc_perror (pnd, "nfc_initiator_poll_targets");
+        nfc_disconnect (pnd);
+        exit (EXIT_FAILURE);
+      } else {
+        printf ("No target found.\n");
+      }
     }
     nfc_disconnect (pnd);
   }

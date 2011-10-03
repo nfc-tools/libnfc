@@ -1,3 +1,25 @@
+New in 1.5.1:
+
+API Changes
+
+  * Types
+    - Communication-level errors DEIO and DETIMEOUT are now know as ECOMIO,
+      ECOMTIMEOUT respectively
+    - Common device-level errors DEINVAL and DEABORT are now know as EINVALARG,
+      EOPABORT respectively
+    - New errors:  EFRAACKMISMATCH, EFRAISERRFRAME, EDEVNOTSUP and ENOTIMPL
+
+  * Functions
+    - nfc_abort_command() returns a boolean
+    - timeout (struct timeval) pointer added to
+      nfc_initiator_transceive_bytes(), nfc_target_send_bytes() and
+      nfc_target_receive_bytes()
+    - timed functions nfc_initiator_transceive_bytes_timed() and
+      nfc_initiator_transceive_bits_timed() now takes uint32_t as cycles
+      pointer
+    - nfc_initiator_poll_targets() renamed to nfc_initiator_poll_target() and
+      only return one target
+
 New in 1.5.0:
 
 Installed files
