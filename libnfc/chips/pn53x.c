@@ -1016,24 +1016,27 @@ pn53x_initiator_poll_target (nfc_device_t * pnd,
     }
   } else {
     pn53x_configure (pnd, NDO_INFINITE_SELECT, true);
-    for (size_t p=0; p<uiPollNr; p++) {
-      for (size_t n=0; n<szModulations; n++) {
-        byte_t *pbtInitiatorData;
-        size_t szInitiatorData;
-        prepare_initiator_data (pnmModulations[n], &pbtInitiatorData, &szInitiatorData);
-        const int timeout_ms = uiPeriod * 150;
-        struct timeval timeout;
-        timeout.tv_sec = timeout_ms / 1000;
-        timeout.tv_usec = (timeout_ms - (timeout.tv_sec * 1000)) * 1000;
-  
-        if (!pn53x_initiator_select_passive_target_ext (pnd, pnmModulations[n], pbtInitiatorData, szInitiatorData, pnt, &timeout)) {
-          if (pnd->iLastError != ECOMTIMEOUT)
-            return false;
-        } else {
-          return true;
+    // FIXME It does not support DEP targets
+    do {
+      for (size_t p=0; p<uiPollNr; p++) {
+        for (size_t n=0; n<szModulations; n++) {
+          byte_t *pbtInitiatorData;
+          size_t szInitiatorData;
+          prepare_initiator_data (pnmModulations[n], &pbtInitiatorData, &szInitiatorData);
+          const int timeout_ms = uiPeriod * 150;
+          struct timeval timeout;
+          timeout.tv_sec = timeout_ms / 1000;
+          timeout.tv_usec = (timeout_ms - (timeout.tv_sec * 1000)) * 1000;
+    
+          if (!pn53x_initiator_select_passive_target_ext (pnd, pnmModulations[n], pbtInitiatorData, szInitiatorData, pnt, &timeout)) {
+            if (pnd->iLastError != ECOMTIMEOUT)
+              return false;
+          } else {
+            return true;
+          }
         }
       }
-    }
+    } while (uiPollNr==0xff); // uiPollNr==0xff means infinite polling
   }
   return false;
 }
