@@ -35,7 +35,8 @@
 #    define MIN(a,b) min(a,b)
 #    define pipe(fds) _pipe(fds, 5000, _O_BINARY)
 #    define ETIMEDOUT     WSAETIMEDOUT
-#    define ENOTSUP 134
+#    define ENOTSUP       WSAEOPNOTSUPP
+#    define ECONNABORTED  WSAECONNABORTED
 #  else
 #    define snprintf sprintf_s
 #    define strdup _strdup
