@@ -20,10 +20,23 @@ AC_DEFUN([LIBNFC_CHECK_LIBUSB],
       HAVE_LIBUSB=1
     fi
 
-    # Search using pkg-config
+    # Search using libusb module using pkg-config
     if test x"$HAVE_LIBUSB" = "x0"; then  
       if test x"$PKG_CONFIG" != "x"; then
         PKG_CHECK_MODULES([libusb], [libusb], [HAVE_LIBUSB=1], [HAVE_LIBUSB=0])
+        if test x"$HAVE_LIBUSB" = "x1"; then
+          if test x"$PKG_CONFIG_REQUIRES" != x""; then
+            PKG_CONFIG_REQUIRES="$PKG_CONFIG_REQUIRES,"
+          fi
+          PKG_CONFIG_REQUIRES="$PKG_CONFIG_REQUIRES libusb"
+        fi
+      fi
+    fi
+
+    # Search using libusb-legacy module using pkg-config
+    if test x"$HAVE_LIBUSB" = "x0"; then  
+      if test x"$PKG_CONFIG" != "x"; then
+        PKG_CHECK_MODULES([libusb], [libusb-legacy], [HAVE_LIBUSB=1], [HAVE_LIBUSB=0])
         if test x"$HAVE_LIBUSB" = "x1"; then
           if test x"$PKG_CONFIG_REQUIRES" != x""; then
             PKG_CONFIG_REQUIRES="$PKG_CONFIG_REQUIRES,"
