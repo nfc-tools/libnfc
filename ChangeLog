@@ -23,6 +23,7 @@ Improvements:
  - libnfc: list_targets support for ASK CTS512B (no anticol support yet)
  - libnfc: nfc_disconnect() now switches NFC device into idle before disconnecting
  - libnfc: nfc_initiator_poll_target() is now available for all devices
+ - libnfc: implement software polling for non-PN532 equipped device
  - chips/pn53x: add pn53x_data_new() function to alloc and init pn53x_data structure
  - chips/pn53x: add some SFR registers description
  - chips/pn53x: implement WriteBack cache
@@ -50,6 +51,7 @@ Improvements:
  - examples/nfc-emulate-forum-tag4: this example now fails with ENOTSUPP when used with a non-PN532 chip.
  - examples/nfc-mfclassic: write special Mifare 1K cards, including Block 0 / UID
  - examples/nfc-mfsetuid: add a new example to set UID of special Mifare 1K cards
+ - examples/nfc-read-forum-tag3: add new example to read a NFC Forum Tag Type 3
  - examples/pn53x-tamashell-scripts: minor enhancements
  - tests/test-dep: add a threaded DEP test to check DEP communication between two local devices
  - debian: enable all drivers at compile time

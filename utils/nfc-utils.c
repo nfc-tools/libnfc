@@ -537,6 +537,8 @@ print_nfc_felica_info (const nfc_felica_info_t nfi, bool verbose)
   print_hex (nfi.abtId, 8);
   printf ("    Parameter (PAD): ");
   print_hex (nfi.abtPad, 8);
+  printf ("   System Code (SC): ");
+  print_hex (nfi.abtSysCode, 2);
 }
 
 void

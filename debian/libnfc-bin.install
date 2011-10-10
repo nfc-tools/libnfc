@@ -1,6 +1,12 @@
+debian/tmp/usr/bin/nfc-emulate-forum-tag2
+debian/tmp/usr/bin/nfc-emulate-forum-tag4
 debian/tmp/usr/bin/nfc-list
 debian/tmp/usr/bin/nfc-mfclassic
 debian/tmp/usr/bin/nfc-mfultralight
+debian/tmp/usr/bin/nfc-relay-picc
+debian/tmp/usr/bin/nfc-read-forum-tag3
+debian/tmp/usr/share/man/man1/nfc-emulate-forum-tag4.1
 debian/tmp/usr/share/man/man1/nfc-list.1
 debian/tmp/usr/share/man/man1/nfc-mfclassic.1
 debian/tmp/usr/share/man/man1/nfc-mfultralight.1
+debian/tmp/usr/share/man/man1/nfc-relay-picc.1

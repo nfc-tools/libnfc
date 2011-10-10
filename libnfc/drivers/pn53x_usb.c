@@ -477,6 +477,7 @@ pn53x_usb_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szData,
     // response packet. With this hack, the nextly executed function (ie.
     // pn53x_usb_receive()) will be able to retreive the correct response
     // packet.
+    // FIXME Sony reader is also affected by this bug but NACK is not supported
     int res = pn53x_usb_bulk_write (DRIVER_DATA (pnd), (byte_t *)pn53x_nack_frame, sizeof(pn53x_nack_frame), timeout);
     if (res < 0) {
       pnd->iLastError = ECOMIO;

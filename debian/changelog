@@ -1,3 +1,11 @@
+libnfc (1.5.1-0) unstable; urgency=low
+  
+  * Move nfc-emulate-nfcforum-tag2, nfc-emulate-nfcforum-tag4 and
+     nfc-relay-picc from libnfc-examples to libnfc-bin package.
+  * Add nfc-read-forum-tag3 to libnfc-bin package.
+
+ -- Romuald Conty <rconty@il4p.fr>  Mon, 10 Oct 2011 02:42:42 +0100
+
 libnfc (1.5.0pre1.4-0) unstable; urgency=low
   
   * All drivers are now enabled under Debian;
