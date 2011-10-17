@@ -30,9 +30,9 @@
 
 #  include <nfc/nfc-types.h>
 
-bool    arygon_probe (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * pszDeviceFound);
+bool    arygon_probe (nfc_connstring connstrings[], size_t connstrings_len, size_t * pszDeviceFound);
 
-nfc_device_t *arygon_connect (const nfc_device_desc_t * pndd);
+nfc_device_t *arygon_connect (const nfc_connstring connstring);
 void    arygon_disconnect (nfc_device_t * pnd);
 
 bool    arygon_tama_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szData, struct timeval *timeout);

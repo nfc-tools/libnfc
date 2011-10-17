@@ -40,7 +40,7 @@
 // Bus
 #include <winscard.h>
 
-#  define ACR122_DRIVER_NAME "ACR122"
+#define ACR122_DRIVER_NAME "acr122"
 
 #if defined (_WIN32)
 #  define IOCTL_CCID_ESCAPE_SCARD_CTL_CODE SCARD_CTL_CODE(3500)
@@ -133,7 +133,7 @@ acr122_free_scardcontext (void)
  * @return true if succeeded, false otherwise.
  */
 bool
-acr122_probe (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * pszDeviceFound)
+acr122_probe (nfc_connstring connstrings[], size_t connstrings_len, size_t * pszDeviceFound)
 {
   size_t  szPos = 0;
   char    acDeviceNames[256 + 64 * PCSC_MAX_DEVICES];
@@ -158,9 +158,7 @@ acr122_probe (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * pszDev
   if (SCardListReaders (*pscc, NULL, acDeviceNames, &dwDeviceNamesLen) != SCARD_S_SUCCESS)
     return false;
 
-  // DBG("%s", "PCSC reports following device(s):");
-
-  while ((acDeviceNames[szPos] != '\0') && ((*pszDeviceFound) < szDevices)) {
+  while ((acDeviceNames[szPos] != '\0') && ((*pszDeviceFound) < connstrings_len)) {
     uiBusIndex++;
 
     // DBG("- %s (pos=%ld)", acDeviceNames + szPos, (unsigned long) szPos);
@@ -173,9 +171,7 @@ acr122_probe (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * pszDev
 
     if (bSupported) {
       // Supported ACR122 device found
-      strncpy (pnddDevices[*pszDeviceFound].acDevice, acDeviceNames + szPos, DEVICE_NAME_LENGTH - 1);
-      pnddDevices[*pszDeviceFound].pcDriver = ACR122_DRIVER_NAME;
-      pnddDevices[*pszDeviceFound].uiBusIndex = uiBusIndex;
+      snprintf (connstrings[*pszDeviceFound], sizeof(nfc_connstring), "%s:%s:%"PRIu32, ACR122_DRIVER_NAME, acDeviceNames + szPos, uiBusIndex);
       (*pszDeviceFound)++;
     } else {
       log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "PCSC device [%s] is not NFC capable or not supported by libnfc.", acDeviceNames + szPos);
@@ -189,9 +185,71 @@ acr122_probe (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * pszDev
   return true;
 }
 
-nfc_device_t *
-acr122_connect (const nfc_device_desc_t * pndd)
+struct acr122_descriptor {
+  char pcsc_device_name[512];
+  int bus_index;
+};
+
+int
+acr122_connstring_decode (const nfc_connstring connstring, struct acr122_descriptor *desc)
 {
+  char *cs = malloc (strlen (connstring) + 1);
+  if (!cs) {
+    perror ("malloc");
+    return -1;
+  }
+  strcpy (cs, connstring);
+  const char *driver_name = strtok (cs, ":");
+  if (!driver_name) {
+    // Parse error
+    free (cs);
+    return -1;
+  }
+
+  if (0 != strcmp (driver_name, ACR122_DRIVER_NAME)) {
+    // Driver name does not match.
+    free (cs);
+    return 0;
+  }
+
+  const char *device_name = strtok (NULL, ":");
+  if (!device_name) {
+    // Only driver name was specified (or parsing error)
+    free (cs);
+    return 1;
+  }
+  strncpy (desc->pcsc_device_name, device_name, sizeof(desc->pcsc_device_name)-1);
+  desc->pcsc_device_name[sizeof(desc->pcsc_device_name)-1] = '\0';
+
+  const char *bus_index_s = strtok (NULL, ":");
+  if (!bus_index_s) {
+    // bus index not specified (or parsing error)
+    free (cs);
+    return 2;
+  }
+  unsigned long bus_index;
+  if (sscanf (bus_index_s, "%lu", &bus_index) != 1) {
+    // bus_index_s is not a number
+    free (cs);
+    return 2;
+  }
+  desc->bus_index = bus_index;
+
+  free (cs);
+  return 3;
+}
+
+nfc_device_t *
+acr122_connect (const nfc_connstring connstring)
+{
+  struct acr122_descriptor ndd;
+  int connstring_decode_level = acr122_connstring_decode (connstring, &ndd);
+
+  if (connstring_decode_level < 2) {
+    return NULL;
+  }
+  // FIXME: acr122_connect() does not take care about bus index
+
   char   *pcFirmware;
   nfc_device_t *pnd = nfc_device_new ();
   pnd->driver_data = malloc (sizeof (struct acr122_data));
@@ -200,15 +258,15 @@ acr122_connect (const nfc_device_desc_t * pndd)
   pn53x_data_new (pnd, &acr122_io);
 
   SCARDCONTEXT *pscc;
-
-  log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "Attempt to connect to %s", pndd->acDevice);
+  
+  log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "Attempt to connect to %s", ndd.pcsc_device_name);
   // Test if context succeeded
   if (!(pscc = acr122_get_scardcontext ()))
     goto error;
   // Test if we were able to connect to the "emulator" card
-  if (SCardConnect (*pscc, pndd->acDevice, SCARD_SHARE_EXCLUSIVE, SCARD_PROTOCOL_T0 | SCARD_PROTOCOL_T1, &(DRIVER_DATA (pnd)->hCard), (void *) &(DRIVER_DATA (pnd)->ioCard.dwProtocol)) != SCARD_S_SUCCESS) {
+  if (SCardConnect (*pscc, ndd.pcsc_device_name, SCARD_SHARE_EXCLUSIVE, SCARD_PROTOCOL_T0 | SCARD_PROTOCOL_T1, &(DRIVER_DATA (pnd)->hCard), (void *) &(DRIVER_DATA (pnd)->ioCard.dwProtocol)) != SCARD_S_SUCCESS) {
     // Connect to ACR122 firmware version >2.0
-    if (SCardConnect (*pscc, pndd->acDevice, SCARD_SHARE_DIRECT, 0, &(DRIVER_DATA (pnd)->hCard), (void *) &(DRIVER_DATA (pnd)->ioCard.dwProtocol)) != SCARD_S_SUCCESS) {
+    if (SCardConnect (*pscc, ndd.pcsc_device_name, SCARD_SHARE_DIRECT, 0, &(DRIVER_DATA (pnd)->hCard), (void *) &(DRIVER_DATA (pnd)->ioCard.dwProtocol)) != SCARD_S_SUCCESS) {
       // We can not connect to this device.
       log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "%s", "PCSC connect failed");
       goto error;
@@ -222,7 +280,7 @@ acr122_connect (const nfc_device_desc_t * pndd)
   if (strstr (pcFirmware, FIRMWARE_TEXT) != NULL) {
 
     // Done, we found the reader we are looking for
-    snprintf (pnd->acName, sizeof (pnd->acName), "%s / %s", pndd->acDevice, pcFirmware);
+    snprintf (pnd->acName, sizeof (pnd->acName), "%s / %s", ndd.pcsc_device_name, pcFirmware);
 
     // 50: empirical tuning on Touchatag
     // 46: empirical tuning on ACR122U
@@ -407,11 +465,11 @@ const struct pn53x_io acr122_io = {
 };
 
 const struct nfc_driver_t acr122_driver = {
-  .name       = ACR122_DRIVER_NAME,
-  .probe      = acr122_probe,
-  .connect    = acr122_connect,
-  .disconnect = acr122_disconnect,
-  .strerror   = pn53x_strerror,
+  .name                             = ACR122_DRIVER_NAME,
+  .probe                            = acr122_probe,
+  .connect                          = acr122_connect,
+  .disconnect                       = acr122_disconnect,
+  .strerror                         = pn53x_strerror,
 
   .initiator_init                   = pn53x_initiator_init,
   .initiator_select_passive_target  = pn53x_initiator_select_passive_target,
@@ -431,7 +489,7 @@ const struct nfc_driver_t acr122_driver = {
 
   .configure  = pn53x_configure,
 
-  .abort_command  = NULL,
-  .idle  = NULL,
+  .abort_command  = NULL,  // FIXME: abort is not supported in this driver
+  .idle  = NULL,           // FIXME: idle is not supported in this driver
 };
 

@@ -97,6 +97,4 @@ void    print_nfc_dep_info (const nfc_dep_info_t ndi, bool verbose);
 
 void    print_nfc_target (const nfc_target_t nt, bool verbose);
 
-nfc_device_desc_t *parse_args (int argc, const char *argv[], size_t * szFound, bool * verbose);
-
 #endif

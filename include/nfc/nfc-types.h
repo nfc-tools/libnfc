@@ -71,24 +71,7 @@ typedef struct {
   int     iLastError;
 } nfc_device_t;
 
-/**
- * @struct nfc_device_desc_t
- * @brief NFC device description
- *
- * This struct is used to try to connect to a specified nfc device when nfc_connect(...)
- */
-typedef struct {
-  /** Device name (e.g. "ACS ACR 38U-CCID 00 00") */
-  char    acDevice[DEVICE_NAME_LENGTH];
-  /** Driver name (e.g. "PN532_UART")*/
-  char   *pcDriver;
-  /** Port (e.g. "/dev/ttyUSB0") */
-  char    acPort[DEVICE_PORT_LENGTH];
-  /** Port speed (e.g. "115200") */
-  uint32_t uiSpeed;
-  /** Device index for backward compatibility (used to choose one specific device in USB or PSCS devices list) */
-  uint32_t uiBusIndex;
-} nfc_device_desc_t;
+typedef char nfc_connstring[1024];
 
 // Compiler directive, set struct alignment to 1 byte_t for compatibility
 #  pragma pack(1)

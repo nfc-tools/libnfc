@@ -29,9 +29,9 @@
 
 #  include <nfc/nfc-types.h>
 
-bool    pn532_uart_probe (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * pszDeviceFound);
+bool    pn532_uart_probe (nfc_connstring connstrings[], size_t connstrings_len, size_t * pszDeviceFound);
 
-nfc_device_t *pn532_uart_connect (const nfc_device_desc_t * pndd);
+nfc_device_t *pn532_uart_connect (const nfc_connstring connstring);
 void    pn532_uart_disconnect (nfc_device_t * pnd);
 bool    pn532_uart_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szData, struct timeval *timeout);
 int     pn532_uart_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szData, struct timeval *timeout);

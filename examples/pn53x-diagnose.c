@@ -55,7 +55,6 @@ main (int argc, const char *argv[])
   size_t  szFound;
   size_t  i;
   nfc_device_t *pnd;
-  nfc_device_desc_t *pnddDevices;
   const char *acLibnfcVersion;
   bool    result;
 
@@ -72,19 +71,15 @@ main (int argc, const char *argv[])
   acLibnfcVersion = nfc_version ();
   printf ("%s uses libnfc %s\n", argv[0], acLibnfcVersion);
 
-  if (!(pnddDevices = malloc (MAX_DEVICE_COUNT * sizeof (*pnddDevices)))) {
-    fprintf (stderr, "malloc() failed\n");
-    return EXIT_FAILURE;
-  }
-
-  nfc_list_devices (pnddDevices, MAX_DEVICE_COUNT, &szFound);
+  nfc_connstring connstrings[MAX_DEVICE_COUNT];
+  nfc_list_devices (connstrings, MAX_DEVICE_COUNT, &szFound);
 
   if (szFound == 0) {
     printf ("No NFC device found.\n");
   }
 
   for (i = 0; i < szFound; i++) {
-    pnd = nfc_connect (&(pnddDevices[i]));
+    pnd = nfc_connect (connstrings[i]);
 
     if (pnd == NULL) {
       ERR ("%s", "Unable to connect to NFC device.");

@@ -62,62 +62,97 @@ const struct nfc_driver_t *nfc_drivers[] = {
 };
 
 /**
+ * @brief Get the defaut NFC device
+ * @param connstring \a nfc_connstring pointer where the default connection string will be stored 
+ * @return \e true on success
+ *
+ * This function fill \e connstring with the LIBNFC_DEFAULT_DEVICE environment variable content
+ * if is set otherwise it will search for the first available device, and fill
+ * \e connstring with the corresponding \a nfc_connstring value.
+ *
+ * This function returns true when LIBNFC_DEFAULT_DEVICE is set or an available device is found.
+ * 
+ * @note The \e connstring content can be invalid if LIBNFC_DEFAULT_DEVICE is
+ * set with incorrect value.
+ */
+bool 
+nfc_get_default_device (nfc_connstring *connstring)
+{
+  char * env_default_connstring = getenv ("LIBNFC_DEFAULT_DEVICE");
+  if (NULL == env_default_connstring) {
+    // LIBNFC_DEFAULT_DEVICE is not set, we fallback on probing for the first available device
+    size_t szDeviceFound;
+    nfc_connstring listed_cs[1];
+    nfc_list_devices (listed_cs, 1, &szDeviceFound);
+    if (szDeviceFound) {
+      strncpy (*connstring, listed_cs[0], sizeof(nfc_connstring));
+    } else {
+      return false;
+    }
+  } else {
+    strncpy (*connstring, env_default_connstring, sizeof(nfc_connstring));
+  }
+  return true;
+}
+
+/**
  * @brief Connect to a NFC device
- * @param pndd device description if specific device is wanted, \c NULL otherwise
+ * @param connstring The device connection string if specific device is wanted, \c NULL otherwise
  * @return Returns pointer to a \a nfc_device_t struct if successfull; otherwise returns \c NULL value.
  *
- * If \e pndd is \c NULL, the first available NFC device is claimed.
- * It will automatically search the system using all available drivers to determine a device is NFC-enabled.
+ * If \e connstring is \c NULL, the \a nfc_get_default_device() function is used.
+ * 
+ * If \e connstring is set, this function will try to claim the right device using information provided by \e connstring.
  *
- * If \e pndd is passed then this function will try to claim the right device using information provided by the \a nfc_device_desc_t struct.
- *
- * When it has successfully claimed a NFC device, memory is allocated to save the device information. It will return a pointer to a \a nfc_device_t struct.
+ * When it has successfully claimed a NFC device, memory is allocated to save the device information.
+ * It will return a pointer to a \a nfc_device_t struct.
  * This pointer should be supplied by every next functions of libnfc that should perform an action with this device.
  *
- * @note Depending on the desired operation mode, the device needs to be configured
- * by using nfc_initiator_init() or nfc_target_init(), optionally followed by manual tuning of the parameters if the default parameters are not suiting your goals.
+ * @note Depending on the desired operation mode, the device needs to be configured by using nfc_initiator_init() or nfc_target_init(), 
+ * optionally followed by manual tuning of the parameters if the default parameters are not suiting your goals.
  */
 nfc_device_t *
-nfc_connect (nfc_device_desc_t * pndd)
+nfc_connect (const nfc_connstring connstring)
 {
+  log_init ();
   nfc_device_t *pnd = NULL;
 
-  if (pndd == NULL) {
-    size_t szDeviceFound;
-    nfc_device_desc_t ndd[1];
-    nfc_list_devices (ndd, 1, &szDeviceFound);
-    if (szDeviceFound) {
-      pndd = &ndd[0];
-    }
-  }
-
-  if (pndd == NULL)
+  nfc_connstring ncs;
+  if (connstring == NULL) {
+    if (!nfc_get_default_device (&ncs)) {
+      log_fini ();
       return NULL;
-
-  log_init ();
+    }
+  } else {
+    strncpy (ncs, connstring, sizeof (nfc_connstring));
+  }
+  
   // Search through the device list for an available device
   const struct nfc_driver_t *ndr;
   const struct nfc_driver_t **pndr = nfc_drivers;
   while ((ndr = *pndr)) {
-    // Specific device is requested: using device description pndd
-    if (0 != strcmp (ndr->name, pndd->pcDriver)) {
+    // Specific device is requested: using device description 
+    if (0 != strncmp (ndr->name, ncs, strlen(ndr->name))) {
       pndr++;
       continue;
-    } else {
-      pnd = ndr->connect (pndd);
     }
 
+    pnd = ndr->connect (ncs);
     // Test if the connection was successful
-    if (pnd != NULL) {
-      log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "[%s] has been claimed.", pnd->acName);
+    if (pnd == NULL) {
+      log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "Unable to connect to \"%s\".", ncs);
+      log_fini ();
       return pnd;
-    } else {
-      log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "No device found using driver: %s", ndr->name);
     }
-    pndr++;
+    
+    log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "[%s] has been claimed.", pnd->acName);
+    log_fini ();
+    return pnd;
   }
+
+  // Too bad, no driver can decode connstring
+  log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "No driver available to handle \"%s\".", ncs);
   log_fini ();
-  // Too bad, no reader is ready to be claimed
   return NULL;
 }
 
@@ -147,7 +182,7 @@ nfc_disconnect (nfc_device_t * pnd)
  * @param[out] pszDeviceFound number of devices found.
  */
 void
-nfc_list_devices (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * pszDeviceFound)
+nfc_list_devices (nfc_connstring connstrings[] , size_t szDevices, size_t * pszDeviceFound)
 {
   size_t  szN;
   *pszDeviceFound = 0;
@@ -157,7 +192,7 @@ nfc_list_devices (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * ps
   log_init ();
   while ((ndr = *pndr)) {
     szN = 0;
-    if (ndr->probe (pnddDevices + (*pszDeviceFound), szDevices - (*pszDeviceFound), &szN)) {
+    if (ndr->probe (connstrings + (*pszDeviceFound), szDevices - (*pszDeviceFound), &szN)) {
       *pszDeviceFound += szN;
       log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "%ld device(s) found using %s driver", (unsigned long) szN, ndr->name);
       if (*pszDeviceFound == szDevices)

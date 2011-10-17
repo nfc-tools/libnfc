@@ -126,10 +126,10 @@
 
 struct nfc_driver_t {
   const char *name;
-  bool (*probe)(nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * pszDeviceFound);
-  nfc_device_t * (*connect)(const nfc_device_desc_t * pndd);
-  void (*disconnect)(nfc_device_t * pnd);
-  const char *(*strerror)(const nfc_device_t * pnd);
+  bool (*probe)(nfc_connstring connstrings[], size_t connstrings_len, size_t * pszDeviceFound);
+  nfc_device_t * (*connect) (const nfc_connstring connstring);
+  void (*disconnect) (nfc_device_t * pnd);
+  const char *(*strerror) (const nfc_device_t * pnd);
 
   bool (*initiator_init) (nfc_device_t * pnd);
   bool (*initiator_select_passive_target) (nfc_device_t * pnd,  const nfc_modulation_t nm, const byte_t * pbtInitData, const size_t szInitData, nfc_target_t * pnt);

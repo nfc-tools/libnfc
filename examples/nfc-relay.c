@@ -83,7 +83,6 @@ main (int argc, char *argv[])
   int     arg;
   bool    quiet_output = false;
   size_t  szFound;
-  nfc_device_desc_t *pnddDevices;
   const char *acLibnfcVersion = nfc_version ();
 
   // Get commandline options
@@ -109,20 +108,16 @@ main (int argc, char *argv[])
   signal (SIGINT, (void (*)()) intr_hdlr);
 #endif
 
-  // Allocate memory to put the result of available devices listing
-  if (!(pnddDevices = malloc (MAX_DEVICE_COUNT * sizeof (*pnddDevices)))) {
-    fprintf (stderr, "malloc() failed\n");
-    return EXIT_FAILURE;
-  }
+  nfc_connstring connstrings[MAX_DEVICE_COUNT];
   // List available devices
-  nfc_list_devices (pnddDevices, MAX_DEVICE_COUNT, &szFound);
+  nfc_list_devices (connstrings, MAX_DEVICE_COUNT, &szFound);
 
   if (szFound < 2) {
     ERR ("%zd device found but two connected devices are needed to relay NFC.", szFound);
     return EXIT_FAILURE;
   }
   // Try to open the NFC emulator device
-  pndTag = nfc_connect (&(pnddDevices[0]));
+  pndTag = nfc_connect (connstrings[0]);
   if (pndTag == NULL) {
     printf ("Error connecting NFC emulator device\n");
     return EXIT_FAILURE;
@@ -165,7 +160,7 @@ main (int argc, char *argv[])
   printf ("%s", "Done, emulated tag is initialized");
 
   // Try to open the NFC reader
-  pndReader = nfc_connect (&(pnddDevices[1]));
+  pndReader = nfc_connect (connstrings[1]);
 
   printf ("Connected to the NFC reader device: %s", pndReader->acName);
   printf ("%s", "Configuring NFC reader settings...");

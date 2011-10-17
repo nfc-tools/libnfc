@@ -150,7 +150,6 @@ main (int argc, char *argv[])
 {
   int     arg;
   size_t  szFound;
-  nfc_device_desc_t *pnddDevices;
   const char *acLibnfcVersion = nfc_version ();
   nfc_target_t ntRealTarget;
 
@@ -192,13 +191,9 @@ main (int argc, char *argv[])
   signal (SIGINT, (void (*)()) intr_hdlr);
 #endif
 
-  // Allocate memory to put the result of available devices listing
-  if (!(pnddDevices = malloc (MAX_DEVICE_COUNT * sizeof (*pnddDevices)))) {
-    fprintf (stderr, "malloc() failed\n");
-    return EXIT_FAILURE;
-  }
+  nfc_connstring connstrings[MAX_DEVICE_COUNT];
   // List available devices
-  nfc_list_devices (pnddDevices, MAX_DEVICE_COUNT, &szFound);
+  nfc_list_devices (connstrings, MAX_DEVICE_COUNT, &szFound);
 
   if (initiator_only_mode || target_only_mode) {
     if (szFound < 1) {
@@ -222,9 +217,9 @@ main (int argc, char *argv[])
     // if there is more than one readers connected we connect to the second reader
     // (we hope they're always detected in the same order)
     if (szFound == 1) {
-      pndInitiator = nfc_connect (&(pnddDevices[0]));
+      pndInitiator = nfc_connect (connstrings[0]);
     } else {
-      pndInitiator = nfc_connect (&(pnddDevices[1]));
+      pndInitiator = nfc_connect (connstrings[1]);
     }
 
     if (!pndInitiator) {
@@ -348,7 +343,7 @@ main (int argc, char *argv[])
     print_nfc_iso14443a_info (ntEmulatedTarget.nti.nai, false);
  
     // Try to open the NFC emulator device
-    pndTarget = nfc_connect (&(pnddDevices[0]));
+    pndTarget = nfc_connect (connstrings[0]);
     if (pndTarget == NULL) {
       printf ("Error connecting NFC emulator device\n");
       if (!target_only_mode) {

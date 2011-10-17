@@ -670,51 +670,6 @@ print_nfc_dep_info (const nfc_dep_info_t ndi, bool verbose)
   }
 }
 
-/**
- * @brief Tries to parse arguments to find device descriptions.
- * @return Returns the list of found device descriptions.
- */
-nfc_device_desc_t *
-parse_args (int argc, const char *argv[], size_t * szFound, bool * verbose)
-{
-  nfc_device_desc_t *pndd = 0;
-  int     arg;
-  *szFound = 0;
-
-  // Get commandline options
-  for (arg = 1; arg < argc; arg++) {
-
-    if (0 == strcmp (argv[arg], "--device")) {
-      // FIXME: this device selection by command line options is terrible & does not support USB/PCSC drivers
-      if (argc > arg + 1) {
-        char    buffer[256];
-
-        pndd = malloc (sizeof (nfc_device_desc_t));
-
-        strncpy (buffer, argv[++arg], 256);
-
-        // Driver.
-        pndd->pcDriver = (char *) malloc (256);
-        strcpy (pndd->pcDriver, strtok (buffer, ":"));
-
-        // Port.
-        strcpy (pndd->acPort, strtok (NULL, ":"));
-
-        // Speed.
-        sscanf (strtok (NULL, ":"), "%u", &pndd->uiSpeed);
-
-        *szFound = 1;
-      } else {
-        errx (1, "usage: %s [--device driver:port:speed]", argv[0]);
-      }
-    }
-    if ((0 == strcmp (argv[arg], "-v")) || (0 == strcmp (argv[arg], "--verbose"))) {
-      *verbose = true;
-    }
-  }
-  return pndd;
-}
-
 const char *
 str_nfc_baud_rate (const nfc_baud_rate_t nbr)
 {

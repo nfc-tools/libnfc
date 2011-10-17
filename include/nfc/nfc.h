@@ -63,10 +63,11 @@ extern  "C" {
 #  endif                        // __cplusplus
 
 /* NFC Device/Hardware manipulation */
-  NFC_EXPORT nfc_device_t *nfc_connect (nfc_device_desc_t * pndd);
+  NFC_EXPORT bool nfc_get_default_device (nfc_connstring *connstring);
+  NFC_EXPORT nfc_device_t *nfc_connect (const nfc_connstring connstring);
   NFC_EXPORT void nfc_disconnect (nfc_device_t * pnd);
   NFC_EXPORT bool nfc_abort_command (nfc_device_t * pnd);
-  NFC_EXPORT void nfc_list_devices (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * pszDeviceFound);
+  NFC_EXPORT void nfc_list_devices (nfc_connstring connstrings[], size_t connstrings_len, size_t * pszDeviceFound);
   NFC_EXPORT bool nfc_configure (nfc_device_t * pnd, const nfc_device_option_t ndo, const bool bEnable);
   NFC_EXPORT bool nfc_idle (nfc_device_t * pnd);
 

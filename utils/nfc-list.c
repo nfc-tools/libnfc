@@ -62,18 +62,16 @@ static nfc_device_t *pnd;
 int
 main (int argc, const char *argv[])
 {
+  (void) argc;
   const char *acLibnfcVersion;
-  size_t  szDeviceFound;
   size_t  szTargetFound;
   size_t  i;
   bool verbose = false;
-  nfc_device_desc_t *pnddDevices;
 
   // Display libnfc version
   acLibnfcVersion = nfc_version ();
   printf ("%s uses libnfc %s\n", argv[0], acLibnfcVersion);
 
-  pnddDevices = parse_args (argc, argv, &szDeviceFound, &verbose);
 #ifdef HAVE_LIBUSB
 #  ifdef DEBUG
   usb_set_debug (4);
@@ -101,15 +99,9 @@ main (int argc, const char *argv[])
   strcpy(ndd.acDevice, "SCM Micro / SCL3711-NFC&RW");
   pnd = nfc_connect (&ndd);
 #endif
-
-  if (szDeviceFound == 0) {
-    if (!(pnddDevices = malloc (MAX_DEVICE_COUNT * sizeof (*pnddDevices)))) {
-      fprintf (stderr, "malloc() failed\n");
-      return EXIT_FAILURE;
-    }
-
-    nfc_list_devices (pnddDevices, MAX_DEVICE_COUNT, &szDeviceFound);
-  }
+  size_t  szDeviceFound;
+  nfc_connstring connstrings[MAX_DEVICE_COUNT];
+  nfc_list_devices (connstrings, MAX_DEVICE_COUNT, &szDeviceFound);
 
   if (szDeviceFound == 0) {
     printf ("No NFC device found.\n");
@@ -117,7 +109,7 @@ main (int argc, const char *argv[])
 
   for (i = 0; i < szDeviceFound; i++) {
     nfc_target_t ant[MAX_TARGET_COUNT];
-    pnd = nfc_connect (&(pnddDevices[i]));
+    pnd = nfc_connect (connstrings[i]);
 
     if (pnd == NULL) {
       ERR ("%s", "Unable to connect to NFC device.");
@@ -243,6 +235,5 @@ main (int argc, const char *argv[])
     nfc_disconnect (pnd);
   }
 
-  free (pnddDevices);
   return 0;
 }
