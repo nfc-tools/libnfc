@@ -5,13 +5,22 @@
 #include <stdlib.h>
 #include <nfc/nfc.h>
 
-#include "nfc-utils.h"
+void
+print_hex (const byte_t * pbtData, const size_t szBytes)
+{
+  size_t  szPos;
+
+  for (szPos = 0; szPos < szBytes; szPos++) {
+    printf ("%02x  ", pbtData[szPos]);
+  }
+  printf ("\n");
+}
 
 int
 main (int argc, const char *argv[])
 {
   nfc_device_t *pnd;
-  nfc_target_info_t nti;
+  nfc_target_t nt;
 
   // Display libnfc version
   const char *acLibnfcVersion = nfc_version ();
@@ -21,7 +30,7 @@ main (int argc, const char *argv[])
   pnd = nfc_connect (NULL);
 
   if (pnd == NULL) {
-    ERR ("%s", "Unable to connect to NFC device.");
+    fprintf (stderr, "Unable to connect to NFC device.");
     return EXIT_FAILURE;
   }
   // Set connected NFC device to initiator mode
@@ -34,17 +43,17 @@ main (int argc, const char *argv[])
     .nmt = NMT_ISO14443A,
     .nbr = NBR_106,
   };
-  if (nfc_initiator_select_passive_target (pnd, PM_ISO14443A_106, NULL, 0, &nti)) {
+  if (nfc_initiator_select_passive_target (pnd, nmMifare, NULL, 0, &nt)) {
     printf ("The following (NFC) ISO14443A tag was found:\n");
     printf ("    ATQA (SENS_RES): ");
-    print_hex (nti.nai.abtAtqa, 2);
-    printf ("       UID (NFCID%c): ", (nti.nai.abtUid[0] == 0x08 ? '3' : '1'));
-    print_hex (nti.nai.abtUid, nti.nai.szUidLen);
+    print_hex (nt.nti.nai.abtAtqa, 2);
+    printf ("       UID (NFCID%c): ", (nt.nti.nai.abtUid[0] == 0x08 ? '3' : '1'));
+    print_hex (nt.nti.nai.abtUid, nt.nti.nai.szUidLen);
     printf ("      SAK (SEL_RES): ");
-    print_hex (&nti.nai.btSak, 1);
-    if (nti.nai.szAtsLen) {
+    print_hex (&nt.nti.nai.btSak, 1);
+    if (nt.nti.nai.szAtsLen) {
       printf ("          ATS (ATR): ");
-      print_hex (nti.nai.abtAts, nti.nai.szAtsLen);
+      print_hex (nt.nti.nai.abtAts, nt.nti.nai.szAtsLen);
     }
   }
   // Disconnect from NFC device
