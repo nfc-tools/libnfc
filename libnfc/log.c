@@ -19,6 +19,7 @@
 
 #include <fcntl.h>
 #include <log4c.h>
+#include <inttypes.h>
 
 #include "log.h"
 
