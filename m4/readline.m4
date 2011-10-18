@@ -14,6 +14,10 @@ AC_DEFUN([AC_CHECK_READLINE],[
 
   AC_MSG_CHECKING(for readline.h)
 
+  if test "x$cross_compiling" == "xyes"; then
+      without_readline=yes
+  fi
+
   if test "x$without_readline" != "xyes"; then
     for i in $with_arg \
 	     /usr/include: \
