@@ -121,7 +121,7 @@ main (int argc, const char *argv[])
 
     if (pnd == NULL) {
       ERR ("%s", "Unable to connect to NFC device.");
-      return EXIT_FAILURE;
+      continue;
     }
     nfc_initiator_init (pnd);
 
