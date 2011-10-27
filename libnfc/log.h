@@ -18,7 +18,7 @@
 #ifndef __LOG_H__
 #define __LOG_H__
 
-#if defined(HAS_LOG4C) && HAS_LOG4C
+#if defined(HAS_LOG4C) && HAS_LOG4C /* log4c have been detected */
 
 #define LOGGING 1
 
@@ -38,7 +38,31 @@ void	 log_put (char *category, int priority, char *format, ...);
 #define NFC_PRIORITY_DEBUG  LOG4C_PRIORITY_DEBUG
 #define NFC_PRIORITY_TRACE  LOG4C_PRIORITY_TRACE
 
-#else /* HAS_LOG4C */
+#elif defined(DEBUG) /* no available log4c but debug is enabled */
+
+#define LOGGING 1
+
+#define log_init() (0)
+#define log_fini() (0)
+#define log_msg(category, priority, message) do {} while (0)
+#define log_set_appender(category, appender) do {} while (0)
+#define log_put(category, priority, format, ...) do { \
+    fprintf(stderr, "%s - ", category); \
+    fprintf(stderr, format, ##__VA_ARGS__); \
+    fprintf(stderr, "\n"); \
+  } while (0)
+
+#define NFC_PRIORITY_FATAL  8
+#define NFC_PRIORITY_ALERT  7
+#define NFC_PRIORITY_CRIT   6
+#define NFC_PRIORITY_ERROR  5
+#define NFC_PRIORITY_WARN   4
+#define NFC_PRIORITY_NOTICE 3
+#define NFC_PRIORITY_INFO   2
+#define NFC_PRIORITY_DEBUG  1
+#define NFC_PRIORITY_TRACE  0
+
+#else /* no available log4c and debug is disabled */
 
 #define log_init() (0)
 #define log_fini() (0)
@@ -56,7 +80,7 @@ void	 log_put (char *category, int priority, char *format, ...);
 #define NFC_PRIORITY_DEBUG  1
 #define NFC_PRIORITY_TRACE  0
 
-#endif /* HAS_LOG4C */
+#endif
 
 /**
  * @macro LOG_HEX

@@ -28,6 +28,7 @@
 #  include <nfc/nfc-types.h>
 #  include <stdbool.h>
 #  include <err.h>
+#  include <sys/time.h>
 
 #include "log.h"
 
