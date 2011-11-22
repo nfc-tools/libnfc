@@ -53,7 +53,6 @@
 #include <unistd.h>
 
 #include <nfc/nfc.h>
-#include <nfc/nfc-emulation.h>
 
 #include "nfc-utils.h"
 
