@@ -4,7 +4,7 @@ AC_DEFUN([LIBNFC_ARG_WITH_DRIVERS],
 [
   AC_MSG_CHECKING(which drivers to build)
   AC_ARG_WITH(drivers,
-  AC_HELP_STRING([--with-drivers=DRIVERS], [Use a custom driver set, where DRIVERS is a coma-separated list of drivers to build support for. Available drivers are: 'acr122', 'arygon', 'pn532_uart' and 'pn53x_usb'. Default drivers set is 'acr122,arygon,pn53x_usb'. The special driver set 'all' compile all available drivers.]),
+  AC_HELP_STRING([--with-drivers=DRIVERS], [Use a custom driver set, where DRIVERS is a coma-separated list of drivers to build support for. Available drivers are: 'acr122', 'acr122s', 'arygon', 'pn532_uart' and 'pn53x_usb'. Default drivers set is 'acr122,acr122s,arygon,pn53x_usb'. The special driver set 'all' compile all available drivers.]),
   [       case "${withval}" in
           yes | no)
                   dnl ignore calls without any arguments
@@ -25,16 +25,17 @@ AC_DEFUN([LIBNFC_ARG_WITH_DRIVERS],
   
   case "${DRIVER_BUILD_LIST}" in
     default)
-                  DRIVER_BUILD_LIST="acr122 arygon pn53x_usb"
+                  DRIVER_BUILD_LIST="acr122 acr122s arygon pn53x_usb"
                   ;;
     all)
-                  DRIVER_BUILD_LIST="acr122 arygon pn53x_usb pn532_uart"
+                  DRIVER_BUILD_LIST="acr122 acr122s arygon pn53x_usb pn532_uart"
                   ;;
   esac
   
   DRIVERS_CFLAGS=""
 
   driver_acr122_enabled="no"
+  driver_acr122s_enabled="no"
   driver_pn53x_usb_enabled="no"
   driver_arygon_enabled="no"
   driver_pn532_uart_enabled="no"
@@ -46,6 +47,10 @@ AC_DEFUN([LIBNFC_ARG_WITH_DRIVERS],
                   pcsc_required="yes"
 		  driver_acr122_enabled="yes"
                   DRIVERS_CFLAGS="$DRIVERS_CFLAGS -DDRIVER_ACR122_ENABLED"
+                  ;;
+    acr122s)
+                  driver_acr122s_enabled="yes"
+                  DRIVERS_CFLAGS="$DRIVERS_CFLAGS -DDRIVER_ACR122S_ENABLED"
                   ;;
     pn53x_usb)
                   libusb_required="yes"
@@ -67,6 +72,7 @@ AC_DEFUN([LIBNFC_ARG_WITH_DRIVERS],
   done
   AC_SUBST(DRIVERS_CFLAGS)
   AM_CONDITIONAL(DRIVER_ACR122_ENABLED, [test x"$driver_acr122_enabled" = xyes])
+  AM_CONDITIONAL(DRIVER_ACR122S_ENABLED, [test x"$driver_acr122s_enabled" = xyes])
   AM_CONDITIONAL(DRIVER_PN53X_USB_ENABLED, [test x"$driver_pn53x_usb_enabled" = xyes])
   AM_CONDITIONAL(DRIVER_ARYGON_ENABLED, [test x"$driver_arygon_enabled" = xyes])
   AM_CONDITIONAL(DRIVER_PN532_UART_ENABLED, [test x"$driver_pn532_uart_enabled" = xyes])
@@ -76,6 +82,7 @@ AC_DEFUN([LIBNFC_DRIVERS_SUMMARY],[
 echo
 echo "Selected drivers:"
 echo "   acr122........... $driver_acr122_enabled"
+echo "   acr122s.......... $driver_acr122s_enabled"
 echo "   arygon........... $driver_arygon_enabled"
 echo "   pn53x_usb........ $driver_pn53x_usb_enabled"
 echo "   pn532_uart....... $driver_pn532_uart_enabled"

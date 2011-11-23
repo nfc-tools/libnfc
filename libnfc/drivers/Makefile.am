@@ -1,7 +1,7 @@
 # set the include path found by configure
 INCLUDES= $(all_includes) $(LIBNFC_CFLAGS)
 
-noinst_HEADERS = acr122.h arygon.h pn532_uart.h pn53x_usb.h
+noinst_HEADERS = acr122.h acr122s.h arygon.h pn532_uart.h pn53x_usb.h
 noinst_LTLIBRARIES = libnfcdrivers.la
 
 libnfcdrivers_la_SOURCES = 
@@ -10,6 +10,10 @@ libnfcdrivers_la_LIBADD =
 
 if DRIVER_ACR122_ENABLED
 libnfcdrivers_la_SOURCES += acr122.c
+endif
+
+if DRIVER_ACR122S_ENABLED
+libnfcdrivers_la_SOURCES += acr122s.c
 endif
 
 if DRIVER_ARYGON_ENABLED
