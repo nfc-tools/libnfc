@@ -48,7 +48,7 @@
 
 #define MAX_FRAME_LEN 264
 
-static nfc_device_t *pnd;
+static nfc_device *pnd;
 
 void stop_dep_communication (int sig)
 {
@@ -62,7 +62,7 @@ void stop_dep_communication (int sig)
 int
 main (int argc, const char *argv[])
 {
-  nfc_target_t nt;
+  nfc_target nt;
   byte_t  abtRx[MAX_FRAME_LEN];
   size_t  szRx = sizeof(abtRx);
   byte_t  abtTx[] = "Hello World!";

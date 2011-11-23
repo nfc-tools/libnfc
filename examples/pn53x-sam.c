@@ -72,7 +72,7 @@ wait_one_minute ()
 int
 main (int argc, const char *argv[])
 {
-  nfc_device_t *pnd;
+  nfc_device *pnd;
 
   (void) argc;
   (void) argv;
@@ -125,7 +125,7 @@ main (int argc, const char *argv[])
 
   case PSM_WIRED_CARD:
     {
-      nfc_target_t nt;
+      nfc_target nt;
 
       // Set connected NFC device to initiator mode
       nfc_initiator_init (pnd);
@@ -136,7 +136,7 @@ main (int argc, const char *argv[])
         exit (EXIT_FAILURE);
       }
       // Read the SAM's info
-      const nfc_modulation_t nmSAM = {
+      const nfc_modulation nmSAM = {
         .nmt = NMT_ISO14443A,
         .nbr = NBR_106,
       };
@@ -156,7 +156,7 @@ main (int argc, const char *argv[])
       byte_t  abtRx[MAX_FRAME_LEN];
       size_t  szRx = sizeof(abtRx);
 
-      nfc_target_t nt = {
+      nfc_target nt = {
         .nm = {
           .nmt = NMT_ISO14443A,
           .nbr = NBR_UNDEFINED,

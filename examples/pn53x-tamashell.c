@@ -71,7 +71,7 @@
 
 int main(int argc, const char* argv[])
 {
-  nfc_device_t* pnd;
+  nfc_device* pnd;
   byte_t abtRx[MAX_FRAME_LEN];
   byte_t abtTx[MAX_FRAME_LEN];
   size_t szRx = sizeof(abtRx);

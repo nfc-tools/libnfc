@@ -76,7 +76,7 @@
 
 const struct pn53x_io acr122_io;
 
-char   *acr122_firmware (nfc_device_t *pnd);
+char   *acr122_firmware (nfc_device *pnd);
 
 const char *supported_devices[] = {
   "ACS ACR122",         // ACR122U & Touchatag, last version
@@ -239,7 +239,7 @@ acr122_connstring_decode (const nfc_connstring connstring, struct acr122_descrip
   return 3;
 }
 
-nfc_device_t *
+nfc_device *
 acr122_connect (const nfc_connstring connstring)
 {
   struct acr122_descriptor ndd;
@@ -251,7 +251,7 @@ acr122_connect (const nfc_connstring connstring)
   // FIXME: acr122_connect() does not take care about bus index
 
   char   *pcFirmware;
-  nfc_device_t *pnd = nfc_device_new ();
+  nfc_device *pnd = nfc_device_new ();
   pnd->driver_data = malloc (sizeof (struct acr122_data));
 
   // Alloc and init chip's data
@@ -300,7 +300,7 @@ error:
 }
 
 void
-acr122_disconnect (nfc_device_t * pnd)
+acr122_disconnect (nfc_device * pnd)
 {
   SCardDisconnect (DRIVER_DATA (pnd)->hCard, SCARD_LEAVE_CARD);
   acr122_free_scardcontext ();
@@ -310,7 +310,7 @@ acr122_disconnect (nfc_device_t * pnd)
 }
 
 bool
-acr122_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szData, struct timeval *timeout)
+acr122_send (nfc_device * pnd, const byte_t * pbtData, const size_t szData, struct timeval *timeout)
 {
   // FIXME: timeout is not handled
   (void) timeout;
@@ -381,7 +381,7 @@ acr122_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szData, st
 }
 
 int
-acr122_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szData, struct timeval *timeout)
+acr122_receive (nfc_device * pnd, byte_t * pbtData, const size_t szData, struct timeval *timeout)
 {
   // FIXME: timeout is not handled
   (void) timeout;
@@ -422,7 +422,7 @@ acr122_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szData, struc
 }
 
 char   *
-acr122_firmware (nfc_device_t *pnd)
+acr122_firmware (nfc_device *pnd)
 {
   byte_t  abtGetFw[5] = { 0xFF, 0x00, 0x48, 0x00, 0x00 };
   uint32_t uiResult;
@@ -445,7 +445,7 @@ acr122_firmware (nfc_device_t *pnd)
 
 #if 0
 bool
-acr122_led_red (nfc_device_t *pnd, bool bOn)
+acr122_led_red (nfc_device *pnd, bool bOn)
 {
   byte_t  abtLed[9] = { 0xFF, 0x00, 0x40, 0x05, 0x04, 0x00, 0x00, 0x00, 0x00 };
   byte_t  abtBuf[2];

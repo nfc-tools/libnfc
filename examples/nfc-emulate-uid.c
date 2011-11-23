@@ -58,7 +58,7 @@
 
 static byte_t abtRecv[MAX_FRAME_LEN];
 static size_t szRecvBits;
-static nfc_device_t *pnd;
+static nfc_device *pnd;
 
 // ISO14443A Anti-Collision response
 byte_t  abtAtqa[2] = { 0x04, 0x00 };
@@ -139,8 +139,8 @@ main (int argc, char *argv[])
   printf ("[+] To do this, please send any command after the anti-collision\n");
   printf ("[+] For example, send a RATS command or use the \"nfc-anticol\" or \"nfc-list\" tool.\n");
 
-  // Note: We have to build a "fake" nfc_target_t in order to do exactly the same that was done before the new nfc_target_init() was introduced.
-  nfc_target_t nt = {
+  // Note: We have to build a "fake" nfc_target in order to do exactly the same that was done before the new nfc_target_init() was introduced.
+  nfc_target nt = {
     .nm = {
       .nmt = NMT_ISO14443A,
       .nbr = NBR_UNDEFINED,

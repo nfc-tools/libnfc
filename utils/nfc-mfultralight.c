@@ -51,13 +51,13 @@
 #include "nfc-utils.h"
 #include "mifare.h"
 
-static nfc_device_t *pnd;
-static nfc_target_t nt;
+static nfc_device *pnd;
+static nfc_target nt;
 static mifare_param mp;
 static mifareul_tag mtDump;
 static uint32_t uiBlocks = 0xF;
 
-static const nfc_modulation_t nmMifare = {
+static const nfc_modulation nmMifare = {
   .nmt = NMT_ISO14443A,
   .nbr = NBR_106,
 };

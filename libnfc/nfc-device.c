@@ -19,7 +19,7 @@
 
  /**
  * @file nfc-device.c
- * @brief Provide internal function to manipulate nfc_device_t type
+ * @brief Provide internal function to manipulate nfc_device type
  */
 
 /* vim:set et sw=2 ts=2: */
@@ -32,10 +32,10 @@
 
 #include "nfc-internal.h"
 
-nfc_device_t *
+nfc_device *
 nfc_device_new (void)
 {
-  nfc_device_t *res = malloc (sizeof (*res));
+  nfc_device *res = malloc (sizeof (*res));
 
   if (!res) {
     err (EXIT_FAILURE, "nfc_device_new: malloc");
@@ -57,7 +57,7 @@ nfc_device_new (void)
 }
 
 void
-nfc_device_free (nfc_device_t *nfc_device)
+nfc_device_free (nfc_device *nfc_device)
 {
   if (nfc_device) {
     free (nfc_device->driver_data);

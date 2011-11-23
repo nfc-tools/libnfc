@@ -56,7 +56,7 @@
 
 static byte_t abtRx[MAX_FRAME_LEN];
 static size_t szRx = sizeof(abtRx);
-static nfc_device_t *pnd;
+static nfc_device *pnd;
 static bool quiet_output = false;
 static bool init_mfc_auth = false;
 
@@ -71,7 +71,7 @@ intr_hdlr (void)
 }
 
 bool 
-target_io( nfc_target_t * pnt, const byte_t * pbtInput, const size_t szInput, byte_t * pbtOutput, size_t *pszOutput )
+target_io( nfc_target * pnt, const byte_t * pbtInput, const size_t szInput, byte_t * pbtOutput, size_t *pszOutput )
 {
   bool loop = true;
   *pszOutput = 0;
@@ -134,7 +134,7 @@ target_io( nfc_target_t * pnt, const byte_t * pbtInput, const size_t szInput, by
 }
 
 bool
-nfc_target_emulate_tag(nfc_device_t* pnd, nfc_target_t * pnt)
+nfc_target_emulate_tag(nfc_device* pnd, nfc_target * pnt)
 {
   size_t szTx;
   byte_t abtTx[MAX_FRAME_LEN];
@@ -203,7 +203,7 @@ main (int argc, char *argv[])
 
   // Example of a Mifare Classic Mini
   // Note that crypto1 is not implemented in this example
-  nfc_target_t nt = {
+  nfc_target nt = {
     .nm = {
       .nmt = NMT_ISO14443A,
       .nbr = NBR_UNDEFINED,
@@ -220,25 +220,37 @@ main (int argc, char *argv[])
   };
 /*
   // Example of a FeliCa
-  nfc_target_t nt = {
-    .nm.nmt = NMT_FELICA,
-    .nm.nbr = NBR_UNDEFINED,
-    .nti.nfi.abtId = { 0x01, 0xFE, 0x56, 0x78, 0x9A, 0xBC, 0xDE, 0xFF },
-    .nti.nfi.abtPad = { 0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC, 0xDE, 0xFF },
-    .nti.nfi.abtSysCode = { 0xFF, 0xFF },
+  nfc_target nt = {
+    .nm = {
+      .nmt = NMT_FELICA,
+      .nbr = NBR_UNDEFINED,
+    },
+    .nti = {
+      .nfi = {
+        .abtId = { 0x01, 0xFE, 0x56, 0x78, 0x9A, 0xBC, 0xDE, 0xFF },
+        .abtPad = { 0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC, 0xDE, 0xFF },
+        .abtSysCode = { 0xFF, 0xFF },
+      },
+    },
   };
 */
 /*
   // Example of a ISO14443-4 (DESfire)
-  nfc_target_t nt = {
-    .nm.nmt = NMT_ISO14443A,
-    .nm.nbr = NBR_UNDEFINED,
-    .nti.nai.abtAtqa = { 0x03, 0x44 },
-    .nti.nai.abtUid = { 0x08, 0xab, 0xcd, 0xef },
-    .nti.nai.btSak = 0x20,
-    .nti.nai.szUidLen = 4,
-    .nti.nai.abtAts = { 0x75, 0x77, 0x81, 0x02, 0x80 },
-    .nti.nai.szAtsLen = 5,
+  nfc_target nt = {
+    .nm = {
+      .nmt = NMT_ISO14443A,
+      .nbr = NBR_UNDEFINED,
+    },
+    .nti = {
+      .nai = {
+        abtAtqa = { 0x03, 0x44 },
+        abtUid = { 0x08, 0xab, 0xcd, 0xef },
+        btSak = 0x20,
+        .szUidLen = 4,
+        .abtAts = { 0x75, 0x77, 0x81, 0x02, 0x80 },
+        .szAtsLen = 5,
+      },
+    },
   };
 */
 

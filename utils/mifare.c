@@ -48,7 +48,7 @@
  * The MIFARE Classic Specification (http://www.nxp.com/acrobat/other/identification/M001053_MF1ICS50_rev5_3.pdf) explains more about this process.
  */
 bool
-nfc_initiator_mifare_cmd (nfc_device_t * pnd, const mifare_cmd mc, const uint8_t ui8Block, mifare_param * pmp)
+nfc_initiator_mifare_cmd (nfc_device * pnd, const mifare_cmd mc, const uint8_t ui8Block, mifare_param * pmp)
 {
   byte_t  abtRx[265];
   size_t  szRx = sizeof(abtRx);
@@ -69,19 +69,19 @@ nfc_initiator_mifare_cmd (nfc_device_t * pnd, const mifare_cmd mc, const uint8_t
     // Authenticate command
   case MC_AUTH_A:
   case MC_AUTH_B:
-    szParamLen = sizeof (mifare_param_auth);
+    szParamLen = sizeof (struct mifare_param_auth);
     break;
 
     // Data command
   case MC_WRITE:
-    szParamLen = sizeof (mifare_param_data);
+    szParamLen = sizeof (struct mifare_param_data);
     break;
 
     // Value command
   case MC_DECREMENT:
   case MC_INCREMENT:
   case MC_TRANSFER:
-    szParamLen = sizeof (mifare_param_value);
+    szParamLen = sizeof (struct mifare_param_value);
     break;
 
     // Please fix your code, you never should reach this statement

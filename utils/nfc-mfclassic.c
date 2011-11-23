@@ -52,8 +52,8 @@
 #include "mifare.h"
 #include "nfc-utils.h"
 
-static nfc_device_t *pnd;
-static nfc_target_t nt;
+static nfc_device *pnd;
+static nfc_target nt;
 static mifare_param mp;
 static mifare_classic_tag mtKeys;
 static mifare_classic_tag mtDump;
@@ -72,7 +72,7 @@ static byte_t keys[] = {
   0xab, 0xcd, 0xef, 0x12, 0x34, 0x56
 };
 
-static const nfc_modulation_t nmMifare = {
+static const nfc_modulation nmMifare = {
   .nmt = NMT_ISO14443A,
   .nbr = NBR_106,
 };

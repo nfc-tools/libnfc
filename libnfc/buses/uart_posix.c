@@ -61,18 +61,20 @@ char *serial_ports_device_radix[] = { "ttyUSB", "ttyS", NULL };
 // Work-around to claim uart interface using the c_iflag (software input processing) from the termios struct
 #  define CCLAIMED 0x80000000
 
-typedef struct {
+struct serial_port_unix{
   int 			fd; 			// Serial port file descriptor
   struct termios 	termios_backup; 	// Terminal info before using the port
   struct termios 	termios_new; 		// Terminal info during the transaction
-} serial_port_unix;
+};
+
+// TODO: #define UART_FD( X ) (((struct serial_port_unix *) X)->fd)
 
 void uart_close_ext (const serial_port sp, const bool restore_termios);
 
 serial_port
 uart_open (const char *pcPortName)
 {
-  serial_port_unix *sp = malloc (sizeof (serial_port_unix));
+  struct serial_port_unix *sp = malloc (sizeof (struct serial_port_unix));
 
   if (sp == 0)
     return INVALID_SERIAL_PORT;
@@ -114,12 +116,12 @@ void
 uart_flush_input (serial_port sp)
 {
   // This line seems to produce absolutely no effect on my system (GNU/Linux 2.6.35)
-  tcflush (((serial_port_unix *) sp)->fd, TCIFLUSH);
+  tcflush (((struct serial_port_unix *) sp)->fd, TCIFLUSH);
   // So, I wrote this byte-eater
   // Retrieve the count of the incoming bytes
   int available_bytes_count = 0;
   int res;
-  res = ioctl (((serial_port_unix *) sp)->fd, FIONREAD, &available_bytes_count);
+  res = ioctl (((struct serial_port_unix *) sp)->fd, FIONREAD, &available_bytes_count);
   if (res != 0) {
     return;
   }
@@ -128,7 +130,7 @@ uart_flush_input (serial_port sp)
   }
   char* rx = malloc (available_bytes_count);
   // There is something available, read the data
-  res = read (((serial_port_unix *) sp)->fd, rx, available_bytes_count);
+  res = read (((struct serial_port_unix *) sp)->fd, rx, available_bytes_count);
   log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "%d bytes have eatten.", available_bytes_count);
   free (rx);
 }
@@ -137,7 +139,7 @@ void
 uart_set_speed (serial_port sp, const uint32_t uiPortSpeed)
 {
   log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "Serial port speed requested to be set to %d bauds.", uiPortSpeed);
-  serial_port_unix *spu = (serial_port_unix *) sp;
+  struct serial_port_unix *spu = (struct serial_port_unix *) sp;
 
   // Portability note: on some systems, B9600 != 9600 so we have to do
   // uint32_t <=> speed_t associations by hand.
@@ -190,7 +192,7 @@ uint32_t
 uart_get_speed (serial_port sp)
 {
   uint32_t uiPortSpeed = 0;
-  const serial_port_unix *spu = (serial_port_unix *) sp;
+  const struct serial_port_unix *spu = (struct serial_port_unix *) sp;
   switch (cfgetispeed (&spu->termios_new)) {
   case B9600:
     uiPortSpeed = 9600;
@@ -229,10 +231,10 @@ uart_get_speed (serial_port sp)
 void
 uart_close_ext (const serial_port sp, const bool restore_termios)
 {
-  if (((serial_port_unix *) sp)->fd >= 0) {
+  if (((struct serial_port_unix *) sp)->fd >= 0) {
     if (restore_termios)
-      tcsetattr (((serial_port_unix *) sp)->fd, TCSANOW, &((serial_port_unix *) sp)->termios_backup);
-    close (((serial_port_unix *) sp)->fd);
+      tcsetattr (((struct serial_port_unix *) sp)->fd, TCSANOW, &((struct serial_port_unix *) sp)->termios_backup);
+    close (((struct serial_port_unix *) sp)->fd);
   }
   free (sp);
 }
@@ -261,7 +263,7 @@ uart_receive (serial_port sp, byte_t * pbtRx, const size_t szRx, void * abort_p,
 select:
     // Reset file descriptor
     FD_ZERO (&rfds);
-    FD_SET (((serial_port_unix *) sp)->fd, &rfds);
+    FD_SET (((struct serial_port_unix *) sp)->fd, &rfds);
 
     if (iAbortFd) {
       FD_SET (iAbortFd, &rfds);
@@ -277,7 +279,7 @@ select:
 	timeout = &fixed_timeout;
     }
 
-    res = select (MAX(((serial_port_unix *) sp)->fd, iAbortFd) + 1, &rfds, NULL, NULL, timeout);
+    res = select (MAX(((struct serial_port_unix *) sp)->fd, iAbortFd) + 1, &rfds, NULL, NULL, timeout);
 
     if ((res < 0) && (EINTR == errno)) {
       // The system call was interupted by a signal and a signal handler was
@@ -304,12 +306,12 @@ select:
     }
 
     // Retrieve the count of the incoming bytes
-    res = ioctl (((serial_port_unix *) sp)->fd, FIONREAD, &available_bytes_count);
+    res = ioctl (((struct serial_port_unix *) sp)->fd, FIONREAD, &available_bytes_count);
     if (res != 0) {
       return ECOMIO;
     }
     // There is something available, read the data
-    res = read (((serial_port_unix *) sp)->fd, pbtRx + received_bytes_count, MIN(available_bytes_count, (expected_bytes_count - received_bytes_count)));
+    res = read (((struct serial_port_unix *) sp)->fd, pbtRx + received_bytes_count, MIN(available_bytes_count, (expected_bytes_count - received_bytes_count)));
     // Stop if the OS has some troubles reading the data
     if (res <= 0) {
       return ECOMIO;
@@ -331,7 +333,7 @@ uart_send (serial_port sp, const byte_t * pbtTx, const size_t szTx, struct timev
 {
   (void) timeout;
   LOG_HEX ("TX", pbtTx, szTx);
-  if ((int) szTx == write (((serial_port_unix *) sp)->fd, pbtTx, szTx))
+  if ((int) szTx == write (((struct serial_port_unix *) sp)->fd, pbtTx, szTx))
     return 0;
   else
     return ECOMIO;

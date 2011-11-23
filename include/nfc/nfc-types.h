@@ -38,7 +38,7 @@ typedef uint8_t byte_t;
 #  define DEVICE_PORT_LENGTH  64
 
 /**
- * @struct nfc_device_t
+ * @struct nfc_device
  * @brief NFC device information
  */
 typedef struct {
@@ -69,7 +69,7 @@ typedef struct {
  *    +----------- Driver-level general error (common to all drivers)
  */
   int     iLastError;
-} nfc_device_t;
+} nfc_device;
 
 typedef char nfc_connstring[1024];
 
@@ -77,7 +77,7 @@ typedef char nfc_connstring[1024];
 #  pragma pack(1)
 
 /**
- * @enum nfc_device_option_t
+ * @enum nfc_device_option
  * @brief NFC device option
  */
 typedef enum {
@@ -137,20 +137,20 @@ typedef enum {
   NDO_FORCE_ISO14443_B = 0x43,
 /** Force the chip to run at 106 kbps */
   NDO_FORCE_SPEED_106 = 0x50,
-} nfc_device_option_t;
+} nfc_device_option;
 
 /**
- * @enum nfc_dep_mode_t
+ * @enum nfc_dep_mode
  * @brief NFC D.E.P. (Data Exchange Protocol) active/passive mode
  */
 typedef enum {
   NDM_UNDEFINED = 0,
   NDM_PASSIVE,
   NDM_ACTIVE,
-} nfc_dep_mode_t;
+} nfc_dep_mode;
 
 /**
- * @struct nfc_dep_info_t
+ * @struct nfc_dep_info
  * @brief NFC target information in D.E.P. (Data Exchange Protocol) see ISO/IEC 18092 (NFCIP-1)
  */
 typedef struct {
@@ -170,11 +170,11 @@ typedef struct {
   byte_t  abtGB[48];
   size_t  szGB;
 /** DEP mode */
-  nfc_dep_mode_t ndm;
-} nfc_dep_info_t;
+  nfc_dep_mode ndm;
+} nfc_dep_info;
 
 /**
- * @struct nfc_iso14443a_info_t
+ * @struct nfc_iso14443a_info
  * @brief NFC ISO14443A tag (MIFARE) information
  */
 typedef struct {
@@ -184,10 +184,10 @@ typedef struct {
   byte_t  abtUid[10];
   size_t  szAtsLen;
   byte_t  abtAts[254]; // Maximal theoretical ATS is FSD-2, FSD=256 for FSDI=8 in RATS
-} nfc_iso14443a_info_t;
+} nfc_iso14443a_info;
 
 /**
- * @struct nfc_felica_info_t
+ * @struct nfc_felica_info
  * @brief NFC FeLiCa tag information
  */
 typedef struct {
@@ -196,10 +196,10 @@ typedef struct {
   byte_t  abtId[8];
   byte_t  abtPad[8];
   byte_t  abtSysCode[2];
-} nfc_felica_info_t;
+} nfc_felica_info;
 
 /**
- * @struct nfc_iso14443b_info_t
+ * @struct nfc_iso14443b_info
  * @brief NFC ISO14443B tag information
  */
 typedef struct {
@@ -211,10 +211,10 @@ typedef struct {
   byte_t abtProtocolInfo[3];
 /** ui8CardIdentifier store CID (Card Identifier) attributted by PCD to the PICC */
   uint8_t ui8CardIdentifier;
-} nfc_iso14443b_info_t;
+} nfc_iso14443b_info;
 
 /**
- * @struct nfc_iso14443bi_info_t
+ * @struct nfc_iso14443bi_info
  * @brief NFC ISO14443B' tag information
  */
 typedef struct {
@@ -227,52 +227,52 @@ typedef struct {
 /** ATR, if any */
   size_t szAtrLen;
   byte_t  abtAtr[33];
-} nfc_iso14443bi_info_t;
+} nfc_iso14443bi_info;
 
 /**
- * @struct nfc_iso14443b2sr_info_t
+ * @struct nfc_iso14443b2sr_info
  * @brief NFC ISO14443-2B ST SRx tag information
  */
 typedef struct {
   byte_t abtUID[8];
-} nfc_iso14443b2sr_info_t;
+} nfc_iso14443b2sr_info;
 
 /**
- * @struct nfc_iso14443b2ct_info_t
+ * @struct nfc_iso14443b2ct_info
  * @brief NFC ISO14443-2B ASK CTx tag information
  */
 typedef struct {
   byte_t abtUID[4];
   byte_t btProdCode;
   byte_t btFabCode;
-} nfc_iso14443b2ct_info_t;
+} nfc_iso14443b2ct_info;
 
 /**
- * @struct nfc_jewel_info_t
+ * @struct nfc_jewel_info
  * @brief NFC Jewel tag information
  */
 typedef struct {
   byte_t  btSensRes[2];
   byte_t  btId[4];
-} nfc_jewel_info_t;
+} nfc_jewel_info;
 
 /**
- * @union nfc_target_info_t
+ * @union nfc_target_info
  * @brief Union between all kind of tags information structures.
  */
 typedef union {
-  nfc_iso14443a_info_t nai;
-  nfc_felica_info_t nfi;
-  nfc_iso14443b_info_t nbi;
-  nfc_iso14443bi_info_t nii;
-  nfc_iso14443b2sr_info_t nsi;
-  nfc_iso14443b2ct_info_t nci;
-  nfc_jewel_info_t nji;
-  nfc_dep_info_t ndi;
-} nfc_target_info_t;
+  nfc_iso14443a_info nai;
+  nfc_felica_info nfi;
+  nfc_iso14443b_info nbi;
+  nfc_iso14443bi_info nii;
+  nfc_iso14443b2sr_info nsi;
+  nfc_iso14443b2ct_info nci;
+  nfc_jewel_info nji;
+  nfc_dep_info ndi;
+} nfc_target_info;
 
 /**
- * @enum nfc_baud_rate_t
+ * @enum nfc_baud_rate
  * @brief NFC baud rate enumeration
  */
 typedef enum {
@@ -281,10 +281,10 @@ typedef enum {
   NBR_212,
   NBR_424,
   NBR_847,
-} nfc_baud_rate_t;
+} nfc_baud_rate;
 
 /**
- * @enum nfc_modulation_type_t
+ * @enum nfc_modulationype
  * @brief NFC modulation type enumeration
  */
 typedef enum {
@@ -296,25 +296,25 @@ typedef enum {
   NMT_ISO14443B2CT, // ISO14443-2B ASK CTx
   NMT_FELICA,
   NMT_DEP,
-} nfc_modulation_type_t;
+} nfc_modulationype;
 
 /**
- * @struct nfc_modulation_t
+ * @struct nfc_modulation
  * @brief NFC modulation structure
  */
 typedef struct {
-  nfc_modulation_type_t nmt;
-  nfc_baud_rate_t nbr;
-} nfc_modulation_t;
+  nfc_modulationype nmt;
+  nfc_baud_rate nbr;
+} nfc_modulation;
 
 /**
- * @struct nfc_target_t
+ * @struct nfc_target
  * @brief NFC target structure
  */
 typedef struct {
-  nfc_target_info_t nti;
-  nfc_modulation_t nm;
-} nfc_target_t;
+  nfc_target_info nti;
+  nfc_modulation nm;
+} nfc_target;
 
 // Reset struct alignment to default
 #  pragma pack()

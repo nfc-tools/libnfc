@@ -118,7 +118,7 @@ struct pn53x_usb_data {
 
 const struct pn53x_io pn53x_usb_io;
 bool pn53x_usb_get_usb_device_name (struct usb_device *dev, usb_dev_handle *udev, char *buffer, size_t len);
-bool pn53x_usb_init (nfc_device_t *pnd);
+bool pn53x_usb_init (nfc_device *pnd);
 
 int
 pn53x_usb_bulk_read (struct pn53x_usb_data *data, byte_t abtRx[], const size_t szRx, struct timeval *timeout)
@@ -190,7 +190,7 @@ pn53x_usb_get_device_model (uint16_t vendor_id, uint16_t product_id)
   return UNKNOWN;
 }
 
-int  pn53x_usb_ack (nfc_device_t * pnd);
+int  pn53x_usb_ack (nfc_device * pnd);
 
 // Find transfer endpoints for bulk transfers
 void
@@ -378,7 +378,7 @@ pn53x_usb_get_usb_device_name (struct usb_device *dev, usb_dev_handle *udev, cha
   return false;
 }
 
-nfc_device_t *
+nfc_device *
 pn53x_usb_connect (const nfc_connstring connstring)
 {
   struct pn53x_usb_descriptor desc;
@@ -388,7 +388,7 @@ pn53x_usb_connect (const nfc_connstring connstring)
     return NULL;
   }
 
-  nfc_device_t *pnd = NULL;
+  nfc_device *pnd = NULL;
   struct pn53x_usb_data data = {
     .pudh = NULL,
     .uiEndPointIn = 0,
@@ -492,7 +492,7 @@ error:
 }
 
 void
-pn53x_usb_disconnect (nfc_device_t * pnd)
+pn53x_usb_disconnect (nfc_device * pnd)
 {
   pn53x_usb_ack (pnd);
 
@@ -519,7 +519,7 @@ pn53x_usb_disconnect (nfc_device_t * pnd)
 #define PN53X_USB_BUFFER_LEN (PN53x_EXTENDED_FRAME__DATA_MAX_LEN + PN53x_EXTENDED_FRAME__OVERHEAD)
 
 bool
-pn53x_usb_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szData, struct timeval *timeout)
+pn53x_usb_send (nfc_device * pnd, const byte_t * pbtData, const size_t szData, struct timeval *timeout)
 {
   byte_t  abtFrame[PN53X_USB_BUFFER_LEN] = { 0x00, 0x00, 0xff };  // Every packet must start with "00 00 ff"
   size_t szFrame = 0;
@@ -565,7 +565,7 @@ pn53x_usb_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szData,
 }
 
 int
-pn53x_usb_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDataLen, struct timeval *timeout)
+pn53x_usb_receive (nfc_device * pnd, byte_t * pbtData, const size_t szDataLen, struct timeval *timeout)
 {
   size_t len;
   off_t offset = 0;
@@ -715,13 +715,13 @@ read:
 }
 
 int
-pn53x_usb_ack (nfc_device_t * pnd)
+pn53x_usb_ack (nfc_device * pnd)
 {
   return pn53x_usb_bulk_write (DRIVER_DATA (pnd), (byte_t *) pn53x_ack_frame, sizeof (pn53x_ack_frame), NULL);
 }
 
 bool
-pn53x_usb_init (nfc_device_t *pnd)
+pn53x_usb_init (nfc_device *pnd)
 {
   // Sometimes PN53x USB doesn't reply ACK one the first frame, so we need to send a dummy one...
   //pn53x_check_communication (pnd); // Sony RC-S360 doesn't support this command for now so let's use a get_firmware_version instead:
@@ -778,7 +778,7 @@ On ASK LoGO hardware:
 }
 
 bool
-pn53x_usb_configure (nfc_device_t * pnd, const nfc_device_option_t ndo, const bool bEnable)
+pn53x_usb_configure (nfc_device * pnd, const nfc_device_option ndo, const bool bEnable)
 {
   if (!pn53x_configure (pnd, ndo, bEnable))
     return false;
@@ -806,7 +806,7 @@ pn53x_usb_configure (nfc_device_t * pnd, const nfc_device_option_t ndo, const bo
 }
 
 bool
-pn53x_usb_abort_command (nfc_device_t * pnd)
+pn53x_usb_abort_command (nfc_device * pnd)
 {
   DRIVER_DATA (pnd)->abort_flag = true;
   return true;

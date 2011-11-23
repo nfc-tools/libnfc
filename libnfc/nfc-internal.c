@@ -23,10 +23,9 @@
  */
 
 #include <nfc/nfc.h>
-#include <nfc/nfc-emulation.h>
 
 void 
-prepare_initiator_data (const nfc_modulation_t nm, byte_t **ppbtInitiatorData, size_t * pszInitiatorData)
+prepare_initiator_data (const nfc_modulation nm, byte_t **ppbtInitiatorData, size_t * pszInitiatorData)
 {
   switch (nm.nmt) {
     case NMT_ISO14443B: {

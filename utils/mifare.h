@@ -53,29 +53,29 @@ typedef enum {
 } mifare_cmd;
 
 // MIFARE command params
-typedef struct {
+struct mifare_param_auth {
   byte_t  abtKey[6];
   byte_t  abtUid[4];
-} mifare_param_auth;
+};
 
-typedef struct {
+struct mifare_param_data {
   byte_t  abtData[16];
-} mifare_param_data;
+};
 
-typedef struct {
+struct mifare_param_value {
   byte_t  abtValue[4];
-} mifare_param_value;
+};
 
 typedef union {
-  mifare_param_auth mpa;
-  mifare_param_data mpd;
-  mifare_param_value mpv;
+  struct mifare_param_auth mpa;
+  struct mifare_param_data mpd;
+  struct mifare_param_value mpv;
 } mifare_param;
 
 // Reset struct alignment to default
 #  pragma pack()
 
-bool    nfc_initiator_mifare_cmd (nfc_device_t * pnd, const mifare_cmd mc, const uint8_t ui8Block, mifare_param * pmp);
+bool    nfc_initiator_mifare_cmd (nfc_device * pnd, const mifare_cmd mc, const uint8_t ui8Block, mifare_param * pmp);
 
 // Compiler directive, set struct alignment to 1 byte_t for compatibility
 #  pragma pack(1)

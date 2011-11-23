@@ -56,8 +56,8 @@ static size_t szReaderRxBits;
 static byte_t abtTagRx[MAX_FRAME_LEN];
 static byte_t abtTagRxPar[MAX_FRAME_LEN];
 static size_t szTagRxBits;
-static nfc_device_t *pndReader;
-static nfc_device_t *pndTag;
+static nfc_device *pndReader;
+static nfc_device *pndTag;
 static bool quitting = false;
 
 void
@@ -130,7 +130,7 @@ main (int argc, char *argv[])
   printf ("[+] To do this, please send any command after the anti-collision\n");
   printf ("[+] For example, send a RATS command or use the \"nfc-anticol\" tool\n");
 
-  nfc_target_t nt = {
+  nfc_target nt = {
     .nm = {
       .nmt = NMT_ISO14443A,
       .nbr = NBR_UNDEFINED,

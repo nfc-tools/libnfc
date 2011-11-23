@@ -57,7 +57,7 @@
 
 #include "nfc-utils.h"
 
-static nfc_device_t *pnd;
+static nfc_device *pnd;
 
 void
 print_usage(char *progname)
@@ -77,7 +77,7 @@ void stop_select (int sig)
 }
 
 void
-build_felica_frame(const nfc_felica_info_t nfi, const byte_t command, const byte_t* payload, const size_t payload_len, byte_t * frame, size_t * frame_len)
+build_felica_frame(const nfc_felica_info nfi, const byte_t command, const byte_t* payload, const size_t payload_len, byte_t * frame, size_t * frame_len)
 {
   frame[0] = 1 + 1 + 8 + payload_len;
   *frame_len = frame[0];
@@ -88,7 +88,7 @@ build_felica_frame(const nfc_felica_info_t nfi, const byte_t command, const byte
 
 #define CHECK 		0x06
 int 
-nfc_forum_tag_type3_check (nfc_device_t *pnd, const nfc_target_t nt, const uint16_t block, const uint8_t block_count, byte_t * data, size_t * data_len)
+nfc_forum_tag_type3_check (nfc_device *pnd, const nfc_target nt, const uint16_t block, const uint8_t block_count, byte_t * data, size_t * data_len)
 {
   byte_t payload[1024] = {
                        1, // Services
@@ -204,14 +204,14 @@ main(int argc, char *argv[])
 
   fprintf (message_stream, "Connected to NFC device: %s\n", pnd->acName);
 
-  nfc_modulation_t nm = {
+  nfc_modulation nm = {
     .nmt = NMT_FELICA,
     .nbr = NBR_212,
   };
 
   signal (SIGINT, stop_select);
 
-  nfc_target_t nt;
+  nfc_target nt;
 
   nfc_initiator_init(pnd);
   fprintf (message_stream, "Place your NFC Forum Tag Type 3 in the field...\n");

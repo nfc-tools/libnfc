@@ -28,7 +28,7 @@
 #include "iso7816.h"
 
 int
-nfc_emulate_target (nfc_device_t* pnd, struct nfc_emulator *emulator)
+nfc_emulate_target (nfc_device* pnd, struct nfc_emulator *emulator)
 {
   byte_t abtRx[ISO7816_SHORT_R_APDU_MAX_LEN];
   size_t szRx = sizeof(abtRx);

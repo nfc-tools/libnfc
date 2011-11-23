@@ -71,7 +71,7 @@
 
 #include "nfc-utils.h"
 
-static nfc_device_t *pnd;
+static nfc_device *pnd;
 
 void
 stop_emulation (int sig)
@@ -155,7 +155,7 @@ main(int argc, char *argv[])
   (void)argc;
   (void)argv;
 
-  nfc_target_t nt = {
+  nfc_target nt = {
     .nm = {
       .nmt = NMT_ISO14443A,
       .nbr = NBR_UNDEFINED, // Will be updated by nfc_target_init()

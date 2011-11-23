@@ -133,7 +133,7 @@ print_hex_par (const byte_t * pbtData, const size_t szBits, const byte_t * pbtDa
 #define SAK_ISO18092_COMPLIANT   0x40
 
 void
-print_nfc_iso14443a_info (const nfc_iso14443a_info_t nai, bool verbose)
+print_nfc_iso14443a_info (const nfc_iso14443a_info nai, bool verbose)
 {
   printf ("    ATQA (SENS_RES): ");
   print_hex (nai.abtAtqa, 2);
@@ -530,7 +530,7 @@ print_nfc_iso14443a_info (const nfc_iso14443a_info_t nai, bool verbose)
 }
 
 void
-print_nfc_felica_info (const nfc_felica_info_t nfi, bool verbose)
+print_nfc_felica_info (const nfc_felica_info nfi, bool verbose)
 {
   (void) verbose;
   printf ("        ID (NFCID2): ");
@@ -542,7 +542,7 @@ print_nfc_felica_info (const nfc_felica_info_t nfi, bool verbose)
 }
 
 void
-print_nfc_jewel_info (const nfc_jewel_info_t nji, bool verbose)
+print_nfc_jewel_info (const nfc_jewel_info nji, bool verbose)
 {
   (void) verbose;
   printf ("    ATQA (SENS_RES): ");
@@ -555,7 +555,7 @@ print_nfc_jewel_info (const nfc_jewel_info_t nji, bool verbose)
 #define PI_NAD_SUPPORTED        0x01
 #define PI_CID_SUPPORTED        0x02
 void
-print_nfc_iso14443b_info (const nfc_iso14443b_info_t nbi, bool verbose)
+print_nfc_iso14443b_info (const nfc_iso14443b_info nbi, bool verbose)
 {
   const int iMaxFrameSizes[] = { 16, 24, 32, 40, 48, 64, 96, 128, 256 };
   printf ("               PUPI: ");
@@ -610,7 +610,7 @@ print_nfc_iso14443b_info (const nfc_iso14443b_info_t nbi, bool verbose)
 }
 
 void
-print_nfc_iso14443bi_info (const nfc_iso14443bi_info_t nii, bool verbose)
+print_nfc_iso14443bi_info (const nfc_iso14443bi_info nii, bool verbose)
 {
   printf ("                DIV: ");
   print_hex (nii.abtDIV, 4);
@@ -634,7 +634,7 @@ print_nfc_iso14443bi_info (const nfc_iso14443bi_info_t nii, bool verbose)
 }
 
 void
-print_nfc_iso14443b2sr_info (const nfc_iso14443b2sr_info_t nsi, bool verbose)
+print_nfc_iso14443b2sr_info (const nfc_iso14443b2sr_info nsi, bool verbose)
 {
   (void) verbose;
   printf ("                UID: ");
@@ -642,7 +642,7 @@ print_nfc_iso14443b2sr_info (const nfc_iso14443b2sr_info_t nsi, bool verbose)
 }
 
 void
-print_nfc_iso14443b2ct_info (const nfc_iso14443b2ct_info_t nci, bool verbose)
+print_nfc_iso14443b2ct_info (const nfc_iso14443b2ct_info nci, bool verbose)
 {
   (void) verbose;
   uint32_t uid;
@@ -655,7 +655,7 @@ print_nfc_iso14443b2ct_info (const nfc_iso14443b2ct_info_t nci, bool verbose)
 }
 
 void
-print_nfc_dep_info (const nfc_dep_info_t ndi, bool verbose)
+print_nfc_dep_info (const nfc_dep_info ndi, bool verbose)
 {
   (void) verbose;
   printf ("       NFCID3: ");
@@ -671,7 +671,7 @@ print_nfc_dep_info (const nfc_dep_info_t ndi, bool verbose)
 }
 
 const char *
-str_nfc_baud_rate (const nfc_baud_rate_t nbr)
+str_nfc_baud_rate (const nfc_baud_rate nbr)
 {
   switch(nbr) {
     case NBR_UNDEFINED:
@@ -694,7 +694,7 @@ str_nfc_baud_rate (const nfc_baud_rate_t nbr)
 }
 
 void
-print_nfc_target (const nfc_target_t nt, bool verbose)
+print_nfc_target (const nfc_target nt, bool verbose)
 {
   switch(nt.nm.nmt) {
     case NMT_ISO14443A:

@@ -65,7 +65,7 @@ static byte_t abtSak;
 static byte_t abtAts[MAX_FRAME_LEN];
 static byte_t szAts = 0;
 static size_t szCL = 1;//Always start with Cascade Level 1 (CL1)
-static nfc_device_t *pnd;
+static nfc_device *pnd;
 
 bool    quiet_output = false;
 bool    iso_ats_supported = false;

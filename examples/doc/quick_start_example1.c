@@ -10,8 +10,8 @@
 int
 main (int argc, const char *argv[])
 {
-  nfc_device_t *pnd;
-  nfc_target_info_t nti;
+  nfc_device *pnd;
+  nfc_target_info nti;
 
   // Display libnfc version
   const char *acLibnfcVersion = nfc_version ();
@@ -30,7 +30,7 @@ main (int argc, const char *argv[])
   printf ("Connected to NFC reader: %s\n", pnd->acName);
 
   // Poll for a ISO14443A (MIFARE) tag
-  const nfc_modulation_t nmMifare = {
+  const nfc_modulation nmMifare = {
     .nmt = NMT_ISO14443A,
     .nbr = NBR_106,
   };

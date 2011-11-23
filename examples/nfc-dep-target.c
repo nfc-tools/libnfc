@@ -47,7 +47,7 @@
 
 #define MAX_FRAME_LEN 264
 
-static nfc_device_t *pnd;
+static nfc_device *pnd;
 
 void stop_dep_communication (int sig)
 {
@@ -86,7 +86,7 @@ main (int argc, const char *argv[])
     return EXIT_FAILURE;
   }
 
-  nfc_target_t nt = {
+  nfc_target nt = {
     .nm = {
       .nmt = NMT_DEP,
       .nbr = NBR_UNDEFINED

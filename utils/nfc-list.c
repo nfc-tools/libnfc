@@ -57,7 +57,7 @@
 #define MAX_DEVICE_COUNT 16
 #define MAX_TARGET_COUNT 16
 
-static nfc_device_t *pnd;
+static nfc_device *pnd;
 
 int
 main (int argc, const char *argv[])
@@ -108,7 +108,7 @@ main (int argc, const char *argv[])
   }
 
   for (i = 0; i < szDeviceFound; i++) {
-    nfc_target_t ant[MAX_TARGET_COUNT];
+    nfc_target ant[MAX_TARGET_COUNT];
     pnd = nfc_connect (connstrings[i]);
 
     if (pnd == NULL) {
@@ -119,7 +119,7 @@ main (int argc, const char *argv[])
 
     printf ("Connected to NFC device: %s\n", pnd->acName);
 
-    nfc_modulation_t nm;
+    nfc_modulation nm;
 
     nm.nmt = NMT_ISO14443A;
     nm.nbr = NBR_106;

@@ -9,8 +9,8 @@
 #define TARGET    1
 
 pthread_t threads[2];
-nfc_device_desc_t device_descriptions[2];
-nfc_device_t *devices[2];
+nfc_connstring connstrings[2];
+nfc_device *devices[2];
 intptr_t result[2];
 
 void
@@ -28,13 +28,13 @@ cut_setup (void)
 {
   size_t n;
 
-  nfc_list_devices (device_descriptions, 2, &n);
+  nfc_list_devices (connstrings, 2, &n);
   if (n < 2) {
     cut_omit ("At least two NFC devices must be plugged-in to run this test");
   }
 
-  devices[TARGET] = nfc_connect (&device_descriptions[TARGET]);
-  devices[INITIATOR] = nfc_connect (&device_descriptions[INITIATOR]);
+  devices[TARGET] = nfc_connect (&connstrings[TARGET]);
+  devices[INITIATOR] = nfc_connect (&connstrings[INITIATOR]);
 
   signal (SIGINT, abort_test_by_keypress);
 }
@@ -47,7 +47,7 @@ cut_teardown (void)
 }
 
 struct thread_data {
-  nfc_device_t *device;
+  nfc_device *device;
   void *cut_test_context;
 };
 
@@ -55,11 +55,11 @@ void *
 target_thread (void *arg)
 {
   intptr_t thread_res = 0;
-//  nfc_device_t *device = ((struct thread_data *) arg)->device;
+//  nfc_device *device = ((struct thread_data *) arg)->device;
   cut_set_current_test_context (((struct thread_data *) arg)->cut_test_context);
 
 #if 0
-  nfc_target_t nt = {
+  nfc_target nt = {
     .nm = {
       .nmt = NMT_DEP,
       .nbr = NBR_UNDEFINED
@@ -106,7 +106,7 @@ void *
 initiator_thread (void *arg)
 {
   intptr_t thread_res = 0;
-//  nfc_device_t *device = ((struct thread_data *) arg)->device;
+//  nfc_device *device = ((struct thread_data *) arg)->device;
   cut_set_current_test_context (((struct thread_data *) arg)->cut_test_context);
 
   cut_fail("plop");
@@ -122,7 +122,7 @@ initiator_thread (void *arg)
   bool res = nfc_initiator_init (device);
   // cut_assert_true (res, cut_message ("Can't initialize NFC device as initiator"));
 
-  nfc_target_t nt;
+  nfc_target nt;
 
   // Passive mode / 212Kbps
   res = nfc_initiator_select_dep_target (device, NDM_PASSIVE, NBR_212, NULL, &nt);

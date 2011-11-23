@@ -32,7 +32,7 @@ struct nfc_emulation_state_machine;
 
 
 struct nfc_emulator {
-  nfc_target_t *target;
+  nfc_target *target;
   struct nfc_emulation_state_machine *state_machine;
   void *user_data;
 };
@@ -42,7 +42,7 @@ struct nfc_emulation_state_machine {
   void *data;
 };
 
-NFC_EXPORT int    nfc_emulate_target (nfc_device_t* pnd, struct nfc_emulator *emulator);
+NFC_EXPORT int    nfc_emulate_target (nfc_device* pnd, struct nfc_emulator *emulator);
 
 #ifdef __cplusplus
 }

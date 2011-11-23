@@ -51,7 +51,7 @@
 
 #define MAX_DEVICE_COUNT 16
 
-static nfc_device_t *pnd = NULL;
+static nfc_device *pnd = NULL;
 
 void stop_polling (int sig)
 {
@@ -80,7 +80,7 @@ main (int argc, const char *argv[])
 
   const uint8_t uiPollNr = 20;
   const uint8_t uiPeriod = 2;
-  const nfc_modulation_t nmModulations[5] = {
+  const nfc_modulation nmModulations[5] = {
     { .nmt = NMT_ISO14443A, .nbr = NBR_106 },
     { .nmt = NMT_ISO14443B, .nbr = NBR_106 },
     { .nmt = NMT_FELICA, .nbr = NBR_212 },
@@ -89,7 +89,7 @@ main (int argc, const char *argv[])
   };
   const size_t szModulations = 5;
 
-  nfc_target_t nt;
+  nfc_target nt;
   bool    res;
 
   pnd = nfc_connect (NULL);

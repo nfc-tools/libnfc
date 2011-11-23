@@ -54,7 +54,7 @@ main (int argc, const char *argv[])
 {
   size_t  szFound;
   size_t  i;
-  nfc_device_t *pnd;
+  nfc_device *pnd;
   const char *acLibnfcVersion;
   bool    result;
 

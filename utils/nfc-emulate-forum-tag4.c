@@ -68,7 +68,7 @@
 
 #include "nfc-utils.h"
 
-static nfc_device_t *pnd;
+static nfc_device *pnd;
 static bool quiet_output = false;
 
 #define SYMBOL_PARAM_fISO14443_4_PICC   0x20
@@ -289,7 +289,7 @@ usage (char *progname)
 int
 main (int argc, char *argv[])
 {
-  nfc_target_t nt = {
+  nfc_target nt = {
     .nm = {
       .nmt = NMT_ISO14443A,
       .nbr = NBR_UNDEFINED, // Will be updated by nfc_target_init()

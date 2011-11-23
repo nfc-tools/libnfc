@@ -61,8 +61,8 @@ static byte_t abtCapdu[MAX_FRAME_LEN];
 static size_t szCapduLen;
 static byte_t abtRapdu[MAX_FRAME_LEN];
 static size_t szRapduLen;
-static nfc_device_t *pndInitiator;
-static nfc_device_t *pndTarget;
+static nfc_device *pndInitiator;
+static nfc_device *pndTarget;
 static bool quitting = false;
 static bool quiet_output = false;
 static bool initiator_only_mode = false;
@@ -151,7 +151,7 @@ main (int argc, char *argv[])
   int     arg;
   size_t  szFound;
   const char *acLibnfcVersion = nfc_version ();
-  nfc_target_t ntRealTarget;
+  nfc_target ntRealTarget;
 
   // Get commandline options
   for (arg = 1; arg < argc; arg++) {
@@ -236,7 +236,7 @@ main (int argc, char *argv[])
     }
 
     // Try to find a ISO 14443-4A tag
-    nfc_modulation_t nm = {
+    nfc_modulation nm = {
       .nmt = NMT_ISO14443A,
       .nbr = NBR_106,
     };
@@ -279,7 +279,7 @@ main (int argc, char *argv[])
     printf ("Hint: tag <---> initiator (relay) <---> target (relay) <---> original reader\n\n");
   }
   if (!initiator_only_mode) {
-    nfc_target_t ntEmulatedTarget = {
+    nfc_target ntEmulatedTarget = {
       .nm = {
         .nmt = NMT_ISO14443A,
         .nbr = NBR_106,
