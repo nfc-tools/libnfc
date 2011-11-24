@@ -67,7 +67,7 @@ struct serial_port_unix{
   struct termios 	termios_new; 		// Terminal info during the transaction
 };
 
-// TODO: #define UART_FD( X ) (((struct serial_port_unix *) X)->fd)
+#define UART_DATA( X ) ((struct serial_port_unix *) X)
 
 void uart_close_ext (const serial_port sp, const bool restore_termios);
 
@@ -116,12 +116,12 @@ void
 uart_flush_input (serial_port sp)
 {
   // This line seems to produce absolutely no effect on my system (GNU/Linux 2.6.35)
-  tcflush (((struct serial_port_unix *) sp)->fd, TCIFLUSH);
+  tcflush (UART_DATA(sp)->fd, TCIFLUSH);
   // So, I wrote this byte-eater
   // Retrieve the count of the incoming bytes
   int available_bytes_count = 0;
   int res;
-  res = ioctl (((struct serial_port_unix *) sp)->fd, FIONREAD, &available_bytes_count);
+  res = ioctl (UART_DATA(sp)->fd, FIONREAD, &available_bytes_count);
   if (res != 0) {
     return;
   }
@@ -130,7 +130,7 @@ uart_flush_input (serial_port sp)
   }
   char* rx = malloc (available_bytes_count);
   // There is something available, read the data
-  res = read (((struct serial_port_unix *) sp)->fd, rx, available_bytes_count);
+  res = read (UART_DATA(sp)->fd, rx, available_bytes_count);
   log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "%d bytes have eatten.", available_bytes_count);
   free (rx);
 }
@@ -139,8 +139,7 @@ void
 uart_set_speed (serial_port sp, const uint32_t uiPortSpeed)
 {
   log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "Serial port speed requested to be set to %d bauds.", uiPortSpeed);
-  struct serial_port_unix *spu = (struct serial_port_unix *) sp;
-
+  
   // Portability note: on some systems, B9600 != 9600 so we have to do
   // uint32_t <=> speed_t associations by hand.
   speed_t stPortSpeed = B9600;
@@ -181,9 +180,9 @@ uart_set_speed (serial_port sp, const uint32_t uiPortSpeed)
   };
 
   // Set port speed (Input and Output)
-  cfsetispeed (&(spu->termios_new), stPortSpeed);
-  cfsetospeed (&(spu->termios_new), stPortSpeed);
-  if (tcsetattr (spu->fd, TCSADRAIN, &(spu->termios_new)) == -1) {
+  cfsetispeed (&(UART_DATA(sp)->termios_new), stPortSpeed);
+  cfsetospeed (&(UART_DATA(sp)->termios_new), stPortSpeed);
+  if (tcsetattr (UART_DATA(sp)->fd, TCSADRAIN, &(UART_DATA(sp)->termios_new)) == -1) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Unable to apply new speed settings.");
   }
 }
@@ -192,8 +191,7 @@ uint32_t
 uart_get_speed (serial_port sp)
 {
   uint32_t uiPortSpeed = 0;
-  const struct serial_port_unix *spu = (struct serial_port_unix *) sp;
-  switch (cfgetispeed (&spu->termios_new)) {
+  switch (cfgetispeed (&UART_DATA(sp)->termios_new)) {
   case B9600:
     uiPortSpeed = 9600;
     break;
@@ -231,10 +229,10 @@ uart_get_speed (serial_port sp)
 void
 uart_close_ext (const serial_port sp, const bool restore_termios)
 {
-  if (((struct serial_port_unix *) sp)->fd >= 0) {
+  if (UART_DATA(sp)->fd >= 0) {
     if (restore_termios)
-      tcsetattr (((struct serial_port_unix *) sp)->fd, TCSANOW, &((struct serial_port_unix *) sp)->termios_backup);
-    close (((struct serial_port_unix *) sp)->fd);
+      tcsetattr (UART_DATA(sp)->fd, TCSANOW, &UART_DATA(sp)->termios_backup);
+    close (UART_DATA(sp)->fd);
   }
   free (sp);
 }
@@ -263,7 +261,7 @@ uart_receive (serial_port sp, byte_t * pbtRx, const size_t szRx, void * abort_p,
 select:
     // Reset file descriptor
     FD_ZERO (&rfds);
-    FD_SET (((struct serial_port_unix *) sp)->fd, &rfds);
+    FD_SET (UART_DATA(sp)->fd, &rfds);
 
     if (iAbortFd) {
       FD_SET (iAbortFd, &rfds);
@@ -279,7 +277,7 @@ select:
 	timeout = &fixed_timeout;
     }
 
-    res = select (MAX(((struct serial_port_unix *) sp)->fd, iAbortFd) + 1, &rfds, NULL, NULL, timeout);
+    res = select (MAX(UART_DATA(sp)->fd, iAbortFd) + 1, &rfds, NULL, NULL, timeout);
 
     if ((res < 0) && (EINTR == errno)) {
       // The system call was interupted by a signal and a signal handler was
@@ -306,12 +304,12 @@ select:
     }
 
     // Retrieve the count of the incoming bytes
-    res = ioctl (((struct serial_port_unix *) sp)->fd, FIONREAD, &available_bytes_count);
+    res = ioctl (UART_DATA(sp)->fd, FIONREAD, &available_bytes_count);
     if (res != 0) {
       return ECOMIO;
     }
     // There is something available, read the data
-    res = read (((struct serial_port_unix *) sp)->fd, pbtRx + received_bytes_count, MIN(available_bytes_count, (expected_bytes_count - received_bytes_count)));
+    res = read (UART_DATA(sp)->fd, pbtRx + received_bytes_count, MIN(available_bytes_count, (expected_bytes_count - received_bytes_count)));
     // Stop if the OS has some troubles reading the data
     if (res <= 0) {
       return ECOMIO;
@@ -333,7 +331,7 @@ uart_send (serial_port sp, const byte_t * pbtTx, const size_t szTx, struct timev
 {
   (void) timeout;
   LOG_HEX ("TX", pbtTx, szTx);
-  if ((int) szTx == write (((struct serial_port_unix *) sp)->fd, pbtTx, szTx))
+  if ((int) szTx == write (UART_DATA(sp)->fd, pbtTx, szTx))
     return 0;
   else
     return ECOMIO;
