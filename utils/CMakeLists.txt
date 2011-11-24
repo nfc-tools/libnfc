@@ -1,4 +1,4 @@
-SET(UTILS-SOURCES nfc-emulate-forum-tag2 nfc-emulate-forum-tag4 nfc-list nfc-relay-picc nfc-mfclassic nfc-mfultralight)
+SET(UTILS-SOURCES nfc-emulate-forum-tag4 nfc-list nfc-relay-picc nfc-mfclassic nfc-mfultralight)
 
 ADD_LIBRARY(nfcutils STATIC 
   nfc-utils.c

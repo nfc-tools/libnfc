@@ -1,5 +1,4 @@
 bin_PROGRAMS = \
-		nfc-emulate-forum-tag2 \
 		nfc-emulate-forum-tag4 \
 		nfc-list \
 		nfc-mfclassic \
@@ -17,10 +16,6 @@ noinst_HEADERS = mifare.h nfc-utils.h
 noinst_LTLIBRARIES = libnfcutils.la
 
 libnfcutils_la_SOURCES = nfc-utils.c
-
-nfc_emulate_forum_tag2_SOURCES = nfc-emulate-forum-tag2.c
-nfc_emulate_forum_tag2_LDADD = $(top_builddir)/libnfc/libnfc.la \
-			       libnfcutils.la
 
 nfc_emulate_forum_tag4_SOURCES = nfc-emulate-forum-tag4.c
 nfc_emulate_forum_tag4_LDADD = $(top_builddir)/libnfc/libnfc.la \
