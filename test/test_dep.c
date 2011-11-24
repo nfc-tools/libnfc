@@ -33,8 +33,8 @@ cut_setup (void)
     cut_omit ("At least two NFC devices must be plugged-in to run this test");
   }
 
-  devices[TARGET] = nfc_connect (&connstrings[TARGET]);
-  devices[INITIATOR] = nfc_connect (&connstrings[INITIATOR]);
+  devices[TARGET] = nfc_connect (connstrings[TARGET]);
+  devices[INITIATOR] = nfc_connect (connstrings[INITIATOR]);
 
   signal (SIGINT, abort_test_by_keypress);
 }
