@@ -112,7 +112,7 @@ static uint8_t __nfcforum_tag2_memory_area[] = {
 
 #define HALT 		0x50
 int
-nfcforum_tag2_io (struct nfc_emulator *emulator, const byte_t *data_in, const size_t data_in_len, byte_t *data_out, const size_t data_out_len)
+nfcforum_tag2_io (struct nfc_emulator *emulator, const uint8_t *data_in, const size_t data_in_len, uint8_t *data_out, const size_t data_out_len)
 {
   int res = 0;
 

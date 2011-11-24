@@ -51,14 +51,14 @@
 
 #define MAX_FRAME_LEN 264
 
-static byte_t abtRx[MAX_FRAME_LEN];
+static uint8_t abtRx[MAX_FRAME_LEN];
 static size_t szRxBits;
 static size_t szRx = sizeof(abtRx);
-static byte_t abtRawUid[12];
-static byte_t abtAtqa[2];
-static byte_t abtSak;
-static byte_t abtAts[MAX_FRAME_LEN];
-static byte_t szAts = 0;
+static uint8_t abtRawUid[12];
+static uint8_t abtAtqa[2];
+static uint8_t abtSak;
+static uint8_t abtAts[MAX_FRAME_LEN];
+static uint8_t szAts = 0;
 static size_t szCL = 1;//Always start with Cascade Level 1 (CL1)
 static nfc_device *pnd;
 
@@ -67,15 +67,15 @@ bool    force_rats = false;
 bool    iso_ats_supported = false;
 
 // ISO14443A Anti-Collision Commands
-byte_t  abtReqa[1] = { 0x26 };
-byte_t  abtSelectAll[2] = { 0x93, 0x20 };
-byte_t  abtSelectTag[9] = { 0x93, 0x70, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-byte_t  abtRats[4] = { 0xe0, 0x50, 0x00, 0x00 };
-byte_t  abtHalt[4] = { 0x50, 0x00, 0x00, 0x00 };
+uint8_t  abtReqa[1] = { 0x26 };
+uint8_t  abtSelectAll[2] = { 0x93, 0x20 };
+uint8_t  abtSelectTag[9] = { 0x93, 0x70, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+uint8_t  abtRats[4] = { 0xe0, 0x50, 0x00, 0x00 };
+uint8_t  abtHalt[4] = { 0x50, 0x00, 0x00, 0x00 };
 #define CASCADE_BIT 0x04
 
 static  bool
-transmit_bits (const byte_t * pbtTx, const size_t szTxBits)
+transmit_bits (const uint8_t * pbtTx, const size_t szTxBits)
 {
   // Show transmitted command
   if (!quiet_output) {
@@ -97,7 +97,7 @@ transmit_bits (const byte_t * pbtTx, const size_t szTxBits)
 
 
 static  bool
-transmit_bytes (const byte_t * pbtTx, const size_t szTx)
+transmit_bytes (const uint8_t * pbtTx, const size_t szTx)
 {
   // Show transmitted command
   if (!quiet_output) {

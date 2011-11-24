@@ -89,7 +89,7 @@ const char *supported_devices[] = {
 struct acr122_data {
   SCARDHANDLE hCard;
   SCARD_IO_REQUEST ioCard;
-  byte_t  abtRx[ACR122_RESPONSE_LEN];
+  uint8_t  abtRx[ACR122_RESPONSE_LEN];
   size_t  szRx;
 };
 
@@ -310,7 +310,7 @@ acr122_disconnect (nfc_device * pnd)
 }
 
 bool
-acr122_send (nfc_device * pnd, const byte_t * pbtData, const size_t szData, struct timeval *timeout)
+acr122_send (nfc_device * pnd, const uint8_t * pbtData, const size_t szData, struct timeval *timeout)
 {
   // FIXME: timeout is not handled
   (void) timeout;
@@ -323,7 +323,7 @@ acr122_send (nfc_device * pnd, const byte_t * pbtData, const size_t szData, stru
 
   // Prepare and transmit the send buffer
   const size_t szTxBuf = szData + 6;
-  byte_t  abtTxBuf[ACR122_WRAP_LEN + ACR122_COMMAND_LEN] = { 0xFF, 0x00, 0x00, 0x00, szData + 1, 0xD4 };
+  uint8_t  abtTxBuf[ACR122_WRAP_LEN + ACR122_COMMAND_LEN] = { 0xFF, 0x00, 0x00, 0x00, szData + 1, 0xD4 };
   memcpy (abtTxBuf + 6, pbtData, szData);
   LOG_HEX ("TX", abtTxBuf, szTxBuf);
 
@@ -381,13 +381,13 @@ acr122_send (nfc_device * pnd, const byte_t * pbtData, const size_t szData, stru
 }
 
 int
-acr122_receive (nfc_device * pnd, byte_t * pbtData, const size_t szData, struct timeval *timeout)
+acr122_receive (nfc_device * pnd, uint8_t * pbtData, const size_t szData, struct timeval *timeout)
 {
   // FIXME: timeout is not handled
   (void) timeout;
 
   int len;
-  byte_t  abtRxCmd[5] = { 0xFF, 0xC0, 0x00, 0x00 };
+  uint8_t  abtRxCmd[5] = { 0xFF, 0xC0, 0x00, 0x00 };
 
   if (DRIVER_DATA (pnd)->ioCard.dwProtocol == SCARD_PROTOCOL_T0) {
     /*
@@ -424,16 +424,16 @@ acr122_receive (nfc_device * pnd, byte_t * pbtData, const size_t szData, struct 
 char   *
 acr122_firmware (nfc_device *pnd)
 {
-  byte_t  abtGetFw[5] = { 0xFF, 0x00, 0x48, 0x00, 0x00 };
+  uint8_t  abtGetFw[5] = { 0xFF, 0x00, 0x48, 0x00, 0x00 };
   uint32_t uiResult;
 
   static char abtFw[11];
   DWORD dwFwLen = sizeof (abtFw);
   memset (abtFw, 0x00, sizeof (abtFw));
   if (DRIVER_DATA (pnd)->ioCard.dwProtocol == SCARD_PROTOCOL_UNDEFINED) {
-    uiResult = SCardControl (DRIVER_DATA (pnd)->hCard, IOCTL_CCID_ESCAPE_SCARD_CTL_CODE, abtGetFw, sizeof (abtGetFw), (byte_t *) abtFw, dwFwLen-1, &dwFwLen);
+    uiResult = SCardControl (DRIVER_DATA (pnd)->hCard, IOCTL_CCID_ESCAPE_SCARD_CTL_CODE, abtGetFw, sizeof (abtGetFw), (uint8_t *) abtFw, dwFwLen-1, &dwFwLen);
   } else {
-    uiResult = SCardTransmit (DRIVER_DATA (pnd)->hCard, &(DRIVER_DATA (pnd)->ioCard), abtGetFw, sizeof (abtGetFw), NULL, (byte_t *) abtFw, &dwFwLen);
+    uiResult = SCardTransmit (DRIVER_DATA (pnd)->hCard, &(DRIVER_DATA (pnd)->ioCard), abtGetFw, sizeof (abtGetFw), NULL, (uint8_t *) abtFw, &dwFwLen);
   }
 
   if (uiResult != SCARD_S_SUCCESS) {
@@ -447,8 +447,8 @@ acr122_firmware (nfc_device *pnd)
 bool
 acr122_led_red (nfc_device *pnd, bool bOn)
 {
-  byte_t  abtLed[9] = { 0xFF, 0x00, 0x40, 0x05, 0x04, 0x00, 0x00, 0x00, 0x00 };
-  byte_t  abtBuf[2];
+  uint8_t  abtLed[9] = { 0xFF, 0x00, 0x40, 0x05, 0x04, 0x00, 0x00, 0x00, 0x00 };
+  uint8_t  abtBuf[2];
   DWORD dwBufLen = sizeof (abtBuf);
   (void) bOn;
   if (DRIVER_DATA (pnd)->ioCard.dwProtocol == SCARD_PROTOCOL_UNDEFINED) {

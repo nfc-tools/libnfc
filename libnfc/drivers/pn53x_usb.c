@@ -121,7 +121,7 @@ bool pn53x_usb_get_usb_device_name (struct usb_device *dev, usb_dev_handle *udev
 bool pn53x_usb_init (nfc_device *pnd);
 
 int
-pn53x_usb_bulk_read (struct pn53x_usb_data *data, byte_t abtRx[], const size_t szRx, struct timeval *timeout)
+pn53x_usb_bulk_read (struct pn53x_usb_data *data, uint8_t abtRx[], const size_t szRx, struct timeval *timeout)
 {
   int timeout_ms = USB_INFINITE_TIMEOUT;
   if (timeout) {
@@ -143,7 +143,7 @@ pn53x_usb_bulk_read (struct pn53x_usb_data *data, byte_t abtRx[], const size_t s
 }
 
 int
-pn53x_usb_bulk_write (struct pn53x_usb_data *data, byte_t abtTx[], const size_t szTx, struct timeval *timeout)
+pn53x_usb_bulk_write (struct pn53x_usb_data *data, uint8_t abtTx[], const size_t szTx, struct timeval *timeout)
 {
   LOG_HEX ("TX", abtTx, szTx);
   int timeout_ms = USB_INFINITE_TIMEOUT;
@@ -519,9 +519,9 @@ pn53x_usb_disconnect (nfc_device * pnd)
 #define PN53X_USB_BUFFER_LEN (PN53x_EXTENDED_FRAME__DATA_MAX_LEN + PN53x_EXTENDED_FRAME__OVERHEAD)
 
 bool
-pn53x_usb_send (nfc_device * pnd, const byte_t * pbtData, const size_t szData, struct timeval *timeout)
+pn53x_usb_send (nfc_device * pnd, const uint8_t * pbtData, const size_t szData, struct timeval *timeout)
 {
-  byte_t  abtFrame[PN53X_USB_BUFFER_LEN] = { 0x00, 0x00, 0xff };  // Every packet must start with "00 00 ff"
+  uint8_t  abtFrame[PN53X_USB_BUFFER_LEN] = { 0x00, 0x00, 0xff };  // Every packet must start with "00 00 ff"
   size_t szFrame = 0;
 
   pn53x_build_frame (abtFrame, &szFrame, pbtData, szData);
@@ -533,7 +533,7 @@ pn53x_usb_send (nfc_device * pnd, const byte_t * pbtData, const size_t szData, s
     return false;
   }
 
-  byte_t abtRxBuf[PN53X_USB_BUFFER_LEN];
+  uint8_t abtRxBuf[PN53X_USB_BUFFER_LEN];
   res = pn53x_usb_bulk_read (DRIVER_DATA (pnd), abtRxBuf, sizeof (abtRxBuf), timeout);
   if (res < 0) {
     pnd->iLastError = ECOMIO;
@@ -552,7 +552,7 @@ pn53x_usb_send (nfc_device * pnd, const byte_t * pbtData, const size_t szData, s
     // pn53x_usb_receive()) will be able to retreive the correct response
     // packet.
     // FIXME Sony reader is also affected by this bug but NACK is not supported
-    int res = pn53x_usb_bulk_write (DRIVER_DATA (pnd), (byte_t *)pn53x_nack_frame, sizeof(pn53x_nack_frame), timeout);
+    int res = pn53x_usb_bulk_write (DRIVER_DATA (pnd), (uint8_t *)pn53x_nack_frame, sizeof(pn53x_nack_frame), timeout);
     if (res < 0) {
       pnd->iLastError = ECOMIO;
       // try to interrupt current device state
@@ -565,12 +565,12 @@ pn53x_usb_send (nfc_device * pnd, const byte_t * pbtData, const size_t szData, s
 }
 
 int
-pn53x_usb_receive (nfc_device * pnd, byte_t * pbtData, const size_t szDataLen, struct timeval *timeout)
+pn53x_usb_receive (nfc_device * pnd, uint8_t * pbtData, const size_t szDataLen, struct timeval *timeout)
 {
   size_t len;
   off_t offset = 0;
 
-  byte_t  abtRxBuf[PN53X_USB_BUFFER_LEN];
+  uint8_t  abtRxBuf[PN53X_USB_BUFFER_LEN];
   int res;
 
   /*
@@ -627,7 +627,7 @@ read:
     return -1;
   }
 
-  const byte_t pn53x_preamble[3] = { 0x00, 0x00, 0xff };
+  const uint8_t pn53x_preamble[3] = { 0x00, 0x00, 0xff };
   if (0 != (memcmp (abtRxBuf, pn53x_preamble, 3))) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Frame preamble+start code mismatch");
     pnd->iLastError = ECOMIO;
@@ -691,7 +691,7 @@ read:
   memcpy (pbtData, abtRxBuf + offset, len);
   offset += len;
 
-  byte_t btDCS = (256 - 0xD5);
+  uint8_t btDCS = (256 - 0xD5);
   btDCS -= CHIP_DATA (pnd)->ui8LastCommand + 1;
   for (size_t szPos = 0; szPos < len; szPos++) {
     btDCS -= pbtData[szPos];
@@ -717,7 +717,7 @@ read:
 int
 pn53x_usb_ack (nfc_device * pnd)
 {
-  return pn53x_usb_bulk_write (DRIVER_DATA (pnd), (byte_t *) pn53x_ack_frame, sizeof (pn53x_ack_frame), NULL);
+  return pn53x_usb_bulk_write (DRIVER_DATA (pnd), (uint8_t *) pn53x_ack_frame, sizeof (pn53x_ack_frame), NULL);
 }
 
 bool
@@ -725,13 +725,13 @@ pn53x_usb_init (nfc_device *pnd)
 {
   // Sometimes PN53x USB doesn't reply ACK one the first frame, so we need to send a dummy one...
   //pn53x_check_communication (pnd); // Sony RC-S360 doesn't support this command for now so let's use a get_firmware_version instead:
-  const byte_t abtCmd[] = { GetFirmwareVersion };
+  const uint8_t abtCmd[] = { GetFirmwareVersion };
   pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, NULL, NULL);
   // ...and we don't care about error
   pnd->iLastError = 0;
   if (SONY_RCS360 == DRIVER_DATA (pnd)->model) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "SONY RC-S360 initialization.");
-    const byte_t abtCmd2[] = { 0x18, 0x01 };
+    const uint8_t abtCmd2[] = { 0x18, 0x01 };
     pn53x_transceive (pnd, abtCmd2, sizeof (abtCmd2), NULL, NULL, NULL);
     pn53x_usb_ack (pnd);
   }

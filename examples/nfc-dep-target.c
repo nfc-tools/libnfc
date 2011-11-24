@@ -61,10 +61,10 @@ void stop_dep_communication (int sig)
 int
 main (int argc, const char *argv[])
 {
-  byte_t  abtRx[MAX_FRAME_LEN];
+  uint8_t  abtRx[MAX_FRAME_LEN];
   size_t  szRx = sizeof(abtRx);
   size_t  szDeviceFound;
-  byte_t  abtTx[] = "Hello Mars!";
+  uint8_t  abtTx[] = "Hello Mars!";
   #define MAX_DEVICE_COUNT 2
   nfc_connstring connstrings[MAX_DEVICE_COUNT];
   nfc_list_devices (connstrings, MAX_DEVICE_COUNT, &szDeviceFound);

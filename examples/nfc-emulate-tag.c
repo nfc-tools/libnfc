@@ -54,7 +54,7 @@
 #define MAX_FRAME_LEN (264)
 #define SAK_ISO14443_4_COMPLIANT 0x20
 
-static byte_t abtRx[MAX_FRAME_LEN];
+static uint8_t abtRx[MAX_FRAME_LEN];
 static size_t szRx = sizeof(abtRx);
 static nfc_device *pnd;
 static bool quiet_output = false;
@@ -71,7 +71,7 @@ intr_hdlr (void)
 }
 
 bool 
-target_io( nfc_target * pnt, const byte_t * pbtInput, const size_t szInput, byte_t * pbtOutput, size_t *pszOutput )
+target_io( nfc_target * pnt, const uint8_t * pbtInput, const size_t szInput, uint8_t * pbtOutput, size_t *pszOutput )
 {
   bool loop = true;
   *pszOutput = 0;
@@ -137,7 +137,7 @@ bool
 nfc_target_emulate_tag(nfc_device* pnd, nfc_target * pnt)
 {
   size_t szTx;
-  byte_t abtTx[MAX_FRAME_LEN];
+  uint8_t abtTx[MAX_FRAME_LEN];
   bool loop = true;
 
   if (!nfc_target_init (pnd, pnt, abtRx, &szRx)) {

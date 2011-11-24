@@ -60,7 +60,7 @@ static mifare_classic_tag mtDump;
 static bool bUseKeyA;
 static bool bUseKeyFile;
 static uint8_t uiBlocks;
-static byte_t keys[] = {
+static uint8_t keys[] = {
   0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
   0xd3, 0xf7, 0xd3, 0xf7, 0xd3, 0xf7,
   0xa0, 0xa1, 0xa2, 0xa3, 0xa4, 0xa5,
@@ -81,18 +81,18 @@ static size_t num_keys = sizeof (keys) / 6;
 
 #define MAX_FRAME_LEN 264
 
-static byte_t abtRx[MAX_FRAME_LEN];
+static uint8_t abtRx[MAX_FRAME_LEN];
 static size_t szRxBits;
 static size_t szRx = sizeof(abtRx);
 
-byte_t  abtHalt[4] = { 0x50, 0x00, 0x00, 0x00 };
+uint8_t  abtHalt[4] = { 0x50, 0x00, 0x00, 0x00 };
 
 // special unlock command
-byte_t  abtUnlock1[1] = { 0x40 };
-byte_t  abtUnlock2[1] = { 0x43 };
+uint8_t  abtUnlock1[1] = { 0x40 };
+uint8_t  abtUnlock2[1] = { 0x43 };
 
 static  bool
-transmit_bits (const byte_t * pbtTx, const size_t szTxBits)
+transmit_bits (const uint8_t * pbtTx, const size_t szTxBits)
 {
   // Show transmitted command
   printf ("Sent bits:     ");
@@ -110,7 +110,7 @@ transmit_bits (const byte_t * pbtTx, const size_t szTxBits)
 
 
 static  bool
-transmit_bytes (const byte_t * pbtTx, const size_t szTx)
+transmit_bytes (const uint8_t * pbtTx, const size_t szTx)
 {
   // Show transmitted command
   printf ("Sent bits:     ");
@@ -458,7 +458,7 @@ int
 main (int argc, const char *argv[])
 {
   action_t atAction = ACTION_USAGE;
-  byte_t *pbtUID;
+  uint8_t *pbtUID;
   FILE   *pfKeys = NULL;
   FILE   *pfDump = NULL;
   int    unlock= 0;
@@ -571,7 +571,7 @@ main (int argc, const char *argv[])
     pbtUID = nt.nti.nai.abtUid;
 
     if (bUseKeyFile) {
-      byte_t fileUid[4];
+      uint8_t fileUid[4];
       memcpy (fileUid, mtKeys.amb[0].mbm.abtUID, 4);
       // Compare if key dump UID is the same as the current tag UID, at least for the first 4 bytes
       if (memcmp (nt.nti.nai.abtUid, fileUid, 4) != 0) {

@@ -58,11 +58,11 @@ main (int argc, const char *argv[])
   const char *acLibnfcVersion;
   bool    result;
 
-  byte_t  abtRx[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
+  uint8_t  abtRx[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
   size_t  szRx = sizeof(abtRx);
-  const byte_t pncmd_diagnose_communication_line_test[] = { Diagnose, 0x00, 0x06, 'l', 'i', 'b', 'n', 'f', 'c' };
-  const byte_t pncmd_diagnose_rom_test[] = { Diagnose, 0x01 };
-  const byte_t pncmd_diagnose_ram_test[] = { Diagnose, 0x02 };
+  const uint8_t pncmd_diagnose_communication_line_test[] = { Diagnose, 0x00, 0x06, 'l', 'i', 'b', 'n', 'f', 'c' };
+  const uint8_t pncmd_diagnose_rom_test[] = { Diagnose, 0x01 };
+  const uint8_t pncmd_diagnose_ram_test[] = { Diagnose, 0x02 };
 
   if (argc > 1) {
     errx (1, "usage: %s", argv[0]);

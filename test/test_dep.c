@@ -80,21 +80,21 @@ target_thread (void *arg)
     },
   };
 
-  byte_t abtRx[1024];
+  uint8_t abtRx[1024];
   size_t szRx = sizeof (abtRx);
   bool res = nfc_target_init (device, &nt, abtRx, &szRx);
   // cut_assert_true (res, cut_message ("Can't initialize NFC device as target"));
 
-  byte_t abtAtrRes[] = "\x11\xd4\x00\x01\xfe\x12\x34\x56\x78\x90\x12\x00\x00\x00\x00\x00\x00";
+  uint8_t abtAtrRes[] = "\x11\xd4\x00\x01\xfe\x12\x34\x56\x78\x90\x12\x00\x00\x00\x00\x00\x00";
   // cut_assert_equal_memory (abtAtrRes, sizeof (abtAtrRes) - 1, abtRx, szRx, cut_message ("Invalid received ATR_RES"));
 
   res = nfc_target_receive_bytes (device, abtRx, &szRx);
   // cut_assert_true (res, cut_message ("Can't receive bytes from initiator"));
 
-  byte_t abtAttRx[] = "Hello DEP target!";
+  uint8_t abtAttRx[] = "Hello DEP target!";
   // cut_assert_equal_memory (abtAttRx, sizeof (abtAttRx), abtRx, szRx, cut_message ("Invalid received data"));
   
-  byte_t abtTx[] = "Hello DEP initiator!";
+  uint8_t abtTx[] = "Hello DEP initiator!";
   res = nfc_target_send_bytes (device, abtTx, sizeof(abtTx));
   // cut_assert_true (res, cut_message ("Can't send bytes to initiator"));
 #endif
@@ -133,13 +133,13 @@ initiator_thread (void *arg)
   // cut_assert_equal_int (NDM_PASSIVE, nt.nti.ndi.ndm, cut_message ("Invalid target DEP mode"));
   // cut_assert_equal_memory ("\x12\x34\x56\x78", 4, nt.nti.ndi.abtGB, nt.nti.ndi.szGB, cut_message ("Invalid target general bytes"));
 
-  byte_t abtTx[] = "Hello DEP target!";
-  byte_t abtRx[1024];
+  uint8_t abtTx[] = "Hello DEP target!";
+  uint8_t abtRx[1024];
   size_t szRx = sizeof (abtRx);
   res = nfc_initiator_transceive_bytes (device, abtTx, sizeof (abtTx), abtRx, &szRx);
   // cut_assert_true (res, cut_message ("Can't transceive bytes to target"));
 
-  byte_t abtAttRx[] = "Hello DEP initiator!";
+  uint8_t abtAttRx[] = "Hello DEP initiator!";
   // cut_assert_equal_memory (abtAttRx, sizeof (abtAttRx), abtRx, szRx, cut_message ("Invalid received data"));
 
   res = nfc_initiator_deselect_target (device);

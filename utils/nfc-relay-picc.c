@@ -57,9 +57,9 @@
 #define MAX_FRAME_LEN 264
 #define MAX_DEVICE_COUNT 2
 
-static byte_t abtCapdu[MAX_FRAME_LEN];
+static uint8_t abtCapdu[MAX_FRAME_LEN];
 static size_t szCapduLen;
-static byte_t abtRapdu[MAX_FRAME_LEN];
+static uint8_t abtRapdu[MAX_FRAME_LEN];
 static size_t szRapduLen;
 static nfc_device *pndInitiator;
 static nfc_device *pndTarget;
@@ -92,7 +92,7 @@ print_usage (char *argv[])
   printf ("\t-n N\tAdds a waiting time of N seconds (integer) in the relay to mimic long distance.\n");
 }
 
-bool print_hex_fd4 (const byte_t * pbtData, const size_t szBytes, const char * pchPrefix)
+bool print_hex_fd4 (const uint8_t * pbtData, const size_t szBytes, const char * pchPrefix)
 {
   size_t  szPos;
   if (szBytes > MAX_FRAME_LEN) {
@@ -114,7 +114,7 @@ bool print_hex_fd4 (const byte_t * pbtData, const size_t szBytes, const char * p
   return EXIT_SUCCESS;
 }
 
-bool scan_hex_fd3 (byte_t *pbtData, size_t *pszBytes, const char * pchPrefix)
+bool scan_hex_fd3 (uint8_t *pbtData, size_t *pszBytes, const char * pchPrefix)
 {
   size_t  szPos;
   unsigned int uiBytes;
@@ -326,11 +326,11 @@ main (int argc, char *argv[])
     // PC/SC pseudo-ATR = 3B 80 80 01 01 if there is no historical bytes
 
     // Creates ATS and copy max 48 bytes of Tk:
-    byte_t * pbtTk;
+    uint8_t * pbtTk;
     size_t szTk;
     pbtTk = iso14443a_locate_historical_bytes (ntEmulatedTarget.nti.nai.abtAts, ntEmulatedTarget.nti.nai.szAtsLen, &szTk);
     szTk = (szTk > 48) ? 48 : szTk;
-    byte_t pbtTkt[48];
+    uint8_t pbtTkt[48];
     memcpy(pbtTkt, pbtTk, szTk);
     ntEmulatedTarget.nti.nai.abtAts[0] = 0x75;
     ntEmulatedTarget.nti.nai.abtAts[1] = 0x33;

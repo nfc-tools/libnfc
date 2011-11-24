@@ -56,14 +56,14 @@
 
 #define MAX_FRAME_LEN 264
 
-static byte_t abtRecv[MAX_FRAME_LEN];
+static uint8_t abtRecv[MAX_FRAME_LEN];
 static size_t szRecvBits;
 static nfc_device *pnd;
 
 // ISO14443A Anti-Collision response
-byte_t  abtAtqa[2] = { 0x04, 0x00 };
-byte_t  abtUidBcc[5] = { 0xDE, 0xAD, 0xBE, 0xEF, 0x62 };
-byte_t  abtSak[9] = { 0x08, 0xb6, 0xdd };
+uint8_t  abtAtqa[2] = { 0x04, 0x00 };
+uint8_t  abtUidBcc[5] = { 0xDE, 0xAD, 0xBE, 0xEF, 0x62 };
+uint8_t  abtSak[9] = { 0x08, 0xb6, 0xdd };
 
 void
 intr_hdlr (void)
@@ -88,7 +88,7 @@ print_usage (char *argv[])
 int
 main (int argc, char *argv[])
 {
-  byte_t *pbtTx = NULL;
+  uint8_t *pbtTx = NULL;
   size_t  szTxBits;
   bool    quiet_output = false;
 
@@ -104,12 +104,12 @@ main (int argc, char *argv[])
       printf ("Quiet mode.\n");
       quiet_output = true;
     } else if ((arg == argc - 1) && (strlen (argv[arg]) == 8)) {        // See if UID was specified as HEX string
-      byte_t  abtTmp[3] = { 0x00, 0x00, 0x00 };
+      uint8_t  abtTmp[3] = { 0x00, 0x00, 0x00 };
       printf ("[+] Using UID: %s\n", argv[arg]);
       abtUidBcc[4] = 0x00;
       for (i = 0; i < 4; ++i) {
         memcpy (abtTmp, argv[arg] + i * 2, 2);
-        abtUidBcc[i] = (byte_t) strtol ((char *) abtTmp, NULL, 16);
+        abtUidBcc[i] = (uint8_t) strtol ((char *) abtTmp, NULL, 16);
         abtUidBcc[4] ^= abtUidBcc[i];
       }
     } else {

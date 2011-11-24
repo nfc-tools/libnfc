@@ -132,20 +132,20 @@ struct nfc_driver_t {
   const char *(*strerror) (const nfc_device * pnd);
 
   bool (*initiator_init) (nfc_device * pnd);
-  bool (*initiator_select_passive_target) (nfc_device * pnd,  const nfc_modulation nm, const byte_t * pbtInitData, const size_t szInitData, nfc_target * pnt);
+  bool (*initiator_select_passive_target) (nfc_device * pnd,  const nfc_modulation nm, const uint8_t * pbtInitData, const size_t szInitData, nfc_target * pnt);
   bool (*initiator_poll_target) (nfc_device * pnd, const nfc_modulation * pnmModulations, const size_t szModulations, const uint8_t uiPollNr, const uint8_t btPeriod, nfc_target * pnt);
   bool (*initiator_select_dep_target) (nfc_device * pnd, const nfc_dep_mode ndm, const nfc_baud_rate nbr, const nfc_dep_info * pndiInitiator, nfc_target * pnt);
   bool (*initiator_deselect_target) (nfc_device * pnd);
-  bool (*initiator_transceive_bytes) (nfc_device * pnd, const byte_t * pbtTx, const size_t szTx, byte_t * pbtRx, size_t * pszRx, struct timeval *timeout);
-  bool (*initiator_transceive_bits) (nfc_device * pnd, const byte_t * pbtTx, const size_t szTxBits, const byte_t * pbtTxPar, byte_t * pbtRx, size_t * pszRxBits, byte_t * pbtRxPar);
-  bool (*initiator_transceive_bytes_timed) (nfc_device * pnd, const byte_t * pbtTx, const size_t szTx, byte_t * pbtRx, size_t * pszRx, uint32_t * cycles);
-  bool (*initiator_transceive_bits_timed) (nfc_device * pnd, const byte_t * pbtTx, const size_t szTxBits, const byte_t * pbtTxPar, byte_t * pbtRx, size_t * pszRxBits, byte_t * pbtRxPar, uint32_t * cycles);
+  bool (*initiator_transceive_bytes) (nfc_device * pnd, const uint8_t * pbtTx, const size_t szTx, uint8_t * pbtRx, size_t * pszRx, struct timeval *timeout);
+  bool (*initiator_transceive_bits) (nfc_device * pnd, const uint8_t * pbtTx, const size_t szTxBits, const uint8_t * pbtTxPar, uint8_t * pbtRx, size_t * pszRxBits, uint8_t * pbtRxPar);
+  bool (*initiator_transceive_bytes_timed) (nfc_device * pnd, const uint8_t * pbtTx, const size_t szTx, uint8_t * pbtRx, size_t * pszRx, uint32_t * cycles);
+  bool (*initiator_transceive_bits_timed) (nfc_device * pnd, const uint8_t * pbtTx, const size_t szTxBits, const uint8_t * pbtTxPar, uint8_t * pbtRx, size_t * pszRxBits, uint8_t * pbtRxPar, uint32_t * cycles);
 
-  bool (*target_init) (nfc_device * pnd, nfc_target * pnt, byte_t * pbtRx, size_t * pszRx);
-  bool (*target_send_bytes) (nfc_device * pnd, const byte_t * pbtTx, const size_t szTx, struct timeval *timeout);
-  bool (*target_receive_bytes) (nfc_device * pnd, byte_t * pbtRx, size_t * pszRx, struct timeval *timeout);
-  bool (*target_send_bits) (nfc_device * pnd, const byte_t * pbtTx, const size_t szTxBits, const byte_t * pbtTxPar);
-  bool (*target_receive_bits) (nfc_device * pnd, byte_t * pbtRx, size_t * pszRxBits, byte_t * pbtRxPar);
+  bool (*target_init) (nfc_device * pnd, nfc_target * pnt, uint8_t * pbtRx, size_t * pszRx);
+  bool (*target_send_bytes) (nfc_device * pnd, const uint8_t * pbtTx, const size_t szTx, struct timeval *timeout);
+  bool (*target_receive_bytes) (nfc_device * pnd, uint8_t * pbtRx, size_t * pszRx, struct timeval *timeout);
+  bool (*target_send_bits) (nfc_device * pnd, const uint8_t * pbtTx, const size_t szTxBits, const uint8_t * pbtTxPar);
+  bool (*target_receive_bits) (nfc_device * pnd, uint8_t * pbtRx, size_t * pszRxBits, uint8_t * pbtRxPar);
 
   bool (*configure) (nfc_device * pnd, const nfc_device_option ndo, const bool bEnable);
 
@@ -156,8 +156,8 @@ struct nfc_driver_t {
 nfc_device  *nfc_device_new (void);
 void           nfc_device_free (nfc_device *nfc_device);
 
-void 	iso14443_cascade_uid (const byte_t abtUID[], const size_t szUID, byte_t * pbtCascadedUID, size_t * pszCascadedUID);
+void 	iso14443_cascade_uid (const uint8_t abtUID[], const size_t szUID, uint8_t * pbtCascadedUID, size_t * pszCascadedUID);
 
-void 	prepare_initiator_data (const nfc_modulation nm, byte_t **ppbtInitiatorData, size_t * pszInitiatorData);
+void 	prepare_initiator_data (const nfc_modulation nm, uint8_t **ppbtInitiatorData, size_t * pszInitiatorData);
 
 #endif // __NFC_INTERNAL_H__

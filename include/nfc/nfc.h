@@ -73,22 +73,22 @@ extern  "C" {
 
 /* NFC initiator: act as "reader" */
   NFC_EXPORT bool nfc_initiator_init (nfc_device * pnd);
-  NFC_EXPORT bool nfc_initiator_select_passive_target (nfc_device * pnd, const nfc_modulation nm, const byte_t * pbtInitData, const size_t szInitData, nfc_target * pnt);
+  NFC_EXPORT bool nfc_initiator_select_passive_target (nfc_device * pnd, const nfc_modulation nm, const uint8_t * pbtInitData, const size_t szInitData, nfc_target * pnt);
   NFC_EXPORT bool nfc_initiator_list_passive_targets (nfc_device * pnd, const nfc_modulation nm, nfc_target ant[], const size_t szTargets, size_t * pszTargetFound);
   NFC_EXPORT bool nfc_initiator_poll_target (nfc_device * pnd, const nfc_modulation * pnmTargetTypes, const size_t szTargetTypes, const uint8_t uiPollNr, const uint8_t uiPeriod, nfc_target * pnt);
   NFC_EXPORT bool nfc_initiator_select_dep_target (nfc_device * pnd, const nfc_dep_mode ndm, const nfc_baud_rate nbr, const nfc_dep_info * pndiInitiator, nfc_target * pnt);
   NFC_EXPORT bool nfc_initiator_deselect_target (nfc_device * pnd);
-  NFC_EXPORT bool nfc_initiator_transceive_bytes (nfc_device * pnd, const byte_t * pbtTx, const size_t szTx, byte_t * pbtRx, size_t * pszRx, struct timeval *timeout);
-  NFC_EXPORT bool nfc_initiator_transceive_bits (nfc_device * pnd, const byte_t * pbtTx, const size_t szTxBits, const byte_t * pbtTxPar, byte_t * pbtRx, size_t * pszRxBits, byte_t * pbtRxPar);
-  NFC_EXPORT bool nfc_initiator_transceive_bytes_timed (nfc_device * pnd, const byte_t * pbtTx, const size_t szTx, byte_t * pbtRx, size_t * pszRx, uint32_t * cycles);
-  NFC_EXPORT bool nfc_initiator_transceive_bits_timed (nfc_device * pnd, const byte_t * pbtTx, const size_t szTxBits, const byte_t * pbtTxPar, byte_t * pbtRx, size_t * pszRxBits, byte_t * pbtRxPar, uint32_t * cycles);
+  NFC_EXPORT bool nfc_initiator_transceive_bytes (nfc_device * pnd, const uint8_t * pbtTx, const size_t szTx, uint8_t * pbtRx, size_t * pszRx, struct timeval *timeout);
+  NFC_EXPORT bool nfc_initiator_transceive_bits (nfc_device * pnd, const uint8_t * pbtTx, const size_t szTxBits, const uint8_t * pbtTxPar, uint8_t * pbtRx, size_t * pszRxBits, uint8_t * pbtRxPar);
+  NFC_EXPORT bool nfc_initiator_transceive_bytes_timed (nfc_device * pnd, const uint8_t * pbtTx, const size_t szTx, uint8_t * pbtRx, size_t * pszRx, uint32_t * cycles);
+  NFC_EXPORT bool nfc_initiator_transceive_bits_timed (nfc_device * pnd, const uint8_t * pbtTx, const size_t szTxBits, const uint8_t * pbtTxPar, uint8_t * pbtRx, size_t * pszRxBits, uint8_t * pbtRxPar, uint32_t * cycles);
 
 /* NFC target: act as tag (i.e. MIFARE Classic) or NFC target device. */
-  NFC_EXPORT bool nfc_target_init (nfc_device * pnd, nfc_target * pnt, byte_t * pbtRx, size_t * pszRx);
-  NFC_EXPORT bool nfc_target_send_bytes (nfc_device * pnd, const byte_t * pbtTx, const size_t szTx, struct timeval *timout);
-  NFC_EXPORT bool nfc_target_receive_bytes (nfc_device * pnd, byte_t * pbtRx, size_t * pszRx, struct timeval *timout);
-  NFC_EXPORT bool nfc_target_send_bits (nfc_device * pnd, const byte_t * pbtTx, const size_t szTxBits, const byte_t * pbtTxPar);
-  NFC_EXPORT bool nfc_target_receive_bits (nfc_device * pnd, byte_t * pbtRx, size_t * pszRxBits, byte_t * pbtRxPar);
+  NFC_EXPORT bool nfc_target_init (nfc_device * pnd, nfc_target * pnt, uint8_t * pbtRx, size_t * pszRx);
+  NFC_EXPORT bool nfc_target_send_bytes (nfc_device * pnd, const uint8_t * pbtTx, const size_t szTx, struct timeval *timout);
+  NFC_EXPORT bool nfc_target_receive_bytes (nfc_device * pnd, uint8_t * pbtRx, size_t * pszRx, struct timeval *timout);
+  NFC_EXPORT bool nfc_target_send_bits (nfc_device * pnd, const uint8_t * pbtTx, const size_t szTxBits, const uint8_t * pbtTxPar);
+  NFC_EXPORT bool nfc_target_receive_bits (nfc_device * pnd, uint8_t * pbtRx, size_t * pszRxBits, uint8_t * pbtRxPar);
 
 /* Error reporting */
   NFC_EXPORT const char *nfc_strerror (const nfc_device * pnd);
@@ -99,9 +99,9 @@ extern  "C" {
   NFC_EXPORT const char *nfc_device_name (nfc_device * pnd);
 
 /* Misc. functions */
-  NFC_EXPORT void iso14443a_crc (byte_t * pbtData, size_t szLen, byte_t * pbtCrc);
-  NFC_EXPORT void iso14443a_crc_append (byte_t * pbtData, size_t szLen);
-  NFC_EXPORT byte_t * iso14443a_locate_historical_bytes (byte_t * pbtAts, size_t szAts, size_t * pszTk);
+  NFC_EXPORT void iso14443a_crc (uint8_t * pbtData, size_t szLen, uint8_t * pbtCrc);
+  NFC_EXPORT void iso14443a_crc_append (uint8_t * pbtData, size_t szLen);
+  NFC_EXPORT uint8_t * iso14443a_locate_historical_bytes (uint8_t * pbtAts, size_t szAts, size_t * pszTk);
   NFC_EXPORT const char *nfc_version (void);
 
 /* PN53x specific errors */

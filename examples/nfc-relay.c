@@ -50,11 +50,11 @@
 #define MAX_FRAME_LEN 264
 #define MAX_DEVICE_COUNT 2
 
-static byte_t abtReaderRx[MAX_FRAME_LEN];
-static byte_t abtReaderRxPar[MAX_FRAME_LEN];
+static uint8_t abtReaderRx[MAX_FRAME_LEN];
+static uint8_t abtReaderRxPar[MAX_FRAME_LEN];
 static size_t szReaderRxBits;
-static byte_t abtTagRx[MAX_FRAME_LEN];
-static byte_t abtTagRxPar[MAX_FRAME_LEN];
+static uint8_t abtTagRx[MAX_FRAME_LEN];
+static uint8_t abtTagRxPar[MAX_FRAME_LEN];
 static size_t szTagRxBits;
 static nfc_device *pndReader;
 static nfc_device *pndTag;

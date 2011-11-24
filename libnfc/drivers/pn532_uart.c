@@ -281,7 +281,7 @@ int
 pn532_uart_wakeup (nfc_device * pnd)
 {
   /* High Speed Unit (HSU) wake up consist to send 0x55 and wait a "long" delay for PN532 being wakeup. */
-  const byte_t pn532_wakeup_preamble[] = { 0x55, 0x55, 0x00, 0x00, 0x00 };
+  const uint8_t pn532_wakeup_preamble[] = { 0x55, 0x55, 0x00, 0x00, 0x00 };
   int res = uart_send (DRIVER_DATA(pnd)->port, pn532_wakeup_preamble, sizeof (pn532_wakeup_preamble), NULL);
   CHIP_DATA(pnd)->power_mode = NORMAL; // PN532 should now be awake
   return res;
@@ -289,7 +289,7 @@ pn532_uart_wakeup (nfc_device * pnd)
 
 #define PN532_BUFFER_LEN (PN53x_EXTENDED_FRAME__DATA_MAX_LEN + PN53x_EXTENDED_FRAME__OVERHEAD)
 bool
-pn532_uart_send (nfc_device * pnd, const byte_t * pbtData, const size_t szData, struct timeval *timeout)
+pn532_uart_send (nfc_device * pnd, const uint8_t * pbtData, const size_t szData, struct timeval *timeout)
 {
   // Before sending anything, we need to discard from any junk bytes
   uart_flush_input (DRIVER_DATA(pnd)->port);
@@ -320,7 +320,7 @@ pn532_uart_send (nfc_device * pnd, const byte_t * pbtData, const size_t szData, 
     break;
   };
 
-  byte_t  abtFrame[PN532_BUFFER_LEN] = { 0x00, 0x00, 0xff };       // Every packet must start with "00 00 ff"
+  uint8_t  abtFrame[PN532_BUFFER_LEN] = { 0x00, 0x00, 0xff };       // Every packet must start with "00 00 ff"
   size_t szFrame = 0;
 
   if (!pn53x_build_frame (abtFrame, &szFrame, pbtData, szData)) {
@@ -335,7 +335,7 @@ pn532_uart_send (nfc_device * pnd, const byte_t * pbtData, const size_t szData, 
     return false;
   }
 
-  byte_t abtRxBuf[6];
+  uint8_t abtRxBuf[6];
   res = uart_receive (DRIVER_DATA(pnd)->port, abtRxBuf, 6, 0, timeout);
   if (res != 0) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Unable to read ACK");
@@ -352,9 +352,9 @@ pn532_uart_send (nfc_device * pnd, const byte_t * pbtData, const size_t szData, 
 }
 
 int
-pn532_uart_receive (nfc_device * pnd, byte_t * pbtData, const size_t szDataLen, struct timeval *timeout)
+pn532_uart_receive (nfc_device * pnd, uint8_t * pbtData, const size_t szDataLen, struct timeval *timeout)
 {
-  byte_t  abtRxBuf[5];
+  uint8_t  abtRxBuf[5];
   size_t len;
   void * abort_p = NULL;
 
@@ -376,7 +376,7 @@ pn532_uart_receive (nfc_device * pnd, byte_t * pbtData, const size_t szDataLen, 
     return -1;
   }
 
-  const byte_t pn53x_preamble[3] = { 0x00, 0x00, 0xff };
+  const uint8_t pn53x_preamble[3] = { 0x00, 0x00, 0xff };
   if (0 != (memcmp (abtRxBuf, pn53x_preamble, 3))) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Frame preamble+start code mismatch");
     pnd->iLastError = ECOMIO;
@@ -454,7 +454,7 @@ pn532_uart_receive (nfc_device * pnd, byte_t * pbtData, const size_t szDataLen, 
     return -1;
   }
 
-  byte_t btDCS = (256 - 0xD5);
+  uint8_t btDCS = (256 - 0xD5);
   btDCS -= CHIP_DATA (pnd)->ui8LastCommand + 1;
   for (size_t szPos = 0; szPos < len; szPos++) {
     btDCS -= pbtData[szPos];

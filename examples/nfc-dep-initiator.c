@@ -63,9 +63,9 @@ int
 main (int argc, const char *argv[])
 {
   nfc_target nt;
-  byte_t  abtRx[MAX_FRAME_LEN];
+  uint8_t  abtRx[MAX_FRAME_LEN];
   size_t  szRx = sizeof(abtRx);
-  byte_t  abtTx[] = "Hello World!";
+  uint8_t  abtTx[] = "Hello World!";
 
   if (argc > 1) {
     printf ("Usage: %s\n", argv[0]);

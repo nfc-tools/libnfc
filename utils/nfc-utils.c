@@ -33,7 +33,7 @@
 
 #include "nfc-utils.h"
 
-static const byte_t OddParity[256] = {
+static const uint8_t OddParity[256] = {
   1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1,
   0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0,
   0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0,
@@ -52,14 +52,14 @@ static const byte_t OddParity[256] = {
   1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1
 };
 
-byte_t
-oddparity (const byte_t bt)
+uint8_t
+oddparity (const uint8_t bt)
 {
   return OddParity[bt];
 }
 
 void
-oddparity_bytes_ts (const byte_t * pbtData, const size_t szLen, byte_t * pbtPar)
+oddparity_bytes_ts (const uint8_t * pbtData, const size_t szLen, uint8_t * pbtPar)
 {
   size_t  szByteNr;
   // Calculate the parity bits for the command
@@ -69,7 +69,7 @@ oddparity_bytes_ts (const byte_t * pbtData, const size_t szLen, byte_t * pbtPar)
 }
 
 void
-print_hex (const byte_t * pbtData, const size_t szBytes)
+print_hex (const uint8_t * pbtData, const size_t szBytes)
 {
   size_t  szPos;
 
@@ -80,7 +80,7 @@ print_hex (const byte_t * pbtData, const size_t szBytes)
 }
 
 void
-print_hex_bits (const byte_t * pbtData, const size_t szBits)
+print_hex_bits (const uint8_t * pbtData, const size_t szBits)
 {
   uint8_t uRemainder;
   size_t  szPos;
@@ -102,7 +102,7 @@ print_hex_bits (const byte_t * pbtData, const size_t szBits)
 }
 
 void
-print_hex_par (const byte_t * pbtData, const size_t szBits, const byte_t * pbtDataPar)
+print_hex_par (const uint8_t * pbtData, const size_t szBits, const uint8_t * pbtDataPar)
 {
   uint8_t uRemainder;
   size_t  szPos;
@@ -202,7 +202,7 @@ print_nfc_iso14443a_info (const nfc_iso14443a_info nai, bool verbose)
 
     size_t offset = 1;
     if (nai.abtAts[0] & 0x10) { // TA(1) present
-      byte_t TA = nai.abtAts[offset];
+      uint8_t TA = nai.abtAts[offset];
       offset++;
       printf ("* Bit Rate Capability:\n");
       if (TA == 0) {
@@ -234,7 +234,7 @@ print_nfc_iso14443a_info (const nfc_iso14443a_info nai, bool verbose)
       }
     }
     if (nai.abtAts[0] & 0x20) { // TB(1) present
-      byte_t TB= nai.abtAts[offset];
+      uint8_t TB= nai.abtAts[offset];
       offset++;
       printf ("* Frame Waiting Time: %.4g ms\n",256.0*16.0*(1<<((TB & 0xf0) >> 4))/13560.0);
       if ((TB & 0x0f) == 0) {
@@ -244,7 +244,7 @@ print_nfc_iso14443a_info (const nfc_iso14443a_info nai, bool verbose)
       }
     }
     if (nai.abtAts[0] & 0x40) { // TC(1) present
-      byte_t TC = nai.abtAts[offset];
+      uint8_t TC = nai.abtAts[offset];
       offset++;
       if (TC & 0x1) {
         printf("* Node ADdress supported\n");
@@ -260,20 +260,20 @@ print_nfc_iso14443a_info (const nfc_iso14443a_info nai, bool verbose)
     if (nai.szAtsLen > offset) {
       printf ("* Historical bytes Tk: " );
       print_hex (nai.abtAts + offset, (nai.szAtsLen - offset));
-      byte_t CIB = nai.abtAts[offset];
+      uint8_t CIB = nai.abtAts[offset];
       offset++;
       if (CIB != 0x00 && CIB != 0x10 && (CIB & 0xf0) != 0x80) {
         printf("  * Proprietary format\n");
         if (CIB == 0xc1) {
           printf("    * Tag byte: Mifare or virtual cards of various types\n");
-          byte_t L = nai.abtAts[offset];
+          uint8_t L = nai.abtAts[offset];
           offset++;
           if (L != (nai.szAtsLen - offset)) {
             printf("    * Warning: Type Identification Coding length (%i)", L);
             printf(" not matching Tk length (%zi)\n", (nai.szAtsLen - offset));
           }
           if ((nai.szAtsLen - offset - 2) > 0) { // Omit 2 CRC bytes
-            byte_t CTC = nai.abtAts[offset];
+            uint8_t CTC = nai.abtAts[offset];
             offset++;
             printf("    * Chip Type: ");
             switch (CTC & 0xf0) {
@@ -316,7 +316,7 @@ print_nfc_iso14443a_info (const nfc_iso14443a_info nai, bool verbose)
             }
           }
           if ((nai.szAtsLen - offset) > 0) { // Omit 2 CRC bytes
-            byte_t CVC = nai.abtAts[offset];
+            uint8_t CVC = nai.abtAts[offset];
             offset++;
             printf("    * Chip Status: ");
             switch (CVC & 0xf0) {
@@ -350,7 +350,7 @@ print_nfc_iso14443a_info (const nfc_iso14443a_info nai, bool verbose)
             }
           }
           if ((nai.szAtsLen - offset) > 0) { // Omit 2 CRC bytes
-            byte_t VCS = nai.abtAts[offset];
+            uint8_t VCS = nai.abtAts[offset];
             offset++;
             printf("    * Specifics (Virtual Card Selection):\n");
             if ((VCS & 0x09) == 0x00) {

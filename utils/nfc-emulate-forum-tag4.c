@@ -113,7 +113,7 @@ uint8_t nfcforum_capability_container[] = {
 #define ISO144434A_RATS 0xE0
 
 int
-nfcforum_tag4_io (struct nfc_emulator *emulator, const byte_t *data_in, const size_t data_in_len, byte_t *data_out, const size_t data_out_len)
+nfcforum_tag4_io (struct nfc_emulator *emulator, const uint8_t *data_in, const size_t data_in_len, uint8_t *data_out, const size_t data_out_len)
 {
   int res = 0;
 

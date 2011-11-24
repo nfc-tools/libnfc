@@ -139,7 +139,7 @@ uart_get_speed (const serial_port sp)
 }
 
 int
-uart_receive (serial_port sp, byte_t * pbtRx, const size_t szRx, void * abort_p, struct timeval *timeout)
+uart_receive (serial_port sp, uint8_t * pbtRx, const size_t szRx, void * abort_p, struct timeval *timeout)
 {
   DWORD dwBytesToGet = (DWORD)szRx;
   DWORD dwBytesReceived = 0;
@@ -194,7 +194,7 @@ uart_receive (serial_port sp, byte_t * pbtRx, const size_t szRx, void * abort_p,
 }
 
 int
-uart_send (serial_port sp, const byte_t * pbtTx, const size_t szTx, struct timeval *timeout)
+uart_send (serial_port sp, const uint8_t * pbtTx, const size_t szTx, struct timeval *timeout)
 {
   DWORD   dwTxLen = 0;
 

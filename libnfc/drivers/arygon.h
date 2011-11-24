@@ -35,8 +35,8 @@ bool    arygon_probe (nfc_connstring connstrings[], size_t connstrings_len, size
 nfc_device *arygon_connect (const nfc_connstring connstring);
 void    arygon_disconnect (nfc_device * pnd);
 
-bool    arygon_tama_send (nfc_device * pnd, const byte_t * pbtData, const size_t szData, struct timeval *timeout);
-int     arygon_tama_receive (nfc_device * pnd, byte_t * pbtData, const size_t szDat, struct timeval *timeouta);
+bool    arygon_tama_send (nfc_device * pnd, const uint8_t * pbtData, const size_t szData, struct timeval *timeout);
+int     arygon_tama_receive (nfc_device * pnd, uint8_t * pbtData, const size_t szDat, struct timeval *timeouta);
 
 extern const struct nfc_driver_t arygon_driver;
 

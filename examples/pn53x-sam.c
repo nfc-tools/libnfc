@@ -153,7 +153,7 @@ main (int argc, const char *argv[])
 
   case PSM_DUAL_CARD:
     {
-      byte_t  abtRx[MAX_FRAME_LEN];
+      uint8_t  abtRx[MAX_FRAME_LEN];
       size_t  szRx = sizeof(abtRx);
 
       nfc_target nt = {

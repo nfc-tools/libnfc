@@ -50,10 +50,10 @@
 bool
 nfc_initiator_mifare_cmd (nfc_device * pnd, const mifare_cmd mc, const uint8_t ui8Block, mifare_param * pmp)
 {
-  byte_t  abtRx[265];
+  uint8_t  abtRx[265];
   size_t  szRx = sizeof(abtRx);
   size_t  szParamLen;
-  byte_t  abtCmd[265];
+  uint8_t  abtCmd[265];
   bool    bEasyFraming;
 
   abtCmd[0] = mc;               // The MIFARE Classic command
@@ -92,7 +92,7 @@ nfc_initiator_mifare_cmd (nfc_device * pnd, const mifare_cmd mc, const uint8_t u
 
   // When available, copy the parameter bytes
   if (szParamLen)
-    memcpy (abtCmd + 2, (byte_t *) pmp, szParamLen);
+    memcpy (abtCmd + 2, (uint8_t *) pmp, szParamLen);
 
   bEasyFraming = pnd->bEasyFraming;
   if (!nfc_configure (pnd, NDO_EASY_FRAMING, true)) {

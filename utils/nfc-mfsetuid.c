@@ -56,14 +56,14 @@
 
 #define MAX_FRAME_LEN 264
 
-static byte_t abtRx[MAX_FRAME_LEN];
+static uint8_t abtRx[MAX_FRAME_LEN];
 static size_t szRxBits;
 static size_t szRx = sizeof(abtRx);
-static byte_t abtRawUid[12];
-static byte_t abtAtqa[2];
-static byte_t abtSak;
-static byte_t abtAts[MAX_FRAME_LEN];
-static byte_t szAts = 0;
+static uint8_t abtRawUid[12];
+static uint8_t abtAtqa[2];
+static uint8_t abtSak;
+static uint8_t abtAts[MAX_FRAME_LEN];
+static uint8_t szAts = 0;
 static size_t szCL = 1;//Always start with Cascade Level 1 (CL1)
 static nfc_device *pnd;
 
@@ -71,24 +71,24 @@ bool    quiet_output = false;
 bool    iso_ats_supported = false;
 
 // ISO14443A Anti-Collision Commands
-byte_t  abtReqa[1] = { 0x26 };
-byte_t  abtSelectAll[2] = { 0x93, 0x20 };
-byte_t  abtSelectTag[9] = { 0x93, 0x70, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-byte_t  abtRats[4] = { 0xe0, 0x50, 0x00, 0x00 };
-byte_t  abtHalt[4] = { 0x50, 0x00, 0x00, 0x00 };
+uint8_t  abtReqa[1] = { 0x26 };
+uint8_t  abtSelectAll[2] = { 0x93, 0x20 };
+uint8_t  abtSelectTag[9] = { 0x93, 0x70, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+uint8_t  abtRats[4] = { 0xe0, 0x50, 0x00, 0x00 };
+uint8_t  abtHalt[4] = { 0x50, 0x00, 0x00, 0x00 };
 #define CASCADE_BIT 0x04
 
 // special unlock command
-byte_t  abtUnlock1[1] = { 0x40 };
-byte_t  abtUnlock2[1] = { 0x43 };
-byte_t  abtWipe[1] = { 0x41 };
-byte_t abtWrite[4] = { 0xa0,  0x00,  0x5f,  0xb1 };
-byte_t abtData[18] = { 0x01,  0x23,  0x45,  0x67,  0x00,  0x08,  0x04,  0x00,  0x46,  0x59,  0x25,  0x58,  0x49,  0x10,  0x23,  0x02,  0x23,  0xeb };
-byte_t abtBlank[18] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x07, 0x80, 0x69, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x36, 0xCC };
+uint8_t  abtUnlock1[1] = { 0x40 };
+uint8_t  abtUnlock2[1] = { 0x43 };
+uint8_t  abtWipe[1] = { 0x41 };
+uint8_t abtWrite[4] = { 0xa0,  0x00,  0x5f,  0xb1 };
+uint8_t abtData[18] = { 0x01,  0x23,  0x45,  0x67,  0x00,  0x08,  0x04,  0x00,  0x46,  0x59,  0x25,  0x58,  0x49,  0x10,  0x23,  0x02,  0x23,  0xeb };
+uint8_t abtBlank[18] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x07, 0x80, 0x69, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x36, 0xCC };
 
 
 static  bool
-transmit_bits (const byte_t * pbtTx, const size_t szTxBits)
+transmit_bits (const uint8_t * pbtTx, const size_t szTxBits)
 {
   // Show transmitted command
   if (!quiet_output) {
@@ -110,7 +110,7 @@ transmit_bits (const byte_t * pbtTx, const size_t szTxBits)
 
 
 static  bool
-transmit_bytes (const byte_t * pbtTx, const size_t szTx)
+transmit_bytes (const uint8_t * pbtTx, const size_t szTx)
 {
   // Show transmitted command
   if (!quiet_output) {
