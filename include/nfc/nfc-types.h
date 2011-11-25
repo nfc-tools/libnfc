@@ -282,7 +282,7 @@ typedef enum {
 } nfc_baud_rate;
 
 /**
- * @enum nfc_modulationype
+ * @enum nfc_modulation_type
  * @brief NFC modulation type enumeration
  */
 typedef enum {
@@ -294,14 +294,14 @@ typedef enum {
   NMT_ISO14443B2CT, // ISO14443-2B ASK CTx
   NMT_FELICA,
   NMT_DEP,
-} nfc_modulationype;
+} nfc_modulation_type;
 
 /**
  * @struct nfc_modulation
  * @brief NFC modulation structure
  */
 typedef struct {
-  nfc_modulationype nmt;
+  nfc_modulation_type nmt;
   nfc_baud_rate nbr;
 } nfc_modulation;
 

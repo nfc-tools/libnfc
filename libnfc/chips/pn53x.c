@@ -318,7 +318,7 @@ pn53x_unwrap_frame (const uint8_t *pbtFrame, const size_t szFrameBits, uint8_t *
 }
 
 bool
-pn53x_decode_target_data (const uint8_t *pbtRawData, size_t szRawData, pn53x_type type, nfc_modulationype nmt,
+pn53x_decode_target_data (const uint8_t *pbtRawData, size_t szRawData, pn53x_type type, nfc_modulation_type nmt,
                           nfc_target_info *pnti)
 {
   uint8_t szAttribRes;
