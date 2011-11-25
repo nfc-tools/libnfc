@@ -461,7 +461,7 @@ nfc_initiator_deselect_target (nfc_device * pnd)
  *
  * @param pbtTx contains a byte array of the frame that needs to be transmitted.
  * @param szTx contains the length in bytes.
- * @param timeout timeval struct pointer (NULL means infinite)
+ * @param timeout in milliseconds
  * 
  * The NFC device (configured as initiator) will transmit the supplied bytes (\a pbtTx) to the target.
  * It waits for the response and stores the received bytes in the \a pbtRx byte array.
@@ -480,7 +480,7 @@ nfc_initiator_deselect_target (nfc_device * pnd)
  */
 bool
 nfc_initiator_transceive_bytes (nfc_device * pnd, const uint8_t * pbtTx, const size_t szTx, uint8_t * pbtRx,
-                                size_t * pszRx, struct timeval *timeout)
+                                size_t * pszRx, int timeout)
 {
   HAL (initiator_transceive_bytes, pnd, pbtTx, szTx, pbtRx, pszRx, timeout)
 }
@@ -682,7 +682,7 @@ nfc_abort_command (nfc_device * pnd)
  * @param pnd \a nfc_device struct pointer that represent currently used device
  * @param pbtTx pointer to Tx buffer
  * @param szTx size of Tx buffer
- * @param timeout timeval struct pointer (NULL means infinite)
+ * @param timeout in milliseconds
  *
  * This function make the NFC device (configured as \e target) send byte frames
  * (e.g. APDU responses) to the \e initiator.
@@ -691,7 +691,7 @@ nfc_abort_command (nfc_device * pnd)
  * If timeout is a null pointer, the function blocks indefinitely (until an error is raised or function is completed).
  */
 bool
-nfc_target_send_bytes (nfc_device * pnd, const uint8_t * pbtTx, const size_t szTx, struct timeval *timeout)
+nfc_target_send_bytes (nfc_device * pnd, const uint8_t * pbtTx, const size_t szTx, int timeout)
 {
   HAL (target_send_bytes, pnd, pbtTx, szTx, timeout);
 }
@@ -703,7 +703,7 @@ nfc_target_send_bytes (nfc_device * pnd, const uint8_t * pbtTx, const size_t szT
  * @param pnd \a nfc_device struct pointer that represent currently used device
  * @param[out] pbtRx pointer to Rx buffer
  * @param[out] pszRx received byte count
- * @param timeout timeval struct pointer (NULL means infinite)
+ * @param timeout in milliseconds
  *
  * This function retrieves bytes frames (e.g. ADPU) sent by the \e initiator to the NFC device (configured as \e target).
  *
@@ -711,7 +711,7 @@ nfc_target_send_bytes (nfc_device * pnd, const uint8_t * pbtTx, const size_t szT
  * If timeout is a null pointer, the function blocks indefinitely (until an error is raised or function is completed).
  */
 bool
-nfc_target_receive_bytes (nfc_device * pnd, uint8_t * pbtRx, size_t * pszRx, struct timeval *timeout)
+nfc_target_receive_bytes (nfc_device * pnd, uint8_t * pbtRx, size_t * pszRx, int timeout)
 {
   HAL (target_receive_bytes, pnd, pbtRx, pszRx, timeout);
 }

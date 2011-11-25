@@ -31,8 +31,8 @@
 
 bool    pn53x_usb_probe (nfc_connstring connstrings[], size_t connstrings_len, size_t * pszDeviceFound);
 nfc_device *pn53x_usb_connect (const nfc_connstring connstring);
-bool    pn53x_usb_send (nfc_device * pnd, const uint8_t * pbtData, const size_t szData, struct timeval *timeout);
-int     pn53x_usb_receive (nfc_device * pnd, uint8_t * pbtData, const size_t szData, struct timeval *timeout);
+bool    pn53x_usb_send (nfc_device * pnd, const uint8_t * pbtData, const size_t szData, int timeout);
+int     pn53x_usb_receive (nfc_device * pnd, uint8_t * pbtData, const size_t szData, int timeout);
 void    pn53x_usb_disconnect (nfc_device * pnd);
 
 extern const struct nfc_driver_t pn53x_usb_driver;

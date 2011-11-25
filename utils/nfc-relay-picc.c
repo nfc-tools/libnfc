@@ -370,7 +370,7 @@ main (int argc, char *argv[])
     bool ret;
     if (!initiator_only_mode) {
       // Receive external reader command through target
-      if (!nfc_target_receive_bytes(pndTarget,abtCapdu,&szCapduLen, NULL)) {
+      if (!nfc_target_receive_bytes(pndTarget,abtCapdu,&szCapduLen, 0)) {
         nfc_perror (pndTarget, "nfc_target_receive_bytes");
         if (!target_only_mode) {
           nfc_disconnect (pndInitiator);
@@ -401,7 +401,7 @@ main (int argc, char *argv[])
     if (!target_only_mode) {
       // Forward the frame to the original tag
       ret = nfc_initiator_transceive_bytes
-          (pndInitiator, abtCapdu, szCapduLen, abtRapdu, &szRapduLen, NULL);
+          (pndInitiator, abtCapdu, szCapduLen, abtRapdu, &szRapduLen, 0);
     } else {
       if (scan_hex_fd3(abtRapdu, &szRapduLen, "R-APDU") != EXIT_SUCCESS) {
         fprintf (stderr, "Error while scanning R-APDU from FD3\n");
@@ -425,7 +425,7 @@ main (int argc, char *argv[])
       }
       if (!initiator_only_mode) {
         // Transmit the response bytes
-        if (!nfc_target_send_bytes(pndTarget, abtRapdu, szRapduLen, NULL)) {
+        if (!nfc_target_send_bytes(pndTarget, abtRapdu, szRapduLen, 0)) {
           nfc_perror (pndTarget, "nfc_target_send_bytes");
           if (!target_only_mode) {
             nfc_disconnect (pndInitiator);

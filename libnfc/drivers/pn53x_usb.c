@@ -121,11 +121,11 @@ bool pn53x_usb_get_usb_device_name (struct usb_device *dev, usb_dev_handle *udev
 bool pn53x_usb_init (nfc_device *pnd);
 
 int
-pn53x_usb_bulk_read (struct pn53x_usb_data *data, uint8_t abtRx[], const size_t szRx, struct timeval *timeout)
+pn53x_usb_bulk_read (struct pn53x_usb_data *data, uint8_t abtRx[], const size_t szRx, int timeout)
 {
   int timeout_ms = USB_INFINITE_TIMEOUT;
-  if (timeout) {
-    timeout_ms = timeout->tv_sec * 1000 + timeout->tv_usec / 1000;
+  if (timeout > 0) {
+    timeout_ms = timeout;
     if (timeout_ms == USB_INFINITE_TIMEOUT) {
       // timeout < 1 ms
       timeout_ms++;
@@ -143,12 +143,12 @@ pn53x_usb_bulk_read (struct pn53x_usb_data *data, uint8_t abtRx[], const size_t 
 }
 
 int
-pn53x_usb_bulk_write (struct pn53x_usb_data *data, uint8_t abtTx[], const size_t szTx, struct timeval *timeout)
+pn53x_usb_bulk_write (struct pn53x_usb_data *data, uint8_t abtTx[], const size_t szTx, int timeout)
 {
   LOG_HEX ("TX", abtTx, szTx);
   int timeout_ms = USB_INFINITE_TIMEOUT;
-  if (timeout)
-      timeout_ms = timeout->tv_sec * 1000 + timeout->tv_usec / 1000;
+  if (timeout > 0)
+      timeout_ms = timeout;
 
   int res = usb_bulk_write (data->pudh, data->uiEndPointOut, (char *) abtTx, szTx, timeout_ms);
   if (res > 0) {
@@ -519,7 +519,7 @@ pn53x_usb_disconnect (nfc_device * pnd)
 #define PN53X_USB_BUFFER_LEN (PN53x_EXTENDED_FRAME__DATA_MAX_LEN + PN53x_EXTENDED_FRAME__OVERHEAD)
 
 bool
-pn53x_usb_send (nfc_device * pnd, const uint8_t * pbtData, const size_t szData, struct timeval *timeout)
+pn53x_usb_send (nfc_device * pnd, const uint8_t * pbtData, const size_t szData, int timeout)
 {
   uint8_t  abtFrame[PN53X_USB_BUFFER_LEN] = { 0x00, 0x00, 0xff };  // Every packet must start with "00 00 ff"
   size_t szFrame = 0;
@@ -565,7 +565,7 @@ pn53x_usb_send (nfc_device * pnd, const uint8_t * pbtData, const size_t szData, 
 }
 
 int
-pn53x_usb_receive (nfc_device * pnd, uint8_t * pbtData, const size_t szDataLen, struct timeval *timeout)
+pn53x_usb_receive (nfc_device * pnd, uint8_t * pbtData, const size_t szDataLen, int timeout)
 {
   size_t len;
   off_t offset = 0;
@@ -583,11 +583,12 @@ pn53x_usb_receive (nfc_device * pnd, uint8_t * pbtData, const size_t szDataLen, 
   };
 
   struct timeval remaining_time, usb_timeout;
-  if (timeout) {
-    remaining_time = *timeout;
+  if (timeout > 0) {
+    remaining_time.tv_sec = (timeout / 1000);
+    remaining_time.tv_usec = ((timeout % 1000) * 1000);
   }
 read:
-  if (timeout) {
+  if (timeout > 0) {
     // A user-provided timeout is set, we have to cut it in multiple chunk to be able to keep an nfc_abort_command() mecanism
     struct timeval tmp;
     if (1 == timeval_subtract (&tmp, &remaining_time, &fixed_timeout)) {
@@ -607,7 +608,7 @@ read:
     pnd->iLastError = ECOMTIMEOUT;
     return -1;
   }
-  res = pn53x_usb_bulk_read (DRIVER_DATA (pnd), abtRxBuf, sizeof (abtRxBuf), &usb_timeout);
+  res = pn53x_usb_bulk_read (DRIVER_DATA (pnd), abtRxBuf, sizeof (abtRxBuf), ((usb_timeout.tv_sec * 1000) + (usb_timeout.tv_usec / 1000)));
 
   if (res == -USB_TIMEDOUT) {
     if (DRIVER_DATA (pnd)->abort_flag) {
@@ -717,7 +718,7 @@ read:
 int
 pn53x_usb_ack (nfc_device * pnd)
 {
-  return pn53x_usb_bulk_write (DRIVER_DATA (pnd), (uint8_t *) pn53x_ack_frame, sizeof (pn53x_ack_frame), NULL);
+  return pn53x_usb_bulk_write (DRIVER_DATA (pnd), (uint8_t *) pn53x_ack_frame, sizeof (pn53x_ack_frame), 0);
 }
 
 bool
@@ -726,13 +727,13 @@ pn53x_usb_init (nfc_device *pnd)
   // Sometimes PN53x USB doesn't reply ACK one the first frame, so we need to send a dummy one...
   //pn53x_check_communication (pnd); // Sony RC-S360 doesn't support this command for now so let's use a get_firmware_version instead:
   const uint8_t abtCmd[] = { GetFirmwareVersion };
-  pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, NULL, NULL);
+  pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, NULL, 0);
   // ...and we don't care about error
   pnd->iLastError = 0;
   if (SONY_RCS360 == DRIVER_DATA (pnd)->model) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "SONY RC-S360 initialization.");
     const uint8_t abtCmd2[] = { 0x18, 0x01 };
-    pn53x_transceive (pnd, abtCmd2, sizeof (abtCmd2), NULL, NULL, NULL);
+    pn53x_transceive (pnd, abtCmd2, sizeof (abtCmd2), NULL, NULL, 0);
     pn53x_usb_ack (pnd);
   }
 

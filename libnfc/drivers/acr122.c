@@ -310,7 +310,7 @@ acr122_disconnect (nfc_device * pnd)
 }
 
 bool
-acr122_send (nfc_device * pnd, const uint8_t * pbtData, const size_t szData, struct timeval *timeout)
+acr122_send (nfc_device * pnd, const uint8_t * pbtData, const size_t szData, int timeout)
 {
   // FIXME: timeout is not handled
   (void) timeout;
@@ -381,7 +381,7 @@ acr122_send (nfc_device * pnd, const uint8_t * pbtData, const size_t szData, str
 }
 
 int
-acr122_receive (nfc_device * pnd, uint8_t * pbtData, const size_t szData, struct timeval *timeout)
+acr122_receive (nfc_device * pnd, uint8_t * pbtData, const size_t szData, int timeout)
 {
   // FIXME: timeout is not handled
   (void) timeout;

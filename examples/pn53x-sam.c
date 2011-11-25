@@ -110,7 +110,7 @@ main (int argc, const char *argv[])
 
   // Connect with the SAM
   // FIXME: Its a private pn53x function
-  if (!pn53x_SAMConfiguration (pnd, mode, NULL)) {
+  if (!pn53x_SAMConfiguration (pnd, mode, 0)) {
     nfc_perror (pnd, "pn53x_SAMConfiguration");
     exit (EXIT_FAILURE);
   }
@@ -185,7 +185,7 @@ main (int argc, const char *argv[])
   }
 
   // Disconnect from the SAM
-  pn53x_SAMConfiguration (pnd, PSM_NORMAL, NULL);
+  pn53x_SAMConfiguration (pnd, PSM_NORMAL, 0);
 
   // Disconnect from NFC device
   nfc_disconnect (pnd);

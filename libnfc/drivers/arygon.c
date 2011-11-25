@@ -304,7 +304,7 @@ arygon_disconnect (nfc_device * pnd)
 #define ARYGON_TX_BUFFER_LEN (PN53x_NORMAL_FRAME__DATA_MAX_LEN + PN53x_NORMAL_FRAME__OVERHEAD + 1)
 #define ARYGON_RX_BUFFER_LEN (PN53x_EXTENDED_FRAME__DATA_MAX_LEN + PN53x_EXTENDED_FRAME__OVERHEAD)
 bool
-arygon_tama_send (nfc_device * pnd, const uint8_t * pbtData, const size_t szData, struct timeval *timeout)
+arygon_tama_send (nfc_device * pnd, const uint8_t * pbtData, const size_t szData, int timeout)
 {
   // Before sending anything, we need to discard from any junk bytes
   uart_flush_input (DRIVER_DATA(pnd)->port);
@@ -359,14 +359,14 @@ arygon_abort (nfc_device *pnd)
   // Send a valid TAMA packet to wakup the PN53x (we will not have an answer, according to Arygon manual)
   uint8_t dummy[] = { 0x32, 0x00, 0x00, 0xff, 0x09, 0xf7, 0xd4, 0x00, 0x00, 0x6c, 0x69, 0x62, 0x6e, 0x66, 0x63, 0xbe, 0x00 };
 
-  uart_send (DRIVER_DATA (pnd)->port, dummy, sizeof (dummy), NULL);
+  uart_send (DRIVER_DATA (pnd)->port, dummy, sizeof (dummy), 0);
 
   // Using Arygon device we can't send ACK frame to abort the running command
   return (pn53x_check_communication (pnd)) ? 0 : -1;
 }
 
 int
-arygon_tama_receive (nfc_device * pnd, uint8_t * pbtData, const size_t szDataLen, struct timeval *timeout)
+arygon_tama_receive (nfc_device * pnd, uint8_t * pbtData, const size_t szDataLen, int timeout)
 {
   uint8_t  abtRxBuf[5];
   size_t len;
@@ -491,12 +491,12 @@ arygon_firmware (nfc_device * pnd, char * str)
   size_t szRx = sizeof(abtRx);
 
 
-  int res = uart_send (DRIVER_DATA (pnd)->port, arygon_firmware_version_cmd, sizeof (arygon_firmware_version_cmd), NULL);
+  int res = uart_send (DRIVER_DATA (pnd)->port, arygon_firmware_version_cmd, sizeof (arygon_firmware_version_cmd), 0);
   if (res != 0) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "Unable to send ARYGON firmware command.");
     return;
   }
-  res = uart_receive (DRIVER_DATA (pnd)->port, abtRx, szRx, 0, NULL);
+  res = uart_receive (DRIVER_DATA (pnd)->port, abtRx, szRx, 0, 0);
   if (res != 0) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "Unable to retrieve ARYGON firmware version.");
     return;
@@ -519,15 +519,11 @@ arygon_reset_tama (nfc_device * pnd)
   size_t szRx = sizeof(abtRx);
   int res;
 
-  struct timeval tv;
-  tv.tv_sec = 1;
-  tv.tv_usec = 0;
-
-  uart_send (DRIVER_DATA (pnd)->port, arygon_reset_tama_cmd, sizeof (arygon_reset_tama_cmd), &tv);
+  uart_send (DRIVER_DATA (pnd)->port, arygon_reset_tama_cmd, sizeof (arygon_reset_tama_cmd), 1000);
 
   // Two reply are possible from ARYGON device: arygon_error_none (ie. in case the byte is well-sent)
   // or arygon_error_unknown_mode (ie. in case of the first byte was bad-transmitted)
-  res = uart_receive (DRIVER_DATA (pnd)->port, abtRx, szRx, 0, &tv);
+  res = uart_receive (DRIVER_DATA (pnd)->port, abtRx, szRx, 0, 1000);
   if (res != 0) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "No reply to 'reset TAMA' command.");
     return false;

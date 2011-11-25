@@ -42,12 +42,12 @@ nfc_emulate_target (nfc_device* pnd, struct nfc_emulator *emulator)
   while (res >= 0) {
     res = emulator->state_machine->io (emulator, abtRx, szRx, abtTx, sizeof (abtTx));
     if (res > 0) {
-      if (!nfc_target_send_bytes(pnd, abtTx, res, NULL)) {
+      if (!nfc_target_send_bytes(pnd, abtTx, res, 0)) {
         return -1;
       }
     }
     if (res >= 0) {
-      if (!nfc_target_receive_bytes(pnd, abtRx, &szRx, NULL)) {
+      if (!nfc_target_receive_bytes(pnd, abtRx, &szRx, 0)) {
         return -1;
       }
     }

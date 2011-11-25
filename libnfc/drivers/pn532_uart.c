@@ -282,14 +282,14 @@ pn532_uart_wakeup (nfc_device * pnd)
 {
   /* High Speed Unit (HSU) wake up consist to send 0x55 and wait a "long" delay for PN532 being wakeup. */
   const uint8_t pn532_wakeup_preamble[] = { 0x55, 0x55, 0x00, 0x00, 0x00 };
-  int res = uart_send (DRIVER_DATA(pnd)->port, pn532_wakeup_preamble, sizeof (pn532_wakeup_preamble), NULL);
+  int res = uart_send (DRIVER_DATA(pnd)->port, pn532_wakeup_preamble, sizeof (pn532_wakeup_preamble), 0);
   CHIP_DATA(pnd)->power_mode = NORMAL; // PN532 should now be awake
   return res;
 }
 
 #define PN532_BUFFER_LEN (PN53x_EXTENDED_FRAME__DATA_MAX_LEN + PN53x_EXTENDED_FRAME__OVERHEAD)
 bool
-pn532_uart_send (nfc_device * pnd, const uint8_t * pbtData, const size_t szData, struct timeval *timeout)
+pn532_uart_send (nfc_device * pnd, const uint8_t * pbtData, const size_t szData, int timeout)
 {
   // Before sending anything, we need to discard from any junk bytes
   uart_flush_input (DRIVER_DATA(pnd)->port);
@@ -301,10 +301,7 @@ pn532_uart_send (nfc_device * pnd, const uint8_t * pbtData, const size_t szData,
         return false;
       }
       // According to PN532 application note, C106 appendix: to go out Low Vbat mode and enter in normal mode we need to send a SAMConfiguration command
-      struct timeval tv;
-      tv.tv_sec = 1;
-      tv.tv_usec = 0;
-      if (!pn53x_SAMConfiguration (pnd, 0x01, &tv)) {
+      if (!pn53x_SAMConfiguration (pnd, 0x01, 1000)) {
         return false;
       }
     }
@@ -352,7 +349,7 @@ pn532_uart_send (nfc_device * pnd, const uint8_t * pbtData, const size_t szData,
 }
 
 int
-pn532_uart_receive (nfc_device * pnd, uint8_t * pbtData, const size_t szDataLen, struct timeval *timeout)
+pn532_uart_receive (nfc_device * pnd, uint8_t * pbtData, const size_t szDataLen, int timeout)
 {
   uint8_t  abtRxBuf[5];
   size_t len;
@@ -483,7 +480,7 @@ pn532_uart_ack (nfc_device * pnd)
       return -1;
     }
   }
-  return (0 == uart_send (DRIVER_DATA(pnd)->port, pn53x_ack_frame, sizeof (pn53x_ack_frame),  NULL)) ? 0 : -1;
+  return (0 == uart_send (DRIVER_DATA(pnd)->port, pn53x_ack_frame, sizeof (pn53x_ack_frame),  0)) ? 0 : -1;
 }
 
 bool

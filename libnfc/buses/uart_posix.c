@@ -249,7 +249,7 @@ uart_close (const serial_port sp)
  * @return 0 on success, otherwise driver error code
  */
 int
-uart_receive (serial_port sp, uint8_t * pbtRx, const size_t szRx, void * abort_p, struct timeval *timeout)
+uart_receive (serial_port sp, uint8_t * pbtRx, const size_t szRx, void * abort_p, int timeout)
 {
   int iAbortFd = abort_p ? *((int*)abort_p) : 0;
   int received_bytes_count = 0;
@@ -272,12 +272,13 @@ select:
      * Make a copy so that it will be updated on these systems,
      */
     struct timeval fixed_timeout;
-    if (timeout) {
-	fixed_timeout = *timeout;
-	timeout = &fixed_timeout;
+    if (timeout > 0) {
+      fixed_timeout.tv_sec = (timeout / 1000);
+      fixed_timeout.tv_usec = ((timeout % 1000) * 1000);
+      timeout = ((fixed_timeout.tv_sec * 1000) + (fixed_timeout.tv_usec / 1000));
     }
 
-    res = select (MAX(UART_DATA(sp)->fd, iAbortFd) + 1, &rfds, NULL, NULL, timeout);
+    res = select (MAX(UART_DATA(sp)->fd, iAbortFd) + 1, &rfds, NULL, NULL, &fixed_timeout);
 
     if ((res < 0) && (EINTR == errno)) {
       // The system call was interupted by a signal and a signal handler was
@@ -327,7 +328,7 @@ select:
  * @return 0 on success, otherwise a driver error is returned
  */
 int
-uart_send (serial_port sp, const uint8_t * pbtTx, const size_t szTx, struct timeval *timeout)
+uart_send (serial_port sp, const uint8_t * pbtTx, const size_t szTx, int timeout)
 {
   (void) timeout;
   LOG_HEX ("TX", pbtTx, szTx);

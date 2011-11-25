@@ -116,7 +116,7 @@ nfc_forum_tag_type3_check (nfc_device *pnd, const nfc_target nt, const uint16_t 
   uint8_t res[1024];
 
   size_t res_len;
-  if (!nfc_initiator_transceive_bytes (pnd, frame, frame_len, res, &res_len, NULL)) {
+  if (!nfc_initiator_transceive_bytes (pnd, frame, frame_len, res, &res_len, 0)) {
     return -1;
   }
   const size_t res_overhead = 1 + 1 + 8 + 2;  // 1+1+8+2: LEN + CMD + NFCID2 + STATUS
