@@ -121,18 +121,9 @@ bool pn53x_usb_get_usb_device_name (struct usb_device *dev, usb_dev_handle *udev
 bool pn53x_usb_init (nfc_device *pnd);
 
 int
-pn53x_usb_bulk_read (struct pn53x_usb_data *data, uint8_t abtRx[], const size_t szRx, int timeout)
+pn53x_usb_bulk_read (struct pn53x_usb_data *data, uint8_t abtRx[], const size_t szRx, const int timeout)
 {
-  int timeout_ms = USB_INFINITE_TIMEOUT;
-  if (timeout > 0) {
-    timeout_ms = timeout;
-    if (timeout_ms == USB_INFINITE_TIMEOUT) {
-      // timeout < 1 ms
-      timeout_ms++;
-    }
-  }
-
-  int res = usb_bulk_read (data->pudh, data->uiEndPointIn, (char *) abtRx, szRx, timeout_ms);
+  int res = usb_bulk_read (data->pudh, data->uiEndPointIn, (char *) abtRx, szRx, timeout);
   if (res > 0) {
     LOG_HEX ("RX", abtRx, res);
   } else if (res < 0) {
@@ -143,18 +134,14 @@ pn53x_usb_bulk_read (struct pn53x_usb_data *data, uint8_t abtRx[], const size_t 
 }
 
 int
-pn53x_usb_bulk_write (struct pn53x_usb_data *data, uint8_t abtTx[], const size_t szTx, int timeout)
+pn53x_usb_bulk_write (struct pn53x_usb_data *data, uint8_t abtTx[], const size_t szTx, const int timeout)
 {
   LOG_HEX ("TX", abtTx, szTx);
-  int timeout_ms = USB_INFINITE_TIMEOUT;
-  if (timeout > 0)
-      timeout_ms = timeout;
-
-  int res = usb_bulk_write (data->pudh, data->uiEndPointOut, (char *) abtTx, szTx, timeout_ms);
+  int res = usb_bulk_write (data->pudh, data->uiEndPointOut, (char *) abtTx, szTx, timeout);
   if (res > 0) {
     // HACK This little hack is a well know problem of USB, see http://www.libusb.org/ticket/6 for more details
     if ((res % data->uiMaxPacketSize) == 0) {
-      usb_bulk_write (data->pudh, data->uiEndPointOut, "\0", 0, timeout_ms);
+      usb_bulk_write (data->pudh, data->uiEndPointOut, "\0", 0, timeout);
     }
   } else {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to write to USB (%s)", _usb_strerror (res));
@@ -519,7 +506,7 @@ pn53x_usb_disconnect (nfc_device *pnd)
 #define PN53X_USB_BUFFER_LEN (PN53x_EXTENDED_FRAME__DATA_MAX_LEN + PN53x_EXTENDED_FRAME__OVERHEAD)
 
 bool
-pn53x_usb_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szData, int timeout)
+pn53x_usb_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szData, const int timeout)
 {
   uint8_t  abtFrame[PN53X_USB_BUFFER_LEN] = { 0x00, 0x00, 0xff };  // Every packet must start with "00 00 ff"
   size_t szFrame = 0;
@@ -564,8 +551,9 @@ pn53x_usb_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szData, in
   return true;
 }
 
+#define USB_TIMEOUT_PER_PASS 200
 int
-pn53x_usb_receive (nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, int timeout)
+pn53x_usb_receive (nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, const int timeout)
 {
   size_t len;
   off_t offset = 0;
@@ -574,41 +562,25 @@ pn53x_usb_receive (nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, in
   int res;
 
   /*
-   * If no timeout is specified but the command is blocking, force a 250ms
+   * If no timeout is specified but the command is blocking, force a 200ms (USB_TIMEOUT_PER_PASS)
    * timeout to allow breaking the loop if the user wants to stop it.
    */
-  const struct timeval fixed_timeout = {
-      .tv_sec = 0,
-      .tv_usec = 250000,
-  };
-
-  struct timeval remaining_time, usb_timeout;
-  if (timeout > 0) {
-    remaining_time.tv_sec = (timeout / 1000);
-    remaining_time.tv_usec = ((timeout % 1000) * 1000);
-  }
+  int usb_timeout;
+  int remaining_time = timeout;
 read:
-  if (timeout > 0) {
-    // A user-provided timeout is set, we have to cut it in multiple chunk to be able to keep an nfc_abort_command() mecanism
-    struct timeval tmp;
-    if (1 == timeval_subtract (&tmp, &remaining_time, &fixed_timeout)) {
-      // The subtraction result is negative
-      usb_timeout = remaining_time;
-      remaining_time.tv_sec = 0;
-      remaining_time.tv_usec = 0;
-    } else {
-      usb_timeout = fixed_timeout;
-      remaining_time = tmp;
-    }
+  if (timeout == USB_INFINITE_TIMEOUT) {
+    usb_timeout = USB_TIMEOUT_PER_PASS;
   } else {
-    // No user-provided timeout, we will wait infinitely but we need nfc_abort_command() mecanism.
-    usb_timeout = fixed_timeout;
+    remaining_time -= USB_TIMEOUT_PER_PASS;
+    if (remaining_time <= 0) {
+      pnd->iLastError = ECOMTIMEOUT;
+      return -1;
+    } else {
+      usb_timeout = MIN(remaining_time, USB_TIMEOUT_PER_PASS);
+    }
   }
-  if ((usb_timeout.tv_sec == 0) && (usb_timeout.tv_usec == 0)) {
-    pnd->iLastError = ECOMTIMEOUT;
-    return -1;
-  }
-  res = pn53x_usb_bulk_read (DRIVER_DATA (pnd), abtRxBuf, sizeof (abtRxBuf), ((usb_timeout.tv_sec * 1000) + (usb_timeout.tv_usec / 1000)));
+
+  res = pn53x_usb_bulk_read (DRIVER_DATA (pnd), abtRxBuf, sizeof (abtRxBuf), usb_timeout);
 
   if (res == -USB_TIMEDOUT) {
     if (DRIVER_DATA (pnd)->abort_flag) {

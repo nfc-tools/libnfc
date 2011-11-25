@@ -21,5 +21,5 @@
 	<layout name="basic" type="basic"/>
 	<layout name="dated" type="dated"/>
 
-	<category name="libnfc" priority="trace" appender="stdout"/>
+	<category name="libnfc" priority="trace" appender="stderr"/>
 </log4c>
