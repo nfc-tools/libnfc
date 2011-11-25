@@ -59,7 +59,7 @@ oddparity (const uint8_t bt)
 }
 
 void
-oddparity_bytes_ts (const uint8_t * pbtData, const size_t szLen, uint8_t * pbtPar)
+oddparity_bytes_ts (const uint8_t *pbtData, const size_t szLen, uint8_t *pbtPar)
 {
   size_t  szByteNr;
   // Calculate the parity bits for the command
@@ -69,7 +69,7 @@ oddparity_bytes_ts (const uint8_t * pbtData, const size_t szLen, uint8_t * pbtPa
 }
 
 void
-print_hex (const uint8_t * pbtData, const size_t szBytes)
+print_hex (const uint8_t *pbtData, const size_t szBytes)
 {
   size_t  szPos;
 
@@ -80,7 +80,7 @@ print_hex (const uint8_t * pbtData, const size_t szBytes)
 }
 
 void
-print_hex_bits (const uint8_t * pbtData, const size_t szBits)
+print_hex_bits (const uint8_t *pbtData, const size_t szBits)
 {
   uint8_t uRemainder;
   size_t  szPos;
@@ -102,7 +102,7 @@ print_hex_bits (const uint8_t * pbtData, const size_t szBits)
 }
 
 void
-print_hex_par (const uint8_t * pbtData, const size_t szBits, const uint8_t * pbtDataPar)
+print_hex_par (const uint8_t *pbtData, const size_t szBits, const uint8_t *pbtDataPar)
 {
   uint8_t uRemainder;
   size_t  szPos;

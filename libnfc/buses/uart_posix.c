@@ -249,7 +249,7 @@ uart_close (const serial_port sp)
  * @return 0 on success, otherwise driver error code
  */
 int
-uart_receive (serial_port sp, uint8_t * pbtRx, const size_t szRx, void * abort_p, int timeout)
+uart_receive (serial_port sp, uint8_t *pbtRx, const size_t szRx, void *abort_p, int timeout)
 {
   int iAbortFd = abort_p ? *((int*)abort_p) : 0;
   int received_bytes_count = 0;
@@ -323,7 +323,7 @@ select:
  * @return 0 on success, otherwise a driver error is returned
  */
 int
-uart_send (serial_port sp, const uint8_t * pbtTx, const size_t szTx, int timeout)
+uart_send (serial_port sp, const uint8_t *pbtTx, const size_t szTx, int timeout)
 {
   (void) timeout;
   LOG_HEX ("TX", pbtTx, szTx);

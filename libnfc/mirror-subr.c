@@ -60,7 +60,7 @@ mirror (uint8_t bt)
 }
 
 void
-mirror_bytes (uint8_t * pbts, size_t szLen)
+mirror_bytes (uint8_t *pbts, size_t szLen)
 {
   size_t  szByteNr;
 

@@ -29,12 +29,12 @@
 
 #  include <nfc/nfc-types.h>
 
-bool    pn532_uart_probe (nfc_connstring connstrings[], size_t connstrings_len, size_t * pszDeviceFound);
+bool    pn532_uart_probe (nfc_connstring connstrings[], size_t connstrings_len, size_t *pszDeviceFound);
 
 nfc_device *pn532_uart_connect (const nfc_connstring connstring);
-void    pn532_uart_disconnect (nfc_device * pnd);
-bool    pn532_uart_send (nfc_device * pnd, const uint8_t * pbtData, const size_t szData, int timeout);
-int     pn532_uart_receive (nfc_device * pnd, uint8_t * pbtData, const size_t szData, int timeout);
+void    pn532_uart_disconnect (nfc_device *pnd);
+bool    pn532_uart_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szData, int timeout);
+int     pn532_uart_receive (nfc_device *pnd, uint8_t *pbtData, const size_t szData, int timeout);
 
 extern const struct nfc_driver_t pn532_uart_driver;
 

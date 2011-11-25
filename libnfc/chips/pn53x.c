@@ -1447,7 +1447,7 @@ pn53x_initiator_transceive_bytes_timed (nfc_device *pnd, const uint8_t *pbtTx, c
   // Recv corrected timer value
   if (pnd->bCrc) {
     // We've to compute CRC ourselves to know last byte actually sent
-    uint8_t * pbtTxRaw;
+    uint8_t *pbtTxRaw;
     pbtTxRaw = (uint8_t *) malloc(szTx+2);
     memcpy (pbtTxRaw, pbtTx, szTx);
     iso14443a_crc_append (pbtTxRaw, szTx);
@@ -1519,15 +1519,15 @@ pn53x_target_init (nfc_device *pnd, nfc_target *pnt, uint8_t *pbtRx, size_t *psz
     return false;
 
   uint8_t abtMifareParams[6];
-  uint8_t * pbtMifareParams = NULL;
-  uint8_t * pbtTkt = NULL;
+  uint8_t *pbtMifareParams = NULL;
+  uint8_t *pbtTkt = NULL;
   size_t szTkt = 0;
 
   uint8_t abtFeliCaParams[18];
-  uint8_t * pbtFeliCaParams = NULL;
+  uint8_t *pbtFeliCaParams = NULL;
 
-  const uint8_t * pbtNFCID3t = NULL;
-  const uint8_t * pbtGBt = NULL;
+  const uint8_t *pbtNFCID3t = NULL;
+  const uint8_t *pbtGBt = NULL;
   size_t szGBt = 0;
 
   switch(pnt->nm.nmt) {
@@ -2292,7 +2292,7 @@ pn53x_TgInitAsTarget (nfc_device *pnd, pn53x_target_mode ptm,
                       const uint8_t *pbtTkt, size_t szTkt,
                       const uint8_t *pbtFeliCaParams,
                       const uint8_t *pbtNFCID3t, const uint8_t *pbtGBt, const size_t szGBt,
-                      uint8_t *pbtRx, size_t * pszRx, uint8_t *pbtModeByte)
+                      uint8_t *pbtRx, size_t *pszRx, uint8_t *pbtModeByte)
 {
   uint8_t  abtCmd[39 + 47 + 48] = { TgInitAsTarget }; // Worst case: 39-byte base, 47 bytes max. for General Bytes, 48 bytes max. for Historical Bytes
   size_t  szOptionalBytes = 0;
@@ -2607,7 +2607,7 @@ pn53x_nm_to_ptt(const nfc_modulation nm)
 }
 
 void
-pn53x_data_new (nfc_device *pnd, const struct pn53x_io* io)
+pn53x_data_new (nfc_device *pnd, const struct pn53x_io *io)
 {
   pnd->chip_data = malloc(sizeof(struct pn53x_data));
 

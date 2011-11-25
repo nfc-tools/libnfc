@@ -32,7 +32,7 @@
 #include <nfc/nfc.h>
 
 void
-iso14443a_crc (uint8_t * pbtData, size_t szLen, uint8_t * pbtCrc)
+iso14443a_crc (uint8_t *pbtData, size_t szLen, uint8_t *pbtCrc)
 {
   uint8_t  bt;
   uint32_t wCrc = 0x6363;
@@ -49,13 +49,13 @@ iso14443a_crc (uint8_t * pbtData, size_t szLen, uint8_t * pbtCrc)
 }
 
 void
-iso14443a_crc_append (uint8_t * pbtData, size_t szLen)
+iso14443a_crc_append (uint8_t *pbtData, size_t szLen)
 {
   iso14443a_crc (pbtData, szLen, pbtData + szLen);
 }
 
 uint8_t *
-iso14443a_locate_historical_bytes (uint8_t * pbtAts, size_t szAts, size_t * pszTk)
+iso14443a_locate_historical_bytes (uint8_t *pbtAts, size_t szAts, size_t *pszTk)
 {
   if (szAts) {
     size_t offset = 1;
@@ -82,7 +82,7 @@ iso14443a_locate_historical_bytes (uint8_t * pbtAts, size_t szAts, size_t * pszT
  * @see ISO/IEC 14443-3 (6.4.4 UID contents and cascade levels)
  */
 void 
-iso14443_cascade_uid (const uint8_t abtUID[], const size_t szUID, uint8_t * pbtCascadedUID, size_t * pszCascadedUID)
+iso14443_cascade_uid (const uint8_t abtUID[], const size_t szUID, uint8_t *pbtCascadedUID, size_t *pszCascadedUID)
 {
   switch (szUID) { 
     case 7: 

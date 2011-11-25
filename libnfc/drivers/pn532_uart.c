@@ -48,8 +48,8 @@
 #define PN532_UART_DRIVER_NAME "pn532_uart"
 #define LOG_CATEGORY "libnfc.driver.pn532_uart"
 
-int     pn532_uart_ack (nfc_device * pnd);
-int     pn532_uart_wakeup (nfc_device * pnd);
+int     pn532_uart_ack (nfc_device *pnd);
+int     pn532_uart_wakeup (nfc_device *pnd);
 
 const struct pn53x_io pn532_uart_io;
 
@@ -65,7 +65,7 @@ struct pn532_uart_data {
 #define DRIVER_DATA(pnd) ((struct pn532_uart_data*)(pnd->driver_data))
 
 bool
-pn532_uart_probe (nfc_connstring connstrings[], size_t connstrings_len, size_t * pszDeviceFound)
+pn532_uart_probe (nfc_connstring connstrings[], size_t connstrings_len, size_t *pszDeviceFound)
 {
   /** @note: Due to UART bus we can't know if its really a pn532 without
   * sending some PN53x commands. But using this way to probe devices, we can
@@ -178,7 +178,7 @@ pn532_connstring_decode (const nfc_connstring connstring, struct pn532_uart_desc
   strncpy (desc->port, port, sizeof(desc->port)-1);
   desc->port[sizeof(desc->port)-1] = '\0';
 
-  const char* speed_s = strtok (NULL, ":");
+  const char *speed_s = strtok (NULL, ":");
   if (!speed_s) {
     // speed not specified (or parsing error)
     free (cs);
@@ -262,7 +262,7 @@ pn532_uart_connect (const nfc_connstring connstring)
 }
 
 void
-pn532_uart_disconnect (nfc_device * pnd)
+pn532_uart_disconnect (nfc_device *pnd)
 {
   // Release UART port
   uart_close (DRIVER_DATA(pnd)->port);
@@ -278,7 +278,7 @@ pn532_uart_disconnect (nfc_device * pnd)
 }
 
 int
-pn532_uart_wakeup (nfc_device * pnd)
+pn532_uart_wakeup (nfc_device *pnd)
 {
   /* High Speed Unit (HSU) wake up consist to send 0x55 and wait a "long" delay for PN532 being wakeup. */
   const uint8_t pn532_wakeup_preamble[] = { 0x55, 0x55, 0x00, 0x00, 0x00 };
@@ -289,7 +289,7 @@ pn532_uart_wakeup (nfc_device * pnd)
 
 #define PN532_BUFFER_LEN (PN53x_EXTENDED_FRAME__DATA_MAX_LEN + PN53x_EXTENDED_FRAME__OVERHEAD)
 bool
-pn532_uart_send (nfc_device * pnd, const uint8_t * pbtData, const size_t szData, int timeout)
+pn532_uart_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szData, int timeout)
 {
   // Before sending anything, we need to discard from any junk bytes
   uart_flush_input (DRIVER_DATA(pnd)->port);
@@ -349,11 +349,11 @@ pn532_uart_send (nfc_device * pnd, const uint8_t * pbtData, const size_t szData,
 }
 
 int
-pn532_uart_receive (nfc_device * pnd, uint8_t * pbtData, const size_t szDataLen, int timeout)
+pn532_uart_receive (nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, int timeout)
 {
   uint8_t  abtRxBuf[5];
   size_t len;
-  void * abort_p = NULL;
+  void *abort_p = NULL;
 
 #ifndef WIN32
   abort_p = &(DRIVER_DATA (pnd)->iAbortFds[1]);
@@ -473,7 +473,7 @@ pn532_uart_receive (nfc_device * pnd, uint8_t * pbtData, const size_t szDataLen,
 }
 
 int
-pn532_uart_ack (nfc_device * pnd)
+pn532_uart_ack (nfc_device *pnd)
 {
   if (POWERDOWN == CHIP_DATA(pnd)->power_mode) {
     if (-1 == pn532_uart_wakeup(pnd)) {
@@ -484,7 +484,7 @@ pn532_uart_ack (nfc_device * pnd)
 }
 
 bool
-pn532_uart_abort_command (nfc_device * pnd)
+pn532_uart_abort_command (nfc_device *pnd)
 {
   if (pnd) {
 #ifndef WIN32

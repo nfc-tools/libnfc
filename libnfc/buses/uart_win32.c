@@ -238,7 +238,7 @@ BOOL is_port_available(int nPort)
 char **
 uart_list_ports (void)
 {
-  char ** availablePorts = malloc((1 + MAX_SERIAL_PORT_WIN) * sizeof(char*));
+  char **availablePorts = malloc((1 + MAX_SERIAL_PORT_WIN) * sizeof(char*));
   int curIndex = 0;
   int i;
   for (i = 1; i <= MAX_SERIAL_PORT_WIN; i++) {

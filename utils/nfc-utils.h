@@ -80,11 +80,11 @@
 #endif
 
 uint8_t  oddparity (const uint8_t bt);
-void    oddparity_uint8_ts (const uint8_t * pbtData, const size_t szLen, uint8_t * pbtPar);
+void    oddparity_uint8_ts (const uint8_t *pbtData, const size_t szLen, uint8_t *pbtPar);
 
-void    print_hex (const uint8_t * pbtData, const size_t szLen);
-void    print_hex_bits (const uint8_t * pbtData, const size_t szBits);
-void    print_hex_par (const uint8_t * pbtData, const size_t szBits, const uint8_t * pbtDataPar);
+void    print_hex (const uint8_t *pbtData, const size_t szLen);
+void    print_hex_bits (const uint8_t *pbtData, const size_t szBits);
+void    print_hex_par (const uint8_t *pbtData, const size_t szBits, const uint8_t *pbtDataPar);
 
 void    print_nfc_iso14443a_info (const nfc_iso14443a_info nai, bool verbose);
 void    print_nfc_iso14443b_info (const nfc_iso14443b_info nbi, bool verbose);

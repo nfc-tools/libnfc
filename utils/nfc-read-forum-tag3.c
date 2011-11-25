@@ -77,7 +77,7 @@ void stop_select (int sig)
 }
 
 void
-build_felica_frame(const nfc_felica_info nfi, const uint8_t command, const uint8_t* payload, const size_t payload_len, uint8_t * frame, size_t * frame_len)
+build_felica_frame(const nfc_felica_info nfi, const uint8_t command, const uint8_t *payload, const size_t payload_len, uint8_t *frame, size_t *frame_len)
 {
   frame[0] = 1 + 1 + 8 + payload_len;
   *frame_len = frame[0];
@@ -88,7 +88,7 @@ build_felica_frame(const nfc_felica_info nfi, const uint8_t command, const uint8
 
 #define CHECK 		0x06
 int 
-nfc_forum_tag_type3_check (nfc_device *pnd, const nfc_target nt, const uint16_t block, const uint8_t block_count, uint8_t * data, size_t * data_len)
+nfc_forum_tag_type3_check (nfc_device *pnd, const nfc_target nt, const uint16_t block, const uint8_t block_count, uint8_t *data, size_t *data_len)
 {
   uint8_t payload[1024] = {
                        1, // Services

@@ -92,7 +92,7 @@ print_usage (char *argv[])
   printf ("\t-n N\tAdds a waiting time of N seconds (integer) in the relay to mimic long distance.\n");
 }
 
-bool print_hex_fd4 (const uint8_t * pbtData, const size_t szBytes, const char * pchPrefix)
+bool print_hex_fd4 (const uint8_t *pbtData, const size_t szBytes, const char *pchPrefix)
 {
   size_t  szPos;
   if (szBytes > MAX_FRAME_LEN) {
@@ -114,7 +114,7 @@ bool print_hex_fd4 (const uint8_t * pbtData, const size_t szBytes, const char * 
   return EXIT_SUCCESS;
 }
 
-bool scan_hex_fd3 (uint8_t *pbtData, size_t *pszBytes, const char * pchPrefix)
+bool scan_hex_fd3 (uint8_t *pbtData, size_t *pszBytes, const char *pchPrefix)
 {
   size_t  szPos;
   unsigned int uiBytes;

@@ -133,7 +133,7 @@ acr122_free_scardcontext (void)
  * @return true if succeeded, false otherwise.
  */
 bool
-acr122_probe (nfc_connstring connstrings[], size_t connstrings_len, size_t * pszDeviceFound)
+acr122_probe (nfc_connstring connstrings[], size_t connstrings_len, size_t *pszDeviceFound)
 {
   size_t  szPos = 0;
   char    acDeviceNames[256 + 64 * PCSC_MAX_DEVICES];
@@ -300,7 +300,7 @@ error:
 }
 
 void
-acr122_disconnect (nfc_device * pnd)
+acr122_disconnect (nfc_device *pnd)
 {
   SCardDisconnect (DRIVER_DATA (pnd)->hCard, SCARD_LEAVE_CARD);
   acr122_free_scardcontext ();
@@ -310,7 +310,7 @@ acr122_disconnect (nfc_device * pnd)
 }
 
 bool
-acr122_send (nfc_device * pnd, const uint8_t * pbtData, const size_t szData, int timeout)
+acr122_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szData, int timeout)
 {
   // FIXME: timeout is not handled
   (void) timeout;
@@ -381,7 +381,7 @@ acr122_send (nfc_device * pnd, const uint8_t * pbtData, const size_t szData, int
 }
 
 int
-acr122_receive (nfc_device * pnd, uint8_t * pbtData, const size_t szData, int timeout)
+acr122_receive (nfc_device *pnd, uint8_t *pbtData, const size_t szData, int timeout)
 {
   // FIXME: timeout is not handled
   (void) timeout;

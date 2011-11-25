@@ -190,7 +190,7 @@ pn53x_usb_get_device_model (uint16_t vendor_id, uint16_t product_id)
   return UNKNOWN;
 }
 
-int  pn53x_usb_ack (nfc_device * pnd);
+int  pn53x_usb_ack (nfc_device *pnd);
 
 // Find transfer endpoints for bulk transfers
 void
@@ -223,7 +223,7 @@ pn53x_usb_get_end_points (struct usb_device *dev, struct pn53x_usb_data *data)
 }
 
 bool
-pn53x_usb_probe (nfc_connstring connstrings[], size_t connstrings_len, size_t * pszDeviceFound)
+pn53x_usb_probe (nfc_connstring connstrings[], size_t connstrings_len, size_t *pszDeviceFound)
 {
   usb_init ();
 
@@ -492,7 +492,7 @@ error:
 }
 
 void
-pn53x_usb_disconnect (nfc_device * pnd)
+pn53x_usb_disconnect (nfc_device *pnd)
 {
   pn53x_usb_ack (pnd);
 
@@ -519,7 +519,7 @@ pn53x_usb_disconnect (nfc_device * pnd)
 #define PN53X_USB_BUFFER_LEN (PN53x_EXTENDED_FRAME__DATA_MAX_LEN + PN53x_EXTENDED_FRAME__OVERHEAD)
 
 bool
-pn53x_usb_send (nfc_device * pnd, const uint8_t * pbtData, const size_t szData, int timeout)
+pn53x_usb_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szData, int timeout)
 {
   uint8_t  abtFrame[PN53X_USB_BUFFER_LEN] = { 0x00, 0x00, 0xff };  // Every packet must start with "00 00 ff"
   size_t szFrame = 0;
@@ -565,7 +565,7 @@ pn53x_usb_send (nfc_device * pnd, const uint8_t * pbtData, const size_t szData, 
 }
 
 int
-pn53x_usb_receive (nfc_device * pnd, uint8_t * pbtData, const size_t szDataLen, int timeout)
+pn53x_usb_receive (nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, int timeout)
 {
   size_t len;
   off_t offset = 0;
@@ -716,7 +716,7 @@ read:
 }
 
 int
-pn53x_usb_ack (nfc_device * pnd)
+pn53x_usb_ack (nfc_device *pnd)
 {
   return pn53x_usb_bulk_write (DRIVER_DATA (pnd), (uint8_t *) pn53x_ack_frame, sizeof (pn53x_ack_frame), 0);
 }
@@ -779,7 +779,7 @@ On ASK LoGO hardware:
 }
 
 bool
-pn53x_usb_configure (nfc_device * pnd, const nfc_device_option ndo, const bool bEnable)
+pn53x_usb_configure (nfc_device *pnd, const nfc_device_option ndo, const bool bEnable)
 {
   if (!pn53x_configure (pnd, ndo, bEnable))
     return false;
@@ -807,7 +807,7 @@ pn53x_usb_configure (nfc_device * pnd, const nfc_device_option ndo, const bool b
 }
 
 bool
-pn53x_usb_abort_command (nfc_device * pnd)
+pn53x_usb_abort_command (nfc_device *pnd)
 {
   DRIVER_DATA (pnd)->abort_flag = true;
   return true;

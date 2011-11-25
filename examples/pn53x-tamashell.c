@@ -71,7 +71,7 @@
 
 int main(int argc, const char* argv[])
 {
-  nfc_device* pnd;
+  nfc_device *pnd;
   uint8_t abtRx[MAX_FRAME_LEN];
   uint8_t abtTx[MAX_FRAME_LEN];
   size_t szRx = sizeof(abtRx);
@@ -97,8 +97,8 @@ int main(int argc, const char* argv[])
   printf ("Connected to NFC reader: %s\n", pnd->acName);
   nfc_initiator_init(pnd);
 
-  char * cmd;
-  char * prompt="> ";
+  char *cmd;
+  char *prompt = "> ";
   while(1) {
     int offset=0;
 #if defined(HAVE_READLINE)
@@ -113,7 +113,7 @@ int main(int argc, const char* argv[])
     } else {
 #endif //HAVE_READLINE
       size_t n = 255;
-      char * ret = NULL;
+      char *ret = NULL;
       cmd = malloc(n);
       printf("%s", prompt);
       fflush(0);

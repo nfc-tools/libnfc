@@ -42,8 +42,8 @@
 typedef struct {
 /** Driver's functions for handling device specific wrapping */
   const struct nfc_driver_t *driver;
-  void* driver_data;
-  void* chip_data;
+  void *driver_data;
+  void *chip_data;
 
 /** Device name string, including device wrapper firmware */
   char    acName[DEVICE_NAME_LENGTH];

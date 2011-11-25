@@ -88,7 +88,7 @@ uint8_t abtBlank[18] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x07, 0x80, 0
 
 
 static  bool
-transmit_bits (const uint8_t * pbtTx, const size_t szTxBits)
+transmit_bits (const uint8_t *pbtTx, const size_t szTxBits)
 {
   // Show transmitted command
   if (!quiet_output) {
@@ -110,7 +110,7 @@ transmit_bits (const uint8_t * pbtTx, const size_t szTxBits)
 
 
 static  bool
-transmit_bytes (const uint8_t * pbtTx, const size_t szTx)
+transmit_bytes (const uint8_t *pbtTx, const size_t szTx)
 {
   // Show transmitted command
   if (!quiet_output) {

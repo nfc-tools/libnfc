@@ -92,7 +92,7 @@ uint8_t  abtUnlock1[1] = { 0x40 };
 uint8_t  abtUnlock2[1] = { 0x43 };
 
 static  bool
-transmit_bits (const uint8_t * pbtTx, const size_t szTxBits)
+transmit_bits (const uint8_t *pbtTx, const size_t szTxBits)
 {
   // Show transmitted command
   printf ("Sent bits:     ");
@@ -110,7 +110,7 @@ transmit_bits (const uint8_t * pbtTx, const size_t szTxBits)
 
 
 static  bool
-transmit_bytes (const uint8_t * pbtTx, const size_t szTx)
+transmit_bytes (const uint8_t *pbtTx, const size_t szTx)
 {
   // Show transmitted command
   printf ("Sent bits:     ");
@@ -127,7 +127,7 @@ transmit_bytes (const uint8_t * pbtTx, const size_t szTx)
 }
 
 static void
-print_success_or_failure (bool bFailure, uint32_t * uiBlockCounter)
+print_success_or_failure (bool bFailure, uint32_t *uiBlockCounter)
 {
   printf ("%c", (bFailure) ? 'x' : '.');
   if (uiBlockCounter && !bFailure)

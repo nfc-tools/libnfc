@@ -71,7 +71,7 @@ intr_hdlr (void)
 }
 
 bool 
-target_io( nfc_target * pnt, const uint8_t * pbtInput, const size_t szInput, uint8_t * pbtOutput, size_t *pszOutput )
+target_io( nfc_target *pnt, const uint8_t *pbtInput, const size_t szInput, uint8_t *pbtOutput, size_t *pszOutput )
 {
   bool loop = true;
   *pszOutput = 0;
@@ -134,7 +134,7 @@ target_io( nfc_target * pnt, const uint8_t * pbtInput, const size_t szInput, uin
 }
 
 bool
-nfc_target_emulate_tag(nfc_device* pnd, nfc_target * pnt)
+nfc_target_emulate_tag(nfc_device *pnd, nfc_target *pnt)
 {
   size_t szTx;
   uint8_t abtTx[MAX_FRAME_LEN];

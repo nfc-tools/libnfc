@@ -26,13 +26,13 @@
 
 #  include <nfc/nfc-types.h>
 
-bool    acr122_probe (nfc_connstring connstrings[], size_t connstrings_len, size_t * pszDeviceFound);
+bool    acr122_probe (nfc_connstring connstrings[], size_t connstrings_len, size_t *pszDeviceFound);
 
 // Functions used by developer to handle connection to this device
 nfc_device *acr122_connect (const nfc_connstring connstring);
-bool    acr122_send (nfc_device * pnd, const uint8_t * pbtData, const size_t szData, int timeout);
-int     acr122_receive (nfc_device * pnd, uint8_t * pbtData, const size_t szData, int timeout);
-void    acr122_disconnect (nfc_device * pnd);
+bool    acr122_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szData, int timeout);
+int     acr122_receive (nfc_device *pnd, uint8_t *pbtData, const size_t szData, int timeout);
+void    acr122_disconnect (nfc_device *pnd);
 
 extern const struct nfc_driver_t acr122_driver;
 

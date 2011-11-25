@@ -115,7 +115,7 @@ typedef struct {
   uint8_t ui8Code;
   uint8_t ui8CompatFlags;
 #ifdef LOGGING
-  const char * abtCommandText;
+  const char *abtCommandText;
 #endif
 } pn53x_command;
 
@@ -203,8 +203,8 @@ static const pn53x_command pn53x_commands[] = {
 #ifdef LOGGING
 typedef struct {
   uint16_t ui16Address;
-  const char * abtRegisterText;
-  const char * abtRegisterDescription;
+  const char *abtRegisterText;
+  const char *abtRegisterDescription;
 } pn53x_register;
 
 #  define PNREG( X, Y ) { X , #X, Y }
