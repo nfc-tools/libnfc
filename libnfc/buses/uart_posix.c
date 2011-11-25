@@ -267,18 +267,13 @@ select:
       FD_SET (iAbortFd, &rfds);
     }
 
-    /*
-     * Some implementations (e.g. Linux) of select(2) will update *timeout.
-     * Make a copy so that it will be updated on these systems,
-     */
-    struct timeval fixed_timeout;
+    struct timeval timeout_tv;
     if (timeout > 0) {
-      fixed_timeout.tv_sec = (timeout / 1000);
-      fixed_timeout.tv_usec = ((timeout % 1000) * 1000);
-      timeout = ((fixed_timeout.tv_sec * 1000) + (fixed_timeout.tv_usec / 1000));
+      timeout_tv.tv_sec = (timeout / 1000);
+      timeout_tv.tv_usec = ((timeout % 1000) * 1000);
     }
 
-    res = select (MAX(UART_DATA(sp)->fd, iAbortFd) + 1, &rfds, NULL, NULL, &fixed_timeout);
+    res = select (MAX(UART_DATA(sp)->fd, iAbortFd) + 1, &rfds, NULL, NULL, &timeout_tv);
 
     if ((res < 0) && (EINTR == errno)) {
       // The system call was interupted by a signal and a signal handler was
