@@ -17,6 +17,9 @@ bin_PROGRAMS += \
 		pn53x-tamashell
 endif
 
+check_PROGRAMS = \
+		quick_start_example1
+
 # set the include path found by configure
 INCLUDES = $(all_includes) $(LIBNFC_CFLAGS)
 
@@ -66,6 +69,11 @@ pn53x_tamashell_SOURCES = pn53x-tamashell.c
 pn53x_tamashell_LDADD = $(top_builddir)/libnfc/libnfc.la \
 		        $(top_builddir)/utils/libnfcutils.la
 pn53x_tamashell_LDFLAGS = @READLINE_LIBS@
+
+quick_start_example1_SOURCES = doc/quick_start_example1.c
+quick_start_example1_LDADD =  $(top_builddir)/libnfc/libnfc.la \
+		  $(top_builddir)/utils/libnfcutils.la
+
 
 dist_man_MANS = \
 		nfc-anticol.1 \
