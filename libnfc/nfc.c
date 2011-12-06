@@ -432,9 +432,9 @@ nfc_initiator_poll_target (nfc_device *pnd,
 bool
 nfc_initiator_select_dep_target (nfc_device *pnd, 
                                  const nfc_dep_mode ndm, const nfc_baud_rate nbr,
-                                 const nfc_dep_info *pndiInitiator, nfc_target *pnt)
+                                 const nfc_dep_info *pndiInitiator, nfc_target *pnt, const int timeout)
 {
-  HAL (initiator_select_dep_target, pnd, ndm, nbr, pndiInitiator, pnt);
+  HAL (initiator_select_dep_target, pnd, ndm, nbr, pndiInitiator, pnt, timeout);
 }
 
 /**

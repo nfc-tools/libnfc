@@ -287,7 +287,8 @@ bool    pn53x_initiator_poll_target (nfc_device *pnd,
 bool    pn53x_initiator_select_dep_target (nfc_device *pnd,
                                            const nfc_dep_mode ndm, const nfc_baud_rate nbr,
                                            const nfc_dep_info *pndiInitiator, 
-                                           nfc_target *pnt);
+                                           nfc_target *pnt,
+                                           const int timeout);
 bool    pn53x_initiator_transceive_bits (nfc_device *pnd, const uint8_t *pbtTx, const size_t szTxBits,
                                          const uint8_t *pbtTxPar, uint8_t *pbtRx, size_t *pszRxBits,
                                          uint8_t *pbtRxPar);
@@ -328,7 +329,8 @@ bool    pn53x_InJumpForDEP (nfc_device *pnd,
                             const uint8_t *pbtPassiveInitiatorData,
                             const uint8_t *pbtNFCID3i,
                             const uint8_t *pbtGB, const size_t szGB,
-                            nfc_target *pnt);
+                            nfc_target *pnt,
+                            const int timeout);
 bool	pn53x_TgInitAsTarget (nfc_device *pnd, pn53x_target_mode ptm,
                               const uint8_t *pbtMifareParams,
                               const uint8_t *pbtTkt, size_t szTkt,

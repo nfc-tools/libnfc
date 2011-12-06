@@ -1038,7 +1038,8 @@ bool
 pn53x_initiator_select_dep_target(nfc_device *pnd,
                                   const nfc_dep_mode ndm, const nfc_baud_rate nbr,
                                   const nfc_dep_info *pndiInitiator,
-                                  nfc_target *pnt)
+                                  nfc_target *pnt,
+                                  const int timeout)
 {
   const uint8_t abtPassiveInitiatorData[] = { 0x00, 0xff, 0xff, 0x00, 0x00 }; // Only for 212/424 kpbs: First 4 bytes shall be set like this according to NFCIP-1, last byte is TSN (Time Slot Number)
   const uint8_t * pbtPassiveInitiatorData = NULL;
@@ -1056,9 +1057,9 @@ pn53x_initiator_select_dep_target(nfc_device *pnd,
   }
 
   if (pndiInitiator) {
-    return pn53x_InJumpForDEP (pnd, ndm, nbr, pbtPassiveInitiatorData, pndiInitiator->abtNFCID3, pndiInitiator->abtGB, pndiInitiator->szGB, pnt);
+    return pn53x_InJumpForDEP (pnd, ndm, nbr, pbtPassiveInitiatorData, pndiInitiator->abtNFCID3, pndiInitiator->abtGB, pndiInitiator->szGB, pnt, timeout);
   } else {
-    return pn53x_InJumpForDEP (pnd, ndm, nbr, pbtPassiveInitiatorData, NULL, NULL, 0, pnt);
+    return pn53x_InJumpForDEP (pnd, ndm, nbr, pbtPassiveInitiatorData, NULL, NULL, 0, pnt, timeout);
   }
 }
 
@@ -2199,7 +2200,8 @@ pn53x_InJumpForDEP (nfc_device *pnd,
                     const uint8_t *pbtPassiveInitiatorData,
                     const uint8_t *pbtNFCID3i,
                     const uint8_t *pbtGBi, const size_t szGBi,
-                    nfc_target *pnt)
+                    nfc_target *pnt,
+                    const int timeout)
 {
   // Max frame size = 1 (Command) + 1 (ActPass) + 1 (Baud rate) + 1 (Next) + 5 (PassiveInitiatorData) + 10 (NFCID3) + 48 (General bytes) = 67 bytes
   uint8_t  abtCmd[67] = { InJumpForDEP, (ndm == NDM_ACTIVE) ? 0x01 : 0x00 };
@@ -2259,7 +2261,7 @@ pn53x_InJumpForDEP (nfc_device *pnd,
   uint8_t  abtRx[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
   size_t  szRx = sizeof (abtRx);
   // Try to find a target, call the transceive callback function of the current device
-  if (!pn53x_transceive (pnd, abtCmd, offset, abtRx, &szRx, 0))
+  if (!pn53x_transceive (pnd, abtCmd, offset, abtRx, &szRx, timeout))
     return false;
 
   // Make sure one target has been found, the PN53X returns 0x00 if none was available
@@ -2270,6 +2272,7 @@ pn53x_InJumpForDEP (nfc_device *pnd,
   if (pnt) {
     pnt->nm.nmt = NMT_DEP;
     pnt->nm.nbr = nbr;
+    pnt->nti.ndi.ndm = ndm;
     memcpy (pnt->nti.ndi.abtNFCID3, abtRx + 2, 10);
     pnt->nti.ndi.btDID = abtRx[12];
     pnt->nti.ndi.btBS = abtRx[13];
