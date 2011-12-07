@@ -77,7 +77,7 @@ main (int argc, const char *argv[])
   } else if (szDeviceFound > 1) {
     pnd = nfc_connect (connstrings[1]);
   } else {
-    printf("No device found.");
+    printf("No device found.\n");
     return EXIT_FAILURE;
   }
 

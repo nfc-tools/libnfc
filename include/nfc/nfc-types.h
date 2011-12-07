@@ -69,6 +69,9 @@ typedef struct {
   int     iLastError;
 } nfc_device;
 
+/**
+ * Connection string
+ */
 typedef char nfc_connstring[1024];
 
 // Compiler directive, set struct alignment to 1 uint8_t for compatibility
