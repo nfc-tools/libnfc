@@ -9,7 +9,7 @@ TESTS_ENVIRONMENT = NO_MAKE=yes CUTTER="$(CUTTER)"
 
 cutter_unit_test_libs = \
 			test_access_storm.la \
-			test_dep.la \
+			test_dep_passive.la \
 			test_register_access.la \
 			test_register_endianness.la
 
@@ -24,8 +24,8 @@ AM_LDFLAGS = -module -rpath $(libdir) -avoid-version -no-undefined
 test_access_storm_la_SOURCES = test_access_storm.c
 test_access_storm_la_LIBADD = $(top_builddir)/libnfc/libnfc.la
 
-test_dep_la_SOURCES = test_dep.c
-test_dep_la_LIBADD = $(top_builddir)/libnfc/libnfc.la
+test_dep_passive_la_SOURCES = test_dep_passive.c
+test_dep_passive_la_LIBADD = $(top_builddir)/libnfc/libnfc.la
 
 test_register_access_la_SOURCES = test_register_access.c
 test_register_access_la_LIBADD = $(top_builddir)/libnfc/libnfc.la
