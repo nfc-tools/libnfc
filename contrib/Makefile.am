@@ -1,4 +1,7 @@
-SUBDIRS = win32
+SUBDIRS = \
+	devd \
+	udev \
+	win32
 
 EXTRA_DIST = \
 	windows.h

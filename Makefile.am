@@ -10,9 +10,7 @@ pkgconfig_DATA = libnfc.pc
 EXTRA_DIST = \
 	CMakeLists.txt \
 	Doxyfile \
-	README-Windows.txt \
-	pn53x.conf \
-	pn53x.rules
+	README-Windows.txt
 
 CLEANFILES = Doxygen.log coverage.info libnfc.pc
 

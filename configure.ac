@@ -157,6 +157,8 @@ AC_CONFIG_FILES([
 		cmake/Makefile
 		cmake/modules/Makefile
 		contrib/Makefile
+		contrib/devd/Makefile
+		contrib/udev/Makefile
 		contrib/win32/Makefile
 		contrib/win32/sys/Makefile
 		examples/Makefile
