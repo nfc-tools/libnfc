@@ -191,7 +191,7 @@ initiator_thread (void *arg)
   cut_assert_equal_memory ("\x12\x34\x56\x78", 4, nt.nti.ndi.abtGB, nt.nti.ndi.szGB, cut_message ("Invalid target general bytes"));
   if (!res) { thread_res = -1; return (void*) thread_res; }
 
- // szRx = sizeof (abtRx);
+  szRx = sizeof (abtRx);
   res = nfc_initiator_transceive_bytes (device, abtTx, sizeof (abtTx), abtRx, &szRx, 1000);
   cut_assert_true (res, cut_message ("Can't transceive bytes to target: %s", nfc_strerror (device)));
 
