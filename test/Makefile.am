@@ -26,7 +26,8 @@ test_access_storm_la_SOURCES = test_access_storm.c
 test_access_storm_la_LIBADD = $(top_builddir)/libnfc/libnfc.la
 
 test_dep_active_la_SOURCES = test_dep_active.c
-test_dep_active_la_LIBADD = $(top_builddir)/libnfc/libnfc.la
+test_dep_active_la_LIBADD = $(top_builddir)/libnfc/libnfc.la \
+		  $(top_builddir)/utils/libnfcutils.la
 
 test_dep_passive_la_SOURCES = test_dep_passive.c
 test_dep_passive_la_LIBADD = $(top_builddir)/libnfc/libnfc.la
