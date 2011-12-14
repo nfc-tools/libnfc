@@ -276,8 +276,8 @@ bool    pn53x_decode_target_data (const uint8_t *pbtRawData, size_t szRawData,
 bool    pn53x_read_register (nfc_device *pnd, uint16_t ui16Reg, uint8_t *ui8Value);
 bool    pn53x_write_register (nfc_device *pnd, uint16_t ui16Reg, uint8_t ui8SymbolMask, uint8_t ui8Value);
 bool    pn53x_get_firmware_version (nfc_device *pnd, char abtFirmwareText[22]);
-bool    pn53x_configure (nfc_device *pnd, const nfc_device_option ndo, const bool bEnable);
 int     pn53x_set_property_int (nfc_device *pnd, const nfc_property property, const int value);
+int     pn53x_set_property_bool (nfc_device *pnd, const nfc_property property, const bool bEnable);
 
 bool    pn53x_check_communication (nfc_device *pnd);
 bool    pn53x_idle (nfc_device *pnd);

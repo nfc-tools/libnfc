@@ -751,32 +751,32 @@ On ASK LoGO hardware:
   return true;
 }
 
-bool
-pn53x_usb_configure (nfc_device *pnd, const nfc_device_option ndo, const bool bEnable)
+int
+pn53x_usb_set_property_bool (nfc_device *pnd, const nfc_property property, const bool bEnable)
 {
-  if (!pn53x_configure (pnd, ndo, bEnable))
-    return false;
+  if (!pn53x_set_property_bool (pnd, property, bEnable))
+    return NFC_DEVICE_ERROR;
 
   switch (DRIVER_DATA (pnd)->model) {
     case ASK_LOGO:
-      if (NDO_ACTIVATE_FIELD == ndo) {
+      if (NP_ACTIVATE_FIELD == property) {
         /* Switch on/off LED2 and Progressive Field GPIO according to ACTIVATE_FIELD option */
         log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "Switch progressive field %s", bEnable ? "On" : "Off");
         if (!pn53x_write_register (pnd, PN53X_SFR_P3, _BV(P31) | _BV(P34), bEnable ? _BV (P34) : _BV (P31)))
-          return false;
+          return NFC_DEVICE_ERROR;
       }
       break;
     case SCM_SCL3711:
-      if (NDO_ACTIVATE_FIELD == ndo) {
+      if (NP_ACTIVATE_FIELD == property) {
         // Switch on/off LED according to ACTIVATE_FIELD option
         if (!pn53x_write_register (pnd, PN53X_SFR_P3, _BV (P32), bEnable ? 0 : _BV (P32)))
-          return false;
+          return NFC_DEVICE_ERROR;
       }
       break;
     default:
       break;
   }
-  return true;
+  return NFC_SUCCESS;
 }
 
 bool
@@ -814,7 +814,7 @@ const struct nfc_driver_t pn53x_usb_driver = {
   .target_send_bits      = pn53x_target_send_bits,
   .target_receive_bits   = pn53x_target_receive_bits,
 
-  .configure  = pn53x_usb_configure,
+  .device_set_property_bool  = pn53x_usb_set_property_bool,
   .device_set_property_int = pn53x_set_property_int,
 
   .abort_command  = pn53x_usb_abort_command,

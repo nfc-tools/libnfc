@@ -155,7 +155,7 @@ nfc_target_emulate_tag(nfc_device *pnd, nfc_target *pnt)
     }
     if ( loop ) {
       if ( init_mfc_auth ) {
-        nfc_configure (pnd, NDO_HANDLE_CRC, false);
+        nfc_device_set_property_bool (pnd, NP_HANDLE_CRC, false);
         init_mfc_auth = false;
       }
       if (!nfc_target_receive_bytes(pnd, abtRx, &szRx, 0)) {
@@ -257,8 +257,8 @@ main (int argc, char *argv[])
   printf ("%s will emulate this ISO14443-A tag:\n", argv[0]);
   print_nfc_iso14443a_info (nt.nti.nai, true);
 
-  // Switch off NDO_EASY_FRAMING if target is not ISO14443-4
-  nfc_configure (pnd, NDO_EASY_FRAMING, (nt.nti.nai.btSak & SAK_ISO14443_4_COMPLIANT));
+  // Switch off NP_EASY_FRAMING if target is not ISO14443-4
+  nfc_device_set_property_bool (pnd, NP_EASY_FRAMING, (nt.nti.nai.btSak & SAK_ISO14443_4_COMPLIANT));
   printf ("NFC device (configured as target) is now emulating the tag, please touch it with a second NFC device (initiator)\n");
   if (!nfc_target_emulate_tag (pnd, &nt)) {
     nfc_perror (pnd, "nfc_target_emulate_tag");

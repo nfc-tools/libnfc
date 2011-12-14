@@ -160,18 +160,18 @@ main (int argc, char *argv[])
   nfc_initiator_init (pnd);
 
   // Configure the CRC
-  if (!nfc_configure (pnd, NDO_HANDLE_CRC, false)) {
-    nfc_perror (pnd, "nfc_configure");
+  if (nfc_device_set_property_bool (pnd, NP_HANDLE_CRC, false) < 0) {
+    nfc_perror (pnd, "nfc_device_set_property_bool");
     exit (EXIT_FAILURE);
   }
   // Use raw send/receive methods
-  if (!nfc_configure (pnd, NDO_EASY_FRAMING, false)) {
-    nfc_perror (pnd, "nfc_configure");
+  if (nfc_device_set_property_bool (pnd, NP_EASY_FRAMING, false) < 0) {
+    nfc_perror (pnd, "nfc_device_set_property_bool");
     exit (EXIT_FAILURE);
   }
   // Disable 14443-4 autoswitching
-  if (!nfc_configure (pnd, NDO_AUTO_ISO14443_4, false)) {
-    nfc_perror (pnd, "nfc_configure");
+  if (nfc_device_set_property_bool (pnd, NP_AUTO_ISO14443_4, false) < 0) {
+    nfc_perror (pnd, "nfc_device_set_property_bool");
     exit (EXIT_FAILURE);
   }
 

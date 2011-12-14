@@ -219,12 +219,12 @@ unlock_card()
   printf ("Unlocking card\n");
 
   // Configure the CRC
-  if (!nfc_configure (pnd, NDO_HANDLE_CRC, false)) {
+  if (nfc_device_set_property_bool (pnd, NP_HANDLE_CRC, false) < 0) {
     nfc_perror (pnd, "nfc_configure");
     exit (EXIT_FAILURE);
   }
   // Use raw send/receive methods
-  if (!nfc_configure (pnd, NDO_EASY_FRAMING, false)) {
+  if (nfc_device_set_property_bool (pnd, NP_EASY_FRAMING, false) < 0) {
     nfc_perror (pnd, "nfc_configure");
     exit (EXIT_FAILURE);
   }
@@ -243,13 +243,13 @@ unlock_card()
 
   // reset reader
   // Configure the CRC
-  if (!nfc_configure (pnd, NDO_HANDLE_CRC, true)) {
-    nfc_perror (pnd, "nfc_configure");
+  if (nfc_device_set_property_bool (pnd, NP_HANDLE_CRC, true) < 0) {
+    nfc_perror (pnd, "nfc_device_set_property_bool");
     exit (EXIT_FAILURE);
   }
   // Switch off raw send/receive methods
-  if (!nfc_configure (pnd, NDO_EASY_FRAMING, true)) {
-    nfc_perror (pnd, "nfc_configure");
+  if (nfc_device_set_property_bool (pnd, NP_EASY_FRAMING, true) < 0) {
+    nfc_perror (pnd, "nfc_device_set_property_bool");
     exit (EXIT_FAILURE);
   }
   return true;
@@ -547,12 +547,12 @@ main (int argc, const char *argv[])
     nfc_initiator_init (pnd);
 
     // Let the reader only try once to find a tag
-    if (!nfc_configure (pnd, NDO_INFINITE_SELECT, false)) {
-      nfc_perror (pnd, "nfc_configure");
+    if (nfc_device_set_property_bool (pnd, NP_INFINITE_SELECT, false) < 0) {
+      nfc_perror (pnd, "nfc_device_set_property_bool");
       exit (EXIT_FAILURE);
     }
     // Disable ISO14443-4 switching in order to read devices that emulate Mifare Classic with ISO14443-4 compliance.
-    nfc_configure (pnd, NDO_AUTO_ISO14443_4, false);
+    nfc_device_set_property_bool (pnd, NP_AUTO_ISO14443_4, false);
 
     printf ("Connected to NFC reader: %s\n", pnd->acName);
 

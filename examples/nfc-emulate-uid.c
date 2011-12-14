@@ -163,8 +163,8 @@ main (int argc, char *argv[])
   printf ("[+] Received initiator command: ");
   print_hex_bits (abtRecv, szRecvBits);
   printf ("[+] Configuring communication\n");
-  if (!nfc_configure (pnd, NDO_HANDLE_CRC, false) || !nfc_configure (pnd, NDO_HANDLE_PARITY, true)) {
-    nfc_perror (pnd, "nfc_configure");
+  if ((nfc_device_set_property_bool (pnd, NP_HANDLE_CRC, false) < 0) || (nfc_device_set_property_bool (pnd, NP_HANDLE_PARITY, true) < 0)) {
+    nfc_perror (pnd, "nfc_device_set_property_bool");
     exit (EXIT_FAILURE);
   }
   printf ("[+] Done, the emulated tag is initialized with UID: %02X%02X%02X%02X\n\n", abtUidBcc[0], abtUidBcc[1],

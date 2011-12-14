@@ -95,8 +95,8 @@ nfc_initiator_mifare_cmd (nfc_device *pnd, const mifare_cmd mc, const uint8_t ui
     memcpy (abtCmd + 2, (uint8_t *) pmp, szParamLen);
 
   bEasyFraming = pnd->bEasyFraming;
-  if (!nfc_configure (pnd, NDO_EASY_FRAMING, true)) {
-    nfc_perror (pnd, "nfc_configure");
+  if (nfc_device_set_property_bool (pnd, NP_EASY_FRAMING, true) < 0) {
+    nfc_perror (pnd, "nfc_device_set_property_bool");
     return false;
   }
   // Fire the mifare command
@@ -109,11 +109,11 @@ nfc_initiator_mifare_cmd (nfc_device *pnd, const mifare_cmd mc, const uint8_t ui
     } else {
       nfc_perror (pnd, "nfc_initiator_transceive_bytes");
     }
-    nfc_configure (pnd, NDO_EASY_FRAMING, bEasyFraming);
+    nfc_device_set_property_bool (pnd, NP_EASY_FRAMING, bEasyFraming);
     return false;
   }
-  if (!nfc_configure (pnd, NDO_EASY_FRAMING, bEasyFraming)) {
-    nfc_perror (pnd, "nfc_configure");
+  if (nfc_device_set_property_bool (pnd, NP_EASY_FRAMING, bEasyFraming) < 0) {
+    nfc_perror (pnd, "nfc_device_set_property_bool");
     return false;
   }
 

@@ -204,24 +204,6 @@ nfc_list_devices (nfc_connstring connstrings[] , size_t szDevices, size_t *pszDe
 }
 
 /**
- * @brief Configure advanced NFC device settings
- * @return Returns \c true if action was successfully performed; otherwise returns \c false.
- * @param pnd \a nfc_device struct pointer that represent currently used device
- * @param ndo \a nfc_device_option struct that contains option to set to device
- * @param bEnable boolean to activate/disactivate the option
- *
- * Configures parameters and registers that control for example timing,
- * modulation, frame and error handling.  There are different categories for
- * configuring the \e PN53X chip features (handle, activate, infinite and
- * accept).
- */
-bool
-nfc_configure (nfc_device *pnd, const nfc_device_option ndo, const bool bEnable)
-{
-  HAL (configure, pnd, ndo, bEnable);
-}
-
-/**
  * @brief Set a device's integer-property value
  * @return Returns 0 on success, otherwise returns libnfc's error code (negative value)
  * @param pnd \a nfc_device struct pointer that represent currently used device
@@ -238,6 +220,25 @@ nfc_device_set_property_int (nfc_device *pnd, const nfc_property property, const
   HAL (device_set_property_int, pnd, property, value);
 }
 
+
+/**
+ * @brief Set a device's boolean-property value
+ * @return Returns 0 on success, otherwise returns libnfc's error code (negative value)
+ * @param pnd \a nfc_device struct pointer that represent currently used device
+ * @param property \a nfc_property which will be set
+ * @param bEnable boolean to activate/disactivate the property
+ *
+ * Configures parameters and registers that control for example timing,
+ * modulation, frame and error handling.  There are different categories for
+ * configuring the \e PN53X chip features (handle, activate, infinite and
+ * accept).
+ */
+int
+nfc_device_set_property_bool (nfc_device *pnd, const nfc_property property, const bool bEnable)
+{
+  HAL (device_set_property_bool, pnd, property, bEnable);
+}
+
 /**
  * @brief Initialize NFC device as initiator (reader)
  * @return Returns \c true if action was successfully performed; otherwise returns \c false.
@@ -246,55 +247,55 @@ nfc_device_set_property_int (nfc_device *pnd, const nfc_property property, const
  * The NFC device is configured to function as RFID reader.
  * After initialization it can be used to communicate to passive RFID tags and active NFC devices.
  * The reader will act as initiator to communicate peer 2 peer (NFCIP) to other active NFC devices.
- * - Crc is handled by the device (NDO_HANDLE_CRC = true)
- * - Parity is handled the device (NDO_HANDLE_PARITY = true)
- * - Cryto1 cipher is disabled (NDO_ACTIVATE_CRYPTO1 = false)
- * - Easy framing is enabled (NDO_EASY_FRAMING = true)
- * - Auto-switching in ISO14443-4 mode is enabled (NDO_AUTO_ISO14443_4 = true)
- * - Invalid frames are not accepted (NDO_ACCEPT_INVALID_FRAMES = false)
- * - Multiple frames are not accepted (NDO_ACCEPT_MULTIPLE_FRAMES = false)
- * - 14443-A mode is activated (NDO_FORCE_ISO14443_A = true)
- * - speed is set to 106 kbps (NDO_FORCE_SPEED_106 = true)
- * - Let the device try forever to find a target (NDO_INFINITE_SELECT = true)
+ * - Crc is handled by the device (NP_HANDLE_CRC = true)
+ * - Parity is handled the device (NP_HANDLE_PARITY = true)
+ * - Cryto1 cipher is disabled (NP_ACTIVATE_CRYPTO1 = false)
+ * - Easy framing is enabled (NP_EASY_FRAMING = true)
+ * - Auto-switching in ISO14443-4 mode is enabled (NP_AUTO_ISO14443_4 = true)
+ * - Invalid frames are not accepted (NP_ACCEPT_INVALID_FRAMES = false)
+ * - Multiple frames are not accepted (NP_ACCEPT_MULTIPLE_FRAMES = false)
+ * - 14443-A mode is activated (NP_FORCE_ISO14443_A = true)
+ * - speed is set to 106 kbps (NP_FORCE_SPEED_106 = true)
+ * - Let the device try forever to find a target (NP_INFINITE_SELECT = true)
  * - RF field is shortly dropped (if it was enabled) then activated again
  */
 bool
 nfc_initiator_init (nfc_device *pnd)
 {
   // Drop the field for a while
-  if (!nfc_configure (pnd, NDO_ACTIVATE_FIELD, false))
+  if (nfc_device_set_property_bool (pnd, NP_ACTIVATE_FIELD, false) < 0)
     return false;
   // Enable field so more power consuming cards can power themselves up
-  if (!nfc_configure (pnd, NDO_ACTIVATE_FIELD, true))
+  if (nfc_device_set_property_bool (pnd, NP_ACTIVATE_FIELD, true) < 0)
     return false;
   // Let the device try forever to find a target/tag
-  if (!nfc_configure (pnd, NDO_INFINITE_SELECT, true))
+  if (nfc_device_set_property_bool (pnd, NP_INFINITE_SELECT, true) < 0)
     return false;
   // Activate auto ISO14443-4 switching by default
-  if (!nfc_configure (pnd, NDO_AUTO_ISO14443_4, true))
+  if (nfc_device_set_property_bool (pnd, NP_AUTO_ISO14443_4, true) < 0)
     return false;
   // Force 14443-A mode
-  if (!nfc_configure (pnd, NDO_FORCE_ISO14443_A, true))
+  if (nfc_device_set_property_bool (pnd, NP_FORCE_ISO14443_A, true) < 0)
     return false;
   // Force speed at 106kbps
-  if (!nfc_configure (pnd, NDO_FORCE_SPEED_106, true))
+  if (nfc_device_set_property_bool (pnd, NP_FORCE_SPEED_106, true) < 0)
     return false;
   // Disallow invalid frame
-  if (!nfc_configure (pnd, NDO_ACCEPT_INVALID_FRAMES, false))
+  if (nfc_device_set_property_bool (pnd, NP_ACCEPT_INVALID_FRAMES, false) < 0)
     return false;
   // Disallow multiple frames
-  if (!nfc_configure (pnd, NDO_ACCEPT_MULTIPLE_FRAMES, false))
+  if (nfc_device_set_property_bool (pnd, NP_ACCEPT_MULTIPLE_FRAMES, false) < 0)
     return false;
   // Make sure we reset the CRC and parity to chip handling.
-  if (!nfc_configure (pnd, NDO_HANDLE_CRC, true))
+  if (nfc_device_set_property_bool (pnd, NP_HANDLE_CRC, true) < 0)
     return false;
-  if (!nfc_configure (pnd, NDO_HANDLE_PARITY, true))
+  if (nfc_device_set_property_bool (pnd, NP_HANDLE_PARITY, true) < 0)
     return false;
   // Activate "easy framing" feature by default
-  if (!nfc_configure (pnd, NDO_EASY_FRAMING, true))
+  if (nfc_device_set_property_bool (pnd, NP_EASY_FRAMING, true) < 0)
     return false;
   // Deactivate the CRYPTO1 cipher, it may could cause problems when still active
-  if (!nfc_configure (pnd, NDO_ACTIVATE_CRYPTO1, false))
+  if (nfc_device_set_property_bool (pnd, NP_ACTIVATE_CRYPTO1, false) < 0)
     return false;
 
   HAL (initiator_init, pnd);
@@ -373,7 +374,7 @@ nfc_initiator_list_passive_targets (nfc_device *pnd,
   pnd->iLastError = 0;
 
   // Let the reader only try once to find a tag
-  if (!nfc_configure (pnd, NDO_INFINITE_SELECT, false)) {
+  if (nfc_device_set_property_bool (pnd, NP_INFINITE_SELECT, false) < 0) {
     return false;
   }
 
@@ -486,14 +487,14 @@ nfc_initiator_deselect_target (nfc_device *pnd)
  * If timeout is not a null pointer, it specifies the maximum interval to wait for the function to be executed.
  * If timeout is a null pointer, the function blocks indefinitely (until an error is raised or function is completed).
  *
- * If \a NDO_EASY_FRAMING option is disabled the frames will sent and received in raw mode: \e PN53x will not handle input neither output data.
+ * If \a NP_EASY_FRAMING option is disabled the frames will sent and received in raw mode: \e PN53x will not handle input neither output data.
  *
  * The parity bits are handled by the \e PN53x chip. The CRC can be generated automatically or handled manually.
  * Using this function, frames can be communicated very fast via the NFC initiator to the tag.
  *
  * Tests show that on average this way of communicating is much faster than using the regular driver/middle-ware (often supplied by manufacturers).
  *
- * @warning The configuration option \a NDO_HANDLE_PARITY must be set to \c true (the default value).
+ * @warning The configuration option \a NP_HANDLE_PARITY must be set to \c true (the default value).
  */
 bool
 nfc_initiator_transceive_bytes (nfc_device *pnd, const uint8_t *pbtTx, const size_t szTx, uint8_t *pbtRx,
@@ -550,7 +551,7 @@ nfc_initiator_transceive_bits (nfc_device *pnd, const uint8_t *pbtTx, const size
  *
  * This function is similar to nfc_initiator_transceive_bytes() with the following differences:
  * - A precise cycles counter will indicate the number of cycles between emission & reception of frames.
- * - It only supports mode with \a NDO_EASY_FRAMING option disabled.
+ * - It only supports mode with \a NP_EASY_FRAMING option disabled.
  * - Overall communication with the host is heavier and slower.
  *
  * Timer control:
@@ -561,8 +562,8 @@ nfc_initiator_transceive_bits (nfc_device *pnd, const uint8_t *pbtTx, const size
  * - If you need to count more cycles, set *cycles to the maximum you expect but don't forget
  *   you'll loose in precision and it'll take more time before timeout, so don't abuse!
  *
- * @warning The configuration option \a NDO_EASY_FRAMING must be set to \c false.
- * @warning The configuration option \a NDO_HANDLE_PARITY must be set to \c true (the default value).
+ * @warning The configuration option \a NP_EASY_FRAMING must be set to \c false.
+ * @warning The configuration option \a NP_HANDLE_PARITY must be set to \c true (the default value).
  */
 bool
 nfc_initiator_transceive_bytes_timed (nfc_device *pnd, const uint8_t *pbtTx, const size_t szTx, uint8_t *pbtRx,
@@ -577,7 +578,7 @@ nfc_initiator_transceive_bytes_timed (nfc_device *pnd, const uint8_t *pbtTx, con
  *
  * This function is similar to nfc_initiator_transceive_bits() with the following differences:
  * - A precise cycles counter will indicate the number of cycles between emission & reception of frames.
- * - It only supports mode with \a NDO_EASY_FRAMING option disabled and CRC must be handled manually.
+ * - It only supports mode with \a NP_EASY_FRAMING option disabled and CRC must be handled manually.
  * - Overall communication with the host is heavier and slower.
  *
  * Timer control:
@@ -588,9 +589,9 @@ nfc_initiator_transceive_bytes_timed (nfc_device *pnd, const uint8_t *pbtTx, con
  * - If you need to count more cycles, set *cycles to the maximum you expect but don't forget
  *   you'll loose in precision and it'll take more time before timeout, so don't abuse!
  *
- * @warning The configuration option \a NDO_EASY_FRAMING must be set to \c false.
- * @warning The configuration option \a NDO_HANDLE_CRC must be set to \c false.
- * @warning The configuration option \a NDO_HANDLE_PARITY must be set to \c true (the default value).
+ * @warning The configuration option \a NP_EASY_FRAMING must be set to \c false.
+ * @warning The configuration option \a NP_HANDLE_CRC must be set to \c false.
+ * @warning The configuration option \a NP_HANDLE_PARITY must be set to \c true (the default value).
  */
 bool
 nfc_initiator_transceive_bits_timed (nfc_device *pnd, const uint8_t *pbtTx, const size_t szTxBits, const uint8_t *pbtTxPar,
@@ -615,13 +616,13 @@ nfc_initiator_transceive_bits_timed (nfc_device *pnd, const uint8_t *pbtTx, cons
  *
  * This function initializes NFC device in \e target mode in order to emulate a
  * tag using the specified \a nfc_target_mode_t.
- * - Crc is handled by the device (NDO_HANDLE_CRC = true)
- * - Parity is handled the device (NDO_HANDLE_PARITY = true)
- * - Cryto1 cipher is disabled (NDO_ACTIVATE_CRYPTO1 = false)
- * - Auto-switching in ISO14443-4 mode is enabled (NDO_AUTO_ISO14443_4 = true)
- * - Easy framing is disabled (NDO_EASY_FRAMING = false)
- * - Invalid frames are not accepted (NDO_ACCEPT_INVALID_FRAMES = false)
- * - Multiple frames are not accepted (NDO_ACCEPT_MULTIPLE_FRAMES = false)
+ * - Crc is handled by the device (NP_HANDLE_CRC = true)
+ * - Parity is handled the device (NP_HANDLE_PARITY = true)
+ * - Cryto1 cipher is disabled (NP_ACTIVATE_CRYPTO1 = false)
+ * - Auto-switching in ISO14443-4 mode is enabled (NP_AUTO_ISO14443_4 = true)
+ * - Easy framing is disabled (NP_EASY_FRAMING = false)
+ * - Invalid frames are not accepted (NP_ACCEPT_INVALID_FRAMES = false)
+ * - Multiple frames are not accepted (NP_ACCEPT_MULTIPLE_FRAMES = false)
  * - RF field is dropped
  *
  * @warning Be aware that this function will wait (hang) until a command is
@@ -633,27 +634,27 @@ bool
 nfc_target_init (nfc_device *pnd, nfc_target *pnt, uint8_t *pbtRx, size_t * pszRx)
 {
   // Disallow invalid frame
-  if (!nfc_configure (pnd, NDO_ACCEPT_INVALID_FRAMES, false))
+  if (nfc_device_set_property_bool (pnd, NP_ACCEPT_INVALID_FRAMES, false) < 0)
     return false;
   // Disallow multiple frames
-  if (!nfc_configure (pnd, NDO_ACCEPT_MULTIPLE_FRAMES, false))
+  if (nfc_device_set_property_bool (pnd, NP_ACCEPT_MULTIPLE_FRAMES, false) < 0)
     return false;
   // Make sure we reset the CRC and parity to chip handling.
-  if (!nfc_configure (pnd, NDO_HANDLE_CRC, true))
+  if (nfc_device_set_property_bool (pnd, NP_HANDLE_CRC, true) < 0)
     return false;
-  if (!nfc_configure (pnd, NDO_HANDLE_PARITY, true))
+  if (nfc_device_set_property_bool (pnd, NP_HANDLE_PARITY, true) < 0)
     return false;
   // Activate auto ISO14443-4 switching by default
-  if (!nfc_configure (pnd, NDO_AUTO_ISO14443_4, true))
+  if (nfc_device_set_property_bool (pnd, NP_AUTO_ISO14443_4, true) < 0)
     return false;
   // Activate "easy framing" feature by default
-  if (!nfc_configure (pnd, NDO_EASY_FRAMING, true))
+  if (nfc_device_set_property_bool (pnd, NP_EASY_FRAMING, true) < 0)
     return false;
   // Deactivate the CRYPTO1 cipher, it may could cause problems when still active
-  if (!nfc_configure (pnd, NDO_ACTIVATE_CRYPTO1, false))
+  if (nfc_device_set_property_bool (pnd, NP_ACTIVATE_CRYPTO1, false) < 0)
     return false;
   // Drop explicitely the field
-  if (!nfc_configure (pnd, NDO_ACTIVATE_FIELD, false))
+  if (nfc_device_set_property_bool (pnd, NP_ACTIVATE_FIELD, false) < 0)
     return false;
 
   HAL (target_init, pnd, pnt, pbtRx, pszRx);
@@ -754,7 +755,7 @@ nfc_target_send_bits (nfc_device *pnd, const uint8_t *pbtTx, const size_t szTxBi
  * the messages that are stored in the FIFO buffer of the \e PN53x chip.  It
  * does not require to send any frame and thereby could be used to snoop frames
  * that are transmitted by a nearby \e initiator.  @note Check out the
- * NDO_ACCEPT_MULTIPLE_FRAMES configuration option to avoid losing transmitted
+ * NP_ACCEPT_MULTIPLE_FRAMES configuration option to avoid losing transmitted
  * frames.
  */
 bool

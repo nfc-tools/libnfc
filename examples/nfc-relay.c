@@ -152,9 +152,9 @@ main (int argc, char *argv[])
     return EXIT_FAILURE;
   }
   printf ("%s", "Configuring emulator settings...");
-  if (!nfc_configure (pndTag, NDO_HANDLE_CRC, false) ||
-      !nfc_configure (pndTag, NDO_HANDLE_PARITY, false) || !nfc_configure (pndTag, NDO_ACCEPT_INVALID_FRAMES, true)) {
-    nfc_perror (pndTag, "nfc_configure");
+  if ((nfc_device_set_property_bool (pndTag, NP_HANDLE_CRC, false) < 0) ||
+      (nfc_device_set_property_bool (pndTag, NP_HANDLE_PARITY, false) < 0) || (nfc_device_set_property_bool (pndTag, NP_ACCEPT_INVALID_FRAMES, true)) < 0) {
+    nfc_perror (pndTag, "nfc_device_set_property_bool");
     exit (EXIT_FAILURE);
   }
   printf ("%s", "Done, emulated tag is initialized");
@@ -165,10 +165,10 @@ main (int argc, char *argv[])
   printf ("Connected to the NFC reader device: %s", pndReader->acName);
   printf ("%s", "Configuring NFC reader settings...");
   nfc_initiator_init (pndReader);
-  if (!nfc_configure (pndReader, NDO_HANDLE_CRC, false) ||
-      !nfc_configure (pndReader, NDO_HANDLE_PARITY, false) ||
-      !nfc_configure (pndReader, NDO_ACCEPT_INVALID_FRAMES, true)) {
-    nfc_perror (pndReader, "nfc_configure");
+  if ((nfc_device_set_property_bool (pndReader, NP_HANDLE_CRC, false) < 0) ||
+      (nfc_device_set_property_bool (pndReader, NP_HANDLE_PARITY, false) < 0) ||
+      (nfc_device_set_property_bool (pndReader, NP_ACCEPT_INVALID_FRAMES, true)) < 0) {
+    nfc_perror (pndReader, "nfc_device_set_property_bool");
     exit (EXIT_FAILURE);
   }
   printf ("%s", "Done, relaying frames now!");
@@ -179,14 +179,14 @@ main (int argc, char *argv[])
       // Drop down the field before sending a REQA command and start a new session
       if (szReaderRxBits == 7 && abtReaderRx[0] == 0x26) {
         // Drop down field for a very short time (original tag will reboot)
-        if (!nfc_configure (pndReader, NDO_ACTIVATE_FIELD, false)) {
-          nfc_perror (pndReader, "nfc_configure");
+        if (nfc_device_set_property_bool (pndReader, NP_ACTIVATE_FIELD, false) < 0) {
+          nfc_perror (pndReader, "nfc_device_set_property_bool");
           exit (EXIT_FAILURE);
         }
         if (!quiet_output)
           printf ("\n");
-        if (!nfc_configure (pndReader, NDO_ACTIVATE_FIELD, true)) {
-          nfc_perror (pndReader, "nfc_configure");
+        if (nfc_device_set_property_bool (pndReader, NP_ACTIVATE_FIELD, true) < 0) {
+          nfc_perror (pndReader, "nfc_device_set_property_bool");
           exit (EXIT_FAILURE);
         }
       }

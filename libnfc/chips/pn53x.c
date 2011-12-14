@@ -643,143 +643,6 @@ pn53x_get_firmware_version (nfc_device *pnd, char abtFirmwareText[22])
   return true;
 }
 
-bool
-pn53x_configure (nfc_device *pnd, const nfc_device_option ndo, const bool bEnable)
-{
-  uint8_t  btValue;
-  switch (ndo) {
-    case NDO_HANDLE_CRC:
-      // Enable or disable automatic receiving/sending of CRC bytes
-      if (bEnable == pnd->bCrc) {
-        // Nothing to do
-        return true;
-      }
-      // TX and RX are both represented by the symbol 0x80
-      btValue = (bEnable) ? 0x80 : 0x00;
-      if (!pn53x_write_register (pnd, PN53X_REG_CIU_TxMode, SYMBOL_TX_CRC_ENABLE, btValue))
-        return false;
-      if (!pn53x_write_register (pnd, PN53X_REG_CIU_RxMode, SYMBOL_RX_CRC_ENABLE, btValue))
-        return false;
-      pnd->bCrc = bEnable;
-      break;
-
-    case NDO_HANDLE_PARITY:
-      // Handle parity bit by PN53X chip or parse it as data bit
-      if (bEnable == pnd->bPar)
-        // Nothing to do
-        return true;
-      btValue = (bEnable) ? 0x00 : SYMBOL_PARITY_DISABLE;
-      if (!pn53x_write_register (pnd, PN53X_REG_CIU_ManualRCV, SYMBOL_PARITY_DISABLE, btValue))
-        return false;
-      pnd->bPar = bEnable;
-      break;
-
-    case NDO_EASY_FRAMING:
-      pnd->bEasyFraming = bEnable;
-      break;
-
-    case NDO_ACTIVATE_FIELD:
-    {
-      return pn53x_RFConfiguration__RF_field (pnd, bEnable);
-    }
-    break;
-
-    case NDO_ACTIVATE_CRYPTO1:
-      btValue = (bEnable) ? SYMBOL_MF_CRYPTO1_ON : 0x00;
-      if (!pn53x_write_register (pnd, PN53X_REG_CIU_Status2, SYMBOL_MF_CRYPTO1_ON, btValue))
-        return false;
-      break;
-
-    case NDO_INFINITE_SELECT:
-    {
-      // TODO Made some research around this point:
-      // timings could be tweak better than this, and maybe we can tweak timings
-      // to "gain" a sort-of hardware polling (ie. like PN532 does)
-      return pn53x_RFConfiguration__MaxRetries (pnd, 
-        (bEnable) ? 0xff : 0x00,        // MxRtyATR, default: active = 0xff, passive = 0x02
-        (bEnable) ? 0xff : 0x00,        // MxRtyPSL, default: 0x01
-        (bEnable) ? 0xff : 0x02         // MxRtyPassiveActivation, default: 0xff (0x00 leads to problems with PN531)
-      );
-    }
-    break;
-
-    case NDO_ACCEPT_INVALID_FRAMES:
-      btValue = (bEnable) ? SYMBOL_RX_NO_ERROR : 0x00;
-      if (!pn53x_write_register (pnd, PN53X_REG_CIU_RxMode, SYMBOL_RX_NO_ERROR, btValue))
-        return false;
-      break;
-
-    case NDO_ACCEPT_MULTIPLE_FRAMES:
-      btValue = (bEnable) ? SYMBOL_RX_MULTIPLE : 0x00;
-      if (!pn53x_write_register (pnd, PN53X_REG_CIU_RxMode, SYMBOL_RX_MULTIPLE, btValue))
-        return false;
-      return true;
-      break;
-
-    case NDO_AUTO_ISO14443_4:
-      if (bEnable == pnd->bAutoIso14443_4)
-        // Nothing to do
-        return true;
-      pnd->bAutoIso14443_4 = bEnable;
-      return pn53x_set_parameters (pnd, PARAM_AUTO_RATS, bEnable);
-      break;
-
-    case NDO_FORCE_ISO14443_A:
-      if(!bEnable) {
-        // Nothing to do
-        return true;
-      }
-      // Force pn53x to be in ISO14443-A mode
-      if (!pn53x_write_register (pnd, PN53X_REG_CIU_TxMode, SYMBOL_TX_FRAMING, 0x00)) {
-        return false;
-      }
-      if (!pn53x_write_register (pnd, PN53X_REG_CIU_RxMode, SYMBOL_RX_FRAMING, 0x00)) {
-        return false;
-      }
-      // Set the PN53X to force 100% ASK Modified miller decoding (default for 14443A cards)
-      if (!pn53x_write_register (pnd, PN53X_REG_CIU_TxAuto, SYMBOL_FORCE_100_ASK, 0x40))
-        return false;
-
-      return true;
-      break;
-
-    case NDO_FORCE_ISO14443_B:
-      if(!bEnable) {
-        // Nothing to do
-        return true;
-      }
-      // Force pn53x to be in ISO14443-B mode
-      if (!pn53x_write_register (pnd, PN53X_REG_CIU_TxMode, SYMBOL_TX_FRAMING, 0x03)) {
-        return false;
-      }
-      if (!pn53x_write_register (pnd, PN53X_REG_CIU_RxMode, SYMBOL_RX_FRAMING, 0x03)) {
-        return false;
-      }
-
-      return true;
-      break;
-
-    case NDO_FORCE_SPEED_106:
-      if(!bEnable) {
-        // Nothing to do
-        return true;
-      }
-      // Force pn53x to be at 106 kbps
-      if (!pn53x_write_register (pnd, PN53X_REG_CIU_TxMode, SYMBOL_TX_SPEED, 0x00)) {
-        return false;
-      }
-      if (!pn53x_write_register (pnd, PN53X_REG_CIU_RxMode, SYMBOL_RX_SPEED, 0x00)) {
-        return false;
-      }
-
-      return true;
-      break;
-  }
-
-  // When we reach this, the configuration is completed and successful
-  return true;
-}
-
 uint8_t
 pn53x_int_to_timeout (const int ms)
 {
@@ -816,6 +679,143 @@ pn53x_set_property_int (nfc_device *pnd, const nfc_property property, const int 
   return NFC_SUCCESS;
 }
 
+int
+pn53x_set_property_bool (nfc_device *pnd, const nfc_property property, const bool bEnable)
+{
+  uint8_t  btValue;
+  switch (property) {
+    case NP_HANDLE_CRC:
+      // Enable or disable automatic receiving/sending of CRC bytes
+      if (bEnable == pnd->bCrc) {
+        // Nothing to do
+        return NFC_SUCCESS;
+      }
+      // TX and RX are both represented by the symbol 0x80
+      btValue = (bEnable) ? 0x80 : 0x00;
+      if (!pn53x_write_register (pnd, PN53X_REG_CIU_TxMode, SYMBOL_TX_CRC_ENABLE, btValue))
+        return NFC_DEVICE_ERROR;
+      if (!pn53x_write_register (pnd, PN53X_REG_CIU_RxMode, SYMBOL_RX_CRC_ENABLE, btValue))
+        return NFC_DEVICE_ERROR;
+      pnd->bCrc = bEnable;
+      break;
+
+    case NP_HANDLE_PARITY:
+      // Handle parity bit by PN53X chip or parse it as data bit
+      if (bEnable == pnd->bPar)
+        // Nothing to do
+        return NFC_SUCCESS;
+      btValue = (bEnable) ? 0x00 : SYMBOL_PARITY_DISABLE;
+      if (!pn53x_write_register (pnd, PN53X_REG_CIU_ManualRCV, SYMBOL_PARITY_DISABLE, btValue))
+        return NFC_DEVICE_ERROR;
+      pnd->bPar = bEnable;
+      break;
+
+    case NP_EASY_FRAMING:
+      pnd->bEasyFraming = bEnable;
+      break;
+
+    case NP_ACTIVATE_FIELD:
+    {
+      return pn53x_RFConfiguration__RF_field (pnd, bEnable);
+    }
+    break;
+
+    case NP_ACTIVATE_CRYPTO1:
+      btValue = (bEnable) ? SYMBOL_MF_CRYPTO1_ON : 0x00;
+      if (!pn53x_write_register (pnd, PN53X_REG_CIU_Status2, SYMBOL_MF_CRYPTO1_ON, btValue))
+        return NFC_DEVICE_ERROR;
+      break;
+
+    case NP_INFINITE_SELECT:
+    {
+      // TODO Made some research around this point:
+      // timings could be tweak better than this, and maybe we can tweak timings
+      // to "gain" a sort-of hardware polling (ie. like PN532 does)
+      return pn53x_RFConfiguration__MaxRetries (pnd, 
+        (bEnable) ? 0xff : 0x00,        // MxRtyATR, default: active = 0xff, passive = 0x02
+        (bEnable) ? 0xff : 0x00,        // MxRtyPSL, default: 0x01
+        (bEnable) ? 0xff : 0x02         // MxRtyPassiveActivation, default: 0xff (0x00 leads to problems with PN531)
+      );
+    }
+    break;
+
+    case NP_ACCEPT_INVALID_FRAMES:
+      btValue = (bEnable) ? SYMBOL_RX_NO_ERROR : 0x00;
+      if (!pn53x_write_register (pnd, PN53X_REG_CIU_RxMode, SYMBOL_RX_NO_ERROR, btValue))
+        return NFC_DEVICE_ERROR;
+      break;
+
+    case NP_ACCEPT_MULTIPLE_FRAMES:
+      btValue = (bEnable) ? SYMBOL_RX_MULTIPLE : 0x00;
+      if (!pn53x_write_register (pnd, PN53X_REG_CIU_RxMode, SYMBOL_RX_MULTIPLE, btValue))
+        return NFC_DEVICE_ERROR;
+      return NFC_SUCCESS;
+      break;
+
+    case NP_AUTO_ISO14443_4:
+      if (bEnable == pnd->bAutoIso14443_4)
+        // Nothing to do
+        return NFC_SUCCESS;
+      pnd->bAutoIso14443_4 = bEnable;
+      return pn53x_set_parameters (pnd, PARAM_AUTO_RATS, bEnable);
+      break;
+
+    case NP_FORCE_ISO14443_A:
+      if(!bEnable) {
+        // Nothing to do
+        return NFC_SUCCESS;
+      }
+      // Force pn53x to be in ISO14443-A mode
+      if (!pn53x_write_register (pnd, PN53X_REG_CIU_TxMode, SYMBOL_TX_FRAMING, 0x00)) {
+        return NFC_DEVICE_ERROR;
+      }
+      if (!pn53x_write_register (pnd, PN53X_REG_CIU_RxMode, SYMBOL_RX_FRAMING, 0x00)) {
+        return NFC_DEVICE_ERROR;
+      }
+      // Set the PN53X to force 100% ASK Modified miller decoding (default for 14443A cards)
+      if (!pn53x_write_register (pnd, PN53X_REG_CIU_TxAuto, SYMBOL_FORCE_100_ASK, 0x40))
+        return NFC_DEVICE_ERROR;
+
+      return NFC_SUCCESS;
+      break;
+
+    case NP_FORCE_ISO14443_B:
+      if(!bEnable) {
+        // Nothing to do
+        return NFC_SUCCESS;
+      }
+      // Force pn53x to be in ISO14443-B mode
+      if (!pn53x_write_register (pnd, PN53X_REG_CIU_TxMode, SYMBOL_TX_FRAMING, 0x03)) {
+        return NFC_DEVICE_ERROR;
+      }
+      if (!pn53x_write_register (pnd, PN53X_REG_CIU_RxMode, SYMBOL_RX_FRAMING, 0x03)) {
+        return NFC_DEVICE_ERROR;
+      }
+
+      return NFC_SUCCESS;
+      break;
+
+    case NP_FORCE_SPEED_106:
+      if(!bEnable) {
+        // Nothing to do
+        return NFC_SUCCESS;
+      }
+      // Force pn53x to be at 106 kbps
+      if (!pn53x_write_register (pnd, PN53X_REG_CIU_TxMode, SYMBOL_TX_SPEED, 0x00)) {
+        return NFC_DEVICE_ERROR;
+      }
+      if (!pn53x_write_register (pnd, PN53X_REG_CIU_RxMode, SYMBOL_RX_SPEED, 0x00)) {
+        return NFC_DEVICE_ERROR;
+      }
+
+      return NFC_SUCCESS;
+      break;
+  }
+
+  // When we reach this, the configuration is completed and successful
+  return NFC_SUCCESS;
+}
+
 bool
 pn53x_idle (nfc_device *pnd)
 {
@@ -840,7 +840,7 @@ pn53x_idle (nfc_device *pnd)
         return false;
       }
       // Disable RF field to avoid heating
-      if (!nfc_configure (pnd, NDO_ACTIVATE_FIELD, false)) {
+      if (nfc_device_set_property_bool (pnd, NP_ACTIVATE_FIELD, false) < 0) {
         return false;
       }
       if (CHIP_DATA (pnd)->type == PN532) {
@@ -908,13 +908,13 @@ pn53x_initiator_select_passive_target_ext (nfc_device *pnd,
       return false;
     }
     // No native support in InListPassiveTarget so we do discovery by hand
-    if (!nfc_configure (pnd, NDO_FORCE_ISO14443_B, true)) {
+    if (nfc_device_set_property_bool (pnd, NP_FORCE_ISO14443_B, true) < 0) {
       return false;
     }
-    if (!nfc_configure (pnd, NDO_FORCE_SPEED_106, true)) {
+    if (nfc_device_set_property_bool (pnd, NP_FORCE_SPEED_106, true) < 0) {
       return false;
     }
-    if (!nfc_configure (pnd, NDO_HANDLE_CRC, true)) {
+    if (nfc_device_set_property_bool (pnd, NP_HANDLE_CRC, true) < 0) {
       return false;
     }
     pnd->bEasyFraming = false;
@@ -1051,7 +1051,7 @@ pn53x_initiator_poll_target (nfc_device *pnd,
       break;
     }
   } else {
-    pn53x_configure (pnd, NDO_INFINITE_SELECT, true);
+    pn53x_set_property_bool (pnd, NP_INFINITE_SELECT, true);
     // FIXME It does not support DEP targets
     do {
       for (size_t p=0; p<uiPollNr; p++) {
@@ -1527,7 +1527,7 @@ pn53x_target_init (nfc_device *pnd, nfc_target *pnt, uint8_t *pbtRx, size_t *psz
       pn53x_set_parameters (pnd, PARAM_AUTO_ATR_RES, false);
       if (CHIP_DATA(pnd)->type == PN532) { // We have a PN532
         if ((pnt->nti.nai.btSak & SAK_ISO14443_4_COMPLIANT) && (pnd->bAutoIso14443_4)) {
-          // We have a ISO14443-4 tag to emulate and NDO_AUTO_14443_4A option is enabled
+          // We have a ISO14443-4 tag to emulate and NP_AUTO_14443_4A option is enabled
           ptm |= PTM_ISO14443_4_PICC_ONLY; // We add ISO14443-4 restriction
           pn53x_set_parameters (pnd, PARAM_14443_4_PICC, true);
         } else {

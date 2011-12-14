@@ -245,8 +245,8 @@ main(int argc, char *argv[])
 
   //print_nfc_felica_info(nt.nti.nfi, true);
 
-  if (!nfc_configure (pnd, NDO_EASY_FRAMING, false) || !nfc_configure (pnd, NDO_INFINITE_SELECT, false)) {
-    nfc_perror (pnd, "nfc_configure");
+  if ((nfc_device_set_property_bool (pnd, NP_EASY_FRAMING, false) < 0) || (nfc_device_set_property_bool (pnd, NP_INFINITE_SELECT, false) < 0)) {
+    nfc_perror (pnd, "nfc_device_set_property_bool");
     error = EXIT_FAILURE;
     goto error;
   }

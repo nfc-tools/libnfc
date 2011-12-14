@@ -68,7 +68,6 @@ extern  "C" {
   NFC_EXPORT void nfc_disconnect (nfc_device *pnd);
   NFC_EXPORT bool nfc_abort_command (nfc_device *pnd);
   NFC_EXPORT void nfc_list_devices (nfc_connstring connstrings[], size_t connstrings_len, size_t *pszDeviceFound);
-  NFC_EXPORT bool nfc_configure (nfc_device *pnd, const nfc_device_option ndo, const bool bEnable);
   NFC_EXPORT bool nfc_idle (nfc_device *pnd);
 
 /* NFC initiator: act as "reader" */
@@ -100,7 +99,7 @@ extern  "C" {
 
 /* Properties accessors */
   NFC_EXPORT int nfc_device_set_property_int (nfc_device *pnd, const nfc_property property, const int value);
-//  NFC_EXPORT int nfc_device_set_property_bool (nfc_device *pnd, const nfc_property property, const int value);
+  NFC_EXPORT int nfc_device_set_property_bool (nfc_device *pnd, const nfc_property property, const bool bEnable);
 
 /* Misc. functions */
   NFC_EXPORT void iso14443a_crc (uint8_t *pbtData, size_t szLen, uint8_t *pbtCrc);
@@ -113,6 +112,7 @@ extern  "C" {
 #define NFC_EIO			-1	// Input / output error, device will not be usable anymore
 #define NFC_ENOTSUP		-2	// Operation not supported
 #define NFC_EINVARG		-3	// Invalid argument(s)
+#define NFC_DEVICE_ERROR  -4  //Device error
 
 /* PN53x specific errors */
 // TODO: Be not PN53x-specific here
