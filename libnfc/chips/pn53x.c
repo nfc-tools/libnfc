@@ -2679,10 +2679,10 @@ pn53x_data_new (nfc_device *pnd, const struct pn53x_io *io)
   CHIP_DATA (pnd)->timeout_command = 500;
 
   // Set default ATR timeout (103 ms)
-  CHIP_DATA (pnd)->timeout_command = 103;
+  CHIP_DATA (pnd)->timeout_atr = 103;
 
   // Set default communication timeout (52 ms)
-  CHIP_DATA (pnd)->timeout_command = 52;
+  CHIP_DATA (pnd)->timeout_communication = 52;
 }
 
 void
