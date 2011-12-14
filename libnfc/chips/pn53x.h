@@ -160,6 +160,12 @@ struct pn53x_data {
   uint8_t wb_data[PN53X_CACHE_REGISTER_SIZE];
   uint8_t wb_mask[PN53X_CACHE_REGISTER_SIZE];
   bool wb_trigged;
+/** Command timeout */
+  int timeout_command;
+/** ATR timeout */
+  int timeout_atr;
+/** Communication timeout */
+  int timeout_communication;
 };
 
 #define CHIP_DATA(pnd) ((struct pn53x_data*)(pnd->chip_data))
@@ -271,6 +277,8 @@ bool    pn53x_read_register (nfc_device *pnd, uint16_t ui16Reg, uint8_t *ui8Valu
 bool    pn53x_write_register (nfc_device *pnd, uint16_t ui16Reg, uint8_t ui8SymbolMask, uint8_t ui8Value);
 bool    pn53x_get_firmware_version (nfc_device *pnd, char abtFirmwareText[22]);
 bool    pn53x_configure (nfc_device *pnd, const nfc_device_option ndo, const bool bEnable);
+int     pn53x_set_property_int (nfc_device *pnd, const nfc_property property, const int value);
+
 bool    pn53x_check_communication (nfc_device *pnd);
 bool    pn53x_idle (nfc_device *pnd);
 
@@ -323,7 +331,8 @@ bool    pn53x_InDeselect (nfc_device *pnd, const uint8_t ui8Target);
 bool    pn53x_InRelease (nfc_device *pnd, const uint8_t ui8Target);
 bool    pn53x_InAutoPoll (nfc_device *pnd, const pn53x_target_type *ppttTargetTypes, const size_t szTargetTypes,
                           const uint8_t btPollNr, const uint8_t btPeriod, nfc_target *pntTargets,
-                          size_t *pszTargetFound);
+                          size_t *pszTargetFound,
+                          const int timeout);
 bool    pn53x_InJumpForDEP (nfc_device *pnd,
                             const nfc_dep_mode ndm, const nfc_baud_rate nbr,
                             const uint8_t *pbtPassiveInitiatorData,

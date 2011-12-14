@@ -74,6 +74,30 @@ typedef struct {
  */
 typedef char nfc_connstring[1024];
 
+/**
+ * Properties
+ */
+typedef enum {
+/** 
+ * Default command processing timeout
+ * Property value's (duration) unit is ms and 0 means no timeout (infinite).
+ * Default value is set by driver layer
+ */
+  NP_TIMEOUT_COMMAND,
+/** 
+ * Timeout between ATR_REQ and ATR_RES
+ * When the device is in initiator mode, a target is considered as mute if no
+ * valid ATR_RES is received within this timeout value.
+ * Default value for this property is 103 ms on PN53x based devices.
+ */
+  NP_TIMEOUT_ATR,
+/**
+ * Timeout value to give up reception from the target in case of no answer.
+ * Default value for this property is 52 ms).
+ */
+  NP_TIMEOUT_COM,
+} nfc_property;
+
 // Compiler directive, set struct alignment to 1 uint8_t for compatibility
 #  pragma pack(1)
 

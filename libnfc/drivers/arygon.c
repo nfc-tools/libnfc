@@ -580,6 +580,7 @@ const struct nfc_driver_t arygon_driver = {
   .target_receive_bits   = pn53x_target_receive_bits,
 
   .configure  = pn53x_configure,
+  .device_set_property_int = pn53x_set_property_int,
 
   .abort_command  = arygon_abort_command,
   .idle  = NULL,  // FIXME arygon driver does not support idle()

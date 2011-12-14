@@ -98,11 +98,21 @@ extern  "C" {
 /* Special data accessors */
   NFC_EXPORT const char *nfc_device_name (nfc_device *pnd);
 
+/* Properties accessors */
+  NFC_EXPORT int nfc_device_set_property_int (nfc_device *pnd, const nfc_property property, const int value);
+//  NFC_EXPORT int nfc_device_set_property_bool (nfc_device *pnd, const nfc_property property, const int value);
+
 /* Misc. functions */
   NFC_EXPORT void iso14443a_crc (uint8_t *pbtData, size_t szLen, uint8_t *pbtCrc);
   NFC_EXPORT void iso14443a_crc_append (uint8_t *pbtData, size_t szLen);
   NFC_EXPORT uint8_t *iso14443a_locate_historical_bytes (uint8_t *pbtAts, size_t szAts, size_t *pszTk);
   NFC_EXPORT const char *nfc_version (void);
+
+/* Error codes */
+#define NFC_SUCCESS		 0	// No error
+#define NFC_EIO			-1	// Input / output error, device will not be usable anymore
+#define NFC_ENOTSUP		-2	// Operation not supported
+#define NFC_EINVARG		-3	// Invalid argument(s)
 
 /* PN53x specific errors */
 // TODO: Be not PN53x-specific here

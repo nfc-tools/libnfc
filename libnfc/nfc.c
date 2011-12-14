@@ -222,6 +222,23 @@ nfc_configure (nfc_device *pnd, const nfc_device_option ndo, const bool bEnable)
 }
 
 /**
+ * @brief Set a device's integer-property value
+ * @return Returns 0 on success, otherwise returns libnfc's error code (negative value)
+ * @param pnd \a nfc_device struct pointer that represent currently used device
+ * @param property \a nfc_property which will be set
+ * @param value integer value
+ *
+ * Sets integer property.
+ *
+ * @see nfc_property enum values
+ */
+int 
+nfc_device_set_property_int (nfc_device *pnd, const nfc_property property, const int value)
+{
+  HAL (device_set_property_int, pnd, property, value);
+}
+
+/**
  * @brief Initialize NFC device as initiator (reader)
  * @return Returns \c true if action was successfully performed; otherwise returns \c false.
  * @param pnd \a nfc_device struct pointer that represent currently used device
