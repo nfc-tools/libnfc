@@ -15,8 +15,8 @@ test_access_storm (void)
 {
     int n = NTESTS;
     nfc_connstring connstrings[MAX_DEVICE_COUNT];
-    size_t device_count, ref_device_count, target_count;
-    bool res;
+    size_t device_count, ref_device_count;
+    int res = 0;
 
     nfc_list_devices (connstrings, MAX_DEVICE_COUNT, &ref_device_count);
     if (!ref_device_count)
@@ -36,14 +36,14 @@ test_access_storm (void)
 	    cut_assert_not_null (device, cut_message ("nfc_connect"));
 
 	    res = nfc_initiator_init(device);
-	    cut_assert_true (res, cut_message ("nfc_initiator_init"));
+	    cut_assert_equal_int (0, res, cut_message ("nfc_initiator_init"));
 
 	    const nfc_modulation nm = {
 		.nmt = NMT_ISO14443A,
 		.nbr = NBR_106,
 	    };
-	    res = nfc_initiator_list_passive_targets(device, nm, ant, MAX_TARGET_COUNT, &target_count);
-	    cut_assert_true (res, cut_message ("nfc_initiator_list_passive_targets"));
+	    res = nfc_initiator_list_passive_targets(device, nm, ant, MAX_TARGET_COUNT);
+	    cut_assert_operator_int (res, >=, 0, cut_message ("nfc_initiator_list_passive_targets"));
 
 	    nfc_disconnect (device);
 	}

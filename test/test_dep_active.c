@@ -117,7 +117,7 @@ initiator_thread (void *arg)
   sleep (1);
   printf ("=========== INITIATOR %s =========\n", nfc_device_name (device));
   bool res = nfc_initiator_init (device);
-  cut_assert_true (res, cut_message ("Can't initialize NFC device as initiator: %s", nfc_strerror (device)));
+  cut_assert_equal_int (0, res, cut_message ("Can't initialize NFC device as initiator: %s", nfc_strerror (device)));
   if (!res) { thread_res = -1; return (void*) thread_res; }
 
   nfc_target nt;

@@ -878,17 +878,17 @@ pn53x_check_communication (nfc_device *pnd)
   return ((sizeof(abtExpectedRx) == szRx) && (0 == memcmp (abtRx, abtExpectedRx, sizeof(abtExpectedRx))));
 }
 
-bool
+int
 pn53x_initiator_init (nfc_device *pnd)
 {
   pn53x_reset_settings(pnd);
 
   // Configure the PN53X to be an Initiator or Reader/Writer
   if (!pn53x_write_register (pnd, PN53X_REG_CIU_Control, SYMBOL_INITIATOR, 0x10))
-    return false;
+    return NFC_DEVICE_ERROR;
 
   CHIP_DATA (pnd)->operating_mode = INITIATOR;
-  return true;
+  return NFC_SUCCESS;
 }
 
 bool

@@ -81,7 +81,7 @@ main (int argc, const char *argv[])
 
   signal (SIGINT, stop_dep_communication);
 
-  if (!nfc_initiator_init (pnd)) {
+  if (nfc_initiator_init (pnd) < 0) {
     nfc_perror(pnd, "nfc_initiator_init");
     return EXIT_FAILURE;
   }

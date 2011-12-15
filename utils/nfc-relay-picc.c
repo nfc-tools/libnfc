@@ -229,7 +229,7 @@ main (int argc, char *argv[])
 
     printf ("Connected to the NFC reader device: %s\n", pndInitiator->acName);
 
-    if (!nfc_initiator_init (pndInitiator)) {
+    if (nfc_initiator_init (pndInitiator) < 0) {
       printf ("Error: fail initializing initiator\n");
       nfc_disconnect (pndInitiator);
       exit (EXIT_FAILURE);

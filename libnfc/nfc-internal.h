@@ -131,7 +131,7 @@ struct nfc_driver_t {
   void (*disconnect) (nfc_device *pnd);
   const char *(*strerror) (const nfc_device *pnd);
 
-  bool (*initiator_init) (nfc_device *pnd);
+  int (*initiator_init) (nfc_device *pnd);
   bool (*initiator_select_passive_target) (nfc_device *pnd,  const nfc_modulation nm, const uint8_t * pbtInitData, const size_t szInitData, nfc_target * pnt);
   bool (*initiator_poll_target) (nfc_device *pnd, const nfc_modulation * pnmModulations, const size_t szModulations, const uint8_t uiPollNr, const uint8_t btPeriod, nfc_target * pnt);
   bool (*initiator_select_dep_target) (nfc_device *pnd, const nfc_dep_mode ndm, const nfc_baud_rate nbr, const nfc_dep_info * pndiInitiator, nfc_target * pnt, const int timeout);

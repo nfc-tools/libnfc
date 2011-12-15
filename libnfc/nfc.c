@@ -241,7 +241,7 @@ nfc_device_set_property_bool (nfc_device *pnd, const nfc_property property, cons
 
 /**
  * @brief Initialize NFC device as initiator (reader)
- * @return Returns \c true if action was successfully performed; otherwise returns \c false.
+ * @return Returns 0 on success, otherwise returns libnfc's error code (negative value)
  * @param pnd \a nfc_device struct pointer that represent currently used device
  *
  * The NFC device is configured to function as RFID reader.
@@ -259,44 +259,45 @@ nfc_device_set_property_bool (nfc_device *pnd, const nfc_property property, cons
  * - Let the device try forever to find a target (NP_INFINITE_SELECT = true)
  * - RF field is shortly dropped (if it was enabled) then activated again
  */
-bool
+int
 nfc_initiator_init (nfc_device *pnd)
 {
+  int res = 0;
   // Drop the field for a while
-  if (nfc_device_set_property_bool (pnd, NP_ACTIVATE_FIELD, false) < 0)
-    return false;
+  if ((res = nfc_device_set_property_bool (pnd, NP_ACTIVATE_FIELD, false)) < 0)
+    return res;
   // Enable field so more power consuming cards can power themselves up
-  if (nfc_device_set_property_bool (pnd, NP_ACTIVATE_FIELD, true) < 0)
-    return false;
+  if ((res = nfc_device_set_property_bool (pnd, NP_ACTIVATE_FIELD, true)) < 0)
+    return res;
   // Let the device try forever to find a target/tag
-  if (nfc_device_set_property_bool (pnd, NP_INFINITE_SELECT, true) < 0)
-    return false;
+  if ((res = nfc_device_set_property_bool (pnd, NP_INFINITE_SELECT, true)) < 0)
+    return res;
   // Activate auto ISO14443-4 switching by default
-  if (nfc_device_set_property_bool (pnd, NP_AUTO_ISO14443_4, true) < 0)
-    return false;
+  if ((res = nfc_device_set_property_bool (pnd, NP_AUTO_ISO14443_4, true)) < 0)
+    return res;
   // Force 14443-A mode
-  if (nfc_device_set_property_bool (pnd, NP_FORCE_ISO14443_A, true) < 0)
-    return false;
+  if ((res = nfc_device_set_property_bool (pnd, NP_FORCE_ISO14443_A, true)) < 0)
+    return res;
   // Force speed at 106kbps
-  if (nfc_device_set_property_bool (pnd, NP_FORCE_SPEED_106, true) < 0)
-    return false;
+  if ((res = nfc_device_set_property_bool (pnd, NP_FORCE_SPEED_106, true)) < 0)
+    return res;
   // Disallow invalid frame
-  if (nfc_device_set_property_bool (pnd, NP_ACCEPT_INVALID_FRAMES, false) < 0)
-    return false;
+  if ((res = nfc_device_set_property_bool (pnd, NP_ACCEPT_INVALID_FRAMES, false)) < 0)
+    return res;
   // Disallow multiple frames
-  if (nfc_device_set_property_bool (pnd, NP_ACCEPT_MULTIPLE_FRAMES, false) < 0)
-    return false;
+  if ((res = nfc_device_set_property_bool (pnd, NP_ACCEPT_MULTIPLE_FRAMES, false)) < 0)
+    return res;
   // Make sure we reset the CRC and parity to chip handling.
-  if (nfc_device_set_property_bool (pnd, NP_HANDLE_CRC, true) < 0)
-    return false;
-  if (nfc_device_set_property_bool (pnd, NP_HANDLE_PARITY, true) < 0)
-    return false;
+  if ((res = nfc_device_set_property_bool (pnd, NP_HANDLE_CRC, true)) < 0)
+    return res;
+  if ((res = nfc_device_set_property_bool (pnd, NP_HANDLE_PARITY, true)) < 0)
+    return res;
   // Activate "easy framing" feature by default
-  if (nfc_device_set_property_bool (pnd, NP_EASY_FRAMING, true) < 0)
-    return false;
+  if ((res = nfc_device_set_property_bool (pnd, NP_EASY_FRAMING, true)) < 0)
+    return res;
   // Deactivate the CRYPTO1 cipher, it may could cause problems when still active
-  if (nfc_device_set_property_bool (pnd, NP_ACTIVATE_CRYPTO1, false) < 0)
-    return false;
+  if ((res = nfc_device_set_property_bool (pnd, NP_ACTIVATE_CRYPTO1, false)) < 0)
+    return res;
 
   HAL (initiator_init, pnd);
 }
@@ -346,13 +347,12 @@ nfc_initiator_select_passive_target (nfc_device *pnd,
 
 /**
  * @brief List passive or emulated tags
- * @return Returns \c true if action was successfully performed; otherwise returns \c false.
+ * @return Returns the number of targets found on success, otherwise returns libnfc's error code (negative value)
  *
  * @param pnd \a nfc_device struct pointer that represent currently used device
  * @param nm desired modulation
  * @param[out] ant array of \a nfc_target that will be filled with targets info
  * @param szTargets size of \a ant (will be the max targets listed)
- * @param[out] pszTargetFound pointer where target found counter will be stored
  *
  * The NFC device will try to find the available passive tags. Some NFC devices
  * are capable to emulate passive tags. The standards (ISO18092 and ECMA-340)
@@ -361,21 +361,22 @@ nfc_initiator_select_passive_target (nfc_device *pnd,
  * with, therefore the initial modulation and speed (106, 212 or 424 kbps)
  * should be supplied.
  */
-bool
+int
 nfc_initiator_list_passive_targets (nfc_device *pnd,
                                     const nfc_modulation nm,
-                                    nfc_target ant[], const size_t szTargets, size_t *pszTargetFound)
+                                    nfc_target ant[], const size_t szTargets)
 {
   nfc_target nt;
   size_t  szTargetFound = 0;
   uint8_t *pbtInitData = NULL;
   size_t  szInitDataLen = 0;
+  int res = 0;
 
   pnd->iLastError = 0;
 
   // Let the reader only try once to find a tag
-  if (nfc_device_set_property_bool (pnd, NP_INFINITE_SELECT, false) < 0) {
-    return false;
+  if ((res = nfc_device_set_property_bool (pnd, NP_INFINITE_SELECT, false)) < 0) {
+    return res;
   }
 
   prepare_initiator_data (nm, &pbtInitData, &szInitDataLen);
@@ -404,9 +405,7 @@ nfc_initiator_list_passive_targets (nfc_device *pnd,
       break;
     }
   }
-  *pszTargetFound = szTargetFound;
-
-  return true;
+  return szTargetFound;
 }
 
 /**
