@@ -317,7 +317,7 @@ acr122_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szData, int t
 
   // Make sure the command does not overflow the send buffer
   if (szData > ACR122_COMMAND_LEN) {
-    pnd->iLastError = EINVALARG;
+    pnd->last_error = NFC_EINVARG;
     return false;
   }
 
@@ -344,7 +344,7 @@ acr122_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szData, int t
      * field.
      */
     if (SCardControl (DRIVER_DATA (pnd)->hCard, IOCTL_CCID_ESCAPE_SCARD_CTL_CODE, abtTxBuf, szTxBuf, DRIVER_DATA (pnd)->abtRx, ACR122_RESPONSE_LEN, &dwRxLen) != SCARD_S_SUCCESS) {
-      pnd->iLastError = ECOMIO;
+      pnd->last_error = NFC_EIO;
       return false;
     }
   } else {
@@ -353,7 +353,7 @@ acr122_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szData, int t
      * receive the response from the PN532.
      */
     if (SCardTransmit (DRIVER_DATA (pnd)->hCard, &(DRIVER_DATA (pnd)->ioCard), abtTxBuf, szTxBuf, NULL, DRIVER_DATA (pnd)->abtRx, &dwRxLen) != SCARD_S_SUCCESS) {
-      pnd->iLastError = ECOMIO;
+      pnd->last_error = NFC_EIO;
       return false;
     }
   }
@@ -365,12 +365,12 @@ acr122_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szData, int t
 
     // Make sure we received the byte-count we expected
     if (dwRxLen != 2) {
-      pnd->iLastError = ECOMIO;
+      pnd->last_error = NFC_EIO;
       return false;
     }
     // Check if the operation was successful, so an answer is available
     if (DRIVER_DATA (pnd)->abtRx[0] == SCARD_OPERATION_ERROR) {
-      pnd->iLastError = EFRAISERRFRAME;
+      pnd->last_error = NFC_EIO;
       return false;
     }
   } else {
@@ -396,7 +396,7 @@ acr122_receive (nfc_device *pnd, uint8_t *pbtData, const size_t szData, int time
     DWORD dwRxLen = sizeof (DRIVER_DATA (pnd)->abtRx);
     abtRxCmd[4] = DRIVER_DATA (pnd)->abtRx[1];
     if (SCardTransmit (DRIVER_DATA (pnd)->hCard, &(DRIVER_DATA (pnd)->ioCard), abtRxCmd, sizeof (abtRxCmd), NULL, DRIVER_DATA (pnd)->abtRx, &dwRxLen) != SCARD_S_SUCCESS) {
-      pnd->iLastError = ECOMIO;
+      pnd->last_error = NFC_EIO;
       return -1;
     }
     DRIVER_DATA (pnd)->szRx = dwRxLen;
@@ -409,15 +409,13 @@ acr122_receive (nfc_device *pnd, uint8_t *pbtData, const size_t szData, int time
 
   // Make sure we have an emulated answer that fits the return buffer
   if (DRIVER_DATA (pnd)->szRx < 4 || (DRIVER_DATA (pnd)->szRx - 4) > szData) {
-    pnd->iLastError = ECOMIO;
+    pnd->last_error = NFC_EIO;
     return -1;
   }
   // Wipe out the 4 APDU emulation bytes: D5 4B .. .. .. 90 00
   len = DRIVER_DATA (pnd)->szRx - 4;
   memcpy (pbtData, DRIVER_DATA (pnd)->abtRx + 2, len);
 
-  // Transmission went successful
-  pnd->iLastError = 0;
   return len;
 }
 
@@ -488,7 +486,7 @@ const struct nfc_driver_t acr122_driver = {
   .target_receive_bits   = pn53x_target_receive_bits,
 
   .device_set_property_bool  = pn53x_set_property_bool,
-  .device_set_property_int = pn53x_set_property_int,
+  .device_set_property_int   = pn53x_set_property_int,
 
   .abort_command  = NULL,  // FIXME: abort is not supported in this driver
   .idle  = NULL,           // FIXME: idle is not supported in this driver

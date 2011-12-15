@@ -91,11 +91,11 @@ extern  "C" {
 
 /* Error reporting */
   NFC_EXPORT const char *nfc_strerror (const nfc_device *pnd);
-  NFC_EXPORT int nfc_strerror_r (const nfc_device *pnd, char *pcStrErrBuf, size_t szBufLen);
-  NFC_EXPORT void nfc_perror (const nfc_device *pnd, const char *pcString);
+  NFC_EXPORT int nfc_strerror_r (const nfc_device *pnd, char *buf, size_t buflen);
+  NFC_EXPORT void nfc_perror (const nfc_device *pnd, const char *s);
 
 /* Special data accessors */
-  NFC_EXPORT const char *nfc_device_name (nfc_device *pnd);
+  NFC_EXPORT const char *nfc_device_get_name (nfc_device *pnd);
 
 /* Properties accessors */
   NFC_EXPORT int nfc_device_set_property_int (nfc_device *pnd, const nfc_property property, const int value);
@@ -108,11 +108,17 @@ extern  "C" {
   NFC_EXPORT const char *nfc_version (void);
 
 /* Error codes */
-#define NFC_SUCCESS		 0	// No error
-#define NFC_EIO			-1	// Input / output error, device will not be usable anymore
-#define NFC_ENOTSUP		-2	// Operation not supported
-#define NFC_EINVARG		-3	// Invalid argument(s)
-#define NFC_DEVICE_ERROR  -4  //Device error
+#define NFC_SUCCESS			 0	// No error
+#define NFC_EIO				-1	// Input / output error, device will not be usable anymore
+#define NFC_EINVARG			-2	// Invalid argument(s)
+#define NFC_ENOTSUCHDEV			-3	// No such device
+#define NFC_ETIMEOUT			-4	// Operation timed out
+#define NFC_EOVFLOW			-5	// Buffer overflow
+#define NFC_EOPABORTED			-6	// Operation aborted (by user)
+#define NFC_ECHIP			-7	// Device's internal chip error
+#define NFC_EDEVNOTSUPP			-8	// Operation not supported by device
+#define NFC_ENOTIMPL			-9	// Not (yet) implemented
+
 
 /* PN53x specific errors */
 // TODO: Be not PN53x-specific here

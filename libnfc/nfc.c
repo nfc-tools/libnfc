@@ -372,7 +372,7 @@ nfc_initiator_list_passive_targets (nfc_device *pnd,
   size_t  szInitDataLen = 0;
   int res = 0;
 
-  pnd->iLastError = 0;
+  pnd->last_error = 0;
 
   // Let the reader only try once to find a tag
   if ((res = nfc_device_set_property_bool (pnd, NP_INFINITE_SELECT, false)) < 0) {

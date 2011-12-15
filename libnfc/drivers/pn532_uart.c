@@ -321,14 +321,14 @@ pn532_uart_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szData, i
   size_t szFrame = 0;
 
   if (!pn53x_build_frame (abtFrame, &szFrame, pbtData, szData)) {
-    pnd->iLastError = EINVALARG;
+    pnd->last_error = EINVALARG;
     return false;
   }
 
   int res = uart_send (DRIVER_DATA(pnd)->port, abtFrame, szFrame, timeout);
   if (res != 0) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Unable to transmit data. (TX)");
-    pnd->iLastError = res;
+    pnd->last_error = res;
     return false;
   }
 
@@ -336,7 +336,7 @@ pn532_uart_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szData, i
   res = uart_receive (DRIVER_DATA(pnd)->port, abtRxBuf, 6, 0, timeout);
   if (res != 0) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Unable to read ACK");
-    pnd->iLastError = res;
+    pnd->last_error = res;
     return false;
   }
 
@@ -361,14 +361,14 @@ pn532_uart_receive (nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, i
   abort_p = (void*)&(DRIVER_DATA (pnd)->abort_flag);
 #endif
 
-  pnd->iLastError = uart_receive (DRIVER_DATA (pnd)->port, abtRxBuf, 5, abort_p, timeout);
+  pnd->last_error = uart_receive (DRIVER_DATA (pnd)->port, abtRxBuf, 5, abort_p, timeout);
 
-  if (abort_p && (EOPABORT == pnd->iLastError)) {
+  if (abort_p && (EOPABORT == pnd->last_error)) {
     pn532_uart_ack (pnd);
     return -1;
   }
 
-  if (pnd->iLastError != 0) {
+  if (pnd->last_error != 0) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Unable to receive data. (RX)");
     return -1;
   }
@@ -376,7 +376,7 @@ pn532_uart_receive (nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, i
   const uint8_t pn53x_preamble[3] = { 0x00, 0x00, 0xff };
   if (0 != (memcmp (abtRxBuf, pn53x_preamble, 3))) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Frame preamble+start code mismatch");
-    pnd->iLastError = ECOMIO;
+    pnd->last_error = ECOMIO;
     return -1;
   }
 
@@ -384,19 +384,19 @@ pn532_uart_receive (nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, i
     // Error frame
     uart_receive (DRIVER_DATA (pnd)->port, abtRxBuf, 3, 0, timeout);
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Application level error detected");
-    pnd->iLastError = EFRAISERRFRAME;
+    pnd->last_error = EFRAISERRFRAME;
     return -1;
   } else if ((0xff == abtRxBuf[3]) && (0xff == abtRxBuf[4])) {
     // Extended frame
-    pnd->iLastError = uart_receive (DRIVER_DATA(pnd)->port, abtRxBuf, 3, 0, timeout);
-    if (pnd->iLastError) return -1;
+    pnd->last_error = uart_receive (DRIVER_DATA(pnd)->port, abtRxBuf, 3, 0, timeout);
+    if (pnd->last_error) return -1;
 
     // (abtRxBuf[0] << 8) + abtRxBuf[1] (LEN) include TFI + (CC+1)
     len = (abtRxBuf[0] << 8) + abtRxBuf[1] - 2;
     if (((abtRxBuf[0] + abtRxBuf[1] + abtRxBuf[2]) % 256) != 0) {
       // TODO: Retry
       log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Length checksum mismatch");
-      pnd->iLastError = ECOMIO;
+      pnd->last_error = ECOMIO;
       return -1;
     }
   } else {
@@ -404,7 +404,7 @@ pn532_uart_receive (nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, i
     if (256 != (abtRxBuf[3] + abtRxBuf[4])) {
       // TODO: Retry
       log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Length checksum mismatch");
-      pnd->iLastError = ECOMIO;
+      pnd->last_error = ECOMIO;
       return -1;
     }
 
@@ -414,39 +414,39 @@ pn532_uart_receive (nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, i
 
   if (len > szDataLen) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to receive data: buffer too small. (szDataLen: %zu, len: %zu)", szDataLen, len);
-    pnd->iLastError = ECOMIO;
+    pnd->last_error = ECOMIO;
     return -1;
   }
 
   // TFI + PD0 (CC+1)
-  pnd->iLastError = uart_receive (DRIVER_DATA (pnd)->port, abtRxBuf, 2, 0, timeout);
-  if (pnd->iLastError != 0) {
+  pnd->last_error = uart_receive (DRIVER_DATA (pnd)->port, abtRxBuf, 2, 0, timeout);
+  if (pnd->last_error != 0) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Unable to receive data. (RX)");
     return -1;
   }
 
   if (abtRxBuf[0] != 0xD5) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "TFI Mismatch");
-    pnd->iLastError = ECOMIO;
+    pnd->last_error = ECOMIO;
     return -1;
   }
 
   if (abtRxBuf[1] != CHIP_DATA (pnd)->ui8LastCommand + 1) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Command Code verification failed");
-    pnd->iLastError = ECOMIO;
+    pnd->last_error = ECOMIO;
     return -1;
   }
 
   if (len) {
-    pnd->iLastError = uart_receive (DRIVER_DATA (pnd)->port, pbtData, len, 0, timeout);
-    if (pnd->iLastError != 0) {
+    pnd->last_error = uart_receive (DRIVER_DATA (pnd)->port, pbtData, len, 0, timeout);
+    if (pnd->last_error != 0) {
       log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Unable to receive data. (RX)");
       return -1;
     }
   }
 
-  pnd->iLastError = uart_receive (DRIVER_DATA (pnd)->port, abtRxBuf, 2, 0, timeout);
-  if (pnd->iLastError != 0) {
+  pnd->last_error = uart_receive (DRIVER_DATA (pnd)->port, abtRxBuf, 2, 0, timeout);
+  if (pnd->last_error != 0) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Unable to receive data. (RX)");
     return -1;
   }
@@ -459,13 +459,13 @@ pn532_uart_receive (nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, i
 
   if (btDCS != abtRxBuf[0]) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Data checksum mismatch");
-    pnd->iLastError = ECOMIO;
+    pnd->last_error = ECOMIO;
     return -1;
   }
 
   if (0x00 != abtRxBuf[1]) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Frame postamble mismatch");
-    pnd->iLastError = ECOMIO;
+    pnd->last_error = ECOMIO;
     return -1;
   }
   // The PN53x command is done and we successfully received the reply
@@ -526,7 +526,7 @@ const struct nfc_driver_t pn532_uart_driver = {
   .target_receive_bits   = pn53x_target_receive_bits,
 
   .device_set_property_bool  = pn53x_set_property_bool,
-  .device_set_property_int = pn53x_set_property_int,
+  .device_set_property_int   = pn53x_set_property_int,
 
   .abort_command  = pn532_uart_abort_command,
   .idle  = pn53x_idle,

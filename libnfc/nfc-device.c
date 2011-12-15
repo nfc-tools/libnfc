@@ -49,7 +49,7 @@ nfc_device_new (void)
   res->bPar = false;
   res->bEasyFraming    = false;
   res->bAutoIso14443_4 = false;
-  res->iLastError  = 0;
+  res->last_error  = 0;
   res->driver_data = NULL;
   res->chip_data   = NULL;
 
