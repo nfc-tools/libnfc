@@ -474,7 +474,7 @@ nfc_initiator_deselect_target (nfc_device *pnd)
 
 /**
  * @brief Send data to target then retrieve data from target
- * @return Returns \c true if action was successfully performed; otherwise returns \c false.
+ * @return Returns received bytes count on success, otherwise returns libnfc's error code
  *
  * @param pbtTx contains a byte array of the frame that needs to be transmitted.
  * @param szTx contains the length in bytes.
@@ -495,7 +495,7 @@ nfc_initiator_deselect_target (nfc_device *pnd)
  *
  * @warning The configuration option \a NP_HANDLE_PARITY must be set to \c true (the default value).
  */
-bool
+int
 nfc_initiator_transceive_bytes (nfc_device *pnd, const uint8_t *pbtTx, const size_t szTx, uint8_t *pbtRx,
                                 size_t *pszRx, int timeout)
 {

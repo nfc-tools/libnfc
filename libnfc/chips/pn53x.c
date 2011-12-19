@@ -943,11 +943,11 @@ pn53x_initiator_select_passive_target_ext (struct nfc_device *pnd,
       uint8_t abtRx[1];
       size_t szRxLen = 1;
       // Getting random Chip_ID
-      if (!pn53x_initiator_transceive_bytes (pnd, abtInitiate, szInitiateLen, abtRx, &szRxLen, timeout)) {
+      if (pn53x_initiator_transceive_bytes (pnd, abtInitiate, szInitiateLen, abtRx, &szRxLen, timeout) < 0) {
         return false;
       }
       abtSelect[1] = abtRx[0];
-      if (!pn53x_initiator_transceive_bytes (pnd, abtSelect, szSelectLen, abtRx, &szRxLen, timeout)) {
+      if (pn53x_initiator_transceive_bytes (pnd, abtSelect, szSelectLen, abtRx, &szRxLen, timeout) < 0) {
         return false;
       }
     }
@@ -956,11 +956,11 @@ pn53x_initiator_select_passive_target_ext (struct nfc_device *pnd,
       uint8_t abtReqt[]="\x10";
       size_t szReqtLen = 1;
       // Getting product code / fab code & store it in output buffer after the serial nr we'll obtain later
-      if (!pn53x_initiator_transceive_bytes (pnd, abtReqt, szReqtLen, abtTargetsData+2, &szTargetsData, timeout) || szTargetsData != 2) {
+      if ((pn53x_initiator_transceive_bytes (pnd, abtReqt, szReqtLen, abtTargetsData+2, &szTargetsData, timeout) < 0) || szTargetsData != 2) {
         return false;
       }
     }
-    if (!pn53x_initiator_transceive_bytes (pnd, pbtInitData, szInitData, abtTargetsData, &szTargetsData, timeout)) {
+    if (pn53x_initiator_transceive_bytes (pnd, pbtInitData, szInitData, abtTargetsData, &szTargetsData, timeout) < 0) {
       return false;
     }
     if (nm.nmt == NMT_ISO14443B2CT) {
@@ -968,7 +968,7 @@ pn53x_initiator_select_passive_target_ext (struct nfc_device *pnd,
         return false;
       uint8_t abtRead[]="\xC4"; // Reading UID_MSB (Read address 4)
       size_t szReadLen = 1;
-      if (!pn53x_initiator_transceive_bytes (pnd, abtRead, szReadLen, abtTargetsData+4, &szTargetsData, timeout) || szTargetsData != 2) {
+      if ((pn53x_initiator_transceive_bytes (pnd, abtRead, szReadLen, abtTargetsData+4, &szTargetsData, timeout) < 0) || szTargetsData != 2) {
         return false;
       }
       szTargetsData = 6; // u16 UID_LSB, u8 prod code, u8 fab code, u16 UID_MSB
@@ -986,7 +986,7 @@ pn53x_initiator_select_passive_target_ext (struct nfc_device *pnd,
       size_t szAttribLen = sizeof(abtAttrib);
       memcpy(abtAttrib, abtTargetsData, szAttribLen);
       abtAttrib[1] = 0x0f; // ATTRIB
-      if (!pn53x_initiator_transceive_bytes (pnd, abtAttrib, szAttribLen, NULL, NULL, timeout)) {
+      if (pn53x_initiator_transceive_bytes (pnd, abtAttrib, szAttribLen, NULL, NULL, timeout) < 0) {
         return false;
       }
     }
