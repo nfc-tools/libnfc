@@ -58,7 +58,7 @@ target_thread (void *arg)
   nfc_device *device = ((struct thread_data *) arg)->device;
   cut_set_current_test_context (((struct thread_data *) arg)->cut_test_context);
 
-  printf ("=========== TARGET %s =========\n", nfc_device_name (device));
+  printf ("=========== TARGET %s =========\n", nfc_device_get_name (device));
   nfc_target nt = {
     .nm = {
       .nmt = NMT_DEP,
@@ -147,7 +147,7 @@ initiator_thread (void *arg)
    * Wait some time for the other thread to initialise NFC device as target
    */
   sleep (1);
-  printf ("=========== INITIATOR %s =========\n", nfc_device_name (device));
+  printf ("=========== INITIATOR %s =========\n", nfc_device_get_name (device));
 
   bool res = nfc_initiator_init (device);
   cut_assert_equal_int (0, res, cut_message ("Can't initialize NFC device as initiator: %s", nfc_strerror (device)));
@@ -156,7 +156,7 @@ initiator_thread (void *arg)
   nfc_target nt;
 
   // Passive mode / 106Kbps
-  printf ("=========== INITIATOR %s (Passive mode / 106Kbps) =========\n", nfc_device_name (device));
+  printf ("=========== INITIATOR %s (Passive mode / 106Kbps) =========\n", nfc_device_get_name (device));
   res = nfc_initiator_select_dep_target (device, NDM_PASSIVE, NBR_106, NULL, &nt, 5000);
   cut_assert_true (res, cut_message ("Can't select any DEP target: %s", nfc_strerror (device)));
   cut_assert_equal_int (NMT_DEP, nt.nm.nmt, cut_message ("Invalid target modulation"));
@@ -181,7 +181,7 @@ initiator_thread (void *arg)
   if (!res) { thread_res = -1; return (void*) thread_res; }
 
   // Passive mode / 212Kbps (second pass)
-  printf ("=========== INITIATOR %s (Passive mode / 212Kbps) =========\n", nfc_device_name (device));
+  printf ("=========== INITIATOR %s (Passive mode / 212Kbps) =========\n", nfc_device_get_name (device));
   res = nfc_initiator_select_dep_target (device, NDM_PASSIVE, NBR_212, NULL, &nt, 1000);
   cut_assert_true (res, cut_message ("Can't select any DEP target: %s", nfc_strerror (device)));
   cut_assert_equal_int (NMT_DEP, nt.nm.nmt, cut_message ("Invalid target modulation"));
@@ -203,7 +203,7 @@ initiator_thread (void *arg)
   if (!res) { thread_res = -1; return (void*) thread_res; }
 
   // Passive mode / 212Kbps
-  printf ("=========== INITIATOR %s (Passive mode / 212Kbps, second pass) =========\n", nfc_device_name (device));
+  printf ("=========== INITIATOR %s (Passive mode / 212Kbps, second pass) =========\n", nfc_device_get_name (device));
   res = nfc_initiator_select_dep_target (device, NDM_PASSIVE, NBR_212, NULL, &nt, 1000);
   cut_assert_true (res, cut_message ("Can't select any DEP target: %s", nfc_strerror (device)));
   cut_assert_equal_int (NMT_DEP, nt.nm.nmt, cut_message ("Invalid target modulation"));
@@ -225,7 +225,7 @@ initiator_thread (void *arg)
   if (!res) { thread_res = -1; return (void*) thread_res; }
   
     // Passive mode / 424Kbps
-  printf ("=========== INITIATOR %s (Passive mode / 424Kbps) =========\n", nfc_device_name (device));
+  printf ("=========== INITIATOR %s (Passive mode / 424Kbps) =========\n", nfc_device_get_name (device));
   res = nfc_initiator_select_dep_target (device, NDM_PASSIVE, NBR_424, NULL, &nt, 1000);
   cut_assert_true (res, cut_message ("Can't select any DEP target: %s", nfc_strerror (device)));
   cut_assert_equal_int (NMT_DEP, nt.nm.nmt, cut_message ("Invalid target modulation"));
