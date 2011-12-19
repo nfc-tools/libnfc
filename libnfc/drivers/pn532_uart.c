@@ -321,7 +321,7 @@ pn532_uart_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szData, i
   size_t szFrame = 0;
 
   if (!pn53x_build_frame (abtFrame, &szFrame, pbtData, szData)) {
-    pnd->last_error = EINVALARG;
+    pnd->last_error = NFC_EINVARG;
     return false;
   }
 
@@ -363,20 +363,20 @@ pn532_uart_receive (nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, i
 
   pnd->last_error = uart_receive (DRIVER_DATA (pnd)->port, abtRxBuf, 5, abort_p, timeout);
 
-  if (abort_p && (EOPABORT == pnd->last_error)) {
+  if (abort_p && (NFC_EOPABORTED == pnd->last_error)) {
     pn532_uart_ack (pnd);
-    return -1;
+    return pnd->last_error;
   }
 
   if (pnd->last_error != 0) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Unable to receive data. (RX)");
-    return -1;
+    return pnd->last_error;
   }
 
   const uint8_t pn53x_preamble[3] = { 0x00, 0x00, 0xff };
   if (0 != (memcmp (abtRxBuf, pn53x_preamble, 3))) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Frame preamble+start code mismatch");
-    pnd->last_error = ECOMIO;
+    pnd->last_error = NFC_EIO;
     return -1;
   }
 
@@ -384,8 +384,8 @@ pn532_uart_receive (nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, i
     // Error frame
     uart_receive (DRIVER_DATA (pnd)->port, abtRxBuf, 3, 0, timeout);
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Application level error detected");
-    pnd->last_error = EFRAISERRFRAME;
-    return -1;
+    pnd->last_error = NFC_EIO;
+    return pnd->last_error;
   } else if ((0xff == abtRxBuf[3]) && (0xff == abtRxBuf[4])) {
     // Extended frame
     pnd->last_error = uart_receive (DRIVER_DATA(pnd)->port, abtRxBuf, 3, 0, timeout);
@@ -396,7 +396,7 @@ pn532_uart_receive (nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, i
     if (((abtRxBuf[0] + abtRxBuf[1] + abtRxBuf[2]) % 256) != 0) {
       // TODO: Retry
       log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Length checksum mismatch");
-      pnd->last_error = ECOMIO;
+      pnd->last_error = NFC_EIO;
       return -1;
     }
   } else {
@@ -404,7 +404,7 @@ pn532_uart_receive (nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, i
     if (256 != (abtRxBuf[3] + abtRxBuf[4])) {
       // TODO: Retry
       log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Length checksum mismatch");
-      pnd->last_error = ECOMIO;
+      pnd->last_error = NFC_EIO;
       return -1;
     }
 
@@ -414,7 +414,7 @@ pn532_uart_receive (nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, i
 
   if (len > szDataLen) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to receive data: buffer too small. (szDataLen: %zu, len: %zu)", szDataLen, len);
-    pnd->last_error = ECOMIO;
+    pnd->last_error = NFC_EIO;
     return -1;
   }
 
@@ -427,13 +427,13 @@ pn532_uart_receive (nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, i
 
   if (abtRxBuf[0] != 0xD5) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "TFI Mismatch");
-    pnd->last_error = ECOMIO;
+    pnd->last_error = NFC_EIO;
     return -1;
   }
 
   if (abtRxBuf[1] != CHIP_DATA (pnd)->ui8LastCommand + 1) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Command Code verification failed");
-    pnd->last_error = ECOMIO;
+    pnd->last_error = NFC_EIO;
     return -1;
   }
 
@@ -459,13 +459,13 @@ pn532_uart_receive (nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, i
 
   if (btDCS != abtRxBuf[0]) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Data checksum mismatch");
-    pnd->last_error = ECOMIO;
+    pnd->last_error = NFC_EIO;
     return -1;
   }
 
   if (0x00 != abtRxBuf[1]) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Frame postamble mismatch");
-    pnd->last_error = ECOMIO;
+    pnd->last_error = NFC_EIO;
     return -1;
   }
   // The PN53x command is done and we successfully received the reply

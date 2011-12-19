@@ -125,7 +125,7 @@ main (int argc, char *argv[])
 
   printf ("Hint: tag <---> initiator (relay) <---> target (relay) <---> original reader\n\n");
 
-  printf ("Connected to the NFC emulator device: %s\n", pndTag->acName);
+  printf ("Connected to the NFC emulator device: %s\n", nfc_device_get_name (pndTag));
   printf ("[+] Try to break out the auto-emulation, this requires a second reader!\n");
   printf ("[+] To do this, please send any command after the anti-collision\n");
   printf ("[+] For example, send a RATS command or use the \"nfc-anticol\" tool\n");
@@ -162,7 +162,7 @@ main (int argc, char *argv[])
   // Try to open the NFC reader
   pndReader = nfc_connect (connstrings[1]);
 
-  printf ("Connected to the NFC reader device: %s", pndReader->acName);
+  printf ("Connected to the NFC reader device: %s", nfc_device_get_name (pndReader));
   printf ("%s", "Configuring NFC reader settings...");
   nfc_initiator_init (pndReader);
   if ((nfc_device_set_property_bool (pndReader, NP_HANDLE_CRC, false) < 0) ||

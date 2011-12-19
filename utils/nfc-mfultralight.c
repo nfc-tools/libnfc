@@ -219,7 +219,7 @@ main (int argc, const char *argv[])
     exit (EXIT_FAILURE);
   }
 
-  printf ("Connected to NFC device: %s\n", pnd->acName);
+  printf ("Connected to NFC device: %s\n", nfc_device_get_name (pnd));
 
   // Try to find a MIFARE Ultralight tag
   if (!nfc_initiator_select_passive_target (pnd, nmMifare, NULL, 0, &nt)) {

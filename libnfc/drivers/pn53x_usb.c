@@ -516,14 +516,14 @@ pn53x_usb_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szData, co
   int res = pn53x_usb_bulk_write (DRIVER_DATA (pnd), abtFrame, szFrame, timeout);
 
   if (res < 0) {
-    pnd->last_error = ECOMIO;
+    pnd->last_error = NFC_EIO;
     return false;
   }
 
   uint8_t abtRxBuf[PN53X_USB_BUFFER_LEN];
   res = pn53x_usb_bulk_read (DRIVER_DATA (pnd), abtRxBuf, sizeof (abtRxBuf), timeout);
   if (res < 0) {
-    pnd->last_error = ECOMIO;
+    pnd->last_error = NFC_EIO;
     // try to interrupt current device state
     pn53x_usb_ack(pnd);
     return false;
@@ -541,7 +541,7 @@ pn53x_usb_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szData, co
     // FIXME Sony reader is also affected by this bug but NACK is not supported
     int res = pn53x_usb_bulk_write (DRIVER_DATA (pnd), (uint8_t *)pn53x_nack_frame, sizeof(pn53x_nack_frame), timeout);
     if (res < 0) {
-      pnd->last_error = ECOMIO;
+      pnd->last_error = NFC_EIO;
       // try to interrupt current device state
       pn53x_usb_ack(pnd);
       return false;
@@ -574,7 +574,7 @@ read:
     // A user-provided timeout is set, we have to cut it in multiple chunk to be able to keep an nfc_abort_command() mecanism
     remaining_time -= USB_TIMEOUT_PER_PASS;
     if (remaining_time <= 0) {
-      pnd->last_error = ECOMTIMEOUT;
+      pnd->last_error = NFC_ETIMEOUT;
       return -1;
     } else {
       usb_timeout = MIN(remaining_time, USB_TIMEOUT_PER_PASS);
@@ -587,7 +587,7 @@ read:
     if (DRIVER_DATA (pnd)->abort_flag) {
       DRIVER_DATA (pnd)->abort_flag = false;
       pn53x_usb_ack (pnd);
-      pnd->last_error = EOPABORT;
+      pnd->last_error = NFC_EOPABORTED;
       return -1;
     } else {
       goto read;
@@ -595,7 +595,7 @@ read:
   }
 
   if (res < 0) {
-    pnd->last_error = ECOMIO;
+    pnd->last_error = NFC_EIO;
     // try to interrupt current device state
     pn53x_usb_ack(pnd);
     return -1;
@@ -604,7 +604,7 @@ read:
   const uint8_t pn53x_preamble[3] = { 0x00, 0x00, 0xff };
   if (0 != (memcmp (abtRxBuf, pn53x_preamble, 3))) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Frame preamble+start code mismatch");
-    pnd->last_error = ECOMIO;
+    pnd->last_error = NFC_EIO;
     return -1;
   }
   offset += 3;
@@ -612,7 +612,7 @@ read:
   if ((0x01 == abtRxBuf[offset]) && (0xff == abtRxBuf[offset + 1])) {
     // Error frame
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Application level error detected");
-    pnd->last_error = EFRAISERRFRAME;
+    pnd->last_error = NFC_EIO;
     return -1;
   } else if ((0xff == abtRxBuf[offset]) && (0xff == abtRxBuf[offset + 1])) {
     // Extended frame
@@ -623,7 +623,7 @@ read:
     if (((abtRxBuf[offset] + abtRxBuf[offset + 1] + abtRxBuf[offset + 2]) % 256) != 0) {
       // TODO: Retry
       log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Length checksum mismatch");
-      pnd->last_error = ECOMIO;
+      pnd->last_error = NFC_EIO;
       return -1;
     }
     offset += 3;
@@ -632,7 +632,7 @@ read:
     if (256 != (abtRxBuf[offset] + abtRxBuf[offset + 1])) {
       // TODO: Retry
       log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Length checksum mismatch");
-      pnd->last_error = ECOMIO;
+      pnd->last_error = NFC_EIO;
       return -1;
     }
 
@@ -643,21 +643,21 @@ read:
 
   if (len > szDataLen) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to receive data: buffer too small. (szDataLen: %zu, len: %zu)", szDataLen, len);
-    pnd->last_error = ECOMIO;
+    pnd->last_error = NFC_EIO;
     return -1;
   }
 
   // TFI + PD0 (CC+1)
   if (abtRxBuf[offset] != 0xD5) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "TFI Mismatch");
-    pnd->last_error = ECOMIO;
+    pnd->last_error = NFC_EIO;
     return -1;
   }
   offset += 1;
 
   if (abtRxBuf[offset] != CHIP_DATA (pnd)->ui8LastCommand + 1) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Command Code verification failed");
-    pnd->last_error = ECOMIO;
+    pnd->last_error = NFC_EIO;
     return -1;
   }
   offset += 1;
@@ -673,14 +673,14 @@ read:
 
   if (btDCS != abtRxBuf[offset]) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Data checksum mismatch");
-    pnd->last_error = ECOMIO;
+    pnd->last_error = NFC_EIO;
     return -1;
   }
   offset += 1;
 
   if (0x00 != abtRxBuf[offset]) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Frame postamble mismatch");
-    pnd->last_error = ECOMIO;
+    pnd->last_error = NFC_EIO;
     return -1;
   }
   // The PN53x command is done and we successfully received the reply

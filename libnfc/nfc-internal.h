@@ -137,7 +137,7 @@ struct nfc_driver_t {
   bool (*initiator_poll_target) (struct nfc_device *pnd, const nfc_modulation * pnmModulations, const size_t szModulations, const uint8_t uiPollNr, const uint8_t btPeriod, nfc_target * pnt);
   bool (*initiator_select_dep_target) (struct nfc_device *pnd, const nfc_dep_mode ndm, const nfc_baud_rate nbr, const nfc_dep_info * pndiInitiator, nfc_target * pnt, const int timeout);
   bool (*initiator_deselect_target) (struct nfc_device *pnd);
-  bool (*initiator_transceive_bytes) (struct nfc_device *pnd, const uint8_t * pbtTx, const size_t szTx, uint8_t * pbtRx, size_t * pszRx, int timeout);
+  int  (*initiator_transceive_bytes) (struct nfc_device *pnd, const uint8_t * pbtTx, const size_t szTx, uint8_t * pbtRx, size_t * pszRx, int timeout);
   bool (*initiator_transceive_bits) (struct nfc_device *pnd, const uint8_t * pbtTx, const size_t szTxBits, const uint8_t * pbtTxPar, uint8_t * pbtRx, size_t * pszRxBits, uint8_t * pbtRxPar);
   bool (*initiator_transceive_bytes_timed) (struct nfc_device *pnd, const uint8_t * pbtTx, const size_t szTx, uint8_t * pbtRx, size_t * pszRx, uint32_t * cycles);
   bool (*initiator_transceive_bits_timed) (struct nfc_device *pnd, const uint8_t * pbtTx, const size_t szTxBits, const uint8_t * pbtTxPar, uint8_t * pbtRx, size_t * pszRxBits, uint8_t * pbtRxPar, uint32_t * cycles);

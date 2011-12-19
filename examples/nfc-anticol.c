@@ -175,7 +175,7 @@ main (int argc, char *argv[])
     exit (EXIT_FAILURE);
   }
 
-  printf ("Connected to NFC reader: %s\n\n", pnd->acName);
+  printf ("Connected to NFC reader: %s\n\n", nfc_device_get_name (pnd));
 
   // Send the 7 bits request command specified in ISO 14443A (0x26)
   if (!transmit_bits (abtReqa, 7)) {

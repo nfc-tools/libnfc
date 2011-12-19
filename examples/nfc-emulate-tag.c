@@ -191,7 +191,7 @@ main (int argc, char *argv[])
     exit (EXIT_FAILURE);
   }
 
-  printf ("Connected to NFC device: %s\n", pnd->acName);
+  printf ("Connected to NFC device: %s\n", nfc_device_get_name (pnd));
 
   // Notes for ISO14443-A emulated tags:
   // * Only short UIDs are supported

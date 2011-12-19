@@ -189,7 +189,7 @@ main(int argc, char *argv[])
     exit (EXIT_FAILURE);
   }
 
-  printf ("Connected to NFC device: %s\n", pnd->acName);
+  printf ("Connected to NFC device: %s\n", nfc_device_get_name (pnd));
   printf ("Emulating NDEF tag now, please touch it with a second NFC device\n");
 
   if (nfc_emulate_target (pnd, &emulator) < 0) {

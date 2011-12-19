@@ -134,7 +134,7 @@ main (int argc, char *argv[])
   }
 
   printf ("\n");
-  printf ("Connected to NFC device: %s\n", pnd->acName);
+  printf ("Connected to NFC device: %s\n", nfc_device_get_name (pnd));
   printf ("[+] Try to break out the auto-emulation, this requires a second NFC device!\n");
   printf ("[+] To do this, please send any command after the anti-collision\n");
   printf ("[+] For example, send a RATS command or use the \"nfc-anticol\" or \"nfc-list\" tool.\n");

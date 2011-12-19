@@ -227,7 +227,7 @@ main (int argc, char *argv[])
       exit(EXIT_FAILURE);
     }
 
-    printf ("Connected to the NFC reader device: %s\n", pndInitiator->acName);
+    printf ("Connected to the NFC reader device: %s\n", nfc_device_get_name (pndInitiator));
 
     if (nfc_initiator_init (pndInitiator) < 0) {
       printf ("Error: fail initializing initiator\n");
@@ -352,7 +352,7 @@ main (int argc, char *argv[])
       return EXIT_FAILURE;
     }
 
-    printf ("Connected to the NFC emulator device: %s\n", pndTarget->acName);
+    printf ("Connected to the NFC emulator device: %s\n", nfc_device_get_name (pndTarget));
 
     if (!nfc_target_init (pndTarget, &ntEmulatedTarget, abtCapdu, &szCapduLen)) {
       ERR ("%s", "Initialization of NFC emulator failed");

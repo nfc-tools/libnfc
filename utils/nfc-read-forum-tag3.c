@@ -202,7 +202,7 @@ main(int argc, char *argv[])
     exit (EXIT_FAILURE);
   }
 
-  fprintf (message_stream, "Connected to NFC device: %s\n", pnd->acName);
+  fprintf (message_stream, "Connected to NFC device: %s\n", nfc_device_get_name (pnd));
 
   nfc_modulation nm = {
     .nmt = NMT_FELICA,

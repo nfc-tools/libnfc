@@ -302,7 +302,7 @@ bool    pn53x_initiator_select_dep_target (struct nfc_device *pnd,
 bool    pn53x_initiator_transceive_bits (struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szTxBits,
                                          const uint8_t *pbtTxPar, uint8_t *pbtRx, size_t *pszRxBits,
                                          uint8_t *pbtRxPar);
-bool    pn53x_initiator_transceive_bytes (struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szTx,
+int     pn53x_initiator_transceive_bytes (struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szTx,
                                           uint8_t *pbtRx, size_t *pszRx, int timeout);
 bool    pn53x_initiator_transceive_bits_timed (struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szTxBits,
                                          const uint8_t *pbtTxPar, uint8_t *pbtRx, size_t *pszRxBits,

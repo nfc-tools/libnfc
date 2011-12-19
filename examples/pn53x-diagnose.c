@@ -86,7 +86,7 @@ main (int argc, const char *argv[])
       return EXIT_FAILURE;
     }
 
-    printf ("NFC device [%s] connected.\n", pnd->acName);
+    printf ("NFC device [%s] connected.\n", nfc_device_get_name (pnd));
 
     result = pn53x_transceive (pnd, pncmd_diagnose_communication_line_test, sizeof (pncmd_diagnose_communication_line_test), abtRx, &szRx, 0);
     if (result) {

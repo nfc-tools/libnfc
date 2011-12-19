@@ -89,7 +89,7 @@ main (int argc, const char *argv[])
     return EXIT_FAILURE;
   }
 
-  printf ("Connected to NFC device: %s\n", pnd->acName);
+  printf ("Connected to NFC device: %s\n", nfc_device_get_name (pnd));
 
   // Print the example's menu
   printf ("\nSelect the communication mode:\n");

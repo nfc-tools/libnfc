@@ -799,7 +799,7 @@ nfc_perror (const nfc_device *pnd, const char *pcString)
  * @return Returns a string with the device name
  */
 const char *
-nfc_device_name (nfc_device *pnd)
+nfc_device_get_name (nfc_device *pnd)
 {
   return pnd->acName;
 }

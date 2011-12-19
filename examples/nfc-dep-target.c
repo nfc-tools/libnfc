@@ -111,7 +111,7 @@ main (int argc, const char *argv[])
     printf("Unable to connect to NFC device.\n");
     return EXIT_FAILURE;
   }
-  printf ("Connected to NFC device: %s\n", pnd->acName);
+  printf ("Connected to NFC device: %s\n", nfc_device_get_name (pnd));
 
   signal (SIGINT, stop_dep_communication);
 

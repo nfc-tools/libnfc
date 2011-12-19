@@ -116,54 +116,9 @@ extern  "C" {
 #define NFC_EOVFLOW			-5	// Buffer overflow
 #define NFC_EOPABORTED			-6	// Operation aborted (by user)
 #define NFC_ECHIP			-7	// Device's internal chip error
-#define NFC_EDEVNOTSUPP			-8	// Operation not supported by device
-#define NFC_ENOTIMPL			-9	// Not (yet) implemented
-
-
-/* PN53x specific errors */
-// TODO: Be not PN53x-specific here
-#define ETIMEOUT	0x01
-#define ECRC		0x02
-#define EPARITY		0x03
-#define EBITCOUNT	0x04
-#define EFRAMING	0x05
-#define EBITCOLL	0x06
-#define ESMALLBUF	0x07
-#define EBUFOVF		0x09
-#define ERFTIMEOUT	0x0a
-#define ERFPROTO	0x0b
-#define EOVHEAT		0x0d
-#define EINBUFOVF	0x0e
-#define EINVPARAM	0x10
-#define EDEPUNKCMD	0x12
-#define EINVRXFRAM	0x13
-#define EMFAUTH		0x14
-#define ENSECNOTSUPP	0x18	// PN533 only
-#define EBCC		0x23
-#define EDEPINVSTATE	0x25
-#define EOPNOTALL	0x26
-#define ECMD		0x27
-#define ETGREL		0x29
-#define ECID		0x2a
-#define ECDISCARDED	0x2b
-#define ENFCID3		0x2c
-#define EOVCURRENT	0x2d
-#define ENAD		0x2e
-
-/* PN53x framing-level errors */
-#define EFRAACKMISMATCH   0x0100  /* Unexpected data */
-#define EFRAISERRFRAME    0x0101  /* Error frame */
-
-/* Communication-level errors */
-#define ECOMIO            0x1000  /* Input/output error */
-#define ECOMTIMEOUT       0x1001  /* Operation timeout */
-
-/* Software level errors */
-#define ETGUIDNOTSUP      0xFF00  /* Target UID not supported */
-#define EOPABORT          0xFF01  /* Operation aborted */
-#define EINVALARG         0xFF02  /* Invalid argument */
-#define EDEVNOTSUP        0xFF03  /* Not supported by device */
-#define ENOTIMPL          0xFF04  /* Not (yet) implemented in libnfc */
+#define NFC_ERFTRANS			-8	// Error while RF transmission
+#define NFC_EDEVNOTSUPP			-9	// Operation not supported by device
+#define NFC_ENOTIMPL			-10	// Not (yet) implemented
 
 #  ifdef __cplusplus
 }

@@ -94,28 +94,32 @@ nfc_initiator_mifare_cmd (nfc_device *pnd, const mifare_cmd mc, const uint8_t ui
   if (szParamLen)
     memcpy (abtCmd + 2, (uint8_t *) pmp, szParamLen);
 
-  bEasyFraming = pnd->bEasyFraming;
+  // FIXME: Save and restore bEasyFraming
+  // bEasyFraming = nfc_device_get_property_bool (pnd, NP_EASY_FRAMING, &bEasyFraming);
   if (nfc_device_set_property_bool (pnd, NP_EASY_FRAMING, true) < 0) {
     nfc_perror (pnd, "nfc_device_set_property_bool");
     return false;
   }
   // Fire the mifare command
-  if (!nfc_initiator_transceive_bytes (pnd, abtCmd, 2 + szParamLen, abtRx, &szRx, 0)) {
-    if (pnd->iLastError == EINVRXFRAM) {
-      // "Invalid received frame" AKA EINVRXFRAM,  usual means we are
+  int res;
+  if ((res = nfc_initiator_transceive_bytes (pnd, abtCmd, 2 + szParamLen, abtRx, &szRx, -1))  < 0) {
+    if (res == NFC_ERFTRANS) {
+      // "Invalid received frame",  usual means we are
       // authenticated on a sector but the requested MIFARE cmd (read, write)
       // is not permitted by current acces bytes;
       // So there is nothing to do here.
     } else {
       nfc_perror (pnd, "nfc_initiator_transceive_bytes");
     }
-    nfc_device_set_property_bool (pnd, NP_EASY_FRAMING, bEasyFraming);
+    // XXX nfc_device_set_property_bool (pnd, NP_EASY_FRAMING, bEasyFraming);
     return false;
   }
+  /* XXX
   if (nfc_device_set_property_bool (pnd, NP_EASY_FRAMING, bEasyFraming) < 0) {
     nfc_perror (pnd, "nfc_device_set_property_bool");
     return false;
   }
+  */
 
   // When we have executed a read command, copy the received bytes into the param
   if (mc == MC_READ) {

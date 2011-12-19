@@ -101,19 +101,18 @@ main (int argc, const char *argv[])
 
   nfc_initiator_init (pnd);
 
-  printf ("Connected to NFC reader: %s\n", pnd->acName);
+  printf ("Connected to NFC reader: %s\n", nfc_device_get_name (pnd));
   printf ("NFC device will poll during %ld ms (%u pollings of %lu ms for %zd modulations)\n", (unsigned long) uiPollNr * szModulations * uiPeriod * 150, uiPollNr, (unsigned long) uiPeriod * 150, szModulations);
-  res = nfc_initiator_poll_target (pnd, nmModulations, szModulations, uiPollNr, uiPeriod, &nt);
-  if (res) {
+  if ((res = nfc_initiator_poll_target (pnd, nmModulations, szModulations, uiPollNr, uiPeriod, &nt))  < 0) {
+    nfc_perror (pnd, "nfc_initiator_poll_targets");
+    nfc_disconnect (pnd);
+    exit (EXIT_FAILURE);
+  }
+
+  if (res > 0) {
     print_nfc_target ( nt, verbose );
   } else {
-    if (pnd->iLastError) {
-      nfc_perror (pnd, "nfc_initiator_poll_targets");
-      nfc_disconnect (pnd);
-      exit (EXIT_FAILURE);
-    } else {
-      printf ("No target found.\n");
-    }
+    printf ("No target found.\n");
   }
   nfc_disconnect (pnd);
   exit (EXIT_SUCCESS);

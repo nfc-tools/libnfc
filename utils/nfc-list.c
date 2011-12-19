@@ -117,7 +117,7 @@ main (int argc, const char *argv[])
     }
     nfc_initiator_init (pnd);
 
-    printf ("Connected to NFC device: %s\n", pnd->acName);
+    printf ("Connected to NFC device: %s\n", nfc_device_get_name (pnd));
 
     nfc_modulation nm;
 

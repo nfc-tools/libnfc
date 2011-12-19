@@ -284,31 +284,31 @@ select:
     // Read error
     if (res < 0) {
       log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "%s", "RX error.");
-      return ECOMIO;
+      return NFC_EIO;
     }
     // Read time-out
     if (res == 0) {
       log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "Timeout!");
-      return ECOMTIMEOUT;
+      return NFC_ETIMEOUT;
     }
 
     if (FD_ISSET (iAbortFd, &rfds)) {
       // Abort requested
       log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "Abort!");
       close (iAbortFd);
-      return EOPABORT;
+      return NFC_EOPABORTED;
     }
 
     // Retrieve the count of the incoming bytes
     res = ioctl (UART_DATA(sp)->fd, FIONREAD, &available_bytes_count);
     if (res != 0) {
-      return ECOMIO;
+      return NFC_EIO;
     }
     // There is something available, read the data
     res = read (UART_DATA(sp)->fd, pbtRx + received_bytes_count, MIN(available_bytes_count, (expected_bytes_count - received_bytes_count)));
     // Stop if the OS has some troubles reading the data
     if (res <= 0) {
-      return ECOMIO;
+      return NFC_EIO;
     }
     received_bytes_count += res;
 
@@ -330,7 +330,7 @@ uart_send (serial_port sp, const uint8_t *pbtTx, const size_t szTx, int timeout)
   if ((int) szTx == write (UART_DATA(sp)->fd, pbtTx, szTx))
     return 0;
   else
-    return ECOMIO;
+    return NFC_EIO;
 }
 
 char **
