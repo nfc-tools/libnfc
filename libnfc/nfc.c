@@ -304,7 +304,7 @@ nfc_initiator_init (nfc_device *pnd)
 
 /**
  * @brief Select a passive or emulated tag
- * @return Returns \c true if action was successfully performed; otherwise returns \c false.
+ * @return Returns 0 on success, otherwise returns libnfc's error code (negative value)
  *
  * @param pnd \a nfc_device struct pointer that represent currently used device
  * @param nm desired modulation
@@ -322,7 +322,7 @@ nfc_initiator_init (nfc_device *pnd)
  * The chip needs to know with what kind of tag it is dealing with, therefore
  * the initial modulation and speed (106, 212 or 424 kbps) should be supplied.
  */
-bool
+int
 nfc_initiator_select_passive_target (nfc_device *pnd,
                                      const nfc_modulation nm,
                                      const uint8_t *pbtInitData, const size_t szInitData,
@@ -381,7 +381,7 @@ nfc_initiator_list_passive_targets (nfc_device *pnd,
 
   prepare_initiator_data (nm, &pbtInitData, &szInitDataLen);
 
-  while (nfc_initiator_select_passive_target (pnd, nm, pbtInitData, szInitDataLen, &nt)) {
+  while (nfc_initiator_select_passive_target (pnd, nm, pbtInitData, szInitDataLen, &nt) == 0) {
     nfc_initiator_deselect_target (pnd);
     if (szTargets == szTargetFound) {
       break;

@@ -907,7 +907,7 @@ pn53x_initiator_init (struct nfc_device *pnd)
   return NFC_SUCCESS;
 }
 
-bool
+int
 pn53x_initiator_select_passive_target_ext (struct nfc_device *pnd,
                                        const nfc_modulation nm,
                                        const uint8_t *pbtInitData, const size_t szInitData,
@@ -916,22 +916,23 @@ pn53x_initiator_select_passive_target_ext (struct nfc_device *pnd,
 {
   uint8_t  abtTargetsData[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
   size_t  szTargetsData = sizeof(abtTargetsData);
+  int res = 0;
 
   if (nm.nmt == NMT_ISO14443BI || nm.nmt == NMT_ISO14443B2SR || nm.nmt == NMT_ISO14443B2CT) {
     if (CHIP_DATA(pnd)->type == RCS360) {
       // TODO add support for RC-S360, at the moment it refuses to send raw frames without a first select
       pnd->last_error = NFC_ENOTIMPL;
-      return false;
+      return pnd->last_error;
     }
     // No native support in InListPassiveTarget so we do discovery by hand
-    if (nfc_device_set_property_bool (pnd, NP_FORCE_ISO14443_B, true) < 0) {
-      return false;
+    if ((res = nfc_device_set_property_bool (pnd, NP_FORCE_ISO14443_B, true)) < 0) {
+      return res;
     }
-    if (nfc_device_set_property_bool (pnd, NP_FORCE_SPEED_106, true) < 0) {
-      return false;
+    if ((res = nfc_device_set_property_bool (pnd, NP_FORCE_SPEED_106, true)) < 0) {
+      return res;
     }
-    if (nfc_device_set_property_bool (pnd, NP_HANDLE_CRC, true) < 0) {
-      return false;
+    if ((res = nfc_device_set_property_bool (pnd, NP_HANDLE_CRC, true)) < 0) {
+      return res;
     }
     pnd->bEasyFraming = false;
     if (nm.nmt == NMT_ISO14443B2SR) {
@@ -943,12 +944,12 @@ pn53x_initiator_select_passive_target_ext (struct nfc_device *pnd,
       uint8_t abtRx[1];
       size_t szRxLen = 1;
       // Getting random Chip_ID
-      if (pn53x_initiator_transceive_bytes (pnd, abtInitiate, szInitiateLen, abtRx, &szRxLen, timeout) < 0) {
-        return false;
+      if ((res = pn53x_initiator_transceive_bytes (pnd, abtInitiate, szInitiateLen, abtRx, &szRxLen, timeout)) < 0) {
+        return res;
       }
       abtSelect[1] = abtRx[0];
-      if (pn53x_initiator_transceive_bytes (pnd, abtSelect, szSelectLen, abtRx, &szRxLen, timeout) < 0) {
-        return false;
+      if ((res = pn53x_initiator_transceive_bytes (pnd, abtSelect, szSelectLen, abtRx, &szRxLen, timeout)) < 0) {
+        return res;
       }
     }
     else if (nm.nmt == NMT_ISO14443B2CT) {
@@ -956,20 +957,20 @@ pn53x_initiator_select_passive_target_ext (struct nfc_device *pnd,
       uint8_t abtReqt[]="\x10";
       size_t szReqtLen = 1;
       // Getting product code / fab code & store it in output buffer after the serial nr we'll obtain later
-      if ((pn53x_initiator_transceive_bytes (pnd, abtReqt, szReqtLen, abtTargetsData+2, &szTargetsData, timeout) < 0) || szTargetsData != 2) {
-        return false;
+      if ((res = pn53x_initiator_transceive_bytes (pnd, abtReqt, szReqtLen, abtTargetsData+2, &szTargetsData, timeout)) < 0) {
+        return res;        
       }
     }
-    if (pn53x_initiator_transceive_bytes (pnd, pbtInitData, szInitData, abtTargetsData, &szTargetsData, timeout) < 0) {
-      return false;
+    if ((res = pn53x_initiator_transceive_bytes (pnd, pbtInitData, szInitData, abtTargetsData, &szTargetsData, timeout)) < 0) {
+      return res;
     }
     if (nm.nmt == NMT_ISO14443B2CT) {
       if (szTargetsData != 2)
-        return false;
+        return NFC_ECHIP;
       uint8_t abtRead[]="\xC4"; // Reading UID_MSB (Read address 4)
       size_t szReadLen = 1;
-      if ((pn53x_initiator_transceive_bytes (pnd, abtRead, szReadLen, abtTargetsData+4, &szTargetsData, timeout) < 0) || szTargetsData != 2) {
-        return false;
+      if ((res = pn53x_initiator_transceive_bytes (pnd, abtRead, szReadLen, abtTargetsData+4, &szTargetsData, timeout) < 0)) {
+        return res;
       }
       szTargetsData = 6; // u16 UID_LSB, u8 prod code, u8 fab code, u16 UID_MSB
     }
@@ -977,7 +978,7 @@ pn53x_initiator_select_passive_target_ext (struct nfc_device *pnd,
       pnt->nm = nm;
       // Fill the tag info struct with the values corresponding to this init modulation
       if (!pn53x_decode_target_data (abtTargetsData, szTargetsData, CHIP_DATA(pnd)->type, nm.nmt, &(pnt->nti))) {
-        return false;
+        return NFC_ECHIP;
       }
     }
     if (nm.nmt == NMT_ISO14443BI) {
@@ -986,11 +987,11 @@ pn53x_initiator_select_passive_target_ext (struct nfc_device *pnd,
       size_t szAttribLen = sizeof(abtAttrib);
       memcpy(abtAttrib, abtTargetsData, szAttribLen);
       abtAttrib[1] = 0x0f; // ATTRIB
-      if (pn53x_initiator_transceive_bytes (pnd, abtAttrib, szAttribLen, NULL, NULL, timeout) < 0) {
-        return false;
+      if ((res = pn53x_initiator_transceive_bytes (pnd, abtAttrib, szAttribLen, NULL, NULL, timeout)) < 0) {
+        return res;
       }
     }
-    return true;
+    return NFC_SUCCESS;
   } // else:
 
   const pn53x_modulation pm = pn53x_nm_to_pm(nm);
@@ -1017,7 +1018,7 @@ pn53x_initiator_select_passive_target_ext (struct nfc_device *pnd,
   return true;
 }
 
-bool
+int
 pn53x_initiator_select_passive_target (struct nfc_device *pnd,
                                        const nfc_modulation nm,
                                        const uint8_t *pbtInitData, const size_t szInitData,
@@ -1077,7 +1078,7 @@ pn53x_initiator_poll_target (struct nfc_device *pnd,
           prepare_initiator_data (pnmModulations[n], &pbtInitiatorData, &szInitiatorData);
           const int timeout_ms = uiPeriod * 150;
     
-          if (!pn53x_initiator_select_passive_target_ext (pnd, pnmModulations[n], pbtInitiatorData, szInitiatorData, pnt, timeout_ms)) {
+          if (pn53x_initiator_select_passive_target_ext (pnd, pnmModulations[n], pbtInitiatorData, szInitiatorData, pnt, timeout_ms) < 0) {
             if (pnd->last_error != NFC_ETIMEOUT)
               return false;
           } else {

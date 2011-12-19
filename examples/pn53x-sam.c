@@ -140,7 +140,7 @@ main (int argc, const char *argv[])
         .nmt = NMT_ISO14443A,
         .nbr = NBR_106,
       };
-      if (!nfc_initiator_select_passive_target (pnd, nmSAM, NULL, 0, &nt)) {
+      if (nfc_initiator_select_passive_target (pnd, nmSAM, NULL, 0, &nt) < 0) {
         nfc_perror (pnd, "nfc_initiator_select_passive_target");
         ERR ("%s", "Reading of SAM info failed.");
         exit (EXIT_FAILURE);

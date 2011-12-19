@@ -286,7 +286,7 @@ bool    pn53x_idle (struct nfc_device *pnd);
 
 // NFC device as Initiator functions
 int     pn53x_initiator_init (struct nfc_device *pnd);
-bool    pn53x_initiator_select_passive_target (struct nfc_device *pnd,
+int    pn53x_initiator_select_passive_target (struct nfc_device *pnd,
                                                const nfc_modulation nm,
                                                const uint8_t *pbtInitData, const size_t szInitData,
                                                nfc_target *pnt);

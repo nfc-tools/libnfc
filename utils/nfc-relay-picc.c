@@ -240,7 +240,7 @@ main (int argc, char *argv[])
       .nmt = NMT_ISO14443A,
       .nbr = NBR_106,
     };
-    if (!nfc_initiator_select_passive_target (pndInitiator, nm, NULL, 0, &ntRealTarget)) {
+    if (nfc_initiator_select_passive_target (pndInitiator, nm, NULL, 0, &ntRealTarget) < 0) {
       printf ("Error: no tag was found\n");
       nfc_disconnect (pndInitiator);
       exit (EXIT_FAILURE);

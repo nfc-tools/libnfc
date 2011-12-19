@@ -72,7 +72,7 @@ extern  "C" {
 
 /* NFC initiator: act as "reader" */
   NFC_EXPORT int nfc_initiator_init (nfc_device *pnd);
-  NFC_EXPORT bool nfc_initiator_select_passive_target (nfc_device *pnd, const nfc_modulation nm, const uint8_t *pbtInitData, const size_t szInitData, nfc_target *pnt);
+  NFC_EXPORT int nfc_initiator_select_passive_target (nfc_device *pnd, const nfc_modulation nm, const uint8_t *pbtInitData, const size_t szInitData, nfc_target *pnt);
   NFC_EXPORT int nfc_initiator_list_passive_targets (nfc_device *pnd, const nfc_modulation nm, nfc_target ant[], const size_t szTargets);
   NFC_EXPORT bool nfc_initiator_poll_target (nfc_device *pnd, const nfc_modulation *pnmTargetTypes, const size_t szTargetTypes, const uint8_t uiPollNr, const uint8_t uiPeriod, nfc_target *pnt);
   NFC_EXPORT bool nfc_initiator_select_dep_target (nfc_device *pnd, const nfc_dep_mode ndm, const nfc_baud_rate nbr, const nfc_dep_info *pndiInitiator, nfc_target *pnt, const int timeout);
