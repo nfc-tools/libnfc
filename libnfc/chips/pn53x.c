@@ -1534,7 +1534,7 @@ pn53x_initiator_deselect_target (struct nfc_device *pnd)
 
 #define SAK_ISO14443_4_COMPLIANT 0x20
 #define SAK_ISO18092_COMPLIANT   0x40
-bool
+int
 pn53x_target_init (struct nfc_device *pnd, nfc_target *pnt, uint8_t *pbtRx, size_t *pszRx)
 {
   pn53x_reset_settings(pnd);
@@ -1548,7 +1548,7 @@ pn53x_target_init (struct nfc_device *pnd, nfc_target *pnt, uint8_t *pbtRx, size
       ptm = PTM_PASSIVE_ONLY;
       if ((pnt->nti.nai.abtUid[0] != 0x08) || (pnt->nti.nai.szUidLen != 4)) {
         pnd->last_error = NFC_EINVARG;
-        return false;
+        return pnd->last_error;
       }
       pn53x_set_parameters (pnd, PARAM_AUTO_ATR_RES, false);
       if (CHIP_DATA(pnd)->type == PN532) { // We have a PN532
@@ -1577,13 +1577,13 @@ pn53x_target_init (struct nfc_device *pnd, nfc_target *pnt, uint8_t *pbtRx, size
     case NMT_ISO14443B2CT:
     case NMT_JEWEL:
       pnd->last_error = NFC_EDEVNOTSUPP;
-      return false;
+      return pnd->last_error;
     break;
   }
 
   // Let the PN53X be activated by the RF level detector from power down mode
   if (!pn53x_write_register (pnd, PN53X_REG_CIU_TxAuto, SYMBOL_INITIAL_RF_ON, 0x04))
-    return false;
+    return NFC_ECHIP;
 
   uint8_t abtMifareParams[6];
   uint8_t *pbtMifareParams = NULL;
@@ -1679,7 +1679,7 @@ pn53x_target_init (struct nfc_device *pnd, nfc_target *pnt, uint8_t *pbtRx, size
     case NMT_ISO14443B2CT:
     case NMT_JEWEL:
       pnd->last_error = NFC_EDEVNOTSUPP;
-      return false;
+      return pnd->last_error;
     break;
   }
 
@@ -1688,7 +1688,7 @@ pn53x_target_init (struct nfc_device *pnd, nfc_target *pnt, uint8_t *pbtRx, size
     uint8_t btActivatedMode;
 
     if(!pn53x_TgInitAsTarget(pnd, ptm, pbtMifareParams, pbtTkt, szTkt, pbtFeliCaParams, pbtNFCID3t, pbtGBt, szGBt, pbtRx, pszRx, &btActivatedMode)) {
-      return false;
+      return NFC_ECHIP;
     }
 
     nfc_modulation nm = {
@@ -1752,7 +1752,7 @@ pn53x_target_init (struct nfc_device *pnd, nfc_target *pnt, uint8_t *pbtRx, size
     }
   }
 
-  return true;
+  return NFC_SUCCESS;
 }
 
 bool

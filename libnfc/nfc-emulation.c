@@ -35,7 +35,7 @@ nfc_emulate_target (nfc_device *pnd, struct nfc_emulator *emulator)
   uint8_t abtTx[ISO7816_SHORT_C_APDU_MAX_LEN];
   int res = 0;
 
-  if (!nfc_target_init (pnd, emulator->target, abtRx, &szRx)) {
+  if (nfc_target_init (pnd, emulator->target, abtRx, &szRx) < 0) {
     return -1;
   }
 

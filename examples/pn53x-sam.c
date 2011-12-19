@@ -173,7 +173,7 @@ main (int argc, const char *argv[])
       };
       printf ("Now both, NFC device (configured as target) and SAM are readables from an external NFC initiator.\n");
       printf ("Please note that NFC device (configured as target) stay in target mode until it receive RATS, ATR_REQ or proprietary command.\n");
-      if (!nfc_target_init (pnd, &nt, abtRx, &szRx)) {
+      if (nfc_target_init (pnd, &nt, abtRx, &szRx) < 0) {
         nfc_perror(pnd, "nfc_target_init");
         return EXIT_FAILURE;
       }

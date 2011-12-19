@@ -601,7 +601,7 @@ nfc_initiator_transceive_bits_timed (nfc_device *pnd, const uint8_t *pbtTx, cons
 
 /**
  * @brief Initialize NFC device as an emulated tag
- * @return Returns \c true if action was successfully performed; otherwise returns \c false.
+ * @return Returns 0 on success, otherwise returns libnfc's error code
  *
  * @param pnd \a nfc_device struct pointer that represent currently used device
  * @param ntm target mode restriction that you want to emulate (eg. NTM_PASSIVE_ONLY)
@@ -629,31 +629,32 @@ nfc_initiator_transceive_bits_timed (nfc_device *pnd, const uint8_t *pbtTx, cons
  * example would wake up the emulator. After this is received, the send and
  * receive functions can be used.
  */
-bool
+int
 nfc_target_init (nfc_device *pnd, nfc_target *pnt, uint8_t *pbtRx, size_t * pszRx)
 {
+  int res = 0;
   // Disallow invalid frame
-  if (nfc_device_set_property_bool (pnd, NP_ACCEPT_INVALID_FRAMES, false) < 0)
+  if ((res = nfc_device_set_property_bool (pnd, NP_ACCEPT_INVALID_FRAMES, false)) < 0)
     return false;
   // Disallow multiple frames
-  if (nfc_device_set_property_bool (pnd, NP_ACCEPT_MULTIPLE_FRAMES, false) < 0)
+  if ((res = nfc_device_set_property_bool (pnd, NP_ACCEPT_MULTIPLE_FRAMES, false)) < 0)
     return false;
   // Make sure we reset the CRC and parity to chip handling.
-  if (nfc_device_set_property_bool (pnd, NP_HANDLE_CRC, true) < 0)
+  if ((res = nfc_device_set_property_bool (pnd, NP_HANDLE_CRC, true)) < 0)
     return false;
-  if (nfc_device_set_property_bool (pnd, NP_HANDLE_PARITY, true) < 0)
+  if ((res = nfc_device_set_property_bool (pnd, NP_HANDLE_PARITY, true)) < 0)
     return false;
   // Activate auto ISO14443-4 switching by default
-  if (nfc_device_set_property_bool (pnd, NP_AUTO_ISO14443_4, true) < 0)
+  if ((res = nfc_device_set_property_bool (pnd, NP_AUTO_ISO14443_4, true)) < 0)
     return false;
   // Activate "easy framing" feature by default
-  if (nfc_device_set_property_bool (pnd, NP_EASY_FRAMING, true) < 0)
+  if ((res = nfc_device_set_property_bool (pnd, NP_EASY_FRAMING, true)) < 0)
     return false;
   // Deactivate the CRYPTO1 cipher, it may could cause problems when still active
-  if (nfc_device_set_property_bool (pnd, NP_ACTIVATE_CRYPTO1, false) < 0)
+  if ((res = nfc_device_set_property_bool (pnd, NP_ACTIVATE_CRYPTO1, false)) < 0)
     return false;
   // Drop explicitely the field
-  if (nfc_device_set_property_bool (pnd, NP_ACTIVATE_FIELD, false) < 0)
+  if ((res = nfc_device_set_property_bool (pnd, NP_ACTIVATE_FIELD, false)) < 0)
     return false;
 
   HAL (target_init, pnd, pnt, pbtRx, pszRx);

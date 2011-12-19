@@ -155,7 +155,7 @@ main (int argc, char *argv[])
       },
     },
   };
-  if (!nfc_target_init (pnd, &nt, abtRecv, &szRecvBits)) {
+  if (nfc_target_init (pnd, &nt, abtRecv, &szRecvBits) < 0) {
     nfc_perror (pnd, "nfc_target_init");
     ERR ("Could not come out of auto-emulation, no command was received");
     goto error;
