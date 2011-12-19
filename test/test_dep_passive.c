@@ -149,15 +149,16 @@ initiator_thread (void *arg)
   sleep (1);
   printf ("=========== INITIATOR %s =========\n", nfc_device_get_name (device));
 
-  bool res = nfc_initiator_init (device);
-  cut_assert_equal_int (0, res, cut_message ("Can't initialize NFC device as initiator: %s", nfc_strerror (device)));
-  if (!res) { thread_res = -1; return (void*) thread_res; }
+  int ires = nfc_initiator_init (device);
+  printf ("IRES: %d\n", ires);
+  cut_assert_equal_int (0, ires, cut_message ("Can't initialize NFC device as initiator: %s", nfc_strerror (device)));
+  if (ires < 0) { thread_res = -1; return (void*) thread_res; }
 
   nfc_target nt;
 
   // Passive mode / 106Kbps
   printf ("=========== INITIATOR %s (Passive mode / 106Kbps) =========\n", nfc_device_get_name (device));
-  res = nfc_initiator_select_dep_target (device, NDM_PASSIVE, NBR_106, NULL, &nt, 5000);
+  bool res = nfc_initiator_select_dep_target (device, NDM_PASSIVE, NBR_106, NULL, &nt, 5000);
   cut_assert_true (res, cut_message ("Can't select any DEP target: %s", nfc_strerror (device)));
   cut_assert_equal_int (NMT_DEP, nt.nm.nmt, cut_message ("Invalid target modulation"));
   cut_assert_equal_int (NBR_106, nt.nm.nbr, cut_message ("Invalid target baud rate"));

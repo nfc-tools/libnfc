@@ -699,6 +699,7 @@ pn53x_set_property_bool (struct nfc_device *pnd, const nfc_property property, co
       if (!pn53x_write_register (pnd, PN53X_REG_CIU_RxMode, SYMBOL_RX_CRC_ENABLE, btValue))
         return NFC_ECHIP;
       pnd->bCrc = bEnable;
+      return NFC_SUCCESS;
       break;
 
     case NP_HANDLE_PARITY:
@@ -710,15 +711,18 @@ pn53x_set_property_bool (struct nfc_device *pnd, const nfc_property property, co
       if (!pn53x_write_register (pnd, PN53X_REG_CIU_ManualRCV, SYMBOL_PARITY_DISABLE, btValue))
         return NFC_ECHIP;
       pnd->bPar = bEnable;
+      return NFC_SUCCESS;
       break;
 
     case NP_EASY_FRAMING:
       pnd->bEasyFraming = bEnable;
+      return NFC_SUCCESS;
       break;
 
     case NP_ACTIVATE_FIELD:
     {
-      return pn53x_RFConfiguration__RF_field (pnd, bEnable);
+      if (pn53x_RFConfiguration__RF_field (pnd, bEnable))
+        return NFC_SUCCESS;
     }
     break;
 
@@ -726,6 +730,7 @@ pn53x_set_property_bool (struct nfc_device *pnd, const nfc_property property, co
       btValue = (bEnable) ? SYMBOL_MF_CRYPTO1_ON : 0x00;
       if (!pn53x_write_register (pnd, PN53X_REG_CIU_Status2, SYMBOL_MF_CRYPTO1_ON, btValue))
         return NFC_ECHIP;
+      return NFC_SUCCESS;
       break;
 
     case NP_INFINITE_SELECT:
@@ -733,11 +738,12 @@ pn53x_set_property_bool (struct nfc_device *pnd, const nfc_property property, co
       // TODO Made some research around this point:
       // timings could be tweak better than this, and maybe we can tweak timings
       // to "gain" a sort-of hardware polling (ie. like PN532 does)
-      return pn53x_RFConfiguration__MaxRetries (pnd, 
+      if (pn53x_RFConfiguration__MaxRetries (pnd, 
         (bEnable) ? 0xff : 0x00,        // MxRtyATR, default: active = 0xff, passive = 0x02
         (bEnable) ? 0xff : 0x00,        // MxRtyPSL, default: 0x01
         (bEnable) ? 0xff : 0x02         // MxRtyPassiveActivation, default: 0xff (0x00 leads to problems with PN531)
-      );
+      ))
+        return NFC_SUCCESS;
     }
     break;
 
@@ -745,6 +751,7 @@ pn53x_set_property_bool (struct nfc_device *pnd, const nfc_property property, co
       btValue = (bEnable) ? SYMBOL_RX_NO_ERROR : 0x00;
       if (!pn53x_write_register (pnd, PN53X_REG_CIU_RxMode, SYMBOL_RX_NO_ERROR, btValue))
         return NFC_ECHIP;
+      return NFC_SUCCESS;
       break;
 
     case NP_ACCEPT_MULTIPLE_FRAMES:
@@ -759,7 +766,8 @@ pn53x_set_property_bool (struct nfc_device *pnd, const nfc_property property, co
         // Nothing to do
         return NFC_SUCCESS;
       pnd->bAutoIso14443_4 = bEnable;
-      return pn53x_set_parameters (pnd, PARAM_AUTO_RATS, bEnable);
+      if (pn53x_set_parameters (pnd, PARAM_AUTO_RATS, bEnable))
+        return NFC_SUCCESS;
       break;
 
     case NP_FORCE_ISO14443_A:
