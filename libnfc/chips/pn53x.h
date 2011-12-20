@@ -266,7 +266,7 @@ extern const uint8_t pn53x_nack_frame[6];
 bool    pn53x_init(struct nfc_device *pnd);
 int    pn53x_transceive (struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szTx, uint8_t *pbtRx, size_t *pszRx, int timeout);
 
-bool    pn53x_set_parameters (struct nfc_device *pnd, const uint8_t ui8Value, const bool bEnable);
+int    pn53x_set_parameters (struct nfc_device *pnd, const uint8_t ui8Value, const bool bEnable);
 bool    pn53x_set_tx_bits (struct nfc_device *pnd, const uint8_t ui8Bits);
 bool    pn53x_wrap_frame (const uint8_t *pbtTx, const size_t szTxBits, const uint8_t *pbtTxPar, uint8_t *pbtFrame,
                           size_t *pszFrameBits);
@@ -322,7 +322,7 @@ bool    pn53x_target_send_bytes (struct nfc_device *pnd, const uint8_t *pbtTx, c
 const char *pn53x_strerror (const struct nfc_device *pnd);
 
 // C wrappers for PN53x commands
-bool    pn53x_SetParameters (struct nfc_device *pnd, const uint8_t ui8Value);
+int    pn53x_SetParameters (struct nfc_device *pnd, const uint8_t ui8Value);
 int    pn53x_SAMConfiguration (struct nfc_device *pnd, const pn532_sam_mode mode, int timeout);
 int    pn53x_PowerDown (struct nfc_device *pnd);
 int    pn53x_InListPassiveTarget (struct nfc_device *pnd, const pn53x_modulation pmInitModulation,

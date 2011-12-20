@@ -74,7 +74,7 @@ pn53x_init(struct nfc_device *pnd)
 
   // We can't read these parameters, so we set a default config by using the SetParameters wrapper
   // Note: pn53x_SetParameters() will save the sent value in pnd->ui8Parameters cache
-  if(!pn53x_SetParameters(pnd, PARAM_AUTO_ATR_RES | PARAM_AUTO_RATS)) {
+  if(pn53x_SetParameters(pnd, PARAM_AUTO_ATR_RES | PARAM_AUTO_RATS) < 0) {
     return false;
   }
 
@@ -195,14 +195,14 @@ pn53x_transceive (struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szT
   return ((0 == CHIP_DATA(pnd)->last_status_byte) ? NFC_SUCCESS : NFC_ECHIP);
 }
 
-bool
+int
 pn53x_set_parameters (struct nfc_device *pnd, const uint8_t ui8Parameter, const bool bEnable)
 {
   uint8_t ui8Value = (bEnable) ? (CHIP_DATA (pnd)->ui8Parameters | ui8Parameter) : (CHIP_DATA (pnd)->ui8Parameters & ~(ui8Parameter));
   if (ui8Value != CHIP_DATA (pnd)->ui8Parameters) {
     return pn53x_SetParameters(pnd, ui8Value);
   }
-  return true;
+  return NFC_SUCCESS;
 }
 
 bool
@@ -761,7 +761,7 @@ pn53x_set_property_bool (struct nfc_device *pnd, const nfc_property property, co
         // Nothing to do
         return NFC_SUCCESS;
       pnd->bAutoIso14443_4 = bEnable;
-      if (pn53x_set_parameters (pnd, PARAM_AUTO_RATS, bEnable))
+      if (pn53x_set_parameters (pnd, PARAM_AUTO_RATS, bEnable) == 0)
         return NFC_SUCCESS;
       break;
 
@@ -2010,17 +2010,18 @@ pn53x_RFConfiguration__MaxRetries (struct nfc_device *pnd, const uint8_t MxRtyAT
   return pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, NULL, -1);
 }
 
-bool
+int
 pn53x_SetParameters (struct nfc_device *pnd, const uint8_t ui8Value)
 {
   uint8_t  abtCmd[] = { SetParameters, ui8Value };
+  int res = 0;
 
-  if(pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, NULL, -1) < 0) {
-    return false;
+  if((res = pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, NULL, -1)) < 0) {
+    return res;
   }
   // We save last parameters in register cache
   CHIP_DATA (pnd)->ui8Parameters = ui8Value;
-  return true;
+  return NFC_SUCCESS;
 }
 
 int
