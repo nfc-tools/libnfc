@@ -11,7 +11,7 @@ test_register_endianness (void)
 {
     nfc_connstring connstrings[MAX_DEVICE_COUNT];
     size_t device_count;
-    bool res;
+    int res = 0;
 
     nfc_list_devices (connstrings, MAX_DEVICE_COUNT, &device_count);
     if (!device_count)
@@ -30,7 +30,7 @@ test_register_endianness (void)
 
     /* Get test value from register memory */
     res = pn53x_read_register (device, PN53X_REG_CIU_TxMode, &value);
-    cut_assert_true (res, cut_message ("read register value"));
+    cut_assert_equal_int (0, res, cut_message ("read register value"));
     cut_assert_equal_uint (0xAA, value, cut_message ("check register value"));
 
     /* Set a 0x55 test value in writable register memory to test register access */
@@ -39,7 +39,7 @@ test_register_endianness (void)
 
     /* Get test value from register memory */
     res = pn53x_read_register (device, PN53X_REG_CIU_TxMode, &value);
-    cut_assert_true (res, cut_message ("read register value"));
+    cut_assert_equal_int (0, res, cut_message ("read register value"));
     cut_assert_equal_uint (0x55, value, cut_message ("check register value"));
 
     nfc_disconnect (device);

@@ -710,7 +710,7 @@ pn53x_usb_init (nfc_device *pnd)
     pn53x_usb_ack (pnd);
   }
 
-  if (!pn53x_init (pnd))
+  if (pn53x_init (pnd) < 0)
     return false;
 
   if (ASK_LOGO == DRIVER_DATA (pnd)->model) {

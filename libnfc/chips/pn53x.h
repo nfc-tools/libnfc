@@ -263,11 +263,11 @@ typedef enum {
 extern const uint8_t pn53x_ack_frame[6];
 extern const uint8_t pn53x_nack_frame[6];
 
-bool    pn53x_init(struct nfc_device *pnd);
+int    pn53x_init(struct nfc_device *pnd);
 int    pn53x_transceive (struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szTx, uint8_t *pbtRx, size_t *pszRx, int timeout);
 
 int    pn53x_set_parameters (struct nfc_device *pnd, const uint8_t ui8Value, const bool bEnable);
-bool    pn53x_set_tx_bits (struct nfc_device *pnd, const uint8_t ui8Bits);
+int    pn53x_set_tx_bits (struct nfc_device *pnd, const uint8_t ui8Bits);
 bool    pn53x_wrap_frame (const uint8_t *pbtTx, const size_t szTxBits, const uint8_t *pbtTxPar, uint8_t *pbtFrame,
                           size_t *pszFrameBits);
 bool    pn53x_unwrap_frame (const uint8_t *pbtFrame, const size_t szFrameBits, uint8_t *pbtRx, size_t *pszRxBits,
@@ -275,7 +275,7 @@ bool    pn53x_unwrap_frame (const uint8_t *pbtFrame, const size_t szFrameBits, u
 bool    pn53x_decode_target_data (const uint8_t *pbtRawData, size_t szRawData,
                                   pn53x_type chip_type, nfc_modulation_type nmt,
                                   nfc_target_info *pnti);
-bool    pn53x_read_register (struct nfc_device *pnd, uint16_t ui16Reg, uint8_t *ui8Value);
+int    pn53x_read_register (struct nfc_device *pnd, uint16_t ui16Reg, uint8_t *ui8Value);
 int    pn53x_write_register (struct nfc_device *pnd, uint16_t ui16Reg, uint8_t ui8SymbolMask, uint8_t ui8Value);
 bool    pn53x_get_firmware_version (struct nfc_device *pnd, char abtFirmwareText[22]);
 int     pn53x_set_property_int (struct nfc_device *pnd, const nfc_property property, const int value);
@@ -331,7 +331,7 @@ int    pn53x_InListPassiveTarget (struct nfc_device *pnd, const pn53x_modulation
                                    int timeout);
 int    pn53x_InDeselect (struct nfc_device *pnd, const uint8_t ui8Target);
 int    pn53x_InRelease (struct nfc_device *pnd, const uint8_t ui8Target);
-bool    pn53x_InAutoPoll (struct nfc_device *pnd, const pn53x_target_type *ppttTargetTypes, const size_t szTargetTypes,
+int    pn53x_InAutoPoll (struct nfc_device *pnd, const pn53x_target_type *ppttTargetTypes, const size_t szTargetTypes,
                           const uint8_t btPollNr, const uint8_t btPeriod, nfc_target *pntTargets,
                           size_t *pszTargetFound,
                           const int timeout);
@@ -342,7 +342,7 @@ bool    pn53x_InJumpForDEP (struct nfc_device *pnd,
                             const uint8_t *pbtGB, const size_t szGB,
                             nfc_target *pnt,
                             const int timeout);
-bool	pn53x_TgInitAsTarget (struct nfc_device *pnd, pn53x_target_mode ptm,
+int    pn53x_TgInitAsTarget (struct nfc_device *pnd, pn53x_target_mode ptm,
                               const uint8_t *pbtMifareParams,
                               const uint8_t *pbtTkt, size_t szTkt,
                               const uint8_t *pbtFeliCaParams,
