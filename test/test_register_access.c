@@ -26,7 +26,7 @@ test_register_endianness (void)
 
     /* Set a 0xAA test value in writable register memory to test register access */
     res = pn53x_write_register (device, PN53X_REG_CIU_TxMode, 0xFF, 0xAA);
-    cut_assert_true (res, cut_message ("write register value to 0xAA"));
+    cut_assert_equal_int (0, res, cut_message ("write register value to 0xAA"));
 
     /* Get test value from register memory */
     res = pn53x_read_register (device, PN53X_REG_CIU_TxMode, &value);
@@ -35,7 +35,7 @@ test_register_endianness (void)
 
     /* Set a 0x55 test value in writable register memory to test register access */
     res = pn53x_write_register (device, PN53X_REG_CIU_TxMode, 0xFF, 0x55);
-    cut_assert_true (res, cut_message ("write register value to 0x55"));
+    cut_assert_equal_int (0, res, cut_message ("write register value to 0x55"));
 
     /* Get test value from register memory */
     res = pn53x_read_register (device, PN53X_REG_CIU_TxMode, &value);

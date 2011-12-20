@@ -754,7 +754,7 @@ On ASK LoGO hardware:
 int
 pn53x_usb_set_property_bool (nfc_device *pnd, const nfc_property property, const bool bEnable)
 {
-  int res;
+  int res = 0;
   if ((res = pn53x_set_property_bool (pnd, property, bEnable)) < 0)
     return res;
 
@@ -763,15 +763,15 @@ pn53x_usb_set_property_bool (nfc_device *pnd, const nfc_property property, const
       if (NP_ACTIVATE_FIELD == property) {
         /* Switch on/off LED2 and Progressive Field GPIO according to ACTIVATE_FIELD option */
         log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "Switch progressive field %s", bEnable ? "On" : "Off");
-        if (!pn53x_write_register (pnd, PN53X_SFR_P3, _BV(P31) | _BV(P34), bEnable ? _BV (P34) : _BV (P31)))
+        if ((res = pn53x_write_register (pnd, PN53X_SFR_P3, _BV(P31) | _BV(P34), bEnable ? _BV (P34) : _BV (P31))) < 0)
           return NFC_ECHIP;
       }
       break;
     case SCM_SCL3711:
       if (NP_ACTIVATE_FIELD == property) {
         // Switch on/off LED according to ACTIVATE_FIELD option
-        if (!pn53x_write_register (pnd, PN53X_SFR_P3, _BV (P32), bEnable ? 0 : _BV (P32)))
-          return NFC_ECHIP;
+        if ((res = pn53x_write_register (pnd, PN53X_SFR_P3, _BV (P32), bEnable ? 0 : _BV (P32))) < 0)
+          return res;
       }
       break;
     default:
