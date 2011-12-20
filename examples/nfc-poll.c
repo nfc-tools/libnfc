@@ -90,7 +90,7 @@ main (int argc, const char *argv[])
   const size_t szModulations = 5;
 
   nfc_target nt;
-  bool    res;
+  int res = 0;
 
   pnd = nfc_connect (NULL);
 
@@ -109,7 +109,7 @@ main (int argc, const char *argv[])
     exit (EXIT_FAILURE);
   }
 
-  if (res > 0) {
+  if (res == 0) {
     print_nfc_target ( nt, verbose );
   } else {
     printf ("No target found.\n");

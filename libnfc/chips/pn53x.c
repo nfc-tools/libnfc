@@ -1016,12 +1016,14 @@ pn53x_initiator_select_passive_target (struct nfc_device *pnd,
   return pn53x_initiator_select_passive_target_ext (pnd, nm, pbtInitData, szInitData, pnt, 0);
 }
 
-bool
+int
 pn53x_initiator_poll_target (struct nfc_device *pnd,
                               const nfc_modulation *pnmModulations, const size_t szModulations,
                               const uint8_t uiPollNr, const uint8_t uiPeriod,
                               nfc_target *pnt)
 {
+  int res = 0;
+  
   if (CHIP_DATA(pnd)->type == PN532) {
     size_t szTargetTypes = 0;
     pn53x_target_type apttTargetTypes[32];
@@ -1029,7 +1031,7 @@ pn53x_initiator_poll_target (struct nfc_device *pnd,
       const pn53x_target_type ptt = pn53x_nm_to_ptt(pnmModulations[n]);
       if (PTT_UNDEFINED == ptt) {
         pnd->last_error = NFC_EINVARG;
-        return false;
+        return pnd->last_error;
       }
       apttTargetTypes[szTargetTypes] = ptt;
       if ((pnd->bAutoIso14443_4) && (ptt == PTT_MIFARE)) { // Hack to have ATS
@@ -1041,19 +1043,19 @@ pn53x_initiator_poll_target (struct nfc_device *pnd,
     }
     size_t szTargetFound = 0;
     nfc_target ntTargets[2];
-    if (pn53x_InAutoPoll (pnd, apttTargetTypes, szTargetTypes, uiPollNr, uiPeriod, ntTargets, &szTargetFound, 0) < 0)
-      return false;
+    if ((res = pn53x_InAutoPoll (pnd, apttTargetTypes, szTargetTypes, uiPollNr, uiPeriod, ntTargets, &szTargetFound, 0)) < 0)
+      return res;
     switch (szTargetFound) {
       case 1:
         *pnt = ntTargets[0];
-        return true;
+        return NFC_SUCCESS;
         break;
       case 2:
         *pnt = ntTargets[1]; // We keep the selected one
-        return true;
+        return NFC_SUCCESS;
         break;
       default:
-        return false;
+        return NFC_ECHIP;
       break;
     }
   } else {
@@ -1069,15 +1071,15 @@ pn53x_initiator_poll_target (struct nfc_device *pnd,
     
           if (pn53x_initiator_select_passive_target_ext (pnd, pnmModulations[n], pbtInitiatorData, szInitiatorData, pnt, timeout_ms) < 0) {
             if (pnd->last_error != NFC_ETIMEOUT)
-              return false;
+              return pnd->last_error;
           } else {
-            return true;
+            return NFC_SUCCESS;
           }
         }
       }
     } while (uiPollNr==0xff); // uiPollNr==0xff means infinite polling
   }
-  return false;
+  return NFC_ECHIP;
 }
 
 bool

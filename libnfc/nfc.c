@@ -410,7 +410,7 @@ nfc_initiator_list_passive_targets (nfc_device *pnd,
 
 /**
  * @brief Polling for NFC targets
- * @return Returns \c true if action was successfully performed; otherwise returns \c false.
+ * @return Returns 0 on success, otherwise returns libnfc's error code (negative value).
  *
  * @param pnd \a nfc_device struct pointer that represent currently used device
  * @param ppttTargetTypes array of desired target types
@@ -421,7 +421,7 @@ nfc_initiator_list_passive_targets (nfc_device *pnd,
  * @note e.g. if uiPeriod=10, it will poll each desired target type during 1.5s
  * @param[out] pnt pointer on \a nfc_target (over)writable struct
  */
-bool
+int
 nfc_initiator_poll_target (nfc_device *pnd,
                            const nfc_modulation *pnmModulations, const size_t szModulations,
                            const uint8_t uiPollNr, const uint8_t uiPeriod,
