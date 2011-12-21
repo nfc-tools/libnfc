@@ -989,12 +989,8 @@ pn53x_initiator_select_passive_target_ext (struct nfc_device *pnd,
     return pnd->last_error;
   }
 
-  if ((res = pn53x_InListPassiveTarget (pnd, pm, 1, pbtInitData, szInitData, abtTargetsData, &szTargetsData, timeout)) < 0)
+  if ((res = pn53x_InListPassiveTarget (pnd, pm, 1, pbtInitData, szInitData, abtTargetsData, &szTargetsData, timeout)) <= 0)
     return res;
-
-  // Make sure one tag has been found, the PN53X returns 0x00 if none was available
-  if (res == 0)
-    return NFC_ECHIP;
 
   // Is a tag info struct available
   if (pnt) {
