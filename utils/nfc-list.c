@@ -138,7 +138,7 @@ main (int argc, const char *argv[])
     nm.nmt = NMT_FELICA;
     nm.nbr = NBR_212;
     // List Felica tags
-    if (nfc_initiator_list_passive_targets (pnd, nm, ant, MAX_TARGET_COUNT) >= 0) {
+    if ((res = nfc_initiator_list_passive_targets (pnd, nm, ant, MAX_TARGET_COUNT)) >= 0) {
       int n;
       if (verbose) {
         printf ("%d Felica (212 kbps) passive target(s) found%s\n", res, (res == 0) ? ".\n" : ":");
@@ -150,7 +150,7 @@ main (int argc, const char *argv[])
     }
 
     nm.nbr = NBR_424;
-    if (nfc_initiator_list_passive_targets (pnd, nm, ant, MAX_TARGET_COUNT) >= 0) {
+    if ((res = nfc_initiator_list_passive_targets (pnd, nm, ant, MAX_TARGET_COUNT)) >= 0) {
       int n;
       if (verbose) {
         printf ("%d Felica (424 kbps) passive target(s) found%s\n", res, (res == 0) ? ".\n" : ":");
@@ -164,7 +164,7 @@ main (int argc, const char *argv[])
     nm.nmt = NMT_ISO14443B;
     nm.nbr = NBR_106;
     // List ISO14443B targets
-    if (nfc_initiator_list_passive_targets (pnd, nm, ant, MAX_TARGET_COUNT) >= 0) {
+    if ((res = nfc_initiator_list_passive_targets (pnd, nm, ant, MAX_TARGET_COUNT)) >= 0) {
       int n;
       if (verbose) {
         printf ("%d ISO14443B passive target(s) found%s\n", res, (res == 0) ? ".\n" : ":");
@@ -178,7 +178,7 @@ main (int argc, const char *argv[])
     nm.nmt = NMT_ISO14443BI;
     nm.nbr = NBR_106;
     // List ISO14443B' targets
-    if (nfc_initiator_list_passive_targets (pnd, nm, ant, MAX_TARGET_COUNT) >= 0) {
+    if ((res = nfc_initiator_list_passive_targets (pnd, nm, ant, MAX_TARGET_COUNT)) >= 0) {
       int n;
       if (verbose) {
         printf ("%d ISO14443B' passive target(s) found%s\n", res, (res == 0) ? ".\n" : ":");
@@ -192,7 +192,7 @@ main (int argc, const char *argv[])
     nm.nmt = NMT_ISO14443B2SR;
     nm.nbr = NBR_106;
     // List ISO14443B-2 ST SRx family targets
-    if (nfc_initiator_list_passive_targets (pnd, nm, ant, MAX_TARGET_COUNT) >= 0) {
+    if ((res = nfc_initiator_list_passive_targets (pnd, nm, ant, MAX_TARGET_COUNT)) >= 0) {
       int n;
       if (verbose) {
         printf ("%d ISO14443B-2 ST SRx passive target(s) found%s\n", res, (res == 0) ? ".\n" : ":");
@@ -206,7 +206,7 @@ main (int argc, const char *argv[])
     nm.nmt = NMT_ISO14443B2CT;
     nm.nbr = NBR_106;
     // List ISO14443B-2 ASK CTx family targets
-    if (nfc_initiator_list_passive_targets (pnd, nm, ant, MAX_TARGET_COUNT) >= 0) {
+    if ((res = nfc_initiator_list_passive_targets (pnd, nm, ant, MAX_TARGET_COUNT)) >= 0) {
       int n;
       if (verbose) {
         printf ("%d ISO14443B-2 ASK CTx passive target(s) found%s\n", res, (res == 0) ? ".\n" : ":");
@@ -220,7 +220,7 @@ main (int argc, const char *argv[])
     nm.nmt = NMT_JEWEL;
     nm.nbr = NBR_106;
     // List Jewel targets
-    if (nfc_initiator_list_passive_targets(pnd, nm, ant, MAX_TARGET_COUNT) >= 0) {
+    if ((res = nfc_initiator_list_passive_targets(pnd, nm, ant, MAX_TARGET_COUNT)) >= 0) {
       int n;
       if (verbose) {
         printf("%d Jewel passive target(s) found%s\n", res, (res == 0)?".\n":":");

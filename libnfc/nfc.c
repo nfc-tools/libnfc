@@ -304,7 +304,7 @@ nfc_initiator_init (nfc_device *pnd)
 
 /**
  * @brief Select a passive or emulated tag
- * @return Returns 0 on success, otherwise returns libnfc's error code (negative value)
+ * @return Returns selected passive target count on success, otherwise returns libnfc's error code (negative value)
  *
  * @param pnd \a nfc_device struct pointer that represent currently used device
  * @param nm desired modulation
@@ -381,7 +381,7 @@ nfc_initiator_list_passive_targets (nfc_device *pnd,
 
   prepare_initiator_data (nm, &pbtInitData, &szInitDataLen);
 
-  while (nfc_initiator_select_passive_target (pnd, nm, pbtInitData, szInitDataLen, &nt) == 0) {
+  while (nfc_initiator_select_passive_target (pnd, nm, pbtInitData, szInitDataLen, &nt) > 0) {
     nfc_initiator_deselect_target (pnd);
     if (szTargets == szTargetFound) {
       break;

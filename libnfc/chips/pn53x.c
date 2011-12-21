@@ -980,31 +980,31 @@ pn53x_initiator_select_passive_target_ext (struct nfc_device *pnd,
         return res;
       }
     }
-    return NFC_SUCCESS;
+    return abtTargetsData[0];
   } // else:
 
   const pn53x_modulation pm = pn53x_nm_to_pm(nm);
   if (PM_UNDEFINED == pm) {
     pnd->last_error = NFC_EINVARG;
-    return false;
+    return pnd->last_error;
   }
 
-  if (pn53x_InListPassiveTarget (pnd, pm, 1, pbtInitData, szInitData, abtTargetsData, &szTargetsData, timeout) < 0)
-    return false;
+  if ((res = pn53x_InListPassiveTarget (pnd, pm, 1, pbtInitData, szInitData, abtTargetsData, &szTargetsData, timeout)) < 0)
+    return res;
 
   // Make sure one tag has been found, the PN53X returns 0x00 if none was available
-  if (abtTargetsData[0] == 0)
-    return false;
+  if (res == 0)
+    return NFC_ECHIP;
 
   // Is a tag info struct available
   if (pnt) {
     pnt->nm = nm;
     // Fill the tag info struct with the values corresponding to this init modulation
     if (!pn53x_decode_target_data (abtTargetsData + 1, szTargetsData - 1, CHIP_DATA(pnd)->type, nm.nmt, &(pnt->nti))) {
-      return false;
+      return NFC_ECHIP;
     }
   }
-  return true;
+  return abtTargetsData[0];
 }
 
 int
@@ -2069,7 +2069,7 @@ pn53x_PowerDown (struct nfc_device *pnd)
 
 /**
  * @brief C wrapper to InListPassiveTarget command
- * @return true if command is successfully sent
+ * @return Returns selected targets count on success, otherwise returns libnfc's error code (negative value)
  *
  * @param pnd struct nfc_device struct pointer that represent currently used device
  * @param pmInitModulation Desired modulation
@@ -2130,8 +2130,11 @@ pn53x_InListPassiveTarget (struct nfc_device *pnd,
   // Set the optional initiator data (used for Felica, ISO14443B, Topaz Polling or for ISO14443A selecting a specific UID).
   if (pbtInitiatorData)
     memcpy (abtCmd + 3, pbtInitiatorData, szInitiatorData);
-
-  return pn53x_transceive (pnd, abtCmd, 3 + szInitiatorData, pbtTargetsData, pszTargetsData, timeout);
+  int res = 0;
+  if ((res = pn53x_transceive (pnd, abtCmd, 3 + szInitiatorData, pbtTargetsData, pszTargetsData, timeout)) < 0) {
+    return res;
+  }
+  return pbtTargetsData[0];
 }
 
 int
