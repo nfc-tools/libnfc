@@ -1518,10 +1518,10 @@ pn53x_initiator_transceive_bytes_timed (struct nfc_device *pnd, const uint8_t *p
   return true;
 }
 
-bool
+int
 pn53x_initiator_deselect_target (struct nfc_device *pnd)
 {
-  return ((pn53x_InDeselect (pnd, 0) < 0 ) ? 0 : 1 );   // 0 mean deselect all selected targets
+  return pn53x_InDeselect (pnd, 0);   // 0 mean deselect all selected targets
 }
 
 #define SAK_ISO14443_4_COMPLIANT 0x20

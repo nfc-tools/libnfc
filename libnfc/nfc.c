@@ -456,7 +456,7 @@ nfc_initiator_select_dep_target (nfc_device *pnd,
 
 /**
  * @brief Deselect a selected passive or emulated tag
- * @return Returns \c true if action was successfully performed; otherwise returns \c false.
+ * @return Returns 0 on success, otherwise returns libnfc's error code (negative value).
  * @param pnd \a nfc_device struct pointer that represents currently used device
  *
  * After selecting and communicating with a passive tag, this function could be
@@ -466,7 +466,7 @@ nfc_initiator_select_dep_target (nfc_device *pnd,
  * tag, test it for the available features and support, deselect it and skip to
  * the next tag until the correct tag is found.
  */
-bool
+int
 nfc_initiator_deselect_target (nfc_device *pnd)
 {
   HAL (initiator_deselect_target, pnd);

@@ -142,9 +142,9 @@ initiator_thread (void *arg)
   const uint8_t abtAttRx[] = "Hello DEP initiator!";
   cut_assert_equal_memory (abtAttRx, sizeof (abtAttRx), abtRx, szRx, cut_message ("Invalid received data"));
   if (res < 0) { thread_res = -1; return (void*) thread_res; }
-  bool bres = nfc_initiator_deselect_target (device);
-  cut_assert_true (bres, cut_message ("Can't deselect target: %s", nfc_strerror (device)));
-  if (!bres) { thread_res = -1; return (void*) thread_res; }
+  res = nfc_initiator_deselect_target (device);
+  cut_assert_equal_int (0, res, cut_message ("Can't deselect target: %s", nfc_strerror (device)));
+  if (res < 0) { thread_res = -1; return (void*) thread_res; }
 
   return (void *) thread_res;
 }
