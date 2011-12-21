@@ -400,8 +400,8 @@ main (int argc, char *argv[])
 
     if (!target_only_mode) {
       // Forward the frame to the original tag
-      ret = nfc_initiator_transceive_bytes
-          (pndInitiator, abtCapdu, szCapduLen, abtRapdu, &szRapduLen, 0);
+      ret = (nfc_initiator_transceive_bytes
+          (pndInitiator, abtCapdu, szCapduLen, abtRapdu, &szRapduLen, 0) < 0) ? 0 : 1;
     } else {
       if (scan_hex_fd3(abtRapdu, &szRapduLen, "R-APDU") != EXIT_SUCCESS) {
         fprintf (stderr, "Error while scanning R-APDU from FD3\n");

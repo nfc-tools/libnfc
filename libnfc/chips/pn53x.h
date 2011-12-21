@@ -294,7 +294,7 @@ int    pn53x_initiator_poll_target (struct nfc_device *pnd,
                                      const nfc_modulation *pnmModulations, const size_t szModulations,
                                      const uint8_t uiPollNr, const uint8_t uiPeriod,
                                      nfc_target *pnt);
-bool    pn53x_initiator_select_dep_target (struct nfc_device *pnd,
+int    pn53x_initiator_select_dep_target (struct nfc_device *pnd,
                                            const nfc_dep_mode ndm, const nfc_baud_rate nbr,
                                            const nfc_dep_info *pndiInitiator, 
                                            nfc_target *pnt,
@@ -335,7 +335,7 @@ int    pn53x_InAutoPoll (struct nfc_device *pnd, const pn53x_target_type *ppttTa
                           const uint8_t btPollNr, const uint8_t btPeriod, nfc_target *pntTargets,
                           size_t *pszTargetFound,
                           const int timeout);
-bool    pn53x_InJumpForDEP (struct nfc_device *pnd,
+int    pn53x_InJumpForDEP (struct nfc_device *pnd,
                             const nfc_dep_mode ndm, const nfc_baud_rate nbr,
                             const uint8_t *pbtPassiveInitiatorData,
                             const uint8_t *pbtNFCID3i,

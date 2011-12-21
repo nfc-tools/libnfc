@@ -1082,7 +1082,7 @@ pn53x_initiator_poll_target (struct nfc_device *pnd,
   return NFC_ECHIP;
 }
 
-bool
+int
 pn53x_initiator_select_dep_target(struct nfc_device *pnd,
                                   const nfc_dep_mode ndm, const nfc_baud_rate nbr,
                                   const nfc_dep_info *pndiInitiator,
@@ -2243,7 +2243,7 @@ pn53x_InAutoPoll (struct nfc_device *pnd,
  * @param szGBi count of General Bytes
  * @param[out] pnt \a nfc_target which will be filled by this function
  */
-bool
+int
 pn53x_InJumpForDEP (struct nfc_device *pnd,
                     const nfc_dep_mode ndm,
                     const nfc_baud_rate nbr,
@@ -2271,7 +2271,7 @@ pn53x_InJumpForDEP (struct nfc_device *pnd,
     case NBR_847:
     case NBR_UNDEFINED:
       pnd->last_error = NFC_EINVARG;
-      return false;
+      return pnd->last_error;
     break;
   }
 
@@ -2291,7 +2291,7 @@ pn53x_InJumpForDEP (struct nfc_device *pnd,
       case NBR_847:
       case NBR_UNDEFINED:
         pnd->last_error = NFC_EINVARG;
-        return false;
+        return pnd->last_error;
       break;
     }
   }
@@ -2310,13 +2310,14 @@ pn53x_InJumpForDEP (struct nfc_device *pnd,
 
   uint8_t  abtRx[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
   size_t  szRx = sizeof (abtRx);
+  int res = 0;
   // Try to find a target, call the transceive callback function of the current device
-  if (pn53x_transceive (pnd, abtCmd, offset, abtRx, &szRx, timeout) < 0)
-    return false;
+  if ((res = pn53x_transceive (pnd, abtCmd, offset, abtRx, &szRx, timeout)) < 0)
+    return res;
 
   // Make sure one target has been found, the PN53X returns 0x00 if none was available
   if (abtRx[1] != 1)
-    return false;
+    return NFC_ECHIP;
 
   // Is a target struct available
   if (pnt) {
@@ -2336,7 +2337,7 @@ pn53x_InJumpForDEP (struct nfc_device *pnd,
       pnt->nti.ndi.szGB = 0;
     }
   }
-  return true;
+  return NFC_SUCCESS;
 }
 
 int

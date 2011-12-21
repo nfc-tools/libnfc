@@ -433,7 +433,7 @@ nfc_initiator_poll_target (nfc_device *pnd,
 
 /**
  * @brief Select a target and request active or passive mode for D.E.P. (Data Exchange Protocol)
- * @return Returns \c true if action was successfully performed; otherwise returns \c false.
+ * @return Returns 0 on success, otherwise returns libnfc's error code (negative value).
  *
  * @param pnd \a nfc_device struct pointer that represent currently used device
  * @param ndm desired D.E.P. mode (\a NDM_ACTIVE or \a NDM_PASSIVE for active, respectively passive mode)
@@ -446,7 +446,7 @@ nfc_initiator_poll_target (nfc_device *pnd,
  * 
  * @note \a nfc_dep_info will be returned when the target was acquired successfully.
  */
-bool
+int
 nfc_initiator_select_dep_target (nfc_device *pnd, 
                                  const nfc_dep_mode ndm, const nfc_baud_rate nbr,
                                  const nfc_dep_info *pndiInitiator, nfc_target *pnt, const int timeout)
