@@ -2315,28 +2315,27 @@ pn53x_InJumpForDEP (struct nfc_device *pnd,
     return res;
 
   // Make sure one target has been found, the PN53X returns 0x00 if none was available
-  if (abtRx[1] != 1)
-    return NFC_ECHIP;
-
-  // Is a target struct available
-  if (pnt) {
-    pnt->nm.nmt = NMT_DEP;
-    pnt->nm.nbr = nbr;
-    pnt->nti.ndi.ndm = ndm;
-    memcpy (pnt->nti.ndi.abtNFCID3, abtRx + 2, 10);
-    pnt->nti.ndi.btDID = abtRx[12];
-    pnt->nti.ndi.btBS = abtRx[13];
-    pnt->nti.ndi.btBR = abtRx[14];
-    pnt->nti.ndi.btTO = abtRx[15];
-    pnt->nti.ndi.btPP = abtRx[16];
-    if(szRx > 17) {
-      pnt->nti.ndi.szGB = szRx - 17;
-      memcpy (pnt->nti.ndi.abtGB, abtRx + 17, pnt->nti.ndi.szGB);
-    } else {
-      pnt->nti.ndi.szGB = 0;
+  if (abtRx[1] >= 1) {
+    // Is a target struct available
+    if (pnt) {
+      pnt->nm.nmt = NMT_DEP;
+      pnt->nm.nbr = nbr;
+      pnt->nti.ndi.ndm = ndm;
+      memcpy (pnt->nti.ndi.abtNFCID3, abtRx + 2, 10);
+      pnt->nti.ndi.btDID = abtRx[12];
+      pnt->nti.ndi.btBS = abtRx[13];
+      pnt->nti.ndi.btBR = abtRx[14];
+      pnt->nti.ndi.btTO = abtRx[15];
+      pnt->nti.ndi.btPP = abtRx[16];
+      if(szRx > 17) {
+        pnt->nti.ndi.szGB = szRx - 17;
+        memcpy (pnt->nti.ndi.abtGB, abtRx + 17, pnt->nti.ndi.szGB);
+      } else {
+        pnt->nti.ndi.szGB = 0;
+      }
     }
   }
-  return NFC_SUCCESS;
+  return abtRx[1];
 }
 
 int
