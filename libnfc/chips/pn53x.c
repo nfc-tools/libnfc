@@ -1866,14 +1866,15 @@ pn53x_target_send_bits (struct nfc_device *pnd, const uint8_t *pbtTx, const size
   return true;
 }
 
-bool
+int
 pn53x_target_send_bytes (struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szTx, int timeout)
 {
   uint8_t  abtCmd[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
+  int res = 0;
 
   // We can not just send bytes without parity if while the PN53X expects we handled them
   if (!pnd->bPar)
-    return false;
+    return NFC_ECHIP;
 
   // XXX I think this is not a clean way to provide some kind of "EasyFraming"
   // but at the moment I have no more better than this
@@ -1892,7 +1893,7 @@ pn53x_target_send_bytes (struct nfc_device *pnd, const uint8_t *pbtTx, const siz
           } else {
             // TODO Support EasyFraming for other cases by software
             pnd->last_error = NFC_ENOTIMPL;
-            return false;
+            return pnd->last_error;
           }
         }
       default:
@@ -1905,13 +1906,13 @@ pn53x_target_send_bytes (struct nfc_device *pnd, const uint8_t *pbtTx, const siz
 
   // Copy the data into the command frame
   memcpy (abtCmd + 1, pbtTx, szTx);
-
+  
   // Try to send the bits to the reader
-  if (pn53x_transceive (pnd, abtCmd, szTx + 1, NULL, NULL, timeout) < 0)
-    return false;
+  if ((res = pn53x_transceive (pnd, abtCmd, szTx + 1, NULL, NULL, timeout)) < 0)
+    return res;
 
-  // Everyting seems ok, return true
-  return true;
+  // Everyting seems ok, return sent byte count
+  return szTx;
 }
 
 static struct sErrorMessage {

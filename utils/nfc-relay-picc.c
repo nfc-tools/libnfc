@@ -425,7 +425,7 @@ main (int argc, char *argv[])
       }
       if (!initiator_only_mode) {
         // Transmit the response bytes
-        if (!nfc_target_send_bytes(pndTarget, abtRapdu, szRapduLen, 0)) {
+        if (nfc_target_send_bytes(pndTarget, abtRapdu, szRapduLen, 0) < 0) {
           nfc_perror (pndTarget, "nfc_target_send_bytes");
           if (!target_only_mode) {
             nfc_disconnect (pndInitiator);

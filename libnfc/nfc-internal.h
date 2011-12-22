@@ -143,7 +143,7 @@ struct nfc_driver_t {
   bool (*initiator_transceive_bits_timed) (struct nfc_device *pnd, const uint8_t * pbtTx, const size_t szTxBits, const uint8_t * pbtTxPar, uint8_t * pbtRx, size_t * pszRxBits, uint8_t * pbtRxPar, uint32_t * cycles);
 
   int (*target_init) (struct nfc_device *pnd, nfc_target * pnt, uint8_t * pbtRx, size_t * pszRx);
-  bool (*target_send_bytes) (struct nfc_device *pnd, const uint8_t * pbtTx, const size_t szTx, int timeout);
+  int (*target_send_bytes) (struct nfc_device *pnd, const uint8_t * pbtTx, const size_t szTx, int timeout);
   int (*target_receive_bytes) (struct nfc_device *pnd, uint8_t * pbtRx, size_t * pszRx, int timeout);
   bool (*target_send_bits) (struct nfc_device *pnd, const uint8_t * pbtTx, const size_t szTxBits, const uint8_t * pbtTxPar);
   bool (*target_receive_bits) (struct nfc_device *pnd, uint8_t * pbtRx, size_t * pszRxBits, uint8_t * pbtRxPar);

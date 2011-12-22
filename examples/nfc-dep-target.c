@@ -133,7 +133,7 @@ main (int argc, const char *argv[])
   printf ("Received: %s\n", abtRx);
 
   printf ("Sending: %s\n", abtTx);
-  if (!nfc_target_send_bytes (pnd, abtTx, sizeof(abtTx), 0)) {
+  if (nfc_target_send_bytes (pnd, abtTx, sizeof(abtTx), 0) < 0) {
     nfc_perror(pnd, "nfc_target_send_bytes");
     goto error;
   }

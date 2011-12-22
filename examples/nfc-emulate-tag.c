@@ -148,7 +148,7 @@ nfc_target_emulate_tag(nfc_device *pnd, nfc_target *pnt)
   while ( loop ) {
     loop = target_io( pnt, abtRx, szRx, abtTx, &szTx );
     if (szTx) {
-      if (!nfc_target_send_bytes(pnd, abtTx, szTx, 0)) {
+      if (nfc_target_send_bytes(pnd, abtTx, szTx, 0) < 0) {
         nfc_perror (pnd, "nfc_target_send_bytes");
         return false;
       }
