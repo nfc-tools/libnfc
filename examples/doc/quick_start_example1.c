@@ -28,7 +28,7 @@ main (int argc, const char *argv[])
   // Set connected NFC device to initiator mode
   nfc_initiator_init (pnd);
 
-  printf ("Connected to NFC reader: %s\n", pnd->acName);
+  printf ("Connected to NFC reader: %s\n", nfc_device_get_name (pnd));
 
   // Poll for a ISO14443A (MIFARE) tag
   const nfc_modulation nmMifare = {
