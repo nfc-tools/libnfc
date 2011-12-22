@@ -1037,18 +1037,17 @@ pn53x_initiator_poll_target (struct nfc_device *pnd,
       }
       szTargetTypes++;
     }
-    size_t szTargetFound = 0;
     nfc_target ntTargets[2];
-    if ((res = pn53x_InAutoPoll (pnd, apttTargetTypes, szTargetTypes, uiPollNr, uiPeriod, ntTargets, &szTargetFound, 0)) < 0)
+    if ((res = pn53x_InAutoPoll (pnd, apttTargetTypes, szTargetTypes, uiPollNr, uiPeriod, ntTargets, 0)) < 0)
       return res;
-    switch (szTargetFound) {
+    switch (res) {
       case 1:
         *pnt = ntTargets[0];
-        return NFC_SUCCESS;
+        return res;
         break;
       case 2:
         *pnt = ntTargets[1]; // We keep the selected one
-        return NFC_SUCCESS;
+        return res;
         break;
       default:
         return NFC_ECHIP;
@@ -1065,11 +1064,12 @@ pn53x_initiator_poll_target (struct nfc_device *pnd,
           prepare_initiator_data (pnmModulations[n], &pbtInitiatorData, &szInitiatorData);
           const int timeout_ms = uiPeriod * 150;
     
-          if (pn53x_initiator_select_passive_target_ext (pnd, pnmModulations[n], pbtInitiatorData, szInitiatorData, pnt, timeout_ms) < 0) {
-            if (pnd->last_error != NFC_ETIMEOUT)
+          if ((res = pn53x_initiator_select_passive_target_ext (pnd, pnmModulations[n], pbtInitiatorData, szInitiatorData, pnt, timeout_ms)) < 0) {
+            if (pnd->last_error != NFC_ETIMEOUT) {
               return pnd->last_error;
+            }
           } else {
-            return NFC_SUCCESS;
+            return res;
           }
         }
       }
@@ -2182,9 +2182,9 @@ pn53x_InRelease (struct nfc_device *pnd, const uint8_t ui8Target)
 int
 pn53x_InAutoPoll (struct nfc_device *pnd,
                   const pn53x_target_type *ppttTargetTypes, const size_t szTargetTypes,
-                  const uint8_t btPollNr, const uint8_t btPeriod, nfc_target * pntTargets, size_t *pszTargetFound,
-                  const int timeout)
+                  const uint8_t btPollNr, const uint8_t btPeriod, nfc_target * pntTargets, const int timeout)
 {
+  size_t szTargetFound = 0;
   if (CHIP_DATA(pnd)->type != PN532) {
     // This function is not supported by pn531 neither pn533
     pnd->last_error = NFC_EDEVNOTSUPP;
@@ -2205,8 +2205,8 @@ pn53x_InAutoPoll (struct nfc_device *pnd,
   if (res < 0) {
     return res;
   } else if (szRx > 0) {
-    *pszTargetFound = abtRx[0];
-    if (*pszTargetFound) {
+    szTargetFound = abtRx[0];
+    if (szTargetFound > 0) {
       uint8_t ln;
       uint8_t *pbt = abtRx + 1;
       /* 1st target */
@@ -2229,7 +2229,7 @@ pn53x_InAutoPoll (struct nfc_device *pnd,
       }
     }
   }
-  return NFC_SUCCESS;
+  return szTargetFound;
 }
 
 /**

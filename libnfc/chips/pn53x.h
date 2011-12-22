@@ -333,7 +333,6 @@ int    pn53x_InDeselect (struct nfc_device *pnd, const uint8_t ui8Target);
 int    pn53x_InRelease (struct nfc_device *pnd, const uint8_t ui8Target);
 int    pn53x_InAutoPoll (struct nfc_device *pnd, const pn53x_target_type *ppttTargetTypes, const size_t szTargetTypes,
                           const uint8_t btPollNr, const uint8_t btPeriod, nfc_target *pntTargets,
-                          size_t *pszTargetFound,
                           const int timeout);
 int    pn53x_InJumpForDEP (struct nfc_device *pnd,
                             const nfc_dep_mode ndm, const nfc_baud_rate nbr,

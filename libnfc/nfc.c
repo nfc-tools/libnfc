@@ -410,7 +410,7 @@ nfc_initiator_list_passive_targets (nfc_device *pnd,
 
 /**
  * @brief Polling for NFC targets
- * @return Returns 0 on success, otherwise returns libnfc's error code (negative value).
+ * @return Returns polled targets count, otherwise returns libnfc's error code (negative value).
  *
  * @param pnd \a nfc_device struct pointer that represent currently used device
  * @param ppttTargetTypes array of desired target types

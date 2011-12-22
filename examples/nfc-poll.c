@@ -109,7 +109,7 @@ main (int argc, const char *argv[])
     exit (EXIT_FAILURE);
   }
 
-  if (res == 0) {
+  if (res > 0) {
     print_nfc_target ( nt, verbose );
   } else {
     printf ("No target found.\n");
