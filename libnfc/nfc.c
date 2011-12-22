@@ -716,7 +716,7 @@ nfc_target_send_bytes (nfc_device *pnd, const uint8_t *pbtTx, const size_t szTx,
 
 /**
  * @brief Receive bytes and APDU frames
- * @return Returns \c true if action was successfully performed; otherwise returns \c false.
+ * @return Returns received bytes count on success, otherwise returns libnfc's error code
  * 
  * @param pnd \a nfc_device struct pointer that represent currently used device
  * @param[out] pbtRx pointer to Rx buffer
@@ -728,7 +728,7 @@ nfc_target_send_bytes (nfc_device *pnd, const uint8_t *pbtTx, const size_t szTx,
  * If timeout is not a null pointer, it specifies the maximum interval to wait for the function to be executed.
  * If timeout is a null pointer, the function blocks indefinitely (until an error is raised or function is completed).
  */
-bool
+int
 nfc_target_receive_bytes (nfc_device *pnd, uint8_t *pbtRx, size_t *pszRx, int timeout)
 {
   HAL (target_receive_bytes, pnd, pbtRx, pszRx, timeout);

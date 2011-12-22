@@ -88,15 +88,15 @@ target_thread (void *arg)
   cut_assert_equal_int (0, ires, cut_message ("Can't initialize NFC device as target: %s", nfc_strerror (device)));
   if (ires < 0) { thread_res = -1; return (void*) thread_res; }
 
-  bool res = nfc_target_receive_bytes (device, abtRx, &szRx, 500);
-  cut_assert_true (res, cut_message ("Can't receive bytes from initiator: %s", nfc_strerror (device)));
+  ires = nfc_target_receive_bytes (device, abtRx, &szRx, 500);
+  cut_assert_operator_int (ires, >, 0, cut_message ("Can't receive bytes from initiator: %s", nfc_strerror (device)));
 
   const uint8_t abtAttRx[] = "Hello DEP target!";
   cut_assert_equal_memory (abtAttRx, sizeof (abtAttRx), abtRx, szRx, cut_message ("Invalid received data"));
-  if (!res) { thread_res = -1; return (void*) thread_res; }
+  if (ires <= 0) { thread_res = -1; return (void*) thread_res; }
   
   const uint8_t abtTx[] = "Hello DEP initiator!";
-  res = nfc_target_send_bytes (device, abtTx, sizeof(abtTx), 500);
+  bool res = nfc_target_send_bytes (device, abtTx, sizeof(abtTx), 500);
   cut_assert_true (res, cut_message ("Can't send bytes to initiator: %s", nfc_strerror (device)));
   if (!res) { thread_res = -1; return (void*) thread_res; }
 
@@ -131,7 +131,7 @@ initiator_thread (void *arg)
   cut_assert_equal_memory ("\x11\x22\x33\x44\x55\x66\x77\x88\x99\xAA", 10, nt.nti.ndi.abtNFCID3, 10, cut_message ("Invalid target NFCID3"));
   cut_assert_equal_int (NDM_ACTIVE, nt.nti.ndi.ndm, cut_message ("Invalid target DEP mode"));
   cut_assert_equal_memory ("\x12\x34\x56\x78", 4, nt.nti.ndi.abtGB, nt.nti.ndi.szGB, cut_message ("Invalid target general bytes"));
-  if (res < 0) { thread_res = -1; return (void*) thread_res; }
+  if (res <= 0) { thread_res = -1; return (void*) thread_res; }
 
   const uint8_t abtTx[] = "Hello DEP target!";
   uint8_t abtRx[1024];

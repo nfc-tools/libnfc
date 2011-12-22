@@ -1779,7 +1779,7 @@ pn53x_target_receive_bits (struct nfc_device *pnd, uint8_t *pbtRx, size_t *pszRx
   return true;
 }
 
-bool
+int
 pn53x_target_receive_bytes (struct nfc_device *pnd, uint8_t *pbtRx, size_t *pszRx, int timeout)
 {
   uint8_t  abtCmd[1];
@@ -1801,7 +1801,7 @@ pn53x_target_receive_bytes (struct nfc_device *pnd, uint8_t *pbtRx, size_t *pszR
           } else {
             // TODO Support EasyFraming for other cases by software
             pnd->last_error = NFC_ENOTIMPL;
-            return false;
+            return pnd->last_error;
           }
         }
       default:
@@ -1816,7 +1816,7 @@ pn53x_target_receive_bytes (struct nfc_device *pnd, uint8_t *pbtRx, size_t *pszR
   uint8_t  abtRx[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
   size_t  szRx = sizeof (abtRx);
   if (pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), abtRx, &szRx, timeout) < 0)
-    return false;
+    return pnd->last_error;
 
   // Save the received byte count
   *pszRx = szRx - 1;
@@ -1825,7 +1825,7 @@ pn53x_target_receive_bytes (struct nfc_device *pnd, uint8_t *pbtRx, size_t *pszR
   memcpy (pbtRx, abtRx + 1, *pszRx);
 
   // Everyting seems ok, return true
-  return true;
+  return *pszRx;
 }
 
 bool

@@ -158,7 +158,7 @@ nfc_target_emulate_tag(nfc_device *pnd, nfc_target *pnt)
         nfc_device_set_property_bool (pnd, NP_HANDLE_CRC, false);
         init_mfc_auth = false;
       }
-      if (!nfc_target_receive_bytes(pnd, abtRx, &szRx, 0)) {
+      if (nfc_target_receive_bytes(pnd, abtRx, &szRx, 0) < 0) {
         nfc_perror (pnd, "nfc_target_receive_bytes");
         return false;
       }
