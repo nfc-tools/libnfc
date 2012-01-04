@@ -564,10 +564,9 @@ nfc_initiator_transceive_bits (nfc_device *pnd, const uint8_t *pbtTx, const size
  * @warning The configuration option \a NP_HANDLE_PARITY must be set to \c true (the default value).
  */
 int
-nfc_initiator_transceive_bytes_timed (nfc_device *pnd, const uint8_t *pbtTx, const size_t szTx, uint8_t *pbtRx,
-                                size_t *pszRx, uint32_t *cycles)
+nfc_initiator_transceive_bytes_timed (nfc_device *pnd, const uint8_t *pbtTx, const size_t szTx, uint8_t *pbtRx, uint32_t *cycles)
 {
-  HAL (initiator_transceive_bytes_timed, pnd, pbtTx, szTx, pbtRx, pszRx, cycles)
+  HAL (initiator_transceive_bytes_timed, pnd, pbtTx, szTx, pbtRx, cycles)
 }
 
 /**

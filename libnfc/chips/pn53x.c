@@ -1420,8 +1420,7 @@ pn53x_initiator_transceive_bits_timed (struct nfc_device *pnd, const uint8_t *pb
 }
 
 int
-pn53x_initiator_transceive_bytes_timed (struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szTx, uint8_t *pbtRx,
-                                        size_t *pszRx, uint32_t *cycles)
+pn53x_initiator_transceive_bytes_timed (struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szTx, uint8_t *pbtRx, uint32_t *cycles)
 {
   uint16_t i;
   uint8_t sz;
@@ -1469,7 +1468,7 @@ pn53x_initiator_transceive_bytes_timed (struct nfc_device *pnd, const uint8_t *p
   }
 
   // Recv data
-  *pszRx = 0;
+  size_t szRx = 0;
   // we've to watch for coming data until we decide to timeout.
   // our PN53x timer saturates after 4.8ms so this function shouldn't be used for
   // responses coming very late anyway.
@@ -1500,9 +1499,9 @@ pn53x_initiator_transceive_bytes_timed (struct nfc_device *pnd, const uint8_t *p
       return res;
     }
     for (i = 0; i < sz; i++) {
-      pbtRx[i+*pszRx] = abtRes[i+off];
+      pbtRx[i+szRx] = abtRes[i+off];
     }
-    *pszRx += (size_t) (sz & SYMBOL_FIFO_LEVEL);
+    szRx += (size_t) (sz & SYMBOL_FIFO_LEVEL);
     sz = abtRes[sz+off];
     if (sz == 0)
       break;
@@ -1520,7 +1519,7 @@ pn53x_initiator_transceive_bytes_timed (struct nfc_device *pnd, const uint8_t *p
   } else {
     *cycles = __pn53x_get_timer (pnd, pbtTx[szTx -1]);
   }
-  return *pszRx;
+  return szRx;
 }
 
 int

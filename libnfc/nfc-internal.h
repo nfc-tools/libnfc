@@ -139,7 +139,7 @@ struct nfc_driver_t {
   int (*initiator_deselect_target) (struct nfc_device *pnd);
   int (*initiator_transceive_bytes) (struct nfc_device *pnd, const uint8_t * pbtTx, const size_t szTx, uint8_t * pbtRx, size_t * pszRx, int timeout);
   int (*initiator_transceive_bits) (struct nfc_device *pnd, const uint8_t * pbtTx, const size_t szTxBits, const uint8_t * pbtTxPar, uint8_t * pbtRx, uint8_t * pbtRxPar);
-  int (*initiator_transceive_bytes_timed) (struct nfc_device *pnd, const uint8_t * pbtTx, const size_t szTx, uint8_t * pbtRx, size_t * pszRx, uint32_t * cycles);
+  int (*initiator_transceive_bytes_timed) (struct nfc_device *pnd, const uint8_t * pbtTx, const size_t szTx, uint8_t * pbtRx, uint32_t * cycles);
   int (*initiator_transceive_bits_timed) (struct nfc_device *pnd, const uint8_t * pbtTx, const size_t szTxBits, const uint8_t * pbtTxPar, uint8_t * pbtRx, uint8_t * pbtRxPar, uint32_t * cycles);
 
   int (*target_init) (struct nfc_device *pnd, nfc_target * pnt, uint8_t * pbtRx, size_t * pszRx);
