@@ -1747,21 +1747,23 @@ pn53x_target_init (struct nfc_device *pnd, nfc_target *pnt, uint8_t *pbtRx, size
   return NFC_SUCCESS;
 }
 
-bool
+int
 pn53x_target_receive_bits (struct nfc_device *pnd, uint8_t *pbtRx, size_t *pszRxBits, uint8_t *pbtRxPar)
 {
   uint8_t  abtCmd[] = { TgGetInitiatorCommand };
 
   uint8_t  abtRx[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
   size_t  szRx = sizeof (abtRx);
+  int res = 0;
+  
   // Try to gather a received frame from the reader
-  if (pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), abtRx, &szRx, -1) < 0)
-    return false;
+  if ((res = pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), abtRx, &szRx, -1)) < 0)
+    return res;
 
   // Get the last bit-count that is stored in the received byte
   uint8_t ui8rcc;
-  if (pn53x_read_register (pnd, PN53X_REG_CIU_Control, &ui8rcc) < 0)
-    return false;
+  if ((res = pn53x_read_register (pnd, PN53X_REG_CIU_Control, &ui8rcc)) < 0)
+    return res;
   uint8_t ui8Bits = ui8rcc & SYMBOL_RX_LAST_BITS;
 
   // Recover the real frame length in bits
@@ -1778,8 +1780,8 @@ pn53x_target_receive_bits (struct nfc_device *pnd, uint8_t *pbtRx, size_t *pszRx
     // Copy the received bytes
     memcpy (pbtRx, abtRx + 1, szRx - 1);
   }
-  // Everyting seems ok, return true
-  return true;
+  // Everyting seems ok, return received bits count
+  return *pszRxBits;
 }
 
 int
@@ -1821,13 +1823,13 @@ pn53x_target_receive_bytes (struct nfc_device *pnd, uint8_t *pbtRx, size_t *pszR
   if (pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), abtRx, &szRx, timeout) < 0)
     return pnd->last_error;
 
-  // Save the received byte count
+  // Save the received bytes count
   *pszRx = szRx - 1;
 
   // Copy the received bytes
   memcpy (pbtRx, abtRx + 1, *pszRx);
 
-  // Everyting seems ok, return true
+  // Everyting seems ok, return received bytes count
   return *pszRx;
 }
 

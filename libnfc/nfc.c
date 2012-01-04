@@ -749,7 +749,7 @@ nfc_target_send_bits (nfc_device *pnd, const uint8_t *pbtTx, const size_t szTxBi
 
 /**
  * @brief Receive bit-frames
- * @return Returns \c true if action was successfully performed; otherwise returns \c false.
+ * @return Returns received bits count on success, otherwise returns libnfc's error code
  *
  * This function makes it possible to receive (raw) bit-frames.  It returns all
  * the messages that are stored in the FIFO buffer of the \e PN53x chip.  It
@@ -758,7 +758,7 @@ nfc_target_send_bits (nfc_device *pnd, const uint8_t *pbtTx, const size_t szTxBi
  * NP_ACCEPT_MULTIPLE_FRAMES configuration option to avoid losing transmitted
  * frames.
  */
-bool
+int
 nfc_target_receive_bits (nfc_device *pnd, uint8_t *pbtRx, size_t *pszRxBits, uint8_t *pbtRxPar)
 {
   HAL (target_receive_bits, pnd, pbtRx, pszRxBits, pbtRxPar);
