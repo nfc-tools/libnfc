@@ -2432,31 +2432,31 @@ pn53x_TgInitAsTarget (struct nfc_device *pnd, pn53x_target_mode ptm,
   return NFC_SUCCESS;
 }
 
-bool
+int
 pn53x_check_ack_frame (struct nfc_device *pnd, const uint8_t *pbtRxFrame, const size_t szRxFrameLen)
 {
   if (szRxFrameLen >= sizeof (pn53x_ack_frame)) {
     if (0 == memcmp (pbtRxFrame, pn53x_ack_frame, sizeof (pn53x_ack_frame))) {
       log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "PN53x ACKed");
-      return true;
+      return NFC_SUCCESS;
     }
   }
   pnd->last_error = NFC_EIO;
   log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unexpected PN53x reply!");
-  return false;
+  return pnd->last_error;
 }
 
-bool
+int
 pn53x_check_error_frame (struct nfc_device *pnd, const uint8_t *pbtRxFrame, const size_t szRxFrameLen)
 {
   if (szRxFrameLen >= sizeof (pn53x_error_frame)) {
     if (0 == memcmp (pbtRxFrame, pn53x_error_frame, sizeof (pn53x_error_frame))) {
       log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "PN53x sent an error frame");
       pnd->last_error = NFC_EIO;
-      return false;
+      return pnd->last_error;
     }
   }
-  return true;
+  return NFC_SUCCESS;
 }
 
 /**

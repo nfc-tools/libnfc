@@ -339,7 +339,7 @@ arygon_tama_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szData, 
     return false;
   }
 
-  if (pn53x_check_ack_frame (pnd, abtRxBuf, sizeof(abtRxBuf))) {
+  if (pn53x_check_ack_frame (pnd, abtRxBuf, sizeof(abtRxBuf)) == 0) {
     // The PN53x is running the sent command
   } else if (0 == memcmp(arygon_error_unknown_mode, abtRxBuf, sizeof(abtRxBuf))) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR,  "Bad frame format." );

@@ -529,7 +529,7 @@ pn53x_usb_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szData, co
     return false;
   }
 
-  if (pn53x_check_ack_frame (pnd, abtRxBuf, res)) {
+  if (pn53x_check_ack_frame (pnd, abtRxBuf, res) == 0) {
     // The PN53x is running the sent command
   } else {
     // For some reasons (eg. send another command while a previous one is

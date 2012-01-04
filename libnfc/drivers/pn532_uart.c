@@ -340,7 +340,7 @@ pn532_uart_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szData, i
     return false;
   }
 
-  if (pn53x_check_ack_frame (pnd, abtRxBuf, sizeof(abtRxBuf))) {
+  if (pn53x_check_ack_frame (pnd, abtRxBuf, sizeof(abtRxBuf)) == 0) {
     // The PN53x is running the sent command
   } else {
     return false;
