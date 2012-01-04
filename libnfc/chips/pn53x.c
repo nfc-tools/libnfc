@@ -2465,7 +2465,7 @@ pn53x_check_error_frame (struct nfc_device *pnd, const uint8_t *pbtRxFrame, cons
  * @param pbtData payload (bytes array) of the frame, will become PD0, ..., PDn in PN53x frame
  * @note The first byte of pbtData is the Command Code (CC)
  */
-bool
+int
 pn53x_build_frame (uint8_t *pbtFrame, size_t *pszFrame, const uint8_t *pbtData, const size_t szData)
 {
   if (szData <= PN53x_NORMAL_FRAME__DATA_MAX_LEN) {
@@ -2517,9 +2517,9 @@ pn53x_build_frame (uint8_t *pbtFrame, size_t *pszFrame, const uint8_t *pbtData, 
     (*pszFrame) = szData + PN53x_EXTENDED_FRAME__OVERHEAD;
   } else {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "We can't send more than %d bytes in a raw (requested: %zd)", PN53x_EXTENDED_FRAME__DATA_MAX_LEN, szData);
-    return false;
+    return NFC_ECHIP;
   }
-  return true;
+  return NFC_SUCCESS;
 }
 pn53x_modulation
 pn53x_nm_to_pm(const nfc_modulation nm)

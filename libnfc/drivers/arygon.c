@@ -319,7 +319,7 @@ arygon_tama_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szData, 
     return false;
   }
 
-  if (!pn53x_build_frame (abtFrame + 1, &szFrame, pbtData, szData)) {
+  if (pn53x_build_frame (abtFrame + 1, &szFrame, pbtData, szData) < 0) {
     pnd->last_error = NFC_EINVARG;
     return false;
   }

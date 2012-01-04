@@ -320,7 +320,7 @@ pn532_uart_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szData, i
   uint8_t  abtFrame[PN532_BUFFER_LEN] = { 0x00, 0x00, 0xff };       // Every packet must start with "00 00 ff"
   size_t szFrame = 0;
 
-  if (!pn53x_build_frame (abtFrame, &szFrame, pbtData, szData)) {
+  if (pn53x_build_frame (abtFrame, &szFrame, pbtData, szData) < 0) {
     pnd->last_error = NFC_EINVARG;
     return false;
   }

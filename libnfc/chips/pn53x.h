@@ -353,7 +353,7 @@ int    pn53x_RFConfiguration__MaxRetries (struct nfc_device *pnd, const uint8_t 
 // Misc
 int    pn53x_check_ack_frame (struct nfc_device *pnd, const uint8_t *pbtRxFrame, const size_t szRxFrameLen);
 int    pn53x_check_error_frame (struct nfc_device *pnd, const uint8_t *pbtRxFrame, const size_t szRxFrameLen);
-bool    pn53x_build_frame (uint8_t *pbtFrame, size_t *pszFrame, const uint8_t *pbtData, const size_t szData);
+int    pn53x_build_frame (uint8_t *pbtFrame, size_t *pszFrame, const uint8_t *pbtData, const size_t szData);
 
 void    pn53x_data_new (struct nfc_device *pnd, const struct pn53x_io *io);
 void    pn53x_data_free (struct nfc_device *pnd);
