@@ -62,6 +62,13 @@ void stop_polling (int sig)
     exit (EXIT_FAILURE);
 }
 
+void
+print_usage (char* progname)
+{
+  printf ("usage: %s [-v]\n", progname);
+  printf ("  -v\t verbose display\n");
+}
+
 int
 main (int argc, const char *argv[])
 {
@@ -72,11 +79,15 @@ main (int argc, const char *argv[])
   // Display libnfc version
   const char *acLibnfcVersion = nfc_version ();
 
-  if (argc > 1) {
-    errx (1, "usage: %s", argv[0]);
-  }
-
   printf ("%s uses libnfc %s\n", argv[0], acLibnfcVersion);
+  if (argc != 1) {
+    if ((argc == 2) && (0 == strcmp ("-v", argv[1]))) {
+      verbose = true;
+    } else {
+      print_usage (argv[0]);
+      exit (EXIT_FAILURE);
+    }
+  }
 
   const uint8_t uiPollNr = 20;
   const uint8_t uiPeriod = 2;

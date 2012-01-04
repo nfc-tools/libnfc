@@ -59,6 +59,13 @@
 
 static nfc_device *pnd;
 
+void
+print_usage (char* progname)
+{
+  printf ("usage: %s [-v]\n", progname);
+  printf ("  -v\t verbose display\n");
+}
+
 int
 main (int argc, const char *argv[])
 {
@@ -71,6 +78,14 @@ main (int argc, const char *argv[])
   // Display libnfc version
   acLibnfcVersion = nfc_version ();
   printf ("%s uses libnfc %s\n", argv[0], acLibnfcVersion);
+  if (argc != 1) {
+    if ((argc == 2) && (0 == strcmp ("-v", argv[1]))) {
+      verbose = true;
+    } else {
+      print_usage (argv[0]);
+      exit (EXIT_FAILURE);
+    }
+  }
 
 #ifdef HAVE_LIBUSB
 #  ifdef DEBUG
