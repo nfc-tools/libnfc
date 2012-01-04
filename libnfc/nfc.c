@@ -504,7 +504,7 @@ nfc_initiator_transceive_bytes (nfc_device *pnd, const uint8_t *pbtTx, const siz
 
 /**
  * @brief Transceive raw bit-frames to a target
- * @return Returns \c true if action was successfully performed; otherwise returns \c false.
+ * @return Returns received bits count on success, otherwise returns libnfc's error code
  *
  * @param pbtTx contains a byte array of the frame that needs to be transmitted.
  * @param szTxBits contains the length in bits.
@@ -537,7 +537,7 @@ nfc_initiator_transceive_bytes (nfc_device *pnd, const uint8_t *pbtTx, const siz
  * require to violate the ISO14443-A standard by sending incorrect parity and
  * CRC bytes. Using this feature you are able to simulate these frames.
  */
-bool
+int
 nfc_initiator_transceive_bits (nfc_device *pnd, const uint8_t *pbtTx, const size_t szTxBits, const uint8_t *pbtTxPar,
                                uint8_t *pbtRx, size_t *pszRxBits, uint8_t *pbtRxPar)
 {

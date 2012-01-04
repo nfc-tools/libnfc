@@ -98,7 +98,8 @@ transmit_bits (const uint8_t *pbtTx, const size_t szTxBits)
   printf ("Sent bits:     ");
   print_hex_bits (pbtTx, szTxBits);
   // Transmit the bit frame command, we don't use the arbitrary parity feature
-  if (!nfc_initiator_transceive_bits (pnd, pbtTx, szTxBits, NULL, abtRx, &szRxBits, NULL))
+  int res = 0;
+  if ((res = nfc_initiator_transceive_bits (pnd, pbtTx, szTxBits, NULL, abtRx, &szRxBits, NULL)) < 0)
     return false;
 
   // Show received answer

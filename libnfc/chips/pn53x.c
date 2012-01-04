@@ -1107,10 +1107,11 @@ pn53x_initiator_select_dep_target(struct nfc_device *pnd,
   }
 }
 
-bool
+int
 pn53x_initiator_transceive_bits (struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szTxBits,
                                  const uint8_t *pbtTxPar, uint8_t *pbtRx, size_t *pszRxBits, uint8_t *pbtRxPar)
 {
+  int res = 0;
   size_t  szFrameBits = 0;
   size_t  szFrameBytes = 0;
   uint8_t ui8rcc;
@@ -1136,19 +1137,19 @@ pn53x_initiator_transceive_bits (struct nfc_device *pnd, const uint8_t *pbtTx, c
     memcpy (abtCmd + 1, pbtTx, szFrameBytes);
 
   // Set the amount of transmission bits in the PN53X chip register
-  if (pn53x_set_tx_bits (pnd, ui8Bits) < 0)
-    return false;
+  if ((res = pn53x_set_tx_bits (pnd, ui8Bits)) < 0)
+    return res;
 
   // Send the frame to the PN53X chip and get the answer
   // We have to give the amount of bytes + (the command byte 0x42)
   uint8_t  abtRx[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
   size_t  szRx = sizeof(abtRx);
-  if (pn53x_transceive (pnd, abtCmd, szFrameBytes + 1, abtRx, &szRx, -1) < 0)
-    return false;
+  if ((res = pn53x_transceive (pnd, abtCmd, szFrameBytes + 1, abtRx, &szRx, -1)) < 0)
+    return res;
 
   // Get the last bit-count that is stored in the received byte
-  if (pn53x_read_register (pnd, PN53X_REG_CIU_Control, &ui8rcc) < 0)
-    return false;
+  if ((res = pn53x_read_register (pnd, PN53X_REG_CIU_Control, &ui8rcc)) < 0)
+    return res;
   ui8Bits = ui8rcc & SYMBOL_RX_LAST_BITS;
 
   // Recover the real frame length in bits
@@ -1168,7 +1169,7 @@ pn53x_initiator_transceive_bits (struct nfc_device *pnd, const uint8_t *pbtTx, c
     }
   }
   // Everything went successful
-  return true;
+  return *pszRxBits;
 }
 
 int
