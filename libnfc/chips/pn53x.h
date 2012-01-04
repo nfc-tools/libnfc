@@ -268,10 +268,8 @@ int    pn53x_transceive (struct nfc_device *pnd, const uint8_t *pbtTx, const siz
 
 int    pn53x_set_parameters (struct nfc_device *pnd, const uint8_t ui8Value, const bool bEnable);
 int    pn53x_set_tx_bits (struct nfc_device *pnd, const uint8_t ui8Bits);
-bool    pn53x_wrap_frame (const uint8_t *pbtTx, const size_t szTxBits, const uint8_t *pbtTxPar, uint8_t *pbtFrame,
-                          size_t *pszFrameBits);
-bool    pn53x_unwrap_frame (const uint8_t *pbtFrame, const size_t szFrameBits, uint8_t *pbtRx, size_t *pszRxBits,
-                            uint8_t *pbtRxPar);
+int    pn53x_wrap_frame (const uint8_t *pbtTx, const size_t szTxBits, const uint8_t *pbtTxPar, uint8_t *pbtFrame);
+int    pn53x_unwrap_frame (const uint8_t *pbtFrame, const size_t szFrameBits, uint8_t *pbtRx, uint8_t *pbtRxPar);
 bool    pn53x_decode_target_data (const uint8_t *pbtRawData, size_t szRawData,
                                   pn53x_type chip_type, nfc_modulation_type nmt,
                                   nfc_target_info *pnti);
