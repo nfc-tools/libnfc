@@ -199,7 +199,7 @@ main (int argc, char *argv[])
       if (nfc_initiator_transceive_bits
           (pndReader, abtReaderRx, szReaderRxBits, abtReaderRxPar, abtTagRx, &szTagRxBits, abtTagRxPar) > 0) {
         // Redirect the answer back to the reader
-        if (!nfc_target_send_bits (pndTag, abtTagRx, szTagRxBits, abtTagRxPar)) {
+        if (nfc_target_send_bits (pndTag, abtTagRx, szTagRxBits, abtTagRxPar) < 0) {
           nfc_perror (pndTag, "nfc_target_send_bits");
           exit (EXIT_FAILURE);
         }

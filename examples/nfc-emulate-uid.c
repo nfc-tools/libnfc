@@ -205,7 +205,7 @@ main (int argc, char *argv[])
       // Test if we know how to respond
       if (szTxBits) {
         // Send and print the command to the screen
-        if (!nfc_target_send_bits (pnd, pbtTx, szTxBits, NULL)) {
+        if (nfc_target_send_bits (pnd, pbtTx, szTxBits, NULL) < 0) {
           nfc_perror (pnd, "nfc_target_send_bits");
           goto error;
         }

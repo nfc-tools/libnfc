@@ -736,12 +736,12 @@ nfc_target_receive_bytes (nfc_device *pnd, uint8_t *pbtRx, size_t *pszRx, int ti
 
 /**
  * @brief Send raw bit-frames
- * @return Returns \c true if action was successfully performed; otherwise returns \c false.
+ * @return Returns sent bits count on success, otherwise returns libnfc's error code.
  *
  * This function can be used to transmit (raw) bit-frames to the \e initiator
  * using the specified NFC device (configured as \e target).
  */
-bool
+int
 nfc_target_send_bits (nfc_device *pnd, const uint8_t *pbtTx, const size_t szTxBits, const uint8_t *pbtTxPar)
 {
   HAL (target_send_bits, pnd, pbtTx, szTxBits, pbtTxPar);

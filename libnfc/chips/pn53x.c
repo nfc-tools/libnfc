@@ -1831,13 +1831,14 @@ pn53x_target_receive_bytes (struct nfc_device *pnd, uint8_t *pbtRx, size_t *pszR
   return *pszRx;
 }
 
-bool
+int
 pn53x_target_send_bits (struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szTxBits, const uint8_t *pbtTxPar)
 {
   size_t  szFrameBits = 0;
   size_t  szFrameBytes = 0;
   uint8_t ui8Bits = 0;
   uint8_t  abtCmd[PN53x_EXTENDED_FRAME__DATA_MAX_LEN] = { TgResponseToInitiator };
+  int res = 0;
 
   // Check if we should prepare the parity bits ourself
   if (!pnd->bPar) {
@@ -1858,15 +1859,15 @@ pn53x_target_send_bits (struct nfc_device *pnd, const uint8_t *pbtTx, const size
     memcpy (abtCmd + 1, pbtTx, szFrameBytes);
 
   // Set the amount of transmission bits in the PN53X chip register
-  if (pn53x_set_tx_bits (pnd, ui8Bits) < 0)
-    return false;
+  if ((res = pn53x_set_tx_bits (pnd, ui8Bits)) < 0)
+    return res;
 
   // Try to send the bits to the reader
-  if (pn53x_transceive (pnd, abtCmd, szFrameBytes + 1, NULL, NULL, -1) < 0)
-    return false;
+  if ((res = pn53x_transceive (pnd, abtCmd, szFrameBytes + 1, NULL, NULL, -1)) < 0)
+    return res;
 
-  // Everyting seems ok, return true
-  return true;
+  // Everyting seems ok, return return sent bits count
+  return szTxBits;
 }
 
 int
