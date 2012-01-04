@@ -64,8 +64,8 @@ pn53x_init(struct nfc_device *pnd)
   int res = 0;
   // GetFirmwareVersion command is used to set PN53x chips type (PN531, PN532 or PN533)
   char abtFirmwareText[22];
-  if (!pn53x_get_firmware_version (pnd, abtFirmwareText)) {
-    return NFC_ECHIP;
+  if ((res = pn53x_get_firmware_version (pnd, abtFirmwareText)) < 0) {
+    return res;
   }
 
   // CRC handling should be enabled by default as declared in nfc_device_new
@@ -600,14 +600,15 @@ pn53x_writeback_register (struct nfc_device *pnd)
   return true;
 }
 
-bool
+int
 pn53x_get_firmware_version (struct nfc_device *pnd, char abtFirmwareText[22])
 {
   const uint8_t abtCmd[] = { GetFirmwareVersion };
   uint8_t  abtFw[4];
   size_t  szFwLen = sizeof (abtFw);
-  if (pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), abtFw, &szFwLen, -1) < 0) {
-    return false;
+  int res = 0;
+  if ((res = pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), abtFw, &szFwLen, -1)) < 0) {
+    return res;
   }
   // Determine which version of chip it is: PN531 will return only 2 bytes, while others return 4 bytes and have the first to tell the version IC
   if (szFwLen == 2) {
@@ -623,11 +624,11 @@ pn53x_get_firmware_version (struct nfc_device *pnd, char abtFirmwareText[22])
       }
     } else {
       // Unknown version IC
-      return false;
+      return NFC_ENOTIMPL;
     }
   } else {
     // Unknown chip
-    return false;
+    return NFC_ENOTIMPL;
   }
   // Convert firmware info in text, PN531 gives 2 bytes info, but PN532 and PN533 gives 4
   switch (CHIP_DATA(pnd)->type) {
@@ -648,7 +649,7 @@ pn53x_get_firmware_version (struct nfc_device *pnd, char abtFirmwareText[22])
       // Could not happend
       break;
   }
-  return true;
+  return NFC_SUCCESS;
 }
 
 uint8_t
