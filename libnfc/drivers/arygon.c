@@ -362,7 +362,7 @@ arygon_abort (nfc_device *pnd)
   uart_send (DRIVER_DATA (pnd)->port, dummy, sizeof (dummy), 0);
 
   // Using Arygon device we can't send ACK frame to abort the running command
-  return (pn53x_check_communication (pnd) == 0) ? 0 : -1;
+  return pn53x_check_communication (pnd);
 }
 
 int
@@ -519,7 +519,7 @@ arygon_reset_tama (nfc_device *pnd)
   size_t szRx = sizeof(abtRx);
   int res;
 
-  uart_send (DRIVER_DATA (pnd)->port, arygon_reset_tama_cmd, sizeof (arygon_reset_tama_cmd), 1000);
+  uart_send (DRIVER_DATA (pnd)->port, arygon_reset_tama_cmd, sizeof (arygon_reset_tama_cmd), 500);
 
   // Two reply are possible from ARYGON device: arygon_error_none (ie. in case the byte is well-sent)
   // or arygon_error_unknown_mode (ie. in case of the first byte was bad-transmitted)

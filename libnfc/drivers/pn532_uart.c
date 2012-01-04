@@ -115,9 +115,6 @@ pn532_uart_probe (nfc_connstring connstrings[], size_t connstrings_len, size_t *
 
       // Check communication using "Diagnose" command, with "Communication test" (0x00)
       int res = pn53x_check_communication (pnd);
-      if(res < 0) {
-        nfc_perror (pnd, "pn53x_check_communication");
-      }
       pn53x_data_free (pnd);
       nfc_device_free (pnd);
       uart_close (sp);
@@ -301,7 +298,7 @@ pn532_uart_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szData, i
         return false;
       }
       // According to PN532 application note, C106 appendix: to go out Low Vbat mode and enter in normal mode we need to send a SAMConfiguration command
-      if (pn53x_SAMConfiguration (pnd, 0x01, 1000) < 0) {
+      if (pn53x_SAMConfiguration (pnd, 0x01, 500) < 0) {
         return false;
       }
     }
