@@ -573,7 +573,7 @@ nfc_initiator_transceive_bytes_timed (nfc_device *pnd, const uint8_t *pbtTx, con
 
 /**
  * @brief Transceive raw bit-frames to a target
- * @return Returns \c true if action was successfully performed; otherwise returns \c false.
+ * @return Returns received bits count on success, otherwise returns libnfc's error code
  *
  * This function is similar to nfc_initiator_transceive_bits() with the following differences:
  * - A precise cycles counter will indicate the number of cycles between emission & reception of frames.
@@ -592,7 +592,7 @@ nfc_initiator_transceive_bytes_timed (nfc_device *pnd, const uint8_t *pbtTx, con
  * @warning The configuration option \a NP_HANDLE_CRC must be set to \c false.
  * @warning The configuration option \a NP_HANDLE_PARITY must be set to \c true (the default value).
  */
-bool
+int
 nfc_initiator_transceive_bits_timed (nfc_device *pnd, const uint8_t *pbtTx, const size_t szTxBits, const uint8_t *pbtTxPar,
                                uint8_t *pbtRx, size_t *pszRxBits, uint8_t *pbtRxPar, uint32_t *cycles)
 {
