@@ -362,7 +362,7 @@ arygon_abort (nfc_device *pnd)
   uart_send (DRIVER_DATA (pnd)->port, dummy, sizeof (dummy), 0);
 
   // Using Arygon device we can't send ACK frame to abort the running command
-  return (pn53x_check_communication (pnd)) ? 0 : -1;
+  return (pn53x_check_communication (pnd) == 0) ? 0 : -1;
 }
 
 int

@@ -870,18 +870,22 @@ pn53x_idle (struct nfc_device *pnd)
   return true;
 }
 
-bool
+int
 pn53x_check_communication (struct nfc_device *pnd)
 {
   const uint8_t abtCmd[] = { Diagnose, 0x00, 'l', 'i', 'b', 'n', 'f', 'c' };
   const uint8_t abtExpectedRx[] = { 0x00, 'l', 'i', 'b', 'n', 'f', 'c' };
   uint8_t abtRx[sizeof(abtExpectedRx)];
   size_t szRx = sizeof (abtRx);
+  int res = 0;
 
-  if (pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), abtRx, &szRx, 1000) < 0)
-    return false;
+  if ((res = pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), abtRx, &szRx, 1000)) < 0)
+    return res;
 
-  return ((sizeof(abtExpectedRx) == szRx) && (0 == memcmp (abtRx, abtExpectedRx, sizeof(abtExpectedRx))));
+  if (((sizeof(abtExpectedRx) == szRx) && (0 == memcmp (abtRx, abtExpectedRx, sizeof(abtExpectedRx)))) == 0)
+    return NFC_ECHIP;
+  
+  return NFC_SUCCESS;
 }
 
 int

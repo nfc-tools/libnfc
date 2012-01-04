@@ -114,14 +114,14 @@ pn532_uart_probe (nfc_connstring connstrings[], size_t connstrings_len, size_t *
 #endif
 
       // Check communication using "Diagnose" command, with "Communication test" (0x00)
-      bool res = pn53x_check_communication (pnd);
-      if(!res) {
+      int res = pn53x_check_communication (pnd);
+      if(res < 0) {
         nfc_perror (pnd, "pn53x_check_communication");
       }
       pn53x_data_free (pnd);
       nfc_device_free (pnd);
       uart_close (sp);
-      if(!res) {
+      if(res < 0) {
         continue;
       }
 
@@ -251,7 +251,7 @@ pn532_uart_connect (const nfc_connstring connstring)
 #endif
 
   // Check communication using "Diagnose" command, with "Communication test" (0x00)
-  if (!pn53x_check_communication (pnd)) {
+  if (pn53x_check_communication (pnd) < 0) {
     nfc_perror (pnd, "pn53x_check_communication");
     pn532_uart_disconnect (pnd);
     return NULL;

@@ -279,7 +279,7 @@ int    pn53x_get_firmware_version (struct nfc_device *pnd, char abtFirmwareText[
 int    pn53x_set_property_int (struct nfc_device *pnd, const nfc_property property, const int value);
 int    pn53x_set_property_bool (struct nfc_device *pnd, const nfc_property property, const bool bEnable);
 
-bool    pn53x_check_communication (struct nfc_device *pnd);
+int    pn53x_check_communication (struct nfc_device *pnd);
 bool    pn53x_idle (struct nfc_device *pnd);
 
 // NFC device as Initiator functions
