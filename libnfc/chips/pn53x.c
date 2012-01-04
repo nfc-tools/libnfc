@@ -132,9 +132,11 @@ pn53x_transceive (struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szT
     pszRx = &szRx;
   }
 
+  int res;
   // Call the send/receice callback functions of the current driver
-  if (!CHIP_DATA (pnd)->io->send (pnd, pbtTx, szTx, timeout))
-    return NFC_ECHIP;
+  if ((res = CHIP_DATA (pnd)->io->send (pnd, pbtTx, szTx, timeout)) < 0) {
+    return pnd->last_error;
+  }
 
   // Command is sent, we store the command
   CHIP_DATA (pnd)->ui8LastCommand = pbtTx[0];
@@ -144,9 +146,8 @@ pn53x_transceive (struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szT
     CHIP_DATA (pnd)->power_mode = POWERDOWN;
   }
 
-  int res = CHIP_DATA(pnd)->io->receive (pnd, pbtRx, *pszRx, timeout);
-  if (res < 0) {
-    return NFC_ECHIP;
+  if ((res = CHIP_DATA(pnd)->io->receive (pnd, pbtRx, *pszRx, timeout)) < 0) {
+    return pnd->last_error;
   }
 
   if ((CHIP_DATA(pnd)->type == PN532) && (TgInitAsTarget == pbtTx[0])) { // PN532 automatically wakeup on external RF field
@@ -979,8 +980,8 @@ pn53x_initiator_select_passive_target_ext (struct nfc_device *pnd,
     if (pnt) {
       pnt->nm = nm;
       // Fill the tag info struct with the values corresponding to this init modulation
-      if (!pn53x_decode_target_data (abtTargetsData, szTargetsData, CHIP_DATA(pnd)->type, nm.nmt, &(pnt->nti))) {
-        return NFC_ECHIP;
+      if ((res = pn53x_decode_target_data (abtTargetsData, szTargetsData, CHIP_DATA(pnd)->type, nm.nmt, &(pnt->nti))) < 0 ) {
+        return res;
       }
     }
     if (nm.nmt == NMT_ISO14443BI) {
@@ -1009,8 +1010,8 @@ pn53x_initiator_select_passive_target_ext (struct nfc_device *pnd,
   if (pnt) {
     pnt->nm = nm;
     // Fill the tag info struct with the values corresponding to this init modulation
-    if (!pn53x_decode_target_data (abtTargetsData + 1, szTargetsData - 1, CHIP_DATA(pnd)->type, nm.nmt, &(pnt->nti))) {
-      return NFC_ECHIP;
+    if ((res = pn53x_decode_target_data (abtTargetsData + 1, szTargetsData - 1, CHIP_DATA(pnd)->type, nm.nmt, &(pnt->nti)) < 0)) {
+      return res;
     }
   }
   return abtTargetsData[0];
@@ -1087,6 +1088,8 @@ pn53x_initiator_poll_target (struct nfc_device *pnd,
         }
       }
     } while (uiPollNr==0xff); // uiPollNr==0xff means infinite polling
+    // We reach this point when each listing give no result, we simply have to return 0
+    return 0;
   }
   return NFC_ECHIP;
 }
@@ -2243,7 +2246,9 @@ pn53x_InAutoPoll (struct nfc_device *pnd,
       pntTargets[0].nm = pn53x_ptt_to_nm(ptt);
       // AutoPollTargetData length
       ln = *(pbt++);
-      pn53x_decode_target_data (pbt, ln, CHIP_DATA(pnd)->type, pntTargets[0].nm.nmt, &(pntTargets[0].nti));
+      if ((res = pn53x_decode_target_data (pbt, ln, CHIP_DATA(pnd)->type, pntTargets[0].nm.nmt, &(pntTargets[0].nti))) < 0) {
+        return res;
+      }
       pbt += ln;
 
       if (abtRx[0] > 1) {
