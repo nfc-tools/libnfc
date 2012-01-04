@@ -82,7 +82,7 @@ static size_t num_keys = sizeof (keys) / 6;
 #define MAX_FRAME_LEN 264
 
 static uint8_t abtRx[MAX_FRAME_LEN];
-static size_t szRxBits;
+static int szRxBits;
 static size_t szRx = sizeof(abtRx);
 
 uint8_t  abtHalt[4] = { 0x50, 0x00, 0x00, 0x00 };
@@ -98,8 +98,7 @@ transmit_bits (const uint8_t *pbtTx, const size_t szTxBits)
   printf ("Sent bits:     ");
   print_hex_bits (pbtTx, szTxBits);
   // Transmit the bit frame command, we don't use the arbitrary parity feature
-  int res = 0;
-  if ((res = nfc_initiator_transceive_bits (pnd, pbtTx, szTxBits, NULL, abtRx, &szRxBits, NULL)) < 0)
+  if ((szRxBits = nfc_initiator_transceive_bits (pnd, pbtTx, szTxBits, NULL, abtRx, NULL)) < 0)
     return false;
 
   // Show received answer

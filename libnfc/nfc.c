@@ -527,7 +527,6 @@ nfc_initiator_transceive_bytes (nfc_device *pnd, const uint8_t *pbtTx, const siz
  * nfc_initiator_transceive_bytes() function.
  * 
  * @param[out] pbtRx response from the tag
- * @param[out] pszRxBits \a pbtRx length in bits
  * @param[out] pbtRxPar parameter contains a byte array of the corresponding parity bits
  *
  * The NFC device (configured as \e initiator) will transmit low-level messages
@@ -539,9 +538,9 @@ nfc_initiator_transceive_bytes (nfc_device *pnd, const uint8_t *pbtTx, const siz
  */
 int
 nfc_initiator_transceive_bits (nfc_device *pnd, const uint8_t *pbtTx, const size_t szTxBits, const uint8_t *pbtTxPar,
-                               uint8_t *pbtRx, size_t *pszRxBits, uint8_t *pbtRxPar)
+                               uint8_t *pbtRx, uint8_t *pbtRxPar)
 {
-  HAL (initiator_transceive_bits, pnd, pbtTx, szTxBits, pbtTxPar, pbtRx, pszRxBits, pbtRxPar);
+  HAL (initiator_transceive_bits, pnd, pbtTx, szTxBits, pbtTxPar, pbtRx, pbtRxPar);
 }
 
 /**

@@ -1110,11 +1110,12 @@ pn53x_initiator_select_dep_target(struct nfc_device *pnd,
 
 int
 pn53x_initiator_transceive_bits (struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szTxBits,
-                                 const uint8_t *pbtTxPar, uint8_t *pbtRx, size_t *pszRxBits, uint8_t *pbtRxPar)
+                                 const uint8_t *pbtTxPar, uint8_t *pbtRx, uint8_t *pbtRxPar)
 {
   int res = 0;
   size_t  szFrameBits = 0;
   size_t  szFrameBytes = 0;
+  size_t szRxBits = 0;
   uint8_t ui8rcc;
   uint8_t ui8Bits = 0;
   uint8_t  abtCmd[PN53x_EXTENDED_FRAME__DATA_MAX_LEN] = { InCommunicateThru };
@@ -1165,16 +1166,16 @@ pn53x_initiator_transceive_bits (struct nfc_device *pnd, const uint8_t *pbtTx, c
       // Unwrap the response frame
       if ((res = pn53x_unwrap_frame (abtRx + 1, szFrameBits, pbtRx, pbtRxPar)) < 0)
         return res;
-      *pszRxBits = res;
+      szRxBits = res;
     } else {
       // Save the received bits
-      *pszRxBits = szFrameBits;
+      szRxBits = szFrameBits;
       // Copy the received bytes
       memcpy (pbtRx, abtRx + 1, szRx - 1);
     }
   }
   // Everything went successful
-  return *pszRxBits;
+  return szRxBits;
 }
 
 int

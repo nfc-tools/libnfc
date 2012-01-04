@@ -57,7 +57,7 @@
 #define MAX_FRAME_LEN 264
 
 static uint8_t abtRx[MAX_FRAME_LEN];
-static size_t szRxBits;
+static int szRxBits;
 static size_t szRx = sizeof(abtRx);
 static uint8_t abtRawUid[12];
 static uint8_t abtAtqa[2];
@@ -96,7 +96,7 @@ transmit_bits (const uint8_t *pbtTx, const size_t szTxBits)
     print_hex_bits (pbtTx, szTxBits);
   }
   // Transmit the bit frame command, we don't use the arbitrary parity feature
-  if (nfc_initiator_transceive_bits (pnd, pbtTx, szTxBits, NULL, abtRx, &szRxBits, NULL) < 0)
+  if ((szRxBits = nfc_initiator_transceive_bits (pnd, pbtTx, szTxBits, NULL, abtRx, NULL)) < 0)
     return false;
 
   // Show received answer

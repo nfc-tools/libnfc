@@ -55,7 +55,7 @@ static uint8_t abtReaderRxPar[MAX_FRAME_LEN];
 static size_t szReaderRxBits;
 static uint8_t abtTagRx[MAX_FRAME_LEN];
 static uint8_t abtTagRxPar[MAX_FRAME_LEN];
-static size_t szTagRxBits;
+static int szTagRxBits;
 static nfc_device *pndReader;
 static nfc_device *pndTag;
 static bool quitting = false;
@@ -196,8 +196,8 @@ main (int argc, char *argv[])
         print_hex_par (abtReaderRx, szReaderRxBits, abtReaderRxPar);
       }
       // Forward the frame to the original tag
-      if (nfc_initiator_transceive_bits
-          (pndReader, abtReaderRx, szReaderRxBits, abtReaderRxPar, abtTagRx, &szTagRxBits, abtTagRxPar) > 0) {
+      if ((szTagRxBits = nfc_initiator_transceive_bits
+          (pndReader, abtReaderRx, szReaderRxBits, abtReaderRxPar, abtTagRx, abtTagRxPar)) > 0) {
         // Redirect the answer back to the reader
         if (nfc_target_send_bits (pndTag, abtTagRx, szTagRxBits, abtTagRxPar) < 0) {
           nfc_perror (pndTag, "nfc_target_send_bits");
