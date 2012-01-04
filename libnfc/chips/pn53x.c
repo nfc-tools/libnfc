@@ -327,7 +327,7 @@ pn53x_unwrap_frame (const uint8_t *pbtFrame, const size_t szFrameBits, uint8_t *
   }
 }
 
-bool
+int
 pn53x_decode_target_data (const uint8_t *pbtRawData, size_t szRawData, pn53x_type type, nfc_modulation_type nmt,
                           nfc_target_info *pnti)
 {
@@ -402,7 +402,7 @@ pn53x_decode_target_data (const uint8_t *pbtRawData, size_t szRawData, pn53x_typ
       // Skip V & T Addresses
       pbtRawData++;
       if (*pbtRawData != 0x07) { // 0x07 = REPGEN 
-        return false;
+        return NFC_ECHIP;
       }
       pbtRawData++;
       // Store the UID
@@ -465,10 +465,10 @@ pn53x_decode_target_data (const uint8_t *pbtRawData, size_t szRawData, pn53x_typ
       memcpy (pnti->nji.btId, pbtRawData, 4);
       break;
     default:
-      return false;
+      return NFC_ECHIP;
       break;
   }
-  return true;
+  return NFC_SUCCESS;
 }
 
 int
