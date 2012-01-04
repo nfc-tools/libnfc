@@ -1318,7 +1318,7 @@ uint32_t __pn53x_get_timer(struct nfc_device *pnd, const uint8_t last_cmd_byte)
 
 int
 pn53x_initiator_transceive_bits_timed (struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szTxBits,
-                                       const uint8_t *pbtTxPar, uint8_t *pbtRx, size_t *pszRxBits, uint8_t *pbtRxPar, uint32_t *cycles)
+                                       const uint8_t *pbtTxPar, uint8_t *pbtRx, uint8_t *pbtRxPar, uint32_t *cycles)
 {
   // TODO Do something with these bytes...
   (void) pbtTxPar;
@@ -1326,6 +1326,7 @@ pn53x_initiator_transceive_bits_timed (struct nfc_device *pnd, const uint8_t *pb
   uint16_t i;
   uint8_t sz;
   int res = 0;
+  size_t szRxBits = 0;
 
   // Sorry, no arbitrary parity bits support for now
   if (!pnd->bPar) {
@@ -1373,7 +1374,6 @@ pn53x_initiator_transceive_bits_timed (struct nfc_device *pnd, const uint8_t *pb
   }
 
   // Recv data
-  *pszRxBits = 0;
   // we've to watch for coming data until we decide to timeout.
   // our PN53x timer saturates after 4.8ms so this function shouldn't be used for
   // responses coming very late anyway.
@@ -1404,19 +1404,19 @@ pn53x_initiator_transceive_bits_timed (struct nfc_device *pnd, const uint8_t *pb
       return res;
     }
     for (i = 0; i < sz; i++) {
-      pbtRx[i+*pszRxBits] = abtRes[i+off];
+      pbtRx[i+szRxBits] = abtRes[i+off];
     }
-    *pszRxBits += (size_t) (sz & SYMBOL_FIFO_LEVEL);
+    szRxBits += (size_t) (sz & SYMBOL_FIFO_LEVEL);
     sz = abtRes[sz+off];
     if (sz == 0)
       break;
   }
-  *pszRxBits *= 8; // in bits, not bytes
+  szRxBits *= 8; // in bits, not bytes
 
   // Recv corrected timer value
   *cycles = __pn53x_get_timer (pnd, pbtTx[szTxBits / 8]);
 
-  return *pszRxBits;
+  return szRxBits;
 }
 
 int

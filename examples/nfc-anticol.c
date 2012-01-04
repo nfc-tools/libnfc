@@ -52,7 +52,7 @@
 #define MAX_FRAME_LEN 264
 
 static uint8_t abtRx[MAX_FRAME_LEN];
-static size_t szRxBits;
+static int szRxBits;
 static size_t szRx = sizeof(abtRx);
 static uint8_t abtRawUid[12];
 static uint8_t abtAtqa[2];
