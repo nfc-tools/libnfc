@@ -1412,23 +1412,24 @@ pn53x_initiator_transceive_bits_timed (struct nfc_device *pnd, const uint8_t *pb
   return true;
 }
 
-bool
+int
 pn53x_initiator_transceive_bytes_timed (struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szTx, uint8_t *pbtRx,
                                         size_t *pszRx, uint32_t *cycles)
 {
   uint16_t i;
   uint8_t sz;
+  int res = 0;
 
   // We can not just send bytes without parity while the PN53X expects we handled them
   if (!pnd->bPar) {
     pnd->last_error = NFC_EINVARG;
-    return false;
+    return pnd->last_error;
   }
   // Sorry, no easy framing support
   // TODO to be changed once we'll provide easy framing support from libnfc itself...
   if (pnd->bEasyFraming) {
     pnd->last_error = NFC_ENOTIMPL;
-    return false;
+    return pnd->last_error;
   }
 
   __pn53x_init_timer(pnd, *cycles);
@@ -1456,8 +1457,8 @@ pn53x_initiator_transceive_bytes_timed (struct nfc_device *pnd, const uint8_t *p
   BUFFER_APPEND (abtWriteRegisterCmd, PN53X_REG_CIU_BitFraming & 0xff);
   BUFFER_APPEND (abtWriteRegisterCmd, SYMBOL_START_SEND);
   // Let's send the previously constructed WriteRegister command
-  if (pn53x_transceive (pnd, abtWriteRegisterCmd, BUFFER_SIZE (abtWriteRegisterCmd), NULL, NULL, -1) < 0) {
-    return false;
+  if ((res = pn53x_transceive (pnd, abtWriteRegisterCmd, BUFFER_SIZE (abtWriteRegisterCmd), NULL, NULL, -1)) < 0) {
+    return res;
   }
 
   // Recv data
@@ -1488,8 +1489,8 @@ pn53x_initiator_transceive_bytes_timed (struct nfc_device *pnd, const uint8_t *p
     uint8_t abtRes[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
     size_t szRes = sizeof(abtRes);
     // Let's send the previously constructed ReadRegister command
-    if (pn53x_transceive (pnd, abtReadRegisterCmd, BUFFER_SIZE (abtReadRegisterCmd), abtRes, &szRes, -1) < 0) {
-      return false;
+    if ((res = pn53x_transceive (pnd, abtReadRegisterCmd, BUFFER_SIZE (abtReadRegisterCmd), abtRes, &szRes, -1)) < 0) {
+      return res;
     }
     for (i = 0; i < sz; i++) {
       pbtRx[i+*pszRx] = abtRes[i+off];
@@ -1512,7 +1513,7 @@ pn53x_initiator_transceive_bytes_timed (struct nfc_device *pnd, const uint8_t *p
   } else {
     *cycles = __pn53x_get_timer (pnd, pbtTx[szTx -1]);
   }
-  return true;
+  return *pszRx;
 }
 
 int

@@ -546,7 +546,7 @@ nfc_initiator_transceive_bits (nfc_device *pnd, const uint8_t *pbtTx, const size
 
 /**
  * @brief Send data to target then retrieve data from target
- * @return Returns \c true if action was successfully performed; otherwise returns \c false.
+ * @return Returns received bytes count on success, otherwise returns libnfc's error code.
  *
  * This function is similar to nfc_initiator_transceive_bytes() with the following differences:
  * - A precise cycles counter will indicate the number of cycles between emission & reception of frames.
@@ -564,7 +564,7 @@ nfc_initiator_transceive_bits (nfc_device *pnd, const uint8_t *pbtTx, const size
  * @warning The configuration option \a NP_EASY_FRAMING must be set to \c false.
  * @warning The configuration option \a NP_HANDLE_PARITY must be set to \c true (the default value).
  */
-bool
+int
 nfc_initiator_transceive_bytes_timed (nfc_device *pnd, const uint8_t *pbtTx, const size_t szTx, uint8_t *pbtRx,
                                 size_t *pszRx, uint32_t *cycles)
 {
