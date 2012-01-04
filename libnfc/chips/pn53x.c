@@ -822,43 +822,44 @@ pn53x_set_property_bool (struct nfc_device *pnd, const nfc_property property, co
   return NFC_EINVARG;
 }
 
-bool
+int
 pn53x_idle (struct nfc_device *pnd)
 {
+  int res = 0;
   switch (CHIP_DATA (pnd)->operating_mode) {
     case TARGET:
       // InRelease used in target mode stops the target emulation and no more
       // tag are seen from external initiator
-      if (pn53x_InRelease (pnd, 0) < 0) {
-        return false;
+      if ((res = pn53x_InRelease (pnd, 0)) < 0) {
+        return res;
       }
       if (CHIP_DATA (pnd)->type == PN532) {
         // Use PowerDown to go in "Low VBat" power mode
-        if (pn53x_PowerDown (pnd) < 0) {
-          return false;
+        if ((res = pn53x_PowerDown (pnd)) < 0) {
+          return res;
         }
         CHIP_DATA (pnd)->power_mode = LOWVBAT;
       }
     break;
     case INITIATOR:
       // Deselect all active communications
-      if (pn53x_InDeselect (pnd, 0) < 0) {
-        return false;
+      if ((res = pn53x_InDeselect (pnd, 0)) < 0) {
+        return res;
       }
       // Disable RF field to avoid heating
-      if (nfc_device_set_property_bool (pnd, NP_ACTIVATE_FIELD, false) < 0) {
-        return false;
+      if ((res = nfc_device_set_property_bool (pnd, NP_ACTIVATE_FIELD, false)) < 0) {
+        return res;
       }
       if (CHIP_DATA (pnd)->type == PN532) {
         // Use PowerDown to go in "Low VBat" power mode
-        if (pn53x_PowerDown (pnd) < 0) {
-          return false;
+        if ((res = pn53x_PowerDown (pnd)) < 0) {
+          return res;
         }
         CHIP_DATA (pnd)->power_mode = LOWVBAT;
       } else {
         // Use InRelease to go in "Standby mode"
-        if (pn53x_InRelease (pnd, 0) < 0) {
-          return false;
+        if ((res = pn53x_InRelease (pnd, 0)) < 0) {
+          return res;
         }
       }
     break;
@@ -867,7 +868,7 @@ pn53x_idle (struct nfc_device *pnd)
     break;
   };
   CHIP_DATA (pnd)->operating_mode = IDLE;
-  return true;
+  return NFC_SUCCESS;
 }
 
 int

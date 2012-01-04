@@ -152,7 +152,7 @@ struct nfc_driver_t {
   int (*device_set_property_int) (struct nfc_device *pnd, const nfc_property property, const int value);
 
   bool (*abort_command) (struct nfc_device *pnd);
-  bool (*idle) (struct nfc_device *pnd);
+  int (*idle) (struct nfc_device *pnd);
 };
 
 #  define DEVICE_NAME_LENGTH  256
