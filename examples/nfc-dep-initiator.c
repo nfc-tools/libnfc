@@ -83,7 +83,7 @@ main (int argc, const char *argv[])
 
   if (nfc_initiator_init (pnd) < 0) {
     nfc_perror(pnd, "nfc_initiator_init");
-    return EXIT_FAILURE;
+    goto error;
   }
 
   if(nfc_initiator_select_dep_target (pnd, NDM_PASSIVE, NBR_212, NULL, &nt, 1000) < 0) {
@@ -101,7 +101,10 @@ main (int argc, const char *argv[])
   abtRx[szRx] = 0;
   printf ("Received: %s\n", abtRx);
 
-  nfc_initiator_deselect_target (pnd);
+  if (nfc_initiator_deselect_target (pnd) < 0) {
+    nfc_perror(pnd, "nfc_initiator_deselect_target");
+    goto error;
+  }
 
 error:
   nfc_disconnect (pnd);
