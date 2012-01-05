@@ -599,7 +599,7 @@ nfc_initiator_transceive_bits_timed (nfc_device *pnd, const uint8_t *pbtTx, cons
 
 /**
  * @brief Initialize NFC device as an emulated tag
- * @return Returns 0 on success, otherwise returns libnfc's error code
+ * @return Returns received bytes count on success, otherwise returns libnfc's error code
  *
  * @param pnd \a nfc_device struct pointer that represent currently used device
  * @param ntm target mode restriction that you want to emulate (eg. NTM_PASSIVE_ONLY)
@@ -610,6 +610,7 @@ nfc_initiator_transceive_bits_timed (nfc_device *pnd, const uint8_t *pbtTx, cons
  *
  * @param[out] pbtRx Rx buffer pointer
  * @param[out] pszRx received bytes count
+ * @param timeout in milliseconds
  *
  * This function initializes NFC device in \e target mode in order to emulate a
  * tag using the specified \a nfc_target_mode_t.
@@ -628,7 +629,7 @@ nfc_initiator_transceive_bits_timed (nfc_device *pnd, const uint8_t *pbtTx, cons
  * receive functions can be used.
  */
 int
-nfc_target_init (nfc_device *pnd, nfc_target *pnt, uint8_t *pbtRx, size_t * pszRx)
+nfc_target_init (nfc_device *pnd, nfc_target *pnt, uint8_t *pbtRx, size_t * pszRx, int timeout)
 {
   int res = 0;
   // Disallow invalid frame
@@ -655,7 +656,7 @@ nfc_target_init (nfc_device *pnd, nfc_target *pnt, uint8_t *pbtRx, size_t * pszR
   if ((res = nfc_device_set_property_bool (pnd, NP_ACTIVATE_FIELD, false)) < 0)
     return res;
 
-  HAL (target_init, pnd, pnt, pbtRx, pszRx);
+  HAL (target_init, pnd, pnt, pbtRx, pszRx, timeout);
 }
 
 /**

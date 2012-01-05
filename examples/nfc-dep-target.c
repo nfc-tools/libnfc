@@ -119,7 +119,7 @@ main (int argc, const char *argv[])
   print_nfc_target (nt, false);
 
   printf ("Waiting for initiator request...\n");
-  if(nfc_target_init (pnd, &nt, abtRx, &szRx) < 0) {
+  if(nfc_target_init (pnd, &nt, abtRx, &szRx, 0) < 0) {
     nfc_perror(pnd, "nfc_target_init");
     goto error;
   }

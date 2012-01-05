@@ -1589,7 +1589,7 @@ pn53x_initiator_deselect_target (struct nfc_device *pnd)
 #define SAK_ISO14443_4_COMPLIANT 0x20
 #define SAK_ISO18092_COMPLIANT   0x40
 int
-pn53x_target_init (struct nfc_device *pnd, nfc_target *pnt, uint8_t *pbtRx, size_t *pszRx)
+pn53x_target_init (struct nfc_device *pnd, nfc_target *pnt, uint8_t *pbtRx, size_t *pszRx, int timeout)
 {
   pn53x_reset_settings(pnd);
 
@@ -1742,7 +1742,7 @@ pn53x_target_init (struct nfc_device *pnd, nfc_target *pnt, uint8_t *pbtRx, size
   while (!targetActivated) {
     uint8_t btActivatedMode;
 
-    if((res = pn53x_TgInitAsTarget(pnd, ptm, pbtMifareParams, pbtTkt, szTkt, pbtFeliCaParams, pbtNFCID3t, pbtGBt, szGBt, pbtRx, pszRx, &btActivatedMode)) < 0) {
+    if((res = pn53x_TgInitAsTarget(pnd, ptm, pbtMifareParams, pbtTkt, szTkt, pbtFeliCaParams, pbtNFCID3t, pbtGBt, szGBt, pbtRx, pszRx, &btActivatedMode, timeout)) < 0) {
       return res;
     }
 
@@ -1807,7 +1807,7 @@ pn53x_target_init (struct nfc_device *pnd, nfc_target *pnt, uint8_t *pbtRx, size
     }
   }
 
-  return NFC_SUCCESS;
+  return *pszRx;
 }
 
 int
@@ -2420,7 +2420,7 @@ pn53x_TgInitAsTarget (struct nfc_device *pnd, pn53x_target_mode ptm,
                       const uint8_t *pbtTkt, size_t szTkt,
                       const uint8_t *pbtFeliCaParams,
                       const uint8_t *pbtNFCID3t, const uint8_t *pbtGBt, const size_t szGBt,
-                      uint8_t *pbtRx, size_t *pszRx, uint8_t *pbtModeByte)
+                      uint8_t *pbtRx, size_t *pszRx, uint8_t *pbtModeByte, int timeout)
 {
   uint8_t  abtCmd[39 + 47 + 48] = { TgInitAsTarget }; // Worst case: 39-byte base, 47 bytes max. for General Bytes, 48 bytes max. for Historical Bytes
   size_t  szOptionalBytes = 0;
@@ -2469,7 +2469,7 @@ pn53x_TgInitAsTarget (struct nfc_device *pnd, pn53x_target_mode ptm,
   // Request the initialization as a target
   uint8_t  abtRx[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
   size_t szRx = sizeof (abtRx);
-  if ((res = pn53x_transceive (pnd, abtCmd, 36 + szOptionalBytes, abtRx, &szRx, -1)) < 0)
+  if ((res = pn53x_transceive (pnd, abtCmd, 36 + szOptionalBytes, abtRx, &szRx, timeout)) < 0)
     return res;
 
   // Note: the first byte is skip: 

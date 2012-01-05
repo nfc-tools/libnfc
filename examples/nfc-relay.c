@@ -146,7 +146,7 @@ main (int argc, char *argv[])
     },
   };
 
-  if (nfc_target_init (pndTag, &nt, abtReaderRx, &szReaderRxBits) < 0) {
+  if (nfc_target_init (pndTag, &nt, abtReaderRx, &szReaderRxBits, 0) < 0) {
     ERR ("%s", "Initialization of NFC emulator failed");
     nfc_disconnect (pndTag);
     return EXIT_FAILURE;
