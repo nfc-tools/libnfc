@@ -118,7 +118,7 @@ struct pn53x_usb_data {
 
 const struct pn53x_io pn53x_usb_io;
 bool pn53x_usb_get_usb_device_name (struct usb_device *dev, usb_dev_handle *udev, char *buffer, size_t len);
-bool pn53x_usb_init (nfc_device *pnd);
+int pn53x_usb_init (nfc_device *pnd);
 
 int
 pn53x_usb_bulk_read (struct pn53x_usb_data *data, uint8_t abtRx[], const size_t szRx, const int timeout)
@@ -461,7 +461,7 @@ pn53x_usb_connect (const nfc_connstring connstring)
 
       // HACK2: Then send a GetFirmware command to resync USB toggle bit between host & device
       // in case host used set_configuration and expects the device to have reset its toggle bit, which PN53x doesn't do
-      if (!pn53x_usb_init (pnd)) {
+      if (pn53x_usb_init (pnd) < 0) {
         usb_close (data.pudh);
         goto error;
       }
@@ -694,9 +694,10 @@ pn53x_usb_ack (nfc_device *pnd)
   return pn53x_usb_bulk_write (DRIVER_DATA (pnd), (uint8_t *) pn53x_ack_frame, sizeof (pn53x_ack_frame), 0);
 }
 
-bool
+int
 pn53x_usb_init (nfc_device *pnd)
 {
+  int res = 0;
   // Sometimes PN53x USB doesn't reply ACK one the first frame, so we need to send a dummy one...
   //pn53x_check_communication (pnd); // Sony RC-S360 doesn't support this command for now so let's use a get_firmware_version instead:
   const uint8_t abtCmd[] = { GetFirmwareVersion };
@@ -710,8 +711,8 @@ pn53x_usb_init (nfc_device *pnd)
     pn53x_usb_ack (pnd);
   }
 
-  if (pn53x_init (pnd) < 0)
-    return false;
+  if ((res = pn53x_init (pnd)) < 0)
+    return res;
 
   if (ASK_LOGO == DRIVER_DATA (pnd)->model) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "ASK LoGO initialization.");
@@ -748,7 +749,7 @@ On ASK LoGO hardware:
     pn53x_write_register (pnd, PN53X_SFR_P3, 0xFF, _BV (P30) | _BV (P31) | _BV (P33) | _BV (P35));
   }
 
-  return true;
+  return NFC_SUCCESS;
 }
 
 int
