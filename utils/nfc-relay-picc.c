@@ -370,7 +370,7 @@ main (int argc, char *argv[])
     bool ret;
     if (!initiator_only_mode) {
       // Receive external reader command through target
-      if (nfc_target_receive_bytes(pndTarget,abtCapdu,&szCapduLen, 0) < 0) {
+      if ((int) ((szCapduLen = (size_t) nfc_target_receive_bytes(pndTarget, abtCapdu, 0))) < 0) {
         nfc_perror (pndTarget, "nfc_target_receive_bytes");
         if (!target_only_mode) {
           nfc_disconnect (pndInitiator);

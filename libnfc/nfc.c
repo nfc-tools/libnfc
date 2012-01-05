@@ -719,7 +719,6 @@ nfc_target_send_bytes (nfc_device *pnd, const uint8_t *pbtTx, const size_t szTx,
  * 
  * @param pnd \a nfc_device struct pointer that represent currently used device
  * @param[out] pbtRx pointer to Rx buffer
- * @param[out] pszRx received byte count
  * @param timeout in milliseconds
  *
  * This function retrieves bytes frames (e.g. ADPU) sent by the \e initiator to the NFC device (configured as \e target).
@@ -728,9 +727,9 @@ nfc_target_send_bytes (nfc_device *pnd, const uint8_t *pbtTx, const size_t szTx,
  * If timeout is a null pointer, the function blocks indefinitely (until an error is raised or function is completed).
  */
 int
-nfc_target_receive_bytes (nfc_device *pnd, uint8_t *pbtRx, size_t *pszRx, int timeout)
+nfc_target_receive_bytes (nfc_device *pnd, uint8_t *pbtRx, int timeout)
 {
-  HAL (target_receive_bytes, pnd, pbtRx, pszRx, timeout);
+  HAL (target_receive_bytes, pnd, pbtRx, timeout);
 }
 
 /**

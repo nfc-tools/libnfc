@@ -1851,7 +1851,7 @@ pn53x_target_receive_bits (struct nfc_device *pnd, uint8_t *pbtRx, uint8_t *pbtR
 }
 
 int
-pn53x_target_receive_bytes (struct nfc_device *pnd, uint8_t *pbtRx, size_t *pszRx, int timeout)
+pn53x_target_receive_bytes (struct nfc_device *pnd, uint8_t *pbtRx, int timeout)
 {
   uint8_t  abtCmd[1];
 
@@ -1890,13 +1890,13 @@ pn53x_target_receive_bytes (struct nfc_device *pnd, uint8_t *pbtRx, size_t *pszR
     return pnd->last_error;
 
   // Save the received bytes count
-  *pszRx = szRx - 1;
+  szRx -= 1;
 
   // Copy the received bytes
-  memcpy (pbtRx, abtRx + 1, *pszRx);
+  memcpy (pbtRx, abtRx + 1, szRx);
 
   // Everyting seems ok, return received bytes count
-  return *pszRx;
+  return szRx;
 }
 
 int
