@@ -295,8 +295,8 @@ pn532_uart_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szData, i
   switch (CHIP_DATA(pnd)->power_mode) {
     case LOWVBAT: {
       /** PN532C106 wakeup. */
-      if (-1 == pn532_uart_wakeup(pnd)) {
-        return NFC_ECHIP;
+      if ((res = pn532_uart_wakeup(pnd)) < 0) {
+        return res;
       }
       // According to PN532 application note, C106 appendix: to go out Low Vbat mode and enter in normal mode we need to send a SAMConfiguration command
       if ((res = pn53x_SAMConfiguration (pnd, 0x01, 500)) < 0) {
@@ -305,8 +305,8 @@ pn532_uart_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szData, i
     }
     break;
     case POWERDOWN: {
-      if (-1 == pn532_uart_wakeup(pnd)) {
-        return NFC_ECHIP;
+      if ((res = pn532_uart_wakeup(pnd)) < 0) {
+        return res;
       }
     }
     break;
@@ -362,8 +362,7 @@ pn532_uart_receive (nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, i
   pnd->last_error = uart_receive (DRIVER_DATA (pnd)->port, abtRxBuf, 5, abort_p, timeout);
 
   if (abort_p && (NFC_EOPABORTED == pnd->last_error)) {
-    pn532_uart_ack (pnd);
-    return pnd->last_error;
+    return pn532_uart_ack (pnd);
   }
 
   if (pnd->last_error != 0) {
@@ -473,12 +472,13 @@ pn532_uart_receive (nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, i
 int
 pn532_uart_ack (nfc_device *pnd)
 {
+  int res = 0;
   if (POWERDOWN == CHIP_DATA(pnd)->power_mode) {
-    if (-1 == pn532_uart_wakeup(pnd)) {
-      return -1;
+    if ((res = pn532_uart_wakeup(pnd)) < 0) {
+      return res;
     }
   }
-  return (uart_send (DRIVER_DATA(pnd)->port, pn53x_ack_frame, sizeof (pn53x_ack_frame),  0) < 0) ? 0 : -1;
+  return (uart_send (DRIVER_DATA(pnd)->port, pn53x_ack_frame, sizeof (pn53x_ack_frame),  0));
 }
 
 bool

@@ -88,7 +88,7 @@ static const uint8_t arygon_error_none[] = "FF000000\x0d\x0a";
 static const uint8_t arygon_error_incomplete_command[] = "FF0C0000\x0d\x0a";
 static const uint8_t arygon_error_unknown_mode[] = "FF060000\x0d\x0a";
 
-bool    arygon_reset_tama (nfc_device *pnd);
+int    arygon_reset_tama (nfc_device *pnd);
 void    arygon_firmware (nfc_device *pnd, char *str);
 
 bool
@@ -135,11 +135,11 @@ arygon_probe (nfc_connstring connstrings[], size_t connstrings_len, size_t *pszD
       DRIVER_DATA (pnd)->abort_flag = false;
 #endif
 
-      bool res = arygon_reset_tama (pnd);
+      int res = arygon_reset_tama (pnd);
       pn53x_data_free (pnd);
       nfc_device_free (pnd);
       uart_close (sp);
-      if(!res) {
+      if(res < 0) {
         continue;
       }
 
@@ -269,7 +269,7 @@ arygon_connect (const nfc_connstring connstring)
 #endif
 
   // Check communication using "Reset TAMA" command
-  if (!arygon_reset_tama(pnd)) {
+  if (arygon_reset_tama(pnd) < 0) {
     arygon_disconnect (pnd);
     return NULL;
   }
@@ -511,7 +511,7 @@ arygon_firmware (nfc_device *pnd, char *str)
   }
 }
 
-bool
+int
 arygon_reset_tama (nfc_device *pnd)
 {
   const uint8_t arygon_reset_tama_cmd[] = { DEV_ARYGON_PROTOCOL_ARYGON_ASCII, 'a', 'r' };
@@ -526,14 +526,16 @@ arygon_reset_tama (nfc_device *pnd)
   res = uart_receive (DRIVER_DATA (pnd)->port, abtRx, szRx, 0, 1000);
   if (res != 0) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "No reply to 'reset TAMA' command.");
-    return false;
+    pnd->last_error = NFC_EIO;
+    return pnd->last_error;
   }
 
   if (0 != memcmp (abtRx, arygon_error_none, sizeof (arygon_error_none) - 1)) {
-    return false;
+    pnd->last_error = NFC_EIO;
+    return pnd->last_error;
   }
 
-  return true;
+  return NFC_SUCCESS;
 }
 
 bool 
