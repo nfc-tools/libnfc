@@ -718,18 +718,19 @@ nfc_target_send_bytes (nfc_device *pnd, const uint8_t *pbtTx, const size_t szTx,
  * @return Returns received bytes count on success, otherwise returns libnfc's error code
  * 
  * @param pnd \a nfc_device struct pointer that represent currently used device
- * @param[out] pbtRx pointer to Rx buffer
+ * @param pbtRx pointer to Rx buffer
+ * @param szRx size of Rx buffer
  * @param timeout in milliseconds
  *
  * This function retrieves bytes frames (e.g. ADPU) sent by the \e initiator to the NFC device (configured as \e target).
  *
- * If timeout is not a null pointer, it specifies the maximum interval to wait for the function to be executed.
- * If timeout is a null pointer, the function blocks indefinitely (until an error is raised or function is completed).
+ * If timeout equals to 0, the function blocks indefinitely (until an error is raised or function is completed)
+ * If timeout equals to -1, the default timeout will be used
  */
 int
-nfc_target_receive_bytes (nfc_device *pnd, uint8_t *pbtRx, int timeout)
+nfc_target_receive_bytes (nfc_device *pnd, uint8_t *pbtRx, const size_t szRx, int timeout)
 {
-  HAL (target_receive_bytes, pnd, pbtRx, timeout);
+  HAL (target_receive_bytes, pnd, pbtRx, szRx, timeout);
 }
 
 /**
@@ -749,6 +750,9 @@ nfc_target_send_bits (nfc_device *pnd, const uint8_t *pbtTx, const size_t szTxBi
  * @brief Receive bit-frames
  * @return Returns received bits count on success, otherwise returns libnfc's error code
  *
+ * @param pbtRx
+ * @param szRx
+ *
  * This function makes it possible to receive (raw) bit-frames.  It returns all
  * the messages that are stored in the FIFO buffer of the \e PN53x chip.  It
  * does not require to send any frame and thereby could be used to snoop frames
@@ -757,9 +761,9 @@ nfc_target_send_bits (nfc_device *pnd, const uint8_t *pbtTx, const size_t szTxBi
  * frames.
  */
 int
-nfc_target_receive_bits (nfc_device *pnd, uint8_t *pbtRx, uint8_t *pbtRxPar)
+nfc_target_receive_bits (nfc_device *pnd, uint8_t *pbtRx, const size_t szRx, uint8_t *pbtRxPar)
 {
-  HAL (target_receive_bits, pnd, pbtRx, pbtRxPar);
+  HAL (target_receive_bits, pnd, pbtRx, szRx, pbtRxPar);
 }
 
 /**

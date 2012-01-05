@@ -47,7 +47,7 @@ nfc_emulate_target (nfc_device *pnd, struct nfc_emulator *emulator)
       }
     }
     if (res >= 0) {
-      if ((res = nfc_target_receive_bytes(pnd, abtRx, 0)) < 0) {
+      if ((res = nfc_target_receive_bytes(pnd, abtRx, szRx, 0)) < 0) {
         return -1;
       }
     }

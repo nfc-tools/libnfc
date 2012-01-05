@@ -354,6 +354,7 @@ main (int argc, char *argv[])
 
     printf ("Connected to the NFC emulator device: %s\n", nfc_device_get_name (pndTarget));
 
+    szCapduLen = sizeof (abtCapdu);
     if (nfc_target_init (pndTarget, &ntEmulatedTarget, abtCapdu, &szCapduLen, 0) < 0) {
       ERR ("%s", "Initialization of NFC emulator failed");
       if (!target_only_mode) {
@@ -371,7 +372,7 @@ main (int argc, char *argv[])
     int res = 0;
     if (!initiator_only_mode) {
       // Receive external reader command through target
-      if ((res = nfc_target_receive_bytes(pndTarget, abtCapdu, 0)) < 0) {
+      if ((res = nfc_target_receive_bytes(pndTarget, abtCapdu, sizeof (abtCapdu), 0)) < 0) {
         nfc_perror (pndTarget, "nfc_target_receive_bytes");
         if (!target_only_mode) {
           nfc_disconnect (pndInitiator);

@@ -126,7 +126,7 @@ main (int argc, const char *argv[])
   }
 
   printf("Initiator request received. Waiting for data...\n");
-  if ((res = nfc_target_receive_bytes (pnd, abtRx, 0)) < 0) {
+  if ((res = nfc_target_receive_bytes (pnd, abtRx, sizeof (abtRx), 0)) < 0) {
     nfc_perror(pnd, "nfc_target_receive_bytes");
     goto error;
   }

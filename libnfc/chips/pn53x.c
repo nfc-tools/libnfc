@@ -1811,7 +1811,7 @@ pn53x_target_init (struct nfc_device *pnd, nfc_target *pnt, uint8_t *pbtRx, size
 }
 
 int
-pn53x_target_receive_bits (struct nfc_device *pnd, uint8_t *pbtRx, uint8_t *pbtRxPar)
+pn53x_target_receive_bits (struct nfc_device *pnd, uint8_t *pbtRx, const size_t szRxLen, uint8_t *pbtRxPar)
 {
   size_t szRxBits = 0;
   uint8_t  abtCmd[] = { TgGetInitiatorCommand };
@@ -1851,7 +1851,7 @@ pn53x_target_receive_bits (struct nfc_device *pnd, uint8_t *pbtRx, uint8_t *pbtR
 }
 
 int
-pn53x_target_receive_bytes (struct nfc_device *pnd, uint8_t *pbtRx, int timeout)
+pn53x_target_receive_bytes (struct nfc_device *pnd, uint8_t *pbtRx, const size_t szRxLen, int timeout)
 {
   uint8_t  abtCmd[1];
 
@@ -1884,13 +1884,16 @@ pn53x_target_receive_bytes (struct nfc_device *pnd, uint8_t *pbtRx, int timeout)
   }
 
   // Try to gather a received frame from the reader
-  uint8_t  abtRx[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
-  size_t  szRx = sizeof (abtRx);
+  uint8_t abtRx[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
+  size_t szRx = sizeof (abtRx);
   if (pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), abtRx, &szRx, timeout) < 0)
     return pnd->last_error;
 
   // Save the received bytes count
   szRx -= 1;
+
+  if (szRx > szRxLen)
+    return NFC_EOVFLOW;
 
   // Copy the received bytes
   memcpy (pbtRx, abtRx + 1, szRx);

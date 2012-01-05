@@ -172,7 +172,7 @@ main (int argc, char *argv[])
 
   while (true) {
     // Test if we received a frame
-    if ((szRecvBits = nfc_target_receive_bits (pnd, abtRecv, NULL)) > 0) {
+    if ((szRecvBits = nfc_target_receive_bits (pnd, abtRecv, sizeof (abtRecv), 0)) > 0) {
       // Prepare the command to send back for the anti-collision request
       switch (szRecvBits) {
       case 7:                  // Request or Wakeup
