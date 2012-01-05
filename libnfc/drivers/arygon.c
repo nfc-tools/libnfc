@@ -538,7 +538,7 @@ arygon_reset_tama (nfc_device *pnd)
   return NFC_SUCCESS;
 }
 
-bool 
+int 
 arygon_abort_command (nfc_device *pnd)
 {
   if (pnd) {
@@ -549,7 +549,7 @@ arygon_abort_command (nfc_device *pnd)
     DRIVER_DATA (pnd)->abort_flag = true;
 #endif
   }
-  return true;
+  return NFC_SUCCESS;
 }
 
 

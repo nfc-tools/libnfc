@@ -577,7 +577,7 @@ main (int argc, const char *argv[])
       uint8_t fileUid[4];
       memcpy (fileUid, mtKeys.amb[0].mbm.abtUID, 4);
       // Compare if key dump UID is the same as the current tag UID, at least for the first 4 bytes
-      if (memcmp (nt.nti.nai.abtUid, fileUid, 4) != 0) {
+      if (memcmp (pbtUID, fileUid, 4) != 0) {
         printf ("Expected MIFARE Classic card with UID starting as: %02x%02x%02x%02x\n",
                 fileUid[0], fileUid[1], fileUid[2], fileUid[3]);
       }

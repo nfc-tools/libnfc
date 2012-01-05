@@ -781,11 +781,11 @@ pn53x_usb_set_property_bool (nfc_device *pnd, const nfc_property property, const
   return NFC_SUCCESS;
 }
 
-bool
+int
 pn53x_usb_abort_command (nfc_device *pnd)
 {
   DRIVER_DATA (pnd)->abort_flag = true;
-  return true;
+  return NFC_SUCCESS;
 }
 
 const struct pn53x_io pn53x_usb_io = {

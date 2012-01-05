@@ -481,7 +481,7 @@ pn532_uart_ack (nfc_device *pnd)
   return (uart_send (DRIVER_DATA(pnd)->port, pn53x_ack_frame, sizeof (pn53x_ack_frame),  0));
 }
 
-bool
+int
 pn532_uart_abort_command (nfc_device *pnd)
 {
   if (pnd) {
@@ -492,7 +492,7 @@ pn532_uart_abort_command (nfc_device *pnd)
     DRIVER_DATA (pnd)->abort_flag = true;
 #endif
   }
-  return true;
+  return NFC_SUCCESS;
 }
 
 const struct pn53x_io pn532_uart_io = {

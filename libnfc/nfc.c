@@ -676,7 +676,7 @@ nfc_idle (nfc_device *pnd)
 
 /**
  * @brief Abort current running command
- * @return Returns \c true if action was successfully performed; otherwise returns \c false.
+ * @return Returns 0 on success, otherwise returns libnfc's error code.
  *
  * @param pnd \a nfc_device struct pointer that represent currently used device
  *
@@ -685,7 +685,7 @@ nfc_idle (nfc_device *pnd)
  *
  * @note The blocking function (ie. nfc_target_init()) will failed with DEABORT error.
  */
-bool
+int
 nfc_abort_command (nfc_device *pnd)
 {
   HAL (abort_command, pnd);

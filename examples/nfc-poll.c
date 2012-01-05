@@ -63,7 +63,7 @@ void stop_polling (int sig)
 }
 
 void
-print_usage (char* progname)
+print_usage (const char* progname)
 {
   printf ("usage: %s [-v]\n", progname);
   printf ("  -v\t verbose display\n");
