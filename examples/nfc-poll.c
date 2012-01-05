@@ -110,7 +110,10 @@ main (int argc, const char *argv[])
     exit (EXIT_FAILURE);
   }
 
-  nfc_initiator_init (pnd);
+  if (nfc_initiator_init (pnd) < 0) {
+    nfc_perror (pnd, "nfc_initiator_init");
+    exit (EXIT_FAILURE);    
+  }
 
   printf ("Connected to NFC reader: %s\n", nfc_device_get_name (pnd));
   printf ("NFC device will poll during %ld ms (%u pollings of %lu ms for %zd modulations)\n", (unsigned long) uiPollNr * szModulations * uiPeriod * 150, uiPollNr, (unsigned long) uiPeriod * 150, szModulations);

@@ -213,7 +213,10 @@ main(int argc, char *argv[])
 
   nfc_target nt;
 
-  nfc_initiator_init(pnd);
+  if (nfc_initiator_init (pnd) < 0) {
+    nfc_perror (pnd, "nfc_initiator_init");
+    exit (EXIT_FAILURE);    
+  }
   fprintf (message_stream, "Place your NFC Forum Tag Type 3 in the field...\n");
 
   int error = EXIT_SUCCESS;

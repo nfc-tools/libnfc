@@ -128,7 +128,10 @@ main (int argc, const char *argv[])
       nfc_target nt;
 
       // Set connected NFC device to initiator mode
-      nfc_initiator_init (pnd);
+      if (nfc_initiator_init (pnd) < 0) {
+        nfc_perror (pnd, "nfc_initiator_init");
+        exit (EXIT_FAILURE);    
+      }
 
       // Let the reader only try once to find a tag
       if (nfc_device_set_property_bool (pnd, NP_INFINITE_SELECT, false) < 0) {

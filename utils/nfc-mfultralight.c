@@ -211,7 +211,10 @@ main (int argc, const char *argv[])
     return 1;
   }
 
-  nfc_initiator_init (pnd);
+  if (nfc_initiator_init (pnd) < 0) {
+    nfc_perror (pnd, "nfc_initiator_init");
+    exit (EXIT_FAILURE);    
+  }
 
   // Let the device only try once to find a tag
   if (nfc_device_set_property_bool (pnd, NP_INFINITE_SELECT, false) < 0) {

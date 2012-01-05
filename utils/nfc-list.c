@@ -130,7 +130,10 @@ main (int argc, const char *argv[])
       ERR ("%s", "Unable to connect to NFC device.");
       return EXIT_FAILURE;
     }
-    nfc_initiator_init (pnd);
+  if (nfc_initiator_init (pnd) < 0) {
+    nfc_perror (pnd, "nfc_initiator_init");
+    exit (EXIT_FAILURE);    
+  }
 
     printf ("Connected to NFC device: %s\n", nfc_device_get_name (pnd));
 

@@ -95,7 +95,10 @@ int main(int argc, const char* argv[])
   }
 
   printf ("Connected to NFC reader: %s\n", nfc_device_get_name (pnd));
-  nfc_initiator_init(pnd);
+  if (nfc_initiator_init (pnd) < 0) {
+    nfc_perror (pnd, "nfc_initiator_init");
+    exit (EXIT_FAILURE);    
+  }
 
   char *cmd;
   char *prompt = "> ";

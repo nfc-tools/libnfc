@@ -186,7 +186,10 @@ main (int argc, char *argv[])
   }
 
   // Initialise NFC device as "initiator"
-  nfc_initiator_init (pnd);
+  if (nfc_initiator_init (pnd) < 0) {
+    nfc_perror (pnd, "nfc_initiator_init");
+    exit (EXIT_FAILURE);    
+  }
 
   // Configure the CRC
   if (nfc_device_set_property_bool (pnd, NP_HANDLE_CRC, false) < 0) {

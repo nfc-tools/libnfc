@@ -164,7 +164,11 @@ main (int argc, char *argv[])
 
   printf ("Connected to the NFC reader device: %s", nfc_device_get_name (pndReader));
   printf ("%s", "Configuring NFC reader settings...");
-  nfc_initiator_init (pndReader);
+  
+  if (nfc_initiator_init (pndReader) < 0) {
+    nfc_perror (pndReader, "nfc_initiator_init");
+    exit (EXIT_FAILURE);    
+  }
   if ((nfc_device_set_property_bool (pndReader, NP_HANDLE_CRC, false) < 0) ||
       (nfc_device_set_property_bool (pndReader, NP_HANDLE_PARITY, false) < 0) ||
       (nfc_device_set_property_bool (pndReader, NP_ACCEPT_INVALID_FRAMES, true)) < 0) {

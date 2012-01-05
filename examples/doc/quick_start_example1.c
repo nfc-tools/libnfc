@@ -26,7 +26,10 @@ main (int argc, const char *argv[])
     return EXIT_FAILURE;
   }
   // Set connected NFC device to initiator mode
-  nfc_initiator_init (pnd);
+  if (nfc_initiator_init (pnd) < 0) {
+    nfc_perror (pnd, "nfc_initiator_init");
+    exit (EXIT_FAILURE);    
+  }
 
   printf ("Connected to NFC reader: %s\n", nfc_device_get_name (pnd));
 
