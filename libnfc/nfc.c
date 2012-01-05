@@ -660,7 +660,7 @@ nfc_target_init (nfc_device *pnd, nfc_target *pnt, uint8_t *pbtRx, size_t * pszR
 
 /**
  * @brief Turn NFC device in idle mode
- * @return Returns \c true if action was successfully performed; otherwise returns \c false.
+ * @return Returns 0 on success, otherwise returns libnfc's error code.
  *
  * @param pnd \a nfc_device struct pointer that represent currently used device
  *
@@ -668,7 +668,7 @@ nfc_target_init (nfc_device *pnd, nfc_target *pnt, uint8_t *pbtRx, size_t * pszR
  * In initiator mode, the RF field is turned off and the device is set to low power mode (if avaible);
  * In target mode, the emulation is stoped (no target available from external initiator) and the device is set to low power mode (if avaible).
  */
-bool
+int
 nfc_idle (nfc_device *pnd)
 {
   HAL (idle, pnd);

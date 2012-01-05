@@ -68,7 +68,7 @@ extern  "C" {
   NFC_EXPORT void nfc_disconnect (nfc_device *pnd);
   NFC_EXPORT bool nfc_abort_command (nfc_device *pnd);
   NFC_EXPORT void nfc_list_devices (nfc_connstring connstrings[], size_t connstrings_len, size_t *pszDeviceFound);
-  NFC_EXPORT bool nfc_idle (nfc_device *pnd);
+  NFC_EXPORT int nfc_idle (nfc_device *pnd);
 
 /* NFC initiator: act as "reader" */
   NFC_EXPORT int nfc_initiator_init (nfc_device *pnd);
