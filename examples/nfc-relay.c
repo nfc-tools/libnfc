@@ -179,7 +179,7 @@ main (int argc, char *argv[])
 
   while (!quitting) {
     // Test if we received a frame from the reader
-    if (nfc_target_receive_bits (pndTag, abtReaderRx, &szReaderRxBits, abtReaderRxPar) > 0) {
+    if ((szReaderRxBits = nfc_target_receive_bits (pndTag, abtReaderRx, abtReaderRxPar)) > 0) {
       // Drop down the field before sending a REQA command and start a new session
       if (szReaderRxBits == 7 && abtReaderRx[0] == 0x26) {
         // Drop down field for a very short time (original tag will reboot)

@@ -1811,8 +1811,9 @@ pn53x_target_init (struct nfc_device *pnd, nfc_target *pnt, uint8_t *pbtRx, size
 }
 
 int
-pn53x_target_receive_bits (struct nfc_device *pnd, uint8_t *pbtRx, size_t *pszRxBits, uint8_t *pbtRxPar)
+pn53x_target_receive_bits (struct nfc_device *pnd, uint8_t *pbtRx, uint8_t *pbtRxPar)
 {
+  size_t szRxBits = 0;
   uint8_t  abtCmd[] = { TgGetInitiatorCommand };
 
   uint8_t  abtRx[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
@@ -1838,15 +1839,15 @@ pn53x_target_receive_bits (struct nfc_device *pnd, uint8_t *pbtRx, size_t *pszRx
     // Unwrap the response frame
     if ((res = pn53x_unwrap_frame (abtRx + 1, szFrameBits, pbtRx, pbtRxPar)) < 0)
       return res;
-    *pszRxBits = res;
+    szRxBits = res;
   } else {
     // Save the received bits
-    *pszRxBits = szFrameBits;
+    szRxBits = szFrameBits;
     // Copy the received bytes
     memcpy (pbtRx, abtRx + 1, szRx - 1);
   }
   // Everyting seems ok, return received bits count
-  return *pszRxBits;
+  return szRxBits;
 }
 
 int

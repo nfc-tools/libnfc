@@ -758,9 +758,9 @@ nfc_target_send_bits (nfc_device *pnd, const uint8_t *pbtTx, const size_t szTxBi
  * frames.
  */
 int
-nfc_target_receive_bits (nfc_device *pnd, uint8_t *pbtRx, size_t *pszRxBits, uint8_t *pbtRxPar)
+nfc_target_receive_bits (nfc_device *pnd, uint8_t *pbtRx, uint8_t *pbtRxPar)
 {
-  HAL (target_receive_bits, pnd, pbtRx, pszRxBits, pbtRxPar);
+  HAL (target_receive_bits, pnd, pbtRx, pbtRxPar);
 }
 
 /**
