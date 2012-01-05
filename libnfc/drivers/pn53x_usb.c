@@ -505,7 +505,7 @@ pn53x_usb_disconnect (nfc_device *pnd)
 
 #define PN53X_USB_BUFFER_LEN (PN53x_EXTENDED_FRAME__DATA_MAX_LEN + PN53x_EXTENDED_FRAME__OVERHEAD)
 
-bool
+int
 pn53x_usb_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szData, const int timeout)
 {
   uint8_t  abtFrame[PN53X_USB_BUFFER_LEN] = { 0x00, 0x00, 0xff };  // Every packet must start with "00 00 ff"
@@ -517,7 +517,7 @@ pn53x_usb_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szData, co
 
   if (res < 0) {
     pnd->last_error = NFC_EIO;
-    return false;
+    return pnd->last_error;
   }
 
   uint8_t abtRxBuf[PN53X_USB_BUFFER_LEN];
@@ -526,7 +526,7 @@ pn53x_usb_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szData, co
     pnd->last_error = NFC_EIO;
     // try to interrupt current device state
     pn53x_usb_ack(pnd);
-    return false;
+    return pnd->last_error;
   }
 
   if (pn53x_check_ack_frame (pnd, abtRxBuf, res) == 0) {
@@ -544,11 +544,11 @@ pn53x_usb_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szData, co
       pnd->last_error = NFC_EIO;
       // try to interrupt current device state
       pn53x_usb_ack(pnd);
-      return false;
+      return pnd->last_error;
     }
   }
 
-  return true;
+  return NFC_SUCCESS;
 }
 
 #define USB_TIMEOUT_PER_PASS 200
@@ -575,7 +575,7 @@ read:
     remaining_time -= USB_TIMEOUT_PER_PASS;
     if (remaining_time <= 0) {
       pnd->last_error = NFC_ETIMEOUT;
-      return -1;
+      return pnd->last_error;
     } else {
       usb_timeout = MIN(remaining_time, USB_TIMEOUT_PER_PASS);
     }
@@ -588,7 +588,7 @@ read:
       DRIVER_DATA (pnd)->abort_flag = false;
       pn53x_usb_ack (pnd);
       pnd->last_error = NFC_EOPABORTED;
-      return -1;
+      return pnd->last_error;
     } else {
       goto read;
     }
@@ -598,14 +598,14 @@ read:
     pnd->last_error = NFC_EIO;
     // try to interrupt current device state
     pn53x_usb_ack(pnd);
-    return -1;
+    return pnd->last_error;
   }
 
   const uint8_t pn53x_preamble[3] = { 0x00, 0x00, 0xff };
   if (0 != (memcmp (abtRxBuf, pn53x_preamble, 3))) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Frame preamble+start code mismatch");
     pnd->last_error = NFC_EIO;
-    return -1;
+    return pnd->last_error;
   }
   offset += 3;
 
@@ -613,7 +613,7 @@ read:
     // Error frame
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Application level error detected");
     pnd->last_error = NFC_EIO;
-    return -1;
+    return pnd->last_error;
   } else if ((0xff == abtRxBuf[offset]) && (0xff == abtRxBuf[offset + 1])) {
     // Extended frame
     offset += 2;
@@ -624,7 +624,7 @@ read:
       // TODO: Retry
       log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Length checksum mismatch");
       pnd->last_error = NFC_EIO;
-      return -1;
+      return pnd->last_error;
     }
     offset += 3;
   } else {
@@ -633,7 +633,7 @@ read:
       // TODO: Retry
       log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Length checksum mismatch");
       pnd->last_error = NFC_EIO;
-      return -1;
+      return pnd->last_error;
     }
 
     // abtRxBuf[3] (LEN) include TFI + (CC+1)
@@ -644,21 +644,21 @@ read:
   if (len > szDataLen) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to receive data: buffer too small. (szDataLen: %zu, len: %zu)", szDataLen, len);
     pnd->last_error = NFC_EIO;
-    return -1;
+    return pnd->last_error;
   }
 
   // TFI + PD0 (CC+1)
   if (abtRxBuf[offset] != 0xD5) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "TFI Mismatch");
     pnd->last_error = NFC_EIO;
-    return -1;
+    return pnd->last_error;
   }
   offset += 1;
 
   if (abtRxBuf[offset] != CHIP_DATA (pnd)->ui8LastCommand + 1) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Command Code verification failed");
     pnd->last_error = NFC_EIO;
-    return -1;
+    return pnd->last_error;
   }
   offset += 1;
 
@@ -674,14 +674,14 @@ read:
   if (btDCS != abtRxBuf[offset]) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Data checksum mismatch");
     pnd->last_error = NFC_EIO;
-    return -1;
+    return pnd->last_error;
   }
   offset += 1;
 
   if (0x00 != abtRxBuf[offset]) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Frame postamble mismatch");
     pnd->last_error = NFC_EIO;
-    return -1;
+    return pnd->last_error;
   }
   // The PN53x command is done and we successfully received the reply
   pnd->last_error = 0;

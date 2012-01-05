@@ -127,7 +127,7 @@ typedef enum {
 } pn53x_operating_mode;
 
 struct pn53x_io {
-  bool (*send)(struct nfc_device *pnd, const uint8_t *pbtData, const size_t szData, int timeout);
+  int (*send)(struct nfc_device *pnd, const uint8_t *pbtData, const size_t szData, int timeout);
   int (*receive)(struct nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, int timeout);
 };
 

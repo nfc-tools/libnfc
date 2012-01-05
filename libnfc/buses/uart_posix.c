@@ -314,7 +314,7 @@ select:
 
   } while (expected_bytes_count > received_bytes_count);
   LOG_HEX ("RX", pbtRx, szRx);
-  return 0;
+  return NFC_SUCCESS;
 }
 
 /**
@@ -328,7 +328,7 @@ uart_send (serial_port sp, const uint8_t *pbtTx, const size_t szTx, int timeout)
   (void) timeout;
   LOG_HEX ("TX", pbtTx, szTx);
   if ((int) szTx == write (UART_DATA(sp)->fd, pbtTx, szTx))
-    return 0;
+    return NFC_SUCCESS;
   else
     return NFC_EIO;
 }

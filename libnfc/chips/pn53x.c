@@ -135,7 +135,7 @@ pn53x_transceive (struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szT
 
   // Call the send/receice callback functions of the current driver
   if ((res = CHIP_DATA (pnd)->io->send (pnd, pbtTx, szTx, timeout)) < 0) {
-    return pnd->last_error;
+    return res;
   }
 
   // Command is sent, we store the command
@@ -147,7 +147,7 @@ pn53x_transceive (struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szT
   }
 
   if ((res = CHIP_DATA(pnd)->io->receive (pnd, pbtRx, *pszRx, timeout)) < 0) {
-    return pnd->last_error;
+    return res;
   }
 
   if ((CHIP_DATA(pnd)->type == PN532) && (TgInitAsTarget == pbtTx[0])) { // PN532 automatically wakeup on external RF field

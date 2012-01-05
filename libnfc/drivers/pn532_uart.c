@@ -285,9 +285,10 @@ pn532_uart_wakeup (nfc_device *pnd)
 }
 
 #define PN532_BUFFER_LEN (PN53x_EXTENDED_FRAME__DATA_MAX_LEN + PN53x_EXTENDED_FRAME__OVERHEAD)
-bool
+int
 pn532_uart_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szData, int timeout)
 {
+  int res = 0;
   // Before sending anything, we need to discard from any junk bytes
   uart_flush_input (DRIVER_DATA(pnd)->port);
 
@@ -295,17 +296,17 @@ pn532_uart_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szData, i
     case LOWVBAT: {
       /** PN532C106 wakeup. */
       if (-1 == pn532_uart_wakeup(pnd)) {
-        return false;
+        return NFC_ECHIP;
       }
       // According to PN532 application note, C106 appendix: to go out Low Vbat mode and enter in normal mode we need to send a SAMConfiguration command
-      if (pn53x_SAMConfiguration (pnd, 0x01, 500) < 0) {
-        return false;
+      if ((res = pn53x_SAMConfiguration (pnd, 0x01, 500)) < 0) {
+        return res;
       }
     }
     break;
     case POWERDOWN: {
       if (-1 == pn532_uart_wakeup(pnd)) {
-        return false;
+        return NFC_ECHIP;
       }
     }
     break;
@@ -319,14 +320,14 @@ pn532_uart_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szData, i
 
   if (pn53x_build_frame (abtFrame, &szFrame, pbtData, szData) < 0) {
     pnd->last_error = NFC_EINVARG;
-    return false;
+    return pnd->last_error;
   }
 
-  int res = uart_send (DRIVER_DATA(pnd)->port, abtFrame, szFrame, timeout);
+  res = uart_send (DRIVER_DATA(pnd)->port, abtFrame, szFrame, timeout);
   if (res != 0) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Unable to transmit data. (TX)");
     pnd->last_error = res;
-    return false;
+    return pnd->last_error;
   }
 
   uint8_t abtRxBuf[6];
@@ -334,15 +335,15 @@ pn532_uart_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szData, i
   if (res != 0) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Unable to read ACK");
     pnd->last_error = res;
-    return false;
+    return pnd->last_error;
   }
 
   if (pn53x_check_ack_frame (pnd, abtRxBuf, sizeof(abtRxBuf)) == 0) {
     // The PN53x is running the sent command
   } else {
-    return false;
+    return pnd->last_error;
   }
-  return true;
+  return NFC_SUCCESS;
 }
 
 int
@@ -374,7 +375,7 @@ pn532_uart_receive (nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, i
   if (0 != (memcmp (abtRxBuf, pn53x_preamble, 3))) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Frame preamble+start code mismatch");
     pnd->last_error = NFC_EIO;
-    return -1;
+    return pnd->last_error;
   }
 
   if ((0x01 == abtRxBuf[3]) && (0xff == abtRxBuf[4])) {
@@ -386,7 +387,7 @@ pn532_uart_receive (nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, i
   } else if ((0xff == abtRxBuf[3]) && (0xff == abtRxBuf[4])) {
     // Extended frame
     pnd->last_error = uart_receive (DRIVER_DATA(pnd)->port, abtRxBuf, 3, 0, timeout);
-    if (pnd->last_error) return -1;
+    if (pnd->last_error) return pnd->last_error;
 
     // (abtRxBuf[0] << 8) + abtRxBuf[1] (LEN) include TFI + (CC+1)
     len = (abtRxBuf[0] << 8) + abtRxBuf[1] - 2;
@@ -394,7 +395,7 @@ pn532_uart_receive (nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, i
       // TODO: Retry
       log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Length checksum mismatch");
       pnd->last_error = NFC_EIO;
-      return -1;
+      return pnd->last_error;
     }
   } else {
     // Normal frame
@@ -402,7 +403,7 @@ pn532_uart_receive (nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, i
       // TODO: Retry
       log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Length checksum mismatch");
       pnd->last_error = NFC_EIO;
-      return -1;
+      return pnd->last_error;
     }
 
     // abtRxBuf[3] (LEN) include TFI + (CC+1)
@@ -412,40 +413,40 @@ pn532_uart_receive (nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, i
   if (len > szDataLen) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to receive data: buffer too small. (szDataLen: %zu, len: %zu)", szDataLen, len);
     pnd->last_error = NFC_EIO;
-    return -1;
+    return pnd->last_error;
   }
 
   // TFI + PD0 (CC+1)
   pnd->last_error = uart_receive (DRIVER_DATA (pnd)->port, abtRxBuf, 2, 0, timeout);
   if (pnd->last_error != 0) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Unable to receive data. (RX)");
-    return -1;
+    return pnd->last_error;
   }
 
   if (abtRxBuf[0] != 0xD5) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "TFI Mismatch");
     pnd->last_error = NFC_EIO;
-    return -1;
+    return pnd->last_error;
   }
 
   if (abtRxBuf[1] != CHIP_DATA (pnd)->ui8LastCommand + 1) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Command Code verification failed");
     pnd->last_error = NFC_EIO;
-    return -1;
+    return pnd->last_error;
   }
 
   if (len) {
     pnd->last_error = uart_receive (DRIVER_DATA (pnd)->port, pbtData, len, 0, timeout);
     if (pnd->last_error != 0) {
       log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Unable to receive data. (RX)");
-      return -1;
+      return pnd->last_error;
     }
   }
 
   pnd->last_error = uart_receive (DRIVER_DATA (pnd)->port, abtRxBuf, 2, 0, timeout);
   if (pnd->last_error != 0) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Unable to receive data. (RX)");
-    return -1;
+    return pnd->last_error;
   }
 
   uint8_t btDCS = (256 - 0xD5);
@@ -457,13 +458,13 @@ pn532_uart_receive (nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, i
   if (btDCS != abtRxBuf[0]) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Data checksum mismatch");
     pnd->last_error = NFC_EIO;
-    return -1;
+    return pnd->last_error;
   }
 
   if (0x00 != abtRxBuf[1]) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Frame postamble mismatch");
     pnd->last_error = NFC_EIO;
-    return -1;
+    return pnd->last_error;
   }
   // The PN53x command is done and we successfully received the reply
   return len;
@@ -477,7 +478,7 @@ pn532_uart_ack (nfc_device *pnd)
       return -1;
     }
   }
-  return (0 == uart_send (DRIVER_DATA(pnd)->port, pn53x_ack_frame, sizeof (pn53x_ack_frame),  0)) ? 0 : -1;
+  return (uart_send (DRIVER_DATA(pnd)->port, pn53x_ack_frame, sizeof (pn53x_ack_frame),  0) < 0) ? 0 : -1;
 }
 
 bool

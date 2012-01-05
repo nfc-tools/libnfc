@@ -303,7 +303,7 @@ arygon_disconnect (nfc_device *pnd)
 
 #define ARYGON_TX_BUFFER_LEN (PN53x_NORMAL_FRAME__DATA_MAX_LEN + PN53x_NORMAL_FRAME__OVERHEAD + 1)
 #define ARYGON_RX_BUFFER_LEN (PN53x_EXTENDED_FRAME__DATA_MAX_LEN + PN53x_EXTENDED_FRAME__OVERHEAD)
-bool
+int
 arygon_tama_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szData, int timeout)
 {
   // Before sending anything, we need to discard from any junk bytes
@@ -316,19 +316,19 @@ arygon_tama_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szData, 
     // ARYGON Reader with PN532 equipped does not support extended frame (bug in ARYGON firmware?)
     log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "ARYGON device does not support more than %d bytes as payload (requested: %zd)", PN53x_NORMAL_FRAME__DATA_MAX_LEN, szData);
     pnd->last_error = NFC_EDEVNOTSUPP;
-    return false;
+    return pnd->last_error;
   }
 
   if (pn53x_build_frame (abtFrame + 1, &szFrame, pbtData, szData) < 0) {
     pnd->last_error = NFC_EINVARG;
-    return false;
+    return pnd->last_error;
   }
 
   int res = uart_send (DRIVER_DATA (pnd)->port, abtFrame, szFrame + 1, timeout);
   if (res != 0) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Unable to transmit data. (TX)");
     pnd->last_error = NFC_EIO;
-    return false;
+    return pnd->last_error;
   }
 
   uint8_t abtRxBuf[6];
@@ -336,7 +336,7 @@ arygon_tama_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szData, 
   if (res != 0) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Unable to read ACK");
     pnd->last_error = NFC_EIO;
-    return false;
+    return pnd->last_error;
   }
 
   if (pn53x_check_ack_frame (pnd, abtRxBuf, sizeof(abtRxBuf)) == 0) {
@@ -345,12 +345,12 @@ arygon_tama_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szData, 
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR,  "Bad frame format." );
     // We have already read 6 bytes and arygon_error_unknown_mode is 10 bytes long
     // so we have to read 4 remaining bytes to be synchronized at the next receiving pass.
-    uart_receive (DRIVER_DATA (pnd)->port, abtRxBuf, 4, 0, timeout);
-    return false;
+    pnd->last_error = uart_receive (DRIVER_DATA (pnd)->port, abtRxBuf, 4, 0, timeout);
+    return pnd->last_error;
   } else {
-    return false;
+    return pnd->last_error;
   }
-  return true;
+  return NFC_SUCCESS;
 }
 
 int
@@ -426,40 +426,40 @@ arygon_tama_receive (nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, 
   if (len > szDataLen) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to receive data: buffer too small. (szDataLen: %zu, len: %zu)", szDataLen, len);
     pnd->last_error = NFC_EIO;
-    return -1;
+    return pnd->last_error;
   }
 
   // TFI + PD0 (CC+1)
   pnd->last_error = uart_receive (DRIVER_DATA (pnd)->port, abtRxBuf, 2, 0, timeout);
   if (pnd->last_error != 0) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Unable to receive data. (RX)");
-    return -1;
+    return pnd->last_error;
   }
 
   if (abtRxBuf[0] != 0xD5) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "TFI Mismatch");
     pnd->last_error = NFC_EIO;
-    return -1;
+    return pnd->last_error;
   }
 
   if (abtRxBuf[1] != CHIP_DATA (pnd)->ui8LastCommand + 1) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Command Code verification failed");
     pnd->last_error = NFC_EIO;
-    return -1;
+    return pnd->last_error;
   }
 
   if (len) {
     pnd->last_error = uart_receive (DRIVER_DATA (pnd)->port, pbtData, len, 0, timeout);
     if (pnd->last_error != 0) {
       log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Unable to receive data. (RX)");
-      return -1;
+      return pnd->last_error;
     }
   }
 
   pnd->last_error = uart_receive (DRIVER_DATA (pnd)->port, abtRxBuf, 2, 0, timeout);
   if (pnd->last_error != 0) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Unable to receive data. (RX)");
-    return -1;
+    return pnd->last_error;
   }
 
   uint8_t btDCS = (256 - 0xD5);
@@ -471,13 +471,13 @@ arygon_tama_receive (nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, 
   if (btDCS != abtRxBuf[0]) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Data checksum mismatch");
     pnd->last_error = NFC_EIO;
-    return -1;
+    return pnd->last_error;
   }
 
   if (0x00 != abtRxBuf[1]) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Frame postamble mismatch");
     pnd->last_error = NFC_EIO;
-    return -1;
+    return pnd->last_error;
   }
   // The PN53x command is done and we successfully received the reply
   return len;
