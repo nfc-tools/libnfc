@@ -62,6 +62,7 @@ int
 main (int argc, const char *argv[])
 {
   uint8_t  abtRx[MAX_FRAME_LEN];
+  int res = 0;
   size_t  szRx = sizeof(abtRx);
   size_t  szDeviceFound;
   uint8_t  abtTx[] = "Hello Mars!";
@@ -125,10 +126,11 @@ main (int argc, const char *argv[])
   }
 
   printf("Initiator request received. Waiting for data...\n");
-  if (((int) (szRx = (size_t) nfc_target_receive_bytes (pnd, abtRx, 0))) < 0) {
+  if ((res = nfc_target_receive_bytes (pnd, abtRx, 0)) < 0) {
     nfc_perror(pnd, "nfc_target_receive_bytes");
     goto error;
   }
+  szRx = (size_t) res;
   abtRx[szRx] = '\0';
   printf ("Received: %s\n", abtRx);
 

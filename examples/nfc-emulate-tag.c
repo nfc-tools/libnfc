@@ -137,6 +137,7 @@ bool
 nfc_target_emulate_tag(nfc_device *pnd, nfc_target *pnt)
 {
   size_t szTx;
+  int res = 0;
   uint8_t abtTx[MAX_FRAME_LEN];
   bool loop = true;
 
@@ -158,10 +159,11 @@ nfc_target_emulate_tag(nfc_device *pnd, nfc_target *pnt)
         nfc_device_set_property_bool (pnd, NP_HANDLE_CRC, false);
         init_mfc_auth = false;
       }
-      if ((int) ((szRx = (size_t) nfc_target_receive_bytes(pnd, abtRx, 0))) < 0) {
+      if ((res = nfc_target_receive_bytes(pnd, abtRx, 0)) < 0) {
         nfc_perror (pnd, "nfc_target_receive_bytes");
         return false;
       }
+      szRx = (size_t) res;
     }
   }
   return true;

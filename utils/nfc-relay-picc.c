@@ -368,9 +368,10 @@ main (int argc, char *argv[])
 
   while (!quitting) {
     bool ret;
+    int res = 0;
     if (!initiator_only_mode) {
       // Receive external reader command through target
-      if ((int) ((szCapduLen = (size_t) nfc_target_receive_bytes(pndTarget, abtCapdu, 0))) < 0) {
+      if ((res = nfc_target_receive_bytes(pndTarget, abtCapdu, 0)) < 0) {
         nfc_perror (pndTarget, "nfc_target_receive_bytes");
         if (!target_only_mode) {
           nfc_disconnect (pndInitiator);
@@ -378,6 +379,7 @@ main (int argc, char *argv[])
         nfc_disconnect (pndTarget);
         exit(EXIT_FAILURE);
       }
+      szCapduLen = (size_t) res;
       if (target_only_mode) {
         if (print_hex_fd4(abtCapdu, szCapduLen, "C-APDU") != EXIT_SUCCESS) {
         fprintf (stderr, "Error while printing C-APDU to FD4\n");
