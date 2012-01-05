@@ -52,7 +52,7 @@ static const uint8_t pn53x_error_frame[] = { 0x00, 0x00, 0xff, 0x01, 0xff, 0x7f,
 
 /* prototypes */
 int pn53x_reset_settings (struct nfc_device *pnd);
-bool pn53x_writeback_register (struct nfc_device *pnd);
+int pn53x_writeback_register (struct nfc_device *pnd);
 
 nfc_modulation pn53x_ptt_to_nm (const pn53x_target_type ptt);
 pn53x_modulation pn53x_nm_to_pm (const nfc_modulation nm);
@@ -106,9 +106,10 @@ pn53x_reset_settings(struct nfc_device *pnd)
 int
 pn53x_transceive (struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szTx, uint8_t *pbtRx, size_t *pszRx, int timeout)
 {
+  int res = 0;
   if (CHIP_DATA (pnd)->wb_trigged) {
-    if (!pn53x_writeback_register (pnd)) {
-      return NFC_ECHIP;
+    if ((res = pn53x_writeback_register (pnd)) < 0) {
+      return res;
     }
   }
 
@@ -132,7 +133,6 @@ pn53x_transceive (struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szT
     pszRx = &szRx;
   }
 
-  int res;
   // Call the send/receice callback functions of the current driver
   if ((res = CHIP_DATA (pnd)->io->send (pnd, pbtTx, szTx, timeout)) < 0) {
     return pnd->last_error;
@@ -581,9 +581,10 @@ pn53x_write_register (struct nfc_device *pnd, const uint16_t ui16RegisterAddress
   return NFC_SUCCESS;
 }
 
-bool
+int
 pn53x_writeback_register (struct nfc_device *pnd)
 {
+  int res = 0;
   // TODO Check at each step (ReadRegister, WriteRegister) if we didn't exceed max supported frame length
   BUFFER_INIT (abtReadRegisterCmd, PN53x_EXTENDED_FRAME__DATA_MAX_LEN);
   BUFFER_APPEND (abtReadRegisterCmd, ReadRegister);
@@ -604,8 +605,8 @@ pn53x_writeback_register (struct nfc_device *pnd)
     uint8_t abtRes[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
     size_t szRes = sizeof(abtRes);
     // It transceives the previously constructed ReadRegister command
-    if (pn53x_transceive (pnd, abtReadRegisterCmd, BUFFER_SIZE (abtReadRegisterCmd), abtRes, &szRes, -1) < 0) {
-      return false;
+    if ((res = pn53x_transceive (pnd, abtReadRegisterCmd, BUFFER_SIZE (abtReadRegisterCmd), abtRes, &szRes, -1)) < 0) {
+      return res;
     }
     size_t i = 0;
     if (CHIP_DATA(pnd)->type == PN533) {
@@ -642,11 +643,11 @@ pn53x_writeback_register (struct nfc_device *pnd)
 
   if (BUFFER_SIZE (abtWriteRegisterCmd) > 1) {
     // We need to write some registers
-    if (pn53x_transceive (pnd, abtWriteRegisterCmd, BUFFER_SIZE (abtWriteRegisterCmd), NULL, NULL, -1) < 0) {
-      return false;
+    if ((res = pn53x_transceive (pnd, abtWriteRegisterCmd, BUFFER_SIZE (abtWriteRegisterCmd), NULL, NULL, -1)) < 0) {
+      return res;
     }
   }
-  return true;
+  return NFC_SUCCESS;
 }
 
 int
