@@ -442,7 +442,7 @@ arygon_tama_receive (nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, 
     return pnd->last_error;
   }
 
-  if (abtRxBuf[1] != CHIP_DATA (pnd)->lastCommand + 1) {
+  if (abtRxBuf[1] != CHIP_DATA (pnd)->last_command + 1) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Command Code verification failed");
     pnd->last_error = NFC_EIO;
     return pnd->last_error;
@@ -463,7 +463,7 @@ arygon_tama_receive (nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, 
   }
 
   uint8_t btDCS = (256 - 0xD5);
-  btDCS -= CHIP_DATA (pnd)->lastCommand + 1;
+  btDCS -= CHIP_DATA (pnd)->last_command + 1;
   for (size_t szPos = 0; szPos < len; szPos++) {
     btDCS -= pbtData[szPos];
   }
