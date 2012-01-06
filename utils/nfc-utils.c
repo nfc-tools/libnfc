@@ -726,7 +726,7 @@ print_nfc_target (const nfc_target nt, bool verbose)
       print_nfc_iso14443b2ct_info (nt.nti.nci, verbose);
     break;
     case NMT_DEP:
-      printf ("D.E.P. (%s) target:\n", str_nfc_baud_rate(nt.nm.nbr));
+      printf ("D.E.P. (%s, %s) target:\n", str_nfc_baud_rate(nt.nm.nbr), (nt.nti.ndi.ndm == NDM_ACTIVE)? "active mode" : "passive mode");
       print_nfc_dep_info (nt.nti.ndi, verbose);
     break;
   }

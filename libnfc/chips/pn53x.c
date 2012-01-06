@@ -796,7 +796,7 @@ pn53x_set_property_bool (struct nfc_device *pnd, const nfc_property property, co
       // to "gain" a sort-of hardware polling (ie. like PN532 does)
       if (pn53x_RFConfiguration__MaxRetries (pnd, 
         (bEnable) ? 0xff : 0x00,        // MxRtyATR, default: active = 0xff, passive = 0x02
-        (bEnable) ? 0xff : 0x00,        // MxRtyPSL, default: 0x01
+        (bEnable) ? 0xff : 0x01,        // MxRtyPSL, default: 0x01
         (bEnable) ? 0xff : 0x02         // MxRtyPassiveActivation, default: 0xff (0x00 leads to problems with PN531)
       ) == 0)
         return NFC_SUCCESS;
@@ -1138,13 +1138,13 @@ pn53x_initiator_poll_target (struct nfc_device *pnd,
 }
 
 int
-pn53x_initiator_select_dep_target(struct nfc_device *pnd,
+pn53x_initiator_select_dep_target (struct nfc_device *pnd,
                                   const nfc_dep_mode ndm, const nfc_baud_rate nbr,
                                   const nfc_dep_info *pndiInitiator,
                                   nfc_target *pnt,
                                   const int timeout)
 {
-  const uint8_t abtPassiveInitiatorData[] = { 0x00, 0xff, 0xff, 0x00, 0x00 }; // Only for 212/424 kpbs: First 4 bytes shall be set like this according to NFCIP-1, last byte is TSN (Time Slot Number)
+  const uint8_t abtPassiveInitiatorData[] = { 0x00, 0xff, 0xff, 0x00, 0x0f }; // Only for 212/424 kpbs: First 4 bytes shall be set like this according to NFCIP-1, last byte is TSN (Time Slot Number)
   const uint8_t * pbtPassiveInitiatorData = NULL;
 
   switch (nbr) {
@@ -1843,6 +1843,9 @@ pn53x_target_receive_bits (struct nfc_device *pnd, uint8_t *pbtRx, const size_t 
   } else {
     // Save the received bits
     szRxBits = szFrameBits;
+
+    if ((szRx - 1) > szRxLen)
+      return NFC_EOVFLOW;
     // Copy the received bytes
     memcpy (pbtRx, abtRx + 1, szRx - 1);
   }
