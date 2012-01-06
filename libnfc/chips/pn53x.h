@@ -153,7 +153,7 @@ struct pn53x_data {
 /** Register cache for SetParameters function. */
   uint8_t ui8Parameters;
 /** Last sent command */
-  uint8_t ui8LastCommand;
+  uint8_t lastCommand;
 /** Interframe timer correction */
   int16_t timer_correction;
 /** Timer prescaler */

@@ -139,7 +139,7 @@ pn53x_transceive (struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szT
   }
 
   // Command is sent, we store the command
-  CHIP_DATA (pnd)->ui8LastCommand = pbtTx[0];
+  CHIP_DATA (pnd)->lastCommand = pbtTx[0];
 
   // Handle power mode for PN532
   if ((CHIP_DATA (pnd)->type == PN532) && (TgInitAsTarget == pbtTx[0])) { // PN532 automatically goes into PowerDown mode when TgInitAsTarget command will be sent
