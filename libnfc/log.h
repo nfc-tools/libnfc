@@ -22,26 +22,8 @@
 #  include "config.h"
 #endif // HAVE_CONFIG_H
 
-#if defined(HAS_LOG4C) && HAS_LOG4C
-  // log4c have been detected so we use it..
-  #include <log4c.h>
-  #define LOGGING 1
-  
-  int	 log_init (void);
-  int	 log_fini (void);
-  void	 log_put (char *category, int priority, char *format, ...);
-  
-  #define NFC_PRIORITY_FATAL  LOG4C_PRIORITY_FATAL
-  #define NFC_PRIORITY_ALERT  LOG4C_PRIORITY_ALERT
-  #define NFC_PRIORITY_CRIT   LOG4C_PRIORITY_CRIT
-  #define NFC_PRIORITY_ERROR  LOG4C_PRIORITY_ERROR
-  #define NFC_PRIORITY_WARN   LOG4C_PRIORITY_WARN
-  #define NFC_PRIORITY_NOTICE LOG4C_PRIORITY_NOTICE
-  #define NFC_PRIORITY_INFO   LOG4C_PRIORITY_INFO
-  #define NFC_PRIORITY_DEBUG  LOG4C_PRIORITY_DEBUG
-  #define NFC_PRIORITY_TRACE  LOG4C_PRIORITY_TRACE
-#elif defined DEBUG
-  // log4c is not detected but user want debug features
+#if defined DEBUG
+  // User want debug features
   #define LOGGING 1
   int	 log_init (void);
   int	 log_fini (void);

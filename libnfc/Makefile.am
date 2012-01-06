@@ -35,22 +35,11 @@ if LIBUSB_ENABLED
   libnfc_la_LIBADD  += @libusb_LIBS@
 endif
 
-if HAS_LOG4C
-  libnfc_la_CFLAGS += @log4c_CFLAGS@
-  libnfc_la_LIBADD += @log4c_LIBS@
-
-  libnfc_la_SOURCES += log-log4c.c
-else 
 if WITH_DEBUG
-  libnfc_la_CFLAGS += @log4c_CFLAGS@
-  libnfc_la_LIBADD += @log4c_LIBS@
-
   libnfc_la_SOURCES += log-printf.c
-endif
 endif
 
 EXTRA_DIST = \
 	CMakeLists.txt \
-	log-log4c.c \
 	log-printf.c
 
