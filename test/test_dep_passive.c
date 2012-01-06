@@ -87,7 +87,7 @@ target_thread (void *arg)
   if (res < 0) { thread_res = -1; return (void*) thread_res; }
 
   // First pass
-  res =  nfc_target_receive_bytes (device, abtRx, 500);
+  res =  nfc_target_receive_bytes (device, abtRx, sizeof (abtRx), 500);
   cut_assert_operator_int (res, >, 0, cut_message ("Can't receive bytes from initiator: %s", nfc_strerror (device)));
   szRx = (size_t) res;
   
@@ -101,7 +101,7 @@ target_thread (void *arg)
   if (res <= 0) { thread_res = -1; return (void*) thread_res; }
 
   // Second pass
-  res = nfc_target_receive_bytes (device, abtRx, 500);
+  res = nfc_target_receive_bytes (device, abtRx, sizeof (abtRx), 500);
   cut_assert_operator_int (res, >, 0, cut_message ("Can't receive bytes from initiator: %s", nfc_strerror (device)));
   szRx = (size_t) res;
 
@@ -113,7 +113,7 @@ target_thread (void *arg)
   if (res <= 0) { thread_res = -1; return (void*) thread_res; }
 
   // Third pass
-  res = nfc_target_receive_bytes (device, abtRx, 500);
+  res = nfc_target_receive_bytes (device, abtRx, sizeof (abtRx), 500);
   cut_assert_operator_int (res, >, 0, cut_message ("Can't receive bytes from initiator: %s", nfc_strerror (device)));
   szRx = (size_t) res;
 
@@ -125,7 +125,7 @@ target_thread (void *arg)
   if (res <= 0) { thread_res = -1; return (void*) thread_res; }
   
   // Fourth pass
-  res =  nfc_target_receive_bytes (device, abtRx, 500);
+  res =  nfc_target_receive_bytes (device, abtRx, sizeof (abtRx), 500);
   cut_assert_operator_int (res, >, 0, cut_message ("Can't receive bytes from initiator: %s", nfc_strerror (device)));
   szRx = (size_t) res;
 
