@@ -157,7 +157,6 @@ main (int argc, const char *argv[])
   case PSM_DUAL_CARD:
     {
       uint8_t  abtRx[MAX_FRAME_LEN];
-      size_t  szRx = sizeof(abtRx);
 
       nfc_target nt = {
         .nm = {
@@ -176,7 +175,7 @@ main (int argc, const char *argv[])
       };
       printf ("Now both, NFC device (configured as target) and SAM are readables from an external NFC initiator.\n");
       printf ("Please note that NFC device (configured as target) stay in target mode until it receive RATS, ATR_REQ or proprietary command.\n");
-      if (nfc_target_init (pnd, &nt, abtRx, &szRx, 0) < 0) {
+      if (nfc_target_init (pnd, &nt, abtRx, sizeof(abtRx), 0) < 0) {
         nfc_perror(pnd, "nfc_target_init");
         return EXIT_FAILURE;
       }

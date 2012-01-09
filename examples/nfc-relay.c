@@ -52,7 +52,7 @@
 
 static uint8_t abtReaderRx[MAX_FRAME_LEN];
 static uint8_t abtReaderRxPar[MAX_FRAME_LEN];
-static size_t szReaderRxBits;
+static int szReaderRxBits;
 static uint8_t abtTagRx[MAX_FRAME_LEN];
 static uint8_t abtTagRxPar[MAX_FRAME_LEN];
 static int szTagRxBits;
@@ -146,7 +146,7 @@ main (int argc, char *argv[])
     },
   };
 
-  if (nfc_target_init (pndTag, &nt, abtReaderRx, &szReaderRxBits, 0) < 0) {
+  if ((szReaderRxBits = nfc_target_init (pndTag, &nt, abtReaderRx, sizeof (abtReaderRx), 0)) < 0) {
     ERR ("%s", "Initialization of NFC emulator failed");
     nfc_disconnect (pndTag);
     return EXIT_FAILURE;
@@ -197,11 +197,11 @@ main (int argc, char *argv[])
       // Print the reader frame to the screen
       if (!quiet_output) {
         printf ("R: ");
-        print_hex_par (abtReaderRx, szReaderRxBits, abtReaderRxPar);
+        print_hex_par (abtReaderRx, (size_t) szReaderRxBits, abtReaderRxPar);
       }
       // Forward the frame to the original tag
       if ((szTagRxBits = nfc_initiator_transceive_bits
-          (pndReader, abtReaderRx, szReaderRxBits, abtReaderRxPar, abtTagRx, abtTagRxPar)) > 0) {
+          (pndReader, abtReaderRx, (size_t) szReaderRxBits, abtReaderRxPar, abtTagRx, abtTagRxPar)) > 0) {
         // Redirect the answer back to the reader
         if (nfc_target_send_bits (pndTag, abtTagRx, szTagRxBits, abtTagRxPar) < 0) {
           nfc_perror (pndTag, "nfc_target_send_bits");

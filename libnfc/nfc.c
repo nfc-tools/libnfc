@@ -609,7 +609,7 @@ nfc_initiator_transceive_bits_timed (nfc_device *pnd, const uint8_t *pbtTx, cons
  * and/or NDM_UNDEFINED (ie. for DEP mode), these fields will be updated.
  *
  * @param[out] pbtRx Rx buffer pointer
- * @param[out] pszRx received bytes count
+ * @param[out] szRx received bytes count
  * @param timeout in milliseconds
  *
  * This function initializes NFC device in \e target mode in order to emulate a
@@ -629,7 +629,7 @@ nfc_initiator_transceive_bits_timed (nfc_device *pnd, const uint8_t *pbtTx, cons
  * receive functions can be used.
  */
 int
-nfc_target_init (nfc_device *pnd, nfc_target *pnt, uint8_t *pbtRx, size_t * pszRx, int timeout)
+nfc_target_init (nfc_device *pnd, nfc_target *pnt, uint8_t *pbtRx, const size_t szRx, int timeout)
 {
   int res = 0;
   // Disallow invalid frame
@@ -656,7 +656,7 @@ nfc_target_init (nfc_device *pnd, nfc_target *pnt, uint8_t *pbtRx, size_t * pszR
   if ((res = nfc_device_set_property_bool (pnd, NP_ACTIVATE_FIELD, false)) < 0)
     return res;
 
-  HAL (target_init, pnd, pnt, pbtRx, pszRx, timeout);
+  HAL (target_init, pnd, pnt, pbtRx, szRx, timeout);
 }
 
 /**

@@ -55,7 +55,7 @@
 #define SAK_ISO14443_4_COMPLIANT 0x20
 
 static uint8_t abtRx[MAX_FRAME_LEN];
-static size_t szRx = sizeof(abtRx);
+static int szRx;
 static nfc_device *pnd;
 static bool quiet_output = false;
 static bool init_mfc_auth = false;
@@ -137,17 +137,16 @@ bool
 nfc_target_emulate_tag(nfc_device *pnd, nfc_target *pnt)
 {
   size_t szTx;
-  int res = 0;
   uint8_t abtTx[MAX_FRAME_LEN];
   bool loop = true;
 
-  if (nfc_target_init (pnd, pnt, abtRx, &szRx, 0) < 0) {
+  if ((szRx = nfc_target_init (pnd, pnt, abtRx, sizeof(abtRx), 0)) < 0) {
     nfc_perror (pnd, "nfc_target_init");
     return false;
   }
 
   while ( loop ) {
-    loop = target_io( pnt, abtRx, szRx, abtTx, &szTx );
+    loop = target_io( pnt, abtRx, (size_t) szRx, abtTx, &szTx );
     if (szTx) {
       if (nfc_target_send_bytes(pnd, abtTx, szTx, 0) < 0) {
         nfc_perror (pnd, "nfc_target_send_bytes");
@@ -159,11 +158,10 @@ nfc_target_emulate_tag(nfc_device *pnd, nfc_target *pnt)
         nfc_device_set_property_bool (pnd, NP_HANDLE_CRC, false);
         init_mfc_auth = false;
       }
-      if ((res = nfc_target_receive_bytes(pnd, abtRx, sizeof (abtRx), 0)) < 0) {
+      if ((szRx = nfc_target_receive_bytes(pnd, abtRx, sizeof (abtRx), 0)) < 0) {
         nfc_perror (pnd, "nfc_target_receive_bytes");
         return false;
       }
-      szRx = (size_t) res;
     }
   }
   return true;

@@ -62,8 +62,7 @@ int
 main (int argc, const char *argv[])
 {
   uint8_t  abtRx[MAX_FRAME_LEN];
-  int res = 0;
-  size_t  szRx = sizeof(abtRx);
+  int  szRx;
   size_t  szDeviceFound;
   uint8_t  abtTx[] = "Hello Mars!";
   #define MAX_DEVICE_COUNT 2
@@ -120,18 +119,17 @@ main (int argc, const char *argv[])
   print_nfc_target (nt, false);
 
   printf ("Waiting for initiator request...\n");
-  if(nfc_target_init (pnd, &nt, abtRx, &szRx, 0) < 0) {
+  if ((szRx = nfc_target_init (pnd, &nt, abtRx, sizeof(abtRx), 0)) < 0) {
     nfc_perror(pnd, "nfc_target_init");
     goto error;
   }
 
   printf("Initiator request received. Waiting for data...\n");
-  if ((res = nfc_target_receive_bytes (pnd, abtRx, sizeof (abtRx), 0)) < 0) {
+  if ((szRx = nfc_target_receive_bytes (pnd, abtRx, sizeof (abtRx), 0)) < 0) {
     nfc_perror(pnd, "nfc_target_receive_bytes");
     goto error;
   }
-  szRx = (size_t) res;
-  abtRx[szRx] = '\0';
+  abtRx[(size_t) szRx] = '\0';
   printf ("Received: %s\n", abtRx);
 
   printf ("Sending: %s\n", abtTx);

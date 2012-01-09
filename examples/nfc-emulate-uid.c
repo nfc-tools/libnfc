@@ -57,7 +57,7 @@
 #define MAX_FRAME_LEN 264
 
 static uint8_t abtRecv[MAX_FRAME_LEN];
-static size_t szRecvBits;
+static int szRecvBits;
 static nfc_device *pnd;
 
 // ISO14443A Anti-Collision response
@@ -155,13 +155,13 @@ main (int argc, char *argv[])
       },
     },
   };
-  if (nfc_target_init (pnd, &nt, abtRecv, &szRecvBits, 0) < 0) {
+  if ((szRecvBits = nfc_target_init (pnd, &nt, abtRecv, sizeof (abtRecv), 0)) < 0) {
     nfc_perror (pnd, "nfc_target_init");
     ERR ("Could not come out of auto-emulation, no command was received");
     goto error;
   }
   printf ("[+] Received initiator command: ");
-  print_hex_bits (abtRecv, szRecvBits);
+  print_hex_bits (abtRecv, (size_t) szRecvBits);
   printf ("[+] Configuring communication\n");
   if ((nfc_device_set_property_bool (pnd, NP_HANDLE_CRC, false) < 0) || (nfc_device_set_property_bool (pnd, NP_HANDLE_PARITY, true) < 0)) {
     nfc_perror (pnd, "nfc_device_set_property_bool");
@@ -200,7 +200,7 @@ main (int argc, char *argv[])
 
       if (!quiet_output) {
         printf ("R: ");
-        print_hex_bits (abtRecv, szRecvBits);
+        print_hex_bits (abtRecv, (size_t) szRecvBits);
       }
       // Test if we know how to respond
       if (szTxBits) {

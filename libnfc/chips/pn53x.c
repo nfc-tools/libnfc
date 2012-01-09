@@ -1592,7 +1592,7 @@ pn53x_initiator_deselect_target (struct nfc_device *pnd)
 #define SAK_ISO14443_4_COMPLIANT 0x20
 #define SAK_ISO18092_COMPLIANT   0x40
 int
-pn53x_target_init (struct nfc_device *pnd, nfc_target *pnt, uint8_t *pbtRx, size_t *pszRx, int timeout)
+pn53x_target_init (struct nfc_device *pnd, nfc_target *pnt, uint8_t *pbtRx, const size_t szRxLen, int timeout)
 {
   pn53x_reset_settings(pnd);
 
@@ -1742,13 +1742,14 @@ pn53x_target_init (struct nfc_device *pnd, nfc_target *pnt, uint8_t *pbtRx, size
   }
 
   bool targetActivated = false;
+  size_t szRx;
   while (!targetActivated) {
     uint8_t btActivatedMode;
 
-    if((res = pn53x_TgInitAsTarget(pnd, ptm, pbtMifareParams, pbtTkt, szTkt, pbtFeliCaParams, pbtNFCID3t, pbtGBt, szGBt, pbtRx, *pszRx, &btActivatedMode, timeout)) < 0) {
+    if((res = pn53x_TgInitAsTarget(pnd, ptm, pbtMifareParams, pbtTkt, szTkt, pbtFeliCaParams, pbtNFCID3t, pbtGBt, szGBt, pbtRx, szRxLen, &btActivatedMode, timeout)) < 0) {
       return res;
     }
-    *pszRx = (size_t) res;
+    szRx = (size_t) res;
     nfc_modulation nm = {
       .nmt = NMT_DEP, // Silent compilation warnings
       .nbr = NBR_UNDEFINED
@@ -1805,12 +1806,12 @@ pn53x_target_init (struct nfc_device *pnd, nfc_target *pnt, uint8_t *pbtRx, size
       if (ptm & PTM_ISO14443_4_PICC_ONLY) {
 	// When PN532 is in PICC target mode, it automatically reply to RATS so
 	// we don't need to forward this command
-        *pszRx = 0;
+        szRx = 0;
       }
     }
   }
 
-  return *pszRx;
+  return szRx;
 }
 
 int

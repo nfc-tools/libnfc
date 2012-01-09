@@ -84,7 +84,7 @@ target_thread (void *arg)
 
   uint8_t abtRx[1024];
   size_t szRx = sizeof (abtRx);
-  int res = nfc_target_init (device, &nt, abtRx, &szRx, 0);
+  int res = nfc_target_init (device, &nt, abtRx, sizeof (abtRx), 0);
   cut_assert_operator_int (res, >, 0, cut_message ("Can't initialize NFC device as target: %s", nfc_strerror (device)));
   if (res < 0) { thread_res = -1; return (void*) thread_res; }
 
