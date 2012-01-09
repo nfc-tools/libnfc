@@ -181,11 +181,13 @@ int main(int argc, const char* argv[])
     print_hex((uint8_t*)abtTx,szTx);
 
     szRx = sizeof(abtRx);
-    if (pn53x_transceive (pnd, abtTx, szTx, abtRx, &szRx, 0) < 0) {
+    int res = 0;
+    if ((res = pn53x_transceive (pnd, abtTx, szTx, abtRx, szRx, 0)) < 0) {
       free(cmd);
       nfc_perror (pnd, "Rx");
       continue;
     }
+    szRx = (size_t) res;
 
     printf("Rx: ");
     print_hex(abtRx, szRx);

@@ -104,7 +104,7 @@ pn53x_reset_settings(struct nfc_device *pnd)
 }
 
 int
-pn53x_transceive (struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szTx, uint8_t *pbtRx, size_t *pszRx, int timeout)
+pn53x_transceive (struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szTx, uint8_t *pbtRx, const size_t szRxLen, int timeout)
 {
   int res = 0;
   if (CHIP_DATA (pnd)->wb_trigged) {
@@ -128,9 +128,10 @@ pn53x_transceive (struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szT
   size_t  szRx = sizeof(abtRx);
 
   // Check if receiving buffers are available, if not, replace them
-  if (!pszRx || !pbtRx) {
+  if (szRxLen == 0 || !pbtRx) {
     pbtRx = abtRx;
-    pszRx = &szRx;
+  } else {
+    szRx = szRxLen;
   }
 
   // Call the send/receice callback functions of the current driver
@@ -146,7 +147,7 @@ pn53x_transceive (struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szT
     CHIP_DATA (pnd)->power_mode = POWERDOWN;
   }
 
-  if ((res = CHIP_DATA(pnd)->io->receive (pnd, pbtRx, *pszRx, timeout)) < 0) {
+  if ((res = CHIP_DATA(pnd)->io->receive (pnd, pbtRx, szRx, timeout)) < 0) {
     return res;
   }
 
@@ -154,7 +155,7 @@ pn53x_transceive (struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szT
     CHIP_DATA(pnd)->power_mode = NORMAL; // When TgInitAsTarget reply that means an external RF have waken up the chip
   }
 
-  *pszRx = (size_t) res;
+  szRx = (size_t) res;
   switch (pbtTx[0]) {
     case PowerDown:
     case InDataExchange:
@@ -200,7 +201,7 @@ pn53x_transceive (struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szT
 
   switch (CHIP_DATA(pnd)->last_status_byte) {
     case 0:
-      res = NFC_SUCCESS;
+      res = szRx;
       break;
     case ETIMEOUT:
     case ECRC:
@@ -529,7 +530,7 @@ pn53x_ReadRegister (struct nfc_device *pnd, uint16_t ui16RegisterAddress, uint8_
   int res = 0;
 
   PNREG_TRACE (ui16RegisterAddress);
-  if ((res = pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), abtRegValue, &szRegValue, -1)) < 0) {
+  if ((res = pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), abtRegValue, szRegValue, -1)) < 0) {
     return res;
   }
   if (CHIP_DATA(pnd)->type == PN533) {
@@ -551,7 +552,7 @@ pn53x_WriteRegister (struct nfc_device *pnd, const uint16_t ui16RegisterAddress,
 {
   uint8_t  abtCmd[] = { WriteRegister, ui16RegisterAddress >> 8, ui16RegisterAddress & 0xff, ui8Value };
   PNREG_TRACE (ui16RegisterAddress);
-  return pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, NULL, -1);
+  return pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, 0, -1);
 }
 
 int
@@ -605,7 +606,7 @@ pn53x_writeback_register (struct nfc_device *pnd)
     uint8_t abtRes[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
     size_t szRes = sizeof(abtRes);
     // It transceives the previously constructed ReadRegister command
-    if ((res = pn53x_transceive (pnd, abtReadRegisterCmd, BUFFER_SIZE (abtReadRegisterCmd), abtRes, &szRes, -1)) < 0) {
+    if ((res = pn53x_transceive (pnd, abtReadRegisterCmd, BUFFER_SIZE (abtReadRegisterCmd), abtRes, szRes, -1)) < 0) {
       return res;
     }
     size_t i = 0;
@@ -643,7 +644,7 @@ pn53x_writeback_register (struct nfc_device *pnd)
 
   if (BUFFER_SIZE (abtWriteRegisterCmd) > 1) {
     // We need to write some registers
-    if ((res = pn53x_transceive (pnd, abtWriteRegisterCmd, BUFFER_SIZE (abtWriteRegisterCmd), NULL, NULL, -1)) < 0) {
+    if ((res = pn53x_transceive (pnd, abtWriteRegisterCmd, BUFFER_SIZE (abtWriteRegisterCmd), NULL, 0, -1)) < 0) {
       return res;
     }
   }
@@ -657,9 +658,10 @@ pn53x_get_firmware_version (struct nfc_device *pnd, char abtFirmwareText[22])
   uint8_t  abtFw[4];
   size_t  szFwLen = sizeof (abtFw);
   int res = 0;
-  if ((res = pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), abtFw, &szFwLen, -1)) < 0) {
+  if ((res = pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), abtFw, szFwLen, -1)) < 0) {
     return res;
   }
+  szFwLen = (size_t) res;
   // Determine which version of chip it is: PN531 will return only 2 bytes, while others return 4 bytes and have the first to tell the version IC
   if (szFwLen == 2) {
     CHIP_DATA(pnd)->type = PN531;
@@ -930,9 +932,9 @@ pn53x_check_communication (struct nfc_device *pnd)
   size_t szRx = sizeof (abtRx);
   int res = 0;
 
-  if ((res = pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), abtRx, &szRx, 500)) < 0)
+  if ((res = pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), abtRx, szRx, 500)) < 0)
     return res;
-
+  szRx = (size_t) res;
   if (((sizeof(abtExpectedRx) == szRx) && (0 == memcmp (abtRx, abtExpectedRx, sizeof(abtExpectedRx)))) == 0)
     return NFC_SUCCESS;
   
@@ -1206,9 +1208,9 @@ pn53x_initiator_transceive_bits (struct nfc_device *pnd, const uint8_t *pbtTx, c
   // We have to give the amount of bytes + (the command byte 0x42)
   uint8_t  abtRx[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
   size_t  szRx = sizeof(abtRx);
-  if ((res = pn53x_transceive (pnd, abtCmd, szFrameBytes + 1, abtRx, &szRx, -1)) < 0)
+  if ((res = pn53x_transceive (pnd, abtCmd, szFrameBytes + 1, abtRx, szRx, -1)) < 0)
     return res;
-
+  szRx = (size_t) res;
   // Get the last bit-count that is stored in the received byte
   if ((res = pn53x_read_register (pnd, PN53X_REG_CIU_Control, &ui8rcc)) < 0)
     return res;
@@ -1271,7 +1273,8 @@ pn53x_initiator_transceive_bytes (struct nfc_device *pnd, const uint8_t *pbtTx, 
   // We have to give the amount of bytes + (the two command bytes 0xD4, 0x42)
   uint8_t  abtRx[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
   size_t  szRx = sizeof(abtRx);
-  if (pn53x_transceive (pnd, abtCmd, szTx + szExtraTxLen, abtRx, &szRx, timeout) < 0) {
+  int res = 0;
+  if ((res = pn53x_transceive (pnd, abtCmd, szTx + szExtraTxLen, abtRx, szRx, timeout)) < 0) {
     // FIXME pn53x_transceive should return an integer
     if (CHIP_DATA (pnd)->last_status_byte == EINVRXFRAM) {
       pnd->last_error = NFC_ERFTRANS;
@@ -1281,7 +1284,7 @@ pn53x_initiator_transceive_bytes (struct nfc_device *pnd, const uint8_t *pbtTx, 
       return pnd->last_error;
     }
   }
-
+  szRx = (size_t) res;
   if (pbtRx != NULL) {
     // Save the received byte count
     *pszRx = szRx - 1;
@@ -1335,7 +1338,7 @@ uint32_t __pn53x_get_timer(struct nfc_device *pnd, const uint8_t last_cmd_byte)
   uint8_t abtRes[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
   size_t szRes = sizeof(abtRes);
   // Let's send the previously constructed ReadRegister command
-  if (pn53x_transceive (pnd, abtReadRegisterCmd, BUFFER_SIZE (abtReadRegisterCmd), abtRes, &szRes, -1) < 0) {
+  if (pn53x_transceive (pnd, abtReadRegisterCmd, BUFFER_SIZE (abtReadRegisterCmd), abtRes, szRes, -1) < 0) {
     return false;
   }
   counter_hi = abtRes[off];
@@ -1427,7 +1430,7 @@ pn53x_initiator_transceive_bits_timed (struct nfc_device *pnd, const uint8_t *pb
   BUFFER_APPEND (abtWriteRegisterCmd, PN53X_REG_CIU_BitFraming & 0xff);
   BUFFER_APPEND (abtWriteRegisterCmd, SYMBOL_START_SEND | ((szTxBits % 8) & SYMBOL_TX_LAST_BITS));
   // Let's send the previously constructed WriteRegister command
-  if ((res = pn53x_transceive (pnd, abtWriteRegisterCmd, BUFFER_SIZE (abtWriteRegisterCmd), NULL, NULL, -1)) < 0) {
+  if ((res = pn53x_transceive (pnd, abtWriteRegisterCmd, BUFFER_SIZE (abtWriteRegisterCmd), NULL, 0, -1)) < 0) {
     return res;
   }
 
@@ -1458,7 +1461,7 @@ pn53x_initiator_transceive_bits_timed (struct nfc_device *pnd, const uint8_t *pb
     uint8_t abtRes[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
     size_t szRes = sizeof(abtRes);
     // Let's send the previously constructed ReadRegister command
-    if ((res = pn53x_transceive (pnd, abtReadRegisterCmd, BUFFER_SIZE (abtReadRegisterCmd), abtRes, &szRes, -1)) < 0) {
+    if ((res = pn53x_transceive (pnd, abtReadRegisterCmd, BUFFER_SIZE (abtReadRegisterCmd), abtRes, szRes, -1)) < 0) {
       return res;
     }
     for (i = 0; i < sz; i++) {
@@ -1521,7 +1524,7 @@ pn53x_initiator_transceive_bytes_timed (struct nfc_device *pnd, const uint8_t *p
   BUFFER_APPEND (abtWriteRegisterCmd, PN53X_REG_CIU_BitFraming & 0xff);
   BUFFER_APPEND (abtWriteRegisterCmd, SYMBOL_START_SEND);
   // Let's send the previously constructed WriteRegister command
-  if ((res = pn53x_transceive (pnd, abtWriteRegisterCmd, BUFFER_SIZE (abtWriteRegisterCmd), NULL, NULL, -1)) < 0) {
+  if ((res = pn53x_transceive (pnd, abtWriteRegisterCmd, BUFFER_SIZE (abtWriteRegisterCmd), NULL, 0, -1)) < 0) {
     return res;
   }
 
@@ -1553,7 +1556,7 @@ pn53x_initiator_transceive_bytes_timed (struct nfc_device *pnd, const uint8_t *p
     uint8_t abtRes[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
     size_t szRes = sizeof(abtRes);
     // Let's send the previously constructed ReadRegister command
-    if ((res = pn53x_transceive (pnd, abtReadRegisterCmd, BUFFER_SIZE (abtReadRegisterCmd), abtRes, &szRes, -1)) < 0) {
+    if ((res = pn53x_transceive (pnd, abtReadRegisterCmd, BUFFER_SIZE (abtReadRegisterCmd), abtRes, szRes, -1)) < 0) {
       return res;
     }
     for (i = 0; i < sz; i++) {
@@ -1821,9 +1824,9 @@ pn53x_target_receive_bits (struct nfc_device *pnd, uint8_t *pbtRx, const size_t 
   int res = 0;
   
   // Try to gather a received frame from the reader
-  if ((res = pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), abtRx, &szRx, -1)) < 0)
+  if ((res = pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), abtRx, szRx, -1)) < 0)
     return res;
-
+  szRx = (size_t) res;
   // Get the last bit-count that is stored in the received byte
   uint8_t ui8rcc;
   if ((res = pn53x_read_register (pnd, PN53X_REG_CIU_Control, &ui8rcc)) < 0)
@@ -1889,9 +1892,10 @@ pn53x_target_receive_bytes (struct nfc_device *pnd, uint8_t *pbtRx, const size_t
   // Try to gather a received frame from the reader
   uint8_t abtRx[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
   size_t szRx = sizeof (abtRx);
-  if (pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), abtRx, &szRx, timeout) < 0)
+  int res = 0;
+  if ((res = pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), abtRx, szRx, timeout)) < 0)
     return pnd->last_error;
-
+  szRx = (size_t) res;
   // Save the received bytes count
   szRx -= 1;
 
@@ -1939,7 +1943,7 @@ pn53x_target_send_bits (struct nfc_device *pnd, const uint8_t *pbtTx, const size
     return res;
 
   // Try to send the bits to the reader
-  if ((res = pn53x_transceive (pnd, abtCmd, szFrameBytes + 1, NULL, NULL, -1)) < 0)
+  if ((res = pn53x_transceive (pnd, abtCmd, szFrameBytes + 1, NULL, 0, -1)) < 0)
     return res;
 
   // Everyting seems ok, return return sent bits count
@@ -1988,7 +1992,7 @@ pn53x_target_send_bytes (struct nfc_device *pnd, const uint8_t *pbtTx, const siz
   memcpy (abtCmd + 1, pbtTx, szTx);
   
   // Try to send the bits to the reader
-  if ((res = pn53x_transceive (pnd, abtCmd, szTx + 1, NULL, NULL, timeout)) < 0)
+  if ((res = pn53x_transceive (pnd, abtCmd, szTx + 1, NULL, 0, timeout)) < 0)
     return res;
 
   // Everyting seems ok, return sent byte count
@@ -2053,7 +2057,7 @@ int
 pn53x_RFConfiguration__RF_field (struct nfc_device *pnd, bool bEnable)
 {
   uint8_t  abtCmd[] = { RFConfiguration, RFCI_FIELD, (bEnable) ? 0x01 : 0x00 };
-  return pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, NULL, -1);
+  return pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, 0, -1);
 }
 
 int
@@ -2066,7 +2070,7 @@ pn53x_RFConfiguration__Various_timings (struct nfc_device *pnd, const uint8_t fA
     fATR_RES_Timeout,	 // ATR_RES timeout (default: 0x0B 102.4 ms)
     fRetryTimeout	 // TimeOut during non-DEP communications (default: 0x0A 51.2 ms)
   };
-  return pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, NULL, -1);
+  return pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, 0, -1);
 }
 
 int
@@ -2077,7 +2081,7 @@ pn53x_RFConfiguration__MaxRtyCOM (struct nfc_device *pnd, const uint8_t MaxRtyCO
     RFCI_RETRY_DATA,
     MaxRtyCOM         // MaxRtyCOM, default: 0x00 (no retry, only one try), inifite: 0xff
   };
-  return pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, NULL, -1);
+  return pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, 0, -1);
 }
 
 int
@@ -2091,7 +2095,7 @@ pn53x_RFConfiguration__MaxRetries (struct nfc_device *pnd, const uint8_t MxRtyAT
     MxRtyPSL,        // MxRtyPSL, default: 0x01
     MxRtyPassiveActivation         // MxRtyPassiveActivation, default: 0xff (0x00 leads to problems with PN531)
   };
-  return pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, NULL, -1);
+  return pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, 0, -1);
 }
 
 int
@@ -2100,7 +2104,7 @@ pn53x_SetParameters (struct nfc_device *pnd, const uint8_t ui8Value)
   uint8_t  abtCmd[] = { SetParameters, ui8Value };
   int res = 0;
 
-  if((res = pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, NULL, -1)) < 0) {
+  if((res = pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, 0, -1)) < 0) {
     return res;
   }
   // We save last parameters in register cache
@@ -2134,14 +2138,14 @@ pn53x_SAMConfiguration (struct nfc_device *pnd, const pn532_sam_mode ui8Mode, in
       pnd->last_error = NFC_EINVARG;
       return pnd->last_error;
   }
-  return (pn53x_transceive (pnd, abtCmd, szCmd, NULL, NULL, timeout));
+  return (pn53x_transceive (pnd, abtCmd, szCmd, NULL, 0, timeout));
 }
 
 int
 pn53x_PowerDown (struct nfc_device *pnd)
 {
   uint8_t  abtCmd[] = { PowerDown, 0xf0 };
-  return (pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, NULL, -1));
+  return (pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, 0, -1));
 }
 
 /**
@@ -2208,9 +2212,10 @@ pn53x_InListPassiveTarget (struct nfc_device *pnd,
   if (pbtInitiatorData)
     memcpy (abtCmd + 3, pbtInitiatorData, szInitiatorData);
   int res = 0;
-  if ((res = pn53x_transceive (pnd, abtCmd, 3 + szInitiatorData, pbtTargetsData, pszTargetsData, timeout)) < 0) {
+  if ((res = pn53x_transceive (pnd, abtCmd, 3 + szInitiatorData, pbtTargetsData, *pszTargetsData, timeout)) < 0) {
     return res;
   }
+  *pszTargetsData = (size_t) res;
   return pbtTargetsData[0];
 }
 
@@ -2223,18 +2228,19 @@ pn53x_InDeselect (struct nfc_device *pnd, const uint8_t ui8Target)
     size_t  szStatus = sizeof(abtStatus);
     uint8_t  abtCmdGetStatus[] = { GetGeneralStatus };
     int res = 0;
-    if ((res = pn53x_transceive (pnd, abtCmdGetStatus, sizeof (abtCmdGetStatus), abtStatus, &szStatus, -1)) < 0) {
+    if ((res = pn53x_transceive (pnd, abtCmdGetStatus, sizeof (abtCmdGetStatus), abtStatus, szStatus, -1)) < 0) {
       return res;
     }
+    szStatus = (size_t) res;
     if ((szStatus < 3) || (abtStatus[2] == 0)) {
       return NFC_SUCCESS;
     }
     // No much choice what to deselect actually...
     uint8_t  abtCmdRcs360[] = { InDeselect, 0x01, 0x01 };
-    return (pn53x_transceive (pnd, abtCmdRcs360, sizeof (abtCmdRcs360), NULL, NULL, -1));
+    return (pn53x_transceive (pnd, abtCmdRcs360, sizeof (abtCmdRcs360), NULL, 0, -1));
   }
   uint8_t  abtCmd[] = { InDeselect, ui8Target };
-  return (pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, NULL, -1));
+  return (pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, 0, -1));
 }
 
 int
@@ -2246,18 +2252,19 @@ pn53x_InRelease (struct nfc_device *pnd, const uint8_t ui8Target)
     size_t  szStatus = sizeof(abtStatus);
     uint8_t  abtCmdGetStatus[] = { GetGeneralStatus };
     int res = 0;
-    if ((res = pn53x_transceive (pnd, abtCmdGetStatus, sizeof (abtCmdGetStatus), abtStatus, &szStatus, -1)) < 0) {
+    if ((res = pn53x_transceive (pnd, abtCmdGetStatus, sizeof (abtCmdGetStatus), abtStatus, szStatus, -1)) < 0) {
       return res;
     }
+    szStatus = (size_t) res;
     if ((szStatus < 3) || (abtStatus[2] == 0)) {
       return NFC_SUCCESS;
     }
     // No much choice what to release actually...
     uint8_t  abtCmdRcs360[] = { InRelease, 0x01, 0x01 };
-    return (pn53x_transceive (pnd, abtCmdRcs360, sizeof (abtCmdRcs360), NULL, NULL, -1));
+    return (pn53x_transceive (pnd, abtCmdRcs360, sizeof (abtCmdRcs360), NULL, 0, -1));
   }
   uint8_t  abtCmd[] = { InRelease, ui8Target };
-  return (pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, NULL, -1));
+  return (pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, 0, -1));
 }
 
 int
@@ -2281,8 +2288,8 @@ pn53x_InAutoPoll (struct nfc_device *pnd,
 
   uint8_t  abtRx[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
   size_t  szRx = sizeof(abtRx);
-  int res = pn53x_transceive (pnd, abtCmd, szTxInAutoPoll, abtRx, &szRx, timeout);
-
+  int res = pn53x_transceive (pnd, abtCmd, szTxInAutoPoll, abtRx, szRx, timeout);
+szRx = (size_t) res;
   if (res < 0) {
     return res;
   } else if (szRx > 0) {
@@ -2394,9 +2401,9 @@ pn53x_InJumpForDEP (struct nfc_device *pnd,
   size_t  szRx = sizeof (abtRx);
   int res = 0;
   // Try to find a target, call the transceive callback function of the current device
-  if ((res = pn53x_transceive (pnd, abtCmd, offset, abtRx, &szRx, timeout)) < 0)
+  if ((res = pn53x_transceive (pnd, abtCmd, offset, abtRx, szRx, timeout)) < 0)
     return res;
-
+  szRx = (size_t) res;
   // Make sure one target has been found, the PN53X returns 0x00 if none was available
   if (abtRx[1] >= 1) {
     // Is a target struct available
@@ -2476,8 +2483,9 @@ pn53x_TgInitAsTarget (struct nfc_device *pnd, pn53x_target_mode ptm,
   // Request the initialization as a target
   uint8_t  abtRx[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
   size_t szRx = sizeof (abtRx);
-  if ((res = pn53x_transceive (pnd, abtCmd, 36 + szOptionalBytes, abtRx, &szRx, timeout)) < 0)
+  if ((res = pn53x_transceive (pnd, abtCmd, 36 + szOptionalBytes, abtRx, szRx, timeout)) < 0)
     return res;
+  szRx = (size_t) res;
 
   // Note: the first byte is skip: 
   //       its the "mode" byte which contains baudrate, DEP and Framing type (Mifare, active or FeliCa) datas.
