@@ -1745,10 +1745,10 @@ pn53x_target_init (struct nfc_device *pnd, nfc_target *pnt, uint8_t *pbtRx, size
   while (!targetActivated) {
     uint8_t btActivatedMode;
 
-    if((res = pn53x_TgInitAsTarget(pnd, ptm, pbtMifareParams, pbtTkt, szTkt, pbtFeliCaParams, pbtNFCID3t, pbtGBt, szGBt, pbtRx, pszRx, &btActivatedMode, timeout)) < 0) {
+    if((res = pn53x_TgInitAsTarget(pnd, ptm, pbtMifareParams, pbtTkt, szTkt, pbtFeliCaParams, pbtNFCID3t, pbtGBt, szGBt, pbtRx, *pszRx, &btActivatedMode, timeout)) < 0) {
       return res;
     }
-
+    *pszRx = (size_t) res;
     nfc_modulation nm = {
       .nmt = NMT_DEP, // Silent compilation warnings
       .nbr = NBR_UNDEFINED
@@ -2434,7 +2434,7 @@ pn53x_TgInitAsTarget (struct nfc_device *pnd, pn53x_target_mode ptm,
                       const uint8_t *pbtTkt, size_t szTkt,
                       const uint8_t *pbtFeliCaParams,
                       const uint8_t *pbtNFCID3t, const uint8_t *pbtGBt, const size_t szGBt,
-                      uint8_t *pbtRx, size_t *pszRx, uint8_t *pbtModeByte, int timeout)
+                      uint8_t *pbtRx, const size_t szRxLen, uint8_t *pbtModeByte, int timeout)
 {
   uint8_t  abtCmd[39 + 47 + 48] = { TgInitAsTarget }; // Worst case: 39-byte base, 47 bytes max. for General Bytes, 48 bytes max. for Historical Bytes
   size_t  szOptionalBytes = 0;
@@ -2494,11 +2494,14 @@ pn53x_TgInitAsTarget (struct nfc_device *pnd, pn53x_target_mode ptm,
   }
 
   // Save the received byte count
-  *pszRx = szRx - 1;
+  szRx -= 1;
+  
+  if ((szRx - 1) > szRxLen)
+    return NFC_EOVFLOW;
   // Copy the received bytes
-  memcpy (pbtRx, abtRx + 1, *pszRx);
+  memcpy (pbtRx, abtRx + 1, szRx);
 
-  return NFC_SUCCESS;
+  return szRx;
 }
 
 int

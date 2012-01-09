@@ -342,7 +342,7 @@ int    pn53x_TgInitAsTarget (struct nfc_device *pnd, pn53x_target_mode ptm,
                               const uint8_t *pbtTkt, size_t szTkt,
                               const uint8_t *pbtFeliCaParams,
                               const uint8_t *pbtNFCID3t, const uint8_t *pbtGB, const size_t szGB,
-                              uint8_t *pbtRx, size_t *pszRx, uint8_t *pbtModeByte, int timeout);
+                              uint8_t *pbtRx, const size_t szRxLen, uint8_t *pbtModeByte, int timeout);
 
 // RFConfiguration
 int    pn53x_RFConfiguration__RF_field (struct nfc_device *pnd, bool bEnable);
