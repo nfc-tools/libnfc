@@ -456,6 +456,45 @@ nfc_initiator_select_dep_target (nfc_device *pnd,
 }
 
 /**
+ * @brief Poll a target and request active or passive mode for D.E.P. (Data Exchange Protocol)
+ * @return Returns selected D.E.P targets count on success, otherwise returns libnfc's error code (negative value).
+ *
+ * @param pnd \a nfc_device struct pointer that represent currently used device
+ * @param ndm desired D.E.P. mode (\a NDM_ACTIVE or \a NDM_PASSIVE for active, respectively passive mode)
+ * @param ndiInitiator pointer \a nfc_dep_info struct that contains \e NFCID3 and \e General \e Bytes to set to the initiator device (optionnal, can be \e NULL)
+ * @param[out] pnt is a \a nfc_target struct pointer where target information will be put.
+ *
+ * The NFC device will try to find an available D.E.P. target. The standards
+ * (ISO18092 and ECMA-340) describe the modulation that can be used for reader
+ * to passive communications.
+ * 
+ * @note \a nfc_dep_info will be returned when the target was acquired successfully.
+ */
+int
+nfc_initiator_poll_dep_target (struct nfc_device *pnd,
+                                  const nfc_dep_mode ndm, const nfc_baud_rate nbr,
+                                  const nfc_dep_info *pndiInitiator,
+                                  nfc_target *pnt,
+                                  const int timeout)
+{
+  const int period = 300;
+  int remaining_time = timeout;
+  int res;
+  if ((res = nfc_device_set_property_bool (pnd, NP_INFINITE_SELECT, true)) < 0)
+    return res;
+  while (remaining_time > 0) {
+    if ((res = nfc_initiator_select_dep_target (pnd, ndm, nbr, pndiInitiator, pnt, period)) < 0) {
+      if (res != NFC_ETIMEOUT)
+        return res;
+    }
+    if (res == 1)
+      return res;
+    remaining_time -= period;
+  }
+  return 0;
+}
+
+/**
  * @brief Deselect a selected passive or emulated tag
  * @return Returns 0 on success, otherwise returns libnfc's error code (negative value).
  * @param pnd \a nfc_device struct pointer that represents currently used device
