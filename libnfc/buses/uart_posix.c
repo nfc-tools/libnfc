@@ -273,7 +273,7 @@ select:
       timeout_tv.tv_usec = ((timeout % 1000) * 1000);
     }
 
-    res = select (MAX(UART_DATA(sp)->fd, iAbortFd) + 1, &rfds, NULL, NULL, &timeout_tv);
+    res = select (MAX(UART_DATA(sp)->fd, iAbortFd) + 1, &rfds, NULL, NULL, timeout ? &timeout_tv : NULL);
 
     if ((res < 0) && (EINTR == errno)) {
       // The system call was interupted by a signal and a signal handler was
@@ -283,7 +283,7 @@ select:
 
     // Read error
     if (res < 0) {
-      log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "%s", "RX error.");
+      log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "Error: %s", strerror(errno));
       return NFC_EIO;
     }
     // Read time-out

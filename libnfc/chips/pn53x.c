@@ -935,7 +935,7 @@ pn53x_check_communication (struct nfc_device *pnd)
   if ((res = pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), abtRx, szRx, 500)) < 0)
     return res;
   szRx = (size_t) res;
-  if (((sizeof(abtExpectedRx) == szRx) && (0 == memcmp (abtRx, abtExpectedRx, sizeof(abtExpectedRx)))) == 0)
+  if ((sizeof(abtExpectedRx) == szRx) && (0 == memcmp (abtRx, abtExpectedRx, sizeof(abtExpectedRx))))
     return NFC_SUCCESS;
   
   return NFC_EIO;
