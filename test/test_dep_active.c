@@ -27,9 +27,7 @@ abort_test_by_keypress (int sig)
 void
 cut_setup (void)
 {
-  size_t n;
-
-  nfc_list_devices (connstrings, 2, &n);
+  size_t n = nfc_list_devices (connstrings, 2);
   if (n < 2) {
     cut_omit ("At least two NFC devices must be plugged-in to run this test");
   }

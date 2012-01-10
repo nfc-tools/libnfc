@@ -81,9 +81,8 @@ nfc_get_default_device (nfc_connstring *connstring)
   char *env_default_connstring = getenv ("LIBNFC_DEFAULT_DEVICE");
   if (NULL == env_default_connstring) {
     // LIBNFC_DEFAULT_DEVICE is not set, we fallback on probing for the first available device
-    size_t szDeviceFound;
     nfc_connstring listed_cs[1];
-    nfc_list_devices (listed_cs, 1, &szDeviceFound);
+    size_t szDeviceFound = nfc_list_devices (listed_cs, 1);
     if (szDeviceFound) {
       strncpy (*connstring, listed_cs[0], sizeof(nfc_connstring));
     } else {
@@ -177,30 +176,32 @@ nfc_disconnect (nfc_device *pnd)
 
 /**
  * @brief Probe for discoverable supported devices (ie. only available for some drivers)
+ * @return Returns the number of devices found.
  * @param[out] pnddDevices array of \a nfc_device_desc_t previously allocated by the caller.
  * @param szDevices size of the \a pnddDevices array.
- * @param[out] pszDeviceFound number of devices found.
+ * 
  */
-void
-nfc_list_devices (nfc_connstring connstrings[] , size_t szDevices, size_t *pszDeviceFound)
+size_t
+nfc_list_devices (nfc_connstring connstrings[] , size_t szDevices)
 {
-  size_t  szN;
-  *pszDeviceFound = 0;
+  size_t szN;
+  size_t szDeviceFound = 0;
   const struct nfc_driver_t *ndr;
   const struct nfc_driver_t **pndr = nfc_drivers;
 
   log_init ();
   while ((ndr = *pndr)) {
     szN = 0;
-    if (ndr->probe (connstrings + (*pszDeviceFound), szDevices - (*pszDeviceFound), &szN)) {
-      *pszDeviceFound += szN;
+    if (ndr->probe (connstrings + (szDeviceFound), szDevices - (szDeviceFound), &szN)) {
+      szDeviceFound += szN;
       log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "%ld device(s) found using %s driver", (unsigned long) szN, ndr->name);
-      if (*pszDeviceFound == szDevices)
+      if (szDeviceFound == szDevices)
 	  break;
     }
     pndr++;
   }
   log_fini ();
+  return szDeviceFound;
 }
 
 /**

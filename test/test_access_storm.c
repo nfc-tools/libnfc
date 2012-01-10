@@ -15,17 +15,16 @@ test_access_storm (void)
 {
     int n = NTESTS;
     nfc_connstring connstrings[MAX_DEVICE_COUNT];
-    size_t device_count, ref_device_count;
     int res = 0;
 
-    nfc_list_devices (connstrings, MAX_DEVICE_COUNT, &ref_device_count);
+    size_t ref_device_count = nfc_list_devices (connstrings, MAX_DEVICE_COUNT);
     if (!ref_device_count)
 	cut_omit ("No NFC device found");
 
     while (n) {
 	size_t i;
 
-	nfc_list_devices (connstrings, MAX_DEVICE_COUNT, &device_count);
+	size_t device_count = nfc_list_devices (connstrings, MAX_DEVICE_COUNT);
 	cut_assert_equal_int (ref_device_count, device_count, cut_message ("device count"));
 
 	for (i = 0; i < device_count; i++) {

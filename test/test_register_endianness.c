@@ -11,10 +11,9 @@ void
 test_register_endianness (void)
 {
     nfc_connstring connstrings[MAX_DEVICE_COUNT];
-    size_t device_count;
     int res = 0;
 
-    nfc_list_devices (connstrings, MAX_DEVICE_COUNT, &device_count);
+    size_t device_count = nfc_list_devices (connstrings, MAX_DEVICE_COUNT);
     if (!device_count)
 	cut_omit ("No NFC device found");
 

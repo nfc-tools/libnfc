@@ -114,9 +114,8 @@ main (int argc, const char *argv[])
   strcpy(ndd.acDevice, "SCM Micro / SCL3711-NFC&RW");
   pnd = nfc_connect (&ndd);
 #endif
-  size_t  szDeviceFound;
   nfc_connstring connstrings[MAX_DEVICE_COUNT];
-  nfc_list_devices (connstrings, MAX_DEVICE_COUNT, &szDeviceFound);
+  size_t szDeviceFound = nfc_list_devices (connstrings, MAX_DEVICE_COUNT);
 
   if (szDeviceFound == 0) {
     printf ("No NFC device found.\n");

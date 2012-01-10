@@ -82,7 +82,6 @@ main (int argc, char *argv[])
 {
   int     arg;
   bool    quiet_output = false;
-  size_t  szFound;
   const char *acLibnfcVersion = nfc_version ();
 
   // Get commandline options
@@ -110,7 +109,7 @@ main (int argc, char *argv[])
 
   nfc_connstring connstrings[MAX_DEVICE_COUNT];
   // List available devices
-  nfc_list_devices (connstrings, MAX_DEVICE_COUNT, &szFound);
+  size_t szFound = nfc_list_devices (connstrings, MAX_DEVICE_COUNT);
 
   if (szFound < 2) {
     ERR ("%zd device found but two connected devices are needed to relay NFC.", szFound);

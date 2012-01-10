@@ -52,7 +52,6 @@
 int
 main (int argc, const char *argv[])
 {
-  size_t  szFound;
   size_t  i;
   nfc_device *pnd;
   const char *acLibnfcVersion;
@@ -73,7 +72,7 @@ main (int argc, const char *argv[])
   printf ("%s uses libnfc %s\n", argv[0], acLibnfcVersion);
 
   nfc_connstring connstrings[MAX_DEVICE_COUNT];
-  nfc_list_devices (connstrings, MAX_DEVICE_COUNT, &szFound);
+  size_t szFound = nfc_list_devices (connstrings, MAX_DEVICE_COUNT);
 
   if (szFound == 0) {
     printf ("No NFC device found.\n");

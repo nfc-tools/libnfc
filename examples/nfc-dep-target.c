@@ -63,11 +63,10 @@ main (int argc, const char *argv[])
 {
   uint8_t  abtRx[MAX_FRAME_LEN];
   int  szRx;
-  size_t  szDeviceFound;
   uint8_t  abtTx[] = "Hello Mars!";
   #define MAX_DEVICE_COUNT 2
   nfc_connstring connstrings[MAX_DEVICE_COUNT];
-  nfc_list_devices (connstrings, MAX_DEVICE_COUNT, &szDeviceFound);
+  size_t szDeviceFound = nfc_list_devices (connstrings, MAX_DEVICE_COUNT);
   // Little hack to allow using nfc-dep-initiator & nfc-dep-target from
   // the same machine: if there is more than one readers connected
   // nfc-dep-target will connect to the second reader

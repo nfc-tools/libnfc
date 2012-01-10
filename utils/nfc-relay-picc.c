@@ -149,7 +149,6 @@ int
 main (int argc, char *argv[])
 {
   int     arg;
-  size_t  szFound;
   const char *acLibnfcVersion = nfc_version ();
   nfc_target ntRealTarget;
 
@@ -193,7 +192,7 @@ main (int argc, char *argv[])
 
   nfc_connstring connstrings[MAX_DEVICE_COUNT];
   // List available devices
-  nfc_list_devices (connstrings, MAX_DEVICE_COUNT, &szFound);
+  size_t szFound = nfc_list_devices (connstrings, MAX_DEVICE_COUNT);
 
   if (initiator_only_mode || target_only_mode) {
     if (szFound < 1) {
