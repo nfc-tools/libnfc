@@ -806,18 +806,46 @@ nfc_target_receive_bits (nfc_device *pnd, uint8_t *pbtRx, const size_t szRx, uin
   HAL (target_receive_bits, pnd, pbtRx, szRx, pbtRxPar);
 }
 
+static struct sErrorMessage {
+  int     iErrorCode;
+  const char *pcErrorMsg;
+} sErrorMessages[] = {
+  /* Chip-level errors (internal errors, RF errors, etc.) */
+  { NFC_SUCCESS, "Success" },
+  { NFC_EIO, "Input / Output Error" },
+  { NFC_EINVARG, "Invalid argument(s)" },
+  { NFC_EDEVNOTSUPP, "Not Supported by Device" },
+  { NFC_ENOTSUCHDEV, "No Such Device" },
+  { NFC_EOVFLOW, "Buffer Overflow" },
+  { NFC_ETIMEOUT, "Timeout" },
+  { NFC_EOPABORTED, "Operation Aborted" },
+  { NFC_ENOTIMPL, "Not (yet) Implemented" },
+  { NFC_ETGRELEASED, "Target Released" },
+  { NFC_ERFTRANS, "RF Transmission Error" },
+  { NFC_ECHIP, "Device's Internal Chip Error" },
+};
+
 /**
- * @brief Return the PCD error string
+ * @brief Return the last error string
  * @return Returns a string
  */
 const char *
 nfc_strerror (const nfc_device *pnd)
-{
-  return pnd->driver->strerror (pnd);
+{  
+  const char *pcRes = "Unknown error";
+  size_t  i;
+  for (i = 0; i < (sizeof (sErrorMessages) / sizeof (struct sErrorMessage)); i++) {
+    if (sErrorMessages[i].iErrorCode == pnd->last_error) {
+      pcRes = sErrorMessages[i].pcErrorMsg;
+      break;
+    }
+  }
+
+  return pcRes;
 }
 
 /**
- * @brief Renders the PCD error in pcStrErrBuf for a maximum size of szBufLen chars
+ * @brief Renders the last error in pcStrErrBuf for a maximum size of szBufLen chars
  * @return Returns 0 upon success
  */
 int
@@ -827,7 +855,7 @@ nfc_strerror_r (const nfc_device *pnd, char *pcStrErrBuf, size_t szBufLen)
 }
 
 /**
- * @brief Display the PCD error a-la perror
+ * @brief Display the last error occured on a nfc_device
  */
 void
 nfc_perror (const nfc_device *pnd, const char *pcString)
