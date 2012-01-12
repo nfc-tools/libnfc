@@ -1244,6 +1244,7 @@ pn53x_initiator_transceive_bytes (struct nfc_device *pnd, const uint8_t *pbtTx, 
 {
   size_t  szExtraTxLen;
   uint8_t  abtCmd[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
+  int res = 0;
 
   // We can not just send bytes without parity if while the PN53X expects we handled them
   if (!pnd->bPar) {
@@ -1264,8 +1265,8 @@ pn53x_initiator_transceive_bytes (struct nfc_device *pnd, const uint8_t *pbtTx, 
   }
 
   // To transfer command frames bytes we can not have any leading bits, reset this to zero
-  if (pn53x_set_tx_bits (pnd, 0) < 0) {
-    pnd->last_error = NFC_EIO; // FIXME pn53x_set_tx_bits should return an integer
+  if ((res = pn53x_set_tx_bits (pnd, 0)) < 0) {
+    pnd->last_error = res;
     return pnd->last_error;
   }
 
@@ -1273,16 +1274,10 @@ pn53x_initiator_transceive_bytes (struct nfc_device *pnd, const uint8_t *pbtTx, 
   // We have to give the amount of bytes + (the two command bytes 0xD4, 0x42)
   uint8_t  abtRx[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
   size_t  szRx = sizeof(abtRx);
-  int res = 0;
+
   if ((res = pn53x_transceive (pnd, abtCmd, szTx + szExtraTxLen, abtRx, szRx, timeout)) < 0) {
-    // FIXME pn53x_transceive should return an integer
-    if (CHIP_DATA (pnd)->last_status_byte == EINVRXFRAM) {
-      pnd->last_error = NFC_ERFTRANS;
+      pnd->last_error = res;
       return pnd->last_error;
-    } else {
-      pnd->last_error = NFC_EIO;
-      return pnd->last_error;
-    }
   }
   szRx = (size_t) res;
   if (pbtRx != NULL) {

@@ -510,20 +510,18 @@ pn53x_usb_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szData, co
 {
   uint8_t  abtFrame[PN53X_USB_BUFFER_LEN] = { 0x00, 0x00, 0xff };  // Every packet must start with "00 00 ff"
   size_t szFrame = 0;
+  int res = 0;
 
   pn53x_build_frame (abtFrame, &szFrame, pbtData, szData);
 
-  int res = pn53x_usb_bulk_write (DRIVER_DATA (pnd), abtFrame, szFrame, timeout);
-
-  if (res < 0) {
-    pnd->last_error = NFC_EIO;
+  if ((res = pn53x_usb_bulk_write (DRIVER_DATA (pnd), abtFrame, szFrame, timeout)) < 0) {
+    pnd->last_error = res;
     return pnd->last_error;
   }
 
   uint8_t abtRxBuf[PN53X_USB_BUFFER_LEN];
-  res = pn53x_usb_bulk_read (DRIVER_DATA (pnd), abtRxBuf, sizeof (abtRxBuf), timeout);
-  if (res < 0) {
-    pnd->last_error = NFC_EIO;
+  if ((res = pn53x_usb_bulk_read (DRIVER_DATA (pnd), abtRxBuf, sizeof (abtRxBuf), timeout)) < 0) {
+    pnd->last_error = res;
     // try to interrupt current device state
     pn53x_usb_ack(pnd);
     return pnd->last_error;
@@ -539,9 +537,8 @@ pn53x_usb_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szData, co
     // pn53x_usb_receive()) will be able to retreive the correct response
     // packet.
     // FIXME Sony reader is also affected by this bug but NACK is not supported
-    int res = pn53x_usb_bulk_write (DRIVER_DATA (pnd), (uint8_t *)pn53x_nack_frame, sizeof(pn53x_nack_frame), timeout);
-    if (res < 0) {
-      pnd->last_error = NFC_EIO;
+    if ((res = pn53x_usb_bulk_write (DRIVER_DATA (pnd), (uint8_t *)pn53x_nack_frame, sizeof(pn53x_nack_frame), timeout)) < 0) {
+      pnd->last_error = res;
       // try to interrupt current device state
       pn53x_usb_ack(pnd);
       return pnd->last_error;
@@ -595,7 +592,7 @@ read:
   }
 
   if (res < 0) {
-    pnd->last_error = NFC_EIO;
+    pnd->last_error = res;
     // try to interrupt current device state
     pn53x_usb_ack(pnd);
     return pnd->last_error;

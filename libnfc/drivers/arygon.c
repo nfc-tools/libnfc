@@ -306,6 +306,7 @@ arygon_disconnect (nfc_device *pnd)
 int
 arygon_tama_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szData, int timeout)
 {
+  int res = 0;
   // Before sending anything, we need to discard from any junk bytes
   uart_flush_input (DRIVER_DATA(pnd)->port);
 
@@ -319,23 +320,21 @@ arygon_tama_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szData, 
     return pnd->last_error;
   }
 
-  if (pn53x_build_frame (abtFrame + 1, &szFrame, pbtData, szData) < 0) {
-    pnd->last_error = NFC_EINVARG;
+  if ((res = pn53x_build_frame (abtFrame + 1, &szFrame, pbtData, szData)) < 0) {
+    pnd->last_error = res;
     return pnd->last_error;
   }
 
-  int res = uart_send (DRIVER_DATA (pnd)->port, abtFrame, szFrame + 1, timeout);
-  if (res != 0) {
+  if ((res = uart_send (DRIVER_DATA (pnd)->port, abtFrame, szFrame + 1, timeout)) != 0) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Unable to transmit data. (TX)");
-    pnd->last_error = NFC_EIO;
+    pnd->last_error = res;
     return pnd->last_error;
   }
 
   uint8_t abtRxBuf[6];
-  res = uart_receive (DRIVER_DATA (pnd)->port, abtRxBuf, sizeof (abtRxBuf), 0, timeout);
-  if (res != 0) {
+  if ((res = uart_receive (DRIVER_DATA (pnd)->port, abtRxBuf, sizeof (abtRxBuf), 0, timeout)) != 0) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Unable to read ACK");
-    pnd->last_error = NFC_EIO;
+    pnd->last_error = res;
     return pnd->last_error;
   }
 
@@ -526,7 +525,7 @@ arygon_reset_tama (nfc_device *pnd)
   res = uart_receive (DRIVER_DATA (pnd)->port, abtRx, szRx, 0, 1000);
   if (res != 0) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "No reply to 'reset TAMA' command.");
-    pnd->last_error = NFC_EIO;
+    pnd->last_error = res;
     return pnd->last_error;
   }
 
