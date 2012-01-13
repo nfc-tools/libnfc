@@ -55,7 +55,18 @@ target_thread (void *arg)
   cut_set_current_test_context (((struct thread_data *) arg)->cut_test_context);
 
   printf ("=========== TARGET %s =========\n", nfc_device_get_name (device));
-  nfc_target nt = {
+  nfc_target nt; 
+
+  uint8_t abtRx[1024];
+  size_t szRx = sizeof (abtRx);
+
+  // 1) nfc_target_init should take target in idle mode
+  int res = nfc_target_init (device, &nt, abtRx, szRx, 500);
+  cut_assert_operator_int (res, >=, 0, cut_message ("Can't initialize NFC device as target: %s", nfc_strerror (device)));
+  if (res < 0) { thread_res = -1; return (void*) thread_res; }
+  
+  // 2) act as target
+  nfc_target nt1 = {
     .nm = {
       .nmt = NMT_DEP,
       .nbr = NBR_UNDEFINED
@@ -75,18 +86,8 @@ target_thread (void *arg)
       },
     },
   };
-
-  uint8_t abtRx[1024];
-  size_t szRx = sizeof (abtRx);
-
-  // 1) nfc_target_init should take target in idle mode
-  int res = nfc_target_init (device, &nt, abtRx, szRx, 500);
-  cut_assert_operator_int (res, >=, 0, cut_message ("Can't initialize NFC device as target: %s", nfc_strerror (device)));
-  if (res < 0) { thread_res = -1; return (void*) thread_res; }
-  
-  // 2) act as target
-  sleep(1);
-  res = nfc_target_init (device, &nt, abtRx, szRx, 0);
+  sleep(6);
+  res = nfc_target_init (device, &nt1, abtRx, szRx, 0);
   cut_assert_operator_int (res, >, 0, cut_message ("Can't initialize NFC device as target: %s", nfc_strerror (device)));
   if (res < 0) { thread_res = -1; return (void*) thread_res; }
 
