@@ -1742,6 +1742,9 @@ pn53x_target_init (struct nfc_device *pnd, nfc_target *pnt, uint8_t *pbtRx, cons
     uint8_t btActivatedMode;
 
     if((res = pn53x_TgInitAsTarget(pnd, ptm, pbtMifareParams, pbtTkt, szTkt, pbtFeliCaParams, pbtNFCID3t, pbtGBt, szGBt, pbtRx, szRxLen, &btActivatedMode, timeout)) < 0) {
+      if (res == NFC_ETIMEOUT) {
+        return pn53x_idle(pnd);
+      }
       return res;
     }
     szRx = (size_t) res;
