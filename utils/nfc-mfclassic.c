@@ -214,7 +214,7 @@ authenticate (uint32_t uiBlock)
 }
 
 static bool
-unlock_card()
+unlock_card (void)
 {
   printf ("Unlocking card\n");
 

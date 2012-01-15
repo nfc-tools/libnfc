@@ -52,7 +52,7 @@
 #define TIMEOUT 60              // secs.
 
 void
-wait_one_minute ()
+wait_one_minute (void)
 {
   int     secs = 0;
 
