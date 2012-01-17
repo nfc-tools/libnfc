@@ -72,12 +72,12 @@ main (int argc, const char *argv[])
     return EXIT_FAILURE;
   }
 
-  pnd = nfc_connect (NULL);
+  pnd = nfc_open (NULL);
   if (!pnd) {
-    printf("Unable to connect to NFC device.\n");
+    printf("Unable to open NFC device.\n");
     return EXIT_FAILURE;
   }
-  printf ("Connected to NFC device: %s\n", nfc_device_get_name (pnd));
+  printf ("NFC device: %s\n opened", nfc_device_get_name (pnd));
 
   signal (SIGINT, stop_dep_communication);
 

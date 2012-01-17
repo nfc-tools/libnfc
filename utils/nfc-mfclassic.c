@@ -538,9 +538,9 @@ main (int argc, const char *argv[])
     // printf("Successfully opened required files\n");
 
     // Try to open the NFC reader
-    pnd = nfc_connect (NULL);
+    pnd = nfc_open (NULL);
     if (pnd == NULL) {
-      printf ("Error connecting NFC reader\n");
+      printf ("Error opening NFC reader\n");
       exit (EXIT_FAILURE);
     }
 
@@ -557,7 +557,7 @@ main (int argc, const char *argv[])
     // Disable ISO14443-4 switching in order to read devices that emulate Mifare Classic with ISO14443-4 compliance.
     nfc_device_set_property_bool (pnd, NP_AUTO_ISO14443_4, false);
 
-    printf ("Connected to NFC reader: %s\n", nfc_device_get_name (pnd));
+    printf ("NFC reader: %s opened\n", nfc_device_get_name (pnd));
 
     // Try to find a MIFARE Classic tag
     if (nfc_initiator_select_passive_target (pnd, nmMifare, NULL, 0, &nt) < 0) {

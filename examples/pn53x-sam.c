@@ -81,15 +81,15 @@ main (int argc, const char *argv[])
   const char *acLibnfcVersion = nfc_version ();
   printf ("%s uses libnfc %s\n", argv[0], acLibnfcVersion);
 
-  // Connect using the first available NFC device
-  pnd = nfc_connect (NULL);
+  // Open using the first available NFC device
+  pnd = nfc_open (NULL);
 
   if (pnd == NULL) {
-    ERR ("%s", "Unable to connect to NFC device.");
+    ERR ("%s", "Unable to open NFC device.");
     return EXIT_FAILURE;
   }
 
-  printf ("Connected to NFC device: %s\n", nfc_device_get_name (pnd));
+  printf ("NFC device: %s opened\n", nfc_device_get_name (pnd));
 
   // Print the example's menu
   printf ("\nSelect the communication mode:\n");
@@ -127,7 +127,7 @@ main (int argc, const char *argv[])
     {
       nfc_target nt;
 
-      // Set connected NFC device to initiator mode
+      // Set opened NFC device to initiator mode
       if (nfc_initiator_init (pnd) < 0) {
         nfc_perror (pnd, "nfc_initiator_init");
         exit (EXIT_FAILURE);    
@@ -189,7 +189,7 @@ main (int argc, const char *argv[])
   // Disconnect from the SAM
   pn53x_SAMConfiguration (pnd, PSM_NORMAL, 0);
 
-  // Disconnect from NFC device
+  // Close NFC device
   nfc_close (pnd);
 
   exit (EXIT_SUCCESS);

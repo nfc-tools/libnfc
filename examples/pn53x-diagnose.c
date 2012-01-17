@@ -79,14 +79,14 @@ main (int argc, const char *argv[])
   }
 
   for (i = 0; i < szFound; i++) {
-    pnd = nfc_connect (connstrings[i]);
+    pnd = nfc_open (connstrings[i]);
 
     if (pnd == NULL) {
-      ERR ("%s", "Unable to connect to NFC device.");
+      ERR ("%s", "Unable to open NFC device.");
       return EXIT_FAILURE;
     }
 
-    printf ("NFC device [%s] connected.\n", nfc_device_get_name (pnd));
+    printf ("NFC device [%s] opened.\n", nfc_device_get_name (pnd));
 
     res = pn53x_transceive (pnd, pncmd_diagnose_communication_line_test, sizeof (pncmd_diagnose_communication_line_test), abtRx, szRx, 0);
     if (res > 0) {

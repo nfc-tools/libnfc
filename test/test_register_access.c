@@ -18,8 +18,8 @@ test_register_endianness (void)
 
     nfc_device *device;
 
-    device = nfc_connect (connstrings[0]);
-    cut_assert_not_null (device, cut_message ("nfc_connect"));
+    device = nfc_open (connstrings[0]);
+    cut_assert_not_null (device, cut_message ("nfc_open"));
 
     uint8_t value;
 

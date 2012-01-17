@@ -178,10 +178,10 @@ main (int argc, char *argv[])
   }
 
   // Try to open the NFC reader
-  pnd = nfc_connect (NULL);
+  pnd = nfc_open (NULL);
 
   if (!pnd) {
-    printf ("Error connecting NFC reader\n");
+    printf ("Error opening NFC reader\n");
     exit(EXIT_FAILURE);
   }
 
@@ -207,7 +207,7 @@ main (int argc, char *argv[])
     exit (EXIT_FAILURE);
   }
 
-  printf ("Connected to NFC reader: %s\n", nfc_device_get_name (pnd));
+  printf ("NFC reader: %s opened\n", nfc_device_get_name (pnd));
 
   // Send the 7 bits request command specified in ISO 14443A (0x26)
   if (!transmit_bits (abtReqa, 7)) {

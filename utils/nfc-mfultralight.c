@@ -205,9 +205,9 @@ main (int argc, const char *argv[])
   DBG ("Successfully opened the dump file\n");
 
   // Try to open the NFC device
-  pnd = nfc_connect (NULL);
+  pnd = nfc_open (NULL);
   if (pnd == NULL) {
-    ERR ("Error connecting NFC device\n");
+    ERR ("Error opening NFC device\n");
     return 1;
   }
 
@@ -222,7 +222,7 @@ main (int argc, const char *argv[])
     exit (EXIT_FAILURE);
   }
 
-  printf ("Connected to NFC device: %s\n", nfc_device_get_name (pnd));
+  printf ("NFC device: %s opened\n", nfc_device_get_name (pnd));
 
   // Try to find a MIFARE Ultralight tag
   if (nfc_initiator_select_passive_target (pnd, nmMifare, NULL, 0, &nt) < 0) {

@@ -126,15 +126,15 @@ main (int argc, char *argv[])
 #endif
 
   // Try to open the NFC device
-  pnd = nfc_connect (NULL);
+  pnd = nfc_open (NULL);
 
   if (pnd == NULL) {
-    printf ("Unable to connect to NFC device\n");
+    printf ("Unable to open NFC device\n");
     exit(EXIT_FAILURE);
   }
 
   printf ("\n");
-  printf ("Connected to NFC device: %s\n", nfc_device_get_name (pnd));
+  printf ("NFC device: %s opened\n", nfc_device_get_name (pnd));
   printf ("[+] Try to break out the auto-emulation, this requires a second NFC device!\n");
   printf ("[+] To do this, please send any command after the anti-collision\n");
   printf ("[+] For example, send a RATS command or use the \"nfc-anticol\" or \"nfc-list\" tool.\n");

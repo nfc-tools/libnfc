@@ -68,13 +68,13 @@ main (int argc, const char *argv[])
   nfc_connstring connstrings[MAX_DEVICE_COUNT];
   size_t szDeviceFound = nfc_list_devices (connstrings, MAX_DEVICE_COUNT);
   // Little hack to allow using nfc-dep-initiator & nfc-dep-target from
-  // the same machine: if there is more than one readers connected
-  // nfc-dep-target will connect to the second reader
+  // the same machine: if there is more than one readers opened
+  // nfc-dep-target will open the second reader
   // (we hope they're always detected in the same order)
   if (szDeviceFound == 1) {
-    pnd = nfc_connect (connstrings[0]);
+    pnd = nfc_open (connstrings[0]);
   } else if (szDeviceFound > 1) {
-    pnd = nfc_connect (connstrings[1]);
+    pnd = nfc_open (connstrings[1]);
   } else {
     printf("No device found.\n");
     return EXIT_FAILURE;
@@ -107,10 +107,10 @@ main (int argc, const char *argv[])
   };
 
   if (!pnd) {
-    printf("Unable to connect to NFC device.\n");
+    printf("Unable to open NFC device.\n");
     return EXIT_FAILURE;
   }
-  printf ("Connected to NFC device: %s\n", nfc_device_get_name (pnd));
+  printf ("NFC device: %s opened\n", nfc_device_get_name (pnd));
 
   signal (SIGINT, stop_dep_communication);
 

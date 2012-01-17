@@ -124,7 +124,7 @@ acr122_free_scardcontext (void)
 
 #define PCSC_MAX_DEVICES 16
 /**
- * @brief List connected devices
+ * @brief List opened devices
  *
  * Probe PCSC to find NFC capable hardware.
  *
@@ -241,7 +241,7 @@ acr122_connstring_decode (const nfc_connstring connstring, struct acr122_descrip
 }
 
 nfc_device *
-acr122_connect (const nfc_connstring connstring)
+acr122_open (const nfc_connstring connstring)
 {
   struct acr122_descriptor ndd;
   int connstring_decode_level = acr122_connstring_decode (connstring, &ndd);
@@ -249,7 +249,7 @@ acr122_connect (const nfc_connstring connstring)
   if (connstring_decode_level < 2) {
     return NULL;
   }
-  // FIXME: acr122_connect() does not take care about bus index
+  // FIXME: acr122_open() does not take care about bus index
 
   char   *pcFirmware;
   nfc_device *pnd = nfc_device_new ();
@@ -260,7 +260,7 @@ acr122_connect (const nfc_connstring connstring)
 
   SCARDCONTEXT *pscc;
   
-  log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "Attempt to connect to %s", ndd.pcsc_device_name);
+  log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "Attempt to open %s", ndd.pcsc_device_name);
   // Test if context succeeded
   if (!(pscc = acr122_get_scardcontext ()))
     goto error;
@@ -466,7 +466,7 @@ const struct pn53x_io acr122_io = {
 const struct nfc_driver acr122_driver = {
   .name                             = ACR122_DRIVER_NAME,
   .probe                            = acr122_probe,
-  .connect                          = acr122_connect,
+  .open                             = acr122_open,
   .close                            = acr122_close,
   .strerror                         = pn53x_strerror,
 

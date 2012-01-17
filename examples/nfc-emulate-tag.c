@@ -180,18 +180,18 @@ main (int argc, char *argv[])
 #endif
 
   // Try to open the NFC reader
-  pnd = nfc_connect (NULL);
+  pnd = nfc_open (NULL);
 
   // Display libnfc version
   acLibnfcVersion = nfc_version ();
   printf ("%s uses libnfc %s\n", argv[0], acLibnfcVersion);
 
   if (pnd == NULL) {
-    ERR("Unable to connect to NFC device");
+    ERR("Unable to open NFC device");
     exit (EXIT_FAILURE);
   }
 
-  printf ("Connected to NFC device: %s\n", nfc_device_get_name (pnd));
+  printf ("NFC device: %s opened\n", nfc_device_get_name (pnd));
 
   // Notes for ISO14443-A emulated tags:
   // * Only short UIDs are supported

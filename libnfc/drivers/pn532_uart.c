@@ -91,7 +91,7 @@ pn532_uart_probe (nfc_connstring connstrings[], size_t connstrings_len, size_t *
     if ((sp != INVALID_SERIAL_PORT) && (sp != CLAIMED_SERIAL_PORT)) {
       // We need to flush input to be sure first reply does not comes from older byte transceive
       uart_flush_input (sp);
-      // Serial port claimed but we need to check if a PN532_UART is connected.
+      // Serial port claimed but we need to check if a PN532_UART is opened.
       uart_set_speed (sp, PN532_UART_DEFAULT_SPEED);
 
       nfc_device *pnd = nfc_device_new ();
@@ -194,7 +194,7 @@ pn532_connstring_decode (const nfc_connstring connstring, struct pn532_uart_desc
 }
 
 nfc_device *
-pn532_uart_connect (const nfc_connstring connstring)
+pn532_uart_open (const nfc_connstring connstring)
 {
   struct pn532_uart_descriptor ndd;
   int connstring_decode_level = pn532_connstring_decode (connstring, &ndd);
@@ -208,7 +208,7 @@ pn532_uart_connect (const nfc_connstring connstring)
   serial_port sp;
   nfc_device *pnd = NULL;
 
-  log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "Attempt to connect to: %s at %d bauds.", ndd.port, ndd.speed);
+  log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "Attempt to open: %s at %d bauds.", ndd.port, ndd.speed);
   sp = uart_open (ndd.port);
 
   if (sp == INVALID_SERIAL_PORT)
@@ -503,7 +503,7 @@ const struct pn53x_io pn532_uart_io = {
 const struct nfc_driver pn532_uart_driver = {
   .name                             = PN532_UART_DRIVER_NAME,
   .probe                            = pn532_uart_probe,
-  .connect                          = pn532_uart_connect,
+  .open                             = pn532_uart_open,
   .close                            = pn532_uart_close,
   .strerror                         = pn53x_strerror,
 

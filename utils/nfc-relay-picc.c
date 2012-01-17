@@ -204,7 +204,7 @@ main (int argc, char *argv[])
   }
   else {
     if (szFound < 2) {
-      ERR ("%zd device found but two connected devices are needed to relay NFC.", szFound);
+      ERR ("%zd device found but two opened devices are needed to relay NFC.", szFound);
       return EXIT_FAILURE;
     }
   }
@@ -213,20 +213,20 @@ main (int argc, char *argv[])
     // Try to open the NFC reader used as initiator
     // Little hack to allow using initiator no matter if
     // there is already a target used locally or not on the same machine:
-    // if there is more than one readers connected we connect to the second reader
+    // if there is more than one readers opened we open the second reader
     // (we hope they're always detected in the same order)
     if (szFound == 1) {
-      pndInitiator = nfc_connect (connstrings[0]);
+      pndInitiator = nfc_open (connstrings[0]);
     } else {
-      pndInitiator = nfc_connect (connstrings[1]);
+      pndInitiator = nfc_open (connstrings[1]);
     }
 
     if (!pndInitiator) {
-      printf ("Error connecting NFC reader\n");
+      printf ("Error opening NFC reader\n");
       exit(EXIT_FAILURE);
     }
 
-    printf ("Connected to the NFC reader device: %s\n", nfc_device_get_name (pndInitiator));
+    printf ("NFC reader device: %s opened\n", nfc_device_get_name (pndInitiator));
 
     if (nfc_initiator_init (pndInitiator) < 0) {
       printf ("Error: fail initializing initiator\n");
@@ -342,16 +342,16 @@ main (int argc, char *argv[])
     print_nfc_iso14443a_info (ntEmulatedTarget.nti.nai, false);
  
     // Try to open the NFC emulator device
-    pndTarget = nfc_connect (connstrings[0]);
+    pndTarget = nfc_open (connstrings[0]);
     if (pndTarget == NULL) {
-      printf ("Error connecting NFC emulator device\n");
+      printf ("Error opening NFC emulator device\n");
       if (!target_only_mode) {
         nfc_close (pndInitiator);
       }
       return EXIT_FAILURE;
     }
 
-    printf ("Connected to the NFC emulator device: %s\n", nfc_device_get_name (pndTarget));
+    printf ("NFC emulator device: %s opened\n", nfc_device_get_name (pndTarget));
 
     szCapduLen = sizeof (abtCapdu);
     if (nfc_target_init (pndTarget, &ntEmulatedTarget, abtCapdu, szCapduLen, 0) < 0) {

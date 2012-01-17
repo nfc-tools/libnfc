@@ -31,8 +31,8 @@ test_access_storm (void)
 	    nfc_device *device;
 	    nfc_target ant[MAX_TARGET_COUNT];
 
-	    device = nfc_connect (connstrings[i]);
-	    cut_assert_not_null (device, cut_message ("nfc_connect"));
+	    device = nfc_open (connstrings[i]);
+	    cut_assert_not_null (device, cut_message ("nfc_open"));
 
 	    res = nfc_initiator_init(device);
 	    cut_assert_equal_int (0, res, cut_message ("nfc_initiator_init"));

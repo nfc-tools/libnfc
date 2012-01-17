@@ -128,7 +128,7 @@
 struct nfc_driver {
   const char *name;
   bool (*probe)(nfc_connstring connstrings[], size_t connstrings_len, size_t * pszDeviceFound);
-  struct nfc_device *(*connect) (const nfc_connstring connstring);
+  struct nfc_device *(*open) (const nfc_connstring connstring);
   void (*close) (struct nfc_device *pnd);
   const char *(*strerror) (const struct nfc_device *pnd);
 

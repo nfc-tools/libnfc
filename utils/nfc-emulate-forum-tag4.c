@@ -347,16 +347,16 @@ main (int argc, char *argv[])
   }
 
   // Try to open the NFC reader
-  pnd = nfc_connect (NULL);
+  pnd = nfc_open (NULL);
 
   if (pnd == NULL) {
-    ERR("Unable to connect to NFC device");
+    ERR("Unable to open NFC device");
     exit (EXIT_FAILURE);
   }
 
   signal (SIGINT, stop_emulation);
 
-  printf ("Connected to NFC device: %s\n", nfc_device_get_name(pnd));
+  printf ("NFC device: %s opened\n", nfc_device_get_name(pnd));
   printf ("Emulating NDEF tag now, please touch it with a second NFC device\n");
 
   if (0 != nfc_emulate_target (pnd, &emulator)) { // contains already nfc_target_init() call

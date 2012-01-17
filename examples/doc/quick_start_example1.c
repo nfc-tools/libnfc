@@ -18,20 +18,20 @@ main (int argc, const char *argv[])
   const char *acLibnfcVersion = nfc_version ();
   printf ("%s uses libnfc %s\n", argv[0], acLibnfcVersion);
 
-  // Connect using the first available NFC device
-  pnd = nfc_connect (NULL);
+  // Ope, using the first available NFC device
+  pnd = nfc_open (NULL);
 
   if (pnd == NULL) {
-    ERR ("%s", "Unable to connect to NFC device.");
+    ERR ("%s", "Unable to open NFC device.");
     return EXIT_FAILURE;
   }
-  // Set connected NFC device to initiator mode
+  // Set opened NFC device to initiator mode
   if (nfc_initiator_init (pnd) < 0) {
     nfc_perror (pnd, "nfc_initiator_init");
     exit (EXIT_FAILURE);    
   }
 
-  printf ("Connected to NFC reader: %s\n", nfc_device_get_name (pnd));
+  printf ("NFC reader: %s opened\n", nfc_device_get_name (pnd));
 
   // Poll for a ISO14443A (MIFARE) tag
   const nfc_modulation nmMifare = {
@@ -51,7 +51,7 @@ main (int argc, const char *argv[])
       print_hex (nt.nti.nai.abtAts, nt.nti.nai.szAtsLen);
     }
   }
-  // Disconnect from NFC device
+  // Close NFC device
   nfc_close (pnd);
   return EXIT_SUCCESS;
 }

@@ -32,7 +32,7 @@
 
 bool    arygon_probe (nfc_connstring connstrings[], size_t connstrings_len, size_t *pszDeviceFound);
 
-nfc_device *arygon_connect (const nfc_connstring connstring);
+nfc_device *arygon_open (const nfc_connstring connstring);
 void    arygon_close (nfc_device *pnd);
 
 int    arygon_tama_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szData, int timeout);

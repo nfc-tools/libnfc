@@ -112,19 +112,19 @@ main (int argc, char *argv[])
   size_t szFound = nfc_list_devices (connstrings, MAX_DEVICE_COUNT);
 
   if (szFound < 2) {
-    ERR ("%zd device found but two connected devices are needed to relay NFC.", szFound);
+    ERR ("%zd device found but two opened devices are needed to relay NFC.", szFound);
     return EXIT_FAILURE;
   }
   // Try to open the NFC emulator device
-  pndTag = nfc_connect (connstrings[0]);
+  pndTag = nfc_open (connstrings[0]);
   if (pndTag == NULL) {
-    printf ("Error connecting NFC emulator device\n");
+    printf ("Error opening NFC emulator device\n");
     return EXIT_FAILURE;
   }
 
   printf ("Hint: tag <---> initiator (relay) <---> target (relay) <---> original reader\n\n");
 
-  printf ("Connected to the NFC emulator device: %s\n", nfc_device_get_name (pndTag));
+  printf ("NFC emulator device: %s opened\n", nfc_device_get_name (pndTag));
   printf ("[+] Try to break out the auto-emulation, this requires a second reader!\n");
   printf ("[+] To do this, please send any command after the anti-collision\n");
   printf ("[+] For example, send a RATS command or use the \"nfc-anticol\" tool\n");
@@ -159,9 +159,9 @@ main (int argc, char *argv[])
   printf ("%s", "Done, emulated tag is initialized");
 
   // Try to open the NFC reader
-  pndReader = nfc_connect (connstrings[1]);
+  pndReader = nfc_open (connstrings[1]);
 
-  printf ("Connected to the NFC reader device: %s", nfc_device_get_name (pndReader));
+  printf ("NFC reader device: %s opened", nfc_device_get_name (pndReader));
   printf ("%s", "Configuring NFC reader settings...");
   
   if (nfc_initiator_init (pndReader) < 0) {

@@ -216,7 +216,7 @@ arygon_connstring_decode (const nfc_connstring connstring, struct arygon_descrip
 }
 
 nfc_device *
-arygon_connect (const nfc_connstring connstring)
+arygon_open (const nfc_connstring connstring)
 {
   struct arygon_descriptor ndd;
   int connstring_decode_level = arygon_connstring_decode (connstring, &ndd);
@@ -230,7 +230,7 @@ arygon_connect (const nfc_connstring connstring)
   serial_port sp;
   nfc_device *pnd = NULL;
 
-  log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "Attempt to connect to: %s at %d bauds.", ndd.port, ndd.speed);
+  log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "Attempt to open: %s at %d bauds.", ndd.port, ndd.speed);
   sp = uart_open (ndd.port);
 
   if (sp == INVALID_SERIAL_PORT)
@@ -254,7 +254,7 @@ arygon_connect (const nfc_connstring connstring)
   // Alloc and init chip's data
   pn53x_data_new (pnd, &arygon_tama_io);
 
-  // The PN53x chip connected to ARYGON MCU doesn't seems to be in LowVBat mode
+  // The PN53x chip opened to ARYGON MCU doesn't seems to be in LowVBat mode
   CHIP_DATA (pnd)->power_mode = NORMAL;
 
   // empirical tuning
@@ -560,7 +560,7 @@ const struct pn53x_io arygon_tama_io = {
 const struct nfc_driver arygon_driver = {
   .name                             = ARYGON_DRIVER_NAME,
   .probe                            = arygon_probe,
-  .connect                          = arygon_connect,
+  .open                             = arygon_open,
   .close                            = arygon_close,
   .strerror                         = pn53x_strerror,
 

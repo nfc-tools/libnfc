@@ -195,14 +195,14 @@ main(int argc, char *argv[])
     } 
   }
 
-  pnd = nfc_connect (NULL);
+  pnd = nfc_open (NULL);
 
   if (pnd == NULL) {
-    ERR("Unable to connect to NFC device");
+    ERR("Unable to open NFC device");
     exit (EXIT_FAILURE);
   }
 
-  fprintf (message_stream, "Connected to NFC device: %s\n", nfc_device_get_name (pnd));
+  fprintf (message_stream, "NFC device: %s opened\n", nfc_device_get_name (pnd));
 
   nfc_modulation nm = {
     .nmt = NMT_FELICA,

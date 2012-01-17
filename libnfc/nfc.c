@@ -95,7 +95,7 @@ nfc_get_default_device (nfc_connstring *connstring)
 }
 
 /**
- * @brief Connect to a NFC device
+ * @brief Open a NFC device
  * @param connstring The device connection string if specific device is wanted, \c NULL otherwise
  * @return Returns pointer to a \a nfc_device struct if successfull; otherwise returns \c NULL value.
  *
@@ -111,7 +111,7 @@ nfc_get_default_device (nfc_connstring *connstring)
  * optionally followed by manual tuning of the parameters if the default parameters are not suiting your goals.
  */
 nfc_device *
-nfc_connect (const nfc_connstring connstring)
+nfc_open (const nfc_connstring connstring)
 {
   log_init ();
   nfc_device *pnd = NULL;
@@ -136,10 +136,10 @@ nfc_connect (const nfc_connstring connstring)
       continue;
     }
 
-    pnd = ndr->connect (ncs);
-    // Test if the connection was successful
+    pnd = ndr->open (ncs);
+    // Test if the opening was successful
     if (pnd == NULL) {
-      log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "Unable to connect to \"%s\".", ncs);
+      log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "Unable to open \"%s\".", ncs);
       log_fini ();
       return pnd;
     }
@@ -167,7 +167,7 @@ nfc_close (nfc_device *pnd)
   if (pnd) {
     // Go in idle mode
     nfc_idle (pnd);
-    // Disconnect, clean up and release the device 
+    // Close, clean up and release the device 
     pnd->driver->close (pnd);
     
     log_fini ();

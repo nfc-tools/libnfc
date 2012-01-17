@@ -87,14 +87,14 @@ int main(int argc, const char* argv[])
   }
 
   // Try to open the NFC reader
-  pnd = nfc_connect(NULL);
+  pnd = nfc_open(NULL);
 
   if (pnd == NULL) {
-    ERR ("%s", "Unable to connect to NFC device.");
+    ERR ("%s", "Unable to open NFC device.");
     return EXIT_FAILURE;
   }
 
-  printf ("Connected to NFC reader: %s\n", nfc_device_get_name (pnd));
+  printf ("NFC reader: %s opened\n", nfc_device_get_name (pnd));
   if (nfc_initiator_init (pnd) < 0) {
     nfc_perror (pnd, "nfc_initiator_init");
     exit (EXIT_FAILURE);    

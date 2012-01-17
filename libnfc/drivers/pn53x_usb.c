@@ -366,7 +366,7 @@ pn53x_usb_get_usb_device_name (struct usb_device *dev, usb_dev_handle *udev, cha
 }
 
 nfc_device *
-pn53x_usb_connect (const nfc_connstring connstring)
+pn53x_usb_open (const nfc_connstring connstring)
 {
   struct pn53x_usb_descriptor desc;
   int connstring_decode_level = pn53x_usb_connstring_decode (connstring, &desc);
@@ -793,7 +793,7 @@ const struct pn53x_io pn53x_usb_io = {
 const struct nfc_driver pn53x_usb_driver = {
   .name                             = PN53X_USB_DRIVER_NAME,
   .probe                            = pn53x_usb_probe,
-  .connect                          = pn53x_usb_connect,
+  .open                             = pn53x_usb_open,
   .close                            = pn53x_usb_close,
   .strerror                         = pn53x_strerror,
 

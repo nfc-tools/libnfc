@@ -95,7 +95,7 @@ main (int argc, const char *argv[])
 
   /* Lazy way to open an NFC device */
 #if 0
-  pnd = nfc_connect (NULL);
+  pnd = nfc_open (NULL);
 #endif
 
   /* If specific device is wanted, i.e. an ARYGON device on /dev/ttyUSB0 */
@@ -104,7 +104,7 @@ main (int argc, const char *argv[])
   ndd.pcDriver = "ARYGON";
   ndd.pcPort = "/dev/ttyUSB0";
   ndd.uiSpeed = 115200;
-  pnd = nfc_connect (&ndd);
+  pnd = nfc_open (&ndd);
 #endif
 
   /* If specific device is wanted, i.e. a SCL3711 on USB */
@@ -112,7 +112,7 @@ main (int argc, const char *argv[])
   nfc_device_desc_t ndd;
   ndd.pcDriver = "PN533_USB";
   strcpy(ndd.acDevice, "SCM Micro / SCL3711-NFC&RW");
-  pnd = nfc_connect (&ndd);
+  pnd = nfc_open (&ndd);
 #endif
   nfc_connstring connstrings[MAX_DEVICE_COUNT];
   size_t szDeviceFound = nfc_list_devices (connstrings, MAX_DEVICE_COUNT);
@@ -123,10 +123,10 @@ main (int argc, const char *argv[])
 
   for (i = 0; i < szDeviceFound; i++) {
     nfc_target ant[MAX_TARGET_COUNT];
-    pnd = nfc_connect (connstrings[i]);
+    pnd = nfc_open (connstrings[i]);
 
     if (pnd == NULL) {
-      ERR ("%s", "Unable to connect to NFC device.");
+      ERR ("%s", "Unable to open NFC device.");
       return EXIT_FAILURE;
     }
   if (nfc_initiator_init (pnd) < 0) {
@@ -134,7 +134,7 @@ main (int argc, const char *argv[])
     exit (EXIT_FAILURE);    
   }
 
-    printf ("Connected to NFC device: %s\n", nfc_device_get_name (pnd));
+    printf ("NFC device: %s opened\n", nfc_device_get_name (pnd));
 
     nfc_modulation nm;
 
