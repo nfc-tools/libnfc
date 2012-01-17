@@ -38,6 +38,6 @@ void    arygon_disconnect (nfc_device *pnd);
 int    arygon_tama_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szData, int timeout);
 int    arygon_tama_receive (nfc_device *pnd, uint8_t *pbtData, const size_t szDat, int timeouta);
 
-extern const struct nfc_driver_t arygon_driver;
+extern const struct nfc_driver arygon_driver;
 
 #endif // ! __NFC_DRIVER_ARYGON_H__

@@ -463,7 +463,7 @@ const struct pn53x_io acr122_io = {
   .receive = acr122_receive,
 };
 
-const struct nfc_driver_t acr122_driver = {
+const struct nfc_driver acr122_driver = {
   .name                             = ACR122_DRIVER_NAME,
   .probe                            = acr122_probe,
   .connect                          = acr122_connect,

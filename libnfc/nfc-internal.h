@@ -125,7 +125,7 @@
 #endif
 
 
-struct nfc_driver_t {
+struct nfc_driver {
   const char *name;
   bool (*probe)(nfc_connstring connstrings[], size_t connstrings_len, size_t * pszDeviceFound);
   struct nfc_device *(*connect) (const nfc_connstring connstring);
@@ -163,7 +163,7 @@ struct nfc_driver_t {
  * @brief NFC device information
  */
 struct nfc_device {
-  const struct nfc_driver_t *driver;
+  const struct nfc_driver *driver;
   void *driver_data;
   void *chip_data;
 

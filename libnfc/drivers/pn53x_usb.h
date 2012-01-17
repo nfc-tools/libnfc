@@ -35,6 +35,6 @@ int    pn53x_usb_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szD
 int    pn53x_usb_receive (nfc_device *pnd, uint8_t *pbtData, const size_t szData, int timeout);
 void    pn53x_usb_disconnect (nfc_device *pnd);
 
-extern const struct nfc_driver_t pn53x_usb_driver;
+extern const struct nfc_driver pn53x_usb_driver;
 
 #endif // ! __NFC_DRIVER_PN53X_USB_H__

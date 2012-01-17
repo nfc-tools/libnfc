@@ -790,7 +790,7 @@ const struct pn53x_io pn53x_usb_io = {
   .receive    = pn53x_usb_receive,
 };
 
-const struct nfc_driver_t pn53x_usb_driver = {
+const struct nfc_driver pn53x_usb_driver = {
   .name                             = PN53X_USB_DRIVER_NAME,
   .probe                            = pn53x_usb_probe,
   .connect                          = pn53x_usb_connect,

@@ -500,7 +500,7 @@ const struct pn53x_io pn532_uart_io = {
   .receive    = pn532_uart_receive,
 };
 
-const struct nfc_driver_t pn532_uart_driver = {
+const struct nfc_driver pn532_uart_driver = {
   .name                             = PN532_UART_DRIVER_NAME,
   .probe                            = pn532_uart_probe,
   .connect                          = pn532_uart_connect,

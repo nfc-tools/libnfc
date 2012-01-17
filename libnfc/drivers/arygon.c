@@ -557,7 +557,7 @@ const struct pn53x_io arygon_tama_io = {
   .receive    = arygon_tama_receive,
 };
 
-const struct nfc_driver_t arygon_driver = {
+const struct nfc_driver arygon_driver = {
   .name                             = ARYGON_DRIVER_NAME,
   .probe                            = arygon_probe,
   .connect                          = arygon_connect,

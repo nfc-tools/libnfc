@@ -36,6 +36,6 @@ void    pn532_uart_disconnect (nfc_device *pnd);
 int    pn532_uart_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szData, int timeout);
 int    pn532_uart_receive (nfc_device *pnd, uint8_t *pbtData, const size_t szData, int timeout);
 
-extern const struct nfc_driver_t pn532_uart_driver;
+extern const struct nfc_driver pn532_uart_driver;
 
 #endif // ! __NFC_DRIVER_PN532_UART_H__

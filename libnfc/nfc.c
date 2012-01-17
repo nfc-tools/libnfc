@@ -45,7 +45,7 @@
 
 #define LOG_CATEGORY "libnfc.general"
 
-const struct nfc_driver_t *nfc_drivers[] = {
+const struct nfc_driver *nfc_drivers[] = {
 #  if defined (DRIVER_PN53X_USB_ENABLED)
   &pn53x_usb_driver,
 #  endif /* DRIVER_PN53X_USB_ENABLED */
@@ -127,8 +127,8 @@ nfc_connect (const nfc_connstring connstring)
   }
   
   // Search through the device list for an available device
-  const struct nfc_driver_t *ndr;
-  const struct nfc_driver_t **pndr = nfc_drivers;
+  const struct nfc_driver *ndr;
+  const struct nfc_driver **pndr = nfc_drivers;
   while ((ndr = *pndr)) {
     // Specific device is requested: using device description 
     if (0 != strncmp (ndr->name, ncs, strlen(ndr->name))) {
@@ -186,8 +186,8 @@ nfc_list_devices (nfc_connstring connstrings[] , size_t szDevices)
 {
   size_t szN;
   size_t szDeviceFound = 0;
-  const struct nfc_driver_t *ndr;
-  const struct nfc_driver_t **pndr = nfc_drivers;
+  const struct nfc_driver *ndr;
+  const struct nfc_driver **pndr = nfc_drivers;
 
   log_init ();
   while ((ndr = *pndr)) {
