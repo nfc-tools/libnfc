@@ -26,6 +26,7 @@
 #  include "config.h"
 #endif // HAVE_CONFIG_H
 
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stddef.h>
