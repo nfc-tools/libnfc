@@ -250,7 +250,7 @@ pn532_uart_connect (const nfc_connstring connstring)
   // Check communication using "Diagnose" command, with "Communication test" (0x00)
   if (pn53x_check_communication (pnd) < 0) {
     nfc_perror (pnd, "pn53x_check_communication");
-    pn532_uart_disconnect (pnd);
+    pn532_uart_close (pnd);
     return NULL;
   }
 
@@ -259,7 +259,7 @@ pn532_uart_connect (const nfc_connstring connstring)
 }
 
 void
-pn532_uart_disconnect (nfc_device *pnd)
+pn532_uart_close (nfc_device *pnd)
 {
   // Release UART port
   uart_close (DRIVER_DATA(pnd)->port);
@@ -504,7 +504,7 @@ const struct nfc_driver pn532_uart_driver = {
   .name                             = PN532_UART_DRIVER_NAME,
   .probe                            = pn532_uart_probe,
   .connect                          = pn532_uart_connect,
-  .disconnect                       = pn532_uart_disconnect,
+  .close                            = pn532_uart_close,
   .strerror                         = pn53x_strerror,
 
   .initiator_init                   = pn53x_initiator_init,

@@ -247,7 +247,7 @@ main (int argc, const char *argv[])
         printf("\n");
       }
     }
-    nfc_disconnect (pnd);
+    nfc_close (pnd);
   }
 
   return 0;

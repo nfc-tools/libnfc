@@ -156,19 +156,19 @@ nfc_connect (const nfc_connstring connstring)
 }
 
 /**
- * @brief Disconnect from a NFC device
+ * @brief Close from a NFC device
  * @param pnd \a nfc_device struct pointer that represent currently used device
  *
- * Initiator's selected tag is disconnected and the device, including allocated \a nfc_device struct, is released.
+ * Initiator's selected tag is closed and the device, including allocated \a nfc_device struct, is released.
  */
 void
-nfc_disconnect (nfc_device *pnd)
+nfc_close (nfc_device *pnd)
 {
   if (pnd) {
     // Go in idle mode
     nfc_idle (pnd);
     // Disconnect, clean up and release the device 
-    pnd->driver->disconnect (pnd);
+    pnd->driver->close (pnd);
     
     log_fini ();
   }

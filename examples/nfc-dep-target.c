@@ -139,6 +139,6 @@ main (int argc, const char *argv[])
   printf("Data sent.\n");
 
 error:
-  nfc_disconnect (pnd);
+  nfc_close (pnd);
   return EXIT_SUCCESS;
 }

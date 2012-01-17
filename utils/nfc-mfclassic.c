@@ -562,7 +562,7 @@ main (int argc, const char *argv[])
     // Try to find a MIFARE Classic tag
     if (nfc_initiator_select_passive_target (pnd, nmMifare, NULL, 0, &nt) < 0) {
       printf ("Error: no tag was found\n");
-      nfc_disconnect (pnd);
+      nfc_close (pnd);
       exit (EXIT_FAILURE);
     }
     // Test if we are dealing with a MIFARE compatible tag
@@ -618,7 +618,7 @@ main (int argc, const char *argv[])
       write_card (unlock);
     }
 
-    nfc_disconnect (pnd);
+    nfc_close (pnd);
     break;
 
   case ACTION_EXTRACT:{

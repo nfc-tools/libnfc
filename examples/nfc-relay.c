@@ -147,7 +147,7 @@ main (int argc, char *argv[])
 
   if ((szReaderRxBits = nfc_target_init (pndTag, &nt, abtReaderRx, sizeof (abtReaderRx), 0)) < 0) {
     ERR ("%s", "Initialization of NFC emulator failed");
-    nfc_disconnect (pndTag);
+    nfc_close (pndTag);
     return EXIT_FAILURE;
   }
   printf ("%s", "Configuring emulator settings...");
@@ -215,7 +215,7 @@ main (int argc, char *argv[])
     }
   }
 
-  nfc_disconnect (pndTag);
-  nfc_disconnect (pndReader);
+  nfc_close (pndTag);
+  nfc_close (pndReader);
   exit (EXIT_SUCCESS);
 }

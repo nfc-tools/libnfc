@@ -363,7 +363,7 @@ main (int argc, char *argv[])
     nfc_perror (pnd, "nfc_emulate_target");
   }
 
-  nfc_disconnect(pnd);
+  nfc_close(pnd);
 
   if (argc == 3) {
     if (!(ndef_message_save (argv[2], &nfcforum_tag4_data))) {

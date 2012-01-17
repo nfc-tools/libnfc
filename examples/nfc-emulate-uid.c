@@ -216,10 +216,10 @@ main (int argc, char *argv[])
       }
     }
   }
-  nfc_disconnect (pnd);
+  nfc_close (pnd);
   exit (EXIT_SUCCESS);
 
 error:
-  nfc_disconnect (pnd);
+  nfc_close (pnd);
   exit (EXIT_FAILURE);
 }

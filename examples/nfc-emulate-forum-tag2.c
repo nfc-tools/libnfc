@@ -196,13 +196,13 @@ main(int argc, char *argv[])
     goto error;
   }
 
-  nfc_disconnect(pnd);
+  nfc_close(pnd);
 
   exit (EXIT_SUCCESS);
 
 error:
   if (pnd) {
     nfc_perror (pnd, argv[0]);
-    nfc_disconnect (pnd);
+    nfc_close (pnd);
   }
 }

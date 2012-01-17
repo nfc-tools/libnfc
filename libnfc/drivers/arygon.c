@@ -270,7 +270,7 @@ arygon_connect (const nfc_connstring connstring)
 
   // Check communication using "Reset TAMA" command
   if (arygon_reset_tama(pnd) < 0) {
-    arygon_disconnect (pnd);
+    arygon_close (pnd);
     return NULL;
   }
 
@@ -286,7 +286,7 @@ arygon_connect (const nfc_connstring connstring)
 }
 
 void
-arygon_disconnect (nfc_device *pnd)
+arygon_close (nfc_device *pnd)
 {
   // Release UART port
   uart_close (DRIVER_DATA (pnd)->port);
@@ -561,7 +561,7 @@ const struct nfc_driver arygon_driver = {
   .name                             = ARYGON_DRIVER_NAME,
   .probe                            = arygon_probe,
   .connect                          = arygon_connect,
-  .disconnect                       = arygon_disconnect,
+  .close                            = arygon_close,
   .strerror                         = pn53x_strerror,
 
   .initiator_init                   = pn53x_initiator_init,

@@ -183,7 +183,7 @@ main (int argc, char *argv[])
   // Send the 7 bits request command specified in ISO 14443A (0x26)
   if (!transmit_bits (abtReqa, 7)) {
     printf ("Error: No tag available\n");
-    nfc_disconnect (pnd);
+    nfc_close (pnd);
     return 1;
   }
   memcpy (abtAtqa, abtRx, 2);
@@ -312,6 +312,6 @@ main (int argc, char *argv[])
       print_hex (abtAts, szAts);
   }
 
-  nfc_disconnect (pnd);
+  nfc_close (pnd);
   return 0;
 }

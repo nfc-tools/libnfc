@@ -38,8 +38,8 @@ cut_setup (void)
 void
 cut_teardown (void)
 {
-  nfc_disconnect (second_device);
-  nfc_disconnect (first_device);
+  nfc_close (second_device);
+  nfc_close (first_device);
 }
 
 struct thread_data {

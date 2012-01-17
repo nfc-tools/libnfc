@@ -32,5 +32,5 @@ test_register_endianness (void)
     res = pn53x_read_register (device, 0xFFF0, &value);
     cut_assert_equal_int (0, res, cut_message ("read register 0xFFF0"));
 
-    nfc_disconnect (device);
+    nfc_close (device);
 }

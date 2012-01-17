@@ -227,14 +227,14 @@ main (int argc, const char *argv[])
   // Try to find a MIFARE Ultralight tag
   if (nfc_initiator_select_passive_target (pnd, nmMifare, NULL, 0, &nt) < 0) {
     ERR ("no tag was found\n");
-    nfc_disconnect (pnd);
+    nfc_close (pnd);
     return 1;
   }
   // Test if we are dealing with a MIFARE compatible tag
 
   if (nt.nti.nai.abtAtqa[1] != 0x44) {
     ERR ("tag is not a MIFARE Ultralight card\n");
-    nfc_disconnect (pnd);
+    nfc_close (pnd);
     return EXIT_FAILURE;
   }
   // Get the info from the current tag
@@ -265,7 +265,7 @@ main (int argc, const char *argv[])
     write_card ();
   }
 
-  nfc_disconnect (pnd);
+  nfc_close (pnd);
 
   return EXIT_SUCCESS;
 }

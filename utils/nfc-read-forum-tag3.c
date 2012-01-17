@@ -313,7 +313,7 @@ main(int argc, char *argv[])
 error:
   fclose (ndef_stream);
   if (pnd) {
-    nfc_disconnect (pnd);
+    nfc_close (pnd);
   }
   exit (error);
 }

@@ -52,6 +52,6 @@ main (int argc, const char *argv[])
     }
   }
   // Disconnect from NFC device
-  nfc_disconnect (pnd);
+  nfc_close (pnd);
   return EXIT_SUCCESS;
 }

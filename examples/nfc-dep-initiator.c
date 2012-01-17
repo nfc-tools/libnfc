@@ -107,6 +107,6 @@ main (int argc, const char *argv[])
   }
 
 error:
-  nfc_disconnect (pnd);
+  nfc_close (pnd);
   return EXIT_SUCCESS;
 }

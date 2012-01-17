@@ -479,7 +479,7 @@ error:
 }
 
 void
-pn53x_usb_disconnect (nfc_device *pnd)
+pn53x_usb_close (nfc_device *pnd)
 {
   pn53x_usb_ack (pnd);
 
@@ -794,7 +794,7 @@ const struct nfc_driver pn53x_usb_driver = {
   .name                             = PN53X_USB_DRIVER_NAME,
   .probe                            = pn53x_usb_probe,
   .connect                          = pn53x_usb_connect,
-  .disconnect                       = pn53x_usb_disconnect,
+  .close                            = pn53x_usb_close,
   .strerror                         = pn53x_strerror,
 
   .initiator_init                   = pn53x_initiator_init,

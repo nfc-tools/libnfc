@@ -230,7 +230,7 @@ main (int argc, char *argv[])
 
     if (nfc_initiator_init (pndInitiator) < 0) {
       printf ("Error: fail initializing initiator\n");
-      nfc_disconnect (pndInitiator);
+      nfc_close (pndInitiator);
       exit (EXIT_FAILURE);
     }
 
@@ -241,7 +241,7 @@ main (int argc, char *argv[])
     };
     if (nfc_initiator_select_passive_target (pndInitiator, nm, NULL, 0, &ntRealTarget) < 0) {
       printf ("Error: no tag was found\n");
-      nfc_disconnect (pndInitiator);
+      nfc_close (pndInitiator);
       exit (EXIT_FAILURE);
     }
 
@@ -250,22 +250,22 @@ main (int argc, char *argv[])
     if (initiator_only_mode) {
       if (print_hex_fd4(ntRealTarget.nti.nai.abtUid, ntRealTarget.nti.nai.szUidLen, "UID") != EXIT_SUCCESS) {
         fprintf (stderr, "Error while printing UID to FD4\n");
-        nfc_disconnect (pndInitiator);
+        nfc_close (pndInitiator);
         exit(EXIT_FAILURE);
       }
       if (print_hex_fd4(ntRealTarget.nti.nai.abtAtqa, 2, "ATQA") != EXIT_SUCCESS) {
         fprintf (stderr, "Error while printing ATQA to FD4\n");
-        nfc_disconnect (pndInitiator);
+        nfc_close (pndInitiator);
         exit(EXIT_FAILURE);
       }
       if (print_hex_fd4(&(ntRealTarget.nti.nai.btSak), 1, "SAK") != EXIT_SUCCESS) {
         fprintf (stderr, "Error while printing SAK to FD4\n");
-        nfc_disconnect (pndInitiator);
+        nfc_close (pndInitiator);
         exit(EXIT_FAILURE);
       }
       if (print_hex_fd4(ntRealTarget.nti.nai.abtAts, ntRealTarget.nti.nai.szAtsLen, "ATS") != EXIT_SUCCESS) {
         fprintf (stderr, "Error while printing ATS to FD4\n");
-        nfc_disconnect (pndInitiator);
+        nfc_close (pndInitiator);
         exit(EXIT_FAILURE);
       }
     } 
@@ -288,22 +288,22 @@ main (int argc, char *argv[])
       size_t foo;
       if (scan_hex_fd3(ntEmulatedTarget.nti.nai.abtUid, &(ntEmulatedTarget.nti.nai.szUidLen), "UID") != EXIT_SUCCESS) {
         fprintf (stderr, "Error while scanning UID from FD3\n");
-        nfc_disconnect (pndInitiator);
+        nfc_close (pndInitiator);
         exit(EXIT_FAILURE);
       }
       if (scan_hex_fd3(ntEmulatedTarget.nti.nai.abtAtqa, &foo, "ATQA") != EXIT_SUCCESS) {
         fprintf (stderr, "Error while scanning ATQA from FD3\n");
-        nfc_disconnect (pndInitiator);
+        nfc_close (pndInitiator);
         exit(EXIT_FAILURE);
       }
       if (scan_hex_fd3(&(ntEmulatedTarget.nti.nai.btSak), &foo, "SAK") != EXIT_SUCCESS) {
         fprintf (stderr, "Error while scanning SAK from FD3\n");
-        nfc_disconnect (pndInitiator);
+        nfc_close (pndInitiator);
         exit(EXIT_FAILURE);
       }
       if (scan_hex_fd3(ntEmulatedTarget.nti.nai.abtAts, &(ntEmulatedTarget.nti.nai.szAtsLen), "ATS") != EXIT_SUCCESS) {
         fprintf (stderr, "Error while scanning ATS from FD3\n");
-        nfc_disconnect (pndInitiator);
+        nfc_close (pndInitiator);
         exit(EXIT_FAILURE);
       }
     } else {
@@ -346,7 +346,7 @@ main (int argc, char *argv[])
     if (pndTarget == NULL) {
       printf ("Error connecting NFC emulator device\n");
       if (!target_only_mode) {
-        nfc_disconnect (pndInitiator);
+        nfc_close (pndInitiator);
       }
       return EXIT_FAILURE;
     }
@@ -357,9 +357,9 @@ main (int argc, char *argv[])
     if (nfc_target_init (pndTarget, &ntEmulatedTarget, abtCapdu, szCapduLen, 0) < 0) {
       ERR ("%s", "Initialization of NFC emulator failed");
       if (!target_only_mode) {
-        nfc_disconnect (pndInitiator);
+        nfc_close (pndInitiator);
       }
-      nfc_disconnect (pndTarget);
+      nfc_close (pndTarget);
       exit(EXIT_FAILURE);
     }
     printf ("%s\n", "Done, relaying frames now!");
@@ -374,23 +374,23 @@ main (int argc, char *argv[])
       if ((res = nfc_target_receive_bytes(pndTarget, abtCapdu, sizeof (abtCapdu), 0)) < 0) {
         nfc_perror (pndTarget, "nfc_target_receive_bytes");
         if (!target_only_mode) {
-          nfc_disconnect (pndInitiator);
+          nfc_close (pndInitiator);
         }
-        nfc_disconnect (pndTarget);
+        nfc_close (pndTarget);
         exit(EXIT_FAILURE);
       }
       szCapduLen = (size_t) res;
       if (target_only_mode) {
         if (print_hex_fd4(abtCapdu, szCapduLen, "C-APDU") != EXIT_SUCCESS) {
         fprintf (stderr, "Error while printing C-APDU to FD4\n");
-          nfc_disconnect (pndTarget);
+          nfc_close (pndTarget);
           exit(EXIT_FAILURE);
         }
       }
     } else {
       if (scan_hex_fd3(abtCapdu, &szCapduLen, "C-APDU") != EXIT_SUCCESS) {
         fprintf (stderr, "Error while scanning C-APDU from FD3\n");
-        nfc_disconnect (pndInitiator);
+        nfc_close (pndInitiator);
         exit(EXIT_FAILURE);
       }
     }
@@ -407,7 +407,7 @@ main (int argc, char *argv[])
     } else {
       if (scan_hex_fd3(abtRapdu, &szRapduLen, "R-APDU") != EXIT_SUCCESS) {
         fprintf (stderr, "Error while scanning R-APDU from FD3\n");
-        nfc_disconnect (pndTarget);
+        nfc_close (pndTarget);
         exit(EXIT_FAILURE);
       }
       ret = true;
@@ -430,17 +430,17 @@ main (int argc, char *argv[])
         if (nfc_target_send_bytes(pndTarget, abtRapdu, szRapduLen, 0) < 0) {
           nfc_perror (pndTarget, "nfc_target_send_bytes");
           if (!target_only_mode) {
-            nfc_disconnect (pndInitiator);
+            nfc_close (pndInitiator);
           }
           if (!initiator_only_mode) {
-            nfc_disconnect (pndTarget);
+            nfc_close (pndTarget);
           }
           exit(EXIT_FAILURE);
         }
       } else {
         if (print_hex_fd4(abtRapdu, szRapduLen, "R-APDU") != EXIT_SUCCESS) {
         fprintf (stderr, "Error while printing R-APDU to FD4\n");
-          nfc_disconnect (pndInitiator);
+          nfc_close (pndInitiator);
           exit(EXIT_FAILURE);
         }
       }
@@ -448,10 +448,10 @@ main (int argc, char *argv[])
   }
 
   if (!target_only_mode) {
-    nfc_disconnect (pndInitiator);
+    nfc_close (pndInitiator);
   }
   if (!initiator_only_mode) {
-    nfc_disconnect (pndTarget);
+    nfc_close (pndTarget);
   }
   exit (EXIT_SUCCESS);
 }

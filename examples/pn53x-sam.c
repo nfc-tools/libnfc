@@ -190,7 +190,7 @@ main (int argc, const char *argv[])
   pn53x_SAMConfiguration (pnd, PSM_NORMAL, 0);
 
   // Disconnect from NFC device
-  nfc_disconnect (pnd);
+  nfc_close (pnd);
 
   exit (EXIT_SUCCESS);
 }

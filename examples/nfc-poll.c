@@ -119,7 +119,7 @@ main (int argc, const char *argv[])
   printf ("NFC device will poll during %ld ms (%u pollings of %lu ms for %zd modulations)\n", (unsigned long) uiPollNr * szModulations * uiPeriod * 150, uiPollNr, (unsigned long) uiPeriod * 150, szModulations);
   if ((res = nfc_initiator_poll_target (pnd, nmModulations, szModulations, uiPollNr, uiPeriod, &nt))  < 0) {
     nfc_perror (pnd, "nfc_initiator_poll_target");
-    nfc_disconnect (pnd);
+    nfc_close (pnd);
     exit (EXIT_FAILURE);
   }
 
@@ -128,6 +128,6 @@ main (int argc, const char *argv[])
   } else {
     printf ("No target found.\n");
   }
-  nfc_disconnect (pnd);
+  nfc_close (pnd);
   exit (EXIT_SUCCESS);
 }

@@ -301,7 +301,7 @@ error:
 }
 
 void
-acr122_disconnect (nfc_device *pnd)
+acr122_close (nfc_device *pnd)
 {
   SCardDisconnect (DRIVER_DATA (pnd)->hCard, SCARD_LEAVE_CARD);
   acr122_free_scardcontext ();
@@ -467,7 +467,7 @@ const struct nfc_driver acr122_driver = {
   .name                             = ACR122_DRIVER_NAME,
   .probe                            = acr122_probe,
   .connect                          = acr122_connect,
-  .disconnect                       = acr122_disconnect,
+  .close                            = acr122_close,
   .strerror                         = pn53x_strerror,
 
   .initiator_init                   = pn53x_initiator_init,

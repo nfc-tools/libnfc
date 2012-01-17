@@ -197,6 +197,6 @@ int main(int argc, const char* argv[])
   if (input != NULL) {
     fclose(input);
   }
-  nfc_disconnect(pnd);
+  nfc_close(pnd);
   return 1;
 }
