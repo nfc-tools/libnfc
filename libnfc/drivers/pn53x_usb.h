@@ -23,11 +23,13 @@
  */
 
 #ifndef __NFC_DRIVER_PN53X_USB_H__
-#  define __NFC_DRIVER_PN53X_USB_H__
+#define __NFC_DRIVER_PN53X_USB_H__
 
-#  include <sys/time.h>
+#include <sys/time.h>
 
-#  include <nfc/nfc-types.h>
+#include <nfc/nfc-types.h>
+
+#include "nfc-internal.h"
 
 bool    pn53x_usb_probe (nfc_connstring connstrings[], size_t connstrings_len, size_t *pszDeviceFound);
 nfc_device *pn53x_usb_open (const nfc_connstring connstring);

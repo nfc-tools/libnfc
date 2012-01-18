@@ -66,37 +66,6 @@ Thanks to d18c7db and Okko for example code
 
 #define DRIVER_DATA(pnd) ((struct pn53x_usb_data*)(pnd->driver_data))
 
-/* This modified from some GNU example _not_ to overwrite y */
-int timeval_subtract(struct timeval *result,
-		     const struct timeval *x,
-		     const struct timeval *y)
-{
-  struct timeval tmp;
-
-  tmp.tv_sec = y->tv_sec;
-  tmp.tv_usec = y->tv_usec;
-
-  /* Perform the carry for the later subtraction */
-  if (x->tv_usec < y->tv_usec) {
-    int nsec = (y->tv_usec - x->tv_usec) / 1000000 + 1;
-    tmp.tv_usec -= 1000000 * nsec;
-    tmp.tv_sec += nsec;
-  }
-  if (x->tv_usec - y->tv_usec > 1000000) {
-    int nsec = (x->tv_usec - y->tv_usec) / 1000000;
-    tmp.tv_usec += 1000000 * nsec;
-    tmp.tv_sec -= nsec;
-  }
-     
-  /* Compute the time remaining to wait.
-     tv_usec is certainly positive. */
-  result->tv_sec = x->tv_sec - tmp.tv_sec;
-  result->tv_usec = x->tv_usec - tmp.tv_usec;
-     
-  /* Return 1 if result is negative. */
-  return x->tv_sec < tmp.tv_sec;
-}
-
 typedef enum {
   UNKNOWN,
   NXP_PN531,
