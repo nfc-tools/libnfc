@@ -62,6 +62,10 @@
 extern  "C" {
 #  endif                        // __cplusplus
 
+/* Library initialization/deinitialization */
+  NFC_EXPORT void nfc_init();
+  NFC_EXPORT void nfc_exit();
+
 /* NFC Device/Hardware manipulation */
   NFC_EXPORT bool nfc_get_default_device (nfc_connstring *connstring);
   NFC_EXPORT nfc_device *nfc_open (const nfc_connstring connstring);

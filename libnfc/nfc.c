@@ -62,6 +62,26 @@ const struct nfc_driver *nfc_drivers[] = {
 };
 
 /**
+ * @brief Initialize libnfc.
+ *
+ */
+void 
+nfc_init()
+{
+  log_init ();
+}
+
+/**
+ * @brief Deinitialize libnfc.
+ *
+ */
+void 
+nfc_exit()
+{
+  log_fini ();
+}
+
+/**
  * @brief Get the defaut NFC device
  * @param connstring \a nfc_connstring pointer where the default connection string will be stored 
  * @return \e true on success
