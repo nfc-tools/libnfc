@@ -250,61 +250,35 @@ pn53x_usb_probe (nfc_connstring connstrings[], size_t connstrings_len, size_t *p
 }
 
 struct pn53x_usb_descriptor {
-  uint16_t bus;
-  uint16_t dev;
+  char *dirname;
+  char *filename;
 };
 
 int
 pn53x_usb_connstring_decode (const nfc_connstring connstring, struct pn53x_usb_descriptor *desc)
 {
-  char *cs = malloc (strlen (connstring) + 1);
-  if (!cs) {
-    perror ("malloc");
-    return -1;
-  }
-  strcpy (cs, connstring);
-  const char *driver_name = strtok (cs, ":");
-  if (!driver_name) {
-    // Parse error
-    free (cs);
-    return -1;
-  }
+  int n = strlen (connstring) + 1;
+  char *driver_name = malloc (n);
+  char *dirname     = malloc (n);
+  char *filename    = malloc (n);
 
-  if (0 != strcmp (driver_name, PN53X_USB_DRIVER_NAME)) {
+  driver_name[0] = '\0';
+
+  int res = sscanf (connstring, "%[^:]:%[^:]:%[^:]", driver_name, dirname, filename);
+
+  if (!res || (0 != strcmp (driver_name, PN53X_USB_DRIVER_NAME))) {
     // Driver name does not match.
-    free (cs);
-    return 0;
+    res = 0;
+  } else {
+    desc->dirname  = strdup (dirname);
+    desc->filename = strdup (filename);
   }
 
-  const char *bus_s = strtok (NULL, ":");
-  if (!bus_s) {
-    // bus not specified (or parsing error)
-    free (cs);
-    return 1;
-  }
-  unsigned int bus;
-  if (sscanf (bus_s, "%u", &bus) != 1) {
-    // bus_s is not a number
-    free (cs);
-    return 1;
-  }
-  desc->bus = bus;
+  free (driver_name);
+  free (dirname);
+  free (filename);
 
-  const char *dev_s = strtok (NULL, ":");
-  if (!dev_s) {
-    // dev not specified (or parsing error)
-    free (cs);
-    return 2;
-  }
-  unsigned int dev;
-  if (sscanf (dev_s, "%u", &dev) != 1) {
-    // dev_s is not a number
-    free (cs);
-    return 2;
-  }
-  desc->dev = dev;
-  free (cs);
-  return 3;
+  return res;
 }
 
 bool
@@ -337,14 +311,14 @@ pn53x_usb_get_usb_device_name (struct usb_device *dev, usb_dev_handle *udev, cha
 nfc_device *
 pn53x_usb_open (const nfc_connstring connstring)
 {
-  struct pn53x_usb_descriptor desc;
+  nfc_device *pnd = NULL;
+  struct pn53x_usb_descriptor desc = { NULL, NULL } ;
   int connstring_decode_level = pn53x_usb_connstring_decode (connstring, &desc);
-  log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "%d element(s) have been decoded from \"%s\"", connstring_decode_level, connstring); 
+  log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "%d element(s) have been decoded from \"%s\"", connstring_decode_level, connstring);
   if (connstring_decode_level < 1) {
-    return NULL;
+    goto free_mem;
   }
 
-  nfc_device *pnd = NULL;
   struct pn53x_usb_data data = {
     .pudh = NULL,
     .uiEndPointIn = 0,
@@ -355,20 +329,32 @@ pn53x_usb_open (const nfc_connstring connstring)
 
   usb_init ();
 
+  int res;
+  // usb_find_busses will find all of the busses on the system. Returns the
+  // number of changes since previous call to this function (total of new
+  // busses and busses removed).
+  if ((res = usb_find_busses () < 0)) {
+    log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to find USB busses (%s)", _usb_strerror (res));
+    goto free_mem;
+  }
+  // usb_find_devices will find all of the devices on each bus. This should be
+  // called after usb_find_busses. Returns the number of changes since the
+  // previous call to this function (total of new device and devices removed).
+  if ((res = usb_find_devices () < 0)) {
+    log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to find USB devices (%s)", _usb_strerror (res));
+    goto free_mem;
+  }
+
   for (bus = usb_get_busses (); bus; bus = bus->next) {
     if (connstring_decode_level > 1)  {
       // A specific bus have been specified
-      unsigned int bus_current;
-      sscanf (bus->dirname, "%u", &bus_current);
-      if (bus_current != desc.bus)
+      if (0 != strcmp (bus->dirname, desc.dirname))
         continue;
     }
     for (dev = bus->devices; dev; dev = dev->next) {
       if (connstring_decode_level > 2)  {
         // A specific dev have been specified
-        unsigned int dev_current;
-        sscanf (dev->filename, "%u", &dev_current);
-        if (dev_current != desc.dev)
+      if (0 != strcmp (dev->filename, desc.filename))
           continue;
       }
       // Open the USB device
@@ -384,7 +370,7 @@ pn53x_usb_open (const nfc_connstring connstring)
         }
         usb_close (data.pudh);
         // we failed to use the specified device
-        return NULL;
+        goto free_mem;
       }
 
       res = usb_claim_interface (data.pudh, 0);
@@ -392,7 +378,7 @@ pn53x_usb_open (const nfc_connstring connstring)
         log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to claim USB interface (%s)", _usb_strerror (res));
         usb_close (data.pudh);
         // we failed to use the specified device
-        return NULL;
+        goto free_mem;
       }
       data.model = pn53x_usb_get_device_model (dev->descriptor.idVendor, dev->descriptor.idProduct);
       // Allocate memory for the device info and specification, fill it and return the info
@@ -435,16 +421,19 @@ pn53x_usb_open (const nfc_connstring connstring)
         goto error;
       }
       DRIVER_DATA (pnd)->abort_flag = false;
-      return pnd;
+      goto free_mem;
     }
   }
   // We ran out of devices before the index required
-  return NULL;
+  goto free_mem;
 
 error:
   // Free allocated structure on error.
   nfc_device_free (pnd);
-  return NULL;
+free_mem:
+  free (desc.dirname);
+  free (desc.filename);
+  return pnd;
 }
 
 void
