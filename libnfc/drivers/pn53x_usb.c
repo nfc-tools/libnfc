@@ -382,8 +382,8 @@ pn53x_usb_open (const nfc_connstring connstring)
       }
       data.model = pn53x_usb_get_device_model (dev->descriptor.idVendor, dev->descriptor.idProduct);
       // Allocate memory for the device info and specification, fill it and return the info
-      pnd = nfc_device_new ();
-      pn53x_usb_get_usb_device_name (dev, data.pudh, pnd->acName, sizeof (pnd->acName));
+      pnd = nfc_device_new (connstring);
+      pn53x_usb_get_usb_device_name (dev, data.pudh, pnd->name, sizeof (pnd->name));
 
       pnd->driver_data = malloc(sizeof(struct pn53x_usb_data));
       *DRIVER_DATA (pnd) = data;

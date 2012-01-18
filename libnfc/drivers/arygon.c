@@ -120,7 +120,10 @@ arygon_probe (nfc_connstring connstrings[], size_t connstrings_len, size_t *pszD
       uart_flush_input (sp);
       uart_set_speed (sp, ARYGON_DEFAULT_SPEED);
 
-      nfc_device *pnd = nfc_device_new ();
+      nfc_connstring connstring;
+      snprintf (connstring, sizeof(nfc_connstring), "%s:%s:%"PRIu32, ARYGON_DRIVER_NAME, acPort, ARYGON_DEFAULT_SPEED);
+      nfc_device *pnd = nfc_device_new (connstring);
+
       pnd->driver = &arygon_driver;
       pnd->driver_data = malloc(sizeof(struct arygon_data));
       DRIVER_DATA (pnd)->port = sp;
@@ -144,7 +147,7 @@ arygon_probe (nfc_connstring connstrings[], size_t connstrings_len, size_t *pszD
       }
 
       // ARYGON reader is found
-      snprintf (connstrings[*pszDeviceFound], sizeof(nfc_connstring), "%s:%s:%"PRIu32, ARYGON_DRIVER_NAME, acPort, ARYGON_DEFAULT_SPEED);
+      memcpy (connstrings[*pszDeviceFound], connstring, sizeof(nfc_connstring));
       (*pszDeviceFound)++;
 
       // Test if we reach the maximum "wanted" devices
@@ -245,8 +248,8 @@ arygon_open (const nfc_connstring connstring)
   uart_set_speed (sp, ndd.speed);
 
   // We have a connection
-  pnd = nfc_device_new ();
-  snprintf (pnd->acName, sizeof (pnd->acName), "%s:%s", ARYGON_DRIVER_NAME, ndd.port);
+  pnd = nfc_device_new (connstring);
+  snprintf (pnd->name, sizeof (pnd->name), "%s:%s", ARYGON_DRIVER_NAME, ndd.port);
 
   pnd->driver_data = malloc(sizeof(struct arygon_data));
   DRIVER_DATA (pnd)->port = sp;
@@ -277,8 +280,8 @@ arygon_open (const nfc_connstring connstring)
   char arygon_firmware_version[10];
   arygon_firmware (pnd, arygon_firmware_version);
   char   *pcName;
-  pcName = strdup (pnd->acName);
-  snprintf (pnd->acName, sizeof (pnd->acName), "%s %s", pcName, arygon_firmware_version);
+  pcName = strdup (pnd->name);
+  snprintf (pnd->name, sizeof (pnd->name), "%s %s", pcName, arygon_firmware_version);
   free (pcName);
 
   pn53x_init(pnd);

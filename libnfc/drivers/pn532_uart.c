@@ -94,7 +94,9 @@ pn532_uart_probe (nfc_connstring connstrings[], size_t connstrings_len, size_t *
       // Serial port claimed but we need to check if a PN532_UART is opened.
       uart_set_speed (sp, PN532_UART_DEFAULT_SPEED);
 
-      nfc_device *pnd = nfc_device_new ();
+      nfc_connstring connstring;
+      snprintf (connstring, sizeof(nfc_connstring), "%s:%s:%"PRIu32, PN532_UART_DRIVER_NAME, acPort, PN532_UART_DEFAULT_SPEED);
+      nfc_device *pnd = nfc_device_new (connstring);
       pnd->driver = &pn532_uart_driver;
       pnd->driver_data = malloc(sizeof(struct pn532_uart_data));
       DRIVER_DATA (pnd)->port = sp;
@@ -122,7 +124,7 @@ pn532_uart_probe (nfc_connstring connstrings[], size_t connstrings_len, size_t *
         continue;
       }
 
-      snprintf (connstrings[*pszDeviceFound], sizeof(nfc_connstring), "%s:%s:%"PRIu32, PN532_UART_DRIVER_NAME, acPort, PN532_UART_DEFAULT_SPEED);
+      memcpy (connstrings[*pszDeviceFound], connstring, sizeof (nfc_connstring));
       (*pszDeviceFound)++;
 
       // Test if we reach the maximum "wanted" devices
@@ -223,8 +225,8 @@ pn532_uart_open (const nfc_connstring connstring)
   uart_set_speed (sp, ndd.speed);
 
   // We have a connection
-  pnd = nfc_device_new ();
-  snprintf (pnd->acName, sizeof (pnd->acName), "%s:%s", PN532_UART_DRIVER_NAME, ndd.port);
+  pnd = nfc_device_new (connstring);
+  snprintf (pnd->name, sizeof (pnd->name), "%s:%s", PN532_UART_DRIVER_NAME, ndd.port);
 
   pnd->driver_data = malloc(sizeof(struct pn532_uart_data));
   DRIVER_DATA (pnd)->port = sp;

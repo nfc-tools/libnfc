@@ -85,8 +85,8 @@ pn53x_init(struct nfc_device *pnd)
 
   // Add the firmware revision to the device name
   char   *pcName;
-  pcName = strdup (pnd->acName);
-  snprintf (pnd->acName, DEVICE_NAME_LENGTH - 1, "%s - %s", pcName, abtFirmwareText);
+  pcName = strdup (pnd->name);
+  snprintf (pnd->name, DEVICE_NAME_LENGTH - 1, "%s - %s", pcName, abtFirmwareText);
   free (pcName);
   return NFC_SUCCESS;
 }

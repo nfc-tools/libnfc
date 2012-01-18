@@ -163,7 +163,7 @@ nfc_open (const nfc_connstring connstring)
       return pnd;
     }
     
-    log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "[%s] has been claimed.", pnd->acName);
+    log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "\"%s\" (%s) has been claimed.", pnd->name, pnd->connstring);
     log_fini ();
     return pnd;
   }
@@ -898,7 +898,17 @@ nfc_device_get_last_error (const nfc_device *pnd)
 const char *
 nfc_device_get_name (nfc_device *pnd)
 {
-  return pnd->acName;
+  return pnd->name;
+}
+
+/**
+ * @brief Returns the device connection string
+ * @return Returns a string with the device connstring
+ */
+const char *
+nfc_device_get_connstring (nfc_device *pnd)
+{
+  return pnd->connstring;
 }
 
 /* Misc. functions */

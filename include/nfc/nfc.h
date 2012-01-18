@@ -102,6 +102,7 @@ extern  "C" {
 
 /* Special data accessors */
   NFC_EXPORT const char *nfc_device_get_name (nfc_device *pnd);
+  NFC_EXPORT const char *nfc_device_get_connstring (nfc_device *pnd);
 
 /* Properties accessors */
   NFC_EXPORT int nfc_device_set_property_int (nfc_device *pnd, const nfc_property property, const int value);

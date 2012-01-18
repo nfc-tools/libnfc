@@ -168,7 +168,9 @@ struct nfc_device {
   void *chip_data;
 
 /** Device name string, including device wrapper firmware */
-  char    acName[DEVICE_NAME_LENGTH];
+  char    name[DEVICE_NAME_LENGTH];
+/** Device connection string */
+  nfc_connstring connstring;
 /** Is the CRC automaticly added, checked and removed from the frames */
   bool    bCrc;
 /** Does the chip handle parity bits, all parities are handled as data */
@@ -184,7 +186,7 @@ struct nfc_device {
   int     last_error;
 };
 
-nfc_device  *nfc_device_new (void);
+nfc_device  *nfc_device_new (const nfc_connstring connstring);
 void           nfc_device_free (nfc_device *dev);
 
 void 	iso14443_cascade_uid (const uint8_t abtUID[], const size_t szUID, uint8_t * pbtCascadedUID, size_t * pszCascadedUID);

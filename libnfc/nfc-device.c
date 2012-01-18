@@ -25,6 +25,7 @@
 /* vim:set et sw=2 ts=2: */
 
 #include <stdlib.h>
+#include <string.h>
 
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
@@ -33,7 +34,7 @@
 #include "nfc-internal.h"
 
 nfc_device *
-nfc_device_new (void)
+nfc_device_new (const nfc_connstring connstring)
 {
   nfc_device *res = malloc (sizeof (*res));
 
@@ -50,6 +51,7 @@ nfc_device_new (void)
   res->bEasyFraming    = false;
   res->bAutoIso14443_4 = false;
   res->last_error  = 0;
+  memcpy (res->connstring, connstring, sizeof (res->connstring));
   res->driver_data = NULL;
   res->chip_data   = NULL;
 
