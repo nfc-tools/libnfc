@@ -186,6 +186,7 @@ main (int argc, char *argv[])
   if (!transmit_bits (abtReqa, 7)) {
     printf ("Error: No tag available\n");
     nfc_close (pnd);
+    nfc_exit ();
     return 1;
   }
   memcpy (abtAtqa, abtRx, 2);
@@ -315,5 +316,6 @@ main (int argc, char *argv[])
   }
 
   nfc_close (pnd);
+  nfc_exit ();
   return 0;
 }

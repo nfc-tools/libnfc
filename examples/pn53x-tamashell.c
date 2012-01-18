@@ -200,5 +200,6 @@ int main(int argc, const char* argv[])
     fclose(input);
   }
   nfc_close(pnd);
+  nfc_exit ();
   return 1;
 }

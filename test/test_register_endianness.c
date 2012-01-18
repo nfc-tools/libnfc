@@ -35,4 +35,5 @@ test_register_endianness (void)
     cut_assert_equal_int (0, res, cut_message ("read register 0xFFF0"));
 
     nfc_close (device);
+    nfc_exit ();
 }

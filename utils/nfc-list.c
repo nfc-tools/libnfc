@@ -251,6 +251,7 @@ main (int argc, const char *argv[])
     }
     nfc_close (pnd);
   }
-
+  
+  nfc_exit ();
   return 0;
 }

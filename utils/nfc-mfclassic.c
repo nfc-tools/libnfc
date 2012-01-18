@@ -565,6 +565,7 @@ main (int argc, const char *argv[])
     if (nfc_initiator_select_passive_target (pnd, nmMifare, NULL, 0, &nt) < 0) {
       printf ("Error: no tag was found\n");
       nfc_close (pnd);
+      nfc_exit ();
       exit (EXIT_FAILURE);
     }
     // Test if we are dealing with a MIFARE compatible tag
@@ -663,6 +664,7 @@ main (int argc, const char *argv[])
       printf ("Done, all bytes have been extracted!\n");
     }
   };
-
+  
+  nfc_exit ();
   exit (EXIT_SUCCESS);
 }

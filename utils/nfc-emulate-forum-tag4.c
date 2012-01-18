@@ -372,6 +372,7 @@ main (int argc, char *argv[])
       err (EXIT_FAILURE, "Can't save NDEF file '%s'", argv[2]);
     }
   }
-
+  
+  nfc_exit ();
   exit (EXIT_SUCCESS);
 }

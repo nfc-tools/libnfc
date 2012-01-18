@@ -51,4 +51,5 @@ test_access_storm (void)
 
 	n--;
     }
+    nfc_exit ();
 }

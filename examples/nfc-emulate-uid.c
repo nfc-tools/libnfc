@@ -219,9 +219,11 @@ main (int argc, char *argv[])
     }
   }
   nfc_close (pnd);
+  nfc_exit ();
   exit (EXIT_SUCCESS);
 
 error:
   nfc_close (pnd);
+  nfc_exit ();
   exit (EXIT_FAILURE);
 }

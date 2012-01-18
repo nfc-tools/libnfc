@@ -43,6 +43,7 @@ cut_teardown (void)
 {
   nfc_close (devices[TARGET]);
   nfc_close (devices[INITIATOR]);
+  nfc_exit ();
 }
 
 struct thread_data {

@@ -198,6 +198,7 @@ main(int argc, char *argv[])
   }
 
   nfc_close(pnd);
+  nfc_exit ();
 
   exit (EXIT_SUCCESS);
 
@@ -205,5 +206,6 @@ error:
   if (pnd) {
     nfc_perror (pnd, argv[0]);
     nfc_close (pnd);
+    nfc_exit ();
   }
 }

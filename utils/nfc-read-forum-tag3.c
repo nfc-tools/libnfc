@@ -317,5 +317,6 @@ error:
   if (pnd) {
     nfc_close (pnd);
   }
+  nfc_exit ();
   exit (error);
 }

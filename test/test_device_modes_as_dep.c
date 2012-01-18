@@ -41,6 +41,7 @@ cut_teardown (void)
 {
   nfc_close (second_device);
   nfc_close (first_device);
+  nfc_exit ();
 }
 
 struct thread_data {

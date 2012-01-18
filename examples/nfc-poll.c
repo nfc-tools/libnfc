@@ -122,6 +122,7 @@ main (int argc, const char *argv[])
   if ((res = nfc_initiator_poll_target (pnd, nmModulations, szModulations, uiPollNr, uiPeriod, &nt))  < 0) {
     nfc_perror (pnd, "nfc_initiator_poll_target");
     nfc_close (pnd);
+    nfc_exit ();
     exit (EXIT_FAILURE);
   }
 
@@ -131,5 +132,6 @@ main (int argc, const char *argv[])
     printf ("No target found.\n");
   }
   nfc_close (pnd);
+  nfc_exit ();
   exit (EXIT_SUCCESS);
 }

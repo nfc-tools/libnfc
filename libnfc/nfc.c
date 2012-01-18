@@ -73,7 +73,7 @@ nfc_init()
 
 /**
  * @brief Deinitialize libnfc.
- *
+ * Should be called after closing all open devices and before your application terminates. 
  */
 void  
 nfc_exit()
@@ -188,8 +188,7 @@ nfc_close (nfc_device *pnd)
     nfc_idle (pnd);
     // Close, clean up and release the device 
     pnd->driver->close (pnd);
-    
-    log_fini ();
+
   }
 }
 
