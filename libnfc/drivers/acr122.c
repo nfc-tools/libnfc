@@ -252,7 +252,7 @@ acr122_open (const nfc_connstring connstring)
   // FIXME: acr122_open() does not take care about bus index
 
   char   *pcFirmware;
-  nfc_device *pnd = nfc_device_new ();
+  nfc_device *pnd = nfc_device_new (connstring);
   pnd->driver_data = malloc (sizeof (struct acr122_data));
 
   // Alloc and init chip's data
@@ -281,7 +281,7 @@ acr122_open (const nfc_connstring connstring)
   if (strstr (pcFirmware, FIRMWARE_TEXT) != NULL) {
 
     // Done, we found the reader we are looking for
-    snprintf (pnd->acName, sizeof (pnd->acName), "%s / %s", ndd.pcsc_device_name, pcFirmware);
+    snprintf (pnd->name, sizeof (pnd->name), "%s / %s", ndd.pcsc_device_name, pcFirmware);
 
     // 50: empirical tuning on Touchatag
     // 46: empirical tuning on ACR122U
