@@ -197,11 +197,10 @@ pn53x_transceive (struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szT
     default:
       CHIP_DATA(pnd)->last_status_byte = 0;
   }
-  log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "Last command status: %s", pn53x_strerror(pnd));
 
   switch (CHIP_DATA(pnd)->last_status_byte) {
     case 0:
-      res = szRx;
+      res = (int)szRx;
       break;
     case ETIMEOUT:
     case ECRC:
@@ -236,6 +235,7 @@ pn53x_transceive (struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szT
     case ETGREL:
     case ECDISCARDED:
       res = NFC_ETGRELEASED;
+      break;
     default:
       res = NFC_ECHIP;
       break;
@@ -244,6 +244,12 @@ pn53x_transceive (struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szT
   { EMFAUTH, "Mifare Authentication Error" },
 */
 
+  if (res < 0) {
+    pnd->last_error = res;
+    log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "Chip error: \"%s\" (%02x), returned error: \"%s\" (%d))", pn53x_strerror (pnd), CHIP_DATA(pnd)->last_status_byte, nfc_strerror (pnd), res);
+  } else {
+    pnd->last_error = 0;
+  }
   return res;
 }
 
