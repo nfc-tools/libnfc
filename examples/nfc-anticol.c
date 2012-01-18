@@ -148,6 +148,8 @@ main (int argc, char *argv[])
     }
   }
 
+  nfc_init();
+  
   // Try to open the NFC reader
   pnd = nfc_open (NULL);
 

@@ -63,7 +63,7 @@ const struct nfc_driver *nfc_drivers[] = {
 
 /**
  * @brief Initialize libnfc.
- *
+ * This function must be called before calling any other libnfc function
  */
 void 
 nfc_init()
@@ -75,7 +75,7 @@ nfc_init()
  * @brief Deinitialize libnfc.
  *
  */
-void 
+void  
 nfc_exit()
 {
   log_fini ();
@@ -133,7 +133,6 @@ nfc_get_default_device (nfc_connstring *connstring)
 nfc_device *
 nfc_open (const nfc_connstring connstring)
 {
-  log_init ();
   nfc_device *pnd = NULL;
 
   nfc_connstring ncs;
@@ -209,7 +208,6 @@ nfc_list_devices (nfc_connstring connstrings[] , size_t szDevices)
   const struct nfc_driver *ndr;
   const struct nfc_driver **pndr = nfc_drivers;
 
-  log_init ();
   while ((ndr = *pndr)) {
     szN = 0;
     if (ndr->probe (connstrings + (szDeviceFound), szDevices - (szDeviceFound), &szN)) {

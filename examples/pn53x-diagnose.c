@@ -67,6 +67,9 @@ main (int argc, const char *argv[])
   if (argc > 1) {
     errx (1, "usage: %s", argv[0]);
   }
+  
+  nfc_init();
+  
   // Display libnfc version
   acLibnfcVersion = nfc_version ();
   printf ("%s uses libnfc %s\n", argv[0], acLibnfcVersion);

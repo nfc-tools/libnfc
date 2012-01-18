@@ -77,6 +77,8 @@ main (int argc, const char *argv[])
   (void) argc;
   (void) argv;
 
+  nfc_init ();
+  
   // Display libnfc version
   const char *acLibnfcVersion = nfc_version ();
   printf ("%s uses libnfc %s\n", argv[0], acLibnfcVersion);

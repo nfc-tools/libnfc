@@ -190,6 +190,8 @@ main (int argc, char *argv[])
   signal (SIGINT, (void (*)()) intr_hdlr);
 #endif
 
+  nfc_init ();
+  
   nfc_connstring connstrings[MAX_DEVICE_COUNT];
   // List available devices
   size_t szFound = nfc_list_devices (connstrings, MAX_DEVICE_COUNT);

@@ -537,6 +537,8 @@ main (int argc, const char *argv[])
     }
     // printf("Successfully opened required files\n");
 
+    nfc_init ();
+    
     // Try to open the NFC reader
     pnd = nfc_open (NULL);
     if (pnd == NULL) {

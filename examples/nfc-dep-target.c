@@ -71,6 +71,7 @@ main (int argc, const char *argv[])
   // the same machine: if there is more than one readers opened
   // nfc-dep-target will open the second reader
   // (we hope they're always detected in the same order)
+  nfc_init ();
   if (szDeviceFound == 1) {
     pnd = nfc_open (connstrings[0]);
   } else if (szDeviceFound > 1) {

@@ -182,6 +182,7 @@ main(int argc, char *argv[])
   };
 
   signal (SIGINT, stop_emulation);
+  nfc_init ();  
   pnd = nfc_open (NULL);
 
   if (pnd == NULL) {

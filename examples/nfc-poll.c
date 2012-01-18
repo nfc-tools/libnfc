@@ -102,6 +102,8 @@ main (int argc, const char *argv[])
 
   nfc_target nt;
   int res = 0;
+  
+  nfc_init ();
 
   pnd = nfc_open (NULL);
 

@@ -345,6 +345,8 @@ main (int argc, char *argv[])
       err (EXIT_FAILURE, "Can't load NDEF file '%s'", argv[1]);
     }
   }
+  
+  nfc_init ();
 
   // Try to open the NFC reader
   pnd = nfc_open (NULL);

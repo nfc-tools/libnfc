@@ -71,6 +71,8 @@ main (int argc, const char *argv[])
     printf ("Usage: %s\n", argv[0]);
     return EXIT_FAILURE;
   }
+  
+  nfc_init();
 
   pnd = nfc_open (NULL);
   if (!pnd) {

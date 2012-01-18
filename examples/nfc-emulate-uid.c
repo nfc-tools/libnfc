@@ -125,6 +125,8 @@ main (int argc, char *argv[])
   signal (SIGINT, (void (*)()) intr_hdlr);
 #endif
 
+  nfc_init ();
+  
   // Try to open the NFC device
   pnd = nfc_open (NULL);
 

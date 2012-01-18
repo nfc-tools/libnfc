@@ -204,6 +204,8 @@ main (int argc, const char *argv[])
   }
   DBG ("Successfully opened the dump file\n");
 
+  nfc_init ();
+  
   // Try to open the NFC device
   pnd = nfc_open (NULL);
   if (pnd == NULL) {

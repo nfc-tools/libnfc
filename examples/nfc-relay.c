@@ -115,6 +115,9 @@ main (int argc, char *argv[])
     ERR ("%zd device found but two opened devices are needed to relay NFC.", szFound);
     return EXIT_FAILURE;
   }
+  
+  nfc_init ();
+  
   // Try to open the NFC emulator device
   pndTag = nfc_open (connstrings[0]);
   if (pndTag == NULL) {

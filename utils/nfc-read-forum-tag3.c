@@ -194,6 +194,8 @@ main(int argc, char *argv[])
       exit (EXIT_FAILURE); 
     } 
   }
+  
+  nfc_init ();
 
   pnd = nfc_open (NULL);
 
