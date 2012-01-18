@@ -14,14 +14,14 @@ main (int argc, const char *argv[])
   nfc_device *pnd;
   nfc_target nt;
   
-  nfc_init();
+  nfc_init (NULL);
 
   // Display libnfc version
   const char *acLibnfcVersion = nfc_version ();
   printf ("%s uses libnfc %s\n", argv[0], acLibnfcVersion);
 
   // Open, using the first available NFC device
-  pnd = nfc_open (NULL);
+  pnd = nfc_open (NULL, NULL);
 
   if (pnd == NULL) {
     ERR ("%s", "Unable to open NFC device.");
@@ -55,6 +55,6 @@ main (int argc, const char *argv[])
   }
   // Close NFC device
   nfc_close (pnd);
-  nfc_exit ();
+  nfc_exit (NULL);
   return EXIT_SUCCESS;
 }

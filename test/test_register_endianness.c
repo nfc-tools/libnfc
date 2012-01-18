@@ -13,15 +13,15 @@ test_register_endianness (void)
     nfc_connstring connstrings[MAX_DEVICE_COUNT];
     int res = 0;
     
-    nfc_init ();
+    nfc_init (NULL);
 
-    size_t device_count = nfc_list_devices (connstrings, MAX_DEVICE_COUNT);
+    size_t device_count = nfc_list_devices (NULL, connstrings, MAX_DEVICE_COUNT);
     if (!device_count)
 	cut_omit ("No NFC device found");
 
     nfc_device *device;
 
-    device = nfc_open (connstrings[0]);
+    device = nfc_open (NULL, connstrings[0]);
     cut_assert_not_null (device, cut_message ("nfc_open"));
 
     uint8_t value;
@@ -35,5 +35,5 @@ test_register_endianness (void)
     cut_assert_equal_int (0, res, cut_message ("read register 0xFFF0"));
 
     nfc_close (device);
-    nfc_exit ();
+    nfc_exit (NULL);
 }

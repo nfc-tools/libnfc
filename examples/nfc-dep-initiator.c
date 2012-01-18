@@ -72,9 +72,9 @@ main (int argc, const char *argv[])
     return EXIT_FAILURE;
   }
   
-  nfc_init();
+  nfc_init (NULL);
 
-  pnd = nfc_open (NULL);
+  pnd = nfc_open (NULL, NULL);
   if (!pnd) {
     printf("Unable to open NFC device.\n");
     return EXIT_FAILURE;
@@ -110,6 +110,6 @@ main (int argc, const char *argv[])
 
 error:
   nfc_close (pnd);
-  nfc_exit ();
+  nfc_exit (NULL);
   return EXIT_SUCCESS;
 }

@@ -125,10 +125,10 @@ main (int argc, char *argv[])
   signal (SIGINT, (void (*)()) intr_hdlr);
 #endif
 
-  nfc_init ();
+  nfc_init (NULL);
   
   // Try to open the NFC device
-  pnd = nfc_open (NULL);
+  pnd = nfc_open (NULL, NULL);
 
   if (pnd == NULL) {
     printf ("Unable to open NFC device\n");
@@ -219,11 +219,11 @@ main (int argc, char *argv[])
     }
   }
   nfc_close (pnd);
-  nfc_exit ();
+  nfc_exit (NULL);
   exit (EXIT_SUCCESS);
 
 error:
   nfc_close (pnd);
-  nfc_exit ();
+  nfc_exit (NULL);
   exit (EXIT_FAILURE);
 }

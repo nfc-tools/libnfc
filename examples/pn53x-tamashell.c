@@ -86,10 +86,10 @@ int main(int argc, const char* argv[])
     }
   }
 
-  nfc_init ();
+  nfc_init (NULL);
   
   // Try to open the NFC reader
-  pnd = nfc_open(NULL);
+  pnd = nfc_open(NULL, NULL);
 
   if (pnd == NULL) {
     ERR ("%s", "Unable to open NFC device.");
@@ -200,6 +200,6 @@ int main(int argc, const char* argv[])
     fclose(input);
   }
   nfc_close(pnd);
-  nfc_exit ();
+  nfc_exit (NULL);
   return 1;
 }

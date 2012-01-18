@@ -182,8 +182,8 @@ main(int argc, char *argv[])
   };
 
   signal (SIGINT, stop_emulation);
-  nfc_init ();  
-  pnd = nfc_open (NULL);
+  nfc_init (NULL);  
+  pnd = nfc_open (NULL, NULL);
 
   if (pnd == NULL) {
     ERR("Unable to open NFC device");
@@ -198,7 +198,7 @@ main(int argc, char *argv[])
   }
 
   nfc_close(pnd);
-  nfc_exit ();
+  nfc_exit (NULL);
 
   exit (EXIT_SUCCESS);
 
@@ -206,6 +206,6 @@ error:
   if (pnd) {
     nfc_perror (pnd, argv[0]);
     nfc_close (pnd);
-    nfc_exit ();
+    nfc_exit (NULL);
   }
 }

@@ -103,9 +103,9 @@ main (int argc, const char *argv[])
   nfc_target nt;
   int res = 0;
   
-  nfc_init ();
+  nfc_init (NULL);
 
-  pnd = nfc_open (NULL);
+  pnd = nfc_open (NULL, NULL);
 
   if (pnd == NULL) {
     ERR ("%s", "Unable to open NFC device.");
@@ -122,7 +122,7 @@ main (int argc, const char *argv[])
   if ((res = nfc_initiator_poll_target (pnd, nmModulations, szModulations, uiPollNr, uiPeriod, &nt))  < 0) {
     nfc_perror (pnd, "nfc_initiator_poll_target");
     nfc_close (pnd);
-    nfc_exit ();
+    nfc_exit (NULL);
     exit (EXIT_FAILURE);
   }
 
@@ -132,6 +132,6 @@ main (int argc, const char *argv[])
     printf ("No target found.\n");
   }
   nfc_close (pnd);
-  nfc_exit ();
+  nfc_exit (NULL);
   exit (EXIT_SUCCESS);
 }

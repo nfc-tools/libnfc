@@ -17,23 +17,23 @@ test_access_storm (void)
     nfc_connstring connstrings[MAX_DEVICE_COUNT];
     int res = 0;
 
-    nfc_init ();
+    nfc_init (NULL);
     
-    size_t ref_device_count = nfc_list_devices (connstrings, MAX_DEVICE_COUNT);
+    size_t ref_device_count = nfc_list_devices (NULL, connstrings, MAX_DEVICE_COUNT);
     if (!ref_device_count)
 	cut_omit ("No NFC device found");
 
     while (n) {
 	size_t i;
 
-	size_t device_count = nfc_list_devices (connstrings, MAX_DEVICE_COUNT);
+	size_t device_count = nfc_list_devices (NULL, connstrings, MAX_DEVICE_COUNT);
 	cut_assert_equal_int (ref_device_count, device_count, cut_message ("device count"));
 
 	for (i = 0; i < device_count; i++) {
 	    nfc_device *device;
 	    nfc_target ant[MAX_TARGET_COUNT];
 
-	    device = nfc_open (connstrings[i]);
+	    device = nfc_open (NULL, connstrings[i]);
 	    cut_assert_not_null (device, cut_message ("nfc_open"));
 
 	    res = nfc_initiator_init(device);
@@ -51,5 +51,5 @@ test_access_storm (void)
 
 	n--;
     }
-    nfc_exit ();
+    nfc_exit (NULL);
 }

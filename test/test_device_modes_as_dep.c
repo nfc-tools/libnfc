@@ -24,14 +24,14 @@ abort_test_by_keypress (int sig)
 void
 cut_setup (void)
 {
-  size_t n = nfc_list_devices (connstrings, 2);
+  size_t n = nfc_list_devices (NULL, connstrings, 2);
   if (n < 2) {
     cut_omit ("At least two NFC devices must be plugged-in to run this test");
   }
 
-  nfc_init ();
-  second_device = nfc_open (connstrings[0]);
-  first_device = nfc_open (connstrings[1]);
+  nfc_init (NULL);
+  second_device = nfc_open (NULL, connstrings[0]);
+  first_device = nfc_open (NULL, connstrings[1]);
 
   signal (SIGINT, abort_test_by_keypress);
 }
@@ -41,7 +41,7 @@ cut_teardown (void)
 {
   nfc_close (second_device);
   nfc_close (first_device);
-  nfc_exit ();
+  nfc_exit (NULL);
 }
 
 struct thread_data {

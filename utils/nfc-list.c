@@ -75,7 +75,7 @@ main (int argc, const char *argv[])
   bool verbose = false;
   int res = 0;
 
-  nfc_init ();
+  nfc_init (NULL);
   
   // Display libnfc version
   acLibnfcVersion = nfc_version ();
@@ -97,7 +97,7 @@ main (int argc, const char *argv[])
 
   /* Lazy way to open an NFC device */
 #if 0
-  pnd = nfc_open (NULL);
+  pnd = nfc_open (NULL, NULL);
 #endif
 
   /* If specific device is wanted, i.e. an ARYGON device on /dev/ttyUSB0 */
@@ -106,7 +106,7 @@ main (int argc, const char *argv[])
   ndd.pcDriver = "ARYGON";
   ndd.pcPort = "/dev/ttyUSB0";
   ndd.uiSpeed = 115200;
-  pnd = nfc_open (&ndd);
+  pnd = nfc_open (NULL, &ndd);
 #endif
 
   /* If specific device is wanted, i.e. a SCL3711 on USB */
@@ -114,10 +114,10 @@ main (int argc, const char *argv[])
   nfc_device_desc_t ndd;
   ndd.pcDriver = "PN533_USB";
   strcpy(ndd.acDevice, "SCM Micro / SCL3711-NFC&RW");
-  pnd = nfc_open (&ndd);
+  pnd = nfc_open (NULL, &ndd);
 #endif
   nfc_connstring connstrings[MAX_DEVICE_COUNT];
-  size_t szDeviceFound = nfc_list_devices (connstrings, MAX_DEVICE_COUNT);
+  size_t szDeviceFound = nfc_list_devices (NULL, connstrings, MAX_DEVICE_COUNT);
 
   if (szDeviceFound == 0) {
     printf ("No NFC device found.\n");
@@ -125,7 +125,7 @@ main (int argc, const char *argv[])
 
   for (i = 0; i < szDeviceFound; i++) {
     nfc_target ant[MAX_TARGET_COUNT];
-    pnd = nfc_open (connstrings[i]);
+    pnd = nfc_open (NULL, connstrings[i]);
 
     if (pnd == NULL) {
       ERR ("%s", "Unable to open NFC device.");
@@ -252,6 +252,6 @@ main (int argc, const char *argv[])
     nfc_close (pnd);
   }
   
-  nfc_exit ();
+  nfc_exit (NULL);
   return 0;
 }

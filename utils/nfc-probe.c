@@ -74,7 +74,7 @@ main (int argc, const char *argv[])
   size_t  i;
   bool verbose = false;
 
-  nfc_init ();
+  nfc_init (NULL);
   
   // Display libnfc version
   acLibnfcVersion = nfc_version ();
@@ -95,7 +95,7 @@ main (int argc, const char *argv[])
 #endif
 
   nfc_connstring connstrings[MAX_DEVICE_COUNT];
-  size_t szDeviceFound = nfc_list_devices (connstrings, MAX_DEVICE_COUNT);
+  size_t szDeviceFound = nfc_list_devices (NULL, connstrings, MAX_DEVICE_COUNT);
 
   if (szDeviceFound == 0) {
     printf ("No NFC device found.\n");
@@ -103,13 +103,13 @@ main (int argc, const char *argv[])
 
   printf ("%d NFC device(s) found:\n", szDeviceFound);
   for (i = 0; i < szDeviceFound; i++) {
-    pnd = nfc_open (connstrings[i]);
+    pnd = nfc_open (NULL, connstrings[i]);
     if (pnd != NULL) {
       printf ("- %s:\n    %s\n", nfc_device_get_name (pnd), nfc_device_get_connstring (pnd));
     }
     nfc_close (pnd);
   }
   
-  nfc_exit ();
+  nfc_exit (NULL);
   return 0;
 }

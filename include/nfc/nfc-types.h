@@ -32,6 +32,8 @@
 #  include <stdbool.h>
 #  include <stdio.h>
 
+typedef void *nfc_context;
+
 /**
  * NFC device
  */

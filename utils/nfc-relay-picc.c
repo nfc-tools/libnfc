@@ -190,11 +190,11 @@ main (int argc, char *argv[])
   signal (SIGINT, (void (*)()) intr_hdlr);
 #endif
 
-  nfc_init ();
+  nfc_init (NULL);
   
   nfc_connstring connstrings[MAX_DEVICE_COUNT];
   // List available devices
-  size_t szFound = nfc_list_devices (connstrings, MAX_DEVICE_COUNT);
+  size_t szFound = nfc_list_devices (NULL, connstrings, MAX_DEVICE_COUNT);
 
   if (initiator_only_mode || target_only_mode) {
     if (szFound < 1) {
@@ -218,9 +218,9 @@ main (int argc, char *argv[])
     // if there is more than one readers opened we open the second reader
     // (we hope they're always detected in the same order)
     if (szFound == 1) {
-      pndInitiator = nfc_open (connstrings[0]);
+      pndInitiator = nfc_open (NULL, connstrings[0]);
     } else {
-      pndInitiator = nfc_open (connstrings[1]);
+      pndInitiator = nfc_open (NULL, connstrings[1]);
     }
 
     if (!pndInitiator) {
@@ -233,7 +233,7 @@ main (int argc, char *argv[])
     if (nfc_initiator_init (pndInitiator) < 0) {
       printf ("Error: fail initializing initiator\n");
       nfc_close (pndInitiator);
-      nfc_exit ();
+      nfc_exit (NULL);
       exit (EXIT_FAILURE);
     }
 
@@ -245,7 +245,7 @@ main (int argc, char *argv[])
     if (nfc_initiator_select_passive_target (pndInitiator, nm, NULL, 0, &ntRealTarget) < 0) {
       printf ("Error: no tag was found\n");
       nfc_close (pndInitiator);
-      nfc_exit ();
+      nfc_exit (NULL);
       exit (EXIT_FAILURE);
     }
 
@@ -255,25 +255,25 @@ main (int argc, char *argv[])
       if (print_hex_fd4(ntRealTarget.nti.nai.abtUid, ntRealTarget.nti.nai.szUidLen, "UID") != EXIT_SUCCESS) {
         fprintf (stderr, "Error while printing UID to FD4\n");
         nfc_close (pndInitiator);
-        nfc_exit ();
+        nfc_exit (NULL);
         exit(EXIT_FAILURE);
       }
       if (print_hex_fd4(ntRealTarget.nti.nai.abtAtqa, 2, "ATQA") != EXIT_SUCCESS) {
         fprintf (stderr, "Error while printing ATQA to FD4\n");
         nfc_close (pndInitiator);
-        nfc_exit ();
+        nfc_exit (NULL);
         exit(EXIT_FAILURE);
       }
       if (print_hex_fd4(&(ntRealTarget.nti.nai.btSak), 1, "SAK") != EXIT_SUCCESS) {
         fprintf (stderr, "Error while printing SAK to FD4\n");
         nfc_close (pndInitiator);
-        nfc_exit ();
+        nfc_exit (NULL);
         exit(EXIT_FAILURE);
       }
       if (print_hex_fd4(ntRealTarget.nti.nai.abtAts, ntRealTarget.nti.nai.szAtsLen, "ATS") != EXIT_SUCCESS) {
         fprintf (stderr, "Error while printing ATS to FD4\n");
         nfc_close (pndInitiator);
-        nfc_exit ();
+        nfc_exit (NULL);
         exit(EXIT_FAILURE);
       }
     } 
@@ -297,7 +297,7 @@ main (int argc, char *argv[])
       if (scan_hex_fd3(ntEmulatedTarget.nti.nai.abtUid, &(ntEmulatedTarget.nti.nai.szUidLen), "UID") != EXIT_SUCCESS) {
         fprintf (stderr, "Error while scanning UID from FD3\n");
         nfc_close (pndInitiator);
-        nfc_exit ();
+        nfc_exit (NULL);
         exit(EXIT_FAILURE);
       }
       if (scan_hex_fd3(ntEmulatedTarget.nti.nai.abtAtqa, &foo, "ATQA") != EXIT_SUCCESS) {
@@ -308,13 +308,13 @@ main (int argc, char *argv[])
       if (scan_hex_fd3(&(ntEmulatedTarget.nti.nai.btSak), &foo, "SAK") != EXIT_SUCCESS) {
         fprintf (stderr, "Error while scanning SAK from FD3\n");
         nfc_close (pndInitiator);
-        nfc_exit ();
+        nfc_exit (NULL);
         exit(EXIT_FAILURE);
       }
       if (scan_hex_fd3(ntEmulatedTarget.nti.nai.abtAts, &(ntEmulatedTarget.nti.nai.szAtsLen), "ATS") != EXIT_SUCCESS) {
         fprintf (stderr, "Error while scanning ATS from FD3\n");
         nfc_close (pndInitiator);
-        nfc_exit ();
+        nfc_exit (NULL);
         exit(EXIT_FAILURE);
       }
     } else {
@@ -353,13 +353,13 @@ main (int argc, char *argv[])
     print_nfc_iso14443a_info (ntEmulatedTarget.nti.nai, false);
  
     // Try to open the NFC emulator device
-    pndTarget = nfc_open (connstrings[0]);
+    pndTarget = nfc_open (NULL, connstrings[0]);
     if (pndTarget == NULL) {
       printf ("Error opening NFC emulator device\n");
       if (!target_only_mode) {
         nfc_close (pndInitiator);
       }
-      nfc_exit ();
+      nfc_exit (NULL);
       return EXIT_FAILURE;
     }
 
@@ -372,7 +372,7 @@ main (int argc, char *argv[])
         nfc_close (pndInitiator);
       }
       nfc_close (pndTarget);
-      nfc_exit ();
+      nfc_exit (NULL);
       exit(EXIT_FAILURE);
     }
     printf ("%s\n", "Done, relaying frames now!");
@@ -390,7 +390,7 @@ main (int argc, char *argv[])
           nfc_close (pndInitiator);
         }
         nfc_close (pndTarget);
-        nfc_exit ();
+        nfc_exit (NULL);
         exit(EXIT_FAILURE);
       }
       szCapduLen = (size_t) res;
@@ -398,7 +398,7 @@ main (int argc, char *argv[])
         if (print_hex_fd4(abtCapdu, szCapduLen, "C-APDU") != EXIT_SUCCESS) {
         fprintf (stderr, "Error while printing C-APDU to FD4\n");
           nfc_close (pndTarget);
-          nfc_exit ();
+          nfc_exit (NULL);
           exit(EXIT_FAILURE);
         }
       }
@@ -406,7 +406,7 @@ main (int argc, char *argv[])
       if (scan_hex_fd3(abtCapdu, &szCapduLen, "C-APDU") != EXIT_SUCCESS) {
         fprintf (stderr, "Error while scanning C-APDU from FD3\n");
         nfc_close (pndInitiator);
-        nfc_exit ();
+        nfc_exit (NULL);
         exit(EXIT_FAILURE);
       }
     }
@@ -424,7 +424,7 @@ main (int argc, char *argv[])
       if (scan_hex_fd3(abtRapdu, &szRapduLen, "R-APDU") != EXIT_SUCCESS) {
         fprintf (stderr, "Error while scanning R-APDU from FD3\n");
         nfc_close (pndTarget);
-        nfc_exit ();
+        nfc_exit (NULL);
         exit(EXIT_FAILURE);
       }
       ret = true;
@@ -451,16 +451,16 @@ main (int argc, char *argv[])
           }
           if (!initiator_only_mode) {
             nfc_close (pndTarget);
-            nfc_exit ();
+            nfc_exit (NULL);
           }
-          nfc_exit ();
+          nfc_exit (NULL);
           exit(EXIT_FAILURE);
         }
       } else {
         if (print_hex_fd4(abtRapdu, szRapduLen, "R-APDU") != EXIT_SUCCESS) {
         fprintf (stderr, "Error while printing R-APDU to FD4\n");
           nfc_close (pndInitiator);
-          nfc_exit ();
+          nfc_exit (NULL);
           exit(EXIT_FAILURE);
         }
       }
@@ -473,7 +473,7 @@ main (int argc, char *argv[])
   if (!initiator_only_mode) {
     nfc_close (pndTarget);
   }
-  nfc_exit ();
+  nfc_exit (NULL);
   exit (EXIT_SUCCESS);
 }
 

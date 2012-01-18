@@ -64,19 +64,21 @@ const struct nfc_driver *nfc_drivers[] = {
 /**
  * @brief Initialize libnfc.
  * This function must be called before calling any other libnfc function
+ * @param context Optional output location for context pointer
  */
 void 
-nfc_init()
+nfc_init(nfc_context *context)
 {
   log_init ();
 }
 
 /**
  * @brief Deinitialize libnfc.
- * Should be called after closing all open devices and before your application terminates. 
+ * Should be called after closing all open devices and before your application terminates.
+ *@param context The context to deinitialize 
  */
 void  
-nfc_exit()
+nfc_exit(nfc_context *context)
 {
   log_fini ();
 }
@@ -102,7 +104,7 @@ nfc_get_default_device (nfc_connstring *connstring)
   if (NULL == env_default_connstring) {
     // LIBNFC_DEFAULT_DEVICE is not set, we fallback on probing for the first available device
     nfc_connstring listed_cs[1];
-    size_t szDeviceFound = nfc_list_devices (listed_cs, 1);
+    size_t szDeviceFound = nfc_list_devices (NULL, listed_cs, 1);
     if (szDeviceFound) {
       strncpy (*connstring, listed_cs[0], sizeof(nfc_connstring));
     } else {
@@ -131,7 +133,7 @@ nfc_get_default_device (nfc_connstring *connstring)
  * optionally followed by manual tuning of the parameters if the default parameters are not suiting your goals.
  */
 nfc_device *
-nfc_open (const nfc_connstring connstring)
+nfc_open (nfc_context *context, const nfc_connstring connstring)
 {
   nfc_device *pnd = NULL;
 
@@ -200,7 +202,7 @@ nfc_close (nfc_device *pnd)
  * 
  */
 size_t
-nfc_list_devices (nfc_connstring connstrings[] , size_t szDevices)
+nfc_list_devices (nfc_context *context, nfc_connstring connstrings[] , size_t szDevices)
 {
   size_t szN;
   size_t szDeviceFound = 0;
