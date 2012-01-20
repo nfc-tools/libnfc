@@ -172,11 +172,11 @@ main(int argc, char *argv[])
   };
 
   struct nfc_emulation_state_machine state_machine = {
-    .io   = nfcforum_tag2_io
+    .io = nfcforum_tag2_io
   };
 
   struct nfc_emulator emulator = {
-    .target= &nt,
+    .target = &nt,
     .state_machine = &state_machine,
     .user_data = __nfcforum_tag2_memory_area,
   };

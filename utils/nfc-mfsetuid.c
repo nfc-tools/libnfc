@@ -344,7 +344,7 @@ main (int argc, char *argv[])
   transmit_bytes (abtWrite,4);
   transmit_bytes (abtData,18);
   if(format) {
-    for(i= 3 ; i < 64 ; i += 4) {
+    for(i = 3 ; i < 64 ; i += 4) {
       abtWrite[1]= (char) i;
       iso14443a_crc_append (abtWrite, 2);
       transmit_bytes (abtWrite,4);

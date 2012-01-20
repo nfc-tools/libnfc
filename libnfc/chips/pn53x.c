@@ -1088,7 +1088,7 @@ pn53x_initiator_poll_target (struct nfc_device *pnd,
   if (CHIP_DATA(pnd)->type == PN532) {
     size_t szTargetTypes = 0;
     pn53x_target_type apttTargetTypes[32];
-    for (size_t n=0; n<szModulations; n++) {
+    for (size_t n = 0; n < szModulations; n++) {
       const pn53x_target_type ptt = pn53x_nm_to_ptt(pnmModulations[n]);
       if (PTT_UNDEFINED == ptt) {
         pnd->last_error = NFC_EINVARG;
@@ -1122,8 +1122,8 @@ pn53x_initiator_poll_target (struct nfc_device *pnd,
     pn53x_set_property_bool (pnd, NP_INFINITE_SELECT, true);
     // FIXME It does not support DEP targets
     do {
-      for (size_t p=0; p<uiPollNr; p++) {
-        for (size_t n=0; n<szModulations; n++) {
+      for (size_t p = 0; p < uiPollNr; p++) {
+        for (size_t n = 0; n < szModulations; n++) {
           uint8_t *pbtInitiatorData;
           size_t szInitiatorData;
           prepare_initiator_data (pnmModulations[n], &pbtInitiatorData, &szInitiatorData);
@@ -1421,7 +1421,7 @@ pn53x_initiator_transceive_bits_timed (struct nfc_device *pnd, const uint8_t *pb
   BUFFER_APPEND (abtWriteRegisterCmd, PN53X_REG_CIU_FIFOLevel  >> 8);
   BUFFER_APPEND (abtWriteRegisterCmd, PN53X_REG_CIU_FIFOLevel & 0xff);
   BUFFER_APPEND (abtWriteRegisterCmd, SYMBOL_FLUSH_BUFFER);
-  for (i=0; i< ((szTxBits / 8) + 1); i++) {
+  for (i = 0; i < ((szTxBits / 8) + 1); i++) {
     BUFFER_APPEND (abtWriteRegisterCmd, PN53X_REG_CIU_FIFOData  >> 8);
     BUFFER_APPEND (abtWriteRegisterCmd, PN53X_REG_CIU_FIFOData & 0xff);
     BUFFER_APPEND (abtWriteRegisterCmd, pbtTx[i]);
@@ -1440,7 +1440,7 @@ pn53x_initiator_transceive_bits_timed (struct nfc_device *pnd, const uint8_t *pb
   // our PN53x timer saturates after 4.8ms so this function shouldn't be used for
   // responses coming very late anyway.
   // Ideally we should implement a real timer here too but looping a few times is good enough.
-  for (i=0; i<(3 *(CHIP_DATA (pnd)->timer_prescaler * 2 + 1)); i++) {
+  for (i = 0; i < (3 *(CHIP_DATA (pnd)->timer_prescaler * 2 + 1)); i++) {
     pn53x_read_register (pnd, PN53X_REG_CIU_FIFOLevel, &sz);
     if (sz > 0)
       break;
@@ -1453,7 +1453,7 @@ pn53x_initiator_transceive_bits_timed (struct nfc_device *pnd, const uint8_t *pb
   while (1) {
     BUFFER_INIT (abtReadRegisterCmd, PN53x_EXTENDED_FRAME__DATA_MAX_LEN);
     BUFFER_APPEND (abtReadRegisterCmd, ReadRegister);
-    for (i=0; i<sz; i++) {
+    for (i = 0; i < sz; i++) {
       BUFFER_APPEND (abtReadRegisterCmd, PN53X_REG_CIU_FIFOData  >> 8);
       BUFFER_APPEND (abtReadRegisterCmd, PN53X_REG_CIU_FIFOData & 0xff);
     }
@@ -1515,7 +1515,7 @@ pn53x_initiator_transceive_bytes_timed (struct nfc_device *pnd, const uint8_t *p
   BUFFER_APPEND (abtWriteRegisterCmd, PN53X_REG_CIU_FIFOLevel  >> 8);
   BUFFER_APPEND (abtWriteRegisterCmd, PN53X_REG_CIU_FIFOLevel & 0xff);
   BUFFER_APPEND (abtWriteRegisterCmd, SYMBOL_FLUSH_BUFFER);
-  for (i=0; i< szTx; i++) {
+  for (i = 0; i < szTx; i++) {
     BUFFER_APPEND (abtWriteRegisterCmd, PN53X_REG_CIU_FIFOData  >> 8);
     BUFFER_APPEND (abtWriteRegisterCmd, PN53X_REG_CIU_FIFOData & 0xff);
     BUFFER_APPEND (abtWriteRegisterCmd, pbtTx[i]);
@@ -1535,7 +1535,7 @@ pn53x_initiator_transceive_bytes_timed (struct nfc_device *pnd, const uint8_t *p
   // our PN53x timer saturates after 4.8ms so this function shouldn't be used for
   // responses coming very late anyway.
   // Ideally we should implement a real timer here too but looping a few times is good enough.
-  for (i=0; i<(3 *(CHIP_DATA (pnd)->timer_prescaler * 2 + 1)); i++) {
+  for (i = 0; i < (3 *(CHIP_DATA (pnd)->timer_prescaler * 2 + 1)); i++) {
     pn53x_read_register (pnd, PN53X_REG_CIU_FIFOLevel, &sz);
     if (sz > 0)
       break;
@@ -1548,7 +1548,7 @@ pn53x_initiator_transceive_bytes_timed (struct nfc_device *pnd, const uint8_t *p
   while (1) {
     BUFFER_INIT (abtReadRegisterCmd, PN53x_EXTENDED_FRAME__DATA_MAX_LEN);
     BUFFER_APPEND (abtReadRegisterCmd, ReadRegister);
-    for (i=0; i<sz; i++) {
+    for (i = 0; i < sz; i++) {
       BUFFER_APPEND (abtReadRegisterCmd, PN53X_REG_CIU_FIFOData  >> 8);
       BUFFER_APPEND (abtReadRegisterCmd, PN53X_REG_CIU_FIFOData & 0xff);
     }

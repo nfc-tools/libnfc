@@ -165,7 +165,7 @@ test_dep (void)
     .cut_test_context = test_context,
   };
   
-  for (int i=0; i<3; i++) {
+  for (int i = 0; i < 3; i++) {
     initiator_data.nbr = nbrs[i];
     
     if ((res = pthread_create (&(threads[TARGET]), NULL, target_thread, &target_data)))

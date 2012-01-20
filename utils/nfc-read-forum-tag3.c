@@ -98,7 +98,7 @@ nfc_forum_tag_type3_check (nfc_device *pnd, const nfc_target nt, const uint16_t 
                      };
   
   size_t payload_len = 1 + 2 + 1;
-  for (uint8_t b=0; b<block_count; b++) {
+  for (uint8_t b = 0; b < block_count; b++) {
     if (block < 0x100) {
       payload[payload_len++] = 0x80;
       payload[payload_len++] = block + b;
@@ -120,7 +120,7 @@ nfc_forum_tag_type3_check (nfc_device *pnd, const nfc_target nt, const uint16_t 
     return -1;
   }
   const size_t res_overhead = 1 + 1 + 8 + 2;  // 1+1+8+2: LEN + CMD + NFCID2 + STATUS
-  if (res_len<res_overhead) { 
+  if (res_len < res_overhead) { 
     // Not enough data
     return -1;
   }
@@ -277,7 +277,7 @@ main(int argc, char *argv[])
   fprintf (message_stream, "NDEF data lenght: %d bytes\n", ndef_data_len);
 
   uint16_t ndef_calculated_checksum = 0;
-  for (size_t n=0; n<14; n++)
+  for (size_t n = 0; n < 14; n++)
     ndef_calculated_checksum += data[n];
 
   const uint16_t ndef_checksum = (data[14] << 8) + data[15];
@@ -297,7 +297,7 @@ main(int argc, char *argv[])
   const uint16_t block_count_to_check = (ndef_data_len / 16) + 1;
 
   data_len = 0;
-  for (uint16_t b=0; b<(block_count_to_check/block_max_per_check); b+=block_max_per_check) {
+  for (uint16_t b = 0; b < (block_count_to_check/block_max_per_check); b += block_max_per_check) {
     size_t len = sizeof(data) - data_len;
     if(!nfc_forum_tag_type3_check (pnd, nt, 1+b, MIN(block_max_per_check, (block_count_to_check-(b*block_max_per_check))), data + data_len, &len)) {
       nfc_perror (pnd, "nfc_forum_tag_type3_check");

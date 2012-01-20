@@ -98,16 +98,16 @@ bool print_hex_fd4 (const uint8_t *pbtData, const size_t szBytes, const char *pc
   if (szBytes > MAX_FRAME_LEN) {
     return EXIT_FAILURE;
   }
-  if (fprintf (fd4, "#%s %04zx: ", pchPrefix, szBytes)<0) {
+  if (fprintf (fd4, "#%s %04zx: ", pchPrefix, szBytes) < 0) {
     return EXIT_FAILURE;
   }
 
   for (szPos = 0; szPos < szBytes; szPos++) {
-    if (fprintf (fd4, "%02x ", pbtData[szPos])<0) {
+    if (fprintf (fd4, "%02x ", pbtData[szPos]) < 0) {
       return EXIT_FAILURE;
     }
   }
-  if (fprintf (fd4, "\n")<0) {
+  if (fprintf (fd4, "\n") < 0) {
     return EXIT_FAILURE;
   }
   fflush(fd4);
@@ -129,7 +129,7 @@ bool scan_hex_fd3 (uint8_t *pbtData, size_t *pszBytes, const char *pchPrefix)
   }
   strncpy(pchScan, pchPrefix, 250);
   strcat(pchScan, " %04x:");
-  if (fscanf (fd3, pchScan, &uiBytes)<1) {
+  if (fscanf (fd3, pchScan, &uiBytes) < 1) {
     return EXIT_FAILURE;
   }
   *pszBytes=uiBytes;
@@ -137,7 +137,7 @@ bool scan_hex_fd3 (uint8_t *pbtData, size_t *pszBytes, const char *pchPrefix)
     return EXIT_FAILURE;
   }
   for (szPos = 0; szPos < *pszBytes; szPos++) {
-    if (fscanf (fd3, "%02x", &uiData)<1) {
+    if (fscanf (fd3, "%02x", &uiData) < 1) {
       return EXIT_FAILURE;
     }
     pbtData[szPos]=uiData;
@@ -168,7 +168,7 @@ main (int argc, char *argv[])
       initiator_only_mode = true;
       target_only_mode = false;
     } else if (0 == strcmp (argv[arg], "-n")) {
-      if (++arg==argc || (sscanf(argv[arg], "%i", &waiting_time)<1)) {
+      if (++arg == argc || (sscanf(argv[arg], "%i", &waiting_time) < 1)) {
         ERR ("Missing or wrong waiting time value: %s.", argv[arg]);
         print_usage (argv);
         return EXIT_FAILURE;

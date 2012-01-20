@@ -80,7 +80,7 @@ int main(int argc, const char* argv[])
   FILE* input = NULL;
 
   if (argc >= 2) {
-    if((input=fopen(argv[1], "r"))==NULL) {
+    if((input = fopen(argv[1], "r"))==NULL) {
       ERR ("%s", "Cannot open file.");
       return EXIT_FAILURE;
     }
@@ -105,12 +105,12 @@ int main(int argc, const char* argv[])
   char *cmd;
   char *prompt = "> ";
   while(1) {
-    int offset=0;
+    int offset = 0;
 #if defined(HAVE_READLINE)
-    if (input==NULL) { // means we use stdin
-      cmd=readline(prompt);
+    if (input == NULL) { // means we use stdin
+      cmd = readline(prompt);
       // NULL if ctrl-d
-      if (cmd==NULL) {
+      if (cmd == NULL) {
         printf("Bye!\n");
         break;
       }
@@ -137,18 +137,18 @@ int main(int argc, const char* argv[])
 #if defined(HAVE_READLINE)
     }
 #endif //HAVE_READLINE
-    if (cmd[0]=='q') {
+    if (cmd[0] == 'q') {
       printf("Bye!\n");
       free(cmd);
       break;
     }
-    if (cmd[0]=='p') {
-      int s=0;
+    if (cmd[0] == 'p') {
+      int s = 0;
       offset++;
       while (isspace(cmd[offset])) {
         offset++;
       }
-      sscanf(cmd+offset, "%d", &s);
+      sscanf(cmd + offset, "%d", &s);
       printf("Pause for %i msecs\n", s);
       if (s>0) {
           sleep(s * SUSP_TIME);
@@ -157,14 +157,14 @@ int main(int argc, const char* argv[])
       continue;
     }
     szTx = 0;
-    for(int i = 0; i<MAX_FRAME_LEN-10; i++) {
+    for(int i = 0; i < MAX_FRAME_LEN - 10; i++) {
       int size;
       uint8_t byte;
       while (isspace(cmd[offset])) {
         offset++;
       }
       size = sscanf(cmd+offset, "%2x", (unsigned int*)&byte);
-      if (size<1) {
+      if (size < 1 ) {
         break;
       }
       abtTx[i] = byte;
