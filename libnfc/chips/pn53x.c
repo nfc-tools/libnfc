@@ -35,36 +35,37 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include <nfc/nfc.h>
 #include <sys/param.h>
 
+#include "nfc/nfc.h"
+#include "nfc-internal.h"
 #include "pn53x.h"
 #include "pn53x-internal.h"
 
 #include "mirror-subr.h"
-#include "nfc-internal.h"
 
 #define LOG_CATEGORY "libnfc.chip.pn53x"
 
-const byte_t pn53x_ack_frame[] = { 0x00, 0x00, 0xff, 0x00, 0xff, 0x00 };
-const byte_t pn53x_nack_frame[] = { 0x00, 0x00, 0xff, 0xff, 0x00, 0x00 };
-static const byte_t pn53x_error_frame[] = { 0x00, 0x00, 0xff, 0x01, 0xff, 0x7f, 0x81, 0x00 };
+const uint8_t pn53x_ack_frame[] = { 0x00, 0x00, 0xff, 0x00, 0xff, 0x00 };
+const uint8_t pn53x_nack_frame[] = { 0x00, 0x00, 0xff, 0xff, 0x00, 0x00 };
+static const uint8_t pn53x_error_frame[] = { 0x00, 0x00, 0xff, 0x01, 0xff, 0x7f, 0x81, 0x00 };
 
 /* prototypes */
-bool pn53x_reset_settings (nfc_device_t * pnd);
-bool pn53x_writeback_register (nfc_device_t * pnd);
+int pn53x_reset_settings (struct nfc_device *pnd);
+int pn53x_writeback_register (struct nfc_device *pnd);
 
-nfc_modulation_t pn53x_ptt_to_nm (const pn53x_target_type_t ptt);
-pn53x_modulation_t pn53x_nm_to_pm (const nfc_modulation_t nm);
-pn53x_target_type_t pn53x_nm_to_ptt (const nfc_modulation_t nm);
+nfc_modulation pn53x_ptt_to_nm (const pn53x_target_type ptt);
+pn53x_modulation pn53x_nm_to_pm (const nfc_modulation nm);
+pn53x_target_type pn53x_nm_to_ptt (const nfc_modulation nm);
 
-bool
-pn53x_init(nfc_device_t * pnd)
+int
+pn53x_init(struct nfc_device *pnd)
 {
+  int res = 0;
   // GetFirmwareVersion command is used to set PN53x chips type (PN531, PN532 or PN533)
   char abtFirmwareText[22];
-  if (!pn53x_get_firmware_version (pnd, abtFirmwareText)) {
-    return false;
+  if ((res = pn53x_get_firmware_version (pnd, abtFirmwareText)) < 0) {
+    return res;
   }
 
   // CRC handling should be enabled by default as declared in nfc_device_new
@@ -74,78 +75,87 @@ pn53x_init(nfc_device_t * pnd)
 
   // We can't read these parameters, so we set a default config by using the SetParameters wrapper
   // Note: pn53x_SetParameters() will save the sent value in pnd->ui8Parameters cache
-  if(!pn53x_SetParameters(pnd, PARAM_AUTO_ATR_RES | PARAM_AUTO_RATS)) {
-    return false;
+  if((res = pn53x_SetParameters(pnd, PARAM_AUTO_ATR_RES | PARAM_AUTO_RATS)) < 0) {
+    return res;
   }
 
-  pn53x_reset_settings(pnd);
+  if ((res = pn53x_reset_settings(pnd)) < 0) {
+    return res;
+  }
 
   // Add the firmware revision to the device name
   char   *pcName;
-  pcName = strdup (pnd->acName);
-  snprintf (pnd->acName, DEVICE_NAME_LENGTH - 1, "%s - %s", pcName, abtFirmwareText);
+  pcName = strdup (pnd->name);
+  snprintf (pnd->name, DEVICE_NAME_LENGTH - 1, "%s - %s", pcName, abtFirmwareText);
   free (pcName);
-  return true;
+  return NFC_SUCCESS;
 }
 
-bool
-pn53x_reset_settings(nfc_device_t * pnd)
+int
+pn53x_reset_settings(struct nfc_device *pnd)
 {
+  int res = 0;
   // Reset the ending transmission bits register, it is unknown what the last tranmission used there
   CHIP_DATA (pnd)->ui8TxBits = 0;
-  if (!pn53x_write_register (pnd, PN53X_REG_CIU_BitFraming, SYMBOL_TX_LAST_BITS, 0x00)) {
-    return false;
+  if ((res = pn53x_write_register (pnd, PN53X_REG_CIU_BitFraming, SYMBOL_TX_LAST_BITS, 0x00)) < 0) {
+    return res;
   }
-  return true;
+  return NFC_SUCCESS;
 }
 
-bool
-pn53x_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, byte_t * pbtRx, size_t *pszRx, struct timeval *timeout)
+int
+pn53x_transceive (struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szTx, uint8_t *pbtRx, const size_t szRxLen, int timeout)
 {
+  int res = 0;
   if (CHIP_DATA (pnd)->wb_trigged) {
-    if (!pn53x_writeback_register (pnd)) {
-      return false;
+    if ((res = pn53x_writeback_register (pnd)) < 0) {
+      return res;
     }
   }
 
   PNCMD_TRACE (pbtTx[0]);
-  if (timeout)
-    log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "Timeout values: %li s, %li us", timeout->tv_sec, timeout->tv_usec);
+  if (timeout > 0) {
+    log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "Timeout values: %d", timeout);
+  } else if (timeout == 0) {
+    log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "No timeout");
+  } else if (timeout == -1) {
+    timeout = CHIP_DATA (pnd)->timeout_command;
+  } else {
+    log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "Invalid timeout value: %d", timeout);
+  }
 
-  byte_t  abtRx[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
+  uint8_t  abtRx[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
   size_t  szRx = sizeof(abtRx);
 
   // Check if receiving buffers are available, if not, replace them
-  if (!pszRx || !pbtRx) {
+  if (szRxLen == 0 || !pbtRx) {
     pbtRx = abtRx;
-    pszRx = &szRx;
+  } else {
+    szRx = szRxLen;
   }
 
   // Call the send/receice callback functions of the current driver
-  if (!CHIP_DATA (pnd)->io->send (pnd, pbtTx, szTx, timeout))
-    return false;
+  if ((res = CHIP_DATA (pnd)->io->send (pnd, pbtTx, szTx, timeout)) < 0) {
+    return res;
+  }
 
   // Command is sent, we store the command
-  CHIP_DATA (pnd)->ui8LastCommand = pbtTx[0];
+  CHIP_DATA (pnd)->last_command = pbtTx[0];
 
   // Handle power mode for PN532
   if ((CHIP_DATA (pnd)->type == PN532) && (TgInitAsTarget == pbtTx[0])) { // PN532 automatically goes into PowerDown mode when TgInitAsTarget command will be sent
     CHIP_DATA (pnd)->power_mode = POWERDOWN;
   }
 
-  int res = CHIP_DATA(pnd)->io->receive (pnd, pbtRx, *pszRx, timeout);
-  if (res < 0) {
-    return false;
+  if ((res = CHIP_DATA(pnd)->io->receive (pnd, pbtRx, szRx, timeout)) < 0) {
+    return res;
   }
-
-  if (pnd->iLastError)
-    return false;
 
   if ((CHIP_DATA(pnd)->type == PN532) && (TgInitAsTarget == pbtTx[0])) { // PN532 automatically wakeup on external RF field
     CHIP_DATA(pnd)->power_mode = NORMAL; // When TgInitAsTarget reply that means an external RF have waken up the chip
   }
 
-  *pszRx = (size_t) res;
+  szRx = (size_t) res;
   switch (pbtTx[0]) {
     case PowerDown:
     case InDataExchange:
@@ -161,81 +171,137 @@ pn53x_transceive (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, b
     case TgResponseToInitiator:
     case TgSetGeneralBytes:
     case TgSetMetaData:
-      pnd->iLastError = pbtRx[0] & 0x3f;
+      if (pbtRx[0] & 0x80) { abort(); } // NAD detected
+      if (pbtRx[0] & 0x40) { abort(); } // MI detected
+      CHIP_DATA(pnd)->last_status_byte = pbtRx[0] & 0x3f;
       break;
     case InDeselect:
     case InRelease:
       if (CHIP_DATA(pnd)->type == RCS360) {
         // Error code is in pbtRx[1] but we ignore error code anyway
         // because other PN53x chips always return 0 on those commands
-        pnd->iLastError = 0;
+        CHIP_DATA(pnd)->last_status_byte = 0;
         break;
       }
-      pnd->iLastError = pbtRx[0] & 0x3f;
+      CHIP_DATA(pnd)->last_status_byte = pbtRx[0] & 0x3f;
       break;
     case ReadRegister:
     case WriteRegister:
       if (CHIP_DATA(pnd)->type == PN533) {
         // PN533 prepends its answer by the status byte
-        pnd->iLastError = pbtRx[0] & 0x3f;
+        CHIP_DATA(pnd)->last_status_byte = pbtRx[0] & 0x3f;
       } else {
-        pnd->iLastError = 0;
+        CHIP_DATA(pnd)->last_status_byte = 0;
       }
       break;
     default:
-      pnd->iLastError = 0;
+      CHIP_DATA(pnd)->last_status_byte = 0;
   }
-  log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "Last command status: %s", pn53x_strerror(pnd));
-  return (0 == pnd->iLastError);
+
+  switch (CHIP_DATA(pnd)->last_status_byte) {
+    case 0:
+      res = (int)szRx;
+      break;
+    case ETIMEOUT:
+    case ECRC:
+    case EPARITY:
+    case EBITCOUNT:
+    case EFRAMING:
+    case EBITCOLL:
+    case ERFPROTO:
+    case ERFTIMEOUT:
+    case EDEPUNKCMD:
+    case EDEPINVSTATE:
+    case ENAD:
+    case ENFCID3:
+    case EINVRXFRAM:
+    case EBCC:
+    case ECID:
+      res = NFC_ERFTRANS;
+      break;
+    case ESMALLBUF:
+    case EOVCURRENT:
+    case EBUFOVF:
+    case EOVHEAT:
+    case EINBUFOVF:
+      res = NFC_ECHIP;
+      break;
+    case EINVPARAM:
+    case EOPNOTALL:
+    case ECMD:
+    case ENSECNOTSUPP:
+      res = NFC_EINVARG;
+      break;
+    case ETGREL:
+    case ECDISCARDED:
+      res = NFC_ETGRELEASED;
+      break;
+    default:
+      res = NFC_ECHIP;
+      break;
+  };
+/*
+  { EMFAUTH, "Mifare Authentication Error" },
+*/
+
+  if (res < 0) {
+    pnd->last_error = res;
+    log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "Chip error: \"%s\" (%02x), returned error: \"%s\" (%d))", pn53x_strerror (pnd), CHIP_DATA(pnd)->last_status_byte, nfc_strerror (pnd), res);
+  } else {
+    pnd->last_error = 0;
+  }
+  return res;
 }
 
-bool
-pn53x_set_parameters (nfc_device_t * pnd, const uint8_t ui8Parameter, const bool bEnable)
+int
+pn53x_set_parameters (struct nfc_device *pnd, const uint8_t ui8Parameter, const bool bEnable)
 {
   uint8_t ui8Value = (bEnable) ? (CHIP_DATA (pnd)->ui8Parameters | ui8Parameter) : (CHIP_DATA (pnd)->ui8Parameters & ~(ui8Parameter));
   if (ui8Value != CHIP_DATA (pnd)->ui8Parameters) {
     return pn53x_SetParameters(pnd, ui8Value);
   }
-  return true;
+  return NFC_SUCCESS;
 }
 
-bool
-pn53x_set_tx_bits (nfc_device_t * pnd, const uint8_t ui8Bits)
+int
+pn53x_set_tx_bits (struct nfc_device *pnd, const uint8_t ui8Bits)
 {
+  int res = 0;
   // Test if we need to update the transmission bits register setting
   if (CHIP_DATA (pnd)->ui8TxBits != ui8Bits) {
     // Set the amount of transmission bits in the PN53X chip register
-    if (!pn53x_write_register (pnd, PN53X_REG_CIU_BitFraming, SYMBOL_TX_LAST_BITS, ui8Bits))
-      return false;
+    if ((res = pn53x_write_register (pnd, PN53X_REG_CIU_BitFraming, SYMBOL_TX_LAST_BITS, ui8Bits)) < 0)
+      return res;
 
     // Store the new setting
     CHIP_DATA (pnd)->ui8TxBits = ui8Bits;
   }
-  return true;
+  return NFC_SUCCESS;
 }
 
-bool
-pn53x_wrap_frame (const byte_t * pbtTx, const size_t szTxBits, const byte_t * pbtTxPar,
-                  byte_t * pbtFrame, size_t * pszFrameBits)
+int
+pn53x_wrap_frame (const uint8_t *pbtTx, const size_t szTxBits, const uint8_t *pbtTxPar,
+                  uint8_t *pbtFrame)
 {
-  byte_t  btFrame;
-  byte_t  btData;
+  uint8_t  btFrame;
+  uint8_t  btData;
   uint32_t uiBitPos;
   uint32_t uiDataPos = 0;
   size_t  szBitsLeft = szTxBits;
+  size_t szFrameBits = 0;
 
   // Make sure we should frame at least something
   if (szBitsLeft == 0)
-    return false;
+    return NFC_ECHIP;
 
   // Handle a short response (1byte) as a special case
   if (szBitsLeft < 9) {
     *pbtFrame = *pbtTx;
-    *pszFrameBits = szTxBits;
-    return true;
+    szFrameBits = szTxBits;
+    return szFrameBits;
   }
   // We start by calculating the frame length in bits
-  *pszFrameBits = szTxBits + (szTxBits / 8);
+  szFrameBits = szTxBits + (szTxBits / 8);
 
   // Parse the data bytes and add the parity bits
   // This is really a sensitive process, mirror the frame bytes and append parity bits
@@ -262,7 +328,7 @@ pn53x_wrap_frame (const byte_t * pbtTx, const size_t szTxBits, const byte_t * pb
       uiDataPos++;
       // Test if we are done
       if (szBitsLeft < 9)
-        return true;
+        return szFrameBits;
       szBitsLeft -= 8;
     }
     // Every 8 data bytes we lose one frame byte to the parities
@@ -270,29 +336,29 @@ pn53x_wrap_frame (const byte_t * pbtTx, const size_t szTxBits, const byte_t * pb
   }
 }
 
-bool
-pn53x_unwrap_frame (const byte_t * pbtFrame, const size_t szFrameBits, byte_t * pbtRx, size_t * pszRxBits,
-                    byte_t * pbtRxPar)
+int
+pn53x_unwrap_frame (const uint8_t *pbtFrame, const size_t szFrameBits, uint8_t *pbtRx, uint8_t *pbtRxPar)
 {
-  byte_t  btFrame;
-  byte_t  btData;
+  uint8_t  btFrame;
+  uint8_t  btData;
   uint8_t uiBitPos;
   uint32_t uiDataPos = 0;
-  byte_t *pbtFramePos = (byte_t *) pbtFrame;
+  uint8_t *pbtFramePos = (uint8_t *) pbtFrame;
   size_t  szBitsLeft = szFrameBits;
+  size_t szRxBits = 0;
 
   // Make sure we should frame at least something
   if (szBitsLeft == 0)
-    return false;
+    return NFC_ECHIP;
 
   // Handle a short response (1byte) as a special case
   if (szBitsLeft < 9) {
     *pbtRx = *pbtFrame;
-    *pszRxBits = szFrameBits;
-    return true;
+    szRxBits = szFrameBits;
+    return szRxBits;
   }
   // Calculate the data length in bits
-  *pszRxBits = szFrameBits - (szFrameBits / 9);
+  szRxBits = szFrameBits - (szFrameBits / 9);
 
   // Parse the frame bytes, remove the parity bits and store them in the parity array
   // This process is the reverse of WrapFrame(), look there for more info
@@ -309,7 +375,7 @@ pn53x_unwrap_frame (const byte_t * pbtFrame, const size_t szFrameBits, byte_t * 
       uiDataPos++;
       // Test if we are done
       if (szBitsLeft < 9)
-        return true;
+        return szRxBits;
       szBitsLeft -= 9;
     }
     // Every 8 data bytes we lose one frame byte to the parities
@@ -317,9 +383,9 @@ pn53x_unwrap_frame (const byte_t * pbtFrame, const size_t szFrameBits, byte_t * 
   }
 }
 
-bool
-pn53x_decode_target_data (const byte_t * pbtRawData, size_t szRawData, pn53x_type type, nfc_modulation_type_t nmt,
-                          nfc_target_info_t * pnti)
+int
+pn53x_decode_target_data (const uint8_t *pbtRawData, size_t szRawData, pn53x_type type, nfc_modulation_type nmt,
+                          nfc_target_info *pnti)
 {
   uint8_t szAttribRes;
 
@@ -392,7 +458,7 @@ pn53x_decode_target_data (const byte_t * pbtRawData, size_t szRawData, pn53x_typ
       // Skip V & T Addresses
       pbtRawData++;
       if (*pbtRawData != 0x07) { // 0x07 = REPGEN 
-        return false;
+        return NFC_ECHIP;
       }
       pbtRawData++;
       // Store the UID
@@ -455,22 +521,23 @@ pn53x_decode_target_data (const byte_t * pbtRawData, size_t szRawData, pn53x_typ
       memcpy (pnti->nji.btId, pbtRawData, 4);
       break;
     default:
-      return false;
+      return NFC_ECHIP;
       break;
   }
-  return true;
+  return NFC_SUCCESS;
 }
 
-bool
-pn53x_ReadRegister (nfc_device_t * pnd, uint16_t ui16RegisterAddress, uint8_t * ui8Value)
+int
+pn53x_ReadRegister (struct nfc_device *pnd, uint16_t ui16RegisterAddress, uint8_t *ui8Value)
 {
-  byte_t  abtCmd[] = { ReadRegister, ui16RegisterAddress >> 8, ui16RegisterAddress & 0xff };
-  byte_t  abtRegValue[2];
+  uint8_t  abtCmd[] = { ReadRegister, ui16RegisterAddress >> 8, ui16RegisterAddress & 0xff };
+  uint8_t  abtRegValue[2];
   size_t  szRegValue = sizeof (abtRegValue);
+  int res = 0;
 
   PNREG_TRACE (ui16RegisterAddress);
-  if (!pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), abtRegValue, &szRegValue, NULL)) {
-    return false;
+  if ((res = pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), abtRegValue, szRegValue, -1)) < 0) {
+    return res;
   }
   if (CHIP_DATA(pnd)->type == PN533) {
     // PN533 prepends its answer by a status byte
@@ -478,31 +545,32 @@ pn53x_ReadRegister (nfc_device_t * pnd, uint16_t ui16RegisterAddress, uint8_t * 
   } else {
     *ui8Value = abtRegValue[0];
   }
-  return true;
+  return NFC_SUCCESS;
 }
 
-bool pn53x_read_register (nfc_device_t * pnd, uint16_t ui16RegisterAddress, uint8_t * ui8Value)
+int pn53x_read_register (struct nfc_device *pnd, uint16_t ui16RegisterAddress, uint8_t *ui8Value)
 {
   return pn53x_ReadRegister (pnd, ui16RegisterAddress, ui8Value);
 }
 
-bool
-pn53x_WriteRegister (nfc_device_t * pnd, const uint16_t ui16RegisterAddress, const uint8_t ui8Value)
+int
+pn53x_WriteRegister (struct nfc_device *pnd, const uint16_t ui16RegisterAddress, const uint8_t ui8Value)
 {
-  byte_t  abtCmd[] = { WriteRegister, ui16RegisterAddress >> 8, ui16RegisterAddress & 0xff, ui8Value };
+  uint8_t  abtCmd[] = { WriteRegister, ui16RegisterAddress >> 8, ui16RegisterAddress & 0xff, ui8Value };
   PNREG_TRACE (ui16RegisterAddress);
-  return pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, NULL, NULL);
+  return pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, 0, -1);
 }
 
-bool
-pn53x_write_register (nfc_device_t * pnd, const uint16_t ui16RegisterAddress, const uint8_t ui8SymbolMask, const uint8_t ui8Value)
+int
+pn53x_write_register (struct nfc_device *pnd, const uint16_t ui16RegisterAddress, const uint8_t ui8SymbolMask, const uint8_t ui8Value)
 {
+  int res = 0;
   if ((ui16RegisterAddress < PN53X_CACHE_REGISTER_MIN_ADDRESS) || (ui16RegisterAddress > PN53X_CACHE_REGISTER_MAX_ADDRESS)) {
     // Direct write
     if (ui8SymbolMask != 0xff) {
       uint8_t ui8CurrentValue;
-      if (!pn53x_read_register (pnd, ui16RegisterAddress, &ui8CurrentValue))
-        return false;
+      if ((res = pn53x_read_register (pnd, ui16RegisterAddress, &ui8CurrentValue)) < 0)
+        return res;
       uint8_t ui8NewValue = ((ui8Value & ui8SymbolMask) | (ui8CurrentValue & (~ui8SymbolMask)));
       if (ui8NewValue != ui8CurrentValue) {
         return pn53x_WriteRegister (pnd, ui16RegisterAddress, ui8NewValue);
@@ -517,12 +585,13 @@ pn53x_write_register (nfc_device_t * pnd, const uint16_t ui16RegisterAddress, co
     CHIP_DATA (pnd)->wb_mask[internal_address] = CHIP_DATA (pnd)->wb_mask[internal_address] | ui8SymbolMask;
     CHIP_DATA (pnd)->wb_trigged = true;
   }
-  return true;
+  return NFC_SUCCESS;
 }
 
-bool
-pn53x_writeback_register (nfc_device_t * pnd)
+int
+pn53x_writeback_register (struct nfc_device *pnd)
 {
+  int res = 0;
   // TODO Check at each step (ReadRegister, WriteRegister) if we didn't exceed max supported frame length
   BUFFER_INIT (abtReadRegisterCmd, PN53x_EXTENDED_FRAME__DATA_MAX_LEN);
   BUFFER_APPEND (abtReadRegisterCmd, ReadRegister);
@@ -543,8 +612,8 @@ pn53x_writeback_register (nfc_device_t * pnd)
     uint8_t abtRes[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
     size_t szRes = sizeof(abtRes);
     // It transceives the previously constructed ReadRegister command
-    if (!pn53x_transceive (pnd, abtReadRegisterCmd, BUFFER_SIZE (abtReadRegisterCmd), abtRes, &szRes, NULL)) {
-      return false;
+    if ((res = pn53x_transceive (pnd, abtReadRegisterCmd, BUFFER_SIZE (abtReadRegisterCmd), abtRes, szRes, -1)) < 0) {
+      return res;
     }
     size_t i = 0;
     if (CHIP_DATA(pnd)->type == PN533) {
@@ -581,22 +650,24 @@ pn53x_writeback_register (nfc_device_t * pnd)
 
   if (BUFFER_SIZE (abtWriteRegisterCmd) > 1) {
     // We need to write some registers
-    if (!pn53x_transceive (pnd, abtWriteRegisterCmd, BUFFER_SIZE (abtWriteRegisterCmd), NULL, NULL, NULL)) {
-      return false;
+    if ((res = pn53x_transceive (pnd, abtWriteRegisterCmd, BUFFER_SIZE (abtWriteRegisterCmd), NULL, 0, -1)) < 0) {
+      return res;
     }
   }
-  return true;
+  return NFC_SUCCESS;
 }
 
-bool
-pn53x_get_firmware_version (nfc_device_t * pnd, char abtFirmwareText[22])
+int
+pn53x_get_firmware_version (struct nfc_device *pnd, char abtFirmwareText[22])
 {
-  const byte_t abtCmd[] = { GetFirmwareVersion };
-  byte_t  abtFw[4];
+  const uint8_t abtCmd[] = { GetFirmwareVersion };
+  uint8_t  abtFw[4];
   size_t  szFwLen = sizeof (abtFw);
-  if (!pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), abtFw, &szFwLen, NULL)) {
-    return false;
+  int res = 0;
+  if ((res = pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), abtFw, szFwLen, -1)) < 0) {
+    return res;
   }
+  szFwLen = (size_t) res;
   // Determine which version of chip it is: PN531 will return only 2 bytes, while others return 4 bytes and have the first to tell the version IC
   if (szFwLen == 2) {
     CHIP_DATA(pnd)->type = PN531;
@@ -611,11 +682,11 @@ pn53x_get_firmware_version (nfc_device_t * pnd, char abtFirmwareText[22])
       }
     } else {
       // Unknown version IC
-      return false;
+      return NFC_ENOTIMPL;
     }
   } else {
     // Unknown chip
-    return false;
+    return NFC_ENOTIMPL;
   }
   // Convert firmware info in text, PN531 gives 2 bytes info, but PN532 and PN533 gives 4
   switch (CHIP_DATA(pnd)->type) {
@@ -636,183 +707,217 @@ pn53x_get_firmware_version (nfc_device_t * pnd, char abtFirmwareText[22])
       // Could not happend
       break;
   }
-  return true;
+  return NFC_SUCCESS;
 }
 
-bool
-pn53x_configure (nfc_device_t * pnd, const nfc_device_option_t ndo, const bool bEnable)
+uint8_t
+pn53x_int_to_timeout (const int ms)
 {
-  byte_t  btValue;
-  switch (ndo) {
-    case NDO_HANDLE_CRC:
+  uint8_t res = 0;
+  if (ms) {
+    res = 0x10;
+    for (int i=3280; i>1; i/=2) {
+      if (ms > i)
+        break;
+      res--;
+    }
+  }
+  return res;
+}
+
+int 
+pn53x_set_property_int (struct nfc_device *pnd, const nfc_property property, const int value)
+{
+  switch (property) {
+    case NP_TIMEOUT_COMMAND:
+      CHIP_DATA (pnd)->timeout_command = value;
+    break;
+    case NP_TIMEOUT_ATR:
+      CHIP_DATA (pnd)->timeout_atr = value;
+      return pn53x_RFConfiguration__Various_timings (pnd, pn53x_int_to_timeout(CHIP_DATA (pnd)->timeout_atr), pn53x_int_to_timeout(CHIP_DATA (pnd)->timeout_communication));
+    break;
+    case NP_TIMEOUT_COM:
+      CHIP_DATA (pnd)->timeout_communication = value;
+      return pn53x_RFConfiguration__Various_timings (pnd, pn53x_int_to_timeout(CHIP_DATA (pnd)->timeout_atr), pn53x_int_to_timeout(CHIP_DATA (pnd)->timeout_communication));
+      break;
+    default:
+      return NFC_EINVARG;
+  }
+  return NFC_SUCCESS;
+}
+
+int
+pn53x_set_property_bool (struct nfc_device *pnd, const nfc_property property, const bool bEnable)
+{
+  uint8_t  btValue;
+  int res = 0;
+  switch (property) {
+    case NP_HANDLE_CRC:
       // Enable or disable automatic receiving/sending of CRC bytes
       if (bEnable == pnd->bCrc) {
         // Nothing to do
-        return true;
+        return NFC_SUCCESS;
       }
       // TX and RX are both represented by the symbol 0x80
       btValue = (bEnable) ? 0x80 : 0x00;
-      if (!pn53x_write_register (pnd, PN53X_REG_CIU_TxMode, SYMBOL_TX_CRC_ENABLE, btValue))
-        return false;
-      if (!pn53x_write_register (pnd, PN53X_REG_CIU_RxMode, SYMBOL_RX_CRC_ENABLE, btValue))
-        return false;
+      if ((res = pn53x_write_register (pnd, PN53X_REG_CIU_TxMode, SYMBOL_TX_CRC_ENABLE, btValue)) < 0)
+        return res;
+      if ((res = pn53x_write_register (pnd, PN53X_REG_CIU_RxMode, SYMBOL_RX_CRC_ENABLE, btValue)) < 0)
+        return res;
       pnd->bCrc = bEnable;
+      return NFC_SUCCESS;
       break;
 
-    case NDO_HANDLE_PARITY:
+    case NP_HANDLE_PARITY:
       // Handle parity bit by PN53X chip or parse it as data bit
       if (bEnable == pnd->bPar)
         // Nothing to do
-        return true;
+        return NFC_SUCCESS;
       btValue = (bEnable) ? 0x00 : SYMBOL_PARITY_DISABLE;
-      if (!pn53x_write_register (pnd, PN53X_REG_CIU_ManualRCV, SYMBOL_PARITY_DISABLE, btValue))
-        return false;
+      if ((res = pn53x_write_register (pnd, PN53X_REG_CIU_ManualRCV, SYMBOL_PARITY_DISABLE, btValue)) < 0)
+        return res;
       pnd->bPar = bEnable;
+      return NFC_SUCCESS;
       break;
 
-    case NDO_EASY_FRAMING:
+    case NP_EASY_FRAMING:
       pnd->bEasyFraming = bEnable;
+      return NFC_SUCCESS;
       break;
 
-    case NDO_ACTIVATE_FIELD:
+    case NP_ACTIVATE_FIELD:
     {
-      return pn53x_RFConfiguration__RF_field (pnd, bEnable);
+      if (pn53x_RFConfiguration__RF_field (pnd, bEnable) == 0)
+        return NFC_SUCCESS;
     }
     break;
 
-    case NDO_ACTIVATE_CRYPTO1:
+    case NP_ACTIVATE_CRYPTO1:
       btValue = (bEnable) ? SYMBOL_MF_CRYPTO1_ON : 0x00;
-      if (!pn53x_write_register (pnd, PN53X_REG_CIU_Status2, SYMBOL_MF_CRYPTO1_ON, btValue))
-        return false;
+      return pn53x_write_register (pnd, PN53X_REG_CIU_Status2, SYMBOL_MF_CRYPTO1_ON, btValue);
       break;
 
-    case NDO_INFINITE_SELECT:
+    case NP_INFINITE_SELECT:
     {
       // TODO Made some research around this point:
       // timings could be tweak better than this, and maybe we can tweak timings
       // to "gain" a sort-of hardware polling (ie. like PN532 does)
-      return pn53x_RFConfiguration__MaxRetries (pnd, 
+      if (pn53x_RFConfiguration__MaxRetries (pnd, 
         (bEnable) ? 0xff : 0x00,        // MxRtyATR, default: active = 0xff, passive = 0x02
-        (bEnable) ? 0xff : 0x00,        // MxRtyPSL, default: 0x01
+        (bEnable) ? 0xff : 0x01,        // MxRtyPSL, default: 0x01
         (bEnable) ? 0xff : 0x02         // MxRtyPassiveActivation, default: 0xff (0x00 leads to problems with PN531)
-      );
+      ) == 0)
+        return NFC_SUCCESS;
     }
     break;
 
-    case NDO_ACCEPT_INVALID_FRAMES:
+    case NP_ACCEPT_INVALID_FRAMES:
       btValue = (bEnable) ? SYMBOL_RX_NO_ERROR : 0x00;
-      if (!pn53x_write_register (pnd, PN53X_REG_CIU_RxMode, SYMBOL_RX_NO_ERROR, btValue))
-        return false;
+      return pn53x_write_register (pnd, PN53X_REG_CIU_RxMode, SYMBOL_RX_NO_ERROR, btValue);
       break;
 
-    case NDO_ACCEPT_MULTIPLE_FRAMES:
+    case NP_ACCEPT_MULTIPLE_FRAMES:
       btValue = (bEnable) ? SYMBOL_RX_MULTIPLE : 0x00;
-      if (!pn53x_write_register (pnd, PN53X_REG_CIU_RxMode, SYMBOL_RX_MULTIPLE, btValue))
-        return false;
-      return true;
+      return pn53x_write_register (pnd, PN53X_REG_CIU_RxMode, SYMBOL_RX_MULTIPLE, btValue);
       break;
 
-    case NDO_AUTO_ISO14443_4:
+    case NP_AUTO_ISO14443_4:
       if (bEnable == pnd->bAutoIso14443_4)
         // Nothing to do
-        return true;
+        return NFC_SUCCESS;
       pnd->bAutoIso14443_4 = bEnable;
-      return pn53x_set_parameters (pnd, PARAM_AUTO_RATS, bEnable);
+      if (pn53x_set_parameters (pnd, PARAM_AUTO_RATS, bEnable) == 0)
+        return NFC_SUCCESS;
       break;
 
-    case NDO_FORCE_ISO14443_A:
+    case NP_FORCE_ISO14443_A:
       if(!bEnable) {
         // Nothing to do
-        return true;
+        return NFC_SUCCESS;
       }
       // Force pn53x to be in ISO14443-A mode
-      if (!pn53x_write_register (pnd, PN53X_REG_CIU_TxMode, SYMBOL_TX_FRAMING, 0x00)) {
-        return false;
+      if ((res = pn53x_write_register (pnd, PN53X_REG_CIU_TxMode, SYMBOL_TX_FRAMING, 0x00)) < 0) {
+        return res;
       }
-      if (!pn53x_write_register (pnd, PN53X_REG_CIU_RxMode, SYMBOL_RX_FRAMING, 0x00)) {
-        return false;
+      if ((res = pn53x_write_register (pnd, PN53X_REG_CIU_RxMode, SYMBOL_RX_FRAMING, 0x00)) < 0) {
+        return res;
       }
       // Set the PN53X to force 100% ASK Modified miller decoding (default for 14443A cards)
-      if (!pn53x_write_register (pnd, PN53X_REG_CIU_TxAuto, SYMBOL_FORCE_100_ASK, 0x40))
-        return false;
-
-      return true;
+      return pn53x_write_register (pnd, PN53X_REG_CIU_TxAuto, SYMBOL_FORCE_100_ASK, 0x40);
       break;
 
-    case NDO_FORCE_ISO14443_B:
+    case NP_FORCE_ISO14443_B:
       if(!bEnable) {
         // Nothing to do
-        return true;
+        return NFC_SUCCESS;
       }
       // Force pn53x to be in ISO14443-B mode
-      if (!pn53x_write_register (pnd, PN53X_REG_CIU_TxMode, SYMBOL_TX_FRAMING, 0x03)) {
-        return false;
+      if ((res = pn53x_write_register (pnd, PN53X_REG_CIU_TxMode, SYMBOL_TX_FRAMING, 0x03)) < 0) {
+        return res;
       }
-      if (!pn53x_write_register (pnd, PN53X_REG_CIU_RxMode, SYMBOL_RX_FRAMING, 0x03)) {
-        return false;
-      }
-
-      return true;
+      return pn53x_write_register (pnd, PN53X_REG_CIU_RxMode, SYMBOL_RX_FRAMING, 0x03);
       break;
 
-    case NDO_FORCE_SPEED_106:
+    case NP_FORCE_SPEED_106:
       if(!bEnable) {
         // Nothing to do
-        return true;
+        return NFC_SUCCESS;
       }
       // Force pn53x to be at 106 kbps
-      if (!pn53x_write_register (pnd, PN53X_REG_CIU_TxMode, SYMBOL_TX_SPEED, 0x00)) {
-        return false;
+      if ((res = pn53x_write_register (pnd, PN53X_REG_CIU_TxMode, SYMBOL_TX_SPEED, 0x00)) < 0) {
+        return res;
       }
-      if (!pn53x_write_register (pnd, PN53X_REG_CIU_RxMode, SYMBOL_RX_SPEED, 0x00)) {
-        return false;
-      }
-
-      return true;
+      return pn53x_write_register (pnd, PN53X_REG_CIU_RxMode, SYMBOL_RX_SPEED, 0x00);
+      break;
+    // Not boolean property
+    case NP_TIMEOUT_COMMAND:
+    case NP_TIMEOUT_ATR:
+    case NP_TIMEOUT_COM:
+      return NFC_EINVARG;
       break;
   }
 
-  // When we reach this, the configuration is completed and successful
-  return true;
+  return NFC_EINVARG;
 }
 
-bool
-pn53x_idle (nfc_device_t *pnd)
+int
+pn53x_idle (struct nfc_device *pnd)
 {
+  int res = 0;
   switch (CHIP_DATA (pnd)->operating_mode) {
     case TARGET:
       // InRelease used in target mode stops the target emulation and no more
       // tag are seen from external initiator
-      if (!pn53x_InRelease (pnd, 0)) {
-        return false;
+      if ((res = pn53x_InRelease (pnd, 0)) < 0) {
+        return res;
       }
       if (CHIP_DATA (pnd)->type == PN532) {
         // Use PowerDown to go in "Low VBat" power mode
-        if (!pn53x_PowerDown (pnd)) {
-          return false;
+        if ((res = pn53x_PowerDown (pnd)) < 0) {
+          return res;
         }
         CHIP_DATA (pnd)->power_mode = LOWVBAT;
       }
     break;
     case INITIATOR:
       // Deselect all active communications
-      if (!pn53x_InDeselect (pnd, 0)) {
-        return false;
+      if ((res = pn53x_InDeselect (pnd, 0)) < 0) {
+        return res;
       }
       // Disable RF field to avoid heating
-      if (!nfc_configure (pnd, NDO_ACTIVATE_FIELD, false)) {
-        return false;
+      if ((res = nfc_device_set_property_bool (pnd, NP_ACTIVATE_FIELD, false)) < 0) {
+        return res;
       }
       if (CHIP_DATA (pnd)->type == PN532) {
         // Use PowerDown to go in "Low VBat" power mode
-        if (!pn53x_PowerDown (pnd)) {
-          return false;
+        if ((res = pn53x_PowerDown (pnd)) < 0) {
+          return res;
         }
         CHIP_DATA (pnd)->power_mode = LOWVBAT;
       } else {
         // Use InRelease to go in "Standby mode"
-        if (!pn53x_InRelease (pnd, 0)) {
-          return false;
+        if ((res = pn53x_InRelease (pnd, 0)) < 0) {
+          return res;
         }
       }
     break;
@@ -821,173 +926,173 @@ pn53x_idle (nfc_device_t *pnd)
     break;
   };
   CHIP_DATA (pnd)->operating_mode = IDLE;
-  return true;
+  return NFC_SUCCESS;
 }
 
-bool
-pn53x_check_communication (nfc_device_t *pnd)
+int
+pn53x_check_communication (struct nfc_device *pnd)
 {
-  const byte_t abtCmd[] = { Diagnose, 0x00, 'l', 'i', 'b', 'n', 'f', 'c' };
-  const byte_t abtExpectedRx[] = { 0x00, 'l', 'i', 'b', 'n', 'f', 'c' };
-  byte_t abtRx[sizeof(abtExpectedRx)];
+  const uint8_t abtCmd[] = { Diagnose, 0x00, 'l', 'i', 'b', 'n', 'f', 'c' };
+  const uint8_t abtExpectedRx[] = { 0x00, 'l', 'i', 'b', 'n', 'f', 'c' };
+  uint8_t abtRx[sizeof(abtExpectedRx)];
   size_t szRx = sizeof (abtRx);
+  int res = 0;
 
-  struct timeval timeout;
-  timeout.tv_sec = 1;
-  timeout.tv_usec = 0;
-
-  if (!pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), abtRx, &szRx, &timeout))
-    return false;
-
-  return ((sizeof(abtExpectedRx) == szRx) && (0 == memcmp (abtRx, abtExpectedRx, sizeof(abtExpectedRx))));
+  if ((res = pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), abtRx, szRx, 500)) < 0)
+    return res;
+  szRx = (size_t) res;
+  if ((sizeof(abtExpectedRx) == szRx) && (0 == memcmp (abtRx, abtExpectedRx, sizeof(abtExpectedRx))))
+    return NFC_SUCCESS;
+  
+  return NFC_EIO;
 }
 
-bool
-pn53x_initiator_init (nfc_device_t * pnd)
+int
+pn53x_initiator_init (struct nfc_device *pnd)
 {
   pn53x_reset_settings(pnd);
+  int res = 0;
 
   // Configure the PN53X to be an Initiator or Reader/Writer
-  if (!pn53x_write_register (pnd, PN53X_REG_CIU_Control, SYMBOL_INITIATOR, 0x10))
-    return false;
+  if ((res = pn53x_write_register (pnd, PN53X_REG_CIU_Control, SYMBOL_INITIATOR, 0x10)) < 0)
+    return res;
 
   CHIP_DATA (pnd)->operating_mode = INITIATOR;
-  return true;
+  return NFC_SUCCESS;
 }
 
-bool
-pn53x_initiator_select_passive_target_ext (nfc_device_t * pnd,
-                                       const nfc_modulation_t nm,
-                                       const byte_t * pbtInitData, const size_t szInitData,
-                                       nfc_target_t * pnt,
-                                       struct timeval* timeout)
+int
+pn53x_initiator_select_passive_target_ext (struct nfc_device *pnd,
+                                       const nfc_modulation nm,
+                                       const uint8_t *pbtInitData, const size_t szInitData,
+                                       nfc_target *pnt,
+                                       int timeout)
 {
-  byte_t  abtTargetsData[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
+  uint8_t  abtTargetsData[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
   size_t  szTargetsData = sizeof(abtTargetsData);
+  int res = 0;
 
   if (nm.nmt == NMT_ISO14443BI || nm.nmt == NMT_ISO14443B2SR || nm.nmt == NMT_ISO14443B2CT) {
     if (CHIP_DATA(pnd)->type == RCS360) {
       // TODO add support for RC-S360, at the moment it refuses to send raw frames without a first select
-      pnd->iLastError = ENOTIMPL;
-      return false;
+      pnd->last_error = NFC_ENOTIMPL;
+      return pnd->last_error;
     }
     // No native support in InListPassiveTarget so we do discovery by hand
-    if (!nfc_configure (pnd, NDO_FORCE_ISO14443_B, true)) {
-      return false;
+    if ((res = nfc_device_set_property_bool (pnd, NP_FORCE_ISO14443_B, true)) < 0) {
+      return res;
     }
-    if (!nfc_configure (pnd, NDO_FORCE_SPEED_106, true)) {
-      return false;
+    if ((res = nfc_device_set_property_bool (pnd, NP_FORCE_SPEED_106, true)) < 0) {
+      return res;
     }
-    if (!nfc_configure (pnd, NDO_HANDLE_CRC, true)) {
-      return false;
+    if ((res = nfc_device_set_property_bool (pnd, NP_HANDLE_CRC, true)) < 0) {
+      return res;
     }
     pnd->bEasyFraming = false;
     if (nm.nmt == NMT_ISO14443B2SR) {
       // Some work to do before getting the UID...
-      byte_t abtInitiate[]="\x06\x00";
+      uint8_t abtInitiate[]="\x06\x00";
       size_t szInitiateLen = 2;
-      byte_t abtSelect[]="\x0e\x00";
+      uint8_t abtSelect[]="\x0e\x00";
       size_t szSelectLen = 2;
-      byte_t abtRx[1];
+      uint8_t abtRx[1];
       size_t szRxLen = 1;
       // Getting random Chip_ID
-      if (!pn53x_initiator_transceive_bytes (pnd, abtInitiate, szInitiateLen, abtRx, &szRxLen, timeout)) {
-        return false;
+      if ((res = pn53x_initiator_transceive_bytes (pnd, abtInitiate, szInitiateLen, abtRx, &szRxLen, timeout)) < 0) {
+        return res;
       }
       abtSelect[1] = abtRx[0];
-      if (!pn53x_initiator_transceive_bytes (pnd, abtSelect, szSelectLen, abtRx, &szRxLen, timeout)) {
-        return false;
+      if ((res = pn53x_initiator_transceive_bytes (pnd, abtSelect, szSelectLen, abtRx, &szRxLen, timeout)) < 0) {
+        return res;
       }
     }
     else if (nm.nmt == NMT_ISO14443B2CT) {
       // Some work to do before getting the UID...
-      byte_t abtReqt[]="\x10";
+      uint8_t abtReqt[]="\x10";
       size_t szReqtLen = 1;
       // Getting product code / fab code & store it in output buffer after the serial nr we'll obtain later
-      if (!pn53x_initiator_transceive_bytes (pnd, abtReqt, szReqtLen, abtTargetsData+2, &szTargetsData, timeout) || szTargetsData != 2) {
-        return false;
+      if ((res = pn53x_initiator_transceive_bytes (pnd, abtReqt, szReqtLen, abtTargetsData+2, &szTargetsData, timeout)) < 0) {
+        return res;        
       }
     }
-    if (!pn53x_initiator_transceive_bytes (pnd, pbtInitData, szInitData, abtTargetsData, &szTargetsData, timeout)) {
-      return false;
+    if ((res = pn53x_initiator_transceive_bytes (pnd, pbtInitData, szInitData, abtTargetsData, &szTargetsData, timeout)) < 0) {
+      return res;
     }
     if (nm.nmt == NMT_ISO14443B2CT) {
       if (szTargetsData != 2)
-        return false;
-      byte_t abtRead[]="\xC4"; // Reading UID_MSB (Read address 4)
+        return NFC_ECHIP;
+      uint8_t abtRead[]="\xC4"; // Reading UID_MSB (Read address 4)
       size_t szReadLen = 1;
-      if (!pn53x_initiator_transceive_bytes (pnd, abtRead, szReadLen, abtTargetsData+4, &szTargetsData, timeout) || szTargetsData != 2) {
-        return false;
+      if ((res = pn53x_initiator_transceive_bytes (pnd, abtRead, szReadLen, abtTargetsData+4, &szTargetsData, timeout) < 0)) {
+        return res;
       }
       szTargetsData = 6; // u16 UID_LSB, u8 prod code, u8 fab code, u16 UID_MSB
     }
     if (pnt) {
       pnt->nm = nm;
       // Fill the tag info struct with the values corresponding to this init modulation
-      if (!pn53x_decode_target_data (abtTargetsData, szTargetsData, CHIP_DATA(pnd)->type, nm.nmt, &(pnt->nti))) {
-        return false;
+      if ((res = pn53x_decode_target_data (abtTargetsData, szTargetsData, CHIP_DATA(pnd)->type, nm.nmt, &(pnt->nti))) < 0 ) {
+        return res;
       }
     }
     if (nm.nmt == NMT_ISO14443BI) {
       // Select tag
-      byte_t abtAttrib[6];
+      uint8_t abtAttrib[6];
       size_t szAttribLen = sizeof(abtAttrib);
       memcpy(abtAttrib, abtTargetsData, szAttribLen);
       abtAttrib[1] = 0x0f; // ATTRIB
-      if (!pn53x_initiator_transceive_bytes (pnd, abtAttrib, szAttribLen, NULL, NULL, timeout)) {
-        return false;
+      if ((res = pn53x_initiator_transceive_bytes (pnd, abtAttrib, szAttribLen, NULL, NULL, timeout)) < 0) {
+        return res;
       }
     }
-    return true;
+    return abtTargetsData[0];
   } // else:
 
-  const pn53x_modulation_t pm = pn53x_nm_to_pm(nm);
+  const pn53x_modulation pm = pn53x_nm_to_pm(nm);
   if (PM_UNDEFINED == pm) {
-    pnd->iLastError = EINVALARG;
-    return false;
+    pnd->last_error = NFC_EINVARG;
+    return pnd->last_error;
   }
 
-  if (!pn53x_InListPassiveTarget (pnd, pm, 1, pbtInitData, szInitData, abtTargetsData, &szTargetsData, timeout))
-    return false;
-
-  // Make sure one tag has been found, the PN53X returns 0x00 if none was available
-  if (abtTargetsData[0] == 0)
-    return false;
+  if ((res = pn53x_InListPassiveTarget (pnd, pm, 1, pbtInitData, szInitData, abtTargetsData, &szTargetsData, timeout)) <= 0)
+    return res;
 
   // Is a tag info struct available
   if (pnt) {
     pnt->nm = nm;
     // Fill the tag info struct with the values corresponding to this init modulation
-    if (!pn53x_decode_target_data (abtTargetsData + 1, szTargetsData - 1, CHIP_DATA(pnd)->type, nm.nmt, &(pnt->nti))) {
-      return false;
+    if ((res = pn53x_decode_target_data (abtTargetsData + 1, szTargetsData - 1, CHIP_DATA(pnd)->type, nm.nmt, &(pnt->nti)) < 0)) {
+      return res;
     }
   }
-  return true;
+  return abtTargetsData[0];
 }
 
-bool
-pn53x_initiator_select_passive_target (nfc_device_t * pnd,
-                                       const nfc_modulation_t nm,
-                                       const byte_t * pbtInitData, const size_t szInitData,
-                                       nfc_target_t * pnt)
+int
+pn53x_initiator_select_passive_target (struct nfc_device *pnd,
+                                       const nfc_modulation nm,
+                                       const uint8_t *pbtInitData, const size_t szInitData,
+                                       nfc_target *pnt)
 {
-  return pn53x_initiator_select_passive_target_ext (pnd, nm, pbtInitData, szInitData, pnt, NULL);
+  return pn53x_initiator_select_passive_target_ext (pnd, nm, pbtInitData, szInitData, pnt, 0);
 }
 
-bool
-pn53x_initiator_poll_target (nfc_device_t * pnd,
-                              const nfc_modulation_t * pnmModulations, const size_t szModulations,
+int
+pn53x_initiator_poll_target (struct nfc_device *pnd,
+                              const nfc_modulation *pnmModulations, const size_t szModulations,
                               const uint8_t uiPollNr, const uint8_t uiPeriod,
-                              nfc_target_t * pnt)
+                              nfc_target *pnt)
 {
+  int res = 0;
+  
   if (CHIP_DATA(pnd)->type == PN532) {
     size_t szTargetTypes = 0;
-    pn53x_target_type_t apttTargetTypes[32];
-    for (size_t n=0; n<szModulations; n++) {
-      const pn53x_target_type_t ptt = pn53x_nm_to_ptt(pnmModulations[n]);
+    pn53x_target_type apttTargetTypes[32];
+    for (size_t n = 0; n < szModulations; n++) {
+      const pn53x_target_type ptt = pn53x_nm_to_ptt(pnmModulations[n]);
       if (PTT_UNDEFINED == ptt) {
-        pnd->iLastError = EINVALARG;
-        return false;
+        pnd->last_error = NFC_EINVARG;
+        return pnd->last_error;
       }
       apttTargetTypes[szTargetTypes] = ptt;
       if ((pnd->bAutoIso14443_4) && (ptt == PTT_MIFARE)) { // Hack to have ATS
@@ -997,58 +1102,58 @@ pn53x_initiator_poll_target (nfc_device_t * pnd,
       }
       szTargetTypes++;
     }
-    size_t szTargetFound = 0;
-    nfc_target_t ntTargets[2];
-    if (!pn53x_InAutoPoll (pnd, apttTargetTypes, szTargetTypes, uiPollNr, uiPeriod, ntTargets, &szTargetFound))
-      return false;
-    switch (szTargetFound) {
+    nfc_target ntTargets[2];
+    if ((res = pn53x_InAutoPoll (pnd, apttTargetTypes, szTargetTypes, uiPollNr, uiPeriod, ntTargets, 0)) < 0)
+      return res;
+    switch (res) {
       case 1:
         *pnt = ntTargets[0];
-        return true;
+        return res;
         break;
       case 2:
         *pnt = ntTargets[1]; // We keep the selected one
-        return true;
+        return res;
         break;
       default:
-        return false;
+        return NFC_ECHIP;
       break;
     }
   } else {
-    pn53x_configure (pnd, NDO_INFINITE_SELECT, true);
+    pn53x_set_property_bool (pnd, NP_INFINITE_SELECT, true);
     // FIXME It does not support DEP targets
     do {
-      for (size_t p=0; p<uiPollNr; p++) {
-        for (size_t n=0; n<szModulations; n++) {
-          byte_t *pbtInitiatorData;
+      for (size_t p = 0; p < uiPollNr; p++) {
+        for (size_t n = 0; n < szModulations; n++) {
+          uint8_t *pbtInitiatorData;
           size_t szInitiatorData;
           prepare_initiator_data (pnmModulations[n], &pbtInitiatorData, &szInitiatorData);
           const int timeout_ms = uiPeriod * 150;
-          struct timeval timeout;
-          timeout.tv_sec = timeout_ms / 1000;
-          timeout.tv_usec = (timeout_ms - (timeout.tv_sec * 1000)) * 1000;
     
-          if (!pn53x_initiator_select_passive_target_ext (pnd, pnmModulations[n], pbtInitiatorData, szInitiatorData, pnt, &timeout)) {
-            if (pnd->iLastError != ECOMTIMEOUT)
-              return false;
+          if ((res = pn53x_initiator_select_passive_target_ext (pnd, pnmModulations[n], pbtInitiatorData, szInitiatorData, pnt, timeout_ms)) < 0) {
+            if (pnd->last_error != NFC_ETIMEOUT) {
+              return pnd->last_error;
+            }
           } else {
-            return true;
+            return res;
           }
         }
       }
     } while (uiPollNr==0xff); // uiPollNr==0xff means infinite polling
+    // We reach this point when each listing give no result, we simply have to return 0
+    return 0;
   }
-  return false;
+  return NFC_ECHIP;
 }
 
-bool
-pn53x_initiator_select_dep_target(nfc_device_t * pnd,
-                                  const nfc_dep_mode_t ndm, const nfc_baud_rate_t nbr,
-                                  const nfc_dep_info_t * pndiInitiator,
-                                  nfc_target_t * pnt)
+int
+pn53x_initiator_select_dep_target (struct nfc_device *pnd,
+                                  const nfc_dep_mode ndm, const nfc_baud_rate nbr,
+                                  const nfc_dep_info *pndiInitiator,
+                                  nfc_target *pnt,
+                                  const int timeout)
 {
-  const byte_t abtPassiveInitiatorData[] = { 0x00, 0xff, 0xff, 0x00, 0x00 }; // Only for 212/424 kpbs: First 4 bytes shall be set like this according to NFCIP-1, last byte is TSN (Time Slot Number)
-  const byte_t * pbtPassiveInitiatorData = NULL;
+  const uint8_t abtPassiveInitiatorData[] = { 0x00, 0xff, 0xff, 0x00, 0x0f }; // Only for 212/424 kpbs: First 4 bytes shall be set like this according to NFCIP-1, last byte is TSN (Time Slot Number)
+  const uint8_t * pbtPassiveInitiatorData = NULL;
 
   switch (nbr) {
     case NBR_212:
@@ -1063,26 +1168,30 @@ pn53x_initiator_select_dep_target(nfc_device_t * pnd,
   }
 
   if (pndiInitiator) {
-    return pn53x_InJumpForDEP (pnd, ndm, nbr, pbtPassiveInitiatorData, pndiInitiator->abtNFCID3, pndiInitiator->abtGB, pndiInitiator->szGB, pnt);
+    return pn53x_InJumpForDEP (pnd, ndm, nbr, pbtPassiveInitiatorData, pndiInitiator->abtNFCID3, pndiInitiator->abtGB, pndiInitiator->szGB, pnt, timeout);
   } else {
-    return pn53x_InJumpForDEP (pnd, ndm, nbr, pbtPassiveInitiatorData, NULL, NULL, 0, pnt);
+    return pn53x_InJumpForDEP (pnd, ndm, nbr, pbtPassiveInitiatorData, NULL, NULL, 0, pnt, timeout);
   }
 }
 
-bool
-pn53x_initiator_transceive_bits (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxBits,
-                                 const byte_t * pbtTxPar, byte_t * pbtRx, size_t * pszRxBits, byte_t * pbtRxPar)
+int
+pn53x_initiator_transceive_bits (struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szTxBits,
+                                 const uint8_t *pbtTxPar, uint8_t *pbtRx, uint8_t *pbtRxPar)
 {
+  int res = 0;
   size_t  szFrameBits = 0;
   size_t  szFrameBytes = 0;
+  size_t szRxBits = 0;
   uint8_t ui8rcc;
   uint8_t ui8Bits = 0;
-  byte_t  abtCmd[PN53x_EXTENDED_FRAME__DATA_MAX_LEN] = { InCommunicateThru };
+  uint8_t  abtCmd[PN53x_EXTENDED_FRAME__DATA_MAX_LEN] = { InCommunicateThru };
 
   // Check if we should prepare the parity bits ourself
   if (!pnd->bPar) {
     // Convert data with parity to a frame
-    pn53x_wrap_frame (pbtTx, szTxBits, pbtTxPar, abtCmd + 1, &szFrameBits);
+    if ((res = pn53x_wrap_frame (pbtTx, szTxBits, pbtTxPar, abtCmd + 1)) < 0)
+      return res;
+    szFrameBits = res;
   } else {
     szFrameBits = szTxBits;
   }
@@ -1098,19 +1207,19 @@ pn53x_initiator_transceive_bits (nfc_device_t * pnd, const byte_t * pbtTx, const
     memcpy (abtCmd + 1, pbtTx, szFrameBytes);
 
   // Set the amount of transmission bits in the PN53X chip register
-  if (!pn53x_set_tx_bits (pnd, ui8Bits))
-    return false;
+  if ((res = pn53x_set_tx_bits (pnd, ui8Bits)) < 0)
+    return res;
 
   // Send the frame to the PN53X chip and get the answer
   // We have to give the amount of bytes + (the command byte 0x42)
-  byte_t  abtRx[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
+  uint8_t  abtRx[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
   size_t  szRx = sizeof(abtRx);
-  if (!pn53x_transceive (pnd, abtCmd, szFrameBytes + 1, abtRx, &szRx, NULL))
-    return false;
-
+  if ((res = pn53x_transceive (pnd, abtCmd, szFrameBytes + 1, abtRx, szRx, -1)) < 0)
+    return res;
+  szRx = (size_t) res;
   // Get the last bit-count that is stored in the received byte
-  if (!pn53x_read_register (pnd, PN53X_REG_CIU_Control, &ui8rcc))
-    return false;
+  if ((res = pn53x_read_register (pnd, PN53X_REG_CIU_Control, &ui8rcc)) < 0)
+    return res;
   ui8Bits = ui8rcc & SYMBOL_RX_LAST_BITS;
 
   // Recover the real frame length in bits
@@ -1121,29 +1230,32 @@ pn53x_initiator_transceive_bits (nfc_device_t * pnd, const byte_t * pbtTx, const
     // Check if we should recover the parity bits ourself
     if (!pnd->bPar) {
       // Unwrap the response frame
-      pn53x_unwrap_frame (abtRx + 1, szFrameBits, pbtRx, pszRxBits, pbtRxPar);
+      if ((res = pn53x_unwrap_frame (abtRx + 1, szFrameBits, pbtRx, pbtRxPar)) < 0)
+        return res;
+      szRxBits = res;
     } else {
       // Save the received bits
-      *pszRxBits = szFrameBits;
+      szRxBits = szFrameBits;
       // Copy the received bytes
       memcpy (pbtRx, abtRx + 1, szRx - 1);
     }
   }
   // Everything went successful
-  return true;
+  return szRxBits;
 }
 
-bool
-pn53x_initiator_transceive_bytes (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, byte_t * pbtRx,
-                                  size_t * pszRx, struct timeval *timeout)
+int
+pn53x_initiator_transceive_bytes (struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szTx, uint8_t *pbtRx,
+                                  size_t *pszRx, int timeout)
 {
   size_t  szExtraTxLen;
-  byte_t  abtCmd[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
+  uint8_t  abtCmd[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
+  int res = 0;
 
   // We can not just send bytes without parity if while the PN53X expects we handled them
   if (!pnd->bPar) {
-    pnd->iLastError = EINVALARG;
-    return false;
+    pnd->last_error = NFC_EINVARG;
+    return pnd->last_error;
   }
 
   // Copy the data into the command frame
@@ -1159,16 +1271,21 @@ pn53x_initiator_transceive_bytes (nfc_device_t * pnd, const byte_t * pbtTx, cons
   }
 
   // To transfer command frames bytes we can not have any leading bits, reset this to zero
-  if (!pn53x_set_tx_bits (pnd, 0))
-    return false;
+  if ((res = pn53x_set_tx_bits (pnd, 0)) < 0) {
+    pnd->last_error = res;
+    return pnd->last_error;
+  }
 
   // Send the frame to the PN53X chip and get the answer
   // We have to give the amount of bytes + (the two command bytes 0xD4, 0x42)
-  byte_t  abtRx[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
+  uint8_t  abtRx[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
   size_t  szRx = sizeof(abtRx);
-  if (!pn53x_transceive (pnd, abtCmd, szTx + szExtraTxLen, abtRx, &szRx, timeout))
-    return false;
 
+  if ((res = pn53x_transceive (pnd, abtCmd, szTx + szExtraTxLen, abtRx, szRx, timeout)) < 0) {
+      pnd->last_error = res;
+      return pnd->last_error;
+  }
+  szRx = (size_t) res;
   if (pbtRx != NULL) {
     // Save the received byte count
     *pszRx = szRx - 1;
@@ -1176,11 +1293,11 @@ pn53x_initiator_transceive_bytes (nfc_device_t * pnd, const byte_t * pbtTx, cons
     // Copy the received bytes
     memcpy (pbtRx, abtRx + 1, *pszRx);
   }
-  // Everything went successful
-  return true;
+  // Everything went successful, we return received bytes count
+  return *pszRx;
 }
 
-void __pn53x_init_timer(nfc_device_t * pnd, const uint32_t max_cycles)
+void __pn53x_init_timer(struct nfc_device *pnd, const uint32_t max_cycles)
 {
 // The prescaler will dictate what will be the precision and
 // the largest delay to measure before saturation. Some examples:
@@ -1201,7 +1318,7 @@ void __pn53x_init_timer(nfc_device_t * pnd, const uint32_t max_cycles)
   pn53x_write_register (pnd, PN53X_REG_CIU_TReloadVal_lo, 0xFF, reloadval & 0xFF);
 }
 
-uint32_t __pn53x_get_timer(nfc_device_t * pnd, const uint8_t last_cmd_byte)
+uint32_t __pn53x_get_timer(struct nfc_device *pnd, const uint8_t last_cmd_byte)
 {
   uint8_t parity;
   uint8_t counter_hi, counter_lo;
@@ -1222,7 +1339,7 @@ uint32_t __pn53x_get_timer(nfc_device_t * pnd, const uint8_t last_cmd_byte)
   uint8_t abtRes[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
   size_t szRes = sizeof(abtRes);
   // Let's send the previously constructed ReadRegister command
-  if (!pn53x_transceive (pnd, abtReadRegisterCmd, BUFFER_SIZE (abtReadRegisterCmd), abtRes, &szRes, NULL)) {
+  if (pn53x_transceive (pnd, abtReadRegisterCmd, BUFFER_SIZE (abtReadRegisterCmd), abtRes, szRes, -1) < 0) {
     return false;
   }
   counter_hi = abtRes[off];
@@ -1261,30 +1378,32 @@ uint32_t __pn53x_get_timer(nfc_device_t * pnd, const uint8_t last_cmd_byte)
   return u32cycles;
 }
 
-bool
-pn53x_initiator_transceive_bits_timed (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxBits,
-                                       const byte_t * pbtTxPar, byte_t * pbtRx, size_t * pszRxBits, byte_t * pbtRxPar, uint32_t * cycles)
+int
+pn53x_initiator_transceive_bits_timed (struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szTxBits,
+                                       const uint8_t *pbtTxPar, uint8_t *pbtRx, uint8_t *pbtRxPar, uint32_t *cycles)
 {
   // TODO Do something with these bytes...
   (void) pbtTxPar;
   (void) pbtRxPar;
   uint16_t i;
   uint8_t sz;
+  int res = 0;
+  size_t szRxBits = 0;
 
   // Sorry, no arbitrary parity bits support for now
   if (!pnd->bPar) {
-    pnd->iLastError = ENOTIMPL;
-    return false;
+    pnd->last_error = NFC_ENOTIMPL;
+    return pnd->last_error;
   }
   // Sorry, no easy framing support
   if (pnd->bEasyFraming) {
-    pnd->iLastError = ENOTIMPL;
-    return false;
+    pnd->last_error = NFC_ENOTIMPL;
+    return pnd->last_error;
   }
   // TODO CRC support but it probably doesn't make sense for (szTxBits % 8 != 0) ...
   if (pnd->bCrc) {
-    pnd->iLastError = ENOTIMPL;
-    return false;
+    pnd->last_error = NFC_ENOTIMPL;
+    return pnd->last_error;
   }
 
   __pn53x_init_timer(pnd, *cycles);
@@ -1302,7 +1421,7 @@ pn53x_initiator_transceive_bits_timed (nfc_device_t * pnd, const byte_t * pbtTx,
   BUFFER_APPEND (abtWriteRegisterCmd, PN53X_REG_CIU_FIFOLevel  >> 8);
   BUFFER_APPEND (abtWriteRegisterCmd, PN53X_REG_CIU_FIFOLevel & 0xff);
   BUFFER_APPEND (abtWriteRegisterCmd, SYMBOL_FLUSH_BUFFER);
-  for (i=0; i< ((szTxBits / 8) + 1); i++) {
+  for (i = 0; i < ((szTxBits / 8) + 1); i++) {
     BUFFER_APPEND (abtWriteRegisterCmd, PN53X_REG_CIU_FIFOData  >> 8);
     BUFFER_APPEND (abtWriteRegisterCmd, PN53X_REG_CIU_FIFOData & 0xff);
     BUFFER_APPEND (abtWriteRegisterCmd, pbtTx[i]);
@@ -1312,17 +1431,16 @@ pn53x_initiator_transceive_bits_timed (nfc_device_t * pnd, const byte_t * pbtTx,
   BUFFER_APPEND (abtWriteRegisterCmd, PN53X_REG_CIU_BitFraming & 0xff);
   BUFFER_APPEND (abtWriteRegisterCmd, SYMBOL_START_SEND | ((szTxBits % 8) & SYMBOL_TX_LAST_BITS));
   // Let's send the previously constructed WriteRegister command
-  if (!pn53x_transceive (pnd, abtWriteRegisterCmd, BUFFER_SIZE (abtWriteRegisterCmd), NULL, NULL, NULL)) {
-    return false;
+  if ((res = pn53x_transceive (pnd, abtWriteRegisterCmd, BUFFER_SIZE (abtWriteRegisterCmd), NULL, 0, -1)) < 0) {
+    return res;
   }
 
   // Recv data
-  *pszRxBits = 0;
   // we've to watch for coming data until we decide to timeout.
   // our PN53x timer saturates after 4.8ms so this function shouldn't be used for
   // responses coming very late anyway.
   // Ideally we should implement a real timer here too but looping a few times is good enough.
-  for (i=0; i<(3 *(CHIP_DATA (pnd)->timer_prescaler * 2 + 1)); i++) {
+  for (i = 0; i < (3 *(CHIP_DATA (pnd)->timer_prescaler * 2 + 1)); i++) {
     pn53x_read_register (pnd, PN53X_REG_CIU_FIFOLevel, &sz);
     if (sz > 0)
       break;
@@ -1335,7 +1453,7 @@ pn53x_initiator_transceive_bits_timed (nfc_device_t * pnd, const byte_t * pbtTx,
   while (1) {
     BUFFER_INIT (abtReadRegisterCmd, PN53x_EXTENDED_FRAME__DATA_MAX_LEN);
     BUFFER_APPEND (abtReadRegisterCmd, ReadRegister);
-    for (i=0; i<sz; i++) {
+    for (i = 0; i < sz; i++) {
       BUFFER_APPEND (abtReadRegisterCmd, PN53X_REG_CIU_FIFOData  >> 8);
       BUFFER_APPEND (abtReadRegisterCmd, PN53X_REG_CIU_FIFOData & 0xff);
     }
@@ -1344,42 +1462,42 @@ pn53x_initiator_transceive_bits_timed (nfc_device_t * pnd, const byte_t * pbtTx,
     uint8_t abtRes[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
     size_t szRes = sizeof(abtRes);
     // Let's send the previously constructed ReadRegister command
-    if (!pn53x_transceive (pnd, abtReadRegisterCmd, BUFFER_SIZE (abtReadRegisterCmd), abtRes, &szRes, NULL)) {
-      return false;
+    if ((res = pn53x_transceive (pnd, abtReadRegisterCmd, BUFFER_SIZE (abtReadRegisterCmd), abtRes, szRes, -1)) < 0) {
+      return res;
     }
     for (i = 0; i < sz; i++) {
-      pbtRx[i+*pszRxBits] = abtRes[i+off];
+      pbtRx[i+szRxBits] = abtRes[i+off];
     }
-    *pszRxBits += (size_t) (sz & SYMBOL_FIFO_LEVEL);
+    szRxBits += (size_t) (sz & SYMBOL_FIFO_LEVEL);
     sz = abtRes[sz+off];
     if (sz == 0)
       break;
   }
-  *pszRxBits *= 8; // in bits, not bytes
+  szRxBits *= 8; // in bits, not bytes
 
   // Recv corrected timer value
   *cycles = __pn53x_get_timer (pnd, pbtTx[szTxBits / 8]);
 
-  return true;
+  return szRxBits;
 }
 
-bool
-pn53x_initiator_transceive_bytes_timed (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, byte_t * pbtRx,
-                                        size_t * pszRx, uint32_t * cycles)
+int
+pn53x_initiator_transceive_bytes_timed (struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szTx, uint8_t *pbtRx, uint32_t *cycles)
 {
   uint16_t i;
   uint8_t sz;
+  int res = 0;
 
   // We can not just send bytes without parity while the PN53X expects we handled them
   if (!pnd->bPar) {
-    pnd->iLastError = EINVALARG;
-    return false;
+    pnd->last_error = NFC_EINVARG;
+    return pnd->last_error;
   }
   // Sorry, no easy framing support
   // TODO to be changed once we'll provide easy framing support from libnfc itself...
   if (pnd->bEasyFraming) {
-    pnd->iLastError = ENOTIMPL;
-    return false;
+    pnd->last_error = NFC_ENOTIMPL;
+    return pnd->last_error;
   }
 
   __pn53x_init_timer(pnd, *cycles);
@@ -1397,7 +1515,7 @@ pn53x_initiator_transceive_bytes_timed (nfc_device_t * pnd, const byte_t * pbtTx
   BUFFER_APPEND (abtWriteRegisterCmd, PN53X_REG_CIU_FIFOLevel  >> 8);
   BUFFER_APPEND (abtWriteRegisterCmd, PN53X_REG_CIU_FIFOLevel & 0xff);
   BUFFER_APPEND (abtWriteRegisterCmd, SYMBOL_FLUSH_BUFFER);
-  for (i=0; i< szTx; i++) {
+  for (i = 0; i < szTx; i++) {
     BUFFER_APPEND (abtWriteRegisterCmd, PN53X_REG_CIU_FIFOData  >> 8);
     BUFFER_APPEND (abtWriteRegisterCmd, PN53X_REG_CIU_FIFOData & 0xff);
     BUFFER_APPEND (abtWriteRegisterCmd, pbtTx[i]);
@@ -1407,17 +1525,17 @@ pn53x_initiator_transceive_bytes_timed (nfc_device_t * pnd, const byte_t * pbtTx
   BUFFER_APPEND (abtWriteRegisterCmd, PN53X_REG_CIU_BitFraming & 0xff);
   BUFFER_APPEND (abtWriteRegisterCmd, SYMBOL_START_SEND);
   // Let's send the previously constructed WriteRegister command
-  if (!pn53x_transceive (pnd, abtWriteRegisterCmd, BUFFER_SIZE (abtWriteRegisterCmd), NULL, NULL, NULL)) {
-    return false;
+  if ((res = pn53x_transceive (pnd, abtWriteRegisterCmd, BUFFER_SIZE (abtWriteRegisterCmd), NULL, 0, -1)) < 0) {
+    return res;
   }
 
   // Recv data
-  *pszRx = 0;
+  size_t szRx = 0;
   // we've to watch for coming data until we decide to timeout.
   // our PN53x timer saturates after 4.8ms so this function shouldn't be used for
   // responses coming very late anyway.
   // Ideally we should implement a real timer here too but looping a few times is good enough.
-  for (i=0; i<(3 *(CHIP_DATA (pnd)->timer_prescaler * 2 + 1)); i++) {
+  for (i = 0; i < (3 *(CHIP_DATA (pnd)->timer_prescaler * 2 + 1)); i++) {
     pn53x_read_register (pnd, PN53X_REG_CIU_FIFOLevel, &sz);
     if (sz > 0)
       break;
@@ -1430,7 +1548,7 @@ pn53x_initiator_transceive_bytes_timed (nfc_device_t * pnd, const byte_t * pbtTx
   while (1) {
     BUFFER_INIT (abtReadRegisterCmd, PN53x_EXTENDED_FRAME__DATA_MAX_LEN);
     BUFFER_APPEND (abtReadRegisterCmd, ReadRegister);
-    for (i=0; i<sz; i++) {
+    for (i = 0; i < sz; i++) {
       BUFFER_APPEND (abtReadRegisterCmd, PN53X_REG_CIU_FIFOData  >> 8);
       BUFFER_APPEND (abtReadRegisterCmd, PN53X_REG_CIU_FIFOData & 0xff);
     }
@@ -1439,13 +1557,13 @@ pn53x_initiator_transceive_bytes_timed (nfc_device_t * pnd, const byte_t * pbtTx
     uint8_t abtRes[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
     size_t szRes = sizeof(abtRes);
     // Let's send the previously constructed ReadRegister command
-    if (!pn53x_transceive (pnd, abtReadRegisterCmd, BUFFER_SIZE (abtReadRegisterCmd), abtRes, &szRes, NULL)) {
-      return false;
+    if ((res = pn53x_transceive (pnd, abtReadRegisterCmd, BUFFER_SIZE (abtReadRegisterCmd), abtRes, szRes, -1)) < 0) {
+      return res;
     }
     for (i = 0; i < sz; i++) {
-      pbtRx[i+*pszRx] = abtRes[i+off];
+      pbtRx[i+szRx] = abtRes[i+off];
     }
-    *pszRx += (size_t) (sz & SYMBOL_FIFO_LEVEL);
+    szRx += (size_t) (sz & SYMBOL_FIFO_LEVEL);
     sz = abtRes[sz+off];
     if (sz == 0)
       break;
@@ -1454,7 +1572,7 @@ pn53x_initiator_transceive_bytes_timed (nfc_device_t * pnd, const byte_t * pbtTx
   // Recv corrected timer value
   if (pnd->bCrc) {
     // We've to compute CRC ourselves to know last byte actually sent
-    uint8_t * pbtTxRaw;
+    uint8_t *pbtTxRaw;
     pbtTxRaw = (uint8_t *) malloc(szTx+2);
     memcpy (pbtTxRaw, pbtTx, szTx);
     iso14443a_crc_append (pbtTxRaw, szTx);
@@ -1463,37 +1581,38 @@ pn53x_initiator_transceive_bytes_timed (nfc_device_t * pnd, const byte_t * pbtTx
   } else {
     *cycles = __pn53x_get_timer (pnd, pbtTx[szTx -1]);
   }
-  return true;
+  return szRx;
 }
 
-bool
-pn53x_initiator_deselect_target (nfc_device_t * pnd)
+int
+pn53x_initiator_deselect_target (struct nfc_device *pnd)
 {
-  return (pn53x_InDeselect (pnd, 0));   // 0 mean deselect all selected targets
+  return pn53x_InDeselect (pnd, 0);   // 0 mean deselect all selected targets
 }
 
 #define SAK_ISO14443_4_COMPLIANT 0x20
 #define SAK_ISO18092_COMPLIANT   0x40
-bool
-pn53x_target_init (nfc_device_t * pnd, nfc_target_t * pnt, byte_t * pbtRx, size_t * pszRx)
+int
+pn53x_target_init (struct nfc_device *pnd, nfc_target *pnt, uint8_t *pbtRx, const size_t szRxLen, int timeout)
 {
   pn53x_reset_settings(pnd);
 
   CHIP_DATA (pnd)->operating_mode = TARGET;
 
-  pn53x_target_mode_t ptm = PTM_NORMAL;
+  pn53x_target_mode ptm = PTM_NORMAL;
+  int res = 0;
 
   switch (pnt->nm.nmt) {
     case NMT_ISO14443A:
       ptm = PTM_PASSIVE_ONLY;
       if ((pnt->nti.nai.abtUid[0] != 0x08) || (pnt->nti.nai.szUidLen != 4)) {
-        pnd->iLastError = ETGUIDNOTSUP;
-        return false;
+        pnd->last_error = NFC_EINVARG;
+        return pnd->last_error;
       }
       pn53x_set_parameters (pnd, PARAM_AUTO_ATR_RES, false);
       if (CHIP_DATA(pnd)->type == PN532) { // We have a PN532
         if ((pnt->nti.nai.btSak & SAK_ISO14443_4_COMPLIANT) && (pnd->bAutoIso14443_4)) {
-          // We have a ISO14443-4 tag to emulate and NDO_AUTO_14443_4A option is enabled
+          // We have a ISO14443-4 tag to emulate and NP_AUTO_14443_4A option is enabled
           ptm |= PTM_ISO14443_4_PICC_ONLY; // We add ISO14443-4 restriction
           pn53x_set_parameters (pnd, PARAM_14443_4_PICC, true);
         } else {
@@ -1516,25 +1635,25 @@ pn53x_target_init (nfc_device_t * pnd, nfc_target_t * pnt, byte_t * pbtRx, size_
     case NMT_ISO14443B2SR:
     case NMT_ISO14443B2CT:
     case NMT_JEWEL:
-      pnd->iLastError = EDEVNOTSUP;
-      return false;
+      pnd->last_error = NFC_EDEVNOTSUPP;
+      return pnd->last_error;
     break;
   }
 
   // Let the PN53X be activated by the RF level detector from power down mode
-  if (!pn53x_write_register (pnd, PN53X_REG_CIU_TxAuto, SYMBOL_INITIAL_RF_ON, 0x04))
-    return false;
+  if ((res = pn53x_write_register (pnd, PN53X_REG_CIU_TxAuto, SYMBOL_INITIAL_RF_ON, 0x04)) < 0)
+    return res;
 
-  byte_t abtMifareParams[6];
-  byte_t * pbtMifareParams = NULL;
-  byte_t * pbtTkt = NULL;
+  uint8_t abtMifareParams[6];
+  uint8_t *pbtMifareParams = NULL;
+  uint8_t *pbtTkt = NULL;
   size_t szTkt = 0;
 
-  byte_t abtFeliCaParams[18];
-  byte_t * pbtFeliCaParams = NULL;
+  uint8_t abtFeliCaParams[18];
+  uint8_t *pbtFeliCaParams = NULL;
 
-  const byte_t * pbtNFCID3t = NULL;
-  const byte_t * pbtGBt = NULL;
+  const uint8_t *pbtNFCID3t = NULL;
+  const uint8_t *pbtGBt = NULL;
   size_t szGBt = 0;
 
   switch(pnt->nm.nmt) {
@@ -1618,24 +1737,28 @@ pn53x_target_init (nfc_device_t * pnd, nfc_target_t * pnt, byte_t * pbtRx, size_
     case NMT_ISO14443B2SR:
     case NMT_ISO14443B2CT:
     case NMT_JEWEL:
-      pnd->iLastError = EDEVNOTSUP;
-      return false;
+      pnd->last_error = NFC_EDEVNOTSUPP;
+      return pnd->last_error;
     break;
   }
 
   bool targetActivated = false;
+  size_t szRx;
   while (!targetActivated) {
-    byte_t btActivatedMode;
+    uint8_t btActivatedMode;
 
-    if(!pn53x_TgInitAsTarget(pnd, ptm, pbtMifareParams, pbtTkt, szTkt, pbtFeliCaParams, pbtNFCID3t, pbtGBt, szGBt, pbtRx, pszRx, &btActivatedMode)) {
-      return false;
+    if((res = pn53x_TgInitAsTarget(pnd, ptm, pbtMifareParams, pbtTkt, szTkt, pbtFeliCaParams, pbtNFCID3t, pbtGBt, szGBt, pbtRx, szRxLen, &btActivatedMode, timeout)) < 0) {
+      if (res == NFC_ETIMEOUT) {
+        return pn53x_idle(pnd);
+      }
+      return res;
     }
-
-    nfc_modulation_t nm = {
+    szRx = (size_t) res;
+    nfc_modulation nm = {
       .nmt = NMT_DEP, // Silent compilation warnings
       .nbr = NBR_UNDEFINED
     };
-    nfc_dep_mode_t ndm = NDM_UNDEFINED;
+    nfc_dep_mode ndm = NDM_UNDEFINED;
     // Decode activated "mode"
     switch(btActivatedMode & 0x70) { // Baud rate
       case 0x00: // 106kbps
@@ -1681,35 +1804,38 @@ pn53x_target_init (nfc_device_t * pnd, nfc_target_t * pnt, byte_t * pbtRx, size_
       if (CHIP_DATA (pnd)->current_target) {
         free (CHIP_DATA (pnd)->current_target);
       }
-      CHIP_DATA (pnd)->current_target = malloc (sizeof(nfc_target_t));
-      memcpy (CHIP_DATA (pnd)->current_target, pnt, sizeof(nfc_target_t));
+      CHIP_DATA (pnd)->current_target = malloc (sizeof(nfc_target));
+      memcpy (CHIP_DATA (pnd)->current_target, pnt, sizeof(nfc_target));
 
       if (ptm & PTM_ISO14443_4_PICC_ONLY) {
 	// When PN532 is in PICC target mode, it automatically reply to RATS so
 	// we don't need to forward this command
-        *pszRx = 0;
+        szRx = 0;
       }
     }
   }
 
-  return true;
+  return szRx;
 }
 
-bool
-pn53x_target_receive_bits (nfc_device_t * pnd, byte_t * pbtRx, size_t * pszRxBits, byte_t * pbtRxPar)
+int
+pn53x_target_receive_bits (struct nfc_device *pnd, uint8_t *pbtRx, const size_t szRxLen, uint8_t *pbtRxPar)
 {
-  byte_t  abtCmd[] = { TgGetInitiatorCommand };
+  size_t szRxBits = 0;
+  uint8_t  abtCmd[] = { TgGetInitiatorCommand };
 
-  byte_t  abtRx[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
+  uint8_t  abtRx[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
   size_t  szRx = sizeof (abtRx);
+  int res = 0;
+  
   // Try to gather a received frame from the reader
-  if (!pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), abtRx, &szRx, NULL))
-    return false;
-
+  if ((res = pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), abtRx, szRx, -1)) < 0)
+    return res;
+  szRx = (size_t) res;
   // Get the last bit-count that is stored in the received byte
   uint8_t ui8rcc;
-  if (!pn53x_read_register (pnd, PN53X_REG_CIU_Control, &ui8rcc))
-    return false;
+  if ((res = pn53x_read_register (pnd, PN53X_REG_CIU_Control, &ui8rcc)) < 0)
+    return res;
   uint8_t ui8Bits = ui8rcc & SYMBOL_RX_LAST_BITS;
 
   // Recover the real frame length in bits
@@ -1719,21 +1845,26 @@ pn53x_target_receive_bits (nfc_device_t * pnd, byte_t * pbtRx, size_t * pszRxBit
   // Check if we should recover the parity bits ourself
   if (!pnd->bPar) {
     // Unwrap the response frame
-    pn53x_unwrap_frame (abtRx + 1, szFrameBits, pbtRx, pszRxBits, pbtRxPar);
+    if ((res = pn53x_unwrap_frame (abtRx + 1, szFrameBits, pbtRx, pbtRxPar)) < 0)
+      return res;
+    szRxBits = res;
   } else {
     // Save the received bits
-    *pszRxBits = szFrameBits;
+    szRxBits = szFrameBits;
+
+    if ((szRx - 1) > szRxLen)
+      return NFC_EOVFLOW;
     // Copy the received bytes
     memcpy (pbtRx, abtRx + 1, szRx - 1);
   }
-  // Everyting seems ok, return true
-  return true;
+  // Everyting seems ok, return received bits count
+  return szRxBits;
 }
 
-bool
-pn53x_target_receive_bytes (nfc_device_t * pnd, byte_t * pbtRx, size_t * pszRx, struct timeval *timeout)
+int
+pn53x_target_receive_bytes (struct nfc_device *pnd, uint8_t *pbtRx, const size_t szRxLen, int timeout)
 {
-  byte_t  abtCmd[1];
+  uint8_t  abtCmd[1];
 
   // XXX I think this is not a clean way to provide some kind of "EasyFraming"
   // but at the moment I have no more better than this
@@ -1751,8 +1882,8 @@ pn53x_target_receive_bytes (nfc_device_t * pnd, byte_t * pbtRx, size_t * pszRx, 
             break;
           } else {
             // TODO Support EasyFraming for other cases by software
-            pnd->iLastError = ENOTIMPL;
-            return false;
+            pnd->last_error = NFC_ENOTIMPL;
+            return pnd->last_error;
           }
         }
       default:
@@ -1764,33 +1895,40 @@ pn53x_target_receive_bytes (nfc_device_t * pnd, byte_t * pbtRx, size_t * pszRx, 
   }
 
   // Try to gather a received frame from the reader
-  byte_t  abtRx[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
-  size_t  szRx = sizeof (abtRx);
-  if (!pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), abtRx, &szRx, timeout))
-    return false;
+  uint8_t abtRx[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
+  size_t szRx = sizeof (abtRx);
+  int res = 0;
+  if ((res = pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), abtRx, szRx, timeout)) < 0)
+    return pnd->last_error;
+  szRx = (size_t) res;
+  // Save the received bytes count
+  szRx -= 1;
 
-  // Save the received byte count
-  *pszRx = szRx - 1;
+  if (szRx > szRxLen)
+    return NFC_EOVFLOW;
 
   // Copy the received bytes
-  memcpy (pbtRx, abtRx + 1, *pszRx);
+  memcpy (pbtRx, abtRx + 1, szRx);
 
-  // Everyting seems ok, return true
-  return true;
+  // Everyting seems ok, return received bytes count
+  return szRx;
 }
 
-bool
-pn53x_target_send_bits (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTxBits, const byte_t * pbtTxPar)
+int
+pn53x_target_send_bits (struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szTxBits, const uint8_t *pbtTxPar)
 {
   size_t  szFrameBits = 0;
   size_t  szFrameBytes = 0;
   uint8_t ui8Bits = 0;
-  byte_t  abtCmd[PN53x_EXTENDED_FRAME__DATA_MAX_LEN] = { TgResponseToInitiator };
+  uint8_t  abtCmd[PN53x_EXTENDED_FRAME__DATA_MAX_LEN] = { TgResponseToInitiator };
+  int res = 0;
 
   // Check if we should prepare the parity bits ourself
   if (!pnd->bPar) {
     // Convert data with parity to a frame
-    pn53x_wrap_frame (pbtTx, szTxBits, pbtTxPar, abtCmd + 1, &szFrameBits);
+    if ((res = pn53x_wrap_frame (pbtTx, szTxBits, pbtTxPar, abtCmd + 1)) < 0)
+      return res;
+    szFrameBits = res;
   } else {
     szFrameBits = szTxBits;
   }
@@ -1806,25 +1944,26 @@ pn53x_target_send_bits (nfc_device_t * pnd, const byte_t * pbtTx, const size_t s
     memcpy (abtCmd + 1, pbtTx, szFrameBytes);
 
   // Set the amount of transmission bits in the PN53X chip register
-  if (!pn53x_set_tx_bits (pnd, ui8Bits))
-    return false;
+  if ((res = pn53x_set_tx_bits (pnd, ui8Bits)) < 0)
+    return res;
 
   // Try to send the bits to the reader
-  if (!pn53x_transceive (pnd, abtCmd, szFrameBytes + 1, NULL, NULL, NULL))
-    return false;
+  if ((res = pn53x_transceive (pnd, abtCmd, szFrameBytes + 1, NULL, 0, -1)) < 0)
+    return res;
 
-  // Everyting seems ok, return true
-  return true;
+  // Everyting seems ok, return return sent bits count
+  return szTxBits;
 }
 
-bool
-pn53x_target_send_bytes (nfc_device_t * pnd, const byte_t * pbtTx, const size_t szTx, struct timeval *timeout)
+int
+pn53x_target_send_bytes (struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szTx, int timeout)
 {
-  byte_t  abtCmd[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
+  uint8_t  abtCmd[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
+  int res = 0;
 
   // We can not just send bytes without parity if while the PN53X expects we handled them
   if (!pnd->bPar)
-    return false;
+    return NFC_ECHIP;
 
   // XXX I think this is not a clean way to provide some kind of "EasyFraming"
   // but at the moment I have no more better than this
@@ -1842,8 +1981,8 @@ pn53x_target_send_bytes (nfc_device_t * pnd, const byte_t * pbtTx, const size_t 
             break;
           } else {
             // TODO Support EasyFraming for other cases by software
-            pnd->iLastError = ENOTIMPL;
-            return false;
+            pnd->last_error = NFC_ENOTIMPL;
+            return pnd->last_error;
           }
         }
       default:
@@ -1856,13 +1995,13 @@ pn53x_target_send_bytes (nfc_device_t * pnd, const byte_t * pbtTx, const size_t 
 
   // Copy the data into the command frame
   memcpy (abtCmd + 1, pbtTx, szTx);
-
+  
   // Try to send the bits to the reader
-  if (!pn53x_transceive (pnd, abtCmd, szTx + 1, NULL, NULL, timeout))
-    return false;
+  if ((res = pn53x_transceive (pnd, abtCmd, szTx + 1, NULL, 0, timeout)) < 0)
+    return res;
 
-  // Everyting seems ok, return true
-  return true;
+  // Everyting seems ok, return sent byte count
+  return szTx;
 }
 
 static struct sErrorMessage {
@@ -1879,7 +2018,6 @@ static struct sErrorMessage {
   { EBITCOLL, "Bit-collision" },    // An abnormal bit-collision has been detected during bit wise anti-collision at 106 kbps
   { ESMALLBUF, "Communication Buffer Too Small" },  // Communication buffer size insufficient
   { EBUFOVF, "Buffer Overflow" },   // RF Buffer overflow has been detected by the CIU (bit BufferOvfl of the register CIU_Error)
-  { ERFTIMEOUT, "RF Timeout" },     // In active communication mode, the RF field has not been switched on in time by the counterpart (as defined in NFCIP-1 standard)
   { ERFPROTO, "RF Protocol Error" },    // RF Protocol error (see PN53x manual)
   { EOVHEAT, "Chip Overheating" },    // Temperature error: the internal temperature sensor has detected overheating, and therefore has automatically switched off the antenna drivers
   { EINBUFOVF, "Internal Buffer overflow."},  // Internal buffer overflow
@@ -1888,6 +2026,7 @@ static struct sErrorMessage {
   { ECMD, "Command Not Acceptable" },   // Command is not acceptable due to the current context
   { EOVCURRENT, "Over Current"  },
   /* DEP errors */
+  { ERFTIMEOUT, "RF Timeout" },     // In active communication mode, the RF field has not been switched on in time by the counterpart (as defined in NFCIP-1 standard)
   { EDEPUNKCMD, "Unknown DEP Command" },
   { EDEPINVSTATE, "Invalid DEP State" },  // DEP Protocol: Invalid device state, the system is in a state which does not allow the operation
   { ENAD, "NAD Missing in DEP Frame" },
@@ -1901,29 +2040,16 @@ static struct sErrorMessage {
   { ECID, "Card ID Mismatch" },     // ISO14443 type B: Card ID mismatch, meaning that the expected card has been exchanged with another one.
   { ECDISCARDED, "Card Discarded" },    // ISO/IEC14443 type B: the card previously activated has disappeared.
   { ENFCID3, "NFCID3 Mismatch" },
-  /* Software level errors */
-  { ETGUIDNOTSUP, "Target UID not supported" }, // In target mode, PN53x only support 4 bytes UID and the first byte must start with 0x08
-  { EOPABORT, "Operation aborted" },  // Error used to catch a user-requested command abort
-  { EINVALARG, "Invalid argument" },  // Function called with invalid argument(s)
-  { ENOTIMPL, "Not (yet) implemented in library" },
-  /* Framming-level errors */
-  { EFRAACKMISMATCH, "Expected ACK frame" },
-  { EFRAISERRFRAME, "Received an error frame" },
-  /* Communication-level errors */
-  { ECOMIO, "Input/output error" },  // Communication I/O errors: connection broken, read/write failure, unreacheable device, etc.
-  { ECOMTIMEOUT, "Operation timed-out" },  // A timeout occured while reading device's reply
-  /* Device-level errors */
-  { EDEVNOTSUP, "Operation not supported by device" }  // Requested task can not be done by current device
 };
 
 const char *
-pn53x_strerror (const nfc_device_t * pnd)
+pn53x_strerror (const struct nfc_device *pnd)
 {
   const char *pcRes = "Unknown error";
   size_t  i;
 
   for (i = 0; i < (sizeof (sErrorMessages) / sizeof (struct sErrorMessage)); i++) {
-    if (sErrorMessages[i].iErrorCode == pnd->iLastError) {
+    if (sErrorMessages[i].iErrorCode == CHIP_DATA(pnd)->last_status_byte) {
       pcRes = sErrorMessages[i].pcErrorMsg;
       break;
     }
@@ -1932,74 +2058,75 @@ pn53x_strerror (const nfc_device_t * pnd)
   return pcRes;
 }
 
-bool
-pn53x_RFConfiguration__RF_field (nfc_device_t * pnd, bool bEnable)
+int
+pn53x_RFConfiguration__RF_field (struct nfc_device *pnd, bool bEnable)
 {
-  byte_t  abtCmd[] = { RFConfiguration, RFCI_FIELD, (bEnable) ? 0x01 : 0x00 };
-  return pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, NULL, NULL);
+  uint8_t  abtCmd[] = { RFConfiguration, RFCI_FIELD, (bEnable) ? 0x01 : 0x00 };
+  return pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, 0, -1);
 }
 
-bool
-pn53x_RFConfiguration__Various_timings (nfc_device_t * pnd, const uint8_t fATR_RES_Timeout, const uint8_t fRetryTimeout)
+int
+pn53x_RFConfiguration__Various_timings (struct nfc_device *pnd, const uint8_t fATR_RES_Timeout, const uint8_t fRetryTimeout)
 {
-  byte_t  abtCmd[] = {
+  uint8_t  abtCmd[] = {
     RFConfiguration,
     RFCI_TIMING,
     0x00,		 // RFU
     fATR_RES_Timeout,	 // ATR_RES timeout (default: 0x0B 102.4 ms)
     fRetryTimeout	 // TimeOut during non-DEP communications (default: 0x0A 51.2 ms)
   };
-  return pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, NULL, NULL);
+  return pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, 0, -1);
 }
 
-bool
-pn53x_RFConfiguration__MaxRtyCOM (nfc_device_t * pnd, const uint8_t MaxRtyCOM)
+int
+pn53x_RFConfiguration__MaxRtyCOM (struct nfc_device *pnd, const uint8_t MaxRtyCOM)
 {
-  byte_t  abtCmd[] = {
+  uint8_t  abtCmd[] = {
     RFConfiguration,
     RFCI_RETRY_DATA,
     MaxRtyCOM         // MaxRtyCOM, default: 0x00 (no retry, only one try), inifite: 0xff
   };
-  return pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, NULL, NULL);
+  return pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, 0, -1);
 }
 
-bool
-pn53x_RFConfiguration__MaxRetries (nfc_device_t * pnd, const uint8_t MxRtyATR, const uint8_t MxRtyPSL, const uint8_t MxRtyPassiveActivation)
+int
+pn53x_RFConfiguration__MaxRetries (struct nfc_device *pnd, const uint8_t MxRtyATR, const uint8_t MxRtyPSL, const uint8_t MxRtyPassiveActivation)
 {
   // Retry format: 0x00 means only 1 try, 0xff means infinite
-  byte_t  abtCmd[] = {
+  uint8_t  abtCmd[] = {
     RFConfiguration,
     RFCI_RETRY_SELECT,
     MxRtyATR,        // MxRtyATR, default: active = 0xff, passive = 0x02
     MxRtyPSL,        // MxRtyPSL, default: 0x01
     MxRtyPassiveActivation         // MxRtyPassiveActivation, default: 0xff (0x00 leads to problems with PN531)
   };
-  return pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, NULL, NULL);
+  return pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, 0, -1);
 }
 
-bool
-pn53x_SetParameters (nfc_device_t * pnd, const uint8_t ui8Value)
+int
+pn53x_SetParameters (struct nfc_device *pnd, const uint8_t ui8Value)
 {
-  byte_t  abtCmd[] = { SetParameters, ui8Value };
+  uint8_t  abtCmd[] = { SetParameters, ui8Value };
+  int res = 0;
 
-  if(!pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, NULL, NULL)) {
-    return false;
+  if((res = pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, 0, -1)) < 0) {
+    return res;
   }
   // We save last parameters in register cache
   CHIP_DATA (pnd)->ui8Parameters = ui8Value;
-  return true;
+  return NFC_SUCCESS;
 }
 
-bool
-pn53x_SAMConfiguration (nfc_device_t * pnd, const pn532_sam_mode ui8Mode, struct timeval *timeout)
+int
+pn53x_SAMConfiguration (struct nfc_device *pnd, const pn532_sam_mode ui8Mode, int timeout)
 {
-  byte_t  abtCmd[] = { SAMConfiguration, ui8Mode, 0x00, 0x00 };
+  uint8_t  abtCmd[] = { SAMConfiguration, ui8Mode, 0x00, 0x00 };
   size_t szCmd = sizeof(abtCmd);
 
   if (CHIP_DATA(pnd)->type != PN532) {
     // This function is not supported by pn531 neither pn533
-    pnd->iLastError = EDEVNOTSUP;
-    return false;
+    pnd->last_error = NFC_EDEVNOTSUPP;
+    return pnd->last_error;
   }
 
   switch (ui8Mode) {
@@ -2013,24 +2140,24 @@ pn53x_SAMConfiguration (nfc_device_t * pnd, const pn532_sam_mode ui8Mode, struct
       szCmd = 3;
       break;
     default:
-      pnd->iLastError = EINVALARG;
-      return false;
+      pnd->last_error = NFC_EINVARG;
+      return pnd->last_error;
   }
-  return (pn53x_transceive (pnd, abtCmd, szCmd, NULL, NULL, timeout));
+  return (pn53x_transceive (pnd, abtCmd, szCmd, NULL, 0, timeout));
 }
 
-bool
-pn53x_PowerDown (nfc_device_t * pnd)
+int
+pn53x_PowerDown (struct nfc_device *pnd)
 {
-  byte_t  abtCmd[] = { PowerDown, 0xf0 };
-  return (pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, NULL, NULL));
+  uint8_t  abtCmd[] = { PowerDown, 0xf0 };
+  return (pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, 0, -1));
 }
 
 /**
  * @brief C wrapper to InListPassiveTarget command
- * @return true if command is successfully sent
+ * @return Returns selected targets count on success, otherwise returns libnfc's error code (negative value)
  *
- * @param pnd nfc_device_t struct pointer that represent currently used device
+ * @param pnd struct nfc_device struct pointer that represent currently used device
  * @param pmInitModulation Desired modulation
  * @param pbtInitiatorData Optional initiator data used for Felica, ISO14443B, Topaz Polling or for ISO14443A selecting a specific UID
  * @param szInitiatorData Length of initiator data \a pbtInitiatorData
@@ -2040,14 +2167,14 @@ pn53x_PowerDown (nfc_device_t * pnd)
  * @note Selected targets count can be found in \a pbtTargetsData[0] if available (i.e. \a pszTargetsData content is more than 0)
  * @note To decode theses TargetData[n], there is @fn pn53x_decode_target_data
  */
-bool
-pn53x_InListPassiveTarget (nfc_device_t * pnd,
-                           const pn53x_modulation_t pmInitModulation, const byte_t szMaxTargets,
-                           const byte_t * pbtInitiatorData, const size_t szInitiatorData,
-                           byte_t * pbtTargetsData, size_t * pszTargetsData,
-                           struct timeval* timeout)
+int
+pn53x_InListPassiveTarget (struct nfc_device *pnd,
+                           const pn53x_modulation pmInitModulation, const uint8_t szMaxTargets,
+                           const uint8_t *pbtInitiatorData, const size_t szInitiatorData,
+                           uint8_t *pbtTargetsData, size_t *pszTargetsData,
+                           int timeout)
 {
-  byte_t  abtCmd[15] = { InListPassiveTarget };
+  uint8_t  abtCmd[15] = { InListPassiveTarget };
 
   abtCmd[1] = szMaxTargets;     // MaxTg
 
@@ -2060,15 +2187,15 @@ pn53x_InListPassiveTarget (nfc_device_t * pnd,
     case PM_ISO14443B_106:
       if (!(pnd->btSupportByte & SUPPORT_ISO14443B)) {
         // Eg. Some PN532 doesn't support type B!
-        pnd->iLastError = EDEVNOTSUP;
-        return false;
+        pnd->last_error = NFC_EDEVNOTSUPP;
+        return pnd->last_error;
       }
       break;
     case PM_JEWEL_106:
       if(CHIP_DATA(pnd)->type == PN531) {
         // These modulations are not supported by pn531
-        pnd->iLastError = EDEVNOTSUP;
-        return false;
+        pnd->last_error = NFC_EDEVNOTSUPP;
+        return pnd->last_error;
       }
       break;
     case PM_ISO14443B_212:
@@ -2076,103 +2203,114 @@ pn53x_InListPassiveTarget (nfc_device_t * pnd,
     case PM_ISO14443B_847:
       if((CHIP_DATA(pnd)->type != PN533) || (!(pnd->btSupportByte & SUPPORT_ISO14443B))) {
         // These modulations are not supported by pn531 neither pn532
-        pnd->iLastError = EDEVNOTSUP;
-        return false;
+        pnd->last_error = NFC_EDEVNOTSUPP;
+        return pnd->last_error;
       }
       break;
     default:
-      pnd->iLastError = EINVALARG;
-      return false;
+      pnd->last_error = NFC_EINVARG;
+      return pnd->last_error;
   }
   abtCmd[2] = pmInitModulation; // BrTy, the type of init modulation used for polling a passive tag
 
   // Set the optional initiator data (used for Felica, ISO14443B, Topaz Polling or for ISO14443A selecting a specific UID).
   if (pbtInitiatorData)
     memcpy (abtCmd + 3, pbtInitiatorData, szInitiatorData);
-
-  return pn53x_transceive (pnd, abtCmd, 3 + szInitiatorData, pbtTargetsData, pszTargetsData, timeout);
+  int res = 0;
+  if ((res = pn53x_transceive (pnd, abtCmd, 3 + szInitiatorData, pbtTargetsData, *pszTargetsData, timeout)) < 0) {
+    return res;
+  }
+  *pszTargetsData = (size_t) res;
+  return pbtTargetsData[0];
 }
 
-bool
-pn53x_InDeselect (nfc_device_t * pnd, const uint8_t ui8Target)
+int
+pn53x_InDeselect (struct nfc_device *pnd, const uint8_t ui8Target)
 {
   if (CHIP_DATA(pnd)->type == RCS360) {
     // We should do act here *only* if a target was previously selected
-    byte_t  abtStatus[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
+    uint8_t  abtStatus[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
     size_t  szStatus = sizeof(abtStatus);
-    byte_t  abtCmdGetStatus[] = { GetGeneralStatus };
-    if (!pn53x_transceive (pnd, abtCmdGetStatus, sizeof (abtCmdGetStatus), abtStatus, &szStatus, NULL)) {
-      return false;
+    uint8_t  abtCmdGetStatus[] = { GetGeneralStatus };
+    int res = 0;
+    if ((res = pn53x_transceive (pnd, abtCmdGetStatus, sizeof (abtCmdGetStatus), abtStatus, szStatus, -1)) < 0) {
+      return res;
     }
+    szStatus = (size_t) res;
     if ((szStatus < 3) || (abtStatus[2] == 0)) {
-      return true;
+      return NFC_SUCCESS;
     }
     // No much choice what to deselect actually...
-    byte_t  abtCmdRcs360[] = { InDeselect, 0x01, 0x01 };
-    return (pn53x_transceive (pnd, abtCmdRcs360, sizeof (abtCmdRcs360), NULL, NULL, NULL));
+    uint8_t  abtCmdRcs360[] = { InDeselect, 0x01, 0x01 };
+    return (pn53x_transceive (pnd, abtCmdRcs360, sizeof (abtCmdRcs360), NULL, 0, -1));
   }
-  byte_t  abtCmd[] = { InDeselect, ui8Target };
-  return (pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, NULL, NULL));
+  uint8_t  abtCmd[] = { InDeselect, ui8Target };
+  return (pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, 0, -1));
 }
 
-bool
-pn53x_InRelease (nfc_device_t * pnd, const uint8_t ui8Target)
+int
+pn53x_InRelease (struct nfc_device *pnd, const uint8_t ui8Target)
 {
   if (CHIP_DATA(pnd)->type == RCS360) {
     // We should do act here *only* if a target was previously selected
-    byte_t  abtStatus[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
+    uint8_t  abtStatus[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
     size_t  szStatus = sizeof(abtStatus);
-    byte_t  abtCmdGetStatus[] = { GetGeneralStatus };
-    if (!pn53x_transceive (pnd, abtCmdGetStatus, sizeof (abtCmdGetStatus), abtStatus, &szStatus, NULL)) {
-      return false;
+    uint8_t  abtCmdGetStatus[] = { GetGeneralStatus };
+    int res = 0;
+    if ((res = pn53x_transceive (pnd, abtCmdGetStatus, sizeof (abtCmdGetStatus), abtStatus, szStatus, -1)) < 0) {
+      return res;
     }
+    szStatus = (size_t) res;
     if ((szStatus < 3) || (abtStatus[2] == 0)) {
-      return true;
+      return NFC_SUCCESS;
     }
     // No much choice what to release actually...
-    byte_t  abtCmdRcs360[] = { InRelease, 0x01, 0x01 };
-    return (pn53x_transceive (pnd, abtCmdRcs360, sizeof (abtCmdRcs360), NULL, NULL, NULL));
+    uint8_t  abtCmdRcs360[] = { InRelease, 0x01, 0x01 };
+    return (pn53x_transceive (pnd, abtCmdRcs360, sizeof (abtCmdRcs360), NULL, 0, -1));
   }
-  byte_t  abtCmd[] = { InRelease, ui8Target };
-  return (pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, NULL, NULL));
+  uint8_t  abtCmd[] = { InRelease, ui8Target };
+  return (pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, 0, -1));
 }
 
-bool
-pn53x_InAutoPoll (nfc_device_t * pnd,
-                  const pn53x_target_type_t * ppttTargetTypes, const size_t szTargetTypes,
-                  const byte_t btPollNr, const byte_t btPeriod, nfc_target_t * pntTargets, size_t * pszTargetFound)
+int
+pn53x_InAutoPoll (struct nfc_device *pnd,
+                  const pn53x_target_type *ppttTargetTypes, const size_t szTargetTypes,
+                  const uint8_t btPollNr, const uint8_t btPeriod, nfc_target * pntTargets, const int timeout)
 {
+  size_t szTargetFound = 0;
   if (CHIP_DATA(pnd)->type != PN532) {
     // This function is not supported by pn531 neither pn533
-    pnd->iLastError = EDEVNOTSUP;
-    return false;
+    pnd->last_error = NFC_EDEVNOTSUPP;
+    return pnd->last_error;
   }
 
   // InAutoPoll frame looks like this { 0xd4, 0x60, 0x0f, 0x01, 0x00 } => { direction, command, pollnr, period, types... }
   size_t szTxInAutoPoll = 3 + szTargetTypes;
-  byte_t abtCmd[3+15] = { InAutoPoll, btPollNr, btPeriod };
+  uint8_t abtCmd[3+15] = { InAutoPoll, btPollNr, btPeriod };
   for (size_t n = 0; n < szTargetTypes; n++) {
     abtCmd[3 + n] = ppttTargetTypes[n];
   }
 
-  byte_t  abtRx[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
+  uint8_t  abtRx[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
   size_t  szRx = sizeof(abtRx);
-  bool res = pn53x_transceive (pnd, abtCmd, szTxInAutoPoll, abtRx, &szRx, NULL);
-
-  if (res == false) {
-    return false;
+  int res = pn53x_transceive (pnd, abtCmd, szTxInAutoPoll, abtRx, szRx, timeout);
+szRx = (size_t) res;
+  if (res < 0) {
+    return res;
   } else if (szRx > 0) {
-    *pszTargetFound = abtRx[0];
-    if (*pszTargetFound) {
+    szTargetFound = abtRx[0];
+    if (szTargetFound > 0) {
       uint8_t ln;
-      byte_t *pbt = abtRx + 1;
+      uint8_t *pbt = abtRx + 1;
       /* 1st target */
       // Target type
-      pn53x_target_type_t ptt = *(pbt++);
+      pn53x_target_type ptt = *(pbt++);
       pntTargets[0].nm = pn53x_ptt_to_nm(ptt);
       // AutoPollTargetData length
       ln = *(pbt++);
-      pn53x_decode_target_data (pbt, ln, CHIP_DATA(pnd)->type, pntTargets[0].nm.nmt, &(pntTargets[0].nti));
+      if ((res = pn53x_decode_target_data (pbt, ln, CHIP_DATA(pnd)->type, pntTargets[0].nm.nmt, &(pntTargets[0].nti))) < 0) {
+        return res;
+      }
       pbt += ln;
 
       if (abtRx[0] > 1) {
@@ -2186,7 +2324,7 @@ pn53x_InAutoPoll (nfc_device_t * pnd,
       }
     }
   }
-  return true;
+  return szTargetFound;
 }
 
 /**
@@ -2197,19 +2335,20 @@ pn53x_InAutoPoll (nfc_device_t * pnd,
  * @param pbtNFCID3i NFCID3 of the initiator
  * @param pbtGBi General Bytes of the initiator
  * @param szGBi count of General Bytes
- * @param[out] pnt \a nfc_target_t which will be filled by this function
+ * @param[out] pnt \a nfc_target which will be filled by this function
  */
-bool
-pn53x_InJumpForDEP (nfc_device_t * pnd,
-                    const nfc_dep_mode_t ndm,
-                    const nfc_baud_rate_t nbr,
-                    const byte_t * pbtPassiveInitiatorData,
-                    const byte_t * pbtNFCID3i,
-                    const byte_t * pbtGBi, const size_t szGBi,
-                    nfc_target_t * pnt)
+int
+pn53x_InJumpForDEP (struct nfc_device *pnd,
+                    const nfc_dep_mode ndm,
+                    const nfc_baud_rate nbr,
+                    const uint8_t *pbtPassiveInitiatorData,
+                    const uint8_t *pbtNFCID3i,
+                    const uint8_t *pbtGBi, const size_t szGBi,
+                    nfc_target *pnt,
+                    const int timeout)
 {
   // Max frame size = 1 (Command) + 1 (ActPass) + 1 (Baud rate) + 1 (Next) + 5 (PassiveInitiatorData) + 10 (NFCID3) + 48 (General bytes) = 67 bytes
-  byte_t  abtCmd[67] = { InJumpForDEP, (ndm == NDM_ACTIVE) ? 0x01 : 0x00 };
+  uint8_t  abtCmd[67] = { InJumpForDEP, (ndm == NDM_ACTIVE) ? 0x01 : 0x00 };
 
   size_t offset = 4; // 1 byte for command, 1 byte for DEP mode (Active/Passive), 1 byte for baud rate, 1 byte for following parameters flag
 
@@ -2225,8 +2364,8 @@ pn53x_InJumpForDEP (nfc_device_t * pnd,
     break;
     case NBR_847:
     case NBR_UNDEFINED:
-      pnd->iLastError = EINVALARG;
-      return false;
+      pnd->last_error = NFC_EINVARG;
+      return pnd->last_error;
     break;
   }
 
@@ -2245,8 +2384,8 @@ pn53x_InJumpForDEP (nfc_device_t * pnd,
       break;
       case NBR_847:
       case NBR_UNDEFINED:
-        pnd->iLastError = EINVALARG;
-        return false;
+        pnd->last_error = NFC_EINVARG;
+        return pnd->last_error;
       break;
     }
   }
@@ -2263,46 +2402,48 @@ pn53x_InJumpForDEP (nfc_device_t * pnd,
     offset += szGBi;
   }
 
-  byte_t  abtRx[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
+  uint8_t  abtRx[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
   size_t  szRx = sizeof (abtRx);
+  int res = 0;
   // Try to find a target, call the transceive callback function of the current device
-  if (!pn53x_transceive (pnd, abtCmd, offset, abtRx, &szRx, NULL))
-    return false;
-
+  if ((res = pn53x_transceive (pnd, abtCmd, offset, abtRx, szRx, timeout)) < 0)
+    return res;
+  szRx = (size_t) res;
   // Make sure one target has been found, the PN53X returns 0x00 if none was available
-  if (abtRx[1] != 1)
-    return false;
-
-  // Is a target struct available
-  if (pnt) {
-    pnt->nm.nmt = NMT_DEP;
-    pnt->nm.nbr = nbr;
-    memcpy (pnt->nti.ndi.abtNFCID3, abtRx + 2, 10);
-    pnt->nti.ndi.btDID = abtRx[12];
-    pnt->nti.ndi.btBS = abtRx[13];
-    pnt->nti.ndi.btBR = abtRx[14];
-    pnt->nti.ndi.btTO = abtRx[15];
-    pnt->nti.ndi.btPP = abtRx[16];
-    if(szRx > 17) {
-      pnt->nti.ndi.szGB = szRx - 17;
-      memcpy (pnt->nti.ndi.abtGB, abtRx + 17, pnt->nti.ndi.szGB);
-    } else {
-      pnt->nti.ndi.szGB = 0;
+  if (abtRx[1] >= 1) {
+    // Is a target struct available
+    if (pnt) {
+      pnt->nm.nmt = NMT_DEP;
+      pnt->nm.nbr = nbr;
+      pnt->nti.ndi.ndm = ndm;
+      memcpy (pnt->nti.ndi.abtNFCID3, abtRx + 2, 10);
+      pnt->nti.ndi.btDID = abtRx[12];
+      pnt->nti.ndi.btBS = abtRx[13];
+      pnt->nti.ndi.btBR = abtRx[14];
+      pnt->nti.ndi.btTO = abtRx[15];
+      pnt->nti.ndi.btPP = abtRx[16];
+      if(szRx > 17) {
+        pnt->nti.ndi.szGB = szRx - 17;
+        memcpy (pnt->nti.ndi.abtGB, abtRx + 17, pnt->nti.ndi.szGB);
+      } else {
+        pnt->nti.ndi.szGB = 0;
+      }
     }
   }
-  return true;
+  return abtRx[1];
 }
 
-bool
-pn53x_TgInitAsTarget (nfc_device_t * pnd, pn53x_target_mode_t ptm,
-                      const byte_t * pbtMifareParams,
-                      const byte_t * pbtTkt, size_t szTkt,
-                      const byte_t * pbtFeliCaParams,
-                      const byte_t * pbtNFCID3t, const byte_t * pbtGBt, const size_t szGBt,
-                      byte_t * pbtRx, size_t * pszRx, byte_t * pbtModeByte)
+int
+pn53x_TgInitAsTarget (struct nfc_device *pnd, pn53x_target_mode ptm,
+                      const uint8_t *pbtMifareParams,
+                      const uint8_t *pbtTkt, size_t szTkt,
+                      const uint8_t *pbtFeliCaParams,
+                      const uint8_t *pbtNFCID3t, const uint8_t *pbtGBt, const size_t szGBt,
+                      uint8_t *pbtRx, const size_t szRxLen, uint8_t *pbtModeByte, int timeout)
 {
-  byte_t  abtCmd[39 + 47 + 48] = { TgInitAsTarget }; // Worst case: 39-byte base, 47 bytes max. for General Bytes, 48 bytes max. for Historical Bytes
+  uint8_t  abtCmd[39 + 47 + 48] = { TgInitAsTarget }; // Worst case: 39-byte base, 47 bytes max. for General Bytes, 48 bytes max. for Historical Bytes
   size_t  szOptionalBytes = 0;
+  int res = 0;
 
   // Clear the target init struct, reset to all zeros
   memset (abtCmd + 1, 0x00, sizeof (abtCmd) - 1);
@@ -2329,7 +2470,7 @@ pn53x_TgInitAsTarget (nfc_device_t * pnd, pn53x_target_mode_t ptm,
       szOptionalBytes = szGBt;
     }
   } else {
-    abtCmd[36] = (byte_t)(szGBt);
+    abtCmd[36] = (uint8_t)(szGBt);
     if (szGBt) {
       memcpy (abtCmd+37, pbtGBt, szGBt);
     }
@@ -2337,7 +2478,7 @@ pn53x_TgInitAsTarget (nfc_device_t * pnd, pn53x_target_mode_t ptm,
   }
   // Historical bytes (ISO/IEC 14443-4)
   if ((CHIP_DATA(pnd)->type != PN531) && (CHIP_DATA(pnd)->type != RCS360)) { // PN531 does not handle Historical Bytes
-    abtCmd[36+szOptionalBytes] = (byte_t)(szTkt);
+    abtCmd[36+szOptionalBytes] = (uint8_t)(szTkt);
     if (szTkt) {
       memcpy (abtCmd+37+szOptionalBytes, pbtTkt, szTkt);
     }
@@ -2345,10 +2486,11 @@ pn53x_TgInitAsTarget (nfc_device_t * pnd, pn53x_target_mode_t ptm,
   }
 
   // Request the initialization as a target
-  byte_t  abtRx[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
+  uint8_t  abtRx[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
   size_t szRx = sizeof (abtRx);
-  if (!pn53x_transceive (pnd, abtCmd, 36 + szOptionalBytes, abtRx, &szRx, NULL))
-    return false;
+  if ((res = pn53x_transceive (pnd, abtCmd, 36 + szOptionalBytes, abtRx, szRx, timeout)) < 0)
+    return res;
+  szRx = (size_t) res;
 
   // Note: the first byte is skip: 
   //       its the "mode" byte which contains baudrate, DEP and Framing type (Mifare, active or FeliCa) datas.
@@ -2357,38 +2499,41 @@ pn53x_TgInitAsTarget (nfc_device_t * pnd, pn53x_target_mode_t ptm,
   }
 
   // Save the received byte count
-  *pszRx = szRx - 1;
+  szRx -= 1;
+  
+  if ((szRx - 1) > szRxLen)
+    return NFC_EOVFLOW;
   // Copy the received bytes
-  memcpy (pbtRx, abtRx + 1, *pszRx);
+  memcpy (pbtRx, abtRx + 1, szRx);
 
-  return true;
+  return szRx;
 }
 
-bool
-pn53x_check_ack_frame (nfc_device_t * pnd, const byte_t * pbtRxFrame, const size_t szRxFrameLen)
+int
+pn53x_check_ack_frame (struct nfc_device *pnd, const uint8_t *pbtRxFrame, const size_t szRxFrameLen)
 {
   if (szRxFrameLen >= sizeof (pn53x_ack_frame)) {
     if (0 == memcmp (pbtRxFrame, pn53x_ack_frame, sizeof (pn53x_ack_frame))) {
       log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "PN53x ACKed");
-      return true;
+      return NFC_SUCCESS;
     }
   }
-  pnd->iLastError = EFRAACKMISMATCH;
+  pnd->last_error = NFC_EIO;
   log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unexpected PN53x reply!");
-  return false;
+  return pnd->last_error;
 }
 
-bool
-pn53x_check_error_frame (nfc_device_t * pnd, const byte_t * pbtRxFrame, const size_t szRxFrameLen)
+int
+pn53x_check_error_frame (struct nfc_device *pnd, const uint8_t *pbtRxFrame, const size_t szRxFrameLen)
 {
   if (szRxFrameLen >= sizeof (pn53x_error_frame)) {
     if (0 == memcmp (pbtRxFrame, pn53x_error_frame, sizeof (pn53x_error_frame))) {
       log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "PN53x sent an error frame");
-      pnd->iLastError = EFRAISERRFRAME;
-      return false;
+      pnd->last_error = NFC_EIO;
+      return pnd->last_error;
     }
   }
-  return true;
+  return NFC_SUCCESS;
 }
 
 /**
@@ -2397,8 +2542,8 @@ pn53x_check_error_frame (nfc_device_t * pnd, const byte_t * pbtRxFrame, const si
  * @param pbtData payload (bytes array) of the frame, will become PD0, ..., PDn in PN53x frame
  * @note The first byte of pbtData is the Command Code (CC)
  */
-bool
-pn53x_build_frame (byte_t * pbtFrame, size_t * pszFrame, const byte_t * pbtData, const size_t szData)
+int
+pn53x_build_frame (uint8_t *pbtFrame, size_t *pszFrame, const uint8_t *pbtData, const size_t szData)
 {
   if (szData <= PN53x_NORMAL_FRAME__DATA_MAX_LEN) {
     // LEN - Packet length = data length (len) + checksum (1) + end of stream marker (1)
@@ -2411,7 +2556,7 @@ pn53x_build_frame (byte_t * pbtFrame, size_t * pszFrame, const byte_t * pbtData,
     memcpy (pbtFrame + 6, pbtData, szData);
 
     // DCS - Calculate data payload checksum
-    byte_t btDCS = (256 - 0xD4);
+    uint8_t btDCS = (256 - 0xD4);
     for (size_t szPos = 0; szPos < szData; szPos++) {
       btDCS -= pbtData[szPos];
     }
@@ -2437,7 +2582,7 @@ pn53x_build_frame (byte_t * pbtFrame, size_t * pszFrame, const byte_t * pbtData,
     memcpy (pbtFrame + 9, pbtData, szData);
 
     // DCS - Calculate data payload checksum
-    byte_t btDCS = (256 - 0xD4);
+    uint8_t btDCS = (256 - 0xD4);
     for (size_t szPos = 0; szPos < szData; szPos++) {
       btDCS -= pbtData[szPos];
     }
@@ -2449,12 +2594,12 @@ pn53x_build_frame (byte_t * pbtFrame, size_t * pszFrame, const byte_t * pbtData,
     (*pszFrame) = szData + PN53x_EXTENDED_FRAME__OVERHEAD;
   } else {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "We can't send more than %d bytes in a raw (requested: %zd)", PN53x_EXTENDED_FRAME__DATA_MAX_LEN, szData);
-    return false;
+    return NFC_ECHIP;
   }
-  return true;
+  return NFC_SUCCESS;
 }
-pn53x_modulation_t
-pn53x_nm_to_pm(const nfc_modulation_t nm)
+pn53x_modulation
+pn53x_nm_to_pm(const nfc_modulation nm)
 {
   switch(nm.nmt) {
     case NMT_ISO14443A:
@@ -2511,8 +2656,8 @@ pn53x_nm_to_pm(const nfc_modulation_t nm)
   return PM_UNDEFINED;
 }
 
-nfc_modulation_t
-pn53x_ptt_to_nm( const pn53x_target_type_t ptt )
+nfc_modulation
+pn53x_ptt_to_nm( const pn53x_target_type ptt )
 {
   switch (ptt) {
     case PTT_GENERIC_PASSIVE_106:
@@ -2524,44 +2669,44 @@ pn53x_ptt_to_nm( const pn53x_target_type_t ptt )
 
     case PTT_MIFARE:
     case PTT_ISO14443_4A_106:
-      return (const nfc_modulation_t){ .nmt = NMT_ISO14443A, .nbr = NBR_106 };
+      return (const nfc_modulation){ .nmt = NMT_ISO14443A, .nbr = NBR_106 };
     break;
 
     case PTT_ISO14443_4B_106:
     case PTT_ISO14443_4B_TCL_106:
-      return (const nfc_modulation_t){ .nmt = NMT_ISO14443B, .nbr = NBR_106 };
+      return (const nfc_modulation){ .nmt = NMT_ISO14443B, .nbr = NBR_106 };
     break;
 
     case PTT_JEWEL_106:
-      return (const nfc_modulation_t){ .nmt = NMT_JEWEL, .nbr = NBR_106 };
+      return (const nfc_modulation){ .nmt = NMT_JEWEL, .nbr = NBR_106 };
     break;
 
     case PTT_FELICA_212:
-      return (const nfc_modulation_t){ .nmt = NMT_FELICA, .nbr = NBR_212 };
+      return (const nfc_modulation){ .nmt = NMT_FELICA, .nbr = NBR_212 };
     break;
     case PTT_FELICA_424:
-      return (const nfc_modulation_t){ .nmt = NMT_FELICA, .nbr = NBR_424 };
+      return (const nfc_modulation){ .nmt = NMT_FELICA, .nbr = NBR_424 };
     break;
 
     case PTT_DEP_PASSIVE_106:
     case PTT_DEP_ACTIVE_106:
-      return (const nfc_modulation_t){ .nmt = NMT_DEP, .nbr = NBR_106 };
+      return (const nfc_modulation){ .nmt = NMT_DEP, .nbr = NBR_106 };
     break;
     case PTT_DEP_PASSIVE_212:
     case PTT_DEP_ACTIVE_212:
-      return (const nfc_modulation_t){ .nmt = NMT_DEP, .nbr = NBR_212 };
+      return (const nfc_modulation){ .nmt = NMT_DEP, .nbr = NBR_212 };
     break;
     case PTT_DEP_PASSIVE_424:
     case PTT_DEP_ACTIVE_424:
-      return (const nfc_modulation_t){ .nmt = NMT_DEP, .nbr = NBR_424 };
+      return (const nfc_modulation){ .nmt = NMT_DEP, .nbr = NBR_424 };
     break;
   }
   // We should never be here, this line silent compilation warning
-  return (const nfc_modulation_t){ .nmt = NMT_ISO14443A, .nbr = NBR_106 };
+  return (const nfc_modulation){ .nmt = NMT_ISO14443A, .nbr = NBR_106 };
 }
 
-pn53x_target_type_t
-pn53x_nm_to_ptt(const nfc_modulation_t nm)
+pn53x_target_type
+pn53x_nm_to_ptt(const nfc_modulation nm)
 {
   switch(nm.nmt) {
     case NMT_ISO14443A:
@@ -2614,7 +2759,7 @@ pn53x_nm_to_ptt(const nfc_modulation_t nm)
 }
 
 void
-pn53x_data_new (nfc_device_t * pnd, const struct pn53x_io* io)
+pn53x_data_new (struct nfc_device *pnd, const struct pn53x_io *io)
 {
   pnd->chip_data = malloc(sizeof(struct pn53x_data));
 
@@ -2631,16 +2776,28 @@ pn53x_data_new (nfc_device_t * pnd, const struct pn53x_io* io)
   // PN53x starts in initiator mode
   CHIP_DATA (pnd)->operating_mode = INITIATOR;
 
+  // Clear last status byte
+  CHIP_DATA (pnd)->last_status_byte = 0x00;
+
   // Set current target to NULL
   CHIP_DATA (pnd)->current_target = NULL;
 
   // WriteBack cache is clean
   CHIP_DATA (pnd)->wb_trigged = false;
   memset (CHIP_DATA (pnd)->wb_mask, 0x00, PN53X_CACHE_REGISTER_SIZE);
+
+  // Set default command timeout (250 ms)
+  CHIP_DATA (pnd)->timeout_command = 250;
+
+  // Set default ATR timeout (103 ms)
+  CHIP_DATA (pnd)->timeout_atr = 103;
+
+  // Set default communication timeout (52 ms)
+  CHIP_DATA (pnd)->timeout_communication = 52;
 }
 
 void
-pn53x_data_free (nfc_device_t * pnd)
+pn53x_data_free (struct nfc_device *pnd)
 {
   if (CHIP_DATA (pnd)->current_target) {
     free (CHIP_DATA (pnd)->current_target);

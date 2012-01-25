@@ -49,8 +49,8 @@ void    uart_flush_input (const serial_port sp);
 void    uart_set_speed (serial_port sp, const uint32_t uiPortSpeed);
 uint32_t uart_get_speed (const serial_port sp);
 
-int     uart_receive (serial_port sp, byte_t * pbtRx, const size_t szRx, void * abort_p, struct timeval *timeout);
-int     uart_send (serial_port sp, const byte_t * pbtTx, const size_t szTx, struct timeval *timeout);
+int     uart_receive (serial_port sp, uint8_t *pbtRx, const size_t szRx, void *abort_p, int timeout);
+int     uart_send (serial_port sp, const uint8_t *pbtTx, const size_t szTx, int timeout);
 
 char  **uart_list_ports (void);
 

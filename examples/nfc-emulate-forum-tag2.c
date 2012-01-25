@@ -69,9 +69,9 @@
 #include <nfc/nfc.h>
 #include <nfc/nfc-emulation.h>
 
-#include "nfc-utils.h"
+#include "utils/nfc-utils.h"
 
-static nfc_device_t *pnd;
+static nfc_device *pnd;
 
 void
 stop_emulation (int sig)
@@ -112,7 +112,7 @@ static uint8_t __nfcforum_tag2_memory_area[] = {
 
 #define HALT 		0x50
 int
-nfcforum_tag2_io (struct nfc_emulator *emulator, const byte_t *data_in, const size_t data_in_len, byte_t *data_out, const size_t data_out_len)
+nfcforum_tag2_io (struct nfc_emulator *emulator, const uint8_t *data_in, const size_t data_in_len, uint8_t *data_out, const size_t data_out_len)
 {
   int res = 0;
 
@@ -155,7 +155,7 @@ main(int argc, char *argv[])
   (void)argc;
   (void)argv;
 
-  nfc_target_t nt = {
+  nfc_target nt = {
     .nm = {
       .nmt = NMT_ISO14443A,
       .nbr = NBR_UNDEFINED, // Will be updated by nfc_target_init()
@@ -172,37 +172,40 @@ main(int argc, char *argv[])
   };
 
   struct nfc_emulation_state_machine state_machine = {
-    .io   = nfcforum_tag2_io
+    .io = nfcforum_tag2_io
   };
 
   struct nfc_emulator emulator = {
-    .target= &nt,
+    .target = &nt,
     .state_machine = &state_machine,
     .user_data = __nfcforum_tag2_memory_area,
   };
 
   signal (SIGINT, stop_emulation);
-  pnd = nfc_connect (NULL);
+  nfc_init (NULL);  
+  pnd = nfc_open (NULL, NULL);
 
   if (pnd == NULL) {
-    ERR("Unable to connect to NFC device");
+    ERR("Unable to open NFC device");
     exit (EXIT_FAILURE);
   }
 
-  printf ("Connected to NFC device: %s\n", pnd->acName);
+  printf ("NFC device: %s opened\n", nfc_device_get_name (pnd));
   printf ("Emulating NDEF tag now, please touch it with a second NFC device\n");
 
   if (nfc_emulate_target (pnd, &emulator) < 0) {
     goto error;
   }
 
-  nfc_disconnect(pnd);
+  nfc_close(pnd);
+  nfc_exit (NULL);
 
   exit (EXIT_SUCCESS);
 
 error:
   if (pnd) {
     nfc_perror (pnd, argv[0]);
-    nfc_disconnect (pnd);
+    nfc_close (pnd);
+    nfc_exit (NULL);
   }
 }

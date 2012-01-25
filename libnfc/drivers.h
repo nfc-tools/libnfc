@@ -50,6 +50,6 @@
 
 #  define DRIVERS_MAX_DEVICES         16
 
-extern const struct nfc_driver_t *nfc_drivers[];
+extern const struct nfc_driver *nfc_drivers[];
 
 #endif // __NFC_DRIVERS_H__

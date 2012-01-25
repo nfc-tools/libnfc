@@ -30,14 +30,14 @@
 
 #  include <nfc/nfc-types.h>
 
-bool    arygon_probe (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * pszDeviceFound);
+bool    arygon_probe (nfc_connstring connstrings[], size_t connstrings_len, size_t *pszDeviceFound);
 
-nfc_device_t *arygon_connect (const nfc_device_desc_t * pndd);
-void    arygon_disconnect (nfc_device_t * pnd);
+nfc_device *arygon_open (const nfc_connstring connstring);
+void    arygon_close (nfc_device *pnd);
 
-bool    arygon_tama_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szData, struct timeval *timeout);
-int     arygon_tama_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szDat, struct timeval *timeouta);
+int    arygon_tama_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szData, int timeout);
+int    arygon_tama_receive (nfc_device *pnd, uint8_t *pbtData, const size_t szDat, int timeouta);
 
-extern const struct nfc_driver_t arygon_driver;
+extern const struct nfc_driver arygon_driver;
 
 #endif // ! __NFC_DRIVER_ARYGON_H__

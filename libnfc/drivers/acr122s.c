@@ -29,6 +29,9 @@
 #include "acr122s.h"
 
 #include <stdio.h>
+#include <inttypes.h>
+#include <string.h>
+#include <sys/param.h>
 #include <string.h>
 #include <unistd.h>
 
@@ -46,7 +49,7 @@
 
 struct acr122s_data {
   serial_port port;
-  byte_t seq;
+  uint8_t seq;
 #ifndef WIN32
   int abort_fds[2];
 #else
@@ -84,74 +87,74 @@ enum {
 #pragma pack(push, 1)
 
 struct icc_power_on_req {
-  byte_t message_type;
+  uint8_t message_type;
   uint32_t length;
-  byte_t slot;
-  byte_t seq;
-  byte_t power_select;
-  byte_t rfu[2];
+  uint8_t slot;
+  uint8_t seq;
+  uint8_t power_select;
+  uint8_t rfu[2];
 };
 
 struct icc_power_on_res {
-  byte_t message_type;
+  uint8_t message_type;
   uint32_t length;
-  byte_t slot;
-  byte_t seq;
-  byte_t status;
-  byte_t error;
-  byte_t chain_parameter;
+  uint8_t slot;
+  uint8_t seq;
+  uint8_t status;
+  uint8_t error;
+  uint8_t chain_parameter;
 };
 
 struct icc_power_off_req {
-  byte_t message_type;
+  uint8_t message_type;
   uint32_t length;
-  byte_t slot;
-  byte_t seq;
-  byte_t rfu[3];
+  uint8_t slot;
+  uint8_t seq;
+  uint8_t rfu[3];
 };
 
 struct icc_power_off_res {
-  byte_t message_type;
+  uint8_t message_type;
   uint32_t length;
-  byte_t slot;
-  byte_t seq;
-  byte_t status;
-  byte_t error;
-  byte_t clock_status;
+  uint8_t slot;
+  uint8_t seq;
+  uint8_t status;
+  uint8_t error;
+  uint8_t clock_status;
 };
 
 struct xfr_block_req {
-  byte_t message_type;
+  uint8_t message_type;
   uint32_t length;
-  byte_t slot;
-  byte_t seq;
-  byte_t bwi;
-  byte_t rfu[2];
+  uint8_t slot;
+  uint8_t seq;
+  uint8_t bwi;
+  uint8_t rfu[2];
 };
 
 struct xfr_block_res {
-  byte_t message_type;
+  uint8_t message_type;
   uint32_t length;
-  byte_t slot;
-  byte_t seq;
-  byte_t status;
-  byte_t error;
-  byte_t chain_parameter;
+  uint8_t slot;
+  uint8_t seq;
+  uint8_t status;
+  uint8_t error;
+  uint8_t chain_parameter;
 };
 
 struct apdu_header {
-  byte_t class;
-  byte_t ins;
-  byte_t p1;
-  byte_t p2;
-  byte_t length;
+  uint8_t class;
+  uint8_t ins;
+  uint8_t p1;
+  uint8_t p2;
+  uint8_t length;
 };
 
 #pragma pack(pop)
 
 #define TRACE do { printf("%s:%d\n", __func__, __LINE__); } while (0)
 
-#define DRIVER_DATA(dev) ((struct acr122s_data *) (dev->driver_data))
+#define DRIVER_DATA(pnd) ((struct acr122s_data *) (pnd->driver_data))
 
 /**
  * Print a debuggin hex string to stdout.
@@ -162,7 +165,7 @@ struct apdu_header {
  */
 #if 0
 static void
-print_hex(const char *caption, byte_t *buf, size_t buf_len)
+print_hex(const char *caption, uint8_t *buf, size_t buf_len)
 {
   printf("%s:", caption);
   for (size_t i = 0; i < buf_len; i++) {
@@ -179,53 +182,55 @@ print_hex(const char *caption, byte_t *buf, size_t buf_len)
  * @note command frame length (uint32_t at offset 2) should be valid
  */
 static void
-acr122s_fix_frame(byte_t *frame)
+acr122s_fix_frame(uint8_t *frame)
 {
   size_t frame_size = FRAME_SIZE(frame);
   frame[0] = STX;
   frame[frame_size - 1] = ETX;
 
-  byte_t *csum = frame + frame_size - 2;
+  uint8_t *csum = frame + frame_size - 2;
   *csum = 0;
-  for (byte_t *p = frame + 1; p < csum; p++)
+  for (uint8_t *p = frame + 1; p < csum; p++)
     *csum ^= *p;
 }
 
 /**
  * Send a command frame to ACR122S and check its ACK status.
  *
- * @param: dev is target nfc device
+ * @param: pnd is target nfc device
  * @param: cmd is command frame to send
  * @param: timeout
  * @return 0 if success
  */
 static int
-acr122s_send_frame(nfc_device_t *dev, byte_t *frame, struct timeval *timeout)
+acr122s_send_frame(nfc_device *pnd, uint8_t *frame, int timeout)
 {
   size_t frame_size = FRAME_SIZE(frame);
-  byte_t ack[4];
-  byte_t positive_ack[4] = { STX, 0, 0, ETX };
-  serial_port port = DRIVER_DATA(dev)->port;
+  uint8_t ack[4];
+  uint8_t positive_ack[4] = { STX, 0, 0, ETX };
+  serial_port port = DRIVER_DATA(pnd)->port;
   int ret;
   void *abort_p;
 
 #ifndef WIN32
-  abort_p = &(DRIVER_DATA(dev)->abort_fds[1]);
+  abort_p = &(DRIVER_DATA(pnd)->abort_fds[1]);
 #else
-  abort_p = &(DRIVER_DATA(dev)->abort_flag);
+  abort_p = &(DRIVER_DATA(pnd)->abort_flag);
 #endif
 
-  if ((ret = uart_send(port, frame, frame_size, timeout)) != 0)
+  if ((ret = uart_send(port, frame, frame_size, timeout)) < 0)
     return ret;
 
-  if ((ret = uart_receive(port, ack, 4, abort_p, timeout)) != 0)
+  if ((ret = uart_receive(port, ack, 4, abort_p, timeout)) < 0)
     return ret;
 
-  if (memcmp(ack, positive_ack, 4) != 0)
-    return ECOMIO;
+  if (memcmp(ack, positive_ack, 4) != 0){
+      pnd->last_error = NFC_EIO;
+      return pnd->last_error;
+    }
 
   struct xfr_block_req *req = (struct xfr_block_req *) &frame[1];
-  DRIVER_DATA(dev)->seq = req->seq + 1;
+  DRIVER_DATA(pnd)->seq = req->seq + 1;
 
   return 0;
 }
@@ -233,7 +238,7 @@ acr122s_send_frame(nfc_device_t *dev, byte_t *frame, struct timeval *timeout)
 /**
  * Receive response frame after a successfull acr122s_send_command().
  *
- * @param: dev is target nfc device
+ * @param: pnd is target nfc device
  * @param: frame is buffer where received response frame will be stored
  * @param: frame_size is frame size
  * @param: abort_p
@@ -243,29 +248,33 @@ acr122s_send_frame(nfc_device_t *dev, byte_t *frame, struct timeval *timeout)
  * @return 0 if success
  */
 static int
-acr122s_recv_frame(nfc_device_t *dev, byte_t *frame, size_t frame_size, void *abort_p, struct timeval *timeout)
+acr122s_recv_frame(nfc_device *pnd, uint8_t *frame, size_t frame_size, void *abort_p, int timeout)
 {
   if (frame_size < 13)
-    return EINVALARG;
+    pnd->last_error = NFC_EINVARG;
+    return pnd->last_error;
 
   int ret;
-  serial_port port = DRIVER_DATA(dev)->port;
+  serial_port port = DRIVER_DATA(pnd)->port;
 
   if ((ret = uart_receive(port, frame, 11, abort_p, timeout)) != 0)
     return ret;
 
   // Is buffer sufficient to store response?
-  if (frame_size < FRAME_SIZE(frame))
-    return ECOMIO;
+  if (frame_size < FRAME_SIZE(frame)){
+    pnd->last_error = NFC_EIO;
+    return pnd->last_error;
+  }
 
   size_t remaining = FRAME_SIZE(frame) - 11;
   if ((ret = uart_receive(port, frame + 11, remaining, abort_p, timeout)) != 0)
     return ret;
 
   struct xfr_block_res *res = (struct xfr_block_res *) &frame[1];
-  if ((byte_t) (res->seq + 1) != DRIVER_DATA(dev)->seq) {
+  if ((uint8_t) (res->seq + 1) != DRIVER_DATA(pnd)->seq) {
     log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Invalid response sequence number.");
-    return ECOMIO;
+    pnd->last_error = NFC_EIO;
+    return pnd->last_error;
   }
 
   return 0;
@@ -279,7 +288,7 @@ acr122s_recv_frame(nfc_device_t *dev, byte_t *frame, size_t frame_size, void *ab
 static uint32_t
 le32(uint32_t val) {
 	uint32_t res;
-	byte_t *p = (byte_t *) &res;
+	uint8_t *p = (uint8_t *) &res;
 	p[0] = val;
 	p[1] = val >> 8;
 	p[2] = val >> 16;
@@ -290,7 +299,7 @@ le32(uint32_t val) {
 /**
  * Build an ACR122S command frame from a PN532 command.
  *
- * @param dev is device for which the command frame will be generated
+ * @param pnd is device for which the command frame will be generated
  * @param frame is where the resulting command frame will be generated
  * @param frame_size is the passed command frame size
  * @param p1
@@ -302,9 +311,9 @@ le32(uint32_t val) {
  * @return true if frame built successfully
  */
 static bool
-acr122s_build_frame(nfc_device_t *dev,
-    byte_t *frame, size_t frame_size, byte_t p1, byte_t p2,
-    const byte_t *data, size_t data_size, int should_prefix)
+acr122s_build_frame(nfc_device *pnd,
+    uint8_t *frame, size_t frame_size, uint8_t p1, uint8_t p2,
+    const uint8_t *data, size_t data_size, int should_prefix)
 {
   if (frame_size < data_size + APDU_OVERHEAD + should_prefix)
     return false;
@@ -315,7 +324,7 @@ acr122s_build_frame(nfc_device_t *dev,
   req->message_type = XFR_BLOCK_REQ_MSG;
   req->length = le32(5 + data_size + should_prefix);
   req->slot = 0;
-  req->seq = DRIVER_DATA(dev)->seq;
+  req->seq = DRIVER_DATA(pnd)->seq;
   req->bwi = 0;
   req->rfu[0] = 0;
   req->rfu[1] = 0;
@@ -327,7 +336,7 @@ acr122s_build_frame(nfc_device_t *dev,
   header->p2 = p2;
 	header->length = data_size + should_prefix;
 
-  byte_t *buf = (byte_t *) &frame[16];
+  uint8_t *buf = (uint8_t *) &frame[16];
   if (should_prefix)
     *buf++ = 0xD4;
   memcpy(buf, data, data_size);
@@ -337,61 +346,61 @@ acr122s_build_frame(nfc_device_t *dev,
 }
 
 static int
-acr122s_activate_sam(nfc_device_t *dev)
+acr122s_activate_sam(nfc_device *pnd)
 {
-  byte_t cmd[13];
+  uint8_t cmd[13];
   memset(cmd, 0, sizeof(cmd));
   cmd[1] = ICC_POWER_ON_REQ_MSG;
   acr122s_fix_frame(cmd);
 
-  byte_t resp[MAX_FRAME_SIZE];
+  uint8_t resp[MAX_FRAME_SIZE];
   int ret;
 
-  if ((ret = acr122s_send_frame(dev, cmd, 0)) != 0)
+  if ((ret = acr122s_send_frame(pnd, cmd, 0)) != 0)
     return ret;
 
-  if ((ret = acr122s_recv_frame(dev, resp, MAX_FRAME_SIZE, 0, 0)) != 0)
+  if ((ret = acr122s_recv_frame(pnd, resp, MAX_FRAME_SIZE, 0, 0)) != 0)
     return ret;
 
-  CHIP_DATA(dev)->power_mode = NORMAL;
+  CHIP_DATA(pnd)->power_mode = NORMAL;
 
   return 0;
 }
 
 static int
-acr122s_deactivate_sam(nfc_device_t *dev)
+acr122s_deactivate_sam(nfc_device *pnd)
 {
-  byte_t cmd[13];
+  uint8_t cmd[13];
   memset(cmd, 0, sizeof(cmd));
   cmd[1] = ICC_POWER_OFF_REQ_MSG;
   acr122s_fix_frame(cmd);
 
-  byte_t resp[MAX_FRAME_SIZE];
+  uint8_t resp[MAX_FRAME_SIZE];
   int ret;
 
-  if ((ret = acr122s_send_frame(dev, cmd, 0)) != 0)
+  if ((ret = acr122s_send_frame(pnd, cmd, 0)) != 0)
     return ret;
 
-  if ((ret = acr122s_recv_frame(dev, resp, MAX_FRAME_SIZE, 0, 0)) != 0)
+  if ((ret = acr122s_recv_frame(pnd, resp, MAX_FRAME_SIZE, 0, 0)) != 0)
     return ret;
 
-  CHIP_DATA(dev)->power_mode = LOWVBAT;
+  CHIP_DATA(pnd)->power_mode = LOWVBAT;
 
   return 0;
 }
 
 static int
-acr122s_get_firmware_version(nfc_device_t *dev, char *version, size_t length)
+acr122s_get_firmware_version(nfc_device *pnd, char *version, size_t length)
 {
   int ret;
-  byte_t cmd[MAX_FRAME_SIZE];
+  uint8_t cmd[MAX_FRAME_SIZE];
 
-  acr122s_build_frame(dev, cmd, sizeof(cmd), 0x48, 0, NULL, 0, 0);
+  acr122s_build_frame(pnd, cmd, sizeof(cmd), 0x48, 0, NULL, 0, 0);
 
-  if ((ret = acr122s_send_frame(dev, cmd, 0)) != 0)
+  if ((ret = acr122s_send_frame(pnd, cmd, 0)) != 0)
     return ret;
 
-  if ((ret = acr122s_recv_frame(dev, cmd, sizeof(cmd), 0, 0)) != 0)
+  if ((ret = acr122s_recv_frame(pnd, cmd, sizeof(cmd), 0, 0)) != 0)
     return ret;
 
   size_t len = APDU_SIZE(cmd);
@@ -403,208 +412,277 @@ acr122s_get_firmware_version(nfc_device_t *dev, char *version, size_t length)
   return 0;
 }
 
+struct acr122s_descriptor {
+  char port[128];
+  uint32_t speed;
+};
+
+int
+acr122s_connstring_decode (const nfc_connstring connstring, struct acr122s_descriptor *desc)
+{
+  char *cs = malloc (strlen (connstring) + 1);
+  if (!cs) {
+    perror ("malloc");
+    return -1;
+  }
+  strcpy (cs, connstring);
+  const char *driver_name = strtok (cs, ":");
+  if (!driver_name) {
+    // Parse error
+    free (cs);
+    return -1;
+  }
+
+  if (0 != strcmp (driver_name, ACR122S_DRIVER_NAME)) {
+    // Driver name does not match.
+    free (cs);
+    return 0;
+  }
+
+  const char *port = strtok (NULL, ":");
+  if (!port) {
+    // Only driver name was specified (or parsing error)
+    free (cs);
+    return 1;
+  }
+  strncpy (desc->port, port, sizeof(desc->port)-1);
+  desc->port[sizeof(desc->port)-1] = '\0';
+
+  const char *speed_s = strtok (NULL, ":");
+  if (!speed_s) {
+    // speed not specified (or parsing error)
+    free (cs);
+    return 2;
+  }
+  unsigned long speed;
+  if (sscanf (speed_s, "%lu", &speed) != 1) {
+    // speed_s is not a number
+    free (cs);
+    return 2;
+  }
+  desc->speed = speed;
+
+  free (cs);
+  return 3;
+}
+
 bool
-acr122s_probe(nfc_device_desc_t descs[], size_t desc_count, size_t *dev_found)
+acr122s_probe(nfc_connstring connstrings[], size_t connstrings_len, size_t *pszDeviceFound)
 {
   /** @note: Due to UART bus we can't know if its really an ACR122S without
   * sending some commands. But using this way to probe devices, we can
   * have serious problem with other device on this bus */
 #ifndef SERIAL_AUTOPROBE_ENABLED
-  (void) descs;
-  (void) desc_count;
-  *dev_found = 0;
+  (void) connstrings;
+  (void) connstrings_len;
+  *pszDeviceFound = 0;
   log_put(LOG_CATEGORY, NFC_PRIORITY_INFO, "Serial auto-probing have been disabled at compile time. Skipping autoprobe.");
   return false;
 #else /* SERIAL_AUTOPROBE_ENABLED */
-  *dev_found = 0;
-  char **ports = uart_list_ports();
-  for (int i = 0; ports[i]; i++) {
-    char *port = ports[i];
-    serial_port sp = uart_open(port);
-    log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "Trying to find ACR122S device on serial port: %s at %d bauds.", port, ACR122S_DEFAULT_SPEED);
+  *pszDeviceFound = 0;
+  
+    serial_port sp;
+  char **acPorts = uart_list_ports ();
+  const char *acPort;
+  int     iDevice = 0;
 
+  while ((acPort = acPorts[iDevice++])) {
+    sp = uart_open (acPort);
+    log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "Trying to find ACR122S device on serial port: %s at %d bauds.", acPort, ACR122S_DEFAULT_SPEED);
+    
     if ((sp != INVALID_SERIAL_PORT) && (sp != CLAIMED_SERIAL_PORT)) {
-      uart_flush_input(sp);
-      uart_set_speed(sp, ACR122S_DEFAULT_SPEED);
+      // We need to flush input to be sure first reply does not comes from older byte transceive
+      uart_flush_input (sp);
+      uart_set_speed (sp, ACR122S_DEFAULT_SPEED);
 
-      nfc_device_t *dev = nfc_device_new();
-      dev->driver = &acr122s_driver;
+      nfc_connstring connstring;
+      snprintf (connstring, sizeof(nfc_connstring), "%s:%s:%"PRIu32, ACR122S_DRIVER_NAME, acPort, ACR122S_DEFAULT_SPEED);
+      nfc_device *pnd = nfc_device_new (connstring);
 
-      dev->driver_data = malloc(sizeof(struct acr122s_data));
-      DRIVER_DATA(dev)->port = sp;
-      DRIVER_DATA(dev)->seq = 0;
+      pnd->driver = &acr122s_driver;
+      pnd->driver_data = malloc(sizeof(struct acr122s_data));
+      DRIVER_DATA (pnd)->port = sp;
+      DRIVER_DATA(pnd)->seq = 0;
 
 #ifndef WIN32
-      pipe(DRIVER_DATA(dev)->abort_fds);
+      pipe(DRIVER_DATA(pnd)->abort_fds);
 #else
-      DRIVER_DATA(dev)->abort_flag = false;
+      DRIVER_DATA(pnd)->abort_flag = false;
 #endif
 
-      pn53x_data_new(dev, &acr122s_io);
-      CHIP_DATA(dev)->type = PN532;
-      CHIP_DATA(dev)->power_mode = NORMAL;
-
+      pn53x_data_new(pnd, &acr122s_io);
+      CHIP_DATA(pnd)->type = PN532;
+      CHIP_DATA(pnd)->power_mode = NORMAL;
+      
       char version[32];
-      int ret = acr122s_get_firmware_version(dev, version, sizeof(version));
+      int ret = acr122s_get_firmware_version(pnd, version, sizeof(version));
       if (ret == 0 && strncmp("ACR122S", version, 7) != 0) {
         ret = -1;
       }
 
-      pn53x_data_free(dev);
-      nfc_device_free(dev);
+      pn53x_data_free(pnd);
+      nfc_device_free(pnd);
       uart_close(sp);
 
       if (ret != 0)
         continue;
-
-      nfc_device_desc_t *desc = &descs[(*dev_found)++];
-      snprintf(desc->acDevice, DEVICE_NAME_LENGTH - 1, "%s (%s)", ACR122S_DRIVER_NAME, port);
-      desc->pcDriver = ACR122S_DRIVER_NAME;
-      strncpy(desc->acPort, port, DEVICE_PORT_LENGTH - 1);
-      desc->acPort[DEVICE_PORT_LENGTH - 1] = '\0';
-      desc->uiSpeed = ACR122S_DEFAULT_SPEED;
-
+      
+      // ACR122S reader is found
+      memcpy (connstrings[*pszDeviceFound], connstring, sizeof(nfc_connstring));
+      (*pszDeviceFound)++;
+      
       // Test if we reach the maximum "wanted" devices
-      if (*dev_found >= desc_count)
+      if (*pszDeviceFound >= connstrings_len)
         break;
     }
   }
-
-  for (int i = 0; ports[i]; i++)
-    free(ports[i]);
-  free(ports);
-
-  return true;
+  iDevice = 0;
+  while ((acPort = acPorts[iDevice++])) {
+    free ((void*)acPort);
+  }
+  free (acPorts);
 #endif /* SERIAL_AUTOPROBE_ENABLED */
+  return true;
 }
 
-nfc_device_t *
-acr122s_connect(const nfc_device_desc_t *desc)
+nfc_device *
+acr122s_open(const nfc_connstring connstring)
 {
   serial_port sp;
-  nfc_device_t *dev;
+  nfc_device *pnd;
+  struct acr122s_descriptor ndd;
+  int connstring_decode_level = acr122s_connstring_decode (connstring, &ndd);
+  
+  if (connstring_decode_level < 2) {
+    return NULL;
+  }
+  if (connstring_decode_level < 3) {
+    ndd.speed = ACR122S_DEFAULT_SPEED;
+  }
 
   log_put(LOG_CATEGORY, NFC_PRIORITY_TRACE,
-      "Attempt to connect to: %s at %d bauds.", desc->acPort, desc->uiSpeed);
+      "Attempt to connect to: %s at %d bauds.", ndd.port, ndd.speed);
 
-  sp = uart_open(desc->acPort);
+  sp = uart_open(ndd.port);
   if (sp == INVALID_SERIAL_PORT) {
     log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR,
-        "Invalid serial port: %s", desc->acPort);
+        "Invalid serial port: %s", ndd.port);
     return NULL;
   }
   if (sp == CLAIMED_SERIAL_PORT) {
     log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR,
-        "Serial port already claimed: %s", desc->acPort);
+        "Serial port already claimed: %s", ndd.port);
     return NULL;
   }
 
   uart_flush_input(sp);
-  uart_set_speed(sp, desc->uiSpeed);
+  uart_set_speed(sp, ndd.speed);
 
-  dev = nfc_device_new();
-  dev->driver = &acr122s_driver;
-  strcpy(dev->acName, ACR122S_DRIVER_NAME);
+  pnd = nfc_device_new(connstring);
+  pnd->driver = &acr122s_driver;
+  strcpy(pnd->name, ACR122S_DRIVER_NAME);
 
-  dev->driver_data = malloc(sizeof(struct acr122s_data));
-  DRIVER_DATA(dev)->port = sp;
-  DRIVER_DATA(dev)->seq = 0;
+  pnd->driver_data = malloc(sizeof(struct acr122s_data));
+  DRIVER_DATA(pnd)->port = sp;
+  DRIVER_DATA(pnd)->seq = 0;
 
 #ifndef WIN32
-  pipe(DRIVER_DATA(dev)->abort_fds);
+  pipe(DRIVER_DATA(pnd)->abort_fds);
 #else
-  DRIVER_DATA(dev)->abort_flag = false;
+  DRIVER_DATA(pnd)->abort_flag = false;
 #endif
 
-  pn53x_data_new(dev, &acr122s_io);
-  CHIP_DATA(dev)->type = PN532;
+  pn53x_data_new(pnd, &acr122s_io);
+  CHIP_DATA(pnd)->type = PN532;
 
 #if 1
   // Retrieve firmware version
   char version[DEVICE_NAME_LENGTH];
-  if (acr122s_get_firmware_version(dev, version, sizeof(version)) != 0) {
+  if (acr122s_get_firmware_version(pnd, version, sizeof(version)) != 0) {
     log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Cannot get reader firmware.");
-    acr122s_disconnect(dev);
+    acr122s_close(pnd);
     return NULL;
   }
 
   if (strncmp(version, "ACR122S", 7) != 0) {
     log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "Invalid firmware version: %s",
         version);
-    acr122s_disconnect(dev);
+    acr122s_close(pnd);
     return NULL;
   }
 
-  snprintf(dev->acName, sizeof(dev->acName), "%s", version);
+  snprintf(pnd->name, sizeof(pnd->name), "%s", version);
 
   // Activate SAM before operating
-  if (acr122s_activate_sam(dev) != 0) {
+  if (acr122s_activate_sam(pnd) != 0) {
     log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Cannot activate SAM.");
-    acr122s_disconnect(dev);
+    acr122s_close(pnd);
     return NULL;
   }
 #endif
 
-  if (!pn53x_init(dev)) {
+  if (!pn53x_init(pnd)) {
     log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Failed initializing PN532 chip.");
-    acr122s_disconnect(dev);
+    acr122s_close(pnd);
     return NULL;
   }
 
-  return dev;
+  return pnd;
 }
 
 void
-acr122s_disconnect (nfc_device_t *dev)
+acr122s_close (nfc_device *pnd)
 {
-  acr122s_deactivate_sam(dev);
-  uart_close(DRIVER_DATA(dev)->port);
+  acr122s_deactivate_sam(pnd);
+  uart_close(DRIVER_DATA(pnd)->port);
 
 #ifndef WIN32
   // Release file descriptors used for abort mecanism
-  close (DRIVER_DATA(dev)->abort_fds[0]);
-  close (DRIVER_DATA(dev)->abort_fds[1]);
+  close (DRIVER_DATA(pnd)->abort_fds[0]);
+  close (DRIVER_DATA(pnd)->abort_fds[1]);
 #endif
 
-  pn53x_data_free(dev);
-  nfc_device_free(dev);
-}
-
-bool
-acr122s_send(nfc_device_t *dev, const byte_t *buf, const size_t buf_len, struct timeval *timeout)
-{
-  uart_flush_input(DRIVER_DATA(dev)->port);
-
-  byte_t cmd[MAX_FRAME_SIZE];
-  acr122s_build_frame(dev, cmd, sizeof(cmd), 0, 0, buf, buf_len, 1);
-  int ret;
-  if ((ret = acr122s_send_frame(dev, cmd, timeout)) != 0) {
-    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Unable to transmit data. (TX)");
-    dev->iLastError = ret;
-    return false;
-  }
-
-  return true;
+  pn53x_data_free(pnd);
+  nfc_device_free(pnd);
 }
 
 int
-acr122s_receive(nfc_device_t *dev, byte_t *buf, size_t buf_len, struct timeval *timeout)
+acr122s_send(nfc_device *pnd, const uint8_t *buf, const size_t buf_len, int timeout)
+{
+  uart_flush_input(DRIVER_DATA(pnd)->port);
+
+  uint8_t cmd[MAX_FRAME_SIZE];
+  acr122s_build_frame(pnd, cmd, sizeof(cmd), 0, 0, buf, buf_len, 1);
+  int ret;
+  if ((ret = acr122s_send_frame(pnd, cmd, timeout)) != 0) {
+    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Unable to transmit data. (TX)");
+    pnd->last_error = ret;
+    return pnd->last_error;
+  }
+
+  return NFC_SUCCESS;
+}
+
+int
+acr122s_receive(nfc_device *pnd, uint8_t *buf, size_t buf_len, int timeout)
 {
   void *abort_p;
 
 #ifndef WIN32
-  abort_p = &(DRIVER_DATA(dev)->abort_fds[1]);
+  abort_p = &(DRIVER_DATA(pnd)->abort_fds[1]);
 #else
-  abort_p = &(DRIVER_DATA(dev)->abort_flag);
+  abort_p = &(DRIVER_DATA(pnd)->abort_flag);
 #endif
 
-  byte_t tmp[MAX_FRAME_SIZE];
-  dev->iLastError = acr122s_recv_frame(dev, tmp, sizeof(tmp), abort_p, timeout);
+  uint8_t tmp[MAX_FRAME_SIZE];
+  pnd->last_error = acr122s_recv_frame(pnd, tmp, sizeof(tmp), abort_p, timeout);
 
-  if (abort_p && (EOPABORT == dev->iLastError))
-    return -1;
+  if (abort_p && (NFC_EOPABORTED == pnd->last_error)) {
+    pnd->last_error = NFC_EOPABORTED;
+    return pnd->last_error;
+  }
 
-  if (dev->iLastError != 0) {
+  if (pnd->last_error < 0) {
     log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Unable to receive data. (RX)");
     return -1;
   }
@@ -612,27 +690,27 @@ acr122s_receive(nfc_device_t *dev, byte_t *buf, size_t buf_len, struct timeval *
   size_t data_len = FRAME_SIZE(tmp) - 17;
   if (data_len > buf_len) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "Receive buffer too small. (buf_len: %zu, data_len: %zu)", buf_len, data_len);
-    dev->iLastError = ECOMIO;
-    return -1;
+    pnd->last_error = NFC_EIO;
+    return pnd->last_error;
   }
 
   memcpy(buf, tmp + 13, data_len);
   return data_len;
 }
 
-bool
-acr122s_abort_command(nfc_device_t *dev)
+int
+acr122s_abort_command(nfc_device *pnd)
 {
-  if (dev) {
+  if (pnd) {
 #ifndef WIN32
-    close(DRIVER_DATA(dev)->abort_fds[0]);
-    close(DRIVER_DATA(dev)->abort_fds[1]);
-    pipe(DRIVER_DATA(dev)->abort_fds);
+    close(DRIVER_DATA(pnd)->abort_fds[0]);
+    close(DRIVER_DATA(pnd)->abort_fds[1]);
+    pipe(DRIVER_DATA(pnd)->abort_fds);
 #else
-    DRIVER_DATA(dev)->abort_flag = true;
+    DRIVER_DATA(pnd)->abort_flag = true;
 #endif
   }
-  return true;
+  return NFC_SUCCESS;
 }
 
 const struct pn53x_io acr122s_io = {
@@ -640,11 +718,11 @@ const struct pn53x_io acr122s_io = {
   .receive = acr122s_receive,
 };
 
-const struct nfc_driver_t acr122s_driver = {
+const struct nfc_driver acr122s_driver = {
   .name       = ACR122S_DRIVER_NAME,
   .probe      = acr122s_probe,
-  .connect    = acr122s_connect,
-  .disconnect = acr122s_disconnect,
+  .open       = acr122s_open,
+  .close      = acr122s_close,
   .strerror   = pn53x_strerror,
 
   .initiator_init                   = pn53x_initiator_init,
@@ -663,7 +741,8 @@ const struct nfc_driver_t acr122s_driver = {
   .target_send_bits      = pn53x_target_send_bits,
   .target_receive_bits   = pn53x_target_receive_bits,
 
-  .configure  = pn53x_configure,
+  .device_set_property_bool  = pn53x_set_property_bool,
+  .device_set_property_int = pn53x_set_property_int,
 
   .abort_command  = acr122s_abort_command,
   .idle  = NULL,

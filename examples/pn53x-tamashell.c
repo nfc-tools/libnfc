@@ -71,41 +71,46 @@
 
 int main(int argc, const char* argv[])
 {
-  nfc_device_t* pnd;
-  byte_t abtRx[MAX_FRAME_LEN];
-  byte_t abtTx[MAX_FRAME_LEN];
+  nfc_device *pnd;
+  uint8_t abtRx[MAX_FRAME_LEN];
+  uint8_t abtTx[MAX_FRAME_LEN];
   size_t szRx = sizeof(abtRx);
   size_t szTx;
   extern FILE* stdin;
   FILE* input = NULL;
 
   if (argc >= 2) {
-    if((input=fopen(argv[1], "r"))==NULL) {
+    if((input = fopen(argv[1], "r"))==NULL) {
       ERR ("%s", "Cannot open file.");
       return EXIT_FAILURE;
     }
   }
 
+  nfc_init (NULL);
+  
   // Try to open the NFC reader
-  pnd = nfc_connect(NULL);
+  pnd = nfc_open(NULL, NULL);
 
   if (pnd == NULL) {
-    ERR ("%s", "Unable to connect to NFC device.");
+    ERR ("%s", "Unable to open NFC device.");
     return EXIT_FAILURE;
   }
 
-  printf ("Connected to NFC reader: %s\n", pnd->acName);
-  nfc_initiator_init(pnd);
+  printf ("NFC reader: %s opened\n", nfc_device_get_name (pnd));
+  if (nfc_initiator_init (pnd) < 0) {
+    nfc_perror (pnd, "nfc_initiator_init");
+    exit (EXIT_FAILURE);    
+  }
 
-  char * cmd;
-  char * prompt="> ";
+  char *cmd;
+  char *prompt = "> ";
   while(1) {
-    int offset=0;
+    int offset = 0;
 #if defined(HAVE_READLINE)
-    if (input==NULL) { // means we use stdin
-      cmd=readline(prompt);
+    if (input == NULL) { // means we use stdin
+      cmd = readline(prompt);
       // NULL if ctrl-d
-      if (cmd==NULL) {
+      if (cmd == NULL) {
         printf("Bye!\n");
         break;
       }
@@ -113,7 +118,7 @@ int main(int argc, const char* argv[])
     } else {
 #endif //HAVE_READLINE
       size_t n = 255;
-      char * ret = NULL;
+      char *ret = NULL;
       cmd = malloc(n);
       printf("%s", prompt);
       fflush(0);
@@ -132,18 +137,18 @@ int main(int argc, const char* argv[])
 #if defined(HAVE_READLINE)
     }
 #endif //HAVE_READLINE
-    if (cmd[0]=='q') {
+    if (cmd[0] == 'q') {
       printf("Bye!\n");
       free(cmd);
       break;
     }
-    if (cmd[0]=='p') {
-      int s=0;
+    if (cmd[0] == 'p') {
+      int s = 0;
       offset++;
       while (isspace(cmd[offset])) {
         offset++;
       }
-      sscanf(cmd+offset, "%d", &s);
+      sscanf(cmd + offset, "%d", &s);
       printf("Pause for %i msecs\n", s);
       if (s>0) {
           sleep(s * SUSP_TIME);
@@ -152,14 +157,14 @@ int main(int argc, const char* argv[])
       continue;
     }
     szTx = 0;
-    for(int i = 0; i<MAX_FRAME_LEN-10; i++) {
+    for(int i = 0; i < MAX_FRAME_LEN - 10; i++) {
       int size;
-      byte_t byte;
+      uint8_t byte;
       while (isspace(cmd[offset])) {
         offset++;
       }
       size = sscanf(cmd+offset, "%2x", (unsigned int*)&byte);
-      if (size<1) {
+      if (size < 1 ) {
         break;
       }
       abtTx[i] = byte;
@@ -175,14 +180,16 @@ int main(int argc, const char* argv[])
       continue;
     }
     printf("Tx: ");
-    print_hex((byte_t*)abtTx,szTx);
+    print_hex((uint8_t*)abtTx,szTx);
 
     szRx = sizeof(abtRx);
-    if (!pn53x_transceive (pnd, abtTx, szTx, abtRx, &szRx, NULL)) {
+    int res = 0;
+    if ((res = pn53x_transceive (pnd, abtTx, szTx, abtRx, szRx, 0)) < 0) {
       free(cmd);
       nfc_perror (pnd, "Rx");
       continue;
     }
+    szRx = (size_t) res;
 
     printf("Rx: ");
     print_hex(abtRx, szRx);
@@ -192,6 +199,7 @@ int main(int argc, const char* argv[])
   if (input != NULL) {
     fclose(input);
   }
-  nfc_disconnect(pnd);
+  nfc_close(pnd);
+  nfc_exit (NULL);
   return 1;
 }

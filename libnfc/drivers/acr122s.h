@@ -28,14 +28,14 @@
 #include <sys/time.h>
 #include <nfc/nfc-types.h>
 
-bool acr122s_probe(nfc_device_desc_t descs[], size_t desc_count, size_t *dev_found);
+bool acr122s_probe(nfc_connstring connstrings[], size_t connstrings_len, size_t *pszDeviceFound);
 
-nfc_device_t *acr122s_connect(const nfc_device_desc_t *desc);
-void acr122s_disconnect(nfc_device_t *dev);
+nfc_device *acr122s_open(const nfc_connstring connstring);
+void acr122s_close(nfc_device *pnd);
 
-bool acr122s_send(nfc_device_t *dev, const byte_t *buf, size_t buf_len, struct timeval *timeout);
-int acr122s_receive(nfc_device_t *dev, byte_t *buf, size_t buf_len, struct timeval *timeout);
+int acr122s_send(nfc_device *pnd, const uint8_t *buf, size_t buf_len, int timeout);
+int acr122s_receive(nfc_device *pnd, uint8_t *buf, size_t buf_len, int timeout);
 
-extern const struct nfc_driver_t acr122s_driver;
+extern const struct nfc_driver acr122s_driver;
 
 #endif

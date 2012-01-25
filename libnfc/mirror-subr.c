@@ -30,7 +30,7 @@
 
 #include "mirror-subr.h"
 
-static const byte_t ByteMirror[256] = {
+static const uint8_t ByteMirror[256] = {
   0x00, 0x80, 0x40, 0xc0, 0x20, 0xa0, 0x60, 0xe0, 0x10, 0x90, 0x50, 0xd0, 0x30,
   0xb0, 0x70, 0xf0, 0x08, 0x88, 0x48, 0xc8, 0x28, 0xa8, 0x68, 0xe8, 0x18, 0x98,
   0x58, 0xd8, 0x38, 0xb8, 0x78, 0xf8, 0x04, 0x84, 0x44, 0xc4, 0x24, 0xa4, 0x64,
@@ -53,14 +53,14 @@ static const byte_t ByteMirror[256] = {
   0xef, 0x1f, 0x9f, 0x5f, 0xdf, 0x3f, 0xbf, 0x7f, 0xff
 };
 
-byte_t
-mirror (byte_t bt)
+uint8_t
+mirror (uint8_t bt)
 {
   return ByteMirror[bt];
 }
 
 void
-mirror_bytes (byte_t * pbts, size_t szLen)
+mirror_bytes (uint8_t *pbts, size_t szLen)
 {
   size_t  szByteNr;
 
@@ -73,13 +73,13 @@ mirror_bytes (byte_t * pbts, size_t szLen)
 uint32_t
 mirror32 (uint32_t ui32Bits)
 {
-  mirror_bytes ((byte_t *) & ui32Bits, 4);
+  mirror_bytes ((uint8_t *) & ui32Bits, 4);
   return ui32Bits;
 }
 
 uint64_t
 mirror64 (uint64_t ui64Bits)
 {
-  mirror_bytes ((byte_t *) & ui64Bits, 8);
+  mirror_bytes ((uint8_t *) & ui64Bits, 8);
   return ui64Bits;
 }

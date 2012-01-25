@@ -51,31 +51,31 @@
 
 #define MAX_FRAME_LEN 264
 
-static byte_t abtRx[MAX_FRAME_LEN];
-static size_t szRxBits;
+static uint8_t abtRx[MAX_FRAME_LEN];
+static int szRxBits;
 static size_t szRx = sizeof(abtRx);
-static byte_t abtRawUid[12];
-static byte_t abtAtqa[2];
-static byte_t abtSak;
-static byte_t abtAts[MAX_FRAME_LEN];
-static byte_t szAts = 0;
+static uint8_t abtRawUid[12];
+static uint8_t abtAtqa[2];
+static uint8_t abtSak;
+static uint8_t abtAts[MAX_FRAME_LEN];
+static uint8_t szAts = 0;
 static size_t szCL = 1;//Always start with Cascade Level 1 (CL1)
-static nfc_device_t *pnd;
+static nfc_device *pnd;
 
 bool    quiet_output = false;
 bool    force_rats = false;
 bool    iso_ats_supported = false;
 
 // ISO14443A Anti-Collision Commands
-byte_t  abtReqa[1] = { 0x26 };
-byte_t  abtSelectAll[2] = { 0x93, 0x20 };
-byte_t  abtSelectTag[9] = { 0x93, 0x70, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-byte_t  abtRats[4] = { 0xe0, 0x50, 0x00, 0x00 };
-byte_t  abtHalt[4] = { 0x50, 0x00, 0x00, 0x00 };
+uint8_t  abtReqa[1] = { 0x26 };
+uint8_t  abtSelectAll[2] = { 0x93, 0x20 };
+uint8_t  abtSelectTag[9] = { 0x93, 0x70, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+uint8_t  abtRats[4] = { 0xe0, 0x50, 0x00, 0x00 };
+uint8_t  abtHalt[4] = { 0x50, 0x00, 0x00, 0x00 };
 #define CASCADE_BIT 0x04
 
 static  bool
-transmit_bits (const byte_t * pbtTx, const size_t szTxBits)
+transmit_bits (const uint8_t *pbtTx, const size_t szTxBits)
 {
   // Show transmitted command
   if (!quiet_output) {
@@ -83,7 +83,7 @@ transmit_bits (const byte_t * pbtTx, const size_t szTxBits)
     print_hex_bits (pbtTx, szTxBits);
   }
   // Transmit the bit frame command, we don't use the arbitrary parity feature
-  if (!nfc_initiator_transceive_bits (pnd, pbtTx, szTxBits, NULL, abtRx, &szRxBits, NULL))
+  if ((szRxBits = nfc_initiator_transceive_bits (pnd, pbtTx, szTxBits, NULL, abtRx, NULL)) < 0)
     return false;
 
   // Show received answer
@@ -97,7 +97,7 @@ transmit_bits (const byte_t * pbtTx, const size_t szTxBits)
 
 
 static  bool
-transmit_bytes (const byte_t * pbtTx, const size_t szTx)
+transmit_bytes (const uint8_t *pbtTx, const size_t szTx)
 {
   // Show transmitted command
   if (!quiet_output) {
@@ -105,7 +105,7 @@ transmit_bytes (const byte_t * pbtTx, const size_t szTx)
     print_hex (pbtTx, szTx);
   }
   // Transmit the command bytes
-  if (!nfc_initiator_transceive_bytes (pnd, pbtTx, szTx, abtRx, &szRx, NULL))
+  if (nfc_initiator_transceive_bytes (pnd, pbtTx, szTx, abtRx, &szRx, 0) < 0)
     return false;
 
   // Show received answer
@@ -148,39 +148,45 @@ main (int argc, char *argv[])
     }
   }
 
+  nfc_init (NULL);
+  
   // Try to open the NFC reader
-  pnd = nfc_connect (NULL);
+  pnd = nfc_open (NULL, NULL);
 
   if (!pnd) {
-    printf ("Error connecting NFC reader\n");
+    printf ("Error opening NFC reader\n");
     exit(EXIT_FAILURE);
   }
 
   // Initialise NFC device as "initiator"
-  nfc_initiator_init (pnd);
+  if (nfc_initiator_init (pnd) < 0) {
+    nfc_perror (pnd, "nfc_initiator_init");
+    exit (EXIT_FAILURE);    
+  }
 
   // Configure the CRC
-  if (!nfc_configure (pnd, NDO_HANDLE_CRC, false)) {
-    nfc_perror (pnd, "nfc_configure");
+  if (nfc_device_set_property_bool (pnd, NP_HANDLE_CRC, false) < 0) {
+    nfc_perror (pnd, "nfc_device_set_property_bool");
     exit (EXIT_FAILURE);
   }
   // Use raw send/receive methods
-  if (!nfc_configure (pnd, NDO_EASY_FRAMING, false)) {
-    nfc_perror (pnd, "nfc_configure");
+  if (nfc_device_set_property_bool (pnd, NP_EASY_FRAMING, false) < 0) {
+    nfc_perror (pnd, "nfc_device_set_property_bool");
     exit (EXIT_FAILURE);
   }
   // Disable 14443-4 autoswitching
-  if (!nfc_configure (pnd, NDO_AUTO_ISO14443_4, false)) {
-    nfc_perror (pnd, "nfc_configure");
+  if (nfc_device_set_property_bool (pnd, NP_AUTO_ISO14443_4, false) < 0) {
+    nfc_perror (pnd, "nfc_device_set_property_bool");
     exit (EXIT_FAILURE);
   }
 
-  printf ("Connected to NFC reader: %s\n\n", pnd->acName);
+  printf ("NFC reader: %s opened\n\n", nfc_device_get_name (pnd));
 
   // Send the 7 bits request command specified in ISO 14443A (0x26)
   if (!transmit_bits (abtReqa, 7)) {
     printf ("Error: No tag available\n");
-    nfc_disconnect (pnd);
+    nfc_close (pnd);
+    nfc_exit (NULL);
     return 1;
   }
   memcpy (abtAtqa, abtRx, 2);
@@ -309,6 +315,7 @@ main (int argc, char *argv[])
       print_hex (abtAts, szAts);
   }
 
-  nfc_disconnect (pnd);
+  nfc_close (pnd);
+  nfc_exit (NULL);
   return 0;
 }

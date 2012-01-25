@@ -18,7 +18,7 @@ libnfc_la_SOURCES = \
 		    nfc-emulation.c \
 		    nfc-internal.c
 
-libnfc_la_LDFLAGS = -no-undefined -version-info 2:0:0
+libnfc_la_LDFLAGS = -no-undefined -version-info 2:0:0 -export-symbols-regex '^nfc_|^iso14443a_|pn53x_transceive|pn53x_SAMConfiguration'
 libnfc_la_CFLAGS = @DRIVERS_CFLAGS@
 libnfc_la_LIBADD = \
 	$(top_builddir)/libnfc/chips/libnfcchips.la \
@@ -35,11 +35,11 @@ if LIBUSB_ENABLED
   libnfc_la_LIBADD  += @libusb_LIBS@
 endif
 
-if HAS_LOG4C
-  libnfc_la_CFLAGS += @log4c_CFLAGS@
-  libnfc_la_LIBADD += @log4c_LIBS@
-
-  libnfc_la_SOURCES += log.c
+if WITH_DEBUG
+  libnfc_la_SOURCES += log-printf.c
 endif
 
-EXTRA_DIST = CMakeLists.txt
+EXTRA_DIST = \
+	CMakeLists.txt \
+	log-printf.c
+

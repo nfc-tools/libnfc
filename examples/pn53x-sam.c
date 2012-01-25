@@ -72,24 +72,26 @@ wait_one_minute (void)
 int
 main (int argc, const char *argv[])
 {
-  nfc_device_t *pnd;
+  nfc_device *pnd;
 
   (void) argc;
   (void) argv;
 
+  nfc_init (NULL);
+  
   // Display libnfc version
   const char *acLibnfcVersion = nfc_version ();
   printf ("%s uses libnfc %s\n", argv[0], acLibnfcVersion);
 
-  // Connect using the first available NFC device
-  pnd = nfc_connect (NULL);
+  // Open using the first available NFC device
+  pnd = nfc_open (NULL, NULL);
 
   if (pnd == NULL) {
-    ERR ("%s", "Unable to connect to NFC device.");
+    ERR ("%s", "Unable to open NFC device.");
     return EXIT_FAILURE;
   }
 
-  printf ("Connected to NFC device: %s\n", pnd->acName);
+  printf ("NFC device: %s opened\n", nfc_device_get_name (pnd));
 
   // Print the example's menu
   printf ("\nSelect the communication mode:\n");
@@ -110,7 +112,7 @@ main (int argc, const char *argv[])
 
   // Connect with the SAM
   // FIXME: Its a private pn53x function
-  if (!pn53x_SAMConfiguration (pnd, mode, NULL)) {
+  if (pn53x_SAMConfiguration (pnd, mode, 0) < 0) {
     nfc_perror (pnd, "pn53x_SAMConfiguration");
     exit (EXIT_FAILURE);
   }
@@ -125,22 +127,25 @@ main (int argc, const char *argv[])
 
   case PSM_WIRED_CARD:
     {
-      nfc_target_t nt;
+      nfc_target nt;
 
-      // Set connected NFC device to initiator mode
-      nfc_initiator_init (pnd);
+      // Set opened NFC device to initiator mode
+      if (nfc_initiator_init (pnd) < 0) {
+        nfc_perror (pnd, "nfc_initiator_init");
+        exit (EXIT_FAILURE);    
+      }
 
       // Let the reader only try once to find a tag
-      if (!nfc_configure (pnd, NDO_INFINITE_SELECT, false)) {
-        nfc_perror (pnd, "nfc_configure");
+      if (nfc_device_set_property_bool (pnd, NP_INFINITE_SELECT, false) < 0) {
+        nfc_perror (pnd, "nfc_device_set_property_bool");
         exit (EXIT_FAILURE);
       }
       // Read the SAM's info
-      const nfc_modulation_t nmSAM = {
+      const nfc_modulation nmSAM = {
         .nmt = NMT_ISO14443A,
         .nbr = NBR_106,
       };
-      if (!nfc_initiator_select_passive_target (pnd, nmSAM, NULL, 0, &nt)) {
+      if (nfc_initiator_select_passive_target (pnd, nmSAM, NULL, 0, &nt) < 0) {
         nfc_perror (pnd, "nfc_initiator_select_passive_target");
         ERR ("%s", "Reading of SAM info failed.");
         exit (EXIT_FAILURE);
@@ -153,10 +158,9 @@ main (int argc, const char *argv[])
 
   case PSM_DUAL_CARD:
     {
-      byte_t  abtRx[MAX_FRAME_LEN];
-      size_t  szRx = sizeof(abtRx);
+      uint8_t  abtRx[MAX_FRAME_LEN];
 
-      nfc_target_t nt = {
+      nfc_target nt = {
         .nm = {
           .nmt = NMT_ISO14443A,
           .nbr = NBR_UNDEFINED,
@@ -173,7 +177,7 @@ main (int argc, const char *argv[])
       };
       printf ("Now both, NFC device (configured as target) and SAM are readables from an external NFC initiator.\n");
       printf ("Please note that NFC device (configured as target) stay in target mode until it receive RATS, ATR_REQ or proprietary command.\n");
-      if (!nfc_target_init (pnd, &nt, abtRx, &szRx)) {
+      if (nfc_target_init (pnd, &nt, abtRx, sizeof(abtRx), 0) < 0) {
         nfc_perror(pnd, "nfc_target_init");
         return EXIT_FAILURE;
       }
@@ -185,10 +189,11 @@ main (int argc, const char *argv[])
   }
 
   // Disconnect from the SAM
-  pn53x_SAMConfiguration (pnd, PSM_NORMAL, NULL);
+  pn53x_SAMConfiguration (pnd, PSM_NORMAL, 0);
 
-  // Disconnect from NFC device
-  nfc_disconnect (pnd);
+  // Close NFC device
+  nfc_close (pnd);
+  nfc_exit (NULL);
 
   exit (EXIT_SUCCESS);
 }

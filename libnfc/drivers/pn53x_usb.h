@@ -23,18 +23,20 @@
  */
 
 #ifndef __NFC_DRIVER_PN53X_USB_H__
-#  define __NFC_DRIVER_PN53X_USB_H__
+#define __NFC_DRIVER_PN53X_USB_H__
 
-#  include <sys/time.h>
+#include <sys/time.h>
 
-#  include <nfc/nfc-types.h>
+#include <nfc/nfc-types.h>
 
-bool    pn53x_usb_probe (nfc_device_desc_t pnddDevices[], size_t szDevices, size_t * pszDeviceFound);
-nfc_device_t *pn53x_usb_connect (const nfc_device_desc_t * pndd);
-bool    pn53x_usb_send (nfc_device_t * pnd, const byte_t * pbtData, const size_t szData, struct timeval *timeout);
-int     pn53x_usb_receive (nfc_device_t * pnd, byte_t * pbtData, const size_t szData, struct timeval *timeout);
-void    pn53x_usb_disconnect (nfc_device_t * pnd);
+#include "nfc-internal.h"
 
-extern const struct nfc_driver_t pn53x_usb_driver;
+bool    pn53x_usb_probe (nfc_connstring connstrings[], size_t connstrings_len, size_t *pszDeviceFound);
+nfc_device *pn53x_usb_open (const nfc_connstring connstring);
+int    pn53x_usb_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szData, int timeout);
+int    pn53x_usb_receive (nfc_device *pnd, uint8_t *pbtData, const size_t szData, int timeout);
+void    pn53x_usb_close (nfc_device *pnd);
+
+extern const struct nfc_driver pn53x_usb_driver;
 
 #endif // ! __NFC_DRIVER_PN53X_USB_H__

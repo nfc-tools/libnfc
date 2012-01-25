@@ -115,7 +115,7 @@ typedef struct {
   uint8_t ui8Code;
   uint8_t ui8CompatFlags;
 #ifdef LOGGING
-  const char * abtCommandText;
+  const char *abtCommandText;
 #endif
 } pn53x_command;
 
@@ -203,8 +203,8 @@ static const pn53x_command pn53x_commands[] = {
 #ifdef LOGGING
 typedef struct {
   uint16_t ui16Address;
-  const char * abtRegisterText;
-  const char * abtRegisterDescription;
+  const char *abtRegisterText;
+  const char *abtRegisterDescription;
 } pn53x_register;
 
 #  define PNREG( X, Y ) { X , #X, Y }
@@ -299,6 +299,34 @@ typedef struct {
 #define PN53X_SFR_P7CFGB 0xFFF5
 #define PN53X_SFR_P7 0xFFF7
 
+/* PN53x specific errors */
+#define ETIMEOUT	0x01
+#define ECRC		0x02
+#define EPARITY		0x03
+#define EBITCOUNT	0x04
+#define EFRAMING	0x05
+#define EBITCOLL	0x06
+#define ESMALLBUF	0x07
+#define EBUFOVF		0x09
+#define ERFTIMEOUT	0x0a
+#define ERFPROTO	0x0b
+#define EOVHEAT		0x0d
+#define EINBUFOVF	0x0e
+#define EINVPARAM	0x10
+#define EDEPUNKCMD	0x12
+#define EINVRXFRAM	0x13
+#define EMFAUTH		0x14
+#define ENSECNOTSUPP	0x18	// PN533 only
+#define EBCC		0x23
+#define EDEPINVSTATE	0x25
+#define EOPNOTALL	0x26
+#define ECMD		0x27
+#define ETGREL		0x29
+#define ECID		0x2a
+#define ECDISCARDED	0x2b
+#define ENFCID3		0x2c
+#define EOVCURRENT	0x2d
+#define ENAD		0x2e
 
 #ifdef LOGGING
 static const pn53x_register pn53x_registers[] = {

@@ -33,7 +33,7 @@
 
 #include "nfc-utils.h"
 
-static const byte_t OddParity[256] = {
+static const uint8_t OddParity[256] = {
   1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1,
   0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0,
   0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0,
@@ -52,14 +52,14 @@ static const byte_t OddParity[256] = {
   1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1
 };
 
-byte_t
-oddparity (const byte_t bt)
+uint8_t
+oddparity (const uint8_t bt)
 {
   return OddParity[bt];
 }
 
 void
-oddparity_bytes_ts (const byte_t * pbtData, const size_t szLen, byte_t * pbtPar)
+oddparity_bytes_ts (const uint8_t *pbtData, const size_t szLen, uint8_t *pbtPar)
 {
   size_t  szByteNr;
   // Calculate the parity bits for the command
@@ -69,7 +69,7 @@ oddparity_bytes_ts (const byte_t * pbtData, const size_t szLen, byte_t * pbtPar)
 }
 
 void
-print_hex (const byte_t * pbtData, const size_t szBytes)
+print_hex (const uint8_t *pbtData, const size_t szBytes)
 {
   size_t  szPos;
 
@@ -80,7 +80,7 @@ print_hex (const byte_t * pbtData, const size_t szBytes)
 }
 
 void
-print_hex_bits (const byte_t * pbtData, const size_t szBits)
+print_hex_bits (const uint8_t *pbtData, const size_t szBits)
 {
   uint8_t uRemainder;
   size_t  szPos;
@@ -102,7 +102,7 @@ print_hex_bits (const byte_t * pbtData, const size_t szBits)
 }
 
 void
-print_hex_par (const byte_t * pbtData, const size_t szBits, const byte_t * pbtDataPar)
+print_hex_par (const uint8_t *pbtData, const size_t szBits, const uint8_t *pbtDataPar)
 {
   uint8_t uRemainder;
   size_t  szPos;
@@ -133,7 +133,7 @@ print_hex_par (const byte_t * pbtData, const size_t szBits, const byte_t * pbtDa
 #define SAK_ISO18092_COMPLIANT   0x40
 
 void
-print_nfc_iso14443a_info (const nfc_iso14443a_info_t nai, bool verbose)
+print_nfc_iso14443a_info (const nfc_iso14443a_info nai, bool verbose)
 {
   printf ("    ATQA (SENS_RES): ");
   print_hex (nai.abtAtqa, 2);
@@ -202,7 +202,7 @@ print_nfc_iso14443a_info (const nfc_iso14443a_info_t nai, bool verbose)
 
     size_t offset = 1;
     if (nai.abtAts[0] & 0x10) { // TA(1) present
-      byte_t TA = nai.abtAts[offset];
+      uint8_t TA = nai.abtAts[offset];
       offset++;
       printf ("* Bit Rate Capability:\n");
       if (TA == 0) {
@@ -234,7 +234,7 @@ print_nfc_iso14443a_info (const nfc_iso14443a_info_t nai, bool verbose)
       }
     }
     if (nai.abtAts[0] & 0x20) { // TB(1) present
-      byte_t TB= nai.abtAts[offset];
+      uint8_t TB= nai.abtAts[offset];
       offset++;
       printf ("* Frame Waiting Time: %.4g ms\n",256.0*16.0*(1<<((TB & 0xf0) >> 4))/13560.0);
       if ((TB & 0x0f) == 0) {
@@ -244,7 +244,7 @@ print_nfc_iso14443a_info (const nfc_iso14443a_info_t nai, bool verbose)
       }
     }
     if (nai.abtAts[0] & 0x40) { // TC(1) present
-      byte_t TC = nai.abtAts[offset];
+      uint8_t TC = nai.abtAts[offset];
       offset++;
       if (TC & 0x1) {
         printf("* Node ADdress supported\n");
@@ -260,20 +260,20 @@ print_nfc_iso14443a_info (const nfc_iso14443a_info_t nai, bool verbose)
     if (nai.szAtsLen > offset) {
       printf ("* Historical bytes Tk: " );
       print_hex (nai.abtAts + offset, (nai.szAtsLen - offset));
-      byte_t CIB = nai.abtAts[offset];
+      uint8_t CIB = nai.abtAts[offset];
       offset++;
       if (CIB != 0x00 && CIB != 0x10 && (CIB & 0xf0) != 0x80) {
         printf("  * Proprietary format\n");
         if (CIB == 0xc1) {
           printf("    * Tag byte: Mifare or virtual cards of various types\n");
-          byte_t L = nai.abtAts[offset];
+          uint8_t L = nai.abtAts[offset];
           offset++;
           if (L != (nai.szAtsLen - offset)) {
             printf("    * Warning: Type Identification Coding length (%i)", L);
             printf(" not matching Tk length (%zi)\n", (nai.szAtsLen - offset));
           }
           if ((nai.szAtsLen - offset - 2) > 0) { // Omit 2 CRC bytes
-            byte_t CTC = nai.abtAts[offset];
+            uint8_t CTC = nai.abtAts[offset];
             offset++;
             printf("    * Chip Type: ");
             switch (CTC & 0xf0) {
@@ -316,7 +316,7 @@ print_nfc_iso14443a_info (const nfc_iso14443a_info_t nai, bool verbose)
             }
           }
           if ((nai.szAtsLen - offset) > 0) { // Omit 2 CRC bytes
-            byte_t CVC = nai.abtAts[offset];
+            uint8_t CVC = nai.abtAts[offset];
             offset++;
             printf("    * Chip Status: ");
             switch (CVC & 0xf0) {
@@ -350,7 +350,7 @@ print_nfc_iso14443a_info (const nfc_iso14443a_info_t nai, bool verbose)
             }
           }
           if ((nai.szAtsLen - offset) > 0) { // Omit 2 CRC bytes
-            byte_t VCS = nai.abtAts[offset];
+            uint8_t VCS = nai.abtAts[offset];
             offset++;
             printf("    * Specifics (Virtual Card Selection):\n");
             if ((VCS & 0x09) == 0x00) {
@@ -530,7 +530,7 @@ print_nfc_iso14443a_info (const nfc_iso14443a_info_t nai, bool verbose)
 }
 
 void
-print_nfc_felica_info (const nfc_felica_info_t nfi, bool verbose)
+print_nfc_felica_info (const nfc_felica_info nfi, bool verbose)
 {
   (void) verbose;
   printf ("        ID (NFCID2): ");
@@ -542,7 +542,7 @@ print_nfc_felica_info (const nfc_felica_info_t nfi, bool verbose)
 }
 
 void
-print_nfc_jewel_info (const nfc_jewel_info_t nji, bool verbose)
+print_nfc_jewel_info (const nfc_jewel_info nji, bool verbose)
 {
   (void) verbose;
   printf ("    ATQA (SENS_RES): ");
@@ -555,7 +555,7 @@ print_nfc_jewel_info (const nfc_jewel_info_t nji, bool verbose)
 #define PI_NAD_SUPPORTED        0x01
 #define PI_CID_SUPPORTED        0x02
 void
-print_nfc_iso14443b_info (const nfc_iso14443b_info_t nbi, bool verbose)
+print_nfc_iso14443b_info (const nfc_iso14443b_info nbi, bool verbose)
 {
   const int iMaxFrameSizes[] = { 16, 24, 32, 40, 48, 64, 96, 128, 256 };
   printf ("               PUPI: ");
@@ -610,7 +610,7 @@ print_nfc_iso14443b_info (const nfc_iso14443b_info_t nbi, bool verbose)
 }
 
 void
-print_nfc_iso14443bi_info (const nfc_iso14443bi_info_t nii, bool verbose)
+print_nfc_iso14443bi_info (const nfc_iso14443bi_info nii, bool verbose)
 {
   printf ("                DIV: ");
   print_hex (nii.abtDIV, 4);
@@ -634,7 +634,7 @@ print_nfc_iso14443bi_info (const nfc_iso14443bi_info_t nii, bool verbose)
 }
 
 void
-print_nfc_iso14443b2sr_info (const nfc_iso14443b2sr_info_t nsi, bool verbose)
+print_nfc_iso14443b2sr_info (const nfc_iso14443b2sr_info nsi, bool verbose)
 {
   (void) verbose;
   printf ("                UID: ");
@@ -642,7 +642,7 @@ print_nfc_iso14443b2sr_info (const nfc_iso14443b2sr_info_t nsi, bool verbose)
 }
 
 void
-print_nfc_iso14443b2ct_info (const nfc_iso14443b2ct_info_t nci, bool verbose)
+print_nfc_iso14443b2ct_info (const nfc_iso14443b2ct_info nci, bool verbose)
 {
   (void) verbose;
   uint32_t uid;
@@ -655,7 +655,7 @@ print_nfc_iso14443b2ct_info (const nfc_iso14443b2ct_info_t nci, bool verbose)
 }
 
 void
-print_nfc_dep_info (const nfc_dep_info_t ndi, bool verbose)
+print_nfc_dep_info (const nfc_dep_info ndi, bool verbose)
 {
   (void) verbose;
   printf ("       NFCID3: ");
@@ -670,53 +670,8 @@ print_nfc_dep_info (const nfc_dep_info_t ndi, bool verbose)
   }
 }
 
-/**
- * @brief Tries to parse arguments to find device descriptions.
- * @return Returns the list of found device descriptions.
- */
-nfc_device_desc_t *
-parse_args (int argc, const char *argv[], size_t * szFound, bool * verbose)
-{
-  nfc_device_desc_t *pndd = 0;
-  int     arg;
-  *szFound = 0;
-
-  // Get commandline options
-  for (arg = 1; arg < argc; arg++) {
-
-    if (0 == strcmp (argv[arg], "--device")) {
-      // FIXME: this device selection by command line options is terrible & does not support USB/PCSC drivers
-      if (argc > arg + 1) {
-        char    buffer[256];
-
-        pndd = malloc (sizeof (nfc_device_desc_t));
-
-        strncpy (buffer, argv[++arg], 256);
-
-        // Driver.
-        pndd->pcDriver = (char *) malloc (256);
-        strcpy (pndd->pcDriver, strtok (buffer, ":"));
-
-        // Port.
-        strcpy (pndd->acPort, strtok (NULL, ":"));
-
-        // Speed.
-        sscanf (strtok (NULL, ":"), "%u", &pndd->uiSpeed);
-
-        *szFound = 1;
-      } else {
-        errx (1, "usage: %s [--device driver:port:speed]", argv[0]);
-      }
-    }
-    if ((0 == strcmp (argv[arg], "-v")) || (0 == strcmp (argv[arg], "--verbose"))) {
-      *verbose = true;
-    }
-  }
-  return pndd;
-}
-
 const char *
-str_nfc_baud_rate (const nfc_baud_rate_t nbr)
+str_nfc_baud_rate (const nfc_baud_rate nbr)
 {
   switch(nbr) {
     case NBR_UNDEFINED:
@@ -739,7 +694,7 @@ str_nfc_baud_rate (const nfc_baud_rate_t nbr)
 }
 
 void
-print_nfc_target (const nfc_target_t nt, bool verbose)
+print_nfc_target (const nfc_target nt, bool verbose)
 {
   switch(nt.nm.nmt) {
     case NMT_ISO14443A:
@@ -771,7 +726,7 @@ print_nfc_target (const nfc_target_t nt, bool verbose)
       print_nfc_iso14443b2ct_info (nt.nti.nci, verbose);
     break;
     case NMT_DEP:
-      printf ("D.E.P. (%s) target:\n", str_nfc_baud_rate(nt.nm.nbr));
+      printf ("D.E.P. (%s, %s) target:\n", str_nfc_baud_rate(nt.nm.nbr), (nt.nti.ndi.ndm == NDM_ACTIVE)? "active mode" : "passive mode");
       print_nfc_dep_info (nt.nti.ndi, verbose);
     break;
   }

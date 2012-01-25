@@ -2,7 +2,7 @@
  * Public platform independent Near Field Communication (NFC) library examples
  * 
  * Copyright (C) 2009, Roel Verdult
- * Copyright (C) 2010, Romuald Conty
+ * Copyright (C) 2010, Romuald Conty, Romain Tartière
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -29,87 +29,87 @@
  */
 
 /**
- * @file nfc-dep-initiator.c
- * @brief Turns the NFC device into a D.E.P. initiator (see NFCIP-1)
+ * @file nfc-probe.c
+ * @brief Lists each available NFC device
  */
 
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif // HAVE_CONFIG_H
 
+#ifdef HAVE_LIBUSB
+#  ifdef DEBUG
+#    include <sys/param.h>
+#    include <usb.h>
+#  endif
+#endif
+
+#include <err.h>
 #include <stdio.h>
+#include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
-#include <signal.h>
 
 #include <nfc/nfc.h>
 
-#include "utils/nfc-utils.h"
+#include "nfc-utils.h"
 
-#define MAX_FRAME_LEN 264
+#define MAX_DEVICE_COUNT 16
+#define MAX_TARGET_COUNT 16
 
 static nfc_device *pnd;
 
-void stop_dep_communication (int sig)
+void
+print_usage (const char* progname)
 {
-  (void) sig;
-  if (pnd)
-    nfc_abort_command (pnd);
-  else
-    exit (EXIT_FAILURE);
+  printf ("usage: %s [-v]\n", progname);
+  printf ("  -v\t verbose display\n");
 }
 
 int
 main (int argc, const char *argv[])
 {
-  nfc_target nt;
-  uint8_t  abtRx[MAX_FRAME_LEN];
-  size_t  szRx = sizeof(abtRx);
-  uint8_t  abtTx[] = "Hello World!";
+  (void) argc;
+  const char *acLibnfcVersion;
+  size_t  i;
+  bool verbose = false;
 
-  if (argc > 1) {
-    printf ("Usage: %s\n", argv[0]);
-    return EXIT_FAILURE;
+  nfc_init (NULL);
+  
+  // Display libnfc version
+  acLibnfcVersion = nfc_version ();
+  printf ("%s uses libnfc %s\n", argv[0], acLibnfcVersion);
+  if (argc != 1) {
+    if ((argc == 2) && (0 == strcmp ("-v", argv[1]))) {
+      verbose = true;
+    } else {
+      print_usage (argv[0]);
+      exit (EXIT_FAILURE);
+    }
+  }
+
+#ifdef HAVE_LIBUSB
+#  ifdef DEBUG
+  usb_set_debug (4);
+#  endif
+#endif
+
+  nfc_connstring connstrings[MAX_DEVICE_COUNT];
+  size_t szDeviceFound = nfc_list_devices (NULL, connstrings, MAX_DEVICE_COUNT);
+
+  if (szDeviceFound == 0) {
+    printf ("No NFC device found.\n");
+  }
+
+  printf ("%d NFC device(s) found:\n", szDeviceFound);
+  for (i = 0; i < szDeviceFound; i++) {
+    pnd = nfc_open (NULL, connstrings[i]);
+    if (pnd != NULL) {
+      printf ("- %s:\n    %s\n", nfc_device_get_name (pnd), nfc_device_get_connstring (pnd));
+    }
+    nfc_close (pnd);
   }
   
-  nfc_init (NULL);
-
-  pnd = nfc_open (NULL, NULL);
-  if (!pnd) {
-    printf("Unable to open NFC device.\n");
-    return EXIT_FAILURE;
-  }
-  printf ("NFC device: %s\n opened", nfc_device_get_name (pnd));
-
-  signal (SIGINT, stop_dep_communication);
-
-  if (nfc_initiator_init (pnd) < 0) {
-    nfc_perror(pnd, "nfc_initiator_init");
-    goto error;
-  }
-
-  if(nfc_initiator_select_dep_target (pnd, NDM_PASSIVE, NBR_212, NULL, &nt, 1000) < 0) {
-    nfc_perror(pnd, "nfc_initiator_select_dep_target");
-    goto error;
-  }
-  print_nfc_target (nt, false);
-
-  printf ("Sending: %s\n", abtTx);
-  if (nfc_initiator_transceive_bytes (pnd, abtTx, sizeof(abtTx), abtRx, &szRx, 0) < 0) {
-    nfc_perror(pnd, "nfc_initiator_transceive_bytes");
-    goto error;
-  }
-
-  abtRx[szRx] = 0;
-  printf ("Received: %s\n", abtRx);
-
-  if (nfc_initiator_deselect_target (pnd) < 0) {
-    nfc_perror(pnd, "nfc_initiator_deselect_target");
-    goto error;
-  }
-
-error:
-  nfc_close (pnd);
   nfc_exit (NULL);
-  return EXIT_SUCCESS;
+  return 0;
 }

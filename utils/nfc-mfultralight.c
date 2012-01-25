@@ -51,13 +51,13 @@
 #include "nfc-utils.h"
 #include "mifare.h"
 
-static nfc_device_t *pnd;
-static nfc_target_t nt;
+static nfc_device *pnd;
+static nfc_target nt;
 static mifare_param mp;
 static mifareul_tag mtDump;
 static uint32_t uiBlocks = 0xF;
 
-static const nfc_modulation_t nmMifare = {
+static const nfc_modulation nmMifare = {
   .nmt = NMT_ISO14443A,
   .nbr = NBR_106,
 };
@@ -142,7 +142,7 @@ write_card (void)
     // Show if the readout went well
     if (bFailure) {
       // When a failure occured we need to redo the anti-collision
-      if (!nfc_initiator_select_passive_target (pnd, nmMifare, NULL, 0, &nt)) {
+      if (nfc_initiator_select_passive_target (pnd, nmMifare, NULL, 0, &nt) < 0) {
         ERR ("tag was removed");
         return false;
       }
@@ -204,34 +204,41 @@ main (int argc, const char *argv[])
   }
   DBG ("Successfully opened the dump file\n");
 
+  nfc_init (NULL);
+  
   // Try to open the NFC device
-  pnd = nfc_connect (NULL);
+  pnd = nfc_open (NULL, NULL);
   if (pnd == NULL) {
-    ERR ("Error connecting NFC device\n");
+    ERR ("Error opening NFC device\n");
     return 1;
   }
 
-  nfc_initiator_init (pnd);
+  if (nfc_initiator_init (pnd) < 0) {
+    nfc_perror (pnd, "nfc_initiator_init");
+    exit (EXIT_FAILURE);    
+  }
 
   // Let the device only try once to find a tag
-  if (!nfc_configure (pnd, NDO_INFINITE_SELECT, false)) {
-    nfc_perror (pnd, "nfc_configure");
+  if (nfc_device_set_property_bool (pnd, NP_INFINITE_SELECT, false) < 0) {
+    nfc_perror (pnd, "nfc_device_set_property_bool");
     exit (EXIT_FAILURE);
   }
 
-  printf ("Connected to NFC device: %s\n", pnd->acName);
+  printf ("NFC device: %s opened\n", nfc_device_get_name (pnd));
 
   // Try to find a MIFARE Ultralight tag
-  if (!nfc_initiator_select_passive_target (pnd, nmMifare, NULL, 0, &nt)) {
+  if (nfc_initiator_select_passive_target (pnd, nmMifare, NULL, 0, &nt) < 0) {
     ERR ("no tag was found\n");
-    nfc_disconnect (pnd);
+    nfc_close (pnd);
+    nfc_exit (NULL);
     return 1;
   }
   // Test if we are dealing with a MIFARE compatible tag
 
   if (nt.nti.nai.abtAtqa[1] != 0x44) {
     ERR ("tag is not a MIFARE Ultralight card\n");
-    nfc_disconnect (pnd);
+    nfc_close (pnd);
+    nfc_exit (NULL);
     return EXIT_FAILURE;
   }
   // Get the info from the current tag
@@ -262,7 +269,7 @@ main (int argc, const char *argv[])
     write_card ();
   }
 
-  nfc_disconnect (pnd);
-
+  nfc_close (pnd);
+  nfc_exit (NULL);
   return EXIT_SUCCESS;
 }

@@ -1,3 +1,9 @@
+libnfc (1.5.1pre2.1-0) unstable; urgency=low
+  
+  * Udev rules file renamed accordingly to udev's README file
+
+ -- Romuald Conty <rconty@il4p.fr>  Fri, 9 Dec 2011 15:42:42 +0100
+
 libnfc (1.5.1-0) unstable; urgency=low
   
   * Move nfc-emulate-nfcforum-tag2, nfc-emulate-nfcforum-tag4 and

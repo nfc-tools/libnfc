@@ -68,7 +68,7 @@
 
 #include "nfc-utils.h"
 
-static nfc_device_t *pnd;
+static nfc_device *pnd;
 static bool quiet_output = false;
 
 #define SYMBOL_PARAM_fISO14443_4_PICC   0x20
@@ -113,7 +113,7 @@ uint8_t nfcforum_capability_container[] = {
 #define ISO144434A_RATS 0xE0
 
 int
-nfcforum_tag4_io (struct nfc_emulator *emulator, const byte_t *data_in, const size_t data_in_len, byte_t *data_out, const size_t data_out_len)
+nfcforum_tag4_io (struct nfc_emulator *emulator, const uint8_t *data_in, const size_t data_in_len, uint8_t *data_out, const size_t data_out_len)
 {
   int res = 0;
 
@@ -289,7 +289,7 @@ usage (char *progname)
 int
 main (int argc, char *argv[])
 {
-  nfc_target_t nt = {
+  nfc_target nt = {
     .nm = {
       .nmt = NMT_ISO14443A,
       .nbr = NBR_UNDEFINED, // Will be updated by nfc_target_init()
@@ -345,31 +345,34 @@ main (int argc, char *argv[])
       err (EXIT_FAILURE, "Can't load NDEF file '%s'", argv[1]);
     }
   }
+  
+  nfc_init (NULL);
 
   // Try to open the NFC reader
-  pnd = nfc_connect (NULL);
+  pnd = nfc_open (NULL, NULL);
 
   if (pnd == NULL) {
-    ERR("Unable to connect to NFC device");
+    ERR("Unable to open NFC device");
     exit (EXIT_FAILURE);
   }
 
   signal (SIGINT, stop_emulation);
 
-  printf ("Connected to NFC device: %s\n", pnd->acName);
+  printf ("NFC device: %s opened\n", nfc_device_get_name(pnd));
   printf ("Emulating NDEF tag now, please touch it with a second NFC device\n");
 
   if (0 != nfc_emulate_target (pnd, &emulator)) { // contains already nfc_target_init() call
     nfc_perror (pnd, "nfc_emulate_target");
   }
 
-  nfc_disconnect(pnd);
+  nfc_close(pnd);
 
   if (argc == 3) {
     if (!(ndef_message_save (argv[2], &nfcforum_tag4_data))) {
       err (EXIT_FAILURE, "Can't save NDEF file '%s'", argv[2]);
     }
   }
-
+  
+  nfc_exit (NULL);
   exit (EXIT_SUCCESS);
 }

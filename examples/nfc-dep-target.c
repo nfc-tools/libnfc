@@ -47,7 +47,7 @@
 
 #define MAX_FRAME_LEN 264
 
-static nfc_device_t *pnd;
+static nfc_device *pnd;
 
 void stop_dep_communication (int sig)
 {
@@ -61,23 +61,23 @@ void stop_dep_communication (int sig)
 int
 main (int argc, const char *argv[])
 {
-  byte_t  abtRx[MAX_FRAME_LEN];
-  size_t  szRx = sizeof(abtRx);
-  size_t  szDeviceFound;
-  byte_t  abtTx[] = "Hello Mars!";
+  uint8_t  abtRx[MAX_FRAME_LEN];
+  int  szRx;
+  uint8_t  abtTx[] = "Hello Mars!";
   #define MAX_DEVICE_COUNT 2
-  nfc_device_desc_t pnddDevices[MAX_DEVICE_COUNT];
-  nfc_list_devices (pnddDevices, MAX_DEVICE_COUNT, &szDeviceFound);
+  nfc_connstring connstrings[MAX_DEVICE_COUNT];
+  size_t szDeviceFound = nfc_list_devices (NULL, connstrings, MAX_DEVICE_COUNT);
   // Little hack to allow using nfc-dep-initiator & nfc-dep-target from
-  // the same machine: if there is more than one readers connected
-  // nfc-dep-target will connect to the second reader
+  // the same machine: if there is more than one readers opened
+  // nfc-dep-target will open the second reader
   // (we hope they're always detected in the same order)
+  nfc_init (NULL);
   if (szDeviceFound == 1) {
-    pnd = nfc_connect (&(pnddDevices[0]));
+    pnd = nfc_open (NULL, connstrings[0]);
   } else if (szDeviceFound > 1) {
-    pnd = nfc_connect (&(pnddDevices[1]));
+    pnd = nfc_open (NULL, connstrings[1]);
   } else {
-    printf("No device found.");
+    printf("No device found.\n");
     return EXIT_FAILURE;
   }
 
@@ -86,7 +86,7 @@ main (int argc, const char *argv[])
     return EXIT_FAILURE;
   }
 
-  nfc_target_t nt = {
+  nfc_target nt = {
     .nm = {
       .nmt = NMT_DEP,
       .nbr = NBR_UNDEFINED
@@ -108,10 +108,10 @@ main (int argc, const char *argv[])
   };
 
   if (!pnd) {
-    printf("Unable to connect to NFC device.\n");
+    printf("Unable to open NFC device.\n");
     return EXIT_FAILURE;
   }
-  printf ("Connected to NFC device: %s\n", pnd->acName);
+  printf ("NFC device: %s opened\n", nfc_device_get_name (pnd));
 
   signal (SIGINT, stop_dep_communication);
 
@@ -119,27 +119,28 @@ main (int argc, const char *argv[])
   print_nfc_target (nt, false);
 
   printf ("Waiting for initiator request...\n");
-  if(!nfc_target_init (pnd, &nt, abtRx, &szRx)) {
+  if ((szRx = nfc_target_init (pnd, &nt, abtRx, sizeof(abtRx), 0)) < 0) {
     nfc_perror(pnd, "nfc_target_init");
     goto error;
   }
 
   printf("Initiator request received. Waiting for data...\n");
-  if (!nfc_target_receive_bytes (pnd, abtRx, &szRx, NULL)) {
+  if ((szRx = nfc_target_receive_bytes (pnd, abtRx, sizeof (abtRx), 0)) < 0) {
     nfc_perror(pnd, "nfc_target_receive_bytes");
     goto error;
   }
-  abtRx[szRx] = '\0';
+  abtRx[(size_t) szRx] = '\0';
   printf ("Received: %s\n", abtRx);
 
   printf ("Sending: %s\n", abtTx);
-  if (!nfc_target_send_bytes (pnd, abtTx, sizeof(abtTx), NULL)) {
+  if (nfc_target_send_bytes (pnd, abtTx, sizeof(abtTx), 0) < 0) {
     nfc_perror(pnd, "nfc_target_send_bytes");
     goto error;
   }
   printf("Data sent.\n");
 
 error:
-  nfc_disconnect (pnd);
+  nfc_close (pnd);
+  nfc_exit (NULL);
   return EXIT_SUCCESS;
 }

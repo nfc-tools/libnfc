@@ -48,13 +48,13 @@
  * The MIFARE Classic Specification (http://www.nxp.com/acrobat/other/identification/M001053_MF1ICS50_rev5_3.pdf) explains more about this process.
  */
 bool
-nfc_initiator_mifare_cmd (nfc_device_t * pnd, const mifare_cmd mc, const uint8_t ui8Block, mifare_param * pmp)
+nfc_initiator_mifare_cmd (nfc_device *pnd, const mifare_cmd mc, const uint8_t ui8Block, mifare_param *pmp)
 {
-  byte_t  abtRx[265];
+  uint8_t  abtRx[265];
   size_t  szRx = sizeof(abtRx);
   size_t  szParamLen;
-  byte_t  abtCmd[265];
-  bool    bEasyFraming;
+  uint8_t  abtCmd[265];
+  //bool    bEasyFraming;
 
   abtCmd[0] = mc;               // The MIFARE Classic command
   abtCmd[1] = ui8Block;         // The block address (1K=0x00..0x39, 4K=0x00..0xff)
@@ -69,19 +69,19 @@ nfc_initiator_mifare_cmd (nfc_device_t * pnd, const mifare_cmd mc, const uint8_t
     // Authenticate command
   case MC_AUTH_A:
   case MC_AUTH_B:
-    szParamLen = sizeof (mifare_param_auth);
+    szParamLen = sizeof (struct mifare_param_auth);
     break;
 
     // Data command
   case MC_WRITE:
-    szParamLen = sizeof (mifare_param_data);
+    szParamLen = sizeof (struct mifare_param_data);
     break;
 
     // Value command
   case MC_DECREMENT:
   case MC_INCREMENT:
   case MC_TRANSFER:
-    szParamLen = sizeof (mifare_param_value);
+    szParamLen = sizeof (struct mifare_param_value);
     break;
 
     // Please fix your code, you never should reach this statement
@@ -92,30 +92,34 @@ nfc_initiator_mifare_cmd (nfc_device_t * pnd, const mifare_cmd mc, const uint8_t
 
   // When available, copy the parameter bytes
   if (szParamLen)
-    memcpy (abtCmd + 2, (byte_t *) pmp, szParamLen);
+    memcpy (abtCmd + 2, (uint8_t *) pmp, szParamLen);
 
-  bEasyFraming = pnd->bEasyFraming;
-  if (!nfc_configure (pnd, NDO_EASY_FRAMING, true)) {
-    nfc_perror (pnd, "nfc_configure");
+  // FIXME: Save and restore bEasyFraming
+  // bEasyFraming = nfc_device_get_property_bool (pnd, NP_EASY_FRAMING, &bEasyFraming);
+  if (nfc_device_set_property_bool (pnd, NP_EASY_FRAMING, true) < 0) {
+    nfc_perror (pnd, "nfc_device_set_property_bool");
     return false;
   }
   // Fire the mifare command
-  if (!nfc_initiator_transceive_bytes (pnd, abtCmd, 2 + szParamLen, abtRx, &szRx, NULL)) {
-    if (pnd->iLastError == EINVRXFRAM) {
-      // "Invalid received frame" AKA EINVRXFRAM,  usual means we are
+  int res;
+  if ((res = nfc_initiator_transceive_bytes (pnd, abtCmd, 2 + szParamLen, abtRx, &szRx, -1))  < 0) {
+    if (res == NFC_ERFTRANS) {
+      // "Invalid received frame",  usual means we are
       // authenticated on a sector but the requested MIFARE cmd (read, write)
       // is not permitted by current acces bytes;
       // So there is nothing to do here.
     } else {
       nfc_perror (pnd, "nfc_initiator_transceive_bytes");
     }
-    nfc_configure (pnd, NDO_EASY_FRAMING, bEasyFraming);
+    // XXX nfc_device_set_property_bool (pnd, NP_EASY_FRAMING, bEasyFraming);
     return false;
   }
-  if (!nfc_configure (pnd, NDO_EASY_FRAMING, bEasyFraming)) {
-    nfc_perror (pnd, "nfc_configure");
+  /* XXX
+  if (nfc_device_set_property_bool (pnd, NP_EASY_FRAMING, bEasyFraming) < 0) {
+    nfc_perror (pnd, "nfc_device_set_property_bool");
     return false;
   }
+  */
 
   // When we have executed a read command, copy the received bytes into the param
   if (mc == MC_READ) {

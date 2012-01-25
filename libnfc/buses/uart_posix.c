@@ -61,18 +61,20 @@ char *serial_ports_device_radix[] = { "ttyUSB", "ttyS", NULL };
 // Work-around to claim uart interface using the c_iflag (software input processing) from the termios struct
 #  define CCLAIMED 0x80000000
 
-typedef struct {
+struct serial_port_unix{
   int 			fd; 			// Serial port file descriptor
   struct termios 	termios_backup; 	// Terminal info before using the port
   struct termios 	termios_new; 		// Terminal info during the transaction
-} serial_port_unix;
+};
+
+#define UART_DATA( X ) ((struct serial_port_unix *) X)
 
 void uart_close_ext (const serial_port sp, const bool restore_termios);
 
 serial_port
 uart_open (const char *pcPortName)
 {
-  serial_port_unix *sp = malloc (sizeof (serial_port_unix));
+  struct serial_port_unix *sp = malloc (sizeof (struct serial_port_unix));
 
   if (sp == 0)
     return INVALID_SERIAL_PORT;
@@ -114,12 +116,12 @@ void
 uart_flush_input (serial_port sp)
 {
   // This line seems to produce absolutely no effect on my system (GNU/Linux 2.6.35)
-  tcflush (((serial_port_unix *) sp)->fd, TCIFLUSH);
+  tcflush (UART_DATA(sp)->fd, TCIFLUSH);
   // So, I wrote this byte-eater
   // Retrieve the count of the incoming bytes
   int available_bytes_count = 0;
   int res;
-  res = ioctl (((serial_port_unix *) sp)->fd, FIONREAD, &available_bytes_count);
+  res = ioctl (UART_DATA(sp)->fd, FIONREAD, &available_bytes_count);
   if (res != 0) {
     return;
   }
@@ -128,7 +130,7 @@ uart_flush_input (serial_port sp)
   }
   char* rx = malloc (available_bytes_count);
   // There is something available, read the data
-  res = read (((serial_port_unix *) sp)->fd, rx, available_bytes_count);
+  res = read (UART_DATA(sp)->fd, rx, available_bytes_count);
   log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "%d bytes have eatten.", available_bytes_count);
   free (rx);
 }
@@ -137,8 +139,7 @@ void
 uart_set_speed (serial_port sp, const uint32_t uiPortSpeed)
 {
   log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "Serial port speed requested to be set to %d bauds.", uiPortSpeed);
-  serial_port_unix *spu = (serial_port_unix *) sp;
-
+  
   // Portability note: on some systems, B9600 != 9600 so we have to do
   // uint32_t <=> speed_t associations by hand.
   speed_t stPortSpeed = B9600;
@@ -179,9 +180,9 @@ uart_set_speed (serial_port sp, const uint32_t uiPortSpeed)
   };
 
   // Set port speed (Input and Output)
-  cfsetispeed (&(spu->termios_new), stPortSpeed);
-  cfsetospeed (&(spu->termios_new), stPortSpeed);
-  if (tcsetattr (spu->fd, TCSADRAIN, &(spu->termios_new)) == -1) {
+  cfsetispeed (&(UART_DATA(sp)->termios_new), stPortSpeed);
+  cfsetospeed (&(UART_DATA(sp)->termios_new), stPortSpeed);
+  if (tcsetattr (UART_DATA(sp)->fd, TCSADRAIN, &(UART_DATA(sp)->termios_new)) == -1) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Unable to apply new speed settings.");
   }
 }
@@ -190,8 +191,7 @@ uint32_t
 uart_get_speed (serial_port sp)
 {
   uint32_t uiPortSpeed = 0;
-  const serial_port_unix *spu = (serial_port_unix *) sp;
-  switch (cfgetispeed (&spu->termios_new)) {
+  switch (cfgetispeed (&UART_DATA(sp)->termios_new)) {
   case B9600:
     uiPortSpeed = 9600;
     break;
@@ -229,10 +229,10 @@ uart_get_speed (serial_port sp)
 void
 uart_close_ext (const serial_port sp, const bool restore_termios)
 {
-  if (((serial_port_unix *) sp)->fd >= 0) {
+  if (UART_DATA(sp)->fd >= 0) {
     if (restore_termios)
-      tcsetattr (((serial_port_unix *) sp)->fd, TCSANOW, &((serial_port_unix *) sp)->termios_backup);
-    close (((serial_port_unix *) sp)->fd);
+      tcsetattr (UART_DATA(sp)->fd, TCSANOW, &UART_DATA(sp)->termios_backup);
+    close (UART_DATA(sp)->fd);
   }
   free (sp);
 }
@@ -249,7 +249,7 @@ uart_close (const serial_port sp)
  * @return 0 on success, otherwise driver error code
  */
 int
-uart_receive (serial_port sp, byte_t * pbtRx, const size_t szRx, void * abort_p, struct timeval *timeout)
+uart_receive (serial_port sp, uint8_t *pbtRx, const size_t szRx, void *abort_p, int timeout)
 {
   int iAbortFd = abort_p ? *((int*)abort_p) : 0;
   int received_bytes_count = 0;
@@ -261,23 +261,19 @@ uart_receive (serial_port sp, byte_t * pbtRx, const size_t szRx, void * abort_p,
 select:
     // Reset file descriptor
     FD_ZERO (&rfds);
-    FD_SET (((serial_port_unix *) sp)->fd, &rfds);
+    FD_SET (UART_DATA(sp)->fd, &rfds);
 
     if (iAbortFd) {
       FD_SET (iAbortFd, &rfds);
     }
 
-    /*
-     * Some implementations (e.g. Linux) of select(2) will update *timeout.
-     * Make a copy so that it will be updated on these systems,
-     */
-    struct timeval fixed_timeout;
-    if (timeout) {
-	fixed_timeout = *timeout;
-	timeout = &fixed_timeout;
+    struct timeval timeout_tv;
+    if (timeout > 0) {
+      timeout_tv.tv_sec = (timeout / 1000);
+      timeout_tv.tv_usec = ((timeout % 1000) * 1000);
     }
 
-    res = select (MAX(((serial_port_unix *) sp)->fd, iAbortFd) + 1, &rfds, NULL, NULL, timeout);
+    res = select (MAX(UART_DATA(sp)->fd, iAbortFd) + 1, &rfds, NULL, NULL, timeout ? &timeout_tv : NULL);
 
     if ((res < 0) && (EINTR == errno)) {
       // The system call was interupted by a signal and a signal handler was
@@ -287,38 +283,38 @@ select:
 
     // Read error
     if (res < 0) {
-      log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "%s", "RX error.");
-      return ECOMIO;
+      log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "Error: %s", strerror(errno));
+      return NFC_EIO;
     }
     // Read time-out
     if (res == 0) {
       log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "Timeout!");
-      return ECOMTIMEOUT;
+      return NFC_ETIMEOUT;
     }
 
     if (FD_ISSET (iAbortFd, &rfds)) {
       // Abort requested
       log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "Abort!");
       close (iAbortFd);
-      return EOPABORT;
+      return NFC_EOPABORTED;
     }
 
     // Retrieve the count of the incoming bytes
-    res = ioctl (((serial_port_unix *) sp)->fd, FIONREAD, &available_bytes_count);
+    res = ioctl (UART_DATA(sp)->fd, FIONREAD, &available_bytes_count);
     if (res != 0) {
-      return ECOMIO;
+      return NFC_EIO;
     }
     // There is something available, read the data
-    res = read (((serial_port_unix *) sp)->fd, pbtRx + received_bytes_count, MIN(available_bytes_count, (expected_bytes_count - received_bytes_count)));
+    res = read (UART_DATA(sp)->fd, pbtRx + received_bytes_count, MIN(available_bytes_count, (expected_bytes_count - received_bytes_count)));
     // Stop if the OS has some troubles reading the data
     if (res <= 0) {
-      return ECOMIO;
+      return NFC_EIO;
     }
     received_bytes_count += res;
 
   } while (expected_bytes_count > received_bytes_count);
   LOG_HEX ("RX", pbtRx, szRx);
-  return 0;
+  return NFC_SUCCESS;
 }
 
 /**
@@ -327,14 +323,14 @@ select:
  * @return 0 on success, otherwise a driver error is returned
  */
 int
-uart_send (serial_port sp, const byte_t * pbtTx, const size_t szTx, struct timeval *timeout)
+uart_send (serial_port sp, const uint8_t *pbtTx, const size_t szTx, int timeout)
 {
   (void) timeout;
   LOG_HEX ("TX", pbtTx, szTx);
-  if ((int) szTx == write (((serial_port_unix *) sp)->fd, pbtTx, szTx))
-    return 0;
+  if ((int) szTx == write (UART_DATA(sp)->fd, pbtTx, szTx))
+    return NFC_SUCCESS;
   else
-    return ECOMIO;
+    return NFC_EIO;
 }
 
 char **

@@ -19,12 +19,13 @@
 
  /**
  * @file nfc-device.c
- * @brief Provide internal function to manipulate nfc_device_t type
+ * @brief Provide internal function to manipulate nfc_device type
  */
 
 /* vim:set et sw=2 ts=2: */
 
 #include <stdlib.h>
+#include <string.h>
 
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
@@ -32,10 +33,10 @@
 
 #include "nfc-internal.h"
 
-nfc_device_t *
-nfc_device_new (void)
+nfc_device *
+nfc_device_new (const nfc_connstring connstring)
 {
-  nfc_device_t *res = malloc (sizeof (*res));
+  nfc_device *res = malloc (sizeof (*res));
 
   if (!res) {
     err (EXIT_FAILURE, "nfc_device_new: malloc");
@@ -49,7 +50,8 @@ nfc_device_new (void)
   res->bPar = false;
   res->bEasyFraming    = false;
   res->bAutoIso14443_4 = false;
-  res->iLastError  = 0;
+  res->last_error  = 0;
+  memcpy (res->connstring, connstring, sizeof (res->connstring));
   res->driver_data = NULL;
   res->chip_data   = NULL;
 
@@ -57,7 +59,7 @@ nfc_device_new (void)
 }
 
 void
-nfc_device_free (nfc_device_t *nfc_device)
+nfc_device_free (nfc_device *nfc_device)
 {
   if (nfc_device) {
     free (nfc_device->driver_data);

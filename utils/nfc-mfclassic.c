@@ -52,15 +52,15 @@
 #include "mifare.h"
 #include "nfc-utils.h"
 
-static nfc_device_t *pnd;
-static nfc_target_t nt;
+static nfc_device *pnd;
+static nfc_target nt;
 static mifare_param mp;
 static mifare_classic_tag mtKeys;
 static mifare_classic_tag mtDump;
 static bool bUseKeyA;
 static bool bUseKeyFile;
 static uint8_t uiBlocks;
-static byte_t keys[] = {
+static uint8_t keys[] = {
   0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
   0xd3, 0xf7, 0xd3, 0xf7, 0xd3, 0xf7,
   0xa0, 0xa1, 0xa2, 0xa3, 0xa4, 0xa5,
@@ -72,7 +72,7 @@ static byte_t keys[] = {
   0xab, 0xcd, 0xef, 0x12, 0x34, 0x56
 };
 
-static const nfc_modulation_t nmMifare = {
+static const nfc_modulation nmMifare = {
   .nmt = NMT_ISO14443A,
   .nbr = NBR_106,
 };
@@ -81,24 +81,24 @@ static size_t num_keys = sizeof (keys) / 6;
 
 #define MAX_FRAME_LEN 264
 
-static byte_t abtRx[MAX_FRAME_LEN];
-static size_t szRxBits;
+static uint8_t abtRx[MAX_FRAME_LEN];
+static int szRxBits;
 static size_t szRx = sizeof(abtRx);
 
-byte_t  abtHalt[4] = { 0x50, 0x00, 0x00, 0x00 };
+uint8_t  abtHalt[4] = { 0x50, 0x00, 0x00, 0x00 };
 
 // special unlock command
-byte_t  abtUnlock1[1] = { 0x40 };
-byte_t  abtUnlock2[1] = { 0x43 };
+uint8_t  abtUnlock1[1] = { 0x40 };
+uint8_t  abtUnlock2[1] = { 0x43 };
 
 static  bool
-transmit_bits (const byte_t * pbtTx, const size_t szTxBits)
+transmit_bits (const uint8_t *pbtTx, const size_t szTxBits)
 {
   // Show transmitted command
   printf ("Sent bits:     ");
   print_hex_bits (pbtTx, szTxBits);
   // Transmit the bit frame command, we don't use the arbitrary parity feature
-  if (!nfc_initiator_transceive_bits (pnd, pbtTx, szTxBits, NULL, abtRx, &szRxBits, NULL))
+  if ((szRxBits = nfc_initiator_transceive_bits (pnd, pbtTx, szTxBits, NULL, abtRx, NULL)) < 0)
     return false;
 
   // Show received answer
@@ -110,13 +110,13 @@ transmit_bits (const byte_t * pbtTx, const size_t szTxBits)
 
 
 static  bool
-transmit_bytes (const byte_t * pbtTx, const size_t szTx)
+transmit_bytes (const uint8_t *pbtTx, const size_t szTx)
 {
   // Show transmitted command
   printf ("Sent bits:     ");
   print_hex (pbtTx, szTx);
   // Transmit the command bytes
-  if (!nfc_initiator_transceive_bytes (pnd, pbtTx, szTx, abtRx, &szRx, NULL))
+  if (nfc_initiator_transceive_bytes (pnd, pbtTx, szTx, abtRx, &szRx, 0) < 0)
     return false;
 
   // Show received answer
@@ -127,7 +127,7 @@ transmit_bytes (const byte_t * pbtTx, const size_t szTx)
 }
 
 static void
-print_success_or_failure (bool bFailure, uint32_t * uiBlockCounter)
+print_success_or_failure (bool bFailure, uint32_t *uiBlockCounter)
 {
   printf ("%c", (bFailure) ? 'x' : '.');
   if (uiBlockCounter && !bFailure)
@@ -219,12 +219,12 @@ unlock_card (void)
   printf ("Unlocking card\n");
 
   // Configure the CRC
-  if (!nfc_configure (pnd, NDO_HANDLE_CRC, false)) {
+  if (nfc_device_set_property_bool (pnd, NP_HANDLE_CRC, false) < 0) {
     nfc_perror (pnd, "nfc_configure");
     exit (EXIT_FAILURE);
   }
   // Use raw send/receive methods
-  if (!nfc_configure (pnd, NDO_EASY_FRAMING, false)) {
+  if (nfc_device_set_property_bool (pnd, NP_EASY_FRAMING, false) < 0) {
     nfc_perror (pnd, "nfc_configure");
     exit (EXIT_FAILURE);
   }
@@ -243,13 +243,13 @@ unlock_card (void)
 
   // reset reader
   // Configure the CRC
-  if (!nfc_configure (pnd, NDO_HANDLE_CRC, true)) {
-    nfc_perror (pnd, "nfc_configure");
+  if (nfc_device_set_property_bool (pnd, NP_HANDLE_CRC, true) < 0) {
+    nfc_perror (pnd, "nfc_device_set_property_bool");
     exit (EXIT_FAILURE);
   }
   // Switch off raw send/receive methods
-  if (!nfc_configure (pnd, NDO_EASY_FRAMING, true)) {
-    nfc_perror (pnd, "nfc_configure");
+  if (nfc_device_set_property_bool (pnd, NP_EASY_FRAMING, true) < 0) {
+    nfc_perror (pnd, "nfc_device_set_property_bool");
     exit (EXIT_FAILURE);
   }
   return true;
@@ -280,7 +280,7 @@ read_card (int read_unlocked)
       // Show if the readout went well
       if (bFailure) {
         // When a failure occured we need to redo the anti-collision
-        if (!nfc_initiator_select_passive_target (pnd, nmMifare, NULL, 0, &nt)) {
+        if (nfc_initiator_select_passive_target (pnd, nmMifare, NULL, 0, &nt) < 0) {
           printf ("!\nError: tag was removed\n");
           return false;
         }
@@ -353,7 +353,7 @@ write_card (int write_block_zero)
       // Show if the readout went well
       if (bFailure) {
         // When a failure occured we need to redo the anti-collision
-        if (!nfc_initiator_select_passive_target (pnd, nmMifare, NULL, 0, &nt)) {
+        if (nfc_initiator_select_passive_target (pnd, nmMifare, NULL, 0, &nt) < 0) {
           printf ("!\nError: tag was removed\n");
           return false;
         }
@@ -458,7 +458,7 @@ int
 main (int argc, const char *argv[])
 {
   action_t atAction = ACTION_USAGE;
-  byte_t *pbtUID;
+  uint8_t *pbtUID;
   FILE   *pfKeys = NULL;
   FILE   *pfDump = NULL;
   int    unlock= 0;
@@ -537,29 +537,35 @@ main (int argc, const char *argv[])
     }
     // printf("Successfully opened required files\n");
 
+    nfc_init (NULL);
+    
     // Try to open the NFC reader
-    pnd = nfc_connect (NULL);
+    pnd = nfc_open (NULL, NULL);
     if (pnd == NULL) {
-      printf ("Error connecting NFC reader\n");
+      printf ("Error opening NFC reader\n");
       exit (EXIT_FAILURE);
     }
 
-    nfc_initiator_init (pnd);
+    if (nfc_initiator_init (pnd) < 0) {
+      nfc_perror (pnd, "nfc_initiator_init");
+      exit (EXIT_FAILURE);    
+    };
 
     // Let the reader only try once to find a tag
-    if (!nfc_configure (pnd, NDO_INFINITE_SELECT, false)) {
-      nfc_perror (pnd, "nfc_configure");
+    if (nfc_device_set_property_bool (pnd, NP_INFINITE_SELECT, false) < 0) {
+      nfc_perror (pnd, "nfc_device_set_property_bool");
       exit (EXIT_FAILURE);
     }
     // Disable ISO14443-4 switching in order to read devices that emulate Mifare Classic with ISO14443-4 compliance.
-    nfc_configure (pnd, NDO_AUTO_ISO14443_4, false);
+    nfc_device_set_property_bool (pnd, NP_AUTO_ISO14443_4, false);
 
-    printf ("Connected to NFC reader: %s\n", pnd->acName);
+    printf ("NFC reader: %s opened\n", nfc_device_get_name (pnd));
 
     // Try to find a MIFARE Classic tag
-    if (!nfc_initiator_select_passive_target (pnd, nmMifare, NULL, 0, &nt)) {
+    if (nfc_initiator_select_passive_target (pnd, nmMifare, NULL, 0, &nt) < 0) {
       printf ("Error: no tag was found\n");
-      nfc_disconnect (pnd);
+      nfc_close (pnd);
+      nfc_exit (NULL);
       exit (EXIT_FAILURE);
     }
     // Test if we are dealing with a MIFARE compatible tag
@@ -571,10 +577,10 @@ main (int argc, const char *argv[])
     pbtUID = nt.nti.nai.abtUid;
 
     if (bUseKeyFile) {
-      byte_t fileUid[4];
+      uint8_t fileUid[4];
       memcpy (fileUid, mtKeys.amb[0].mbm.abtUID, 4);
       // Compare if key dump UID is the same as the current tag UID, at least for the first 4 bytes
-      if (memcmp (nt.nti.nai.abtUid, fileUid, 4) != 0) {
+      if (memcmp (pbtUID, fileUid, 4) != 0) {
         printf ("Expected MIFARE Classic card with UID starting as: %02x%02x%02x%02x\n",
                 fileUid[0], fileUid[1], fileUid[2], fileUid[3]);
       }
@@ -615,7 +621,7 @@ main (int argc, const char *argv[])
       write_card (unlock);
     }
 
-    nfc_disconnect (pnd);
+    nfc_close (pnd);
     break;
 
   case ACTION_EXTRACT:{
@@ -658,6 +664,7 @@ main (int argc, const char *argv[])
       printf ("Done, all bytes have been extracted!\n");
     }
   };
-
+  
+  nfc_exit (NULL);
   exit (EXIT_SUCCESS);
 }

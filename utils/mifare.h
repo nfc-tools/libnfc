@@ -38,7 +38,7 @@
 
 #  include <nfc/nfc-types.h>
 
-// Compiler directive, set struct alignment to 1 byte_t for compatibility
+// Compiler directive, set struct alignment to 1 uint8_t for compatibility
 #  pragma pack(1)
 
 typedef enum {
@@ -53,50 +53,50 @@ typedef enum {
 } mifare_cmd;
 
 // MIFARE command params
-typedef struct {
-  byte_t  abtKey[6];
-  byte_t  abtUid[4];
-} mifare_param_auth;
+struct mifare_param_auth {
+  uint8_t  abtKey[6];
+  uint8_t  abtUid[4];
+};
 
-typedef struct {
-  byte_t  abtData[16];
-} mifare_param_data;
+struct mifare_param_data {
+  uint8_t  abtData[16];
+};
 
-typedef struct {
-  byte_t  abtValue[4];
-} mifare_param_value;
+struct mifare_param_value {
+  uint8_t  abtValue[4];
+};
 
 typedef union {
-  mifare_param_auth mpa;
-  mifare_param_data mpd;
-  mifare_param_value mpv;
+  struct mifare_param_auth mpa;
+  struct mifare_param_data mpd;
+  struct mifare_param_value mpv;
 } mifare_param;
 
 // Reset struct alignment to default
 #  pragma pack()
 
-bool    nfc_initiator_mifare_cmd (nfc_device_t * pnd, const mifare_cmd mc, const uint8_t ui8Block, mifare_param * pmp);
+bool    nfc_initiator_mifare_cmd (nfc_device *pnd, const mifare_cmd mc, const uint8_t ui8Block, mifare_param *pmp);
 
-// Compiler directive, set struct alignment to 1 byte_t for compatibility
+// Compiler directive, set struct alignment to 1 uint8_t for compatibility
 #  pragma pack(1)
 
 // MIFARE Classic
 typedef struct {
-  byte_t  abtUID[4];
-  byte_t  btBCC;
-  byte_t  btUnknown;
-  byte_t  abtATQA[2];
-  byte_t  abtUnknown[8];
+  uint8_t  abtUID[4];
+  uint8_t  btBCC;
+  uint8_t  btUnknown;
+  uint8_t  abtATQA[2];
+  uint8_t  abtUnknown[8];
 } mifare_classic_block_manufacturer;
 
 typedef struct {
-  byte_t  abtData[16];
+  uint8_t  abtData[16];
 } mifare_classic_block_data;
 
 typedef struct {
-  byte_t  abtKeyA[6];
-  byte_t  abtAccessBits[4];
-  byte_t  abtKeyB[6];
+  uint8_t  abtKeyA[6];
+  uint8_t  abtAccessBits[4];
+  uint8_t  abtKeyB[6];
 } mifare_classic_block_trailer;
 
 typedef union {
@@ -111,17 +111,17 @@ typedef struct {
 
 // MIFARE Ultralight
 typedef struct {
-  byte_t  sn0[3];
-  byte_t  btBCC0;
-  byte_t  sn1[4];
-  byte_t  btBCC1;
-  byte_t  internal;
-  byte_t  lock[2];
-  byte_t  otp[4];
+  uint8_t  sn0[3];
+  uint8_t  btBCC0;
+  uint8_t  sn1[4];
+  uint8_t  btBCC1;
+  uint8_t  internal;
+  uint8_t  lock[2];
+  uint8_t  otp[4];
 } mifareul_block_manufacturer;
 
 typedef struct {
-  byte_t  abtData[16];
+  uint8_t  abtData[16];
 } mifareul_block_data;
 
 typedef union {

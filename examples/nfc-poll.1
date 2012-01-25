@@ -1,6 +1,6 @@
 .TH nfc-poll 1 "June 26, 2009" "libnfc" "libnfc's examples"
 .SH NAME
-nfc-poll \- Poll for one NFC target
+nfc-poll \- poll first available NFC target
 .SH SYNOPSIS
 .B nfc-poll
 .SH DESCRIPTION
@@ -8,8 +8,18 @@ nfc-poll \- Poll for one NFC target
 is a utility for polling any available target (tags but also NFCIP targets)
 using ISO14443-A, FeliCa, Jewel and ISO14443-B modulations.
 
-This tool relies on a hardware polling feature of the PN532, it will display
-available information retrieved from the tag.
+This tool uses hardware polling feature if available (ie. PN532) or switch back
+to software polling, it will display available information retrieved from the
+tag.
+
+.SH OPTIONS
+.TP
+.B \-v
+Tells
+.I
+nfc-poll
+to be verbose and display detailed information about the targets shown.
+This includes SAK decoding and fingerprinting is available.
 
 .SH IMPORTANT
 There are some well-know limits with this example:

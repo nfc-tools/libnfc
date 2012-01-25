@@ -17,9 +17,10 @@
 
 #include "config.h"
 
+#include <stdint.h>
+#include <stdio.h>
+#include <stdarg.h>
 #include <fcntl.h>
-#include <log4c.h>
-#include <inttypes.h>
 
 #include "log.h"
 
@@ -31,7 +32,7 @@ log_init (void)
   int res = 0;
 
   if (__log_init_counter == 0) {
-    res = log4c_init ();
+    res = 0;
   }
   if (!res) {
     __log_init_counter++;
@@ -45,7 +46,7 @@ log_fini (void)
   int res = 0;
   if (__log_init_counter >= 1) {
     if (__log_init_counter == 1) {
-      res = log4c_fini ();
+      res = 0;
     }
     __log_init_counter--;
   } else {
@@ -55,12 +56,12 @@ log_fini (void)
 }
 
 void
-log_put (char *category, int priority, char *format, ...)
+log_put (char *category, char *priority, char *format, ...)
 {
-  const log4c_category_t *cat = log4c_category_get (category);
-  if (log4c_category_is_priority_enabled (cat, priority)) {
-    va_list va;
-    va_start (va, format);
-    log4c_category_vlog (cat, priority, format, va);
-  }
+  va_list va;
+  va_start (va, format);
+  printf ("%s\t%s\t", priority, category);
+  vprintf (format, va);
+  printf ("\n");
+  va_end (va);
 }

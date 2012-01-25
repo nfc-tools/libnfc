@@ -28,26 +28,26 @@
 #include "iso7816.h"
 
 int
-nfc_emulate_target (nfc_device_t* pnd, struct nfc_emulator *emulator)
+nfc_emulate_target (nfc_device *pnd, struct nfc_emulator *emulator)
 {
-  byte_t abtRx[ISO7816_SHORT_R_APDU_MAX_LEN];
-  size_t szRx = sizeof(abtRx);
-  byte_t abtTx[ISO7816_SHORT_C_APDU_MAX_LEN];
+  uint8_t abtRx[ISO7816_SHORT_R_APDU_MAX_LEN];
+  int szRx;
+  uint8_t abtTx[ISO7816_SHORT_C_APDU_MAX_LEN];
   int res = 0;
 
-  if (!nfc_target_init (pnd, emulator->target, abtRx, &szRx)) {
+  if ((szRx = nfc_target_init (pnd, emulator->target, abtRx, sizeof(abtRx), 0)) < 0) {
     return -1;
   }
 
   while (res >= 0) {
-    res = emulator->state_machine->io (emulator, abtRx, szRx, abtTx, sizeof (abtTx));
+    res = emulator->state_machine->io (emulator, abtRx, (size_t) szRx, abtTx, sizeof (abtTx));
     if (res > 0) {
-      if (!nfc_target_send_bytes(pnd, abtTx, res, NULL)) {
+      if (nfc_target_send_bytes(pnd, abtTx, res, 0) < 0) {
         return -1;
       }
     }
     if (res >= 0) {
-      if (!nfc_target_receive_bytes(pnd, abtRx, &szRx, NULL)) {
+      if ((res = nfc_target_receive_bytes(pnd, abtRx, (size_t) szRx, 0)) < 0) {
         return -1;
       }
     }

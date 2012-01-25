@@ -4,6 +4,7 @@ bin_PROGRAMS = \
 		nfc-anticol \
 		nfc-dep-initiator \
 		nfc-dep-target \
+		nfc-emulate-forum-tag2 \
 		nfc-emulate-tag \
 		nfc-emulate-uid \
 		nfc-poll \
@@ -15,6 +16,9 @@ if POSIX_ONLY_EXAMPLES_ENABLED
 bin_PROGRAMS += \
 		pn53x-tamashell
 endif
+
+check_PROGRAMS = \
+		quick_start_example1
 
 # set the include path found by configure
 INCLUDES = $(all_includes) $(LIBNFC_CFLAGS)
@@ -32,6 +36,10 @@ nfc_anticol_LDADD = $(top_builddir)/libnfc/libnfc.la \
 nfc_relay_SOURCES = nfc-relay.c
 nfc_relay_LDADD = $(top_builddir)/libnfc/libnfc.la \
 		  $(top_builddir)/utils/libnfcutils.la
+
+nfc_emulate_forum_tag2_SOURCES = nfc-emulate-forum-tag2.c
+nfc_emulate_forum_tag2_LDADD = $(top_builddir)/libnfc/libnfc.la \
+			$(top_builddir)/utils/libnfcutils.la
 
 nfc_emulate_tag_SOURCES = nfc-emulate-tag.c
 nfc_emulate_tag_LDADD = $(top_builddir)/libnfc/libnfc.la \
@@ -62,6 +70,11 @@ pn53x_tamashell_LDADD = $(top_builddir)/libnfc/libnfc.la \
 		        $(top_builddir)/utils/libnfcutils.la
 pn53x_tamashell_LDFLAGS = @READLINE_LIBS@
 
+quick_start_example1_SOURCES = doc/quick_start_example1.c
+quick_start_example1_LDADD =  $(top_builddir)/libnfc/libnfc.la \
+		  $(top_builddir)/utils/libnfcutils.la
+
+
 dist_man_MANS = \
 		nfc-anticol.1 \
 		nfc-dep-initiator.1 \
@@ -73,10 +86,5 @@ dist_man_MANS = \
 		pn53x-diagnose.1 \
 		pn53x-sam.1 \
 		pn53x-tamashell.1
-
-if HAS_LOG4C
-  AM_CFLAGS += @log4c_CFLAGS@
-  LIBADD = @log4c_LIBS@
-endif
 
 EXTRA_DIST = CMakeLists.txt
