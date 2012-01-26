@@ -312,7 +312,7 @@ nfc_device *
 pn53x_usb_open (const nfc_connstring connstring)
 {
   nfc_device *pnd = NULL;
-  struct pn53x_usb_descriptor desc = { NULL, NULL } ;
+  struct pn53x_usb_descriptor desc = { NULL, NULL };
   int connstring_decode_level = pn53x_usb_connstring_decode (connstring, &desc);
   log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "%d element(s) have been decoded from \"%s\"", connstring_decode_level, connstring);
   if (connstring_decode_level < 1) {
@@ -479,9 +479,9 @@ pn53x_usb_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szData, co
 
   uint8_t abtRxBuf[PN53X_USB_BUFFER_LEN];
   if ((res = pn53x_usb_bulk_read (DRIVER_DATA (pnd), abtRxBuf, sizeof (abtRxBuf), timeout)) < 0) {
-    pnd->last_error = res;
     // try to interrupt current device state
     pn53x_usb_ack(pnd);
+    pnd->last_error = res;
     return pnd->last_error;
   }
 
@@ -550,9 +550,9 @@ read:
   }
 
   if (res < 0) {
-    pnd->last_error = res;
     // try to interrupt current device state
     pn53x_usb_ack(pnd);
+    pnd->last_error = res;
     return pnd->last_error;
   }
 

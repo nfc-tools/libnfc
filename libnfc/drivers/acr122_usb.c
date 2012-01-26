@@ -59,7 +59,7 @@ Thanks to d18c7db and Okko for example code
 #include "chips/pn53x-internal.h"
 #include "drivers/acr122_usb.h"
 
-#define PN53X_USB_DRIVER_NAME "acr122_usb"
+#define ACR122_USB_DRIVER_NAME "acr122_usb"
 #define LOG_CATEGORY "libnfc.driver.acr122_usb"
 
 #define USB_INFINITE_TIMEOUT   0
@@ -92,8 +92,12 @@ acr122_usb_bulk_read (struct acr122_usb_data *data, uint8_t abtRx[], const size_
   if (res > 0) {
     LOG_HEX ("RX", abtRx, res);
   } else if (res < 0) {
-    if (res != -USB_TIMEDOUT)
+    if (res != -USB_TIMEDOUT) {
+      res = NFC_EIO;
       log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to read from USB (%s)", _usb_strerror (res));
+    } else {
+      res = NFC_ETIMEOUT;
+    }
   }
   return res;
 }
@@ -108,8 +112,13 @@ acr122_usb_bulk_write (struct acr122_usb_data *data, uint8_t abtTx[], const size
     if ((res % data->uiMaxPacketSize) == 0) {
       usb_bulk_write (data->pudh, data->uiEndPointOut, "\0", 0, timeout);
     }
-  } else {
+  } else if (res < 0) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to write to USB (%s)", _usb_strerror (res));
+    if (res == -USB_TIMEDOUT) {
+      res = NFC_ETIMEOUT;
+    } else {
+      res = NFC_EIO;
+    }
   }
   return res;
 }
@@ -227,7 +236,7 @@ acr122_usb_probe (nfc_connstring connstrings[], size_t connstrings_len, size_t *
           // acr122_usb_get_usb_device_name (dev, udev, pnddDevices[*pszDeviceFound].acDevice, sizeof (pnddDevices[*pszDeviceFound].acDevice));
           log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "device found: Bus %s Device %s", bus->dirname, dev->filename);
           usb_close (udev);
-          snprintf (connstrings[*pszDeviceFound], sizeof(nfc_connstring), "%s:%s:%s", PN53X_USB_DRIVER_NAME, bus->dirname, dev->filename);
+          snprintf (connstrings[*pszDeviceFound], sizeof(nfc_connstring), "%s:%s:%s", ACR122_USB_DRIVER_NAME, bus->dirname, dev->filename);
           (*pszDeviceFound)++;
           // Test if we reach the maximum "wanted" devices
           if ((*pszDeviceFound) == connstrings_len) {
@@ -242,61 +251,35 @@ acr122_usb_probe (nfc_connstring connstrings[], size_t connstrings_len, size_t *
 }
 
 struct acr122_usb_descriptor {
-  uint16_t bus;
-  uint16_t dev;
+  char *dirname;
+  char *filename;
 };
 
 int
 acr122_usb_connstring_decode (const nfc_connstring connstring, struct acr122_usb_descriptor *desc)
 {
-  char *cs = malloc (strlen (connstring) + 1);
-  if (!cs) {
-    perror ("malloc");
-    return -1;
-  }
-  strcpy (cs, connstring);
-  const char *driver_name = strtok (cs, ":");
-  if (!driver_name) {
-    // Parse error
-    free (cs);
-    return -1;
-  }
+  int n = strlen (connstring) + 1;
+  char *driver_name = malloc (n);
+  char *dirname     = malloc (n);
+  char *filename    = malloc (n);
 
-  if (0 != strcmp (driver_name, PN53X_USB_DRIVER_NAME)) {
+  driver_name[0] = '\0';
+
+  int res = sscanf (connstring, "%[^:]:%[^:]:%[^:]", driver_name, dirname, filename);
+
+  if (!res || (0 != strcmp (driver_name, ACR122_USB_DRIVER_NAME))) {
     // Driver name does not match.
-    free (cs);
-    return 0;
+    res = 0;
+  } else {
+    desc->dirname  = strdup (dirname);
+    desc->filename = strdup (filename);
   }
 
-  const char *bus_s = strtok (NULL, ":");
-  if (!bus_s) {
-    // bus not specified (or parsing error)
-    free (cs);
-    return 1;
-  }
-  unsigned int bus;
-  if (sscanf (bus_s, "%u", &bus) != 1) {
-    // bus_s is not a number
-    free (cs);
-    return 1;
-  }
-  desc->bus = bus;
+  free (driver_name);
+  free (dirname);
+  free (filename);
 
-  const char *dev_s = strtok (NULL, ":");
-  if (!dev_s) {
-    // dev not specified (or parsing error)
-    free (cs);
-    return 2;
-  }
-  unsigned int dev;
-  if (sscanf (dev_s, "%u", &dev) != 1) {
-    // dev_s is not a number
-    free (cs);
-    return 2;
-  }
-  desc->dev = dev;
-  free (cs);
-  return 3;
+  return res;
 }
 
 bool
@@ -329,14 +312,14 @@ acr122_usb_get_usb_device_name (struct usb_device *dev, usb_dev_handle *udev, ch
 nfc_device *
 acr122_usb_open (const nfc_connstring connstring)
 {
-  struct acr122_usb_descriptor desc;
+  nfc_device *pnd = NULL;
+  struct acr122_usb_descriptor desc = { NULL, NULL };
   int connstring_decode_level = acr122_usb_connstring_decode (connstring, &desc);
-  log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "%d element(s) have been decoded from \"%s\"", connstring_decode_level, connstring); 
+  log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "%d element(s) have been decoded from \"%s\"", connstring_decode_level, connstring);
   if (connstring_decode_level < 1) {
-    return NULL;
+    goto free_mem;
   }
 
-  nfc_device *pnd = NULL;
   struct acr122_usb_data data = {
     .pudh = NULL,
     .uiEndPointIn = 0,
@@ -347,20 +330,32 @@ acr122_usb_open (const nfc_connstring connstring)
 
   usb_init ();
 
+  int res;
+  // usb_find_busses will find all of the busses on the system. Returns the
+  // number of changes since previous call to this function (total of new
+  // busses and busses removed).
+  if ((res = usb_find_busses () < 0)) {
+    log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to find USB busses (%s)", _usb_strerror (res));
+    goto free_mem;
+  }
+  // usb_find_devices will find all of the devices on each bus. This should be
+  // called after usb_find_busses. Returns the number of changes since the
+  // previous call to this function (total of new device and devices removed).
+  if ((res = usb_find_devices () < 0)) {
+    log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to find USB devices (%s)", _usb_strerror (res));
+    goto free_mem;
+  }
+
   for (bus = usb_get_busses (); bus; bus = bus->next) {
     if (connstring_decode_level > 1)  {
       // A specific bus have been specified
-      unsigned int bus_current;
-      sscanf (bus->dirname, "%u", &bus_current);
-      if (bus_current != desc.bus)
+      if (0 != strcmp (bus->dirname, desc.dirname))
         continue;
     }
     for (dev = bus->devices; dev; dev = dev->next) {
       if (connstring_decode_level > 2)  {
         // A specific dev have been specified
-        unsigned int dev_current;
-        sscanf (dev->filename, "%u", &dev_current);
-        if (dev_current != desc.dev)
+      if (0 != strcmp (dev->filename, desc.filename))
           continue;
       }
       // Open the USB device
@@ -376,7 +371,7 @@ acr122_usb_open (const nfc_connstring connstring)
         }
         usb_close (data.pudh);
         // we failed to use the specified device
-        return NULL;
+        goto free_mem;
       }
 
       res = usb_claim_interface (data.pudh, 0);
@@ -384,7 +379,7 @@ acr122_usb_open (const nfc_connstring connstring)
         log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to claim USB interface (%s)", _usb_strerror (res));
         usb_close (data.pudh);
         // we failed to use the specified device
-        return NULL;
+        goto free_mem;
       }
       data.model = acr122_usb_get_device_model (dev->descriptor.idVendor, dev->descriptor.idProduct);
       // Allocate memory for the device info and specification, fill it and return the info
@@ -420,16 +415,20 @@ acr122_usb_open (const nfc_connstring connstring)
         goto error;
       }
       DRIVER_DATA (pnd)->abort_flag = false;
-      return pnd;
+      goto free_mem;
     }
   }
   // We ran out of devices before the index required
-  return NULL;
+  goto free_mem;
 
 error:
   // Free allocated structure on error.
   nfc_device_free (pnd);
-  return NULL;
+  pnd = NULL;
+free_mem:
+  free (desc.dirname);
+  free (desc.filename);
+  return pnd;
 }
 
 void
@@ -451,29 +450,27 @@ acr122_usb_close (nfc_device *pnd)
   nfc_device_free (pnd);
 }
 
-#define PN53X_USB_BUFFER_LEN (PN53x_EXTENDED_FRAME__DATA_MAX_LEN + PN53x_EXTENDED_FRAME__OVERHEAD)
+#define ACR122_USB_BUFFER_LEN (PN53x_EXTENDED_FRAME__DATA_MAX_LEN + PN53x_EXTENDED_FRAME__OVERHEAD)
 
 int
 acr122_usb_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szData, const int timeout)
 {
-  uint8_t  abtFrame[PN53X_USB_BUFFER_LEN] = { 0x00, 0x00, 0xff };  // Every packet must start with "00 00 ff"
+  uint8_t  abtFrame[ACR122_USB_BUFFER_LEN] = { 0x00, 0x00, 0xff };  // Every packet must start with "00 00 ff"
   size_t szFrame = 0;
 
   pn53x_build_frame (abtFrame, &szFrame, pbtData, szData);
 
-  int res = acr122_usb_bulk_write (DRIVER_DATA (pnd), abtFrame, szFrame, timeout);
-
-  if (res < 0) {
-    pnd->last_error = NFC_EIO;
+  int res;
+  if ((res = acr122_usb_bulk_write (DRIVER_DATA (pnd), abtFrame, szFrame, timeout)) < 0) {
+    pnd->last_error = res;
     return pnd->last_error;
   }
 
-  uint8_t abtRxBuf[PN53X_USB_BUFFER_LEN];
-  res = acr122_usb_bulk_read (DRIVER_DATA (pnd), abtRxBuf, sizeof (abtRxBuf), timeout);
-  if (res < 0) {
-    pnd->last_error = NFC_EIO;
+  uint8_t abtRxBuf[ACR122_USB_BUFFER_LEN];
+  if ((res = acr122_usb_bulk_read (DRIVER_DATA (pnd), abtRxBuf, sizeof (abtRxBuf), timeout)) < 0) {
     // try to interrupt current device state
     acr122_usb_ack(pnd);
+    pnd->last_error = res;
     return pnd->last_error;
   }
 
@@ -487,11 +484,10 @@ acr122_usb_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szData, c
     // acr122_usb_receive()) will be able to retreive the correct response
     // packet.
     // FIXME Sony reader is also affected by this bug but NACK is not supported
-    int res = acr122_usb_bulk_write (DRIVER_DATA (pnd), (uint8_t *)pn53x_nack_frame, sizeof(pn53x_nack_frame), timeout);
-    if (res < 0) {
-      pnd->last_error = NFC_EIO;
+    if ((res = acr122_usb_bulk_write (DRIVER_DATA (pnd), (uint8_t *)pn53x_nack_frame, sizeof(pn53x_nack_frame), timeout)) < 0) {
       // try to interrupt current device state
       acr122_usb_ack(pnd);
+      pnd->last_error = res;
       return pnd->last_error;
     }
   }
@@ -506,7 +502,7 @@ acr122_usb_receive (nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, c
   size_t len;
   off_t offset = 0;
 
-  uint8_t  abtRxBuf[PN53X_USB_BUFFER_LEN];
+  uint8_t  abtRxBuf[ACR122_USB_BUFFER_LEN];
   int res;
 
   /*
@@ -531,7 +527,7 @@ read:
 
   res = acr122_usb_bulk_read (DRIVER_DATA (pnd), abtRxBuf, sizeof (abtRxBuf), usb_timeout);
 
-  if (res == -USB_TIMEDOUT) {
+  if (res == NFC_ETIMEOUT) {
     if (DRIVER_DATA (pnd)->abort_flag) {
       DRIVER_DATA (pnd)->abort_flag = false;
       acr122_usb_ack (pnd);
@@ -543,9 +539,9 @@ read:
   }
 
   if (res < 0) {
-    pnd->last_error = NFC_EIO;
     // try to interrupt current device state
     acr122_usb_ack(pnd);
+    pnd->last_error = res;
     return pnd->last_error;
   }
 
@@ -646,12 +642,6 @@ int
 acr122_usb_init (nfc_device *pnd)
 {
   int res = 0;
-  // Sometimes PN53x USB doesn't reply ACK one the first frame, so we need to send a dummy one...
-  const uint8_t abtCmd[] = { GetFirmwareVersion };
-  pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, 0, -1);
-  // ...and we don't care about error
-  pnd->last_error = 0;
-
   if ((res = pn53x_init (pnd)) < 0)
     return res;
 
@@ -671,7 +661,7 @@ const struct pn53x_io acr122_usb_io = {
 };
 
 const struct nfc_driver acr122_usb_driver = {
-  .name                             = PN53X_USB_DRIVER_NAME,
+  .name                             = ACR122_USB_DRIVER_NAME,
   .probe                            = acr122_usb_probe,
   .open                             = acr122_usb_open,
   .close                            = acr122_usb_close,
