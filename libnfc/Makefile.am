@@ -25,11 +25,6 @@ libnfc_la_LIBADD = \
 	$(top_builddir)/libnfc/buses/libnfcbuses.la \
 	$(top_builddir)/libnfc/drivers/libnfcdrivers.la
 
-if PCSC_ENABLED
-  libnfc_la_CFLAGS += @libpcsclite_CFLAGS@ -DHAVE_PCSC
-  libnfc_la_LIBADD += @libpcsclite_LIBS@
-endif
-
 if LIBUSB_ENABLED
   libnfc_la_CFLAGS += @libusb_CFLAGS@ -DHAVE_LIBUSB
   libnfc_la_LIBADD  += @libusb_LIBS@

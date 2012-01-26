@@ -50,11 +50,8 @@ const struct nfc_driver *nfc_drivers[] = {
   &pn53x_usb_driver,
 #  endif /* DRIVER_PN53X_USB_ENABLED */
 #  if defined (DRIVER_ACR122_ENABLED)
-  &acr122_driver,
+  &acr122_usb_driver,
 #  endif /* DRIVER_ACR122_ENABLED */
-#  if defined (DRIVER_ACR122S_ENABLED)
-  &acr122s_driver,
-#  endif /* DRIVER_ACR122S_ENABLED */
 #  if defined (DRIVER_PN532_UART_ENABLED)
   &pn532_uart_driver,
 #  endif /* DRIVER_PN532_UART_ENABLED */

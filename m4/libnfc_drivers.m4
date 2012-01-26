@@ -35,7 +35,6 @@ AC_DEFUN([LIBNFC_ARG_WITH_DRIVERS],
   DRIVERS_CFLAGS=""
 
   driver_acr122_enabled="no"
-  driver_acr122s_enabled="no"
   driver_pn53x_usb_enabled="no"
   driver_arygon_enabled="no"
   driver_pn532_uart_enabled="no"
@@ -44,7 +43,7 @@ AC_DEFUN([LIBNFC_ARG_WITH_DRIVERS],
   do
     case "${driver}" in
     acr122)
-                  pcsc_required="yes"
+                  libusb_required="yes"
 		  driver_acr122_enabled="yes"
                   DRIVERS_CFLAGS="$DRIVERS_CFLAGS -DDRIVER_ACR122_ENABLED"
                   ;;

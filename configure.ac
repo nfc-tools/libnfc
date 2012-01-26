@@ -116,12 +116,10 @@ AM_CONDITIONAL(DOC_ENABLED, [test x"$enable_doc" = xyes])
 PKG_CONFIG_REQUIRES=""
 
 LIBNFC_CHECK_LIBUSB
-LIBNFC_CHECK_PCSC
 
 AC_SUBST(PKG_CONFIG_REQUIRES)
 
 AM_CONDITIONAL(LIBUSB_ENABLED, [test "$HAVE_LIBUSB" = "1"])
-AM_CONDITIONAL(PCSC_ENABLED, [test "$HAVE_PCSC" = "1"])
 
 CUTTER_REQUIRED_VERSION=1.1.8
 m4_ifdef([AC_CHECK_CUTTER], [AC_CHECK_CUTTER([>= $CUTTER_REQUIRED_VERSION])], [ac_cv_use_cutter="no"])
@@ -137,6 +135,9 @@ CFLAGS="$CFLAGS -Wall -pedantic -Wextra"
 
 # Defines and C flags
 CFLAGS="$CFLAGS -std=c99"
+
+# Workarounds for libusb in c99
+CFLAGS="$CFLAGS -Du_int8_t=uint8_t -Du_int16_t=uint16_t"
 
 AC_CONFIG_FILES([
 		Doxyfile

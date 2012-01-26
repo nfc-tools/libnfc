@@ -14,4 +14,8 @@ ATTRS{idVendor}=="04e6", ATTRS{idProduct}=="5591", MODE="0664", GROUP="plugdev"
 ATTRS{idVendor}=="1fd3", ATTRS{idProduct}=="0608", MODE="0664", GROUP="plugdev"
 ATTRS{idVendor}=="054c", ATTRS{idProduct}=="02e1", MODE="0664", GROUP="plugdev"
 
+# ACR122 / Touchatag
+ATTRS{idVendor}=="072f", ATTRS{idProduct}=="2200", MODE="0664", GROUP="plugdev"
+ATTRS{idVendor}=="072f", ATTRS{idProduct}=="90cc", MODE="0664", GROUP="plugdev"
+
 LABEL="pn53x_rules_end"
