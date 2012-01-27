@@ -225,14 +225,6 @@ acr122_usb_probe (nfc_connstring connstrings[], size_t connstrings_len, size_t *
           usb_dev_handle *udev = usb_open (dev);
 
           // Set configuration
-          int res = usb_set_configuration (udev, 1);
-          if (res < 0) {
-            log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to set USB configuration (%s)", _usb_strerror (res));
-            usb_close (udev);
-            // we failed to use the device
-            continue;
-          }
-
           // acr122_usb_get_usb_device_name (dev, udev, pnddDevices[*pszDeviceFound].acDevice, sizeof (pnddDevices[*pszDeviceFound].acDevice));
           log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "device found: Bus %s Device %s", bus->dirname, dev->filename);
           usb_close (udev);
@@ -360,20 +352,11 @@ acr122_usb_open (const nfc_connstring connstring)
       }
       // Open the USB device
       data.pudh = usb_open (dev);
+      // Reset device
+      usb_reset (data.pudh);
       // Retrieve end points
       acr122_usb_get_end_points (dev, &data);
-      // Set configuration
-      int res = usb_set_configuration (data.pudh, 1);
-      if (res < 0) {
-        log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to set USB configuration (%s)", _usb_strerror (res));
-        if (EPERM == -res) {
-          log_put (LOG_CATEGORY, NFC_PRIORITY_WARN, "Please double check USB permissions for device %04x:%04x", dev->descriptor.idVendor, dev->descriptor.idProduct);
-        }
-        usb_close (data.pudh);
-        // we failed to use the specified device
-        goto free_mem;
-      }
-
+      // Claim interface
       res = usb_claim_interface (data.pudh, 0);
       if (res < 0) {
         log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to claim USB interface (%s)", _usb_strerror (res));
@@ -381,6 +364,15 @@ acr122_usb_open (const nfc_connstring connstring)
         // we failed to use the specified device
         goto free_mem;
       }
+
+      res = usb_set_altinterface (data.pudh, 0);
+      if (res < 0) {
+        log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to set alternate setting on USB interface (%s)", _usb_strerror (res));
+        usb_close (data.pudh);
+        // we failed to use the specified device
+        goto free_mem;
+      }
+
       data.model = acr122_usb_get_device_model (dev->descriptor.idVendor, dev->descriptor.idProduct);
       // Allocate memory for the device info and specification, fill it and return the info
       pnd = nfc_device_new (connstring);
@@ -451,47 +443,32 @@ acr122_usb_close (nfc_device *pnd)
 }
 
 #define ACR122_USB_BUFFER_LEN (PN53x_EXTENDED_FRAME__DATA_MAX_LEN + PN53x_EXTENDED_FRAME__OVERHEAD)
+size_t
+acr122_build_frame (uint8_t *frame, const size_t frame_len, const uint8_t *data, const size_t data_len)
+{
+  frame[1] = data_len + 6;
+  frame[14] = data_len + 1;
+  memcpy (frame + 16, data, data_len);
+  return data_len + 16;
+}
 
 int
 acr122_usb_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szData, const int timeout)
 {
-  uint8_t  abtFrame[ACR122_USB_BUFFER_LEN] = { 0x00, 0x00, 0xff };  // Every packet must start with "00 00 ff"
-  size_t szFrame = 0;
-
-  pn53x_build_frame (abtFrame, &szFrame, pbtData, szData);
+  uint8_t  abtFrame[ACR122_USB_BUFFER_LEN] = { 0x6b, 
+                                               0x00, // len
+                                               0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // padding
+                                               0xff, 0x00, 0x00, 0x00,
+                                               0x00, // pn532 command lenght
+                                               0xd4, // direction
+  };
+  size_t szFrame = acr122_build_frame (abtFrame, sizeof(abtFrame), pbtData, szData);
 
   int res;
   if ((res = acr122_usb_bulk_write (DRIVER_DATA (pnd), abtFrame, szFrame, timeout)) < 0) {
     pnd->last_error = res;
     return pnd->last_error;
   }
-
-  uint8_t abtRxBuf[ACR122_USB_BUFFER_LEN];
-  if ((res = acr122_usb_bulk_read (DRIVER_DATA (pnd), abtRxBuf, sizeof (abtRxBuf), timeout)) < 0) {
-    // try to interrupt current device state
-    acr122_usb_ack(pnd);
-    pnd->last_error = res;
-    return pnd->last_error;
-  }
-
-  if (pn53x_check_ack_frame (pnd, abtRxBuf, res) == 0) {
-    // The PN53x is running the sent command
-  } else {
-    // For some reasons (eg. send another command while a previous one is
-    // running), the PN533 sometimes directly replies the response packet
-    // instead of ACK frame, so we send a NACK frame to force PN533 to resend
-    // response packet. With this hack, the nextly executed function (ie.
-    // acr122_usb_receive()) will be able to retreive the correct response
-    // packet.
-    // FIXME Sony reader is also affected by this bug but NACK is not supported
-    if ((res = acr122_usb_bulk_write (DRIVER_DATA (pnd), (uint8_t *)pn53x_nack_frame, sizeof(pn53x_nack_frame), timeout)) < 0) {
-      // try to interrupt current device state
-      acr122_usb_ack(pnd);
-      pnd->last_error = res;
-      return pnd->last_error;
-    }
-  }
-
   return NFC_SUCCESS;
 }
 
@@ -499,7 +476,6 @@ acr122_usb_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szData, c
 int
 acr122_usb_receive (nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, const int timeout)
 {
-  size_t len;
   off_t offset = 0;
 
   uint8_t  abtRxBuf[ACR122_USB_BUFFER_LEN];
@@ -545,51 +521,34 @@ read:
     return pnd->last_error;
   }
 
-  const uint8_t pn53x_preamble[3] = { 0x00, 0x00, 0xff };
-  if (0 != (memcmp (abtRxBuf, pn53x_preamble, 3))) {
-    log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Frame preamble+start code mismatch");
+  if (abtRxBuf[offset] != 0x83) {
+    log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Frame header mismatch");
     pnd->last_error = NFC_EIO;
     return pnd->last_error;
   }
-  offset += 3;
+  offset++;
 
-  if ((0x01 == abtRxBuf[offset]) && (0xff == abtRxBuf[offset + 1])) {
-    // Error frame
-    log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Application level error detected");
+  size_t len = abtRxBuf[offset++];
+  if (len < 4) {
+    log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "Too small reply");
     pnd->last_error = NFC_EIO;
     return pnd->last_error;
-  } else if ((0xff == abtRxBuf[offset]) && (0xff == abtRxBuf[offset + 1])) {
-    // Extended frame
-    offset += 2;
-
-    // (abtRxBuf[offset] << 8) + abtRxBuf[offset + 1] (LEN) include TFI + (CC+1)
-    len = (abtRxBuf[offset] << 8) + abtRxBuf[offset + 1] - 2;
-    if (((abtRxBuf[offset] + abtRxBuf[offset + 1] + abtRxBuf[offset + 2]) % 256) != 0) {
-      // TODO: Retry
-      log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Length checksum mismatch");
-      pnd->last_error = NFC_EIO;
-      return pnd->last_error;
-    }
-    offset += 3;
-  } else {
-    // Normal frame
-    if (256 != (abtRxBuf[offset] + abtRxBuf[offset + 1])) {
-      // TODO: Retry
-      log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Length checksum mismatch");
-      pnd->last_error = NFC_EIO;
-      return pnd->last_error;
-    }
-
-    // abtRxBuf[3] (LEN) include TFI + (CC+1)
-    len = abtRxBuf[offset] - 2;
-    offset += 2;
   }
+  len -= 4;
 
   if (len > szDataLen) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to receive data: buffer too small. (szDataLen: %zu, len: %zu)", szDataLen, len);
     pnd->last_error = NFC_EIO;
     return pnd->last_error;
   }
+
+  const uint8_t acr122_preamble[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x81, 0x00 };
+  if (0 != (memcmp (abtRxBuf + offset, acr122_preamble, sizeof(acr122_preamble)))) {
+    log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Frame preamble mismatch");
+    pnd->last_error = NFC_EIO;
+    return pnd->last_error;
+  }
+  offset += sizeof(acr122_preamble);
 
   // TFI + PD0 (CC+1)
   if (abtRxBuf[offset] != 0xD5) {
@@ -609,39 +568,38 @@ read:
   memcpy (pbtData, abtRxBuf + offset, len);
   offset += len;
 
-  uint8_t btDCS = (256 - 0xD5);
-  btDCS -= CHIP_DATA (pnd)->last_command + 1;
-  for (size_t szPos = 0; szPos < len; szPos++) {
-    btDCS -= pbtData[szPos];
-  }
-
-  if (btDCS != abtRxBuf[offset]) {
-    log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Data checksum mismatch");
-    pnd->last_error = NFC_EIO;
-    return pnd->last_error;
-  }
-  offset += 1;
-
-  if (0x00 != abtRxBuf[offset]) {
-    log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Frame postamble mismatch");
-    pnd->last_error = NFC_EIO;
-    return pnd->last_error;
-  }
-  // The PN53x command is done and we successfully received the reply
-  pnd->last_error = 0;
   return len;
 }
 
 int
 acr122_usb_ack (nfc_device *pnd)
 {
-  return acr122_usb_bulk_write (DRIVER_DATA (pnd), (uint8_t *) pn53x_ack_frame, sizeof (pn53x_ack_frame), 1000);
+  return 0;
+  //return acr122_usb_bulk_write (DRIVER_DATA (pnd), (uint8_t *) pn53x_ack_frame, sizeof (pn53x_ack_frame), 1000);
 }
 
 int
 acr122_usb_init (nfc_device *pnd)
 {
   int res = 0;
+/*
+  uint8_t frame[] = { 0x6B,
+			0x07,
+			0, 0, 0, 0, 0, 0, 0, 0, // padding
+			0xFF, 0x00, 0x00, 0x00, 0x02, 0xD4, 0x02 // frame
+                    };
+  acr122_usb_bulk_write (DRIVER_DATA (pnd), frame, sizeof(frame), 300);
+  acr122_usb_bulk_read (DRIVER_DATA (pnd), frame, sizeof(frame), 0);
+*/
+
+/*
+  uint8_t frame[] = { 0x6B,
+			5, // len
+			0, 0, 0, 0, 0, 0, 0, 0, // padding
+			0xFF, 0x00, 0x48, 0x00, 0x00 // frame
+                    };
+  acr122_usb_bulk_write (DRIVER_DATA (pnd), frame, sizeof(frame), 0);
+*/
   if ((res = pn53x_init (pnd)) < 0)
     return res;
 
