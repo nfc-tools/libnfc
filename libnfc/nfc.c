@@ -121,6 +121,7 @@ nfc_get_default_device (nfc_connstring *connstring)
 
 /**
  * @brief Open a NFC device
+ * @param context The context to operate on, or NULL for the default context.
  * @param connstring The device connection string if specific device is wanted, \c NULL otherwise
  * @return Returns pointer to a \a nfc_device struct if successfull; otherwise returns \c NULL value.
  *
@@ -200,8 +201,9 @@ nfc_close (nfc_device *pnd)
 /**
  * @brief Probe for discoverable supported devices (ie. only available for some drivers)
  * @return Returns the number of devices found.
- * @param[out] pnddDevices array of \a nfc_device_desc_t previously allocated by the caller.
- * @param szDevices size of the \a pnddDevices array.
+ * @param context The context to operate on, or NULL for the default context.
+ * @param connstrings The device connection string if specific device is wanted, \c NULL otherwise
+ * @param szDevices size of the \a connstrings array.
  * 
  */
 size_t
@@ -436,8 +438,8 @@ nfc_initiator_list_passive_targets (nfc_device *pnd,
  * @return Returns polled targets count, otherwise returns libnfc's error code (negative value).
  *
  * @param pnd \a nfc_device struct pointer that represent currently used device
- * @param ppttTargetTypes array of desired target types
- * @param szTargetTypes \e ppttTargetTypes count
+ * @param pnmModulations desired modulation
+ * @param szModulations size of \a pnmModulations
  * @param uiPollNr specifies the number of polling (0x01 – 0xFE: 1 up to 254 polling, 0xFF: Endless polling)
  * @note one polling is a polling for each desired target type
  * @param uiPeriod indicates the polling period in units of 150 ms (0x01 – 0x0F: 150ms – 2.25s)
@@ -462,6 +464,7 @@ nfc_initiator_poll_target (nfc_device *pnd,
  * @param ndm desired D.E.P. mode (\a NDM_ACTIVE or \a NDM_PASSIVE for active, respectively passive mode)
  * @param ndiInitiator pointer \a nfc_dep_info struct that contains \e NFCID3 and \e General \e Bytes to set to the initiator device (optionnal, can be \e NULL)
  * @param[out] pnt is a \a nfc_target struct pointer where target information will be put.
+ * @param timeout in milliseconds
  *
  * The NFC device will try to find an available D.E.P. target. The standards
  * (ISO18092 and ECMA-340) describe the modulation that can be used for reader
@@ -483,8 +486,10 @@ nfc_initiator_select_dep_target (nfc_device *pnd,
  *
  * @param pnd \a nfc_device struct pointer that represent currently used device
  * @param ndm desired D.E.P. mode (\a NDM_ACTIVE or \a NDM_PASSIVE for active, respectively passive mode)
+ * @param nbr desired baud rate
  * @param ndiInitiator pointer \a nfc_dep_info struct that contains \e NFCID3 and \e General \e Bytes to set to the initiator device (optionnal, can be \e NULL)
  * @param[out] pnt is a \a nfc_target struct pointer where target information will be put.
+ * @param timeout in milliseconds
  *
  * The NFC device will try to find an available D.E.P. target. The standards
  * (ISO18092 and ECMA-340) describe the modulation that can be used for reader
@@ -538,8 +543,11 @@ nfc_initiator_deselect_target (nfc_device *pnd)
  * @brief Send data to target then retrieve data from target
  * @return Returns received bytes count on success, otherwise returns libnfc's error code
  *
+ * @param pnd \a nfc_device struct pointer that represents currently used device
  * @param pbtTx contains a byte array of the frame that needs to be transmitted.
  * @param szTx contains the length in bytes.
+ * @param[out] pbtRx response from the tags
+ * @param pszRx size of \a pbtRx
  * @param timeout in milliseconds
  * 
  * The NFC device (configured as initiator) will transmit the supplied bytes (\a pbtTx) to the target.
@@ -568,6 +576,7 @@ nfc_initiator_transceive_bytes (nfc_device *pnd, const uint8_t *pbtTx, const siz
  * @brief Transceive raw bit-frames to a target
  * @return Returns received bits count on success, otherwise returns libnfc's error code
  *
+ * @param pnd \a nfc_device struct pointer that represents currently used device
  * @param pbtTx contains a byte array of the frame that needs to be transmitted.
  * @param szTxBits contains the length in bits.
  *
@@ -664,7 +673,6 @@ nfc_initiator_transceive_bits_timed (nfc_device *pnd, const uint8_t *pbtTx, cons
  * @return Returns received bytes count on success, otherwise returns libnfc's error code
  *
  * @param pnd \a nfc_device struct pointer that represent currently used device
- * @param ntm target mode restriction that you want to emulate (eg. NTM_PASSIVE_ONLY)
  * @param pnt pointer to \a nfc_target struct that represents the wanted emulated target
  *
  * @note \a pnt can be updated by this function: if you set NBR_UNDEFINED
@@ -799,6 +807,10 @@ nfc_target_receive_bytes (nfc_device *pnd, uint8_t *pbtRx, const size_t szRx, in
  * @brief Send raw bit-frames
  * @return Returns sent bits count on success, otherwise returns libnfc's error code.
  *
+ * @param pnd \a nfc_device struct pointer that represent currently used device
+ * @param pbtTx pointer to Tx buffer
+ * @param szTxBits size of Tx buffer
+ * @param pbtTxPar parameter contains a byte array of the corresponding parity bits needed to send per byte.
  * This function can be used to transmit (raw) bit-frames to the \e initiator
  * using the specified NFC device (configured as \e target).
  */
@@ -812,8 +824,10 @@ nfc_target_send_bits (nfc_device *pnd, const uint8_t *pbtTx, const size_t szTxBi
  * @brief Receive bit-frames
  * @return Returns received bits count on success, otherwise returns libnfc's error code
  *
- * @param pbtRx
- * @param szRx
+ * @param pnd \a nfc_device struct pointer that represent currently used device
+ * @param pbtRx pointer to Rx buffer
+ * @param szRx size of Rx buffer
+ * @param[out] pbtRxPar parameter contains a byte array of the corresponding parity bits
  *
  * This function makes it possible to receive (raw) bit-frames.  It returns all
  * the messages that are stored in the FIFO buffer of the \e PN53x chip.  It
@@ -850,6 +864,8 @@ static struct sErrorMessage {
 /**
  * @brief Return the last error string
  * @return Returns a string
+ * 
+ * @param pnd \a nfc_device struct pointer that represent currently used device
  */
 const char *
 nfc_strerror (const nfc_device *pnd)
@@ -869,6 +885,8 @@ nfc_strerror (const nfc_device *pnd)
 /**
  * @brief Renders the last error in pcStrErrBuf for a maximum size of szBufLen chars
  * @return Returns 0 upon success
+ * 
+ * @param pnd \a nfc_device struct pointer that represent currently used device
  */
 int
 nfc_strerror_r (const nfc_device *pnd, char *pcStrErrBuf, size_t szBufLen)
@@ -878,6 +896,9 @@ nfc_strerror_r (const nfc_device *pnd, char *pcStrErrBuf, size_t szBufLen)
 
 /**
  * @brief Display the last error occured on a nfc_device
+ * 
+ * @param pnd \a nfc_device struct pointer that represent currently used device
+ * @param pcString a string 
  */
 void
 nfc_perror (const nfc_device *pnd, const char *pcString)
@@ -887,6 +908,9 @@ nfc_perror (const nfc_device *pnd, const char *pcString)
 
 /**
  * @brief Returns last error occured on a nfc_device
+ * @return Returns an integer that represents to libnfc's error code.
+ * 
+ * @param pnd \a nfc_device struct pointer that represent currently used device
  */
 int
 nfc_device_get_last_error (const nfc_device *pnd)
@@ -899,6 +923,8 @@ nfc_device_get_last_error (const nfc_device *pnd)
 /**
  * @brief Returns the device name
  * @return Returns a string with the device name
+ * 
+ * @param pnd \a nfc_device struct pointer that represent currently used device
  */
 const char *
 nfc_device_get_name (nfc_device *pnd)
@@ -909,6 +935,8 @@ nfc_device_get_name (nfc_device *pnd)
 /**
  * @brief Returns the device connection string
  * @return Returns a string with the device connstring
+ * 
+ * @param pnd \a nfc_device struct pointer that represent currently used device
  */
 const char *
 nfc_device_get_connstring (nfc_device *pnd)
@@ -921,6 +949,8 @@ nfc_device_get_connstring (nfc_device *pnd)
 /**
  * @brief Returns the library version
  * @return Returns a string with the library version
+ * 
+ * @param pnd \a nfc_device struct pointer that represent currently used device
  */
 const char *
 nfc_version (void)
