@@ -499,6 +499,7 @@ nfc_initiator_poll_target (nfc_device *pnd,
  *
  * @param pnd \a nfc_device struct pointer that represent currently used device
  * @param ndm desired D.E.P. mode (\a NDM_ACTIVE or \a NDM_PASSIVE for active, respectively passive mode)
+ * @param nbr desired baud rate
  * @param ndiInitiator pointer \a nfc_dep_info struct that contains \e NFCID3 and \e General \e Bytes to set to the initiator device (optionnal, can be \e NULL)
  * @param[out] pnt is a \a nfc_target struct pointer where target information will be put.
  * @param timeout in milliseconds
@@ -924,6 +925,8 @@ nfc_strerror (const nfc_device *pnd)
  * @return Returns 0 upon success
  * 
  * @param pnd \a nfc_device struct pointer that represent currently used device
+ * @param pcStrErrBuf a string that contains the last error.
+ * @param szBufLen size of buffer
  */
 int
 nfc_strerror_r (const nfc_device *pnd, char *pcStrErrBuf, size_t szBufLen)
