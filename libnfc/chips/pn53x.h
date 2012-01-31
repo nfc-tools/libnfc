@@ -114,18 +114,31 @@
 #  define RFCI_ANALOG_TYPE_B          0x0C      //  3
 #  define RFCI_ANALOG_TYPE_14443_4    0x0D      //  9
 
+/**
+ * @enum pn53x_power_mode
+ * @brief PN53x power mode enumeration
+ */
 typedef enum {
   NORMAL,	// In that case, there is no power saved but the PN53x reacts as fast as possible on the host controller interface.
   POWERDOWN,	// Only on PN532, need to be wake up to process commands with a long preamble
   LOWVBAT	// Only on PN532, need to be wake up to process commands with a long preamble and SAMConfiguration command
 } pn53x_power_mode;
 
+/**
+ * @enum pn53x_operating_mode
+ * @brief PN53x operatin mode enumeration
+ */
 typedef enum {
   IDLE,
   INITIATOR,
   TARGET,
 } pn53x_operating_mode;
 
+/**
+ * @internal
+ * @struct pn53x_io
+ * @brief PN53x I/O structure
+ */
 struct pn53x_io {
   int (*send)(struct nfc_device *pnd, const uint8_t *pbtData, const size_t szData, int timeout);
   int (*receive)(struct nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, int timeout);
@@ -135,6 +148,12 @@ struct pn53x_io {
 #define PN53X_CACHE_REGISTER_MIN_ADDRESS 	PN53X_REG_CIU_Mode
 #define PN53X_CACHE_REGISTER_MAX_ADDRESS 	PN53X_REG_CIU_Coll
 #define PN53X_CACHE_REGISTER_SIZE 		((PN53X_CACHE_REGISTER_MAX_ADDRESS - PN53X_CACHE_REGISTER_MIN_ADDRESS) + 1)
+
+/**
+ * @internal
+ * @struct pn53x_data
+ * @brief PN53x data structure
+ */
 struct pn53x_data {
 /** Chip type (PN531, PN532 or PN533)*/
   pn53x_type type;
@@ -174,7 +193,7 @@ struct pn53x_data {
 
 /**
  * @enum pn53x_modulation
- * @brief NFC modulation
+ * @brief NFC modulation enumeration
  */
 typedef enum {
   /** Undefined modulation */
@@ -238,6 +257,10 @@ typedef enum {
   PTT_DEP_ACTIVE_424 = 0x82,
 } pn53x_target_type;
 
+/**
+ * @enum pn532_sam_mode
+ * @brief PN53x SAM mode enumeration
+ */
 typedef enum {
   PSM_NORMAL = 0x01,
   PSM_VIRTUAL_CARD = 0x02,

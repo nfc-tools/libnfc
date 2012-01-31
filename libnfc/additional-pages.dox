@@ -3,11 +3,23 @@
  *
  * @section intro_sec Introduction
  * This is the developer manual for \b libnfc.
+ * libnfc is an open source library that allows you to communicate with NFC devices. For more info, see the 
+ * <a href="http://www.libnfc.org">libusb homepage</a>.
  * 
  * @section quick_start_sec Quick start
- * If you are looking for libnfc's public API, you should start with nfc.h
+ * If you are looking for libnfc's public API, you should start with the Modules page which links to the different categories of libnfc's functionality.
  * Some commented examples that present how to use \b libnfc can be found here:
  * @subpage examples_page
+ * 
+ * Others example programs can be found in the libnfc source distribution under the "examples" subdirectory.
+ * 
+ * You can also find utils in the libnfc source distribution under the "utils" subdirectory.
+ * 
+ * \section errorhandling Error handling
+ *
+ * libusb functions typically return 0 or more on success or a negative error code
+ * on failure. These negative error codes relate to LIBNFC_ERROR constants
+ * which are listed on the \ref error "Error reporting" documentation page.
  * 
  * @section upgrading_sec Upgrading from previous version
  * If you are upgrading from a previous \b libnfc version, please take care about changes, specially API changes.

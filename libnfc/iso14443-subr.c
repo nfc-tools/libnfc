@@ -19,7 +19,7 @@
 
  /**
  * @file iso14443-subr.c
- * @brief
+ * @brief Defines some function extracted for ISO/IEC 14443
  */
 
 #ifdef HAVE_CONFIG_H
@@ -31,6 +31,11 @@
 
 #include <nfc/nfc.h>
 
+
+/**
+ * @brief CRC
+ *
+ */
 void
 iso14443a_crc (uint8_t *pbtData, size_t szLen, uint8_t *pbtCrc)
 {
@@ -48,12 +53,20 @@ iso14443a_crc (uint8_t *pbtData, size_t szLen, uint8_t *pbtCrc)
   *pbtCrc = (uint8_t) ((wCrc >> 8) & 0xFF);
 }
 
+/**
+ * @brief Append CRC
+ *
+ */
 void
 iso14443a_crc_append (uint8_t *pbtData, size_t szLen)
 {
   iso14443a_crc (pbtData, szLen, pbtData + szLen);
 }
 
+/**
+ * @brief Locate historical bytes
+ * @see ISO/IEC 14443-4 (5.2.7 Historical bytes)
+ */
 uint8_t *
 iso14443a_locate_historical_bytes (uint8_t *pbtAts, size_t szAts, size_t *pszTk)
 {

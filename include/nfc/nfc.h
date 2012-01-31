@@ -115,18 +115,67 @@ extern  "C" {
   NFC_EXPORT const char *nfc_version (void);
 
 /* Error codes */
-#define NFC_SUCCESS			 0	// No error
-#define NFC_EIO				-1	// Input / output error, device will not be usable anymore
-#define NFC_EINVARG			-2	// Invalid argument(s)
-#define NFC_EDEVNOTSUPP			-3	// Operation not supported by device
-#define NFC_ENOTSUCHDEV			-4	// No such device
-#define NFC_EOVFLOW			-5	// Buffer overflow
-#define NFC_ETIMEOUT			-6	// Operation timed out
-#define NFC_EOPABORTED			-7	// Operation aborted (by user)
-#define NFC_ENOTIMPL			-8	// Not (yet) implemented
-#define NFC_ETGRELEASED			-10     // Target released
-#define NFC_ERFTRANS			-20	// Error while RF transmission
-#define NFC_ECHIP			-90	// Device's internal chip error
+/** @ingroup error
+ * @hideinitializer
+ * Success (no error)
+ */
+#define NFC_SUCCESS			 0
+/** @ingroup error
+ * @hideinitializer
+ * Input / output error, device will not be usable anymore 
+ */
+#define NFC_EIO				-1
+/** @ingroup error
+ * @hideinitializer
+ * Invalid argument(s) 
+ */
+#define NFC_EINVARG			-2
+/** @ingroup error
+ * @hideinitializer
+ *  Operation not supported by device 
+ */
+#define NFC_EDEVNOTSUPP			-3
+/** @ingroup error
+ * @hideinitializer
+ * No such device 
+ */
+#define NFC_ENOTSUCHDEV			-4
+/** @ingroup error
+ * @hideinitializer
+ * Buffer overflow 
+ */
+#define NFC_EOVFLOW			-5
+/** @ingroup error
+ * @hideinitializer
+ * Operation timed out 
+ */
+#define NFC_ETIMEOUT			-6
+/** @ingroup error
+ * @hideinitializer
+ * Operation aborted (by user) 
+ */
+#define NFC_EOPABORTED			-7
+/** @ingroup error
+ * @hideinitializer
+ * Not (yet) implemented 
+ */
+#define NFC_ENOTIMPL			-8
+/** @ingroup error
+ * @hideinitializer
+ * Target released 
+ */
+#define NFC_ETGRELEASED			-10     
+/** @ingroup error
+ * @hideinitializer
+ * Error while RF transmission 
+ */
+#define NFC_ERFTRANS			-20
+/** @ingroup error
+ * @hideinitializer
+ * Device's internal chip error 
+ */
+#define NFC_ECHIP			-90
+
 
 #  ifdef __cplusplus
 }

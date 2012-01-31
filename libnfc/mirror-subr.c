@@ -19,7 +19,7 @@
 
  /**
  * @file mirror-subr.c
- * @brief
+ * @brief Mirror bytes
  */
 
 #ifdef HAVE_CONFIG_H

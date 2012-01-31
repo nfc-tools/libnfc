@@ -18,7 +18,7 @@
  * 
  * 
  * @file mirror-subr.h
- * @brief
+ * @brief Mirror bytes
  */
 
 #ifndef _LIBNFC_MIRROR_SUBR_H_

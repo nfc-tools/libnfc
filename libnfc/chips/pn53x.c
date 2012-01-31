@@ -20,6 +20,7 @@
  */
 
 /**
+ * @internal
  * @file pn53x.c
  * @brief PN531, PN532 and PN533 common functions
  */

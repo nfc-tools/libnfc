@@ -31,7 +31,10 @@
  */
 /**
  * @defgroup dev NFC Device/Hardware manipulation 
- * 
+ * The functionality documented below is designed to help with the following
+ * operations:
+ * - Enumerating the NFC devices currently attached to the system
+ * - Opening and closing the chosen device
  */ 
 /**
  * @defgroup initiator  NFC initiator
@@ -98,7 +101,7 @@ const struct nfc_driver *nfc_drivers[] = {
   NULL
 };
 
-/** \ingroup lib
+/** @ingroup lib
  * @brief Initialize libnfc.
  * This function must be called before calling any other libnfc function
  * @param context Optional output location for context pointer
@@ -109,7 +112,7 @@ nfc_init(nfc_context *context)
   log_init ();
 }
 
-/** \ingroup lib
+/** @ingroup lib
  * @brief Deinitialize libnfc.
  * Should be called after closing all open devices and before your application terminates.
  *@param context The context to deinitialize 
@@ -120,7 +123,7 @@ nfc_exit(nfc_context *context)
   log_fini ();
 }
 
-/** \ingroup dev
+/** @ingroup dev
  * @brief Get the defaut NFC device
  * @param connstring \a nfc_connstring pointer where the default connection string will be stored 
  * @return \e true on success
@@ -153,7 +156,7 @@ nfc_get_default_device (nfc_connstring *connstring)
   return true;
 }
 
-/** \ingroup dev
+/** @ingroup dev
  * @brief Open a NFC device
  * @param context The context to operate on, or NULL for the default context.
  * @param connstring The device connection string if specific device is wanted, \c NULL otherwise
@@ -214,7 +217,7 @@ nfc_open (nfc_context *context, const nfc_connstring connstring)
   return NULL;
 }
 
-/** \ingroup dev
+/** @ingroup dev
  * @brief Close from a NFC device
  * @param pnd \a nfc_device struct pointer that represent currently used device
  *
@@ -232,11 +235,11 @@ nfc_close (nfc_device *pnd)
   }
 }
 
-/** \ingroup dev
+/** @ingroup dev
  * @brief Probe for discoverable supported devices (ie. only available for some drivers)
  * @return Returns the number of devices found.
  * @param context The context to operate on, or NULL for the default context.
- * @param connstrings The device connection string if specific device is wanted, \c NULL otherwise
+ * @param connstrings array of \a nfc_connstring.
  * @param szDevices size of the \a connstrings array.
  * 
  */
@@ -262,7 +265,7 @@ nfc_list_devices (nfc_context *context, nfc_connstring connstrings[] , size_t sz
   return szDeviceFound;
 }
 
-/** \ingroup properties
+/** @ingroup properties
  * @brief Set a device's integer-property value
  * @return Returns 0 on success, otherwise returns libnfc's error code (negative value)
  * @param pnd \a nfc_device struct pointer that represent currently used device
@@ -280,7 +283,7 @@ nfc_device_set_property_int (nfc_device *pnd, const nfc_property property, const
 }
 
 
-/** \ingroup properties
+/** @ingroup properties
  * @brief Set a device's boolean-property value
  * @return Returns 0 on success, otherwise returns libnfc's error code (negative value)
  * @param pnd \a nfc_device struct pointer that represent currently used device
@@ -298,7 +301,7 @@ nfc_device_set_property_bool (nfc_device *pnd, const nfc_property property, cons
   HAL (device_set_property_bool, pnd, property, bEnable);
 }
 
-/** \ingroup initiator
+/** @ingroup initiator
  * @brief Initialize NFC device as initiator (reader)
  * @return Returns 0 on success, otherwise returns libnfc's error code (negative value)
  * @param pnd \a nfc_device struct pointer that represent currently used device
@@ -361,7 +364,7 @@ nfc_initiator_init (nfc_device *pnd)
   HAL (initiator_init, pnd);
 }
 
-/** \ingroup initiator
+/** @ingroup initiator
  * @brief Select a passive or emulated tag
  * @return Returns selected passive target count on success, otherwise returns libnfc's error code (negative value)
  *
@@ -404,7 +407,7 @@ nfc_initiator_select_passive_target (nfc_device *pnd,
   HAL (initiator_select_passive_target, pnd, nm, abtInit, szInit, pnt);
 }
 
-/** \ingroup initiator
+/** @ingroup initiator
  * @brief List passive or emulated tags
  * @return Returns the number of targets found on success, otherwise returns libnfc's error code (negative value)
  *
@@ -467,12 +470,12 @@ nfc_initiator_list_passive_targets (nfc_device *pnd,
   return szTargetFound;
 }
 
-/** \ingroup initiator
+/** @ingroup initiator
  * @brief Polling for NFC targets
  * @return Returns polled targets count, otherwise returns libnfc's error code (negative value).
  *
  * @param pnd \a nfc_device struct pointer that represent currently used device
- * @param pnmModulations desired modulation
+ * @param pnmModulations desired modulations
  * @param szModulations size of \a pnmModulations
  * @param uiPollNr specifies the number of polling (0x01 – 0xFE: 1 up to 254 polling, 0xFF: Endless polling)
  * @note one polling is a polling for each desired target type
@@ -490,7 +493,7 @@ nfc_initiator_poll_target (nfc_device *pnd,
 }
 
 
-/** \ingroup initiator
+/** @ingroup initiator
  * @brief Select a target and request active or passive mode for D.E.P. (Data Exchange Protocol)
  * @return Returns selected D.E.P targets count on success, otherwise returns libnfc's error code (negative value).
  *
@@ -514,7 +517,7 @@ nfc_initiator_select_dep_target (nfc_device *pnd,
   HAL (initiator_select_dep_target, pnd, ndm, nbr, pndiInitiator, pnt, timeout);
 }
 
-/** \ingroup initiator
+/** @ingroup initiator
  * @brief Poll a target and request active or passive mode for D.E.P. (Data Exchange Protocol)
  * @return Returns selected D.E.P targets count on success, otherwise returns libnfc's error code (negative value).
  *
@@ -555,7 +558,7 @@ nfc_initiator_poll_dep_target (struct nfc_device *pnd,
   return 0;
 }
 
-/** \ingroup initiator
+/** @ingroup initiator
  * @brief Deselect a selected passive or emulated tag
  * @return Returns 0 on success, otherwise returns libnfc's error code (negative value).
  * @param pnd \a nfc_device struct pointer that represents currently used device
@@ -573,7 +576,7 @@ nfc_initiator_deselect_target (nfc_device *pnd)
   HAL (initiator_deselect_target, pnd);
 }
 
-/** \ingroup initiator
+/** @ingroup initiator
  * @brief Send data to target then retrieve data from target
  * @return Returns received bytes count on success, otherwise returns libnfc's error code
  *
@@ -606,7 +609,7 @@ nfc_initiator_transceive_bytes (nfc_device *pnd, const uint8_t *pbtTx, const siz
   HAL (initiator_transceive_bytes, pnd, pbtTx, szTx, pbtRx, pszRx, timeout)
 }
 
-/** \ingroup initiator
+/** @ingroup initiator
  * @brief Transceive raw bit-frames to a target
  * @return Returns received bits count on success, otherwise returns libnfc's error code
  *
@@ -648,7 +651,7 @@ nfc_initiator_transceive_bits (nfc_device *pnd, const uint8_t *pbtTx, const size
   HAL (initiator_transceive_bits, pnd, pbtTx, szTxBits, pbtTxPar, pbtRx, pbtRxPar);
 }
 
-/** \ingroup initiator
+/** @ingroup initiator
  * @brief Send data to target then retrieve data from target
  * @return Returns received bytes count on success, otherwise returns libnfc's error code.
  *
@@ -674,7 +677,7 @@ nfc_initiator_transceive_bytes_timed (nfc_device *pnd, const uint8_t *pbtTx, con
   HAL (initiator_transceive_bytes_timed, pnd, pbtTx, szTx, pbtRx, cycles)
 }
 
-/** \ingroup initiator
+/** @ingroup initiator
  * @brief Transceive raw bit-frames to a target
  * @return Returns received bits count on success, otherwise returns libnfc's error code
  *
@@ -702,7 +705,7 @@ nfc_initiator_transceive_bits_timed (nfc_device *pnd, const uint8_t *pbtTx, cons
   HAL (initiator_transceive_bits_timed, pnd, pbtTx, szTxBits, pbtTxPar, pbtRx, pbtRxPar, cycles);
 }
 
-/** \ingroup target
+/** @ingroup target
  * @brief Initialize NFC device as an emulated tag
  * @return Returns received bytes count on success, otherwise returns libnfc's error code
  *
@@ -763,7 +766,7 @@ nfc_target_init (nfc_device *pnd, nfc_target *pnt, uint8_t *pbtRx, const size_t 
   HAL (target_init, pnd, pnt, pbtRx, szRx, timeout);
 }
 
-/** \ingroup dev
+/** @ingroup dev
  * @brief Turn NFC device in idle mode
  * @return Returns 0 on success, otherwise returns libnfc's error code.
  *
@@ -779,7 +782,7 @@ nfc_idle (nfc_device *pnd)
   HAL (idle, pnd);
 }
 
-/** \ingroup dev
+/** @ingroup dev
  * @brief Abort current running command
  * @return Returns 0 on success, otherwise returns libnfc's error code.
  *
@@ -796,7 +799,7 @@ nfc_abort_command (nfc_device *pnd)
   HAL (abort_command, pnd);
 }
 
-/** \ingroup target
+/** @ingroup target
  * @brief Send bytes and APDU frames
  * @return Returns sent bytes count on success, otherwise returns libnfc's error code
  *
@@ -817,7 +820,7 @@ nfc_target_send_bytes (nfc_device *pnd, const uint8_t *pbtTx, const size_t szTx,
   HAL (target_send_bytes, pnd, pbtTx, szTx, timeout);
 }
 
-/** \ingroup target
+/** @ingroup target
  * @brief Receive bytes and APDU frames
  * @return Returns received bytes count on success, otherwise returns libnfc's error code
  * 
@@ -837,7 +840,7 @@ nfc_target_receive_bytes (nfc_device *pnd, uint8_t *pbtRx, const size_t szRx, in
   HAL (target_receive_bytes, pnd, pbtRx, szRx, timeout);
 }
 
-/** \ingroup target
+/** @ingroup target
  * @brief Send raw bit-frames
  * @return Returns sent bits count on success, otherwise returns libnfc's error code.
  *
@@ -854,7 +857,7 @@ nfc_target_send_bits (nfc_device *pnd, const uint8_t *pbtTx, const size_t szTxBi
   HAL (target_send_bits, pnd, pbtTx, szTxBits, pbtTxPar);
 }
 
-/** \ingroup target
+/** @ingroup target
  * @brief Receive bit-frames
  * @return Returns received bits count on success, otherwise returns libnfc's error code
  *
@@ -895,7 +898,7 @@ static struct sErrorMessage {
   { NFC_ECHIP, "Device's Internal Chip Error" },
 };
 
-/** \ingroup error
+/** @ingroup error
  * @brief Return the last error string
  * @return Returns a string
  * 
@@ -916,7 +919,7 @@ nfc_strerror (const nfc_device *pnd)
   return pcRes;
 }
 
-/** \ingroup error
+/** @ingroup error
  * @brief Renders the last error in pcStrErrBuf for a maximum size of szBufLen chars
  * @return Returns 0 upon success
  * 
@@ -928,7 +931,7 @@ nfc_strerror_r (const nfc_device *pnd, char *pcStrErrBuf, size_t szBufLen)
   return (snprintf (pcStrErrBuf, szBufLen, "%s", nfc_strerror (pnd)) < 0) ? -1 : 0;
 }
 
-/** \ingroup error
+/** @ingroup error
  * @brief Display the last error occured on a nfc_device
  * 
  * @param pnd \a nfc_device struct pointer that represent currently used device
@@ -940,7 +943,7 @@ nfc_perror (const nfc_device *pnd, const char *pcString)
   fprintf (stderr, "%s: %s\n", pcString, nfc_strerror (pnd));
 }
 
-/** \ingroup error
+/** @ingroup error
  * @brief Returns last error occured on a nfc_device
  * @return Returns an integer that represents to libnfc's error code.
  * 
@@ -954,7 +957,7 @@ nfc_device_get_last_error (const nfc_device *pnd)
 
 /* Special data accessors */
 
-/** \ingroup data
+/** @ingroup data
  * @brief Returns the device name
  * @return Returns a string with the device name
  * 
@@ -966,7 +969,7 @@ nfc_device_get_name (nfc_device *pnd)
   return pnd->name;
 }
 
-/** \ingroup data
+/** @ingroup data
  * @brief Returns the device connection string
  * @return Returns a string with the device connstring
  * 
@@ -980,7 +983,7 @@ nfc_device_get_connstring (nfc_device *pnd)
 
 /* Misc. functions */
 
-/** \ingroup misc
+/** @ingroup misc
  * @brief Returns the library version
  * @return Returns a string with the library version
  * 

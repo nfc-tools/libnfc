@@ -18,7 +18,7 @@
  */
 
  /**
- * @file nfc-emulate.c
+ * @file nfc-emulation.c
  * @brief Provide a small API to ease emulation in libnfc
  */
 

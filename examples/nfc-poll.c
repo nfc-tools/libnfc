@@ -29,7 +29,7 @@
  */
 
 /**
- * @file nfc-poll
+ * @file nfc-poll.c
  * @brief Polling example
  */
 

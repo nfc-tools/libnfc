@@ -1,3 +1,8 @@
+/** 
+ * @file quick_start_example1.c
+ * @brief Quick start example that presents how to use libnfc
+ */
+
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif // HAVE_CONFIG_H
