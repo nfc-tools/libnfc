@@ -29,7 +29,7 @@
  */
 
 /**
- * @file mifaretag.h
+ * @file mifare.h
  * @brief provide samples structs and functions to manipulate MIFARE Classic and Ultralight tags using libnfc
  */
 

@@ -27,7 +27,10 @@
  * Note that this license only applies on the examples, NFC library itself is under LGPL
  *
  */
-
+/**
+ * @file mifare.c
+ * @brief provide samples structs and functions to manipulate MIFARE Classic and Ultralight tags using libnfc
+ */
 #include "mifare.h"
 
 #include <string.h>

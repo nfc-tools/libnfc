@@ -27,7 +27,10 @@
  * Note that this license only applies on the examples, NFC library itself is under LGPL
  *
  */
-
+/**
+ * @file nfc-utils.c
+ * @brief Provide some examples shared functions like print, parity calculation, options parsing.
+ */
 #include <nfc/nfc.h>
 #include <err.h>
 

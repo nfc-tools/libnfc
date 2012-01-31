@@ -38,23 +38,23 @@
  */ 
 /**
  * @defgroup initiator  NFC initiator
- * act as "reader"
+ * This page details how to act as "reader".
  */ 
 /**
  * @defgroup target  NFC target
- * act as tag (i.e. MIFARE Classic) or NFC target device.
+ * This page details how to act as tag (i.e. MIFARE Classic) or NFC target device.
  */ 
 /**
  * @defgroup error  Error reporting
- * 
+ * Most libnfc functions return 0 on success or one of error codes defined on failure.
  */ 
 /**
  * @defgroup data  Special data accessors
- * 
+ * The functionnality documented below allow to access to special data as device name or device connstring.
  */ 
 /**
  * @defgroup properties  Properties accessors
- * 
+ * The functionnality documented below allow to configure parameters and registers.
  */ 
 /**
  * @defgroup misc Miscellaneous

@@ -11,13 +11,13 @@
  * Some commented examples that present how to use \b libnfc can be found here:
  * @subpage examples_page
  * 
- * Others example programs can be found in the libnfc source distribution under the "examples" subdirectory.
+ * Others example programs can be found in the libnfc source distribution under the "examples" subdirectory \ref examples.
  * 
- * You can also find utils in the libnfc source distribution under the "utils" subdirectory.
+ * You can also find utils in the libnfc source distribution under the "utils" subdirectory \ref utils.
  * 
  * \section errorhandling Error handling
  *
- * libnfc functions typically return 0 or more on success or a negative error code
+ * \b libnfc functions typically return 0 or more on success or a negative error code
  * on failure. These negative error codes relate to LIBNFC_ERROR constants
  * which are listed on the \ref error "Error reporting" documentation page.
  * 
@@ -29,7 +29,7 @@
 /**
  * @page examples_page Examples
  * @section intro_sec Introduction
- * This page present some examples to help developers which use \b libnfc.
+ * This page presents some examples to help developers which use \b libnfc.
  *
  * @section example_1_sec Simple tag UID reader.
  * This short commented code example should be helpful to quick start development with \b libnfc, it grab the first available NFC device and print the first found ISO14443-A tag (e.g. MIFARE Classic, MIFARE Ultralight).
