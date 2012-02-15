@@ -12,29 +12,29 @@ nfc-mfclassic \- MIFARE Classic command line tool
 .B nfc-mfclassic
 is a MIFARE Classic tool that allow to read or write
 .IR DUMP
-file using Mifare keys provided in 
+file using MIFARE keys provided in 
 .IR KEYS
 file.
 
 MIFARE Classic tag is one of the most widely used RFID tags.
 
 The firmware in the NFC controller supports authenticating, reading and writing
-to/from Mifare Classic tags. This tool demonstrates the speed of this library
+to/from MIFARE Classic tags. This tool demonstrates the speed of this library
 and its ease-of-use. It's possible to read and write the complete content of a
-Mifare Classic 4KB tag within 1 second. It uses a binary Mifare Dump file (MFD)
+MIFARE Classic 4KB tag within 1 second. It uses a binary MIFARE Dump file (MFD)
 to store the keys and data for all sectors.
 
-Be cautious that some parts of a Mifare Classic memory are used for r/w access
+Be cautious that some parts of a MIFARE Classic memory are used for r/w access
 of the rest of the memory, so please read the tag documentation before experimenting too much!
 
-The 'W' option allows writing of special Mifare cards that can be 'unlocked' to allow block 0
+The 'W' option allows writing of special MIFARE cards that can be 'unlocked' to allow block 0
 to be overwritten. This includes UID and manufacturer data. Take care when amending UIDs to set
 the correct BCC (UID checksum). Currently only 4 byte UIDs are supported.
 
 Similarly, the 'R' option allows an 'unlocked' read. This bypasses authentication and allows 
 reading of the Key A and Key B data regardless of ACLs.
 
-*** Note that 'W' and 'R' options only work on special versions of Mifare 1K cards (Chinese clones).
+*** Note that 'W' and 'R' options only work on special versions of MIFARE 1K cards (Chinese clones).
 
 .SH OPTIONS
 .BR r " | " R " | " w " | " W
@@ -49,7 +49,7 @@ Perform read from (
 ) card.
 .TP
 .BR a " | " b
-Use A or B Mifare keys.
+Use A or B MIFARE keys.
 .TP
 .IR DUMP
 MiFare Dump (MFD) used to write (card to MFD) or (MFD to card)

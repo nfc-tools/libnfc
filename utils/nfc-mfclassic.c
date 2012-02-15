@@ -431,7 +431,6 @@ mifare_classic_extract_payload (const char *abDump, char *pbPayload)
 typedef enum {
   ACTION_READ,
   ACTION_WRITE,
-  ACTION_EXTRACT,
   ACTION_USAGE
 } action_t;
 
@@ -447,11 +446,6 @@ print_usage (const char *pcProgramName)
   printf ("  a|b           - Use A or B keys for action\n");
   printf ("  <dump.mfd>    - MiFare Dump (MFD) used to write (card to MFD) or (MFD to card)\n");
   printf ("  <keys.mfd>    - MiFare Dump (MFD) that contain the keys (optional)\n");
-  printf ("Or: ");
-  printf ("%s x <dump.mfd> <payload.bin>\n", pcProgramName);
-  printf ("  x             - Extract payload (data blocks) from MFD\n");
-  printf ("  <dump.mfd>    - MiFare Dump (MFD) that contains wanted payload\n");
-  printf ("  <payload.bin> - Binary file where payload will be extracted\n");
 }
 
 int
@@ -489,12 +483,6 @@ main (int argc, const char *argv[])
       unlock= 1;
     bUseKeyA = tolower ((int) ((unsigned char) *(argv[2]))) == 'a';
     bUseKeyFile = (argc > 4);
-  } else if (strcmp (command, "x") == 0) {
-    if (argc < 4) {
-      print_usage (argv[0]);
-      exit (EXIT_FAILURE);
-    }
-    atAction = ACTION_EXTRACT;
   }
 
   switch (atAction) {
@@ -623,46 +611,6 @@ main (int argc, const char *argv[])
 
     nfc_close (pnd);
     break;
-
-  case ACTION_EXTRACT:{
-      const char *pcDump = argv[2];
-      const char *pcPayload = argv[3];
-
-      FILE   *pfDump = NULL;
-      FILE   *pfPayload = NULL;
-
-      char    abDump[4096];
-      char    abPayload[4096];
-
-      pfDump = fopen (pcDump, "rb");
-
-      if (pfDump == NULL) {
-        printf ("Could not open dump file: %s\n", pcDump);
-        exit (EXIT_FAILURE);
-      }
-
-      if (fread (abDump, 1, sizeof (abDump), pfDump) != sizeof (abDump)) {
-        printf ("Could not read dump file: %s\n", pcDump);
-        fclose (pfDump);
-        exit (EXIT_FAILURE);
-      }
-      fclose (pfDump);
-
-      mifare_classic_extract_payload (abDump, abPayload);
-
-      printf ("Writing data to file: %s\n", pcPayload);
-      pfPayload = fopen (pcPayload, "wb");
-      if (pfPayload == NULL) {
-        printf ("Could not open file %s for writting.\n", pcPayload);
-        exit (EXIT_FAILURE);
-      }
-      if (fwrite (abPayload, 1, sizeof (abPayload), pfPayload) != sizeof (abPayload)) {
-        printf ("Could not write to file: %s\n", pcPayload);
-        exit (EXIT_FAILURE);
-      }
-      fclose (pfPayload);
-      printf ("Done, all bytes have been extracted!\n");
-    }
   };
   
   nfc_exit (NULL);
