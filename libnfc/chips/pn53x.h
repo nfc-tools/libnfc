@@ -187,6 +187,9 @@ struct pn53x_data {
   int timeout_atr;
 /** Communication timeout */
   int timeout_communication;
+/** Supported modulation type */  
+  nfc_modulation_type *supported_modulation_as_initiator;  
+  nfc_modulation_type *supported_modulation_as_target;
 };
 
 #define CHIP_DATA(pnd) ((struct pn53x_data*)(pnd->chip_data))
@@ -377,6 +380,8 @@ int    pn53x_RFConfiguration__MaxRetries (struct nfc_device *pnd, const uint8_t 
 int    pn53x_check_ack_frame (struct nfc_device *pnd, const uint8_t *pbtRxFrame, const size_t szRxFrameLen);
 int    pn53x_check_error_frame (struct nfc_device *pnd, const uint8_t *pbtRxFrame, const size_t szRxFrameLen);
 int    pn53x_build_frame (uint8_t *pbtFrame, size_t *pszFrame, const uint8_t *pbtData, const size_t szData);
+int    pn53x_get_supported_modulation(nfc_device *pnd, const nfc_mode mode, nfc_modulation_type **supported_mt);
+int    pn53x_get_supported_baud_rate(nfc_device *pnd, const nfc_modulation_type nmt, nfc_baud_rate **supported_br);
 
 void    pn53x_data_new (struct nfc_device *pnd, const struct pn53x_io *io);
 void    pn53x_data_free (struct nfc_device *pnd);

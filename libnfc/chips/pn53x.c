@@ -49,6 +49,13 @@
 const uint8_t pn53x_ack_frame[] = { 0x00, 0x00, 0xff, 0x00, 0xff, 0x00 };
 const uint8_t pn53x_nack_frame[] = { 0x00, 0x00, 0xff, 0xff, 0x00, 0x00 };
 static const uint8_t pn53x_error_frame[] = { 0x00, 0x00, 0xff, 0x01, 0xff, 0x7f, 0x81, 0x00 };
+const nfc_baud_rate pn53x_iso14443a_supported_baud_rates[] = { NBR_106, 0 };
+const nfc_baud_rate pn53x_felica_supported_baud_rates[] = { NBR_424, NBR_212, 0 };
+const nfc_baud_rate pn53x_dep_supported_baud_rates[] = { NBR_424, NBR_212, NBR_106, 0 };
+const nfc_baud_rate pn53x_jewel_supported_baud_rates[] = { NBR_106, 0 };
+const nfc_baud_rate pn532_iso14443b_supported_baud_rates[] = { NBR_106, 0 };
+const nfc_baud_rate pn533_iso14443b_supported_baud_rates[] = { NBR_847, NBR_424, NBR_212, NBR_106, 0 };
+const nfc_modulation_type pn53x_supported_modulation_as_target[] = {NMT_ISO14443A, NMT_FELICA, NMT_DEP, 0};
 
 /* prototypes */
 int pn53x_reset_settings (struct nfc_device *pnd);
@@ -68,6 +75,32 @@ pn53x_init(struct nfc_device *pnd)
     return res;
   }
 
+  if (!CHIP_DATA(pnd)->supported_modulation_as_initiator) {
+    CHIP_DATA(pnd)->supported_modulation_as_initiator = malloc(sizeof(nfc_modulation) * 9);
+    int nbSupportedModulation = 0;
+    if ((pnd->btSupportByte & SUPPORT_ISO14443A)) {
+      CHIP_DATA(pnd)->supported_modulation_as_initiator[nbSupportedModulation] = NMT_ISO14443A;
+      nbSupportedModulation++;
+      CHIP_DATA(pnd)->supported_modulation_as_initiator[nbSupportedModulation] = NMT_FELICA;
+      nbSupportedModulation++;
+    } 
+    if (pnd->btSupportByte & SUPPORT_ISO14443B) {
+      CHIP_DATA(pnd)->supported_modulation_as_initiator[nbSupportedModulation] = NMT_ISO14443B;
+      nbSupportedModulation++;
+    } 
+    if(CHIP_DATA(pnd)->type != PN531) {
+      CHIP_DATA(pnd)->supported_modulation_as_initiator[nbSupportedModulation] = NMT_JEWEL;
+      nbSupportedModulation++;
+    }
+    CHIP_DATA(pnd)->supported_modulation_as_initiator[nbSupportedModulation] = NMT_DEP;
+    nbSupportedModulation++;
+    CHIP_DATA(pnd)->supported_modulation_as_initiator[nbSupportedModulation] = 0;
+  }
+  
+  if (!CHIP_DATA(pnd)->supported_modulation_as_target) {
+    CHIP_DATA(pnd)->supported_modulation_as_target = pn53x_supported_modulation_as_target;
+  }
+    
   // CRC handling should be enabled by default as declared in nfc_device_new
   // which is the case by default for pn53x, so nothing to do here
   // Parity handling should be enabled by default as declared in nfc_device_new
@@ -2758,6 +2791,51 @@ pn53x_nm_to_ptt(const nfc_modulation nm)
   return PTT_UNDEFINED;
 }
 
+int    
+pn53x_get_supported_modulation(nfc_device *pnd, const nfc_mode mode, nfc_modulation_type **supported_mt)
+{
+  switch (mode) {
+    case N_TARGET:
+      *supported_mt = CHIP_DATA(pnd)->supported_modulation_as_target;
+    break;
+    case N_INITIATOR:
+      *supported_mt = CHIP_DATA(pnd)->supported_modulation_as_initiator;
+    break;
+    default: 
+      return NFC_EINVARG;
+  }
+  return NFC_SUCCESS;
+}
+
+int
+pn53x_get_supported_baud_rate (nfc_device *pnd, const nfc_modulation_type nmt, nfc_baud_rate **supported_br)
+{  
+  switch (nmt) {
+    case NMT_FELICA: 
+      *supported_br = (nfc_baud_rate*)pn53x_felica_supported_baud_rates;
+    break;
+    case NMT_ISO14443A: 
+      *supported_br = (nfc_baud_rate*)pn53x_iso14443a_supported_baud_rates;
+    break;
+    case NMT_ISO14443B: {
+      if ((CHIP_DATA(pnd)->type != PN533)) {
+        *supported_br = (nfc_baud_rate*)pn532_iso14443b_supported_baud_rates;
+      } else {
+        *supported_br = (nfc_baud_rate*)pn533_iso14443b_supported_baud_rates;
+      }
+    }
+    break;
+    case NMT_JEWEL:
+      *supported_br = (nfc_baud_rate*)pn53x_jewel_supported_baud_rates;
+    break;
+    case NMT_DEP: 
+      *supported_br = (nfc_baud_rate*)pn53x_dep_supported_baud_rates;
+    break;
+    return NFC_EINVARG;
+  }
+  return NFC_SUCCESS;
+}
+
 void
 pn53x_data_new (struct nfc_device *pnd, const struct pn53x_io *io)
 {
@@ -2794,6 +2872,10 @@ pn53x_data_new (struct nfc_device *pnd, const struct pn53x_io *io)
 
   // Set default communication timeout (52 ms)
   CHIP_DATA (pnd)->timeout_communication = 52;
+  
+  CHIP_DATA (pnd)->supported_modulation_as_initiator = NULL;
+  
+  CHIP_DATA (pnd)->supported_modulation_as_target = NULL;  
 }
 
 void
@@ -2801,6 +2883,9 @@ pn53x_data_free (struct nfc_device *pnd)
 {
   if (CHIP_DATA (pnd)->current_target) {
     free (CHIP_DATA (pnd)->current_target);
+  }
+  if (CHIP_DATA(pnd)->supported_modulation_as_initiator) {
+    free (CHIP_DATA(pnd)->supported_modulation_as_initiator);
   }
   free (pnd->chip_data);
 }

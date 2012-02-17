@@ -276,7 +276,7 @@ typedef enum {
  * @brief NFC modulation type enumeration
  */
 typedef enum {
-  NMT_ISO14443A,
+  NMT_ISO14443A = 1,
   NMT_JEWEL,
   NMT_ISO14443B,
   NMT_ISO14443BI, // pre-ISO14443B aka ISO/IEC 14443 B' or Type B'
@@ -285,6 +285,15 @@ typedef enum {
   NMT_FELICA,
   NMT_DEP,
 } nfc_modulation_type;
+
+/**
+ * @enum nfc_mode
+ * @brief NFC mode type enumeration
+ */
+typedef enum {
+  N_TARGET,
+  N_INITIATOR,
+} nfc_mode;
 
 /**
  * @struct nfc_modulation

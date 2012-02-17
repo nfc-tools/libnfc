@@ -113,6 +113,8 @@ extern  "C" {
   NFC_EXPORT void iso14443a_crc_append (uint8_t *pbtData, size_t szLen);
   NFC_EXPORT uint8_t *iso14443a_locate_historical_bytes (uint8_t *pbtAts, size_t szAts, size_t *pszTk);
   NFC_EXPORT const char *nfc_version (void);
+  NFC_EXPORT int nfc_device_get_supported_modulation (nfc_device *pnd, const nfc_mode mode,  nfc_modulation_type **supported_mt);
+  NFC_EXPORT int nfc_device_get_supported_baud_rate (nfc_device *pnd, const nfc_modulation_type nmt, nfc_baud_rate **supported_br);
 
 /* Error codes */
 /** @ingroup error

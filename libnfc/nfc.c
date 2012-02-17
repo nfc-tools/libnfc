@@ -1001,3 +1001,15 @@ nfc_version (void)
   return PACKAGE_VERSION;
 #endif // SVN_REVISION
 }
+
+int 
+nfc_device_get_supported_modulation (nfc_device *pnd, const nfc_mode mode,  nfc_modulation_type **supported_mt)
+{
+  HAL (get_supported_modulation, pnd, mode, supported_mt);
+}
+
+int 
+nfc_device_get_supported_baud_rate (nfc_device *pnd, const nfc_modulation_type nmt, nfc_baud_rate **supported_br)
+{
+  HAL (get_supported_baud_rate, pnd, nmt, supported_br);
+}

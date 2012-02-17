@@ -743,6 +743,8 @@ const struct nfc_driver acr122s_driver = {
 
   .device_set_property_bool  = pn53x_set_property_bool,
   .device_set_property_int = pn53x_set_property_int,
+  .get_supported_modulation = pn53x_get_supported_modulation,
+  .get_supported_baud_rate = pn53x_get_supported_baud_rate,
 
   .abort_command  = acr122s_abort_command,
   .idle  = NULL,
