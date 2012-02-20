@@ -265,6 +265,34 @@ nfc_list_devices (nfc_context *context, nfc_connstring connstrings[] , size_t sz
   return szDeviceFound;
 }
 
+/** @ingroup dev
+ * @brief Get supported modulations.
+ * @return Returns 0 on success, otherwise returns libnfc's error code (negative value)
+ * @param pnd \a nfc_device struct pointer that represent currently used device
+ * @param mode \a nfc_mode.
+ * @param supported_mt pointer of \a nfc_modulation_type array.
+ * 
+ */
+int 
+nfc_device_get_supported_modulation (nfc_device *pnd, const nfc_mode mode,  nfc_modulation_type **supported_mt)
+{
+  HAL (get_supported_modulation, pnd, mode, supported_mt);
+}
+
+/** @ingroup dev
+ * @brief Get supported baud rates.
+ * @return Returns 0 on success, otherwise returns libnfc's error code (negative value)
+ * @param pnd \a nfc_device struct pointer that represent currently used device
+ * @param nmt \a nfc_modulation_type.
+ * @param supported_br pointer of \a nfc_baud_rate array.
+ * 
+ */
+int 
+nfc_device_get_supported_baud_rate (nfc_device *pnd, const nfc_modulation_type nmt, nfc_baud_rate **supported_br)
+{
+  HAL (get_supported_baud_rate, pnd, nmt, supported_br);
+}
+
 /** @ingroup properties
  * @brief Set a device's integer-property value
  * @return Returns 0 on success, otherwise returns libnfc's error code (negative value)
@@ -1000,16 +1028,4 @@ nfc_version (void)
 #else
   return PACKAGE_VERSION;
 #endif // SVN_REVISION
-}
-
-int 
-nfc_device_get_supported_modulation (nfc_device *pnd, const nfc_mode mode,  nfc_modulation_type **supported_mt)
-{
-  HAL (get_supported_modulation, pnd, mode, supported_mt);
-}
-
-int 
-nfc_device_get_supported_baud_rate (nfc_device *pnd, const nfc_modulation_type nmt, nfc_baud_rate **supported_br)
-{
-  HAL (get_supported_baud_rate, pnd, nmt, supported_br);
 }
