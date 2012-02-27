@@ -251,9 +251,9 @@ static int
 acr122s_recv_frame(nfc_device *pnd, uint8_t *frame, size_t frame_size, void *abort_p, int timeout)
 {
   if (frame_size < 13)
-    pnd->last_error = NFC_EINVARG;
+  {  pnd->last_error = NFC_EINVARG;
     return pnd->last_error;
-
+    }
   int ret;
   serial_port port = DRIVER_DATA(pnd)->port;
 
@@ -621,7 +621,7 @@ acr122s_open(const nfc_connstring connstring)
   }
 #endif
 
-  if (!pn53x_init(pnd)) {
+  if (pn53x_init(pnd) < 0) {
     log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Failed initializing PN532 chip.");
     acr122s_close(pnd);
     return NULL;
