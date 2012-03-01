@@ -40,8 +40,8 @@
   #define NFC_PRIORITY_TRACE  "trace"
 #else
   // No logging
-  #define log_init() (0)
-  #define log_fini() (0)
+  #define log_init() ((void) 0)
+  #define log_fini() ((void) 0)
   #define log_msg(category, priority, message) do {} while (0)
   #define log_set_appender(category, appender) do {} while (0)
   #define log_put(category, priority, format, ...) do {} while (0)

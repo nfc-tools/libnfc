@@ -150,7 +150,7 @@ pn53x_transceive (struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szT
   if (timeout > 0) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "Timeout values: %d", timeout);
   } else if (timeout == 0) {
-    log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "No timeout");
+    log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "%s", "No timeout");
   } else if (timeout == -1) {
     timeout = CHIP_DATA (pnd)->timeout_command;
   } else {
@@ -2547,12 +2547,12 @@ pn53x_check_ack_frame (struct nfc_device *pnd, const uint8_t *pbtRxFrame, const 
 {
   if (szRxFrameLen >= sizeof (pn53x_ack_frame)) {
     if (0 == memcmp (pbtRxFrame, pn53x_ack_frame, sizeof (pn53x_ack_frame))) {
-      log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "PN53x ACKed");
+      log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "%s", "PN53x ACKed");
       return NFC_SUCCESS;
     }
   }
   pnd->last_error = NFC_EIO;
-  log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unexpected PN53x reply!");
+  log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Unexpected PN53x reply!");
   return pnd->last_error;
 }
 
@@ -2561,7 +2561,7 @@ pn53x_check_error_frame (struct nfc_device *pnd, const uint8_t *pbtRxFrame, cons
 {
   if (szRxFrameLen >= sizeof (pn53x_error_frame)) {
     if (0 == memcmp (pbtRxFrame, pn53x_error_frame, sizeof (pn53x_error_frame))) {
-      log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "PN53x sent an error frame");
+      log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "%s", "PN53x sent an error frame");
       pnd->last_error = NFC_EIO;
       return pnd->last_error;
     }
@@ -2831,6 +2831,7 @@ pn53x_get_supported_baud_rate (nfc_device *pnd, const nfc_modulation_type nmt, n
     case NMT_DEP: 
       *supported_br = (nfc_baud_rate*)pn53x_dep_supported_baud_rates;
     break;
+    default:
     return NFC_EINVARG;
   }
   return NFC_SUCCESS;

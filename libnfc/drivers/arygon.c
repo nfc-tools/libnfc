@@ -101,7 +101,7 @@ arygon_probe (nfc_connstring connstrings[], size_t connstrings_len, size_t *pszD
   (void) connstrings;
   (void) connstrings_len;
   *pszDeviceFound = 0;
-  log_put (LOG_CATEGORY, NFC_PRIORITY_INFO, "Serial auto-probing have been disabled at compile time. Skipping autoprobe.");
+  log_put (LOG_CATEGORY, NFC_PRIORITY_INFO, "%s", "Serial auto-probing have been disabled at compile time. Skipping autoprobe.");
   return false;
 #else /* SERIAL_AUTOPROBE_ENABLED */
   *pszDeviceFound = 0;
@@ -113,7 +113,7 @@ arygon_probe (nfc_connstring connstrings[], size_t connstrings_len, size_t *pszD
 
   while ((acPort = acPorts[iDevice++])) {
     sp = uart_open (acPort);
-    log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "Trying to find ARYGON device on serial port: %s at %d bauds.", acPort, ARYGON_DEFAULT_SPEED);
+    log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "%s", "Trying to find ARYGON device on serial port: %s at %d bauds.", acPort, ARYGON_DEFAULT_SPEED);
 
     if ((sp != INVALID_SERIAL_PORT) && (sp != CLAIMED_SERIAL_PORT)) {
       // We need to flush input to be sure first reply does not comes from older byte transceive
@@ -344,7 +344,7 @@ arygon_tama_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szData, 
   if (pn53x_check_ack_frame (pnd, abtRxBuf, sizeof(abtRxBuf)) == 0) {
     // The PN53x is running the sent command
   } else if (0 == memcmp(arygon_error_unknown_mode, abtRxBuf, sizeof(abtRxBuf))) {
-    log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR,  "Bad frame format." );
+    log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Bad frame format.");
     // We have already read 6 bytes and arygon_error_unknown_mode is 10 bytes long
     // so we have to read 4 remaining bytes to be synchronized at the next receiving pass.
     pnd->last_error = uart_receive (DRIVER_DATA (pnd)->port, abtRxBuf, 4, 0, timeout);
@@ -495,12 +495,12 @@ arygon_firmware (nfc_device *pnd, char *str)
 
   int res = uart_send (DRIVER_DATA (pnd)->port, arygon_firmware_version_cmd, sizeof (arygon_firmware_version_cmd), 0);
   if (res != 0) {
-    log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "Unable to send ARYGON firmware command.");
+    log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "%s", "Unable to send ARYGON firmware command.");
     return;
   }
   res = uart_receive (DRIVER_DATA (pnd)->port, abtRx, szRx, 0, 0);
   if (res != 0) {
-    log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "Unable to retrieve ARYGON firmware version.");
+    log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "%s", "Unable to retrieve ARYGON firmware version.");
     return;
   }
 
@@ -527,7 +527,7 @@ arygon_reset_tama (nfc_device *pnd)
   // or arygon_error_unknown_mode (ie. in case of the first byte was bad-transmitted)
   res = uart_receive (DRIVER_DATA (pnd)->port, abtRx, szRx, 0, 1000);
   if (res != 0) {
-    log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "No reply to 'reset TAMA' command.");
+    log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "%s", "No reply to 'reset TAMA' command.");
     pnd->last_error = res;
     return pnd->last_error;
   }

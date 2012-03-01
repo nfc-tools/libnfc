@@ -288,13 +288,13 @@ select:
     }
     // Read time-out
     if (res == 0) {
-      log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "Timeout!");
+      log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "%s", "Timeout!");
       return NFC_ETIMEOUT;
     }
 
     if (FD_ISSET (iAbortFd, &rfds)) {
       // Abort requested
-      log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "Abort!");
+      log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "%s", "Abort!");
       close (iAbortFd);
       return NFC_EOPABORTED;
     }

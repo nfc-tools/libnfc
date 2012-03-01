@@ -106,20 +106,22 @@ const struct nfc_driver *nfc_drivers[] = {
  * This function must be called before calling any other libnfc function
  * @param context Optional output location for context pointer
  */
-void 
+void
 nfc_init(nfc_context *context)
 {
+  (void) context;
   log_init ();
 }
 
 /** @ingroup lib
  * @brief Deinitialize libnfc.
  * Should be called after closing all open devices and before your application terminates.
- *@param context The context to deinitialize 
+ *@param context The context to deinitialize
  */
-void  
+void
 nfc_exit(nfc_context *context)
 {
+  (void) context;
   log_fini ();
 }
 
@@ -176,6 +178,7 @@ nfc_get_default_device (nfc_connstring *connstring)
 nfc_device *
 nfc_open (nfc_context *context, const nfc_connstring connstring)
 {
+  (void) context;
   nfc_device *pnd = NULL;
 
   nfc_connstring ncs;
@@ -250,6 +253,8 @@ nfc_list_devices (nfc_context *context, nfc_connstring connstrings[] , size_t sz
   size_t szDeviceFound = 0;
   const struct nfc_driver *ndr;
   const struct nfc_driver **pndr = nfc_drivers;
+
+  (void) context;
 
   while ((ndr = *pndr)) {
     szN = 0;

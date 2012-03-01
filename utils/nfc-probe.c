@@ -101,7 +101,7 @@ main (int argc, const char *argv[])
     printf ("No NFC device found.\n");
   }
 
-  printf ("%d NFC device(s) found:\n", szDeviceFound);
+  printf ("%d NFC device(s) found:\n", (int) szDeviceFound);
   for (i = 0; i < szDeviceFound; i++) {
     pnd = nfc_open (NULL, connstrings[i]);
     if (pnd != NULL) {

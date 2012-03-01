@@ -660,7 +660,7 @@ pn53x_usb_init (nfc_device *pnd)
   // ...and we don't care about error
   pnd->last_error = 0;
   if (SONY_RCS360 == DRIVER_DATA (pnd)->model) {
-    log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "SONY RC-S360 initialization.");
+    log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "%s", "SONY RC-S360 initialization.");
     const uint8_t abtCmd2[] = { 0x18, 0x01 };
     pn53x_transceive (pnd, abtCmd2, sizeof (abtCmd2), NULL, 0, 0);
     pn53x_usb_ack (pnd);
@@ -670,7 +670,7 @@ pn53x_usb_init (nfc_device *pnd)
     return res;
 
   if (ASK_LOGO == DRIVER_DATA (pnd)->model) {
-    log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "ASK LoGO initialization.");
+    log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "%s", "ASK LoGO initialization.");
     /* Internal registers */
     /* Disable 100mA current limit, Power on Secure IC (SVDD) */
     pn53x_write_register (pnd, PN53X_REG_Control_switch_rng, 0xFF, SYMBOL_CURLIMOFF | SYMBOL_SIC_SWITCH_EN | SYMBOL_RANDOM_DATAREADY);
