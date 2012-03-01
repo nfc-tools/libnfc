@@ -1,3 +1,42 @@
+New in 1.6.0-rc1:
+
+API Changes:
+
+  * Types
+    - '_t' suffix removed from all types (e.g. nfc_device_t is now nfc_device)
+    - All errors removed in flavour of NFC_EIO, NFC_EINVARG, NFC_EDEVNOTSUPP,
+      NFC_ENOTSUCHDEV, NFC_EOVFLOW, NFC_ETIMEOUT, NFC_EOPABORTED, NFC_ENOTIMPL,
+      NFC_ETGRELEASED, NFC_ERFTRANS, NFC_ECHIP and NFC_SUCCESS
+    - nfc_device_desc_t replaced by nfc_connstring: libnfc now uses connection
+      strings to describe a device
+    - byte_t typedef removed, libnfc now uses uint8_t from C99
+    - nfc_device is now an opaque type
+    - nfc_properties replaces nfc_options
+
+  * Functions
+    - New nfc_get_default_device() function that allows to grab the connstring
+      stored in LIBNFC_DEFAULT_DEVICE environnement variable or returns the
+      first available device if not set
+    - New nfc_device_get_connstring() accessor function to know the device
+      connstring
+    - New nfc_device_set_property_bool() function that replace nfc_configure()
+    - New nfc_device_set_property_int() function to set integer property
+    - nfc_device_name() renamed to nfc_device_get_name() for the sake of
+      consistency
+    - New nfc_device_get_last_error() function, an accessor to last error occured
+    - Whole libnfc's functions now return 0 (NFC_SUCCESS) or positive value if
+      appropriated on success and libnfc's error code on failure
+    - nfc_connect(), nfc_disconnect() renamed to nfc_open(), nfc_close()
+      respectively
+    - Add 2 new functions: initialization and deinitialization functions:
+      nfc_init() and nfc_exit()
+    - New nfc_device_get_supported_modulation() and
+      nfc_device_get_supported_baud_rate() functions
+
+  * Dependencies
+    - log4c is not anymore used for debugging facility. It was a bad choice,
+      sorry for inconvenience.
+
 New in 1.5.1:
 
 API Changes

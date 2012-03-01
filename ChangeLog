@@ -1,3 +1,45 @@
+Feb 27, 2012 - 1.6.0-rc1 (release candidate)
+-------------------------------
+
+Fixes:
+ - utils/nfc-mfclassic: use MIFARE instead of Mifare typo
+ - utils/nfc-list: continue to attempt to reach devices after a connection failure
+ - libnfc: avoid readline auto-detection when cross-compiling
+ - driver/pn53x_usb: fix path usage for FreeBSD
+ - doc: quick_start_example1.c fixed
+ - utils/*: verbose option back for nfc-list, and newly implemented in nfc-poll
+
+Improvements:
+ - libnfc: enhanced documentation
+ - libnfc: debug facility back without external depends
+ - libnfc: add nfc_device_get_supported_modulation() and nfc_device_get_supported_baud_rate() functions
+ - libnfc: enhanced code indent
+ - drivers: implement driver for ACR122S device
+ - utils/nfc-mfclassic: remove non-conscistent "extract payload" option in nfc-mfclassic
+ - utils/nfc-emulate-forum-tag2: add missing manpage
+ - utils/nfc-read-forum-tag3: add missing manpage
+ - tests/*: fix some warnings in test
+ - tests/test_dep*: add some DEP tests (Active/Passive in several baud rates)
+ - doc: quick_start_example1 is now compiled when running make check or distcheck
+ - libnfc: a printf-based logging replaces log4c
+ - libnfc: various minor fixes/enhancements
+ - utils/*: nfc-probe example added to show devices connection strings
+
+Changes:
+ - PN53x specific errors are not public anymore;
+ - Timeouts are now integers instead of timeval structure
+ - Removes libusb types workaround (r200) as it seems to not be needed anymore but may disturb compiler
+ - Removes parse_args() from nfc-utils.[hc]
+ - Move nfc-emulate-forum-tag2 from utils to examples.
+ - contrib: move udev and devd files into contrib/
+ - debian: udev rules file renamed
+
+See NEWS file for major changes (ie. API changes)
+
+Special thanks to:
+ - Thomas Hood (Debian packages and various fixes/contributions)
+ - Anugrah Redja (ACR122S driver)
+
 Oct 17, 2011 - 1.5.1 (unstable)
 -------------------------------
 
