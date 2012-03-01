@@ -74,7 +74,7 @@ pn532_uart_probe (nfc_connstring connstrings[], size_t connstrings_len, size_t *
   (void) connstrings;
   (void) connstrings_len;
   *pszDeviceFound = 0;
-  log_put (LOG_CATEGORY, NFC_PRIORITY_INFO, "Serial auto-probing have been disabled at compile time. Skipping autoprobe.");
+  log_put (LOG_CATEGORY, NFC_PRIORITY_INFO, "%s", "Serial auto-probing have been disabled at compile time. Skipping autoprobe.");
   return false;
 #else /* SERIAL_AUTOPROBE_ENABLED */
   *pszDeviceFound = 0;
