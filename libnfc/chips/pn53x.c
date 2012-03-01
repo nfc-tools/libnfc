@@ -98,7 +98,7 @@ pn53x_init(struct nfc_device *pnd)
   }
   
   if (!CHIP_DATA(pnd)->supported_modulation_as_target) {
-    CHIP_DATA(pnd)->supported_modulation_as_target = pn53x_supported_modulation_as_target;
+    CHIP_DATA(pnd)->supported_modulation_as_target = (nfc_modulation_type*) pn53x_supported_modulation_as_target;
   }
     
   // CRC handling should be enabled by default as declared in nfc_device_new
@@ -2792,7 +2792,7 @@ pn53x_nm_to_ptt(const nfc_modulation nm)
 }
 
 int    
-pn53x_get_supported_modulation(nfc_device *pnd, const nfc_mode mode, nfc_modulation_type **supported_mt)
+pn53x_get_supported_modulation(nfc_device *pnd, const nfc_mode mode, const nfc_modulation_type * *const supported_mt)
 {
   switch (mode) {
     case N_TARGET:
@@ -2808,7 +2808,7 @@ pn53x_get_supported_modulation(nfc_device *pnd, const nfc_mode mode, nfc_modulat
 }
 
 int
-pn53x_get_supported_baud_rate (nfc_device *pnd, const nfc_modulation_type nmt, nfc_baud_rate **supported_br)
+pn53x_get_supported_baud_rate (nfc_device *pnd, const nfc_modulation_type nmt, const nfc_baud_rate * *const supported_br)
 {  
   switch (nmt) {
     case NMT_FELICA: 
@@ -2832,7 +2832,7 @@ pn53x_get_supported_baud_rate (nfc_device *pnd, const nfc_modulation_type nmt, n
       *supported_br = (nfc_baud_rate*)pn53x_dep_supported_baud_rates;
     break;
     default:
-    return NFC_EINVARG;
+      return NFC_EINVARG;
   }
   return NFC_SUCCESS;
 }
