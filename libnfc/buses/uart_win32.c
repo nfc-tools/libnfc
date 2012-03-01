@@ -157,7 +157,7 @@ uart_receive (serial_port sp, uint8_t * pbtRx, const size_t szRx, void * abort_p
 
   if (!SetCommTimeouts (((struct serial_port_windows *) sp)->hPort, &timeouts)) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to apply new timeout settings.");
-    return ECOMIO;
+    return NFC_EIO;
   }
   log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "Timeouts are set to %u ms", timeout_ms);
 
@@ -175,9 +175,9 @@ uart_receive (serial_port sp, uint8_t * pbtRx, const size_t szRx, void * abort_p
     if (!res) {
       DWORD err = GetLastError();
       log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "ReadFile error: %u", err);
-      return ECOMIO;
+      return NFC_EIO;
     } else if (dwBytesReceived == 0) {
-	  return ECOMTIMEOUT;
+	  return NFC_ETIMEOUT;
 	}
 	
     if (((DWORD)szRx) > dwTotalBytesReceived) {
@@ -185,12 +185,12 @@ uart_receive (serial_port sp, uint8_t * pbtRx, const size_t szRx, void * abort_p
     }
 
     if (abort_flag_p != NULL && (*abort_flag_p) && dwTotalBytesReceived == 0) {
-      return EOPABORT;
+      return NFC_EOPABORTED;
     }
   } while (((DWORD)szRx) > dwTotalBytesReceived);
   LOG_HEX ("RX", pbtRx, szRx);
 
-  return (dwTotalBytesReceived == (DWORD) szRx) ? 0 : ECOMIO;
+  return (dwTotalBytesReceived == (DWORD) szRx) ? 0 : NFC_EIO;
 }
 
 int
@@ -207,15 +207,15 @@ uart_send (serial_port sp, const uint8_t * pbtTx, const size_t szTx, int timeout
 
   if (!SetCommTimeouts (((struct serial_port_windows *) sp)->hPort, &timeouts)) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to apply new timeout settings.");
-    return ECOMIO;
+    return NFC_EIO;
   }
 
   LOG_HEX ("TX", pbtTx, szTx);
   if (!WriteFile (((struct serial_port_windows *) sp)->hPort, pbtTx, szTx, &dwTxLen, NULL)) {
-    return ECOMIO;
+    return NFC_EIO;
   }
   if (!dwTxLen)
-    return ECOMIO;
+    return NFC_EIO;
   return 0;
 }
 
