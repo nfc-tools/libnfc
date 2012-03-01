@@ -1,7 +1,7 @@
 # General init
 
 # /!\ Don't forget to update 'CMakeLists.txt' too /!\
-AC_INIT(libnfc, 1.6.0, info@libnfc.org)
+AC_INIT(libnfc, 1.6.0-rc1, info@libnfc.org)
 
 AC_CONFIG_MACRO_DIR([m4])
 

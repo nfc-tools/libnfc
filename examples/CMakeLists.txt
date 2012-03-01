@@ -1,4 +1,13 @@
-SET(EXAMPLES-SOURCES nfc-anticol nfc-dep-initiator nfc-dep-target nfc-emulate-forum-tag2 nfc-emulate-tag nfc-emulate-uid nfc-poll nfc-relay)
+SET(EXAMPLES-SOURCES
+  nfc-anticol
+  nfc-dep-initiator
+  nfc-dep-target
+  nfc-emulate-forum-tag2
+  nfc-emulate-tag
+  nfc-emulate-uid
+  nfc-poll
+  nfc-relay
+)
 
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/../libnfc)
 

@@ -410,24 +410,6 @@ write_card (int write_block_zero)
   return true;
 }
 
-static void
-mifare_classic_extract_payload (const char *abDump, char *pbPayload)
-{
-  uint8_t uiSectorIndex;
-  uint8_t uiBlockIndex;
-  size_t  szDumpOffset;
-  size_t  szPayloadIndex = 0;
-
-  for (uiSectorIndex = 1; uiSectorIndex < 16; uiSectorIndex++) {
-    for (uiBlockIndex = 0; uiBlockIndex < 3; uiBlockIndex++) {
-      szDumpOffset = uiSectorIndex * 16 * 4 + uiBlockIndex * 16;
-//      for(uint8_t uiByteIndex=0; uiByteIndex<16; uiByteIndex++) printf("%02x ", abDump[szPayloadIndex+uiByteIndex]);
-      memcpy (pbPayload + szPayloadIndex, abDump + szDumpOffset, 16);
-      szPayloadIndex += 16;
-    }
-  }
-}
-
 typedef enum {
   ACTION_READ,
   ACTION_WRITE,
