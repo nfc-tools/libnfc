@@ -430,6 +430,7 @@ pn53x_usb_open (const nfc_connstring connstring)
 error:
   // Free allocated structure on error.
   nfc_device_free (pnd);
+  pnd = NULL;
 free_mem:
   free (desc.dirname);
   free (desc.filename);
