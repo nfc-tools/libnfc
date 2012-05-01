@@ -442,6 +442,55 @@ acr122_usb_close (nfc_device *pnd)
   nfc_device_free (pnd);
 }
 
+/*
+USB activity trace for PN533, ACR122 and Touchatag
+
+--------------------------------------------------------------------
+PN533
+                     0000ff02fe d402          2a00
+                     0000ff00ff00
+                     ACK
+                     0000ff06fa d50333020707  e500
+
+--------------------------------------------------------------------
+Acr122U PICC    pseudo-APDU through PCSC Escape mechanism:
+6b07000000000a000000 ff00000002 d402
+PC_to_RDR_Escape     APDU
+  Len.....           ClInP1P2Lc
+          Slot=0     pseudo-APDU DirectTransmit
+            Seq=0a
+              RFU=000000
+8308000000000a028100            d50332010407  9000
+RDR_to_PC_Escape                              SW: OK
+  Len.....
+          Slot=0
+            Seq=0a
+              Slot Status=02  ??
+                Slot Error=81 ??
+                  RFU=00
+
+
+--------------------------------------------------------------------
+Touchatag (Acr122U SAM) pseudo-APDU mechanism:
+6f07000000000e000000 ff00000002 d402
+PC_to_RDR_XfrBlock   APDU
+  Len.....           ClInP1P2Lc
+          Slot=0     pseudo-APDU DirectTransmit
+            Seq=0e
+              BWI=00
+                RFU=0000
+8002000000000e000000                          6108
+RDR_to_PC_DataBlock                           SW: more data: 8 bytes
+          Slot=0
+            Seq=0e
+              Slot Status=00
+                Slot Error=00
+                  RFU=00
+6f05000000000f000000 ffc0000008
+                     pseudo-ADPU GetResponse
+8008000000000f000000            d50332010407  9000
+                                              SW: OK
+*/
 #define ACR122_USB_BUFFER_LEN (PN53x_EXTENDED_FRAME__DATA_MAX_LEN + PN53x_EXTENDED_FRAME__OVERHEAD)
 size_t
 acr122_build_frame (uint8_t *frame, const size_t frame_len, const uint8_t *data, const size_t data_len)
