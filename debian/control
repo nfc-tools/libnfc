@@ -2,7 +2,7 @@ Source: libnfc
 Section: libs
 Priority: extra
 Maintainer: Thomas Hood <jdthood@gmail.com>
-Build-Depends: debhelper (>= 7.0.50~), dh-autoreconf, libtool, pkg-config, libusb-dev, libpcsclite-dev
+Build-Depends: debhelper (>= 7.0.50~), dh-autoreconf, libtool, pkg-config, libusb-dev
 Standards-Version: 3.9.2
 Homepage: http://www.libnfc.org/
 Vcs-Svn: http://libnfc.googlecode.com/svn/trunk
@@ -11,7 +11,7 @@ Vcs-Browser: http://code.google.com/p/libnfc/source/browse/#svn/trunk
 Package: libnfc2
 Section: libs
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, libusb-0.1-4, libpcsclite1 (>= 1.5), libccid (>= 1.3.10), pcscd (>= 1.5)
+Depends: ${shlibs:Depends}, ${misc:Depends}, libusb-0.1-4
 Description: Near Field Communication (NFC) library
  libnfc is a Free Software library for Near Field Communication.
  Supported NFC hardware devices are, theorically, all hardware
@@ -20,7 +20,7 @@ Description: Near Field Communication (NFC) library
 Package: libnfc-dev
 Section: libdevel
 Architecture: any
-Depends: ${misc:Depends}, libnfc2 (= ${binary:Version}), libusb-dev, libpcsclite-dev
+Depends: ${misc:Depends}, libnfc2 (= ${binary:Version}), libusb-dev
 Description: Near Field Communication library (development files)
  libnfc is a free software library for near-field communication.
  It supports most hardware based on the NXP PN531, PN532 or PN533

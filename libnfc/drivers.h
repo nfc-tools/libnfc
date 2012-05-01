@@ -28,9 +28,13 @@
 
 #  include <nfc/nfc-types.h>
 
-#  if defined (DRIVER_ACR122_ENABLED)
-#    include "drivers/acr122.h"
-#  endif /* DRIVER_ACR122_ENABLED */
+#  if defined (DRIVER_ACR122_PCSC_ENABLED)
+#    include "drivers/acr122_pcsc.h"
+#  endif /* DRIVER_ACR122_PCSC_ENABLED */
+
+#  if defined (DRIVER_ACR122_USB_ENABLED)
+#    include "drivers/acr122_usb.h"
+#  endif /* DRIVER_ACR122_USB_ENABLED */
 
 #  if defined (DRIVER_ACR122S_ENABLED)
 #    include "drivers/acr122s.h"

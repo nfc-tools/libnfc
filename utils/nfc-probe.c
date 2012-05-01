@@ -97,19 +97,23 @@ main (int argc, const char *argv[])
   nfc_connstring connstrings[MAX_DEVICE_COUNT];
   size_t szDeviceFound = nfc_list_devices (NULL, connstrings, MAX_DEVICE_COUNT);
 
+  int res = EXIT_FAILURE;
   if (szDeviceFound == 0) {
     printf ("No NFC device found.\n");
+    goto bye;
   }
 
-  printf ("%d NFC device(s) found:\n", (int) szDeviceFound);
+  printf ("%d NFC device(s) found:\n", (int)szDeviceFound);
   for (i = 0; i < szDeviceFound; i++) {
     pnd = nfc_open (NULL, connstrings[i]);
     if (pnd != NULL) {
       printf ("- %s:\n    %s\n", nfc_device_get_name (pnd), nfc_device_get_connstring (pnd));
+      nfc_close (pnd);
     }
-    nfc_close (pnd);
   }
-  
+  res = EXIT_SUCCESS;
+
+bye:
   nfc_exit (NULL);
-  return 0;
+  return res;
 }

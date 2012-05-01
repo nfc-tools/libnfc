@@ -2,6 +2,8 @@
  * Public platform independent Near Field Communication (NFC) library
  * 
  * Copyright (C) 2009, Roel Verdult
+ * Copyright (C) 2011, Romain Tartiere, Romuald Conty
+ * Copyright (C) 2012, Romuald Conty
  * 
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -18,8 +20,8 @@
  */
 
 /**
- * @file acr122.c
- * @brief Driver for ACR122 devices (e.g. Tikitag, Touchatag, ACS ACR122)
+ * @file acr122_pcsc.c
+ * @brief Driver for ACR122 devices (e.g. Tikitag, Touchatag, ACS ACR122) behind PC/SC
  */
 
 #ifdef HAVE_CONFIG_H
@@ -35,13 +37,13 @@
 #include <nfc/nfc.h>
 
 #include "chips/pn53x.h"
-#include "drivers/acr122.h"
+#include "drivers/acr122_pcsc.h"
 #include "nfc-internal.h"
 
 // Bus
 #include <winscard.h>
 
-#define ACR122_DRIVER_NAME "acr122"
+#define ACR122_PCSC_DRIVER_NAME "acr122"
 
 #if defined (_WIN32)
 #  define IOCTL_CCID_ESCAPE_SCARD_CTL_CODE SCARD_CTL_CODE(3500)
@@ -69,15 +71,15 @@
 
 #define FIRMWARE_TEXT "ACR122U" // Tested on: ACR122U101(ACS), ACR122U102(Tikitag), ACR122U203(ACS)
 
-#define ACR122_WRAP_LEN 5
-#define ACR122_COMMAND_LEN 266
-#define ACR122_RESPONSE_LEN 268
+#define ACR122_PCSC_WRAP_LEN 5
+#define ACR122_PCSC_COMMAND_LEN 266
+#define ACR122_PCSC_RESPONSE_LEN 268
 
 #define LOG_CATEGORY "libnfc.driver.acr122"
 
-const struct pn53x_io acr122_io;
+const struct pn53x_io acr122_pcsc_io;
 
-char   *acr122_firmware (nfc_device *pnd);
+char   *acr122_pcsc_firmware (nfc_device *pnd);
 
 const char *supported_devices[] = {
   "ACS ACR122",         // ACR122U & Touchatag, last version
@@ -87,20 +89,20 @@ const char *supported_devices[] = {
   NULL
 };
 
-struct acr122_data {
+struct acr122_pcsc_data {
   SCARDHANDLE hCard;
   SCARD_IO_REQUEST ioCard;
-  uint8_t  abtRx[ACR122_RESPONSE_LEN];
+  uint8_t  abtRx[ACR122_PCSC_RESPONSE_LEN];
   size_t  szRx;
 };
 
-#define DRIVER_DATA(pnd) ((struct acr122_data*)(pnd->driver_data))
+#define DRIVER_DATA(pnd) ((struct acr122_pcsc_data*)(pnd->driver_data))
 
 static SCARDCONTEXT _SCardContext;
 static int _iSCardContextRefCount = 0;
 
 SCARDCONTEXT *
-acr122_get_scardcontext (void)
+acr122_pcsc_get_scardcontext (void)
 {
   if (_iSCardContextRefCount == 0) {
     if (SCardEstablishContext (SCARD_SCOPE_USER, NULL, NULL, &_SCardContext) != SCARD_S_SUCCESS)
@@ -112,7 +114,7 @@ acr122_get_scardcontext (void)
 }
 
 void
-acr122_free_scardcontext (void)
+acr122_pcsc_free_scardcontext (void)
 {
   if (_iSCardContextRefCount) {
     _iSCardContextRefCount--;
@@ -134,7 +136,7 @@ acr122_free_scardcontext (void)
  * @return true if succeeded, false otherwise.
  */
 bool
-acr122_probe (nfc_connstring connstrings[], size_t connstrings_len, size_t *pszDeviceFound)
+acr122_pcsc_probe (nfc_connstring connstrings[], size_t connstrings_len, size_t *pszDeviceFound)
 {
   size_t  szPos = 0;
   char    acDeviceNames[256 + 64 * PCSC_MAX_DEVICES];
@@ -150,7 +152,7 @@ acr122_probe (nfc_connstring connstrings[], size_t connstrings_len, size_t *pszD
   *pszDeviceFound = 0;
 
   // Test if context succeeded
-  if (!(pscc = acr122_get_scardcontext ())) {
+  if (!(pscc = acr122_pcsc_get_scardcontext ())) {
     log_put (LOG_CATEGORY, NFC_PRIORITY_WARN, "%s", "PCSC context not found (make sure PCSC daemon is running).");
     return false;
   }
@@ -172,7 +174,7 @@ acr122_probe (nfc_connstring connstrings[], size_t connstrings_len, size_t *pszD
 
     if (bSupported) {
       // Supported ACR122 device found
-      snprintf (connstrings[*pszDeviceFound], sizeof(nfc_connstring), "%s:%s:%"PRIu32, ACR122_DRIVER_NAME, acDeviceNames + szPos, uiBusIndex);
+      snprintf (connstrings[*pszDeviceFound], sizeof(nfc_connstring), "%s:%s:%"PRIu32, ACR122_PCSC_DRIVER_NAME, acDeviceNames + szPos, uiBusIndex);
       (*pszDeviceFound)++;
     } else {
       log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "PCSC device [%s] is not NFC capable or not supported by libnfc.", acDeviceNames + szPos);
@@ -181,18 +183,18 @@ acr122_probe (nfc_connstring connstrings[], size_t connstrings_len, size_t *pszD
     // Find next device name position
     while (acDeviceNames[szPos++] != '\0');
   }
-  acr122_free_scardcontext ();
+  acr122_pcsc_free_scardcontext ();
 
   return true;
 }
 
-struct acr122_descriptor {
+struct acr122_pcsc_descriptor {
   char pcsc_device_name[512];
   int bus_index;
 };
 
 int
-acr122_connstring_decode (const nfc_connstring connstring, struct acr122_descriptor *desc)
+acr122_pcsc_connstring_decode (const nfc_connstring connstring, struct acr122_pcsc_descriptor *desc)
 {
   char *cs = malloc (strlen (connstring) + 1);
   if (!cs) {
@@ -207,7 +209,7 @@ acr122_connstring_decode (const nfc_connstring connstring, struct acr122_descrip
     return -1;
   }
 
-  if (0 != strcmp (driver_name, ACR122_DRIVER_NAME)) {
+  if (0 != strcmp (driver_name, ACR122_PCSC_DRIVER_NAME)) {
     // Driver name does not match.
     free (cs);
     return 0;
@@ -241,28 +243,28 @@ acr122_connstring_decode (const nfc_connstring connstring, struct acr122_descrip
 }
 
 nfc_device *
-acr122_open (const nfc_connstring connstring)
+acr122_pcsc_open (const nfc_connstring connstring)
 {
-  struct acr122_descriptor ndd;
-  int connstring_decode_level = acr122_connstring_decode (connstring, &ndd);
+  struct acr122_pcsc_descriptor ndd;
+  int connstring_decode_level = acr122_pcsc_connstring_decode (connstring, &ndd);
 
   if (connstring_decode_level < 2) {
     return NULL;
   }
-  // FIXME: acr122_open() does not take care about bus index
+  // FIXME: acr122_pcsc_open() does not take care about bus index
 
   char   *pcFirmware;
   nfc_device *pnd = nfc_device_new (connstring);
-  pnd->driver_data = malloc (sizeof (struct acr122_data));
+  pnd->driver_data = malloc (sizeof (struct acr122_pcsc_data));
 
   // Alloc and init chip's data
-  pn53x_data_new (pnd, &acr122_io);
+  pn53x_data_new (pnd, &acr122_pcsc_io);
 
   SCARDCONTEXT *pscc;
   
   log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "Attempt to open %s", ndd.pcsc_device_name);
   // Test if context succeeded
-  if (!(pscc = acr122_get_scardcontext ()))
+  if (!(pscc = acr122_pcsc_get_scardcontext ()))
     goto error;
   // Test if we were able to connect to the "emulator" card
   if (SCardConnect (*pscc, ndd.pcsc_device_name, SCARD_SHARE_EXCLUSIVE, SCARD_PROTOCOL_T0 | SCARD_PROTOCOL_T1, &(DRIVER_DATA (pnd)->hCard), (void *) &(DRIVER_DATA (pnd)->ioCard.dwProtocol)) != SCARD_S_SUCCESS) {
@@ -277,7 +279,7 @@ acr122_open (const nfc_connstring connstring)
   DRIVER_DATA (pnd)->ioCard.cbPciLength = sizeof (SCARD_IO_REQUEST);
 
   // Retrieve the current firmware version
-  pcFirmware = acr122_firmware (pnd);
+  pcFirmware = acr122_pcsc_firmware (pnd);
   if (strstr (pcFirmware, FIRMWARE_TEXT) != NULL) {
 
     // Done, we found the reader we are looking for
@@ -287,7 +289,7 @@ acr122_open (const nfc_connstring connstring)
     // 46: empirical tuning on ACR122U
     CHIP_DATA (pnd)->timer_correction = 50;
 
-    pnd->driver = &acr122_driver;
+    pnd->driver = &acr122_pcsc_driver;
 
     pn53x_init (pnd);
 
@@ -301,30 +303,30 @@ error:
 }
 
 void
-acr122_close (nfc_device *pnd)
+acr122_pcsc_close (nfc_device *pnd)
 {
   SCardDisconnect (DRIVER_DATA (pnd)->hCard, SCARD_LEAVE_CARD);
-  acr122_free_scardcontext ();
+  acr122_pcsc_free_scardcontext ();
 
   pn53x_data_free (pnd);
   nfc_device_free (pnd);
 }
 
 int
-acr122_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szData, int timeout)
+acr122_pcsc_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szData, int timeout)
 {
   // FIXME: timeout is not handled
   (void) timeout;
 
   // Make sure the command does not overflow the send buffer
-  if (szData > ACR122_COMMAND_LEN) {
+  if (szData > ACR122_PCSC_COMMAND_LEN) {
     pnd->last_error = NFC_EINVARG;
     return pnd->last_error;
   }
 
   // Prepare and transmit the send buffer
   const size_t szTxBuf = szData + 6;
-  uint8_t  abtTxBuf[ACR122_WRAP_LEN + ACR122_COMMAND_LEN] = { 0xFF, 0x00, 0x00, 0x00, szData + 1, 0xD4 };
+  uint8_t  abtTxBuf[ACR122_PCSC_WRAP_LEN + ACR122_PCSC_COMMAND_LEN] = { 0xFF, 0x00, 0x00, 0x00, szData + 1, 0xD4 };
   memcpy (abtTxBuf + 6, pbtData, szData);
   LOG_HEX ("TX", abtTxBuf, szTxBuf);
 
@@ -344,7 +346,7 @@ acr122_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szData, int t
      * This state is generaly reached when the ACR122 has no target in it's
      * field.
      */
-    if (SCardControl (DRIVER_DATA (pnd)->hCard, IOCTL_CCID_ESCAPE_SCARD_CTL_CODE, abtTxBuf, szTxBuf, DRIVER_DATA (pnd)->abtRx, ACR122_RESPONSE_LEN, &dwRxLen) != SCARD_S_SUCCESS) {
+    if (SCardControl (DRIVER_DATA (pnd)->hCard, IOCTL_CCID_ESCAPE_SCARD_CTL_CODE, abtTxBuf, szTxBuf, DRIVER_DATA (pnd)->abtRx, ACR122_PCSC_RESPONSE_LEN, &dwRxLen) != SCARD_S_SUCCESS) {
       pnd->last_error = NFC_EIO;
       return pnd->last_error;
     }
@@ -382,7 +384,7 @@ acr122_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szData, int t
 }
 
 int
-acr122_receive (nfc_device *pnd, uint8_t *pbtData, const size_t szData, int timeout)
+acr122_pcsc_receive (nfc_device *pnd, uint8_t *pbtData, const size_t szData, int timeout)
 {
   // FIXME: timeout is not handled
   (void) timeout;
@@ -403,7 +405,7 @@ acr122_receive (nfc_device *pnd, uint8_t *pbtData, const size_t szData, int time
     DRIVER_DATA (pnd)->szRx = dwRxLen;
   } else {
     /*
-     * We already have the PN532 answer, it was saved by acr122_send().
+     * We already have the PN532 answer, it was saved by acr122_pcsc_send().
      */
   }
   LOG_HEX ("RX", DRIVER_DATA (pnd)->abtRx, DRIVER_DATA (pnd)->szRx);
@@ -421,7 +423,7 @@ acr122_receive (nfc_device *pnd, uint8_t *pbtData, const size_t szData, int time
 }
 
 char   *
-acr122_firmware (nfc_device *pnd)
+acr122_pcsc_firmware (nfc_device *pnd)
 {
   uint8_t  abtGetFw[5] = { 0xFF, 0x00, 0x48, 0x00, 0x00 };
   uint32_t uiResult;
@@ -444,7 +446,7 @@ acr122_firmware (nfc_device *pnd)
 
 #if 0
 bool
-acr122_led_red (nfc_device *pnd, bool bOn)
+acr122_pcsc_led_red (nfc_device *pnd, bool bOn)
 {
   uint8_t  abtLed[9] = { 0xFF, 0x00, 0x40, 0x05, 0x04, 0x00, 0x00, 0x00, 0x00 };
   uint8_t  abtBuf[2];
@@ -458,16 +460,16 @@ acr122_led_red (nfc_device *pnd, bool bOn)
 }
 #endif
 
-const struct pn53x_io acr122_io = {
-  .send    = acr122_send,
-  .receive = acr122_receive,
+const struct pn53x_io acr122_pcsc_io = {
+  .send    = acr122_pcsc_send,
+  .receive = acr122_pcsc_receive,
 };
 
-const struct nfc_driver acr122_driver = {
-  .name                             = ACR122_DRIVER_NAME,
-  .probe                            = acr122_probe,
-  .open                             = acr122_open,
-  .close                            = acr122_close,
+const struct nfc_driver acr122_pcsc_driver = {
+  .name                             = ACR122_PCSC_DRIVER_NAME,
+  .probe                            = acr122_pcsc_probe,
+  .open                             = acr122_pcsc_open,
+  .close                            = acr122_pcsc_close,
   .strerror                         = pn53x_strerror,
 
   .initiator_init                   = pn53x_initiator_init,

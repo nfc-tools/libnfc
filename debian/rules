@@ -18,6 +18,8 @@ override_dh_installchangelogs:
 override_dh_auto_configure: 
 #	dh_auto_configure -- --enable-serial-autoprobe
 	dh_auto_configure -- --enable-debug --with-drivers=all --enable-serial-autoprobe
+#	dh_auto_configure -- --enable-debug --with-drivers=acr122_pcsc
+#	dh_auto_configure -- --enable-debug --with-drivers=pn532_uart,pn53x_usb --enable-serial-autoprobe
 
 %:
 	dh --with autoreconf $@
