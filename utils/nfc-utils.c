@@ -49,7 +49,7 @@ oddparity_bytes_ts (const uint8_t *pbtData, const size_t szLen, uint8_t *pbtPar)
   size_t  szByteNr;
   // Calculate the parity bits for the command
   for (szByteNr = 0; szByteNr < szLen; szByteNr++) {
-    pbtPar[szByteNr] = OddParity[pbtData[szByteNr]];
+    pbtPar[szByteNr] = oddparity(pbtData[szByteNr]);
   }
 }
 
@@ -95,7 +95,7 @@ print_hex_par (const uint8_t *pbtData, const size_t szBits, const uint8_t *pbtDa
 
   for (szPos = 0; szPos < szBytes; szPos++) {
     printf ("%02x", pbtData[szPos]);
-    if (OddParity[pbtData[szPos]] != pbtDataPar[szPos]) {
+    if (oddparity(pbtData[szPos]) != pbtDataPar[szPos]) {
       printf ("! ");
     } else {
       printf ("  ");
