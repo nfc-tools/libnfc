@@ -60,8 +60,8 @@ log_put (char *category, char *priority, char *format, ...)
 {
   va_list va;
   va_start (va, format);
-  printf ("%s\t%s\t", priority, category);
-  vprintf (format, va);
-  printf ("\n");
+  fprintf (stderr, "%s\t%s\t", priority, category);
+  vfprintf (stderr, format, va);
+  fprintf (stderr, "\n");
   va_end (va);
 }
