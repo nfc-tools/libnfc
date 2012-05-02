@@ -80,7 +80,7 @@
 #endif
 
 uint8_t  oddparity (const uint8_t bt);
-void    oddparity_uint8_ts (const uint8_t *pbtData, const size_t szLen, uint8_t *pbtPar);
+void    oddparity_bytes_ts (const uint8_t *pbtData, const size_t szLen, uint8_t *pbtPar);
 
 void    print_hex (const uint8_t *pbtData, const size_t szLen);
 void    print_hex_bits (const uint8_t *pbtData, const size_t szBits);
