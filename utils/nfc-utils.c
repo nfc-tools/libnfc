@@ -36,6 +36,90 @@
 
 #include "nfc-utils.h"
 
+struct card_atqa
+{
+    uint32_t atqa;
+    uint32_t mask;
+    char type[128];
+};
+
+struct card_sak
+{
+    uint32_t sak;
+    uint32_t mask;
+    char type[128];
+};
+
+#define ATQALIST	14
+#define SAKLIST		29
+#define LINKLIST	8
+
+struct card_atqa const_ca[ATQALIST] = { 
+    {0x0044, 0xffff, "MIFARE Ultralight CL2" },
+    {0x0044, 0xffff, "MIFARE Ultralight C CL2" },
+    {0x0004, 0xffff, "MIFARE Plus (4 Byte UID or 4 Byte RID)" },
+    {0x0002, 0xffff, "MIFARE Plus (4 Byte UID or 4 Byte RID)" },
+    {0x0044, 0xffff, "MIFARE Plus (7 Byte UID)" },
+    {0x0042, 0xffff, "MIFARE Plus (7 Byte UID)" },
+    {0x0304, 0xffff, "MIFARE DESFire" },
+    {0x0044, 0xffff, "P3SR008" },
+    {0x0004, 0xff0f, "MIFARE Mini" },
+    {0x0004, 0xff0f, "MIFARE Classic 1K" },
+    {0x0002, 0xff0f, "MIFARE Classic 4K" },
+    {0x0004, 0xf0ff, "SmartMX with MIFARE 1K emulation" },
+    {0x0002, 0xf0ff, "SmartMX with MIFARE 4K emulation" },
+    {0x0048, 0xf0ff, "SmartMX with 7 Byte UID" }
+};
+
+struct card_sak const_cs[SAKLIST] = {
+    {0x04, 0xff, "Any MIFARE CL1" },
+    {0x24, 0xff, "MIFARE DESFire CL1" },
+    {0x24, 0xff, "MIFARE DESFire EV1 CL1" },
+    {0x00, 0xff, "MIFARE Ultralight CL2" },
+    {0x00, 0xff, "MIFARE Ultralight C CL2" },
+    {0x09, 0xff, "MIFARE Mini 0.3K" },
+    {0x08, 0xff, "MIFARE Classic 1K" },
+    {0x18, 0xff, "MIFARE Classik 4K" },
+    {0x09, 0xff, "MIFARE Mini CL2 0.3K" },
+    {0x08, 0xff, "MIFARE Classic 1K CL2" },
+    {0x18, 0xff, "MIFARE Classik 4K CL2" },
+    {0x08, 0xff, "MIFARE Plus 2K (Security level: 1)" },
+    {0x18, 0xff, "MIFARE Plus 4K (Security level: 1)" },
+    {0x08, 0xff, "MIFARE Plus CL2 2K (Security level: 1)" },
+    {0x18, 0xff, "MIFARE Plus CL2 4K (Security level: 1)" },
+    {0x10, 0xff, "MIFARE Plus 2K (Security level: 2)" },
+    {0x11, 0xff, "MIFARE Plus 4K (Security level: 2)" },
+    {0x10, 0xff, "MIFARE Plus CL2 2K (Security level: 2)" },
+    {0x11, 0xff, "MIFARE Plus CL2 4K (Security level: 2)" },
+    {0x20, 0xff, "MIFARE Plus 2K (Security level: 3)" },
+    {0x20, 0xff, "MIFARE Plus 4K (Security level: 3)" },
+    {0x20, 0xff, "MIFARE Plus CL2 2K (Security level: 3)" },
+    {0x20, 0xff, "MIFARE Plus CL2 4K (Security level: 3)" },
+    {0x20, 0xff, "MIFARE DESFire CL2 4K" },
+    {0x20, 0xff, "MIFARE DESFire EV1 CL2 2K" },
+    {0x20, 0xff, "MIFARE DESFire EV1 CL2 4K" },
+    {0x20, 0xff, "MIFARE DESFire EV1 CL2 8K" },
+    {0x00, 0x00, "Smart MX" },
+    {0x00, 0x00, "Smart MX CL2" }
+};
+
+uint32_t card_link[ATQALIST][LINKLIST] = {
+    {1, 4, 5, 0, 0, 0, 0, 0},
+    {1, 4, 5, 0, 0, 0, 0, 0},
+    {1, 12, 13, 16, 17, 20, 21, 0},
+    {1, 12, 13, 16, 17, 20, 21, 0},
+    {1, 14, 15, 18, 19, 22, 23, 0},
+    {1, 14, 15, 18, 19, 22, 23, 0},
+    {1, 2, 3, 24, 25, 26, 27, 0},
+    {1, 0, 0, 0, 0, 0, 0, 0},
+    {1, 6, 9, 0, 0, 0, 0, 0},
+    {1, 7, 10, 0, 0, 0, 0, 0},
+    {1, 8, 11, 0, 0, 0, 0, 0},
+    {1, 28, 0, 0, 0, 0, 0, 0},
+    {1, 28, 0, 0, 0, 0, 0, 0},
+    {1, 29, 0, 0, 0, 0, 0, 0}
+};
+
 uint8_t
 oddparity (const uint8_t bt)
 {
@@ -378,12 +462,39 @@ print_nfc_iso14443a_info (const nfc_iso14443a_info nai, bool verbose)
     }
   }
   if (verbose) {
-    printf("Fingerprinting based on ATQA & SAK values:\n");
+    printf("Fingerprinting based on ATQA & SAK values (new method):\n");
+    uint32_t atqa_new = 0;
+    uint32_t sak_new = 0;
+    uint32_t i, j;
+    bool found_possible_match = false;
+
+    atqa_new += (((uint32_t)nai.abtAtqa[0] & 0xff)<<8);
+    atqa_new += (((uint32_t)nai.abtAtqa[1] & 0xff));
+    sak_new += ((uint32_t)nai.btSak & 0xff);
+
+    for (i = 0; i < ATQALIST; i++)
+	if (const_ca[i].atqa == (atqa_new & const_ca[i].mask))
+	{
+	    for (j = 0; j < LINKLIST; j++)
+	    {
+		if (card_link[i][j] != 0)
+		{
+		    if ((sak_new & const_cs[card_link[i][j]-1].mask) == const_cs[card_link[i][j]-1].sak)
+		    {
+			printf("* %s (%s)\n", const_ca[i].type, const_cs[card_link[i][j]-1].type);
+			found_possible_match = true;
+		    }
+		}
+	    }
+	}
+
     uint32_t atqasak = 0;
     atqasak += (((uint32_t)nai.abtAtqa[0] & 0xff)<<16);
     atqasak += (((uint32_t)nai.abtAtqa[1] & 0xff)<<8);
     atqasak += ((uint32_t)nai.btSak & 0xff);
-    bool found_possible_match = false;
+
+    printf("Fingerprinting based on ATQA & SAK values:\n");
+    found_possible_match = false;
     switch (atqasak) {
       case 0x000218:
         printf("* Mifare Classic 4K\n");
