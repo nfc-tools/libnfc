@@ -60,7 +60,7 @@ static nfc_device *pndReader;
 static nfc_device *pndTag;
 static bool quitting = false;
 
-void
+static void
 intr_hdlr (void)
 {
   printf ("\nQuitting...\n");
@@ -68,7 +68,7 @@ intr_hdlr (void)
   return;
 }
 
-void
+static void
 print_usage (char *argv[])
 {
   printf ("Usage: %s [OPTIONS]\n", argv[0]);
