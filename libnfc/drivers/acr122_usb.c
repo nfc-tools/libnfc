@@ -85,7 +85,7 @@ const struct pn53x_io acr122_usb_io;
 bool acr122_usb_get_usb_device_name (struct usb_device *dev, usb_dev_handle *udev, char *buffer, size_t len);
 int acr122_usb_init (nfc_device *pnd);
 
-int
+static int
 acr122_usb_bulk_read (struct acr122_usb_data *data, uint8_t abtRx[], const size_t szRx, const int timeout)
 {
   int res = usb_bulk_read (data->pudh, data->uiEndPointIn, (char *) abtRx, szRx, timeout);
@@ -102,7 +102,7 @@ acr122_usb_bulk_read (struct acr122_usb_data *data, uint8_t abtRx[], const size_
   return res;
 }
 
-int
+static int
 acr122_usb_bulk_write (struct acr122_usb_data *data, uint8_t abtTx[], const size_t szTx, const int timeout)
 {
   LOG_HEX ("TX", abtTx, szTx);
@@ -135,7 +135,7 @@ const struct acr122_usb_supported_device acr122_usb_supported_devices[] = {
   { 0x072F, 0x90CC, TOUCHATAG,   "Touchatag" },
 };
 
-acr122_usb_model
+static acr122_usb_model
 acr122_usb_get_device_model (uint16_t vendor_id, uint16_t product_id)
 {
   for (size_t n = 0; n < sizeof (acr122_usb_supported_devices) / sizeof (struct acr122_usb_supported_device); n++) {
@@ -150,7 +150,7 @@ acr122_usb_get_device_model (uint16_t vendor_id, uint16_t product_id)
 int  acr122_usb_ack (nfc_device *pnd);
 
 // Find transfer endpoints for bulk transfers
-void
+static void
 acr122_usb_get_end_points (struct usb_device *dev, struct acr122_usb_data *data)
 {
   uint32_t uiIndex;
@@ -247,7 +247,7 @@ struct acr122_usb_descriptor {
   char *filename;
 };
 
-int
+static int
 acr122_usb_connstring_decode (const nfc_connstring connstring, struct acr122_usb_descriptor *desc)
 {
   int n = strlen (connstring) + 1;
@@ -301,7 +301,7 @@ acr122_usb_get_usb_device_name (struct usb_device *dev, usb_dev_handle *udev, ch
   return false;
 }
 
-nfc_device *
+static nfc_device *
 acr122_usb_open (const nfc_connstring connstring)
 {
   nfc_device *pnd = NULL;
@@ -423,7 +423,7 @@ free_mem:
   return pnd;
 }
 
-void
+static void
 acr122_usb_close (nfc_device *pnd)
 {
   acr122_usb_ack (pnd);
@@ -492,7 +492,7 @@ RDR_to_PC_DataBlock                           SW: more data: 8 bytes
                                               SW: OK
 */
 #define ACR122_USB_BUFFER_LEN (PN53x_EXTENDED_FRAME__DATA_MAX_LEN + PN53x_EXTENDED_FRAME__OVERHEAD)
-size_t
+static size_t
 acr122_build_frame (uint8_t *frame, const size_t frame_len, const uint8_t *data, const size_t data_len)
 {
   frame[1] = data_len + 6;
@@ -655,7 +655,7 @@ acr122_usb_init (nfc_device *pnd)
   return NFC_SUCCESS;
 }
 
-int
+static int
 acr122_usb_abort_command (nfc_device *pnd)
 {
   DRIVER_DATA (pnd)->abort_flag = true;
