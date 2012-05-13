@@ -60,7 +60,7 @@ static nfc_device *pnd;
 static bool quiet_output = false;
 static bool init_mfc_auth = false;
 
-void
+static void
 intr_hdlr (void)
 {
   printf ("\nQuitting...\n");
@@ -71,7 +71,7 @@ intr_hdlr (void)
   exit (EXIT_FAILURE);
 }
 
-bool 
+static bool 
 target_io( nfc_target *pnt, const uint8_t *pbtInput, const size_t szInput, uint8_t *pbtOutput, size_t *pszOutput )
 {
   bool loop = true;
@@ -134,7 +134,7 @@ target_io( nfc_target *pnt, const uint8_t *pbtInput, const size_t szInput, uint8
   return loop;
 }
 
-bool
+static bool
 nfc_target_emulate_tag(nfc_device *pnd, nfc_target *pnt)
 {
   size_t szTx;
