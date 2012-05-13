@@ -169,7 +169,7 @@ struct arygon_descriptor {
   uint32_t speed;
 };
 
-int
+static int
 arygon_connstring_decode (const nfc_connstring connstring, struct arygon_descriptor *desc)
 {
   char *cs = malloc (strlen (connstring) + 1);
@@ -355,7 +355,7 @@ arygon_tama_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szData, 
   return NFC_SUCCESS;
 }
 
-int
+static int
 arygon_abort (nfc_device *pnd)
 {
   // Send a valid TAMA packet to wakup the PN53x (we will not have an answer, according to Arygon manual)
@@ -540,7 +540,7 @@ arygon_reset_tama (nfc_device *pnd)
   return NFC_SUCCESS;
 }
 
-int 
+static int 
 arygon_abort_command (nfc_device *pnd)
 {
   if (pnd) {
