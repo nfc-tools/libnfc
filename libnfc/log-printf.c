@@ -56,7 +56,7 @@ log_fini (void)
 }
 
 void
-log_put (char *category, char *priority, char *format, ...)
+log_put (const char *category, const char *priority, const char *format, ...)
 {
   va_list va;
   va_start (va, format);

@@ -27,7 +27,7 @@
   #define LOGGING 1
   int	 log_init (void);
   int	 log_fini (void);
-  void log_put (char *category, char *priority, char *format, ...);
+  void log_put (const char *category, const char *priority, const char *format, ...);
   
   #define NFC_PRIORITY_FATAL  "fatal"
   #define NFC_PRIORITY_ALERT  "alert"
