@@ -23,6 +23,7 @@
  */
 
 #include <nfc/nfc.h>
+#include "nfc-internal.h"
 
 void 
 prepare_initiator_data (const nfc_modulation nm, uint8_t **ppbtInitiatorData, size_t * pszInitiatorData)
