@@ -112,7 +112,7 @@ uint8_t nfcforum_capability_container[] = {
 
 #define ISO144434A_RATS 0xE0
 
-int
+static int
 nfcforum_tag4_io (struct nfc_emulator *emulator, const uint8_t *data_in, const size_t data_in_len, uint8_t *data_out, const size_t data_out_len)
 {
   int res = 0;
@@ -227,7 +227,7 @@ nfcforum_tag4_io (struct nfc_emulator *emulator, const uint8_t *data_in, const s
   return res;
 }
 
-void stop_emulation (int sig)
+static void stop_emulation (int sig)
 {
   (void) sig;
   if (pnd)
@@ -236,7 +236,7 @@ void stop_emulation (int sig)
     exit (EXIT_FAILURE);
 }
 
-size_t
+static size_t
 ndef_message_load (char *filename, struct nfcforum_tag4_ndef_data *tag_data)
 {
   struct stat sb;
@@ -264,7 +264,7 @@ ndef_message_load (char *filename, struct nfcforum_tag4_ndef_data *tag_data)
   return sb.st_size;
 }
 
-size_t
+static size_t
 ndef_message_save (char *filename, struct nfcforum_tag4_ndef_data *tag_data)
 {
   FILE *F;
@@ -280,7 +280,7 @@ ndef_message_save (char *filename, struct nfcforum_tag4_ndef_data *tag_data)
   return tag_data->ndef_file_len - 2;
 }
 
-void
+static void
 usage (char *progname)
 {
   fprintf (stderr, "usage: %s [infile [outfile]]\n", progname);
