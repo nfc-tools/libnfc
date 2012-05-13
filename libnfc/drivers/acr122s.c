@@ -417,7 +417,7 @@ struct acr122s_descriptor {
   uint32_t speed;
 };
 
-int
+static int
 acr122s_connstring_decode (const nfc_connstring connstring, struct acr122s_descriptor *desc)
 {
   char *cs = malloc (strlen (connstring) + 1);
@@ -698,7 +698,7 @@ acr122s_receive(nfc_device *pnd, uint8_t *buf, size_t buf_len, int timeout)
   return data_len;
 }
 
-int
+static int
 acr122s_abort_command(nfc_device *pnd)
 {
   if (pnd) {
