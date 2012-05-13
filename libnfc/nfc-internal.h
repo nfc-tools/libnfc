@@ -108,7 +108,7 @@
  * BUFFER_APPEND_LE (buffer, data, 3, 4);
  */
 
-#if _BYTE_ORDER != _LITTLE_ENDIAN
+#if defined(_BYTE_ORDER) && (_BYTE_ORDER != _LITTLE_ENDIAN)
 #define BUFFER_APPEND_LE(buffer, data, data_size, field_size) \
     do { \
         size_t __data_size = data_size; \
