@@ -66,7 +66,7 @@ uint8_t  abtUidBcc[5] = { 0xDE, 0xAD, 0xBE, 0xEF, 0x62 };
 uint8_t  abtSak[9] = { 0x08, 0xb6, 0xdd };
 
 static void
-intr_hdlr (void)
+intr_hdlr (int sig)
 {
   if (pnd != NULL) {
     printf ("\nAborting current command...\n");
@@ -122,7 +122,7 @@ main (int argc, char *argv[])
 #ifdef WIN32
   signal (SIGINT, (void (__cdecl *) (int)) intr_hdlr);
 #else
-  signal (SIGINT, (void (*)()) intr_hdlr);
+  signal (SIGINT, intr_hdlr);
 #endif
 
   nfc_init (NULL);
