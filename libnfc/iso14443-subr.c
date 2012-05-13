@@ -30,6 +30,7 @@
 #include <string.h>
 
 #include <nfc/nfc.h>
+#include "nfc-internal.h"
 
 
 /**
