@@ -101,7 +101,7 @@ struct acr122_pcsc_data {
 static SCARDCONTEXT _SCardContext;
 static int _iSCardContextRefCount = 0;
 
-SCARDCONTEXT *
+static SCARDCONTEXT *
 acr122_pcsc_get_scardcontext (void)
 {
   if (_iSCardContextRefCount == 0) {
@@ -113,7 +113,7 @@ acr122_pcsc_get_scardcontext (void)
   return &_SCardContext;
 }
 
-void
+static void
 acr122_pcsc_free_scardcontext (void)
 {
   if (_iSCardContextRefCount) {
@@ -193,7 +193,7 @@ struct acr122_pcsc_descriptor {
   int bus_index;
 };
 
-int
+static int
 acr122_pcsc_connstring_decode (const nfc_connstring connstring, struct acr122_pcsc_descriptor *desc)
 {
   char *cs = malloc (strlen (connstring) + 1);
