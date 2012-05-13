@@ -79,6 +79,13 @@
 #  define ERR(...)  warnx ("ERROR: " __VA_ARGS__ )
 #endif
 
+#ifndef MIN
+#define MIN(a,b) (((a) < (b)) ? (a) : (b))
+#endif
+#ifndef MAX
+#define MAX(a,b) (((a) > (b)) ? (a) : (b))
+#endif
+
 uint8_t  oddparity (const uint8_t bt);
 void    oddparity_bytes_ts (const uint8_t *pbtData, const size_t szLen, uint8_t *pbtPar);
 

@@ -39,7 +39,6 @@
 
 #ifdef HAVE_LIBUSB
 #  ifdef DEBUG
-#    include <sys/param.h>
 #    include <usb.h>
 #  endif
 #endif

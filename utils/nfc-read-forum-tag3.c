@@ -49,7 +49,6 @@
 #include <errno.h>
 #include <signal.h>
 #include <stdlib.h>
-#include <sys/param.h>
 #include <unistd.h>
 
 #include <nfc/nfc.h>

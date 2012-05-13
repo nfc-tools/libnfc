@@ -28,7 +28,6 @@
 /* vim: set ts=2 sw=2 et: */
 
 #include <sys/ioctl.h>
-#include <sys/param.h>
 #include <sys/select.h>
 #include <sys/stat.h>
 #include <sys/time.h>

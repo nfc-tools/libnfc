@@ -35,8 +35,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include <sys/param.h>
-
 #include "nfc/nfc.h"
 #include "nfc-internal.h"
 #include "pn53x.h"

@@ -78,8 +78,6 @@
 #include "nfc-internal.h"
 #include "drivers.h"
 
-#include <sys/param.h>
-
 #define LOG_CATEGORY "libnfc.general"
 
 const struct nfc_driver *nfc_drivers[] = {
