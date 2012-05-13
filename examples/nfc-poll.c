@@ -53,7 +53,7 @@
 
 static nfc_device *pnd = NULL;
 
-void stop_polling (int sig)
+static void stop_polling (int sig)
 {
   (void) sig;
   if (pnd)
@@ -62,7 +62,7 @@ void stop_polling (int sig)
     exit (EXIT_FAILURE);
 }
 
-void
+static void
 print_usage (const char* progname)
 {
   printf ("usage: %s [-v]\n", progname);
