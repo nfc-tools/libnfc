@@ -51,7 +51,7 @@
 #define MAX_FRAME_LEN 264
 #define TIMEOUT 60              // secs.
 
-void
+static void
 wait_one_minute (void)
 {
   int     secs = 0;
