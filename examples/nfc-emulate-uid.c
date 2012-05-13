@@ -65,7 +65,7 @@ uint8_t  abtAtqa[2] = { 0x04, 0x00 };
 uint8_t  abtUidBcc[5] = { 0xDE, 0xAD, 0xBE, 0xEF, 0x62 };
 uint8_t  abtSak[9] = { 0x08, 0xb6, 0xdd };
 
-void
+static void
 intr_hdlr (void)
 {
   if (pnd != NULL) {
@@ -74,7 +74,7 @@ intr_hdlr (void)
   }
 }
 
-void
+static void
 print_usage (char *argv[])
 {
   printf ("Usage: %s [OPTIONS] [UID]\n", argv[0]);
