@@ -58,7 +58,7 @@
 
 static nfc_device *pnd;
 
-void
+static void
 print_usage(char *progname)
 {
     fprintf (stderr, "usage: %s -o FILE\n", progname);
@@ -66,7 +66,7 @@ print_usage(char *progname)
     fprintf (stderr, "  -o     Extract NDEF message if available in FILE\n");
 }
 
-void stop_select (int sig)
+static void stop_select (int sig)
 {
   (void) sig;
   if (pnd)
@@ -75,7 +75,7 @@ void stop_select (int sig)
     exit (EXIT_FAILURE);
 }
 
-void
+static void
 build_felica_frame(const nfc_felica_info nfi, const uint8_t command, const uint8_t *payload, const size_t payload_len, uint8_t *frame, size_t *frame_len)
 {
   frame[0] = 1 + 1 + 8 + payload_len;
@@ -86,7 +86,7 @@ build_felica_frame(const nfc_felica_info nfi, const uint8_t command, const uint8
 }
 
 #define CHECK 		0x06
-int 
+static int 
 nfc_forum_tag_type3_check (nfc_device *pnd, const nfc_target nt, const uint16_t block, const uint8_t block_count, uint8_t *data, size_t *data_len)
 {
   uint8_t payload[1024] = {
