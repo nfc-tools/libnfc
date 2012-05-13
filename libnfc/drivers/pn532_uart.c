@@ -146,7 +146,7 @@ struct pn532_uart_descriptor {
   uint32_t speed;
 };
 
-int
+static int
 pn532_connstring_decode (const nfc_connstring connstring, struct pn532_uart_descriptor *desc)
 {
   char *cs = malloc (strlen (connstring) + 1);
@@ -486,7 +486,7 @@ pn532_uart_ack (nfc_device *pnd)
   return (uart_send (DRIVER_DATA(pnd)->port, pn53x_ack_frame, sizeof (pn53x_ack_frame),  0));
 }
 
-int
+static int
 pn532_uart_abort_command (nfc_device *pnd)
 {
   if (pnd) {
