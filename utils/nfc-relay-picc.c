@@ -71,8 +71,8 @@ static int waiting_time = 0;
 FILE * fd3;
 FILE * fd4;
 
-void
-intr_hdlr (void)
+static void
+intr_hdlr (int sig)
 {
   printf ("\nQuitting...\n");
   printf ("Please send a last command to the emulator to quit properly.\n");
@@ -80,7 +80,7 @@ intr_hdlr (void)
   return;
 }
 
-void
+static void
 print_usage (char *argv[])
 {
   printf ("Usage: %s [OPTIONS]\n", argv[0]);
@@ -92,7 +92,7 @@ print_usage (char *argv[])
   printf ("\t-n N\tAdds a waiting time of N seconds (integer) in the relay to mimic long distance.\n");
 }
 
-bool print_hex_fd4 (const uint8_t *pbtData, const size_t szBytes, const char *pchPrefix)
+static bool print_hex_fd4 (const uint8_t *pbtData, const size_t szBytes, const char *pchPrefix)
 {
   size_t  szPos;
   if (szBytes > MAX_FRAME_LEN) {
@@ -114,7 +114,7 @@ bool print_hex_fd4 (const uint8_t *pbtData, const size_t szBytes, const char *pc
   return EXIT_SUCCESS;
 }
 
-bool scan_hex_fd3 (uint8_t *pbtData, size_t *pszBytes, const char *pchPrefix)
+static bool scan_hex_fd3 (uint8_t *pbtData, size_t *pszBytes, const char *pchPrefix)
 {
   size_t  szPos;
   unsigned int uiBytes;
@@ -187,7 +187,7 @@ main (int argc, char *argv[])
 #ifdef WIN32
   signal (SIGINT, (void (__cdecl *) (int)) intr_hdlr);
 #else
-  signal (SIGINT, (void (*)()) intr_hdlr);
+  signal (SIGINT, intr_hdlr);
 #endif
 
   nfc_init (NULL);
