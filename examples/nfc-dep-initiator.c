@@ -50,7 +50,7 @@
 
 static nfc_device *pnd;
 
-void stop_dep_communication (int sig)
+static void stop_dep_communication (int sig)
 {
   (void) sig;
   if (pnd)
