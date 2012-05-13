@@ -31,8 +31,6 @@
 #  include "win32/err.h"
 #  if defined (__MINGW32__)
 #    define snprintf(S, n, F, ...) sprintf(S, F, __VA_ARGS__)
-#    define MAX(a,b) max(a,b)
-#    define MIN(a,b) min(a,b)
 #    define pipe(fds) _pipe(fds, 5000, _O_BINARY)
 #    define ETIMEDOUT     WSAETIMEDOUT
 #    define ENOTSUP       WSAEOPNOTSUPP
