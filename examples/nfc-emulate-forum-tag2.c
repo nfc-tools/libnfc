@@ -73,7 +73,7 @@
 
 static nfc_device *pnd;
 
-void
+static void
 stop_emulation (int sig)
 {
   (void)sig;
@@ -111,7 +111,7 @@ static uint8_t __nfcforum_tag2_memory_area[] = {
 #define SECTOR_SELECT 	0xC2
 
 #define HALT 		0x50
-int
+static int
 nfcforum_tag2_io (struct nfc_emulator *emulator, const uint8_t *data_in, const size_t data_in_len, uint8_t *data_out, const size_t data_out_len)
 {
   int res = 0;
