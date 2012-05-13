@@ -560,7 +560,7 @@ pn53x_decode_target_data (const uint8_t *pbtRawData, size_t szRawData, pn53x_typ
   return NFC_SUCCESS;
 }
 
-int
+static int
 pn53x_ReadRegister (struct nfc_device *pnd, uint16_t ui16RegisterAddress, uint8_t *ui8Value)
 {
   uint8_t  abtCmd[] = { ReadRegister, ui16RegisterAddress >> 8, ui16RegisterAddress & 0xff };
@@ -586,7 +586,7 @@ int pn53x_read_register (struct nfc_device *pnd, uint16_t ui16RegisterAddress, u
   return pn53x_ReadRegister (pnd, ui16RegisterAddress, ui8Value);
 }
 
-int
+static int
 pn53x_WriteRegister (struct nfc_device *pnd, const uint16_t ui16RegisterAddress, const uint8_t ui8Value)
 {
   uint8_t  abtCmd[] = { WriteRegister, ui16RegisterAddress >> 8, ui16RegisterAddress & 0xff, ui8Value };
@@ -743,7 +743,7 @@ pn53x_get_firmware_version (struct nfc_device *pnd, char abtFirmwareText[22])
   return NFC_SUCCESS;
 }
 
-uint8_t
+static uint8_t
 pn53x_int_to_timeout (const int ms)
 {
   uint8_t res = 0;
@@ -994,7 +994,7 @@ pn53x_initiator_init (struct nfc_device *pnd)
   return NFC_SUCCESS;
 }
 
-int
+static int
 pn53x_initiator_select_passive_target_ext (struct nfc_device *pnd,
                                        const nfc_modulation nm,
                                        const uint8_t *pbtInitData, const size_t szInitData,
@@ -1330,7 +1330,7 @@ pn53x_initiator_transceive_bytes (struct nfc_device *pnd, const uint8_t *pbtTx, 
   return *pszRx;
 }
 
-void __pn53x_init_timer(struct nfc_device *pnd, const uint32_t max_cycles)
+static void __pn53x_init_timer(struct nfc_device *pnd, const uint32_t max_cycles)
 {
 // The prescaler will dictate what will be the precision and
 // the largest delay to measure before saturation. Some examples:
@@ -1351,7 +1351,7 @@ void __pn53x_init_timer(struct nfc_device *pnd, const uint32_t max_cycles)
   pn53x_write_register (pnd, PN53X_REG_CIU_TReloadVal_lo, 0xFF, reloadval & 0xFF);
 }
 
-uint32_t __pn53x_get_timer(struct nfc_device *pnd, const uint8_t last_cmd_byte)
+static uint32_t __pn53x_get_timer(struct nfc_device *pnd, const uint8_t last_cmd_byte)
 {
   uint8_t parity;
   uint8_t counter_hi, counter_lo;
