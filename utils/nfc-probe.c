@@ -59,7 +59,7 @@
 
 static nfc_device *pnd;
 
-void
+static void
 print_usage (const char* progname)
 {
   printf ("usage: %s [-v]\n", progname);
