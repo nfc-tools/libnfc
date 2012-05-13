@@ -61,7 +61,7 @@ static nfc_device *pndTag;
 static bool quitting = false;
 
 static void
-intr_hdlr (void)
+intr_hdlr (int sig)
 {
   printf ("\nQuitting...\n");
   quitting = true;
@@ -104,7 +104,7 @@ main (int argc, char *argv[])
 #ifdef WIN32
   signal (SIGINT, (void (__cdecl *) (int)) intr_hdlr);
 #else
-  signal (SIGINT, (void (*)()) intr_hdlr);
+  signal (SIGINT, intr_hdlr);
 #endif
 
   nfc_connstring connstrings[MAX_DEVICE_COUNT];
