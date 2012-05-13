@@ -89,7 +89,7 @@ const struct pn53x_io pn53x_usb_io;
 bool pn53x_usb_get_usb_device_name (struct usb_device *dev, usb_dev_handle *udev, char *buffer, size_t len);
 int pn53x_usb_init (nfc_device *pnd);
 
-int
+static int
 pn53x_usb_bulk_read (struct pn53x_usb_data *data, uint8_t abtRx[], const size_t szRx, const int timeout)
 {
   int res = usb_bulk_read (data->pudh, data->uiEndPointIn, (char *) abtRx, szRx, timeout);
@@ -102,7 +102,7 @@ pn53x_usb_bulk_read (struct pn53x_usb_data *data, uint8_t abtRx[], const size_t 
   return res;
 }
 
-int
+static int
 pn53x_usb_bulk_write (struct pn53x_usb_data *data, uint8_t abtTx[], const size_t szTx, const int timeout)
 {
   LOG_HEX ("TX", abtTx, szTx);
@@ -134,7 +134,7 @@ const struct pn53x_usb_supported_device pn53x_usb_supported_devices[] = {
   { 0x054C, 0x02E1, SONY_RCS360, "Sony / FeliCa S360 [PaSoRi]" }
 };
 
-pn53x_usb_model
+static pn53x_usb_model
 pn53x_usb_get_device_model (uint16_t vendor_id, uint16_t product_id)
 {
   for (size_t n = 0; n < sizeof (pn53x_usb_supported_devices) / sizeof (struct pn53x_usb_supported_device); n++) {
@@ -149,7 +149,7 @@ pn53x_usb_get_device_model (uint16_t vendor_id, uint16_t product_id)
 int  pn53x_usb_ack (nfc_device *pnd);
 
 // Find transfer endpoints for bulk transfers
-void
+static void
 pn53x_usb_get_end_points (struct usb_device *dev, struct pn53x_usb_data *data)
 {
   uint32_t uiIndex;
@@ -254,7 +254,7 @@ struct pn53x_usb_descriptor {
   char *filename;
 };
 
-int
+static int
 pn53x_usb_connstring_decode (const nfc_connstring connstring, struct pn53x_usb_descriptor *desc)
 {
   int n = strlen (connstring) + 1;
@@ -708,7 +708,7 @@ On ASK LoGO hardware:
   return NFC_SUCCESS;
 }
 
-int
+static int
 pn53x_usb_set_property_bool (nfc_device *pnd, const nfc_property property, const bool bEnable)
 {
   int res = 0;
@@ -737,7 +737,7 @@ pn53x_usb_set_property_bool (nfc_device *pnd, const nfc_property property, const
   return NFC_SUCCESS;
 }
 
-int
+static int
 pn53x_usb_abort_command (nfc_device *pnd)
 {
   DRIVER_DATA (pnd)->abort_flag = true;
