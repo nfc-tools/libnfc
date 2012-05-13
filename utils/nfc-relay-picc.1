@@ -46,10 +46,10 @@ Remote relay over TCP/IP:
 
   \fBsocat\fP
     TCP-LISTEN:port,reuseaddr
-    "EXEC:\fBnfc-relay-picc -i\fP,fdin=3,fdout=4"
+    "EXEC:\fBnfc-relay-picc \-i\fP,fdin=3,fdout=4"
   \fBsocat\fP
     TCP:remotehost:port
-    "EXEC:\fBnfc-relay-picc -t\fP,fdin=3,fdout=4"
+    "EXEC:\fBnfc-relay-picc \-t\fP,fdin=3,fdout=4"
 
 .SH NOTES
 There are some differences with \fBnfc-relay\fP:

@@ -76,8 +76,8 @@
 /** @note PN53x's normal frame:
  * 
  *   .-- Start
- *   |   .-- Packet lenght
- *   |   |  .-- Lenght checksum
+ *   |   .-- Packet length
+ *   |   |  .-- Length checksum
  *   |   |  |  .-- Direction (D4 Host to PN, D5 PN to Host)
  *   |   |  |  |  .-- Code
  *   |   |  |  |  |  .-- Packet checksum
@@ -91,8 +91,8 @@
  * 
  *   .-- Start
  *   |     .-- Fixed to FF to enable extended frame
- *   |     |     .-- Packet lenght
- *   |     |     |   .-- Lenght checksum
+ *   |     |     .-- Packet length
+ *   |     |     |   .-- Length checksum
  *   |     |     |   |  .-- Direction (D4 Host to PN, D5 PN to Host)
  *   |     |     |   |  |  .-- Code
  *   |     |     |   |  |  |  .-- Packet checksum
@@ -103,7 +103,7 @@
  */
 
 /** 
- * Start bytes, packet lenght, lenght checksum, direction, packet checksum and postamble are overhead
+ * Start bytes, packet length, length checksum, direction, packet checksum and postamble are overhead
  */
 // The TFI is considered part of the overhead
 #  define PN53x_NORMAL_FRAME__DATA_MAX_LEN		254

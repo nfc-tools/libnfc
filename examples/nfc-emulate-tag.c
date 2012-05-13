@@ -108,7 +108,7 @@ target_io( nfc_target *pnt, const uint8_t *pbtInput, const size_t szInput, uint8
       case 0xe0: // RATS (ISO14443-4)
         // Send ATS
         *pszOutput = pnt->nti.nai.szAtsLen + 1;
-        pbtOutput[0] = pnt->nti.nai.szAtsLen + 1; // ISO14443-4 says that ATS contains ATS_Lenght as first byte
+        pbtOutput[0] = pnt->nti.nai.szAtsLen + 1; // ISO14443-4 says that ATS contains ATS_Length as first byte
         if(pnt->nti.nai.szAtsLen) {
           memcpy(pbtOutput+1, pnt->nti.nai.abtAts, pnt->nti.nai.szAtsLen);
         }

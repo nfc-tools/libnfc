@@ -273,7 +273,7 @@ main(int argc, char *argv[])
   fprintf (message_stream, "NFC Forum Tag Type 3 capacity: %d bytes\n", available_block_count * 16);
 
   uint32_t ndef_data_len = (data[11] << 16) + (data[12] << 8) + data[13];
-  fprintf (message_stream, "NDEF data lenght: %d bytes\n", ndef_data_len);
+  fprintf (message_stream, "NDEF data length: %d bytes\n", ndef_data_len);
 
   uint16_t ndef_calculated_checksum = 0;
   for (size_t n = 0; n < 14; n++)

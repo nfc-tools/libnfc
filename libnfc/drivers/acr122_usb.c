@@ -508,7 +508,7 @@ acr122_usb_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szData, c
                                                0x00, // len
                                                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // padding
                                                0xff, 0x00, 0x00, 0x00,
-                                               0x00, // pn532 command lenght
+                                               0x00, // pn532 command length
                                                0xd4, // direction
   };
   size_t szFrame = acr122_build_frame (abtFrame, sizeof(abtFrame), pbtData, szData);
