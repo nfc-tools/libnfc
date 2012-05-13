@@ -59,7 +59,7 @@ mirror (uint8_t bt)
   return ByteMirror[bt];
 }
 
-void
+static void
 mirror_bytes (uint8_t *pbts, size_t szLen)
 {
   size_t  szByteNr;
