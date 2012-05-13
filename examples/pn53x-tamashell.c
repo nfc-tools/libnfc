@@ -103,7 +103,7 @@ int main(int argc, const char* argv[])
   }
 
   char *cmd;
-  char *prompt = "> ";
+  const char *prompt = "> ";
   while(1) {
     int offset = 0;
 #if defined(HAVE_READLINE)
