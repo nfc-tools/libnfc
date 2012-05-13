@@ -76,7 +76,6 @@ int main(int argc, const char* argv[])
   uint8_t abtTx[MAX_FRAME_LEN];
   size_t szRx = sizeof(abtRx);
   size_t szTx;
-  extern FILE* stdin;
   FILE* input = NULL;
 
   if (argc >= 2) {
