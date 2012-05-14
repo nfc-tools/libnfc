@@ -48,11 +48,11 @@
 
 #  if defined(__APPLE__)
   // FIXME: find UART connection string for PN53X device on Mac OS X when multiples devices are used
-char *serial_ports_device_radix[] = { "tty.SLAB_USBtoUART", NULL };
+const char *serial_ports_device_radix[] = { "tty.SLAB_USBtoUART", NULL };
 #  elif defined (__FreeBSD__) || defined (__OpenBSD__)
-char *serial_ports_device_radix[] = { "cuaU", "cuau", NULL };
+const char *serial_ports_device_radix[] = { "cuaU", "cuau", NULL };
 #  elif defined (__linux__)
-char *serial_ports_device_radix[] = { "ttyUSB", "ttyS", NULL };
+const char *serial_ports_device_radix[] = { "ttyUSB", "ttyS", NULL };
 #  else
 #    error "Can't determine serial string for your system"
 #  endif
@@ -346,7 +346,7 @@ uart_list_ports (void)
 	if (!isdigit (pdDirEnt->d_name[strlen (pdDirEnt->d_name) - 1]))
 	    continue;
 
-	char **p = serial_ports_device_radix;
+	const char **p = serial_ports_device_radix;
 	while (*p) {
 	    if (!strncmp(pdDirEnt->d_name, *p, strlen (*p))) {
 		char **res2 = realloc (res, (szRes+1) * sizeof (char *));
