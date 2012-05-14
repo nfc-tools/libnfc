@@ -495,6 +495,7 @@ RDR_to_PC_DataBlock                           SW: more data: 8 bytes
 static size_t
 acr122_build_frame (uint8_t *frame, const size_t frame_len, const uint8_t *data, const size_t data_len)
 {
+  (void) frame_len;
   frame[1] = data_len + 6;
   frame[14] = data_len + 1;
   memcpy (frame + 16, data, data_len);
@@ -579,7 +580,7 @@ read:
 
   size_t len = abtRxBuf[offset++];
   if (len < 4) {
-    log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "Too small reply");
+    log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Too small reply");
     pnd->last_error = NFC_EIO;
     return pnd->last_error;
   }
@@ -623,6 +624,7 @@ read:
 int
 acr122_usb_ack (nfc_device *pnd)
 {
+  (void) pnd;
   return 0;
   //return acr122_usb_bulk_write (DRIVER_DATA (pnd), (uint8_t *) pn53x_ack_frame, sizeof (pn53x_ack_frame), 1000);
 }

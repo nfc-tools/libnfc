@@ -68,6 +68,7 @@ uint8_t  abtSak[9] = { 0x08, 0xb6, 0xdd };
 static void
 intr_hdlr (int sig)
 {
+  (void) sig;
   if (pnd != NULL) {
     printf ("\nAborting current command...\n");
     nfc_abort_command (pnd);

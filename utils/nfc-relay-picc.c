@@ -74,6 +74,7 @@ FILE * fd4;
 static void
 intr_hdlr (int sig)
 {
+  (void) sig;
   printf ("\nQuitting...\n");
   printf ("Please send a last command to the emulator to quit properly.\n");
   quitting = true;

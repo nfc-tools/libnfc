@@ -63,6 +63,7 @@ static bool quitting = false;
 static void
 intr_hdlr (int sig)
 {
+  (void) sig;
   printf ("\nQuitting...\n");
   quitting = true;
   return;

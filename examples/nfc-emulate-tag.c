@@ -63,6 +63,7 @@ static bool init_mfc_auth = false;
 static void
 intr_hdlr (int sig)
 {
+  (void) sig;
   printf ("\nQuitting...\n");
   if (pnd != NULL) {
     nfc_close(pnd);    
