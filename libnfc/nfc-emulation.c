@@ -31,26 +31,28 @@ int
 nfc_emulate_target (nfc_device *pnd, struct nfc_emulator *emulator)
 {
   uint8_t abtRx[ISO7816_SHORT_R_APDU_MAX_LEN];
-  int szRx;
   uint8_t abtTx[ISO7816_SHORT_C_APDU_MAX_LEN];
-  int res = 0;
 
-  if ((szRx = nfc_target_init (pnd, emulator->target, abtRx, sizeof(abtRx), 0)) < 0) {
-    return -1;
+  int res;
+  if ((res = nfc_target_init (pnd, emulator->target, abtRx, sizeof(abtRx), 0)) < 0) {
+    return res;
   }
 
-  while (res >= 0) {
-    res = emulator->state_machine->io (emulator, abtRx, sizeof(abtRx), abtTx, sizeof (abtTx));
-    if (res > 0) {
-      if (nfc_target_send_bytes(pnd, abtTx, res, 0) < 0) {
-        return -1;
+  size_t szRx = res;
+  int io_res = res;
+  while (io_res >= 0) {
+    io_res = emulator->state_machine->io (emulator, abtRx, szRx, abtTx, sizeof (abtTx));
+    if (io_res > 0) {
+      if ((res = nfc_target_send_bytes(pnd, abtTx, io_res, 0)) < 0) {
+        return res;
       }
     }
-    if (res >= 0) {
-      if ((res = nfc_target_receive_bytes(pnd, abtRx, (size_t) szRx, 0)) < 0) {
-        return -1;
+    if (io_res >= 0) {
+      if ((res = nfc_target_receive_bytes(pnd, abtRx, sizeof(abtRx), 0)) < 0) {
+        return res;
       }
+      szRx = res;
     }
   }
-  return (res < 0) ? res : 0;
+  return (io_res < 0) ? io_res : 0;
 }
