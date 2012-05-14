@@ -5,14 +5,18 @@
 .Nd NFC Forum tag type 4 emulation command line demonstration tool
 .Sh SYNOPSIS
 .Nm
+.Op -1
 .Op infile Op outfile
 .Sh DESCRIPTION
 .Nm 
-is a demonstration tool that emulates a NFC Forum tag type 4 v1.0 with NDEF content.
+is a demonstration tool that emulates a NFC Forum tag type 4 v2.0 (or v1.0) with NDEF content.
+.Pp
+.Ar -1
+can be provided to force old Tag Type 4 version 1.0 behavior.
 .Pp
 .Ar infile
 is the file which contains NDEF message you want to share with the NFC-Forum
-compliant initiator device (e.g. Nokia 6212 Classic)
+compliant initiator device (e.g. Nokia 6212 Classic for a v1.0 tag)
 .Pp
 If you want to save a shared content by the initiator device, we have to give 
 .Ar outfile
@@ -21,7 +25,7 @@ argument to point where the NDEF message will be saved.
 This example uses the hardware capability of PN532 to handle ISO/IEC 14443-4
 low-level frames like RATS/ATS, WTX, etc.
 .Pp
-All devices compliant with NFC-Forum Tag Type 4 (Version 1.0) can be used with
+All devices compliant with NFC-Forum Tag Type 4 (Version 2.0 or 1.0) can be used with
 this example in read-write mode.
 .Pp
 If no argument is given, a default NDEF file is available.

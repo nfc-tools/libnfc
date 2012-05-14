@@ -30,7 +30,7 @@
 
 /**
  * @file nfc-emulate-forum-tag4.c
- * @brief Emulates a NFC Forum Tag Type 4 v1.0 with a NDEF message
+ * @brief Emulates a NFC Forum Tag Type 4 v2.0 (or v1.0) with a NDEF message
  */
 
 /*
@@ -40,6 +40,7 @@
  * NFC Forum Type 4 Tag Operation
  *  Technical Specification
  *  NFCForum-TS-Type-4-Tag_1.0 - 2007-03-13
+ *  NFCForum-TS-Type-4-Tag_2.0 - 2010-11-18
  */
 
 // Notes & differences with nfc-emulate-tag:
@@ -70,6 +71,8 @@
 
 static nfc_device *pnd;
 static bool quiet_output = false;
+// Version of the emulated type4 tag:
+static int type4v = 2;
 
 #define SYMBOL_PARAM_fISO14443_4_PICC   0x20
 
@@ -86,7 +89,7 @@ struct nfcforum_tag4_state_machine_data {
 
 uint8_t nfcforum_capability_container[] = {
   0x00, 0x0F, /* CCLEN 15 bytes */
-  0x10,       /* Mapping version 1.0 */
+  0x20,       /* Mapping version 2.0, use option -1 to force v1.0 */
   0x00, 0x54, /* MLe Maximum R-ADPU data size */
 // Notes: 
 //  - I (Romuald) don't know why Nokia 6212 Classic refuses the NDEF message if MLe is more than 0xFD (any suggests are welcome);
@@ -165,8 +168,11 @@ nfcforum_tag4_io (struct nfc_emulator *emulator, const uint8_t *data_in, const s
         if (data_in[P2] != 0x00)
           return -ENOTSUP;
 
-        const uint8_t ndef_tag_application_name[] = { 0xD2, 0x76, 0x00, 0x00, 0x85, 0x01, 0x00 };
-        if ((data_in[LC] == sizeof (ndef_tag_application_name)) && (0 == memcmp (ndef_tag_application_name, data_in + DATA, data_in[LC])))
+        const uint8_t ndef_tag_application_name_v1[] = { 0xD2, 0x76, 0x00, 0x00, 0x85, 0x01, 0x00 };
+        const uint8_t ndef_tag_application_name_v2[] = { 0xD2, 0x76, 0x00, 0x00, 0x85, 0x01, 0x01 };
+        if ((type4v == 1) && (data_in[LC] == sizeof (ndef_tag_application_name_v1)) && (0 == memcmp (ndef_tag_application_name_v1, data_in + DATA, data_in[LC])))
+          memcpy (data_out, "\x90\x00", res = 2);
+        else if ((type4v == 2) && (data_in[LC] == sizeof (ndef_tag_application_name_v2)) && (0 == memcmp (ndef_tag_application_name_v2, data_in + DATA, data_in[LC])))
           memcpy (data_out, "\x90\x00", res = 2);
         else
           memcpy (data_out, "\x6a\x82", res = 2);
@@ -283,12 +289,14 @@ ndef_message_save (char *filename, struct nfcforum_tag4_ndef_data *tag_data)
 static void
 usage (char *progname)
 {
-  fprintf (stderr, "usage: %s [infile [outfile]]\n", progname);
+  fprintf (stderr, "usage: %s [-1] [infile [outfile]]\n", progname);
+  fprintf (stderr, "      -1: force Tag Type 4 v1.0 (default is v2.0)\n");
 }
 
 int
 main (int argc, char *argv[])
 {
+  int options = 0;
   nfc_target nt = {
     .nm = {
       .nmt = NMT_ISO14443A,
@@ -334,15 +342,26 @@ main (int argc, char *argv[])
     .user_data = &nfcforum_tag4_data,
   };
 
-  if (argc > 3) {
+  if ((argc > (1 + options)) && (0 == strcmp ("-h", argv[1 + options]))) {
+    usage (argv[0]);
+    exit (EXIT_SUCCESS);
+  }
+
+  if ((argc > (1 + options)) && (0 == strcmp ("-1", argv[1 + options]))) {
+    type4v = 1;
+    nfcforum_capability_container[2] = 0x10;
+    options += 1;
+  }
+
+  if (argc > (3 + options)) {
     usage (argv[0]);
     exit (EXIT_FAILURE);
   }
 
   // If some file is provided load it
-  if (argc >= 2) {
-    if (!ndef_message_load (argv[1], &nfcforum_tag4_data)) {
-      err (EXIT_FAILURE, "Can't load NDEF file '%s'", argv[1]);
+  if (argc >= (2 + options)) {
+    if (!ndef_message_load (argv[1 + options], &nfcforum_tag4_data)) {
+      err (EXIT_FAILURE, "Can't load NDEF file '%s'", argv[1 + options]);
     }
   }
   
@@ -367,9 +386,9 @@ main (int argc, char *argv[])
 
   nfc_close(pnd);
 
-  if (argc == 3) {
-    if (!(ndef_message_save (argv[2], &nfcforum_tag4_data))) {
-      err (EXIT_FAILURE, "Can't save NDEF file '%s'", argv[2]);
+  if (argc == (3 + options)) {
+    if (!(ndef_message_save (argv[2 + options], &nfcforum_tag4_data))) {
+      err (EXIT_FAILURE, "Can't save NDEF file '%s'", argv[2 + options]);
     }
   }
   
