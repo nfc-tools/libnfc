@@ -97,27 +97,27 @@ main (int argc, const char *argv[])
       // Result of Diagnose ping for RC-S360 doesn't contain status byte so we've to handle both cases
       result = (memcmp (pncmd_diagnose_communication_line_test + 1, abtRx, sizeof (pncmd_diagnose_communication_line_test) - 1) == 0) ||
                (memcmp (pncmd_diagnose_communication_line_test + 2, abtRx, sizeof (pncmd_diagnose_communication_line_test) - 2) == 0);
+      printf (" Communication line test: %s\n", result ? "OK" : "Failed");
     } else {
-      nfc_perror (pnd, "pn53x_transceive");
+      nfc_perror (pnd, "pn53x_transceive: cannot diagnose communication line");
     }
-    printf (" Communication line test: %s\n", result ? "OK" : "Failed");
 
     res = pn53x_transceive (pnd, pncmd_diagnose_rom_test, sizeof (pncmd_diagnose_rom_test), abtRx, szRx, 0);
     if (res > 0) {
       szRx = (size_t) res;
       result = ((szRx == 1) && (abtRx[0] == 0x00));
+      printf (" ROM test: %s\n", result ? "OK" : "Failed");
     } else {
-      nfc_perror (pnd, "pn53x_transceive");
+      nfc_perror (pnd, "pn53x_transceive: cannot diagnose ROM");
     }
-    printf (" ROM test: %s\n", result ? "OK" : "Failed");
 
     res = pn53x_transceive (pnd, pncmd_diagnose_ram_test, sizeof (pncmd_diagnose_ram_test), abtRx, szRx, 0);
     if (res > 0) {
       szRx = (size_t) res;
       result = ((szRx == 1) && (abtRx[0] == 0x00));
+      printf (" RAM test: %s\n", result ? "OK" : "Failed");
     } else {
-      nfc_perror (pnd, "pn53x_transceive");
+      nfc_perror (pnd, "pn53x_transceive: cannot diagnose RAM");
     }
-    printf (" RAM test: %s\n", result ? "OK" : "Failed");
   }
 }
