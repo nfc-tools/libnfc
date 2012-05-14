@@ -43,7 +43,7 @@
 // Bus
 #include <winscard.h>
 
-#define ACR122_PCSC_DRIVER_NAME "acr122"
+#define ACR122_PCSC_DRIVER_NAME "acr122_pcsc"
 
 #if defined (_WIN32)
 #  define IOCTL_CCID_ESCAPE_SCARD_CTL_CODE SCARD_CTL_CODE(3500)
