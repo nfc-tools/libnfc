@@ -240,7 +240,7 @@ main(int argc, char *argv[])
     }
     // Check again if System Code equals 0x12fc 
     if (0 != memcmp (nt.nti.nfi.abtSysCode, abtNfcForumSysCode, 2)) {
-      fprintf (stderr, "Tag is not NFC Forum Tag Type 3 compiliant.\n");
+      fprintf (stderr, "Tag is not NFC Forum Tag Type 3 compliant.\n");
       error = EXIT_FAILURE;
       goto error;
     }

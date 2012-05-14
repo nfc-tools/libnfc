@@ -35,7 +35,7 @@
  * It have been developed using PN533 USB hardware as target and Google Nexus S phone as initiator.
  *
  * This is know to NOT work with Nokia 6212 Classic and could not work with
- * several NFC Forum compiliant devices due to these reasons:
+ * several NFC Forum compliant devices due to these reasons:
  *  - The emulated target only have a 4 bytes UID where 7 bytes UID (as a real
  *  Mifare Ultralight tag) are usually attempted;
  *  - The chip is emulating a ISO/IEC 14443-3 tag, without any hardware helper.

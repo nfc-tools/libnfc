@@ -30,7 +30,7 @@
 
 /**
  * @file nfc-emulate-forum-tag4.c
- * @brief Emulates a NFC Forum Tag Type 4 with a NDEF message
+ * @brief Emulates a NFC Forum Tag Type 4 v1.0 with a NDEF message
  */
 
 /*
