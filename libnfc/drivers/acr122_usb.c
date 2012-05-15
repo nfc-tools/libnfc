@@ -24,6 +24,23 @@
  * @brief Driver for ACR122 using direct USB (without PCSC)
  */
 
+/*
+ * This implementation was written based on information provided by the
+ * following documents:
+ *
+ * Smart Card CCID
+ * Specification for Integrated Circuit(s) Cards Interface Devices
+ * Revision 1.1
+ * April 22rd, 2005
+ * http://www.usb.org/developers/devclass_docs/DWG_Smart-Card_CCID_Rev110.pdf
+ * 
+ * ACR122U NFC Reader
+ * Application Programming Interface
+ * Revision 1.2
+ * http://acs.com.hk/drivers/eng/API_ACR122U.pdf
+ */
+
+
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif // HAVE_CONFIG_H
@@ -83,7 +100,8 @@ struct acr122_usb_data {
 
 const struct pn53x_io acr122_usb_io;
 bool acr122_usb_get_usb_device_name (struct usb_device *dev, usb_dev_handle *udev, char *buffer, size_t len);
-int acr122_usb_init (nfc_device *pnd);
+int  acr122_usb_init (nfc_device *pnd);
+int  acr122_usb_ack (nfc_device *pnd);
 
 static int
 acr122_usb_bulk_read (struct acr122_usb_data *data, uint8_t abtRx[], const size_t szRx, const int timeout)
@@ -146,8 +164,6 @@ acr122_usb_get_device_model (uint16_t vendor_id, uint16_t product_id)
 
   return UNKNOWN;
 }
-
-int  acr122_usb_ack (nfc_device *pnd);
 
 // Find transfer endpoints for bulk transfers
 static void
@@ -397,11 +413,6 @@ acr122_usb_open (const nfc_connstring connstring)
       }
       pnd->driver = &acr122_usb_driver;
 
-      // HACK1: Send first an ACK as Abort command, to reset chip before talking to it:
-      acr122_usb_ack (pnd);
-
-      // HACK2: Then send a GetFirmware command to resync USB toggle bit between host & device
-      // in case host used set_configuration and expects the device to have reset its toggle bit, which PN53x doesn't do
       if (acr122_usb_init (pnd) < 0) {
         usb_close (data.pudh);
         goto error;
@@ -491,31 +502,58 @@ RDR_to_PC_DataBlock                           SW: more data: 8 bytes
 8008000000000f000000            d50332010407  9000
                                               SW: OK
 */
+// FIXME ACR122_USB_BUFFER_LEN don't have the correct lenght value
 #define ACR122_USB_BUFFER_LEN (PN53x_EXTENDED_FRAME__DATA_MAX_LEN + PN53x_EXTENDED_FRAME__OVERHEAD)
-static size_t
-acr122_build_frame (uint8_t *frame, const size_t frame_len, const uint8_t *data, const size_t data_len)
+static int
+acr122_build_frame_from_apdu (uint8_t **frame, const uint8_t *apdu, const size_t apdu_len)
 {
-  (void) frame_len;
-  frame[1] = data_len + 6;
-  frame[14] = data_len + 1;
-  memcpy (frame + 16, data, data_len);
-  return data_len + 16;
+  static uint8_t  abtFrame[ACR122_USB_BUFFER_LEN] = {
+    0x6b, // PC_to_RDR_Escape
+    0x00, // len
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // padding
+  };
+  if ((apdu_len+10) > ACR122_USB_BUFFER_LEN)
+    return NFC_EINVARG;
+
+  abtFrame[1] = apdu_len;
+  memcpy (abtFrame + 10, apdu, apdu_len);
+  *frame = abtFrame;
+  return (apdu_len + 10);
+}
+
+static int
+acr122_build_frame_from_tama (uint8_t **frame, const uint8_t *tama, const size_t tama_len)
+{
+  static uint8_t  abtFrame[ACR122_USB_BUFFER_LEN] = {
+    0x6b, // PC_to_RDR_Escape
+    0x00, // len
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // padding
+    // APDU
+    0xff, 0x00, 0x00, 0x00,
+    0x00, // PN532 command length
+    0xd4, // PN532 direction
+  };
+  if ((tama_len+16) > ACR122_USB_BUFFER_LEN)
+    return NFC_EINVARG;
+
+  abtFrame[1] = tama_len + 6;
+  abtFrame[14] = tama_len + 1;
+  memcpy (abtFrame + 16, tama, tama_len);
+  *frame = abtFrame;
+  return (tama_len + 16);
 }
 
 int
 acr122_usb_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szData, const int timeout)
 {
-  uint8_t  abtFrame[ACR122_USB_BUFFER_LEN] = { 0x6b, 
-                                               0x00, // len
-                                               0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // padding
-                                               0xff, 0x00, 0x00, 0x00,
-                                               0x00, // pn532 command length
-                                               0xd4, // direction
-  };
-  size_t szFrame = acr122_build_frame (abtFrame, sizeof(abtFrame), pbtData, szData);
-
+  uint8_t *frame;
   int res;
-  if ((res = acr122_usb_bulk_write (DRIVER_DATA (pnd), abtFrame, szFrame, timeout)) < 0) {
+  if ((res = acr122_build_frame_from_tama (&frame, pbtData, szData)) < 0) {
+    pnd->last_error = NFC_EINVARG;
+    return pnd->last_error;
+  }
+
+  if ((res = acr122_usb_bulk_write (DRIVER_DATA (pnd), frame, res, timeout)) < 0) {
     pnd->last_error = res;
     return pnd->last_error;
   }
@@ -625,32 +663,68 @@ int
 acr122_usb_ack (nfc_device *pnd)
 {
   (void) pnd;
-  return 0;
-  //return acr122_usb_bulk_write (DRIVER_DATA (pnd), (uint8_t *) pn53x_ack_frame, sizeof (pn53x_ack_frame), 1000);
+  int res = 0;
+  uint8_t acr122_ack_frame[] = { GetFirmwareVersion }; // We can't send a PN532's ACK frame, so we use a normal command to cancel current command
+  log_put (LOG_CATEGORY, NFC_PRIORITY_DEBUG, "%s", "ACR122 Abort");
+  uint8_t *frame;
+  if ((res = acr122_build_frame_from_tama (&frame, acr122_ack_frame, sizeof (acr122_ack_frame))) < 0)
+    return res;
+
+  res = acr122_usb_bulk_write (DRIVER_DATA (pnd), frame, res, 1000);
+  uint8_t  abtRxBuf[ACR122_USB_BUFFER_LEN];
+  res = acr122_usb_bulk_read (DRIVER_DATA (pnd), abtRxBuf, sizeof (abtRxBuf), 1000);
+  return res;
 }
 
 int
 acr122_usb_init (nfc_device *pnd)
 {
   int res = 0;
-/*
-  uint8_t frame[] = { 0x6B,
-			0x07,
-			0, 0, 0, 0, 0, 0, 0, 0, // padding
-			0xFF, 0x00, 0x00, 0x00, 0x02, 0xD4, 0x02 // frame
-                    };
-  acr122_usb_bulk_write (DRIVER_DATA (pnd), frame, sizeof(frame), 300);
-  acr122_usb_bulk_read (DRIVER_DATA (pnd), frame, sizeof(frame), 0);
-*/
+  uint8_t  abtRxBuf[ACR122_USB_BUFFER_LEN];
 
 /*
-  uint8_t frame[] = { 0x6B,
-			5, // len
-			0, 0, 0, 0, 0, 0, 0, 0, // padding
-			0xFF, 0x00, 0x48, 0x00, 0x00 // frame
-                    };
-  acr122_usb_bulk_write (DRIVER_DATA (pnd), frame, sizeof(frame), 0);
+  // See ACR122 manual: "Bi-Color LED and Buzzer Control" section
+  uint8_t acr122u_get_led_state_frame[] = { 
+    0x6b, // CCID
+    0x09, // lenght of frame
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // padding
+    // frame:
+    0xff, // Class
+    0x00, // INS
+    0x40, // P1: Get LED state command
+    0x00, // P2: LED state control
+    0x04, // Lc
+    0x00, 0x00, 0x00, 0x00, // Blinking duration control
+  };
+
+  log_put (LOG_CATEGORY, NFC_PRIORITY_DEBUG, "%s", "ACR122 Get LED state");
+  if ((res = acr122_usb_bulk_write (DRIVER_DATA (pnd), (uint8_t *) acr122u_get_led_state_frame, sizeof (acr122u_get_led_state_frame), 1000)) < 0)
+    return res;
+
+  if ((res = acr122_usb_bulk_read (DRIVER_DATA (pnd), abtRxBuf, sizeof (abtRxBuf), 1000)) < 0)
+    return res;
 */
+
+  if ((res = pn53x_set_property_int (pnd, NP_TIMEOUT_COMMAND, 1000)) < 0)
+    return res;
+
+  uint8_t acr122u_set_picc_operating_parameters_off_frame[] = {
+    0xff, // Class
+    0x00, // INS
+    0x51, // P1: Set PICC Operating Parameters
+    0x00, // P2: New PICC Operating Parameters
+    0x00, // Le
+  };
+  uint8_t *frame;
+
+  log_put (LOG_CATEGORY, NFC_PRIORITY_DEBUG, "%s", "ACR122 PICC Operating Parameters");
+  if ((res = acr122_build_frame_from_apdu (&frame, acr122u_set_picc_operating_parameters_off_frame, sizeof(acr122u_set_picc_operating_parameters_off_frame))) < 0)
+    return res;
+  if ((res = acr122_usb_bulk_write (DRIVER_DATA (pnd), frame, res, 1000)) < 0)
+    return res;
+  if ((res = acr122_usb_bulk_read (DRIVER_DATA (pnd), abtRxBuf, sizeof (abtRxBuf), 1000)) < 0)
+    return res;
+
   if ((res = pn53x_init (pnd)) < 0)
     return res;
 
