@@ -36,8 +36,6 @@
 #  include "config.h"
 #endif // HAVE_CONFIG_H
 
-#  define _GNU_SOURCE // for getline on system with glibc < 2.10
-#  define _POSIX_C_SOURCE 200809L // for getline on system with glibc >= 2.10
 #  include <stdio.h>
 #if defined(HAVE_READLINE)
 #  include <readline/readline.h>
