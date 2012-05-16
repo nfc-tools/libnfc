@@ -551,7 +551,8 @@ pn53x_decode_target_data (const uint8_t *pbtRawData, size_t szRawData, pn53x_typ
       pbtRawData += 2;
       memcpy (pnti->nji.btId, pbtRawData, 4);
       break;
-    default:
+    // Should not happend...
+    case NMT_DEP:
       return NFC_ECHIP;
       break;
   }
@@ -771,7 +772,19 @@ pn53x_set_property_int (struct nfc_device *pnd, const nfc_property property, con
       CHIP_DATA (pnd)->timeout_communication = value;
       return pn53x_RFConfiguration__Various_timings (pnd, pn53x_int_to_timeout(CHIP_DATA (pnd)->timeout_atr), pn53x_int_to_timeout(CHIP_DATA (pnd)->timeout_communication));
       break;
-    default:
+    // Following properties are invalid (not integer)
+    case NP_HANDLE_CRC:
+    case NP_HANDLE_PARITY:
+    case NP_ACTIVATE_FIELD:
+    case NP_ACTIVATE_CRYPTO1:
+    case NP_INFINITE_SELECT:
+    case NP_ACCEPT_INVALID_FRAMES:
+    case NP_ACCEPT_MULTIPLE_FRAMES:
+    case NP_AUTO_ISO14443_4:
+    case NP_EASY_FRAMING:
+    case NP_FORCE_ISO14443_A:
+    case NP_FORCE_ISO14443_B:
+    case NP_FORCE_SPEED_106:
       return NFC_EINVARG;
   }
   return NFC_SUCCESS;
@@ -900,7 +913,7 @@ pn53x_set_property_bool (struct nfc_device *pnd, const nfc_property property, co
       }
       return pn53x_write_register (pnd, PN53X_REG_CIU_RxMode, SYMBOL_RX_SPEED, 0x00);
       break;
-    // Not boolean property
+    // Following properties are invalid (not boolean)
     case NP_TIMEOUT_COMMAND:
     case NP_TIMEOUT_ATR:
     case NP_TIMEOUT_COM:
@@ -950,8 +963,7 @@ pn53x_idle (struct nfc_device *pnd)
         }
       }
     break;
-    default:
-      // Nothing to do
+    case IDLE: // Nothing to do.
     break;
   };
   CHIP_DATA (pnd)->operating_mode = IDLE;
@@ -1191,8 +1203,12 @@ pn53x_initiator_select_dep_target (struct nfc_device *pnd,
       pbtPassiveInitiatorData = abtPassiveInitiatorData;
       break;
 
-    default:
+    case NBR_106:
       // Nothing to do
+      break;
+    case NBR_847:
+    case NBR_UNDEFINED:
+      return NFC_EINVARG;
       break;
   }
 
@@ -1915,7 +1931,13 @@ pn53x_target_receive_bytes (struct nfc_device *pnd, uint8_t *pbtRx, const size_t
             return pnd->last_error;
           }
         }
-      default:
+      // NO BREAK
+      case NMT_JEWEL:
+      case NMT_ISO14443B:
+      case NMT_ISO14443BI:
+      case NMT_ISO14443B2SR:
+      case NMT_ISO14443B2CT:
+      case NMT_FELICA:
         abtCmd[0] = TgGetInitiatorCommand;
         break;
     }
@@ -2014,7 +2036,13 @@ pn53x_target_send_bytes (struct nfc_device *pnd, const uint8_t *pbtTx, const siz
             return pnd->last_error;
           }
         }
-      default:
+      // NO BREAK      
+      case NMT_JEWEL:
+      case NMT_ISO14443B:
+      case NMT_ISO14443BI:
+      case NMT_ISO14443B2SR:
+      case NMT_ISO14443B2CT:
+      case NMT_FELICA:
         abtCmd[0] = TgResponseToInitiator;
         break;
     }
@@ -2240,7 +2268,7 @@ pn53x_InListPassiveTarget (struct nfc_device *pnd,
         return pnd->last_error;
       }
       break;
-    default:
+    case PM_UNDEFINED:
       pnd->last_error = NFC_EINVARG;
       return pnd->last_error;
   }
@@ -2817,7 +2845,11 @@ pn53x_get_supported_baud_rate (nfc_device *pnd, const nfc_modulation_type nmt, c
     case NMT_ISO14443A: 
       *supported_br = (nfc_baud_rate*)pn53x_iso14443a_supported_baud_rates;
     break;
-    case NMT_ISO14443B: {
+    case NMT_ISO14443B:
+    case NMT_ISO14443BI:
+    case NMT_ISO14443B2SR:
+    case NMT_ISO14443B2CT:
+    {
       if ((CHIP_DATA(pnd)->type != PN533)) {
         *supported_br = (nfc_baud_rate*)pn532_iso14443b_supported_baud_rates;
       } else {
