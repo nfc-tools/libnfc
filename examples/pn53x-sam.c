@@ -184,7 +184,7 @@ main (int argc, const char *argv[])
       // wait_one_minute ();
     }
     break;
-  default:
+  case PSM_NORMAL:
     break;
   }
 
