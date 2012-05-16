@@ -927,7 +927,6 @@ pn53x_idle (struct nfc_device *pnd)
         if ((res = pn53x_PowerDown (pnd)) < 0) {
           return res;
         }
-        CHIP_DATA (pnd)->power_mode = LOWVBAT;
       }
     break;
     case INITIATOR:
@@ -944,7 +943,6 @@ pn53x_idle (struct nfc_device *pnd)
         if ((res = pn53x_PowerDown (pnd)) < 0) {
           return res;
         }
-        CHIP_DATA (pnd)->power_mode = LOWVBAT;
       } else {
         // Use InRelease to go in "Standby mode"
         if ((res = pn53x_InRelease (pnd, 0)) < 0) {
@@ -2181,7 +2179,11 @@ int
 pn53x_PowerDown (struct nfc_device *pnd)
 {
   uint8_t  abtCmd[] = { PowerDown, 0xf0 };
-  return (pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, 0, -1));
+  int res;
+  if ((res = pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), NULL, 0, -1)) < 0)
+    return res;
+  CHIP_DATA (pnd)->power_mode = LOWVBAT;
+  return res;
 }
 
 /**
