@@ -112,7 +112,7 @@ arygon_probe (nfc_connstring connstrings[], size_t connstrings_len, size_t *pszD
 
   while ((acPort = acPorts[iDevice++])) {
     sp = uart_open (acPort);
-    log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "%s", "Trying to find ARYGON device on serial port: %s at %d bauds.", acPort, ARYGON_DEFAULT_SPEED);
+    log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "Trying to find ARYGON device on serial port: %s at %d bauds.", acPort, ARYGON_DEFAULT_SPEED);
 
     if ((sp != INVALID_SERIAL_PORT) && (sp != CLAIMED_SERIAL_PORT)) {
       // We need to flush input to be sure first reply does not comes from older byte transceive
