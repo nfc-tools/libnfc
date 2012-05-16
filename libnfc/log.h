@@ -23,11 +23,25 @@
 #endif // HAVE_CONFIG_H
 
 #if defined DEBUG
+
+#  ifndef __has_attribute
+#    define __has_attribute(x) 0
+#  endif
+
+#  if __has_attribute(format) || defined(__GNUC__)
+#    define __has_attribute_format 1
+#  endif
+
   // User want debug features
   #define LOGGING 1
   int	 log_init (void);
   int	 log_fini (void);
-  void log_put (const char *category, const char *priority, const char *format, ...);
+  void log_put (const char *category, const char *priority, const char *format, ...)
+#  if __has_attribute_format
+    __attribute__((format(printf, 3, 4)))
+#  endif
+    ;
+    
   
   #define NFC_PRIORITY_FATAL  "fatal"
   #define NFC_PRIORITY_ALERT  "alert"
