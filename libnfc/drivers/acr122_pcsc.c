@@ -41,14 +41,18 @@
 #include "nfc-internal.h"
 
 // Bus
+#ifdef __APPLE__
+#include <PCSC/winscard.h>
+#include <PCSC/wintypes.h>
+#else
 #include <winscard.h>
+#endif
 
 #define ACR122_PCSC_DRIVER_NAME "acr122_pcsc"
 
 #if defined (_WIN32)
 #  define IOCTL_CCID_ESCAPE_SCARD_CTL_CODE SCARD_CTL_CODE(3500)
 #elif defined(__APPLE__)
-#  include <wintypes.h>
 #  define IOCTL_CCID_ESCAPE_SCARD_CTL_CODE (((0x31) << 16) | ((3500) << 2))
 #elif defined (__FreeBSD__) || defined (__OpenBSD__)
 #  define IOCTL_CCID_ESCAPE_SCARD_CTL_CODE (((0x31) << 16) | ((3500) << 2))
