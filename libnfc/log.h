@@ -92,7 +92,7 @@
       snprintf (__acBuf + __szBuf, sizeof(__acBuf) - __szBuf, "%02x  ",((uint8_t *)(pbtData))[__szPos]); \
       __szBuf += 4; \
     } \
-    log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, __acBuf); \
+    log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "%s", __acBuf); \
   } while (0);
 #  else
 #    define LOG_HEX(pcTag, pbtData, szBytes) do { \
