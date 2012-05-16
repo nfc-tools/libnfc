@@ -404,7 +404,13 @@ nfc_initiator_select_passive_target (nfc_device *pnd,
     iso14443_cascade_uid (pbtInitData, szInitData, abtInit, &szInit);
     break;
 
-  default:
+  case NMT_JEWEL:
+  case NMT_ISO14443B:
+  case NMT_ISO14443BI:
+  case NMT_ISO14443B2SR:
+  case NMT_ISO14443B2CT:
+  case NMT_FELICA:
+  case NMT_DEP:
     memcpy (abtInit, pbtInitData, szInitData);
     szInit = szInitData;
     break;

@@ -59,10 +59,10 @@ nfc_device_new (const nfc_connstring connstring)
 }
 
 void
-nfc_device_free (nfc_device *nfc_device)
+nfc_device_free (nfc_device *dev)
 {
-  if (nfc_device) {
-    free (nfc_device->driver_data);
-    free (nfc_device);
+  if (dev) {
+    free (dev->driver_data);
+    free (dev);
   }
 }

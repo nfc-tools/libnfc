@@ -224,7 +224,7 @@ pn53x_usb_probe (nfc_connstring connstrings[], size_t connstrings_len, size_t *p
           usb_dev_handle *udev = usb_open (dev);
 
           // Set configuration
-          int res = usb_set_configuration (udev, 1);
+          res = usb_set_configuration (udev, 1);
           if (res < 0) {
             log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to set USB configuration (%s)", _usb_strerror (res));
             usb_close (udev);
@@ -362,7 +362,7 @@ pn53x_usb_open (const nfc_connstring connstring)
       // Retrieve end points
       pn53x_usb_get_end_points (dev, &data);
       // Set configuration
-      int res = usb_set_configuration (data.pudh, 1);
+      res = usb_set_configuration (data.pudh, 1);
       if (res < 0) {
         log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to set USB configuration (%s)", _usb_strerror (res));
         if (EPERM == -res) {
@@ -406,7 +406,9 @@ pn53x_usb_open (const nfc_connstring connstring)
         case SONY_PN531:
           CHIP_DATA (pnd)->timer_correction = 54;
           break;
-        default:
+        case SONY_RCS360:
+        case UNKNOWN:
+          CHIP_DATA (pnd)->timer_correction = 0;  // TODO: allow user to know if timed functions are available
           break;
       }
       pnd->driver = &pn53x_usb_driver;
@@ -731,7 +733,12 @@ pn53x_usb_set_property_bool (nfc_device *pnd, const nfc_property property, const
           return res;
       }
       break;
-    default:
+    case NXP_PN531:
+    case NXP_PN533:
+    case SONY_PN531:
+    case SONY_RCS360:
+    case UNKNOWN:
+      // Nothing to do.
       break;
   }
   return NFC_SUCCESS;

@@ -408,7 +408,7 @@ acr122_usb_open (const nfc_connstring connstring)
         case TOUCHATAG:
           CHIP_DATA (pnd)->timer_correction = 50;
           break;
-        default:
+        case UNKNOWN:
           break;
       }
       pnd->driver = &acr122_usb_driver;

@@ -59,7 +59,9 @@ prepare_initiator_data (const nfc_modulation nm, uint8_t **ppbtInitiatorData, si
       *pszInitiatorData = 5;
     }
     break;
-    default:
+    case NMT_ISO14443A:
+    case NMT_JEWEL:
+    case NMT_DEP:
       *ppbtInitiatorData = NULL;
       *pszInitiatorData = 0;
     break;
