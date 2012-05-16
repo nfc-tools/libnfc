@@ -265,7 +265,9 @@ arygon_open (const nfc_connstring connstring)
 
 #ifndef WIN32
   // pipe-based abort mecanism
-  pipe (DRIVER_DATA (pnd)->iAbortFds);
+  if (pipe (DRIVER_DATA (pnd)->iAbortFds) < 0) {
+    return NULL;
+  }
 #else
   DRIVER_DATA (pnd)->abort_flag = false;
 #endif
@@ -545,7 +547,9 @@ arygon_abort_command (nfc_device *pnd)
   if (pnd) {
 #ifndef WIN32
     close (DRIVER_DATA (pnd)->iAbortFds[0]);
-    pipe (DRIVER_DATA (pnd)->iAbortFds);
+    if (pipe (DRIVER_DATA (pnd)->iAbortFds) < 0) {
+      return NFC_ESOFT;
+    }
 #else
     DRIVER_DATA (pnd)->abort_flag = true;
 #endif

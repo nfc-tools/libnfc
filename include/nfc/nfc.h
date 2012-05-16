@@ -124,7 +124,7 @@ extern  "C" {
 #define NFC_SUCCESS			 0
 /** @ingroup error
  * @hideinitializer
- * Input / output error, device will not be usable anymore 
+ * Input / output error, device may not be usable anymore without re-open it
  */
 #define NFC_EIO				-1
 /** @ingroup error
@@ -172,6 +172,11 @@ extern  "C" {
  * Error while RF transmission 
  */
 #define NFC_ERFTRANS			-20
+/** @ingroup error
+ * @hideinitializer
+ * Software error (allocation, file/pipe creation, etc.)
+ */
+#define NFC_ESOFT			-80
 /** @ingroup error
  * @hideinitializer
  * Device's internal chip error 

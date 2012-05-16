@@ -1,3 +1,10 @@
+New in TBD:
+
+API Changes:
+
+  * Types
+    - New NFC_ESOFT error to handle software errors (allocations, pie creation, etc.)
+
 New in 1.6.0-rc1:
 
 API Changes:

@@ -586,7 +586,9 @@ acr122s_open(const nfc_connstring connstring)
   DRIVER_DATA(pnd)->seq = 0;
 
 #ifndef WIN32
-  pipe(DRIVER_DATA(pnd)->abort_fds);
+  if (pipe(DRIVER_DATA(pnd)->abort_fds) < 0) {
+    return NULL;
+  }
 #else
   DRIVER_DATA(pnd)->abort_flag = false;
 #endif
@@ -704,7 +706,9 @@ acr122s_abort_command(nfc_device *pnd)
 #ifndef WIN32
     close(DRIVER_DATA(pnd)->abort_fds[0]);
     close(DRIVER_DATA(pnd)->abort_fds[1]);
-    pipe(DRIVER_DATA(pnd)->abort_fds);
+    if (pipe(DRIVER_DATA(pnd)->abort_fds) < 0 ) {
+      return NFC_ESOFT;
+    }
 #else
     DRIVER_DATA(pnd)->abort_flag = true;
 #endif
