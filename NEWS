@@ -5,6 +5,12 @@ API Changes:
   * Types
     - New NFC_ESOFT error to handle software errors (allocations, pie creation, etc.)
 
+  * Functions
+    - New enum-to-string converter functions str_nfc_modulation_type() and
+      str_nfc_baud_rate()
+    - New nfc_device_get_information_about() function to retreive some device's
+      information
+
 New in 1.6.0-rc1:
 
 API Changes:

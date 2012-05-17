@@ -766,8 +766,11 @@ const struct nfc_driver acr122_usb_driver = {
   .target_send_bits      = pn53x_target_send_bits,
   .target_receive_bits   = pn53x_target_receive_bits,
 
-  .device_set_property_bool  = pn53x_set_property_bool,
-  .device_set_property_int = pn53x_set_property_int,
+  .device_set_property_bool     = pn53x_set_property_bool,
+  .device_set_property_int      = pn53x_set_property_int,
+  .get_supported_modulation     = pn53x_get_supported_modulation,
+  .get_supported_baud_rate      = pn53x_get_supported_baud_rate,
+  .device_get_information_about = pn53x_get_information_about,
 
   .abort_command  = acr122_usb_abort_command,
   .idle  = pn53x_idle,

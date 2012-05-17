@@ -656,63 +656,33 @@ print_nfc_dep_info (const nfc_dep_info ndi, bool verbose)
   }
 }
 
-const char *
-str_nfc_baud_rate (const nfc_baud_rate nbr)
-{
-  switch(nbr) {
-    case NBR_UNDEFINED:
-      return "undefined baud rate";
-    break;
-    case NBR_106:
-      return "106 kbps";
-    break;
-    case NBR_212:
-      return "212 kbps";
-    break;
-    case NBR_424:
-      return "424 kbps";
-    break;
-    case NBR_847:
-      return "847 kbps";
-    break;
-  }
-  return "";
-}
-
 void
 print_nfc_target (const nfc_target nt, bool verbose)
 {
+  printf ("%s (%s%s) target:\n", str_nfc_modulation_type(nt.nm.nmt), str_nfc_baud_rate(nt.nm.nbr), (nt.nm.nmt!=NMT_DEP)?"":(nt.nti.ndi.ndm == NDM_ACTIVE)? "active mode" : "passive mode");
   switch(nt.nm.nmt) {
     case NMT_ISO14443A:
-      printf ("ISO/IEC 14443A (%s) target:\n", str_nfc_baud_rate(nt.nm.nbr));
       print_nfc_iso14443a_info (nt.nti.nai, verbose);
     break;
     case NMT_JEWEL:
-      printf ("Innovision Jewel (%s) target:\n", str_nfc_baud_rate(nt.nm.nbr));
       print_nfc_jewel_info (nt.nti.nji, verbose);
     break;
     case NMT_FELICA:
-      printf ("FeliCa (%s) target:\n", str_nfc_baud_rate(nt.nm.nbr));
       print_nfc_felica_info (nt.nti.nfi, verbose);
     break;
     case NMT_ISO14443B:
-      printf ("ISO/IEC 14443-4B (%s) target:\n", str_nfc_baud_rate(nt.nm.nbr));
       print_nfc_iso14443b_info (nt.nti.nbi, verbose);
     break;
     case NMT_ISO14443BI:
-      printf ("ISO/IEC 14443-4B' (%s) target:\n", str_nfc_baud_rate(nt.nm.nbr));
       print_nfc_iso14443bi_info (nt.nti.nii, verbose);
     break;
     case NMT_ISO14443B2SR:
-      printf ("ISO/IEC 14443-2B ST SRx (%s) target:\n", str_nfc_baud_rate(nt.nm.nbr));
       print_nfc_iso14443b2sr_info (nt.nti.nsi, verbose);
     break;
     case NMT_ISO14443B2CT:
-      printf ("ISO/IEC 14443-2B ASK CTx (%s) target:\n", str_nfc_baud_rate(nt.nm.nbr));
       print_nfc_iso14443b2ct_info (nt.nti.nci, verbose);
     break;
     case NMT_DEP:
-      printf ("D.E.P. (%s, %s) target:\n", str_nfc_baud_rate(nt.nm.nbr), (nt.nti.ndi.ndm == NDM_ACTIVE)? "active mode" : "passive mode");
       print_nfc_dep_info (nt.nti.ndi, verbose);
     break;
   }

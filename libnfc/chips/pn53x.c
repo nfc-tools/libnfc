@@ -68,8 +68,7 @@ pn53x_init(struct nfc_device *pnd)
 {
   int res = 0;
   // GetFirmwareVersion command is used to set PN53x chips type (PN531, PN532 or PN533)
-  char abtFirmwareText[22];
-  if ((res = pn53x_get_firmware_version (pnd, abtFirmwareText)) < 0) {
+  if ((res = pn53x_decode_firmware_version (pnd)) < 0) {
     return res;
   }
 
@@ -113,12 +112,6 @@ pn53x_init(struct nfc_device *pnd)
   if ((res = pn53x_reset_settings(pnd)) < 0) {
     return res;
   }
-
-  // Add the firmware revision to the device name
-  char   *pcName;
-  pcName = strdup (pnd->name);
-  snprintf (pnd->name, DEVICE_NAME_LENGTH - 1, "%s - %s", pcName, abtFirmwareText);
-  free (pcName);
   return NFC_SUCCESS;
 }
 
@@ -690,7 +683,7 @@ pn53x_writeback_register (struct nfc_device *pnd)
 }
 
 int
-pn53x_get_firmware_version (struct nfc_device *pnd, char abtFirmwareText[22])
+pn53x_decode_firmware_version (struct nfc_device *pnd)
 {
   const uint8_t abtCmd[] = { GetFirmwareVersion };
   uint8_t  abtFw[4];
@@ -723,16 +716,16 @@ pn53x_get_firmware_version (struct nfc_device *pnd, char abtFirmwareText[22])
   // Convert firmware info in text, PN531 gives 2 bytes info, but PN532 and PN533 gives 4
   switch (CHIP_DATA(pnd)->type) {
     case PN531:
-      snprintf (abtFirmwareText, 22, "PN531 v%d.%d", abtFw[0], abtFw[1]);
+      snprintf (CHIP_DATA(pnd)->firmware_text, sizeof(CHIP_DATA(pnd)->firmware_text), "PN531 v%d.%d", abtFw[0], abtFw[1]);
       pnd->btSupportByte = SUPPORT_ISO14443A | SUPPORT_ISO18092;
       break;
     case PN532:
-      snprintf (abtFirmwareText, 22, "PN532 v%d.%d (0x%02x)", abtFw[1], abtFw[2], abtFw[3]);
+      snprintf (CHIP_DATA(pnd)->firmware_text, sizeof(CHIP_DATA(pnd)->firmware_text), "PN532 v%d.%d", abtFw[1], abtFw[2]);
       pnd->btSupportByte = abtFw[3];
       break;
     case PN533:
     case RCS360:
-      snprintf (abtFirmwareText, 22, "PN533 v%d.%d (0x%02x)", abtFw[1], abtFw[2], abtFw[3]);
+      snprintf (CHIP_DATA(pnd)->firmware_text, sizeof(CHIP_DATA(pnd)->firmware_text), "PN533 v%d.%d", abtFw[1], abtFw[2]);
       pnd->btSupportByte = abtFw[3];
       break;
     case PN53X:
@@ -2866,6 +2859,132 @@ pn53x_get_supported_baud_rate (nfc_device *pnd, const nfc_modulation_type nmt, c
     default:
       return NFC_EINVARG;
   }
+  return NFC_SUCCESS;
+}
+
+int
+pn53x_get_information_about (nfc_device *pnd, char *buf, size_t buflen)
+{
+  int res;
+  if ((res = snprintf (buf, buflen, "chip: %s\n", CHIP_DATA(pnd)->firmware_text)) < 0) {
+    return NFC_ESOFT;
+  }
+  buf += res;
+  if (buflen <= (size_t)res) {
+    return NFC_EOVFLOW;
+  }
+  buflen -= res;
+
+  if ((res = snprintf (buf, buflen, "initator mode modulations: ")) < 0) {
+    return NFC_ESOFT;
+  }
+  buf += res;
+  if (buflen <= (size_t)res) {
+    return NFC_EOVFLOW;
+  }
+  buflen -= res;
+  const nfc_modulation_type *nmt;
+  if ((res = nfc_device_get_supported_modulation(pnd, N_INITIATOR, &nmt)) < 0) {
+    return res;
+  }
+  
+  for (int i=0; nmt[i]; i++) {
+    if ((res = snprintf (buf, buflen, "%s%s (", (i==0)?"":", ", str_nfc_modulation_type (nmt[i]))) < 0) {
+      return NFC_ESOFT;
+    }
+    buf += res;
+    if (buflen <= (size_t)res) {
+      return NFC_EOVFLOW;
+    }
+    buflen -= res;
+    const nfc_baud_rate *nbr;
+    if ((res = nfc_device_get_supported_baud_rate (pnd, nmt[i], &nbr)) < 0) {
+      return res;
+    }
+    
+    for (int j=0; nbr[j]; j++) {
+      if ((res = snprintf (buf, buflen, "%s%s", (j==0)?"":", ", str_nfc_baud_rate (nbr[j]))) < 0) {
+        return NFC_ESOFT;
+      }
+      buf += res;
+      if (buflen <= (size_t)res) {
+        return NFC_EOVFLOW;
+      }
+      buflen -= res;
+    }
+    if ((res = snprintf (buf, buflen, ")")) < 0) {
+      return NFC_ESOFT;
+    }
+    buf += res;
+    if (buflen <= (size_t)res) {
+      return NFC_EOVFLOW;
+    }
+    buflen -= res;
+
+  }
+  if ((res = snprintf (buf, buflen, "\n")) < 0) {
+    return NFC_ESOFT;
+  }
+  buf += res;
+  if (buflen <= (size_t)res) {
+    return NFC_EOVFLOW;
+  }
+  buflen -= res;
+  if ((res = snprintf (buf, buflen, "target mode modulations: ")) < 0) {
+    return NFC_ESOFT;
+  }
+  buf += res;
+  if (buflen <= (size_t)res) {
+    return NFC_EOVFLOW;
+  }
+  buflen -= res;
+  if ((res = nfc_device_get_supported_modulation(pnd, N_TARGET, &nmt)) < 0) {
+    return res;
+  }
+  
+  for (int i=0; nmt[i]; i++) {
+    if ((res = snprintf (buf, buflen, "%s%s (", (i==0)?"":", ", str_nfc_modulation_type (nmt[i]))) < 0) {
+      return NFC_ESOFT;
+    }
+    buf += res;
+    if (buflen <= (size_t)res) {
+      return NFC_EOVFLOW;
+    }
+    buflen -= res;
+    const nfc_baud_rate *nbr;
+    if ((res = nfc_device_get_supported_baud_rate (pnd, nmt[i], &nbr)) < 0) {
+      return res;
+    }
+    
+    for (int j=0; nbr[j]; j++) {
+      if ((res = snprintf (buf, buflen, "%s%s", (j==0)?"":", ", str_nfc_baud_rate (nbr[j]))) < 0) {
+        return NFC_ESOFT;
+      }
+      buf += res;
+      if (buflen <= (size_t)res) {
+        return NFC_EOVFLOW;
+      }
+      buflen -= res;
+    }
+    if ((res = snprintf (buf, buflen, ")")) < 0) {
+      return NFC_ESOFT;
+    }
+    buf += res;
+    if (buflen <= (size_t)res) {
+      return NFC_EOVFLOW;
+    }
+    buflen -= res;
+
+  }
+  if ((res = snprintf (buf, buflen, "\n")) < 0) {
+    return NFC_ESOFT;
+  }
+  buf += res;
+  if (buflen <= (size_t)res) {
+    return NFC_EOVFLOW;
+  }
+  buflen -= res;
+
   return NFC_SUCCESS;
 }
 

@@ -160,6 +160,7 @@ struct nfc_driver {
   int (*device_set_property_int) (struct nfc_device *pnd, const nfc_property property, const int value);
   int (*get_supported_modulation) (struct nfc_device *pnd, const nfc_mode mode, const nfc_modulation_type **const supported_mt);
   int (*get_supported_baud_rate) (struct nfc_device *pnd, const nfc_modulation_type nmt, const nfc_baud_rate **const supported_br);
+  int (*device_get_information_about) (struct nfc_device *pnd, char *buf, size_t buflen);
 
   int (*abort_command) (struct nfc_device *pnd);
   int (*idle) (struct nfc_device *pnd);

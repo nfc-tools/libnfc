@@ -1041,3 +1041,83 @@ nfc_version (void)
   return PACKAGE_VERSION;
 #endif // SVN_REVISION
 }
+
+/** @ingroup misc
+ * @brief Print information about NFC device
+ * @return Upon successful return, this function returns the number of characters printed (excluding the null byte used to end output to strings), otherwise returns libnfc's error code (negative value)
+ * @param pnd \a nfc_device struct pointer that represent currently used device
+ * @param buf string to print information
+ * @param buflen buf length
+ */
+int 
+nfc_device_get_information_about (nfc_device *pnd, char *buf, size_t buflen)
+{
+  HAL (device_get_information_about, pnd, buf, buflen);
+}
+
+/** @ingroup string-converter
+ * @brief Convert \a nfc_baud_rate value to string
+ * @return Returns nfc baud rate
+ * @param \a nfc_baud_rate to convert
+*/
+const char *
+str_nfc_baud_rate (const nfc_baud_rate nbr)
+{
+  switch(nbr) {
+    case NBR_UNDEFINED:
+      return "undefined baud rate";
+    break;
+    case NBR_106:
+      return "106 kbps";
+    break;
+    case NBR_212:
+      return "212 kbps";
+    break;
+    case NBR_424:
+      return "424 kbps";
+    break;
+    case NBR_847:
+      return "847 kbps";
+    break;
+  }
+  // Should never go there..
+  return "";
+}
+
+/** @ingroup string-converter
+ * @brief Convert \a nfc_modulation_type value to string
+ * @return Returns nfc modulation type
+ * @param \a nfc_modulation_type to convert
+*/
+const char *
+str_nfc_modulation_type (const nfc_modulation_type nmt)
+{
+  switch(nmt) {
+    case NMT_ISO14443A:
+      return "ISO/IEC 14443A";
+    break;
+    case NMT_ISO14443B:
+      return "ISO/IEC 14443-4B";
+    break;
+    case NMT_ISO14443BI:
+      return "ISO/IEC 14443-4B'";
+    break;
+    case NMT_ISO14443B2CT:
+      return "ISO/IEC 14443-2B ASK CTx";
+    break;
+    case NMT_ISO14443B2SR:
+      return "ISO/IEC 14443-2B ST SRx";
+    break;
+    case NMT_FELICA:
+      return "FeliCa";
+    break;
+    case NMT_JEWEL:
+      return "Innovision Jewel";
+    break;
+    case NMT_DEP:
+      return "D.E.P.";
+    break;
+  }
+  // Should never go there..
+  return "";
+}

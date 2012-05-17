@@ -155,8 +155,10 @@ struct pn53x_io {
  * @brief PN53x data structure
  */
 struct pn53x_data {
-/** Chip type (PN531, PN532 or PN533)*/
+/** Chip type (PN531, PN532 or PN533) */
   pn53x_type type;
+/** Chip firmware text */
+  char firmware_text[22];
 /** Current power mode */
   pn53x_power_mode power_mode;
 /** Current operating mode */
@@ -301,7 +303,7 @@ int    pn53x_decode_target_data (const uint8_t *pbtRawData, size_t szRawData,
                                   nfc_target_info *pnti);
 int    pn53x_read_register (struct nfc_device *pnd, uint16_t ui16Reg, uint8_t *ui8Value);
 int    pn53x_write_register (struct nfc_device *pnd, uint16_t ui16Reg, uint8_t ui8SymbolMask, uint8_t ui8Value);
-int    pn53x_get_firmware_version (struct nfc_device *pnd, char abtFirmwareText[22]);
+int    pn53x_decode_firmware_version (struct nfc_device *pnd);
 int    pn53x_set_property_int (struct nfc_device *pnd, const nfc_property property, const int value);
 int    pn53x_set_property_bool (struct nfc_device *pnd, const nfc_property property, const bool bEnable);
 
@@ -382,6 +384,7 @@ int    pn53x_check_error_frame (struct nfc_device *pnd, const uint8_t *pbtRxFram
 int    pn53x_build_frame (uint8_t *pbtFrame, size_t *pszFrame, const uint8_t *pbtData, const size_t szData);
 int    pn53x_get_supported_modulation (nfc_device *pnd, const nfc_mode mode, const nfc_modulation_type **const supported_mt);
 int    pn53x_get_supported_baud_rate (nfc_device *pnd, const nfc_modulation_type nmt, const nfc_baud_rate **const supported_br);
+int    pn53x_get_information_about (nfc_device *pnd, char *buf, size_t buflen);
 
 void    pn53x_data_new (struct nfc_device *pnd, const struct pn53x_io *io);
 void    pn53x_data_free (struct nfc_device *pnd);

@@ -101,7 +101,6 @@ void    print_nfc_iso14443b2ct_info (const nfc_iso14443b2ct_info nci, bool verbo
 void    print_nfc_felica_info (const nfc_felica_info nfi, bool verbose);
 void    print_nfc_jewel_info (const nfc_jewel_info nji, bool verbose);
 void    print_nfc_dep_info (const nfc_dep_info ndi, bool verbose);
-const char * str_nfc_baud_rate (const nfc_baud_rate nbr);
 
 void    print_nfc_target (const nfc_target nt, bool verbose);
 
