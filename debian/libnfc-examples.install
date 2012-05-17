@@ -1,6 +1,7 @@
 debian/tmp/usr/bin/nfc-anticol
 debian/tmp/usr/bin/nfc-dep-initiator
 debian/tmp/usr/bin/nfc-dep-target
+debian/tmp/usr/bin/nfc-emulate-forum-tag2
 debian/tmp/usr/bin/nfc-emulate-tag
 debian/tmp/usr/bin/nfc-emulate-uid
 debian/tmp/usr/bin/nfc-mfsetuid

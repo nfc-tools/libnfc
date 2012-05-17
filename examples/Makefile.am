@@ -7,6 +7,7 @@ bin_PROGRAMS = \
 		nfc-emulate-forum-tag2 \
 		nfc-emulate-tag \
 		nfc-emulate-uid \
+		nfc-mfsetuid \
 		nfc-poll \
 		nfc-relay \
 		pn53x-diagnose \
@@ -57,6 +58,10 @@ nfc_dep_initiator_SOURCES = nfc-dep-initiator.c
 nfc_dep_initiator_LDADD = $(top_builddir)/libnfc/libnfc.la \
 			  $(top_builddir)/utils/libnfcutils.la
 
+nfc_mfsetuid_SOURCES = nfc-mfsetuid.c
+nfc_mfsetuid_LDADD = $(top_builddir)/libnfc/libnfc.la \
+			  $(top_builddir)/utils/libnfcutils.la
+
 pn53x_diagnose_SOURCES = pn53x-diagnose.c
 pn53x_diagnose_LDADD = $(top_builddir)/libnfc/libnfc.la \
 		       $(top_builddir)/utils/libnfcutils.la
@@ -83,6 +88,7 @@ dist_man_MANS = \
 		nfc-emulate-uid.1 \
 		nfc-poll.1 \
 		nfc-relay.1 \
+		nfc-mfsetuid.1 \
 		pn53x-diagnose.1 \
 		pn53x-sam.1 \
 		pn53x-tamashell.1

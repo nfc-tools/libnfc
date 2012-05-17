@@ -5,6 +5,7 @@ SET(EXAMPLES-SOURCES
   nfc-emulate-forum-tag2
   nfc-emulate-tag
   nfc-emulate-uid
+  nfc-mfsetuid
   nfc-poll
   nfc-relay
 )
