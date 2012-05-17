@@ -177,7 +177,7 @@ int main(int argc, const char* argv[])
       continue;
     }
     printf("Tx: ");
-    print_hex((uint8_t*)abtTx,szTx);
+    print_hex(abtTx,szTx);
 
     szRx = sizeof(abtRx);
     int res = 0;
