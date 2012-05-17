@@ -86,7 +86,7 @@ build_felica_frame(const nfc_felica_info nfi, const uint8_t command, const uint8
 
 #define CHECK 		0x06
 static int 
-nfc_forum_tag_type3_check (nfc_device *pnd, const nfc_target nt, const uint16_t block, const uint8_t block_count, uint8_t *data, size_t *data_len)
+nfc_forum_tag_type3_check (nfc_device *dev, const nfc_target nt, const uint16_t block, const uint8_t block_count, uint8_t *data, size_t *data_len)
 {
   uint8_t payload[1024] = {
                        1, // Services
@@ -114,7 +114,7 @@ nfc_forum_tag_type3_check (nfc_device *pnd, const nfc_target nt, const uint16_t 
   uint8_t res[1024];
 
   size_t res_len;
-  if (nfc_initiator_transceive_bytes (pnd, frame, frame_len, res, &res_len, 0) < 0) {
+  if (nfc_initiator_transceive_bytes (dev, frame, frame_len, res, &res_len, 0) < 0) {
     return -1;
   }
   const size_t res_overhead = 1 + 1 + 8 + 2;  // 1+1+8+2: LEN + CMD + NFCID2 + STATUS
@@ -296,13 +296,13 @@ main(int argc, char *argv[])
 
   data_len = 0;
   for (uint16_t b = 0; b < (block_count_to_check/block_max_per_check); b += block_max_per_check) {
-    size_t len = sizeof(data) - data_len;
-    if(!nfc_forum_tag_type3_check (pnd, nt, 1+b, MIN(block_max_per_check, (block_count_to_check-(b*block_max_per_check))), data + data_len, &len)) {
+    size_t size = sizeof(data) - data_len;
+    if(!nfc_forum_tag_type3_check (pnd, nt, 1+b, MIN(block_max_per_check, (block_count_to_check-(b*block_max_per_check))), data + data_len, &size)) {
       nfc_perror (pnd, "nfc_forum_tag_type3_check");
       error = EXIT_FAILURE;
       goto error;
     }
-    data_len += len;
+    data_len += size;
   }
   if (fwrite (data, 1, data_len, ndef_stream) != data_len) {
     fprintf (stderr, "Could not write to file.\n");

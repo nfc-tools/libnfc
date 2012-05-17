@@ -136,32 +136,32 @@ target_io( nfc_target *pnt, const uint8_t *pbtInput, const size_t szInput, uint8
 }
 
 static bool
-nfc_target_emulate_tag(nfc_device *pnd, nfc_target *pnt)
+nfc_target_emulate_tag(nfc_device *dev, nfc_target *pnt)
 {
   size_t szTx;
   uint8_t abtTx[MAX_FRAME_LEN];
   bool loop = true;
 
-  if ((szRx = nfc_target_init (pnd, pnt, abtRx, sizeof(abtRx), 0)) < 0) {
-    nfc_perror (pnd, "nfc_target_init");
+  if ((szRx = nfc_target_init (dev, pnt, abtRx, sizeof(abtRx), 0)) < 0) {
+    nfc_perror (dev, "nfc_target_init");
     return false;
   }
 
   while ( loop ) {
     loop = target_io( pnt, abtRx, (size_t) szRx, abtTx, &szTx );
     if (szTx) {
-      if (nfc_target_send_bytes(pnd, abtTx, szTx, 0) < 0) {
-        nfc_perror (pnd, "nfc_target_send_bytes");
+      if (nfc_target_send_bytes(dev, abtTx, szTx, 0) < 0) {
+        nfc_perror (dev, "nfc_target_send_bytes");
         return false;
       }
     }
     if ( loop ) {
       if ( init_mfc_auth ) {
-        nfc_device_set_property_bool (pnd, NP_HANDLE_CRC, false);
+        nfc_device_set_property_bool (dev, NP_HANDLE_CRC, false);
         init_mfc_auth = false;
       }
-      if ((szRx = nfc_target_receive_bytes(pnd, abtRx, sizeof (abtRx), 0)) < 0) {
-        nfc_perror (pnd, "nfc_target_receive_bytes");
+      if ((szRx = nfc_target_receive_bytes(dev, abtRx, sizeof (abtRx), 0)) < 0) {
+        nfc_perror (dev, "nfc_target_receive_bytes");
         return false;
       }
     }
