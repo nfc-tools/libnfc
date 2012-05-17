@@ -156,11 +156,11 @@ int main(int argc, const char* argv[])
     szTx = 0;
     for(int i = 0; i < MAX_FRAME_LEN - 10; i++) {
       int size;
-      uint8_t byte;
+      unsigned int byte;
       while (isspace(cmd[offset])) {
         offset++;
       }
-      size = sscanf(cmd+offset, "%2x", (unsigned int*)&byte);
+      size = sscanf(cmd+offset, "%2x", &byte);
       if (size < 1 ) {
         break;
       }
