@@ -396,7 +396,7 @@ acr122s_get_firmware_version(nfc_device *pnd, char *version, size_t length)
 
   acr122s_build_frame(pnd, cmd, sizeof(cmd), 0x48, 0, NULL, 0, 0);
 
-  if ((ret = acr122s_send_frame(pnd, cmd, 0)) != 0)
+  if ((ret = acr122s_send_frame(pnd, cmd, 1000)) != 0)
     return ret;
 
   if ((ret = acr122s_recv_frame(pnd, cmd, sizeof(cmd), 0, 0)) != 0)
