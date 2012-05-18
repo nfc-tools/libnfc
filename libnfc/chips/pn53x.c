@@ -1332,7 +1332,7 @@ pn53x_initiator_transceive_bytes (struct nfc_device *pnd, const uint8_t *pbtTx, 
     memcpy (pbtRx, abtRx + 1, *pszRx);
   }
   // Everything went successful, we return received bytes count
-  return *pszRx;
+  return (szRx - 1);
 }
 
 static void __pn53x_init_timer(struct nfc_device *pnd, const uint32_t max_cycles)
