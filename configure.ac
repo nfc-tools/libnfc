@@ -1,7 +1,7 @@
 # General init
 
 # /!\ Don't forget to update 'CMakeLists.txt' too /!\
-AC_INIT(libnfc, 1.6.0-rc1, info@libnfc.org)
+AC_INIT([libnfc],[1.6.0-rc1],[info@libnfc.org])
 
 AC_CONFIG_MACRO_DIR([m4])
 
@@ -16,13 +16,13 @@ AM_INIT_AUTOMAKE
 
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
 
-AC_LANG_C
+AC_LANG([C])
 AC_PROG_CC
 AC_PROG_MAKE_SET
 
 WITH_POSIX_ONLY_EXAMPLES=1
 # Libtool
-AC_PROG_LIBTOOL
+LT_INIT
 case "$host" in
   *-pc-linux-gnu)
     AC_MSG_RESULT([Fixing libtool for -rpath problems.])
@@ -64,8 +64,6 @@ AC_TYPE_UINT64_T
 AC_TYPE_INT16_T
 AC_TYPE_INT32_T
 AC_TYPE_OFF_T
-
-AC_TYPE_SIGNAL
 
 LIBNFC_CFLAGS='-I$(top_srcdir)/libnfc -I$(top_builddir)/include -I$(top_srcdir)/include'
 AC_SUBST(LIBNFC_CFLAGS)
