@@ -8,9 +8,7 @@ bin_PROGRAMS = \
 		nfc-relay-picc
 
 # set the include path found by configure
-INCLUDES = $(all_includes) $(LIBNFC_CFLAGS)
-
-AM_CFLAGS =
+AM_CPPFLAGS = $(all_includes) $(LIBNFC_CFLAGS)
 
 noinst_HEADERS = mifare.h nfc-utils.h
 noinst_LTLIBRARIES = libnfcutils.la
