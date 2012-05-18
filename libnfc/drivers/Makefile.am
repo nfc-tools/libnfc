@@ -1,5 +1,5 @@
 # set the include path found by configure
-INCLUDES= $(all_includes) $(LIBNFC_CFLAGS)
+AM_CPPFLAGS = $(all_includes) $(LIBNFC_CFLAGS)
 
 noinst_HEADERS = acr122_pcsc.h acr122_usb.h acr122s.h arygon.h pn532_uart.h pn53x_usb.h
 noinst_LTLIBRARIES = libnfcdrivers.la

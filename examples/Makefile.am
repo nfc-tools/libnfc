@@ -22,7 +22,7 @@ check_PROGRAMS = \
 		quick_start_example1
 
 # set the include path found by configure
-INCLUDES = $(all_includes) $(LIBNFC_CFLAGS)
+AM_CPPFLAGS = $(all_includes) $(LIBNFC_CFLAGS)
 
 AM_CFLAGS = -I$(top_srcdir)/libnfc -I$(top_srcdir)
 
