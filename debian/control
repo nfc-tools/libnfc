@@ -9,7 +9,6 @@ Vcs-Svn: http://libnfc.googlecode.com/svn/trunk
 Vcs-Browser: http://code.google.com/p/libnfc/source/browse/#svn/trunk
 
 Package: libnfc2
-Section: libs
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, libusb-0.1-4
 Description: Near Field Communication (NFC) library
