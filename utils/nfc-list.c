@@ -127,7 +127,7 @@ main (int argc, const char *argv[])
     pnd = nfc_open (NULL, connstrings[i]);
 
     if (pnd == NULL) {
-      ERR ("%s", "Unable to open NFC device.");
+      ERR ("Unable to open NFC device: %s", connstrings[i]);
       continue;
     }
   if (nfc_initiator_init (pnd) < 0) {
