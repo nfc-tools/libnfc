@@ -145,7 +145,6 @@ acr122_pcsc_probe (nfc_connstring connstrings[], size_t connstrings_len, size_t 
   size_t  szPos = 0;
   char    acDeviceNames[256 + 64 * PCSC_MAX_DEVICES];
   size_t  szDeviceNamesLen = sizeof (acDeviceNames);
-  uint32_t uiBusIndex = 0;
   SCARDCONTEXT *pscc;
   bool    bSupported;
   int     i;
@@ -166,7 +165,6 @@ acr122_pcsc_probe (nfc_connstring connstrings[], size_t connstrings_len, size_t 
     return false;
 
   while ((acDeviceNames[szPos] != '\0') && ((*pszDeviceFound) < connstrings_len)) {
-    uiBusIndex++;
 
     // DBG("- %s (pos=%ld)", acDeviceNames + szPos, (unsigned long) szPos);
 
@@ -178,7 +176,7 @@ acr122_pcsc_probe (nfc_connstring connstrings[], size_t connstrings_len, size_t 
 
     if (bSupported) {
       // Supported ACR122 device found
-      snprintf (connstrings[*pszDeviceFound], sizeof(nfc_connstring), "%s:%s:%"PRIu32, ACR122_PCSC_DRIVER_NAME, acDeviceNames + szPos, uiBusIndex);
+      snprintf (connstrings[*pszDeviceFound], sizeof(nfc_connstring), "%s:%s", ACR122_PCSC_DRIVER_NAME, acDeviceNames + szPos);
       (*pszDeviceFound)++;
     } else {
       log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "PCSC device [%s] is not NFC capable or not supported by libnfc.", acDeviceNames + szPos);
@@ -194,7 +192,6 @@ acr122_pcsc_probe (nfc_connstring connstrings[], size_t connstrings_len, size_t 
 
 struct acr122_pcsc_descriptor {
   char pcsc_device_name[512];
-  int bus_index;
 };
 
 static int
@@ -228,19 +225,8 @@ acr122_pcsc_connstring_decode (const nfc_connstring connstring, struct acr122_pc
   strncpy (desc->pcsc_device_name, device_name, sizeof(desc->pcsc_device_name)-1);
   desc->pcsc_device_name[sizeof(desc->pcsc_device_name)-1] = '\0';
 
-  const char *bus_index_s = strtok (NULL, ":");
-  if (!bus_index_s) {
-    // bus index not specified (or parsing error)
-    free (cs);
-    return 2;
-  }
-  unsigned long bus_index;
-  if (sscanf (bus_index_s, "%lu", &bus_index) != 1) {
-    // bus_index_s is not a number
-    free (cs);
-    return 2;
-  }
-  desc->bus_index = bus_index;
+  free (cs);
+  return 2;
 
   free (cs);
   return 3;
@@ -270,7 +256,23 @@ acr122_pcsc_open (const nfc_connstring connstring)
   } else {
     memcpy(fullconnstring, connstring, sizeof(nfc_connstring));
   }
-  // FIXME: acr122_pcsc_open() does not take care about bus index
+  if (strlen(ndd.pcsc_device_name) < 5) { // We can assume it's a reader ID as pcsc_name always ends with "NN NN"
+    // Device was not specified, only ID, retrieve it
+    size_t index;
+    if (sscanf (ndd.pcsc_device_name, "%lu", &index) != 1)
+      return NULL;
+    nfc_connstring *ncs = malloc (sizeof (nfc_connstring) * (index + 1));
+    size_t szDeviceFound;
+    acr122_pcsc_probe(ncs, index + 1, &szDeviceFound);
+    if (szDeviceFound < index + 1)
+      return NULL;
+    strncpy(fullconnstring, ncs[index], sizeof(nfc_connstring));
+    free(ncs);
+    connstring_decode_level = acr122_pcsc_connstring_decode (fullconnstring, &ndd);
+    if (connstring_decode_level < 2) {
+      return NULL;
+    }
+  }
 
   char   *pcFirmware;
   nfc_device *pnd = nfc_device_new (fullconnstring);
