@@ -252,13 +252,28 @@ acr122_pcsc_open (const nfc_connstring connstring)
   struct acr122_pcsc_descriptor ndd;
   int connstring_decode_level = acr122_pcsc_connstring_decode (connstring, &ndd);
 
-  if (connstring_decode_level < 2) {
+  if (connstring_decode_level < 1) {
     return NULL;
+  }
+
+  nfc_connstring fullconnstring;
+  if (connstring_decode_level == 1) {
+    // Device was not specified, take the first one we can find
+    size_t szDeviceFound;
+    acr122_pcsc_probe(&fullconnstring, 1, &szDeviceFound);
+    if (szDeviceFound < 1)
+      return NULL;
+    connstring_decode_level = acr122_pcsc_connstring_decode (fullconnstring, &ndd);
+    if (connstring_decode_level < 2) {
+      return NULL;
+    }
+  } else {
+    memcpy(fullconnstring, connstring, sizeof(nfc_connstring));
   }
   // FIXME: acr122_pcsc_open() does not take care about bus index
 
   char   *pcFirmware;
-  nfc_device *pnd = nfc_device_new (connstring);
+  nfc_device *pnd = nfc_device_new (fullconnstring);
   pnd->driver_data = malloc (sizeof (struct acr122_pcsc_data));
 
   // Alloc and init chip's data
