@@ -1,0 +1,37 @@
+Hello hackers!
+
+General remarks about contributing
+----------------------------------
+
+Contributions to the libnfc are welcome!
+Here are some directions to get you started:
+
+  1. Follow style conventions
+     The source code of the library trend to follow some conventions so that it
+     is consistent in style and thus easier to read.
+     Look around and respect the same style.
+     Don't use tabs. Increment unit is two spaces.
+
+  2. Chase warnings: no warning should be introduced by your changes
+  Depending what you touch, you can check with:
+    2.1 When using autotools
+      $ autoreconf -Wall -vis
+    2.2 When compiling
+      $ export CFLAGS="-Wall -g -O2 -Wextra -pipe -funsigned-char -fstrict-aliasing \
+        -Wchar-subscripts -Wundef -Wshadow -Wcast-align -Wwrite-strings -Wunused \
+        -Wuninitialized -Wpointer-arith -Wredundant-decls -Winline -Wformat \
+        -Wformat-security -Wswitch-enum -Winit-self -Wmissing-include-dirs \
+        -Wmissing-prototypes -Wstrict-prototypes -Wold-style-definition \
+        -Wbad-function-cast -Wnested-externs -Wmissing-declarations"
+      $ make
+    2.3 When Debianizing
+      $ lintian *deb
+
+  3. Preserve cross-platform compatility
+     The source code should remain compilable across various platforms,
+     including some you probably cannot test alone so keep it in mind.
+     Supported platforms:
+     - Linux
+     - FreeBSD
+     - Mac OS X
+     - Windows with Mingw
