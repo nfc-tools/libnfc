@@ -23,6 +23,7 @@ Here are some directions to get you started:
         -Wformat-security -Wswitch-enum -Winit-self -Wmissing-include-dirs \
         -Wmissing-prototypes -Wstrict-prototypes -Wold-style-definition \
         -Wbad-function-cast -Wnested-externs -Wmissing-declarations"
+      $ ./configure
       $ make
     2.3 When Debianizing
       $ lintian *deb
