@@ -199,6 +199,13 @@ pn53x_transceive (struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szT
       if (pbtRx[0] & 0x40) { abort(); } // MI detected
       CHIP_DATA(pnd)->last_status_byte = pbtRx[0] & 0x3f;
       break;
+    case Diagnose:
+      if (pbtTx[1] == 0x06) { // Diagnose: Card presence detection
+        CHIP_DATA(pnd)->last_status_byte = pbtRx[0] & 0x3f;
+      } else {
+        CHIP_DATA(pnd)->last_status_byte = 0;
+      };
+      break;
     case InDeselect:
     case InRelease:
       if (CHIP_DATA(pnd)->type == RCS360) {
@@ -1622,6 +1629,22 @@ int
 pn53x_initiator_deselect_target (struct nfc_device *pnd)
 {
   return pn53x_InDeselect (pnd, 0);   // 0 mean deselect all selected targets
+}
+
+int 
+pn53x_initiator_target_is_present (struct nfc_device *pnd, const nfc_target nt)
+{
+  // TODO Check if nt is equal to current target
+  const uint8_t abtCmd[] = { Diagnose, 0x06 };
+  uint8_t abtRx[1];
+  int res = 0;
+
+  if ((res = pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), abtRx, sizeof (abtRx), -1)) < 0)
+    return res;
+  if (res==1) {
+    return NFC_SUCCESS;
+  }
+  return NFC_ETGRELEASED;
 }
 
 #define SAK_ISO14443_4_COMPLIANT 0x20

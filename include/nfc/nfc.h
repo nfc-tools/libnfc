@@ -86,6 +86,7 @@ extern  "C" {
   NFC_EXPORT int nfc_initiator_transceive_bits (nfc_device *pnd, const uint8_t *pbtTx, const size_t szTxBits, const uint8_t *pbtTxPar, uint8_t *pbtRx, uint8_t *pbtRxPar);
   NFC_EXPORT int nfc_initiator_transceive_bytes_timed (nfc_device *pnd, const uint8_t *pbtTx, const size_t szTx, uint8_t *pbtRx, uint32_t *cycles);
   NFC_EXPORT int nfc_initiator_transceive_bits_timed (nfc_device *pnd, const uint8_t *pbtTx, const size_t szTxBits, const uint8_t *pbtTxPar, uint8_t *pbtRx, uint8_t *pbtRxPar, uint32_t *cycles);
+  NFC_EXPORT int nfc_initiator_target_is_present (nfc_device *pnd, const nfc_target nt);
 
 /* NFC target: act as tag (i.e. MIFARE Classic) or NFC target device. */
   NFC_EXPORT int nfc_target_init (nfc_device *pnd, nfc_target *pnt, uint8_t *pbtRx, const size_t szRx, int timeout);

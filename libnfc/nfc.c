@@ -687,7 +687,21 @@ nfc_initiator_transceive_bits (nfc_device *pnd, const uint8_t *pbtTx, const size
 int
 nfc_initiator_transceive_bytes_timed (nfc_device *pnd, const uint8_t *pbtTx, const size_t szTx, uint8_t *pbtRx, uint32_t *cycles)
 {
-  HAL (initiator_transceive_bytes_timed, pnd, pbtTx, szTx, pbtRx, cycles)
+  HAL (initiator_transceive_bytes_timed, pnd, pbtTx, szTx, pbtRx, cycles);
+}
+
+/** @ingroup initiator
+ * @brief Check target presence
+ * @return Returns 0 on success, otherwise returns libnfc's error code.
+ *
+ * This function tests if \a nfc_target is currently present on NFC device.
+ * @warning The target have to be selected before check its presence
+ * @warning To run the test, one or more commands will be sent to target
+*/
+int
+nfc_initiator_target_is_present (nfc_device *pnd, const nfc_target nt)
+{
+  HAL (initiator_target_is_present, pnd, nt);
 }
 
 /** @ingroup initiator

@@ -12,6 +12,8 @@ API Changes:
       information
     - No more in/out function parameter: nfc_initiator_transceive_bytes() now
       take a constant size for Rx buffer
+    - New nfc_initiator_target_is_present() to test is the previously selected
+      target is available in the field
 
 New in 1.6.0-rc1:
 

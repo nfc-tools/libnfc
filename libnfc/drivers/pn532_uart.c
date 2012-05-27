@@ -521,6 +521,7 @@ const struct nfc_driver pn532_uart_driver = {
   .initiator_transceive_bits        = pn53x_initiator_transceive_bits,
   .initiator_transceive_bytes_timed = pn53x_initiator_transceive_bytes_timed,
   .initiator_transceive_bits_timed  = pn53x_initiator_transceive_bits_timed,
+  .initiator_target_is_present      = pn53x_initiator_target_is_present,
 
   .target_init           = pn53x_target_init,
   .target_send_bytes     = pn53x_target_send_bytes,
