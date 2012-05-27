@@ -1010,7 +1010,7 @@ pn53x_initiator_select_passive_target_ext (struct nfc_device *pnd,
                                        int timeout)
 {
   uint8_t  abtTargetsData[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
-  size_t  szTargetsData;
+  size_t  szTargetsData = sizeof (abtTargetsData);
   int res = 0;
 
   if (nm.nmt == NMT_ISO14443BI || nm.nmt == NMT_ISO14443B2SR || nm.nmt == NMT_ISO14443B2CT) {
