@@ -54,7 +54,6 @@ bool
 nfc_initiator_mifare_cmd (nfc_device *pnd, const mifare_cmd mc, const uint8_t ui8Block, mifare_param *pmp)
 {
   uint8_t  abtRx[265];
-  size_t  szRx = sizeof(abtRx);
   size_t  szParamLen;
   uint8_t  abtCmd[265];
   //bool    bEasyFraming;
@@ -105,7 +104,7 @@ nfc_initiator_mifare_cmd (nfc_device *pnd, const mifare_cmd mc, const uint8_t ui
   }
   // Fire the mifare command
   int res;
-  if ((res = nfc_initiator_transceive_bytes (pnd, abtCmd, 2 + szParamLen, abtRx, &szRx, -1))  < 0) {
+  if ((res = nfc_initiator_transceive_bytes (pnd, abtCmd, 2 + szParamLen, abtRx, sizeof(abtRx), -1))  < 0) {
     if (res == NFC_ERFTRANS) {
       // "Invalid received frame",  usual means we are
       // authenticated on a sector but the requested MIFARE cmd (read, write)
@@ -126,7 +125,7 @@ nfc_initiator_mifare_cmd (nfc_device *pnd, const mifare_cmd mc, const uint8_t ui
 
   // When we have executed a read command, copy the received bytes into the param
   if (mc == MC_READ) {
-    if (szRx == 16) {
+    if (res == 16) {
       memcpy (pmp->mpd.abtData, abtRx, 16);
     } else {
       return false;

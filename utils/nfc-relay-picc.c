@@ -365,9 +365,8 @@ main (int argc, char *argv[])
     }
 
     printf ("NFC emulator device: %s opened\n", nfc_device_get_name (pndTarget));
-
-    szCapduLen = sizeof (abtCapdu);
-    if (nfc_target_init (pndTarget, &ntEmulatedTarget, abtCapdu, szCapduLen, 0) < 0) {
+    int res;
+    if ((res = nfc_target_init (pndTarget, &ntEmulatedTarget, abtCapdu, sizeof(abtCapdu), 0)) < 0) {
       ERR ("%s", "Initialization of NFC emulator failed");
       if (!target_only_mode) {
         nfc_close (pndInitiator);
@@ -378,7 +377,6 @@ main (int argc, char *argv[])
     }
     printf ("%s\n", "Done, relaying frames now!");
   }
-
 
   while (!quitting) {
     bool ret;
@@ -419,8 +417,12 @@ main (int argc, char *argv[])
 
     if (!target_only_mode) {
       // Forward the frame to the original tag
-      ret = (nfc_initiator_transceive_bytes
-          (pndInitiator, abtCapdu, szCapduLen, abtRapdu, &szRapduLen, 0) < 0) ? 0 : 1;
+      if ((res = nfc_initiator_transceive_bytes (pndInitiator, abtCapdu, szCapduLen, abtRapdu, sizeof(abtRapdu), -1) < 0)) {
+        ret = false;
+      } else {
+        szCapduLen = (size_t) res;
+        ret = true;
+      }
     } else {
       if (scan_hex_fd3(abtRapdu, &szRapduLen, "R-APDU") != EXIT_SUCCESS) {
         fprintf (stderr, "Error while scanning R-APDU from FD3\n");

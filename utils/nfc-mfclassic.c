@@ -83,7 +83,6 @@ static size_t num_keys = sizeof (keys) / 6;
 
 static uint8_t abtRx[MAX_FRAME_LEN];
 static int szRxBits;
-static size_t szRx = sizeof(abtRx);
 
 uint8_t  abtHalt[4] = { 0x50, 0x00, 0x00, 0x00 };
 
@@ -116,12 +115,13 @@ transmit_bytes (const uint8_t *pbtTx, const size_t szTx)
   printf ("Sent bits:     ");
   print_hex (pbtTx, szTx);
   // Transmit the command bytes
-  if (nfc_initiator_transceive_bytes (pnd, pbtTx, szTx, abtRx, &szRx, 0) < 0)
+  int res;
+  if ((res = nfc_initiator_transceive_bytes (pnd, pbtTx, szTx, abtRx, sizeof(abtRx), 0)) < 0)
     return false;
 
   // Show received answer
   printf ("Received bits: ");
-  print_hex (abtRx, szRx);
+  print_hex (abtRx, res);
   // Succesful transfer
   return true;
 }

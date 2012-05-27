@@ -10,6 +10,8 @@ API Changes:
       str_nfc_baud_rate()
     - New nfc_device_get_information_about() function to retreive some device's
       information
+    - No more in/out function parameter: nfc_initiator_transceive_bytes() now
+      take a constant size for Rx buffer
 
 New in 1.6.0-rc1:
 

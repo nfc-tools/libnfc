@@ -111,40 +111,39 @@ nfc_forum_tag_type3_check (nfc_device *dev, const nfc_target nt, const uint16_t 
   size_t frame_len = sizeof(frame);
   build_felica_frame (nt.nti.nfi, CHECK, payload, payload_len, frame, &frame_len);
 
-  uint8_t res[1024];
-
-  size_t res_len;
-  if (nfc_initiator_transceive_bytes (dev, frame, frame_len, res, &res_len, 0) < 0) {
-    return -1;
+  uint8_t rx[1024];
+  int res;
+  if ((res = nfc_initiator_transceive_bytes (dev, frame, frame_len, rx, sizeof(rx), 0)) < 0) {
+    return res;
   }
-  const size_t res_overhead = 1 + 1 + 8 + 2;  // 1+1+8+2: LEN + CMD + NFCID2 + STATUS
-  if (res_len < res_overhead) { 
+  const int res_overhead = 1 + 1 + 8 + 2;  // 1+1+8+2: LEN + CMD + NFCID2 + STATUS
+  if (res < res_overhead) { 
     // Not enough data
     return -1;
   }
-  uint8_t felica_res_len = res[0];
-  if (res_len != felica_res_len) {
+  uint8_t felica_res_len = rx[0];
+  if (res != felica_res_len) {
     // Error while receiving felica frame
     return -1;
   }
-  if ((CHECK + 1) != res[1]) {
+  if ((CHECK + 1) != rx[1]) {
     // Command return does not match
     return -1;
   }
-  if (0 != memcmp (&res[2], nt.nti.nfi.abtId, 8)) {
+  if (0 != memcmp (&rx[2], nt.nti.nfi.abtId, 8)) {
     // NFCID2 does not match
     return -1;
   }
-  const uint8_t status_flag1 = res[10];
-  const uint8_t status_flag2 = res[11];
+  const uint8_t status_flag1 = rx[10];
+  const uint8_t status_flag2 = rx[11];
   if ((status_flag1) || (status_flag2)) {
     // Felica card's error
     fprintf (stderr, "Status bytes: %02x, %02x\n", status_flag1, status_flag2);
     return -1;
   }
   // const uint8_t res_block_count = res[12];
-  *data_len = res_len - res_overhead + 1; // +1 => block count is stored on 1 byte
-  memcpy (data, &res[res_overhead+1], *data_len);
+  *data_len = res - res_overhead + 1; // +1 => block count is stored on 1 byte
+  memcpy (data, &rx[res_overhead+1], *data_len);
   return *data_len;
 }
 

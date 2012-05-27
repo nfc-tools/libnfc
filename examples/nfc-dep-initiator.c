@@ -64,7 +64,6 @@ main (int argc, const char *argv[])
 {
   nfc_target nt;
   uint8_t  abtRx[MAX_FRAME_LEN];
-  size_t  szRx = sizeof(abtRx);
   uint8_t  abtTx[] = "Hello World!";
 
   if (argc > 1) {
@@ -95,12 +94,13 @@ main (int argc, const char *argv[])
   print_nfc_target (nt, false);
 
   printf ("Sending: %s\n", abtTx);
-  if (nfc_initiator_transceive_bytes (pnd, abtTx, sizeof(abtTx), abtRx, &szRx, 0) < 0) {
+  int res;
+  if ((res = nfc_initiator_transceive_bytes (pnd, abtTx, sizeof(abtTx), abtRx, sizeof(abtRx), 0)) < 0) {
     nfc_perror(pnd, "nfc_initiator_transceive_bytes");
     goto error;
   }
 
-  abtRx[szRx] = 0;
+  abtRx[res] = 0;
   printf ("Received: %s\n", abtRx);
 
   if (nfc_initiator_deselect_target (pnd) < 0) {

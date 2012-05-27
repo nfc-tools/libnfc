@@ -104,14 +104,15 @@ transmit_bytes (const uint8_t *pbtTx, const size_t szTx)
     printf ("Sent bits:     ");
     print_hex (pbtTx, szTx);
   }
+  int res;
   // Transmit the command bytes
-  if (nfc_initiator_transceive_bytes (pnd, pbtTx, szTx, abtRx, &szRx, 0) < 0)
+  if ((res = nfc_initiator_transceive_bytes (pnd, pbtTx, szTx, abtRx, sizeof(abtRx), 0)) < 0)
     return false;
 
   // Show received answer
   if (!quiet_output) {
     printf ("Received bits: ");
-    print_hex (abtRx, szRx);
+    print_hex (abtRx, res);
   }
   // Succesful transfer
   return true;

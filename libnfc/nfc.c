@@ -597,7 +597,7 @@ nfc_initiator_deselect_target (nfc_device *pnd)
  * @param pbtTx contains a byte array of the frame that needs to be transmitted.
  * @param szTx contains the length in bytes.
  * @param[out] pbtRx response from the tags
- * @param pszRx size of \a pbtRx
+ * @param szRx size of \a pbtRx (Will return NFC_EOVFLOW if RX exceeds this size)
  * @param timeout in milliseconds
  * 
  * The NFC device (configured as initiator) will transmit the supplied bytes (\a pbtTx) to the target.
@@ -617,9 +617,9 @@ nfc_initiator_deselect_target (nfc_device *pnd)
  */
 int
 nfc_initiator_transceive_bytes (nfc_device *pnd, const uint8_t *pbtTx, const size_t szTx, uint8_t *pbtRx,
-                                size_t *pszRx, int timeout)
+                                const size_t szRx, int timeout)
 {
-  HAL (initiator_transceive_bytes, pnd, pbtTx, szTx, pbtRx, pszRx, timeout)
+  HAL (initiator_transceive_bytes, pnd, pbtTx, szTx, pbtRx, szRx, timeout)
 }
 
 /** @ingroup initiator
