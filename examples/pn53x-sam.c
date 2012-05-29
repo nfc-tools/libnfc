@@ -125,15 +125,13 @@ main (int argc, const char *argv[])
   }
 
   switch (mode) {
-    case PSM_VIRTUAL_CARD:
-    {
+    case PSM_VIRTUAL_CARD: {
       printf ("Now the SAM is readable for 1 minute from an external reader.\n");
       wait_one_minute ();
     }
     break;
 
-    case PSM_WIRED_CARD:
-    {
+    case PSM_WIRED_CARD: {
       nfc_target nt;
 
       // Set opened NFC device to initiator mode
@@ -169,8 +167,7 @@ main (int argc, const char *argv[])
     }
     break;
 
-    case PSM_DUAL_CARD:
-    {
+    case PSM_DUAL_CARD: {
       uint8_t  abtRx[MAX_FRAME_LEN];
 
       nfc_target nt = {

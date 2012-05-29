@@ -204,8 +204,7 @@ main (int argc, char *argv[])
     }
     fd3 = fdopen(3, "r");
     fd4 = fdopen(4, "w");
-  }
-  else {
+  } else {
     if (szFound < 2) {
       ERR ("%zd device found but two opened devices are needed to relay NFC.", szFound);
       return EXIT_FAILURE;

@@ -829,8 +829,7 @@ pn53x_set_property_bool (struct nfc_device *pnd, const nfc_property property, co
       return NFC_SUCCESS;
       break;
 
-    case NP_ACTIVATE_FIELD:
-    {
+    case NP_ACTIVATE_FIELD: {
       if (pn53x_RFConfiguration__RF_field (pnd, bEnable) == 0)
         return NFC_SUCCESS;
     }
@@ -841,8 +840,7 @@ pn53x_set_property_bool (struct nfc_device *pnd, const nfc_property property, co
       return pn53x_write_register (pnd, PN53X_REG_CIU_Status2, SYMBOL_MF_CRYPTO1_ON, btValue);
       break;
 
-    case NP_INFINITE_SELECT:
-    {
+    case NP_INFINITE_SELECT: {
       // TODO Made some research around this point:
       // timings could be tweak better than this, and maybe we can tweak timings
       // to "gain" a sort-of hardware polling (ie. like PN532 does)
@@ -1045,8 +1043,7 @@ pn53x_initiator_select_passive_target_ext (struct nfc_device *pnd,
         return res;
       }
       szTargetsData = (size_t)res;
-    }
-    else if (nm.nmt == NMT_ISO14443B2CT) {
+    } else if (nm.nmt == NMT_ISO14443B2CT) {
       // Some work to do before getting the UID...
       const uint8_t abtReqt[]= { 0x10 };
       // Getting product code / fab code & store it in output buffer after the serial nr we'll obtain later
@@ -2860,8 +2857,7 @@ pn53x_get_supported_baud_rate (nfc_device *pnd, const nfc_modulation_type nmt, c
     case NMT_ISO14443B:
     case NMT_ISO14443BI:
     case NMT_ISO14443B2SR:
-    case NMT_ISO14443B2CT:
-    {
+    case NMT_ISO14443B2CT: {
       if ((CHIP_DATA(pnd)->type != PN533)) {
         *supported_br = (nfc_baud_rate*)pn532_iso14443b_supported_baud_rates;
       } else {

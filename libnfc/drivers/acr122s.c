@@ -249,8 +249,8 @@ acr122s_send_frame(nfc_device *pnd, uint8_t *frame, int timeout)
 static int
 acr122s_recv_frame(nfc_device *pnd, uint8_t *frame, size_t frame_size, void *abort_p, int timeout)
 {
-  if (frame_size < 13)
-  { pnd->last_error = NFC_EINVARG;
+  if (frame_size < 13) {
+    pnd->last_error = NFC_EINVARG;
     return pnd->last_error;
   }
   int ret;
@@ -285,7 +285,8 @@ acr122s_recv_frame(nfc_device *pnd, uint8_t *frame, size_t frame_size, void *abo
  * Convert host uint32 to litle endian uint32
  */
 static uint32_t
-le32(uint32_t val) {
+le32(uint32_t val)
+{
   uint32_t res;
   uint8_t *p = (uint8_t *) &res;
   p[0] = val;

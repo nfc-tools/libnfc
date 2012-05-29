@@ -36,8 +36,7 @@
 
 #include "nfc-utils.h"
 
-struct card_atqa
-{
+struct card_atqa {
   uint16_t atqa;
   uint16_t mask;
   char type[128];
@@ -45,54 +44,67 @@ struct card_atqa
   int saklist[8];
 };
 
-struct card_sak
-{
+struct card_sak {
   uint8_t sak;
   uint8_t mask;
   char type[128];
 };
 
 struct card_atqa const_ca[] = {
-  { 0x0044, 0xffff, "MIFARE Ultralight",
+  {
+    0x0044, 0xffff, "MIFARE Ultralight",
     {0, -1}
   },
-  { 0x0044, 0xffff, "MIFARE Ultralight C",
+  {
+    0x0044, 0xffff, "MIFARE Ultralight C",
     {0, -1}
   },
-  { 0x0004, 0xff0f, "MIFARE Mini 0.3K",
+  {
+    0x0004, 0xff0f, "MIFARE Mini 0.3K",
     {1, -1}
   },
-  { 0x0004, 0xff0f, "MIFARE Classic 1K",
+  {
+    0x0004, 0xff0f, "MIFARE Classic 1K",
     {2, -1}
   },
-  { 0x0002, 0xff0f, "MIFARE Classic 4K",
+  {
+    0x0002, 0xff0f, "MIFARE Classic 4K",
     {3, -1}
   },
-  { 0x0004, 0xffff, "MIFARE Plus (4 Byte UID or 4 Byte RID)",
+  {
+    0x0004, 0xffff, "MIFARE Plus (4 Byte UID or 4 Byte RID)",
     {4, 5, 6, 7, 8, 9, -1}
   },
-  { 0x0002, 0xffff, "MIFARE Plus (4 Byte UID or 4 Byte RID)",
+  {
+    0x0002, 0xffff, "MIFARE Plus (4 Byte UID or 4 Byte RID)",
     {4, 5, 6, 7, 8, 9, -1}
   },
-  { 0x0044, 0xffff, "MIFARE Plus (7 Byte UID)",
+  {
+    0x0044, 0xffff, "MIFARE Plus (7 Byte UID)",
     {4, 5, 6, 7, 8, 9, -1}
   },
-  { 0x0042, 0xffff, "MIFARE Plus (7 Byte UID)",
+  {
+    0x0042, 0xffff, "MIFARE Plus (7 Byte UID)",
     {4, 5, 6, 7, 8, 9, -1}
   },
-  { 0x0344, 0xffff, "MIFARE DESFire",
+  {
+    0x0344, 0xffff, "MIFARE DESFire",
     {10, 11, -1}
   },
-  { 0x0044, 0xffff, "P3SR008",
+  {
+    0x0044, 0xffff, "P3SR008",
     {-1}
   }, // TODO we need SAK info
-  { 0x0004, 0xf0ff, "SmartMX with MIFARE 1K emulation",
+  {
+    0x0004, 0xf0ff, "SmartMX with MIFARE 1K emulation",
     {12, -1}
   },
-  { 0x0002, 0xf0ff, "SmartMX with MIFARE 4K emulation",
+  {
+    0x0002, 0xf0ff, "SmartMX with MIFARE 4K emulation",
     {12, -1}
   },
-  { 0x0048, 0xf0ff, "SmartMX with 7 Byte UID",
+  {
+    0x0048, 0xf0ff, "SmartMX with 7 Byte UID",
     {12, -1}
   }
 };
