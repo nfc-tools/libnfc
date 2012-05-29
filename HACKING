@@ -11,8 +11,9 @@ Here are some directions to get you started:
      is consistent in style and thus easier to read.
      Look around and respect the same style.
      Don't use tabs. Increment unit is two spaces.
-     Don't leave dandling spaces or tabs at EOL. Helper script:
-     $ find . -name '*.[ch]' -exec perl -pi -e 's/[ \t]+$//;' {} \;
+     Don't leave dandling spaces or tabs at EOL.
+     Helper script to get some uniformity in the style:
+     $ make style
 
   2. Chase warnings: no warning should be introduced by your changes
   Depending what you touch, you can check with:

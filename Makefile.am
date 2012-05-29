@@ -16,7 +16,7 @@ CLEANFILES = Doxygen.log coverage.info libnfc.pc
 
 clean-local: clean-local-doc clean-local-coverage
 
-.PHONY: clean-local-coverage clean-local-doc doc
+.PHONY: clean-local-coverage clean-local-doc doc style
 clean-local-coverage:
 	-rm -rf coverage
 
@@ -28,3 +28,10 @@ doc : Doxyfile
 
 DISTCHECK_CONFIGURE_FLAGS="--with-drivers=all"
 
+style:
+	find . -name "*.[ch]" -exec perl -pi -e 's/[ \t]+$$//' {} \;
+	find . -name "*.[ch]" -exec astyle --formatted --mode=c --suffix=none \
+	    --indent=spaces=2 --indent-switches --indent-preprocessor \
+	    --keep-one-line-blocks --max-instatement-indent=60 \
+	    --brackets=linux --pad-oper --unpad-paren --pad-header \
+	    --align-pointer=name {} \;
