@@ -222,8 +222,8 @@ acr122_pcsc_connstring_decode (const nfc_connstring connstring, struct acr122_pc
     free (cs);
     return 1;
   }
-  strncpy (desc->pcsc_device_name, device_name, sizeof(desc->pcsc_device_name)-1);
-  desc->pcsc_device_name[sizeof(desc->pcsc_device_name)-1] = '\0';
+  strncpy (desc->pcsc_device_name, device_name, sizeof(desc->pcsc_device_name) - 1);
+  desc->pcsc_device_name[sizeof(desc->pcsc_device_name) - 1] = '\0';
 
   free (cs);
   return 2;
@@ -288,9 +288,9 @@ acr122_pcsc_open (const nfc_connstring connstring)
   if (!(pscc = acr122_pcsc_get_scardcontext ()))
     goto error;
   // Test if we were able to connect to the "emulator" card
-  if (SCardConnect (*pscc, ndd.pcsc_device_name, SCARD_SHARE_EXCLUSIVE, SCARD_PROTOCOL_T0 | SCARD_PROTOCOL_T1, &(DRIVER_DATA (pnd)->hCard), (void *) &(DRIVER_DATA (pnd)->ioCard.dwProtocol)) != SCARD_S_SUCCESS) {
+  if (SCardConnect (*pscc, ndd.pcsc_device_name, SCARD_SHARE_EXCLUSIVE, SCARD_PROTOCOL_T0 | SCARD_PROTOCOL_T1, &(DRIVER_DATA (pnd)->hCard), (void *) & (DRIVER_DATA (pnd)->ioCard.dwProtocol)) != SCARD_S_SUCCESS) {
     // Connect to ACR122 firmware version >2.0
-    if (SCardConnect (*pscc, ndd.pcsc_device_name, SCARD_SHARE_DIRECT, 0, &(DRIVER_DATA (pnd)->hCard), (void *) &(DRIVER_DATA (pnd)->ioCard.dwProtocol)) != SCARD_S_SUCCESS) {
+    if (SCardConnect (*pscc, ndd.pcsc_device_name, SCARD_SHARE_DIRECT, 0, &(DRIVER_DATA (pnd)->hCard), (void *) & (DRIVER_DATA (pnd)->ioCard.dwProtocol)) != SCARD_S_SUCCESS) {
       // We can not connect to this device.
       log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "%s", "PCSC connect failed");
       goto error;
@@ -453,7 +453,7 @@ acr122_pcsc_firmware (nfc_device *pnd)
   DWORD dwFwLen = sizeof (abtFw);
   memset (abtFw, 0x00, sizeof (abtFw));
   if (DRIVER_DATA (pnd)->ioCard.dwProtocol == SCARD_PROTOCOL_UNDEFINED) {
-    uiResult = SCardControl (DRIVER_DATA (pnd)->hCard, IOCTL_CCID_ESCAPE_SCARD_CTL_CODE, abtGetFw, sizeof (abtGetFw), (uint8_t *) abtFw, dwFwLen-1, &dwFwLen);
+    uiResult = SCardControl (DRIVER_DATA (pnd)->hCard, IOCTL_CCID_ESCAPE_SCARD_CTL_CODE, abtGetFw, sizeof (abtGetFw), (uint8_t *) abtFw, dwFwLen - 1, &dwFwLen);
   } else {
     uiResult = SCardTransmit (DRIVER_DATA (pnd)->hCard, &(DRIVER_DATA (pnd)->ioCard), abtGetFw, sizeof (abtGetFw), NULL, (uint8_t *) abtFw, &dwFwLen);
   }

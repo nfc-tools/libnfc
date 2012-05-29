@@ -241,7 +241,7 @@ main (int argc, const char *argv[])
     if ((res = nfc_initiator_list_passive_targets(pnd, nm, ant, MAX_TARGET_COUNT)) >= 0) {
       int n;
       if (verbose || (res > 0)) {
-        printf("%d Jewel passive target(s) found%s\n", res, (res == 0)?".\n":":");
+        printf("%d Jewel passive target(s) found%s\n", res, (res == 0) ? ".\n" : ":");
       }
       for(n = 0; n < res; n++) {
         print_nfc_jewel_info (ant[n].nti.nji, verbose);

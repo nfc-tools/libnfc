@@ -83,8 +83,8 @@ iso14443a_locate_historical_bytes (uint8_t *pbtAts, size_t szAts, size_t *pszTk)
       offset++;
     }
     if (szAts > offset) {
-      *pszTk = (szAts-offset);
-      return (pbtAts+offset);
+      *pszTk = (szAts - offset);
+      return (pbtAts + offset);
     }
   }
   *pszTk = 0;

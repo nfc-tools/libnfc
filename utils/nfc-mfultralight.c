@@ -129,12 +129,12 @@ write_card (void)
   uiSkippedPages = 2;
 
   for (int page = 0x2; page <= 0xF; page++) {
-    if ((page==0x2) && (!write_lock)) {
+    if ((page == 0x2) && (!write_lock)) {
       printf ("s");
       uiSkippedPages++;
       continue;
     }
-    if ((page==0x3) && (!write_otp)) {
+    if ((page == 0x3) && (!write_otp)) {
       printf ("s");
       uiSkippedPages++;
       continue;
@@ -183,7 +183,7 @@ main (int argc, const char *argv[])
 
   DBG ("\nChecking arguments and settings\n");
 
-  bReadAction = tolower ((int) ((unsigned char) *(argv[1])) == 'r');
+  bReadAction = tolower ((int) ((unsigned char) * (argv[1])) == 'r');
 
   if (bReadAction) {
     memset (&mtDump, 0x00, sizeof (mtDump));

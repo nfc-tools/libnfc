@@ -196,8 +196,8 @@ arygon_connstring_decode (const nfc_connstring connstring, struct arygon_descrip
     free (cs);
     return 1;
   }
-  strncpy (desc->port, port, sizeof(desc->port)-1);
-  desc->port[sizeof(desc->port)-1] = '\0';
+  strncpy (desc->port, port, sizeof(desc->port) - 1);
+  desc->port[sizeof(desc->port) - 1] = '\0';
 
   const char *speed_s = strtok (NULL, ":");
   if (!speed_s) {
@@ -378,7 +378,7 @@ arygon_tama_receive (nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, 
 #ifndef WIN32
   abort_p = &(DRIVER_DATA (pnd)->iAbortFds[1]);
 #else
-  abort_p = (void*)&(DRIVER_DATA (pnd)->abort_flag);
+  abort_p = (void*) & (DRIVER_DATA (pnd)->abort_flag);
 #endif
 
   pnd->last_error = uart_receive (DRIVER_DATA (pnd)->port, abtRxBuf, 5, abort_p, timeout);

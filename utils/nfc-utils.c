@@ -93,7 +93,7 @@ struct card_atqa const_ca[] = {
   },
   {
     0x0044, 0xffff, "P3SR008",
-    {-1}
+    { -1}
   }, // TODO we need SAK info
   {
     0x0004, 0xf0ff, "SmartMX with MIFARE 1K emulation",
@@ -213,7 +213,7 @@ print_nfc_iso14443a_info (const nfc_iso14443a_info nai, bool verbose)
   print_hex (nai.abtAtqa, 2);
   if (verbose) {
     printf("* UID size: ");
-    switch ((nai.abtAtqa[1] & 0xc0)>>6) {
+    switch ((nai.abtAtqa[1] & 0xc0) >> 6) {
       case 0:
         printf("single\n");
         break;
@@ -282,39 +282,39 @@ print_nfc_iso14443a_info (const nfc_iso14443a_info nai, bool verbose)
       if (TA == 0) {
         printf ("  * PICC supports only 106 kbits/s in both directions\n");
       }
-      if (TA & 1<<7) {
+      if (TA & 1 << 7) {
         printf ("  * Same bitrate in both directions mandatory\n");
       }
-      if (TA & 1<<4) {
+      if (TA & 1 << 4) {
         printf ("  * PICC to PCD, DS=2, bitrate 212 kbits/s supported\n");
       }
-      if (TA & 1<<5) {
+      if (TA & 1 << 5) {
         printf ("  * PICC to PCD, DS=4, bitrate 424 kbits/s supported\n");
       }
-      if (TA & 1<<6) {
+      if (TA & 1 << 6) {
         printf ("  * PICC to PCD, DS=8, bitrate 847 kbits/s supported\n");
       }
-      if (TA & 1<<0) {
+      if (TA & 1 << 0) {
         printf ("  * PCD to PICC, DR=2, bitrate 212 kbits/s supported\n");
       }
-      if (TA & 1<<1) {
+      if (TA & 1 << 1) {
         printf ("  * PCD to PICC, DR=4, bitrate 424 kbits/s supported\n");
       }
-      if (TA & 1<<2) {
+      if (TA & 1 << 2) {
         printf ("  * PCD to PICC, DR=8, bitrate 847 kbits/s supported\n");
       }
-      if (TA & 1<<3) {
+      if (TA & 1 << 3) {
         printf ("  * ERROR unknown value\n");
       }
     }
     if (nai.abtAts[0] & 0x20) { // TB(1) present
-      uint8_t TB= nai.abtAts[offset];
+      uint8_t TB = nai.abtAts[offset];
       offset++;
-      printf ("* Frame Waiting Time: %.4g ms\n",256.0*16.0*(1<<((TB & 0xf0) >> 4))/13560.0);
+      printf ("* Frame Waiting Time: %.4g ms\n", 256.0 * 16.0 * (1 << ((TB & 0xf0) >> 4)) / 13560.0);
       if ((TB & 0x0f) == 0) {
         printf ("* No Start-up Frame Guard Time required\n");
       } else {
-        printf ("* Start-up Frame Guard Time: %.4g ms\n",256.0*16.0*(1<<(TB & 0x0f))/13560.0);
+        printf ("* Start-up Frame Guard Time: %.4g ms\n", 256.0 * 16.0 * (1 << (TB & 0x0f)) / 13560.0);
       }
     }
     if (nai.abtAts[0] & 0x40) { // TC(1) present
@@ -473,11 +473,11 @@ print_nfc_iso14443a_info (const nfc_iso14443a_info nai, bool verbose)
     uint8_t i, j;
     bool found_possible_match = false;
 
-    atqa = (((uint16_t)nai.abtAtqa[0] & 0xff)<<8);
+    atqa = (((uint16_t)nai.abtAtqa[0] & 0xff) << 8);
     atqa += (((uint16_t)nai.abtAtqa[1] & 0xff));
     sak = ((uint8_t)nai.btSak & 0xff);
 
-    for (i = 0; i < sizeof(const_ca)/sizeof(const_ca[0]); i++) {
+    for (i = 0; i < sizeof(const_ca) / sizeof(const_ca[0]); i++) {
       if ((atqa & const_ca[i].mask) == const_ca[i].atqa) {
         for (j = 0; (j < sizeof(const_ca[i].saklist)) && (const_ca[i].saklist[j] >= 0); j++) {
           int sakindex = const_ca[i].saklist[j];
@@ -493,8 +493,8 @@ print_nfc_iso14443a_info (const nfc_iso14443a_info nai, bool verbose)
     // but seen in the field:
     printf("Other possible matches based on ATQA & SAK values:\n");
     uint32_t atqasak = 0;
-    atqasak += (((uint32_t)nai.abtAtqa[0] & 0xff)<<16);
-    atqasak += (((uint32_t)nai.abtAtqa[1] & 0xff)<<8);
+    atqasak += (((uint32_t)nai.abtAtqa[0] & 0xff) << 16);
+    atqasak += (((uint32_t)nai.abtAtqa[1] & 0xff) << 8);
     atqasak += ((uint32_t)nai.btSak & 0xff);
     switch (atqasak) {
       case 0x000488:
@@ -581,28 +581,28 @@ print_nfc_iso14443b_info (const nfc_iso14443b_info nbi, bool verbose)
     if (nbi.abtProtocolInfo[0] == 0) {
       printf (" * PICC supports only 106 kbits/s in both directions\n");
     }
-    if (nbi.abtProtocolInfo[0] & 1<<7) {
+    if (nbi.abtProtocolInfo[0] & 1 << 7) {
       printf (" * Same bitrate in both directions mandatory\n");
     }
-    if (nbi.abtProtocolInfo[0] & 1<<4) {
+    if (nbi.abtProtocolInfo[0] & 1 << 4) {
       printf (" * PICC to PCD, 1etu=64/fc, bitrate 212 kbits/s supported\n");
     }
-    if (nbi.abtProtocolInfo[0] & 1<<5) {
+    if (nbi.abtProtocolInfo[0] & 1 << 5) {
       printf (" * PICC to PCD, 1etu=32/fc, bitrate 424 kbits/s supported\n");
     }
-    if (nbi.abtProtocolInfo[0] & 1<<6) {
+    if (nbi.abtProtocolInfo[0] & 1 << 6) {
       printf (" * PICC to PCD, 1etu=16/fc, bitrate 847 kbits/s supported\n");
     }
-    if (nbi.abtProtocolInfo[0] & 1<<0) {
+    if (nbi.abtProtocolInfo[0] & 1 << 0) {
       printf (" * PCD to PICC, 1etu=64/fc, bitrate 212 kbits/s supported\n");
     }
-    if (nbi.abtProtocolInfo[0] & 1<<1) {
+    if (nbi.abtProtocolInfo[0] & 1 << 1) {
       printf (" * PCD to PICC, 1etu=32/fc, bitrate 424 kbits/s supported\n");
     }
-    if (nbi.abtProtocolInfo[0] & 1<<2) {
+    if (nbi.abtProtocolInfo[0] & 1 << 2) {
       printf (" * PCD to PICC, 1etu=16/fc, bitrate 847 kbits/s supported\n");
     }
-    if (nbi.abtProtocolInfo[0] & 1<<3) {
+    if (nbi.abtProtocolInfo[0] & 1 << 3) {
       printf (" * ERROR unknown value\n");
     }
     if( (nbi.abtProtocolInfo[1] & 0xf0) <= 0x80 ) {
@@ -611,8 +611,8 @@ print_nfc_iso14443b_info (const nfc_iso14443b_info nbi, bool verbose)
     if((nbi.abtProtocolInfo[1] & 0x0f) == PI_ISO14443_4_SUPPORTED) {
       printf ("* Protocol types supported: ISO/IEC 14443-4\n");
     }
-    printf ("* Frame Waiting Time: %.4g ms\n",256.0*16.0*(1<<((nbi.abtProtocolInfo[2] & 0xf0) >> 4))/13560.0);
-    if((nbi.abtProtocolInfo[2] & (PI_NAD_SUPPORTED|PI_CID_SUPPORTED)) != 0) {
+    printf ("* Frame Waiting Time: %.4g ms\n", 256.0 * 16.0 * (1 << ((nbi.abtProtocolInfo[2] & 0xf0) >> 4)) / 13560.0);
+    if((nbi.abtProtocolInfo[2] & (PI_NAD_SUPPORTED | PI_CID_SUPPORTED)) != 0) {
       printf ("* Frame options supported: ");
       if ((nbi.abtProtocolInfo[2] & PI_NAD_SUPPORTED) != 0) printf ("NAD ");
       if ((nbi.abtProtocolInfo[2] & PI_CID_SUPPORTED) != 0) printf ("CID ");
@@ -627,7 +627,7 @@ print_nfc_iso14443bi_info (const nfc_iso14443bi_info nii, bool verbose)
   printf ("                DIV: ");
   print_hex (nii.abtDIV, 4);
   if (verbose) {
-    int version = (nii.btVerLog & 0x1e)>>1;
+    int version = (nii.btVerLog & 0x1e) >> 1;
     printf ("   Software Version: ");
     if (version == 15) {
       printf ("Undefined\n");
@@ -685,7 +685,7 @@ print_nfc_dep_info (const nfc_dep_info ndi, bool verbose)
 void
 print_nfc_target (const nfc_target nt, bool verbose)
 {
-  printf ("%s (%s%s) target:\n", str_nfc_modulation_type(nt.nm.nmt), str_nfc_baud_rate(nt.nm.nbr), (nt.nm.nmt!=NMT_DEP)?"":(nt.nti.ndi.ndm == NDM_ACTIVE)? "active mode" : "passive mode");
+  printf ("%s (%s%s) target:\n", str_nfc_modulation_type(nt.nm.nmt), str_nfc_baud_rate(nt.nm.nbr), (nt.nm.nmt != NMT_DEP) ? "" : (nt.nti.ndi.ndm == NDM_ACTIVE) ? "active mode" : "passive mode");
   switch(nt.nm.nmt) {
     case NMT_ISO14443A:
       print_nfc_iso14443a_info (nt.nti.nai, verbose);

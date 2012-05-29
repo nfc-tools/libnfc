@@ -512,7 +512,7 @@ acr122_build_frame_from_apdu (uint8_t **frame, const uint8_t *apdu, const size_t
     0x00, // len
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // padding
   };
-  if ((apdu_len+10) > ACR122_USB_BUFFER_LEN)
+  if ((apdu_len + 10) > ACR122_USB_BUFFER_LEN)
     return NFC_EINVARG;
 
   abtFrame[1] = apdu_len;
@@ -533,7 +533,7 @@ acr122_build_frame_from_tama (uint8_t **frame, const uint8_t *tama, const size_t
     0x00, // PN532 command length
     0xd4, // PN532 direction
   };
-  if ((tama_len+16) > ACR122_USB_BUFFER_LEN)
+  if ((tama_len + 16) > ACR122_USB_BUFFER_LEN)
     return NFC_EINVARG;
 
   abtFrame[1] = tama_len + 6;

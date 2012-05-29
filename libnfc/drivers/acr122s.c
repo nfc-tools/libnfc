@@ -445,8 +445,8 @@ acr122s_connstring_decode (const nfc_connstring connstring, struct acr122s_descr
     free (cs);
     return 1;
   }
-  strncpy (desc->port, port, sizeof(desc->port)-1);
-  desc->port[sizeof(desc->port)-1] = '\0';
+  strncpy (desc->port, port, sizeof(desc->port) - 1);
+  desc->port[sizeof(desc->port) - 1] = '\0';
 
   const char *speed_s = strtok (NULL, ":");
   if (!speed_s) {

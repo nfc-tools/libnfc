@@ -123,7 +123,7 @@ static bool scan_hex_fd3 (uint8_t *pbtData, size_t *pszBytes, const char *pchPre
   char pchScan[256];
   int c;
   // Look for our next sync marker
-  while ( (c=fgetc(fd3)) != '#') {
+  while ( (c = fgetc(fd3)) != '#') {
     if (c == EOF) {
       return EXIT_FAILURE;
     }
@@ -133,7 +133,7 @@ static bool scan_hex_fd3 (uint8_t *pbtData, size_t *pszBytes, const char *pchPre
   if (fscanf (fd3, pchScan, &uiBytes) < 1) {
     return EXIT_FAILURE;
   }
-  *pszBytes=uiBytes;
+  *pszBytes = uiBytes;
   if (*pszBytes > MAX_FRAME_LEN) {
     return EXIT_FAILURE;
   }
@@ -141,7 +141,7 @@ static bool scan_hex_fd3 (uint8_t *pbtData, size_t *pszBytes, const char *pchPre
     if (fscanf (fd3, "%02x", &uiData) < 1) {
       return EXIT_FAILURE;
     }
-    pbtData[szPos]=uiData;
+    pbtData[szPos] = uiData;
   }
   return EXIT_SUCCESS;
 }
@@ -322,7 +322,7 @@ main (int argc, char *argv[])
     }
     // We can only emulate a short UID, so fix length & ATQA bit:
     ntEmulatedTarget.nti.nai.szUidLen = 4;
-    ntEmulatedTarget.nti.nai.abtAtqa[1] &= (0xFF-0x40);
+    ntEmulatedTarget.nti.nai.abtAtqa[1] &= (0xFF - 0x40);
     // First byte of UID is always automatically replaced by 0x08 in this mode anyway
     ntEmulatedTarget.nti.nai.abtUid[0] = 0x08;
     // ATS is always automatically replaced by PN532, we've no control on it:

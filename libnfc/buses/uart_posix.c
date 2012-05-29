@@ -349,18 +349,18 @@ uart_list_ports (void)
     const char **p = serial_ports_device_radix;
     while (*p) {
       if (!strncmp(pdDirEnt->d_name, *p, strlen (*p))) {
-        char **res2 = realloc (res, (szRes+1) * sizeof (char *));
+        char **res2 = realloc (res, (szRes + 1) * sizeof (char *));
         if (!res2)
           goto oom;
 
         res = res2;
-        if (!(res[szRes-1] = malloc (6 + strlen (pdDirEnt->d_name))))
+        if (!(res[szRes - 1] = malloc (6 + strlen (pdDirEnt->d_name))))
           goto oom;
 
-        sprintf (res[szRes-1], "/dev/%s", pdDirEnt->d_name);
+        sprintf (res[szRes - 1], "/dev/%s", pdDirEnt->d_name);
 
         szRes++;
-        res[szRes-1] = NULL;
+        res[szRes - 1] = NULL;
       }
       p++;
     }

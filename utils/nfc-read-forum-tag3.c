@@ -143,7 +143,7 @@ nfc_forum_tag_type3_check (nfc_device *dev, const nfc_target nt, const uint16_t 
   }
   // const uint8_t res_block_count = res[12];
   *data_len = res - res_overhead + 1; // +1 => block count is stored on 1 byte
-  memcpy (data, &rx[res_overhead+1], *data_len);
+  memcpy (data, &rx[res_overhead + 1], *data_len);
   return *data_len;
 }
 
@@ -294,9 +294,9 @@ main(int argc, char *argv[])
   const uint16_t block_count_to_check = (ndef_data_len / 16) + 1;
 
   data_len = 0;
-  for (uint16_t b = 0; b < (block_count_to_check/block_max_per_check); b += block_max_per_check) {
+  for (uint16_t b = 0; b < (block_count_to_check / block_max_per_check); b += block_max_per_check) {
     size_t size = sizeof(data) - data_len;
-    if(!nfc_forum_tag_type3_check (pnd, nt, 1+b, MIN(block_max_per_check, (block_count_to_check-(b*block_max_per_check))), data + data_len, &size)) {
+    if(!nfc_forum_tag_type3_check (pnd, nt, 1 + b, MIN(block_max_per_check, (block_count_to_check - (b * block_max_per_check))), data + data_len, &size)) {
       nfc_perror (pnd, "nfc_forum_tag_type3_check");
       error = EXIT_FAILURE;
       goto error;

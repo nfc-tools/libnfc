@@ -148,9 +148,9 @@ int
 main (int argc, char *argv[])
 {
   int      arg, i;
-  bool     format= false;
+  bool     format = false;
   unsigned int c;
-  char     tmp[3]= { 0x00, 0x00, 0x00 };
+  char     tmp[3] = { 0x00, 0x00, 0x00 };
 
 
   // Get commandline options
@@ -159,16 +159,16 @@ main (int argc, char *argv[])
       print_usage (argv);
       exit(EXIT_SUCCESS);
     } else if (0 == strcmp (argv[arg], "-f")) {
-      format= true;
+      format = true;
     } else if (0 == strcmp (argv[arg], "-q")) {
       quiet_output = true;
     } else if (strlen(argv[arg]) == 8) {
-      for(i= 0 ; i < 4 ; ++i) {
-        memcpy(tmp, argv[arg]+i*2, 2);
+      for(i = 0 ; i < 4 ; ++i) {
+        memcpy(tmp, argv[arg] + i * 2, 2);
         sscanf(tmp, "%02x", &c);
-        abtData[i]= (char) c;
+        abtData[i] = (char) c;
       }
-      abtData[4]= abtData[0] ^ abtData[1] ^ abtData[2] ^ abtData[3];
+      abtData[4] = abtData[0] ^ abtData[1] ^ abtData[2] ^ abtData[3];
       iso14443a_crc_append (abtData, 16);
     } else {
       ERR ("%s is not supported option.", argv[arg]);
@@ -334,21 +334,21 @@ main (int argc, char *argv[])
   // now reset UID
   iso14443a_crc_append(abtHalt, 2);
   transmit_bytes (abtHalt, 4);
-  transmit_bits (abtUnlock1,7);
+  transmit_bits (abtUnlock1, 7);
   if(format) {
-    transmit_bytes (abtWipe,1);
+    transmit_bytes (abtWipe, 1);
     transmit_bytes (abtHalt, 4);
-    transmit_bits (abtUnlock1,7);
+    transmit_bits (abtUnlock1, 7);
   }
-  transmit_bytes (abtUnlock2,1);
-  transmit_bytes (abtWrite,4);
-  transmit_bytes (abtData,18);
+  transmit_bytes (abtUnlock2, 1);
+  transmit_bytes (abtWrite, 4);
+  transmit_bytes (abtData, 18);
   if(format) {
     for(i = 3 ; i < 64 ; i += 4) {
-      abtWrite[1]= (char) i;
+      abtWrite[1] = (char) i;
       iso14443a_crc_append (abtWrite, 2);
-      transmit_bytes (abtWrite,4);
-      transmit_bytes (abtBlank,18);
+      transmit_bytes (abtWrite, 4);
+      transmit_bytes (abtBlank, 18);
     }
   }
 

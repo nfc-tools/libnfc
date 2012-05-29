@@ -437,7 +437,7 @@ main (int argc, const char *argv[])
   uint8_t *pbtUID;
   FILE   *pfKeys = NULL;
   FILE   *pfDump = NULL;
-  int    unlock= 0;
+  int    unlock = 0;
 
   if (argc < 2) {
     print_usage (argv[0]);
@@ -452,8 +452,8 @@ main (int argc, const char *argv[])
     }
     atAction = ACTION_READ;
     if (strcmp (command, "R") == 0)
-      unlock= 1;
-    bUseKeyA = tolower ((int) ((unsigned char) *(argv[2]))) == 'a';
+      unlock = 1;
+    bUseKeyA = tolower ((int) ((unsigned char) * (argv[2]))) == 'a';
     bUseKeyFile = (argc > 4);
   } else if (strcmp (command, "w") == 0 || strcmp (command, "W") == 0) {
     if (argc < 4) {
@@ -462,8 +462,8 @@ main (int argc, const char *argv[])
     }
     atAction = ACTION_WRITE;
     if (strcmp (command, "W") == 0)
-      unlock= 1;
-    bUseKeyA = tolower ((int) ((unsigned char) *(argv[2]))) == 'a';
+      unlock = 1;
+    bUseKeyA = tolower ((int) ((unsigned char) * (argv[2]))) == 'a';
     bUseKeyFile = (argc > 4);
   }
 

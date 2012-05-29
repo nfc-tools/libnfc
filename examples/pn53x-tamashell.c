@@ -77,7 +77,7 @@ int main(int argc, const char* argv[])
   FILE* input = NULL;
 
   if (argc >= 2) {
-    if((input = fopen(argv[1], "r"))==NULL) {
+    if((input = fopen(argv[1], "r")) == NULL) {
       ERR ("%s", "Cannot open file.");
       return EXIT_FAILURE;
     }
@@ -147,7 +147,7 @@ int main(int argc, const char* argv[])
       }
       sscanf(cmd + offset, "%d", &s);
       printf("Pause for %i msecs\n", s);
-      if (s>0) {
+      if (s > 0) {
         sleep(s * SUSP_TIME);
       }
       free(cmd);
@@ -160,13 +160,13 @@ int main(int argc, const char* argv[])
       while (isspace(cmd[offset])) {
         offset++;
       }
-      size = sscanf(cmd+offset, "%2x", &byte);
+      size = sscanf(cmd + offset, "%2x", &byte);
       if (size < 1 ) {
         break;
       }
       abtTx[i] = byte;
       szTx++;
-      if (cmd[offset+1] == 0) { // if last hex was only 1 symbol
+      if (cmd[offset + 1] == 0) { // if last hex was only 1 symbol
         break;
       }
       offset += 2;
@@ -177,7 +177,7 @@ int main(int argc, const char* argv[])
       continue;
     }
     printf("Tx: ");
-    print_hex(abtTx,szTx);
+    print_hex(abtTx, szTx);
 
     szRx = sizeof(abtRx);
     int res = 0;
