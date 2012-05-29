@@ -15,6 +15,9 @@ Here are some directions to get you started:
      Helper script to get some uniformity in the style:
      $ make style
 
+     If you use vim see the "Vim: How to prevent trailing whitespaces"
+     http://www.carbon-project.org/Vim__How_to_prevent_trailing_whitespaces.html
+
   2. Chase warnings: no warning should be introduced by your changes
   Depending what you touch, you can check with:
     2.1 When using autotools
