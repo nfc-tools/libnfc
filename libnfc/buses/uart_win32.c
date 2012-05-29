@@ -1,13 +1,13 @@
 /*-
  * Public platform independent Near Field Communication (NFC) library
- * 
+ *
  * Copyright (C) 2009, 2010, Roel Verdult, Romuald Conty
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
  * Free Software Foundation, either version 3 of the License, or (at your
  * option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
@@ -167,7 +167,7 @@ uart_receive (serial_port sp, uint8_t * pbtRx, const size_t szRx, void * abort_p
   do {
     log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "ReadFile");
     res = ReadFile (((struct serial_port_windows *) sp)->hPort, pbtRx + dwTotalBytesReceived,
-      dwBytesToGet, 
+      dwBytesToGet,
       &dwBytesReceived, NULL);
 
     dwTotalBytesReceived += dwBytesReceived;
@@ -179,7 +179,7 @@ uart_receive (serial_port sp, uint8_t * pbtRx, const size_t szRx, void * abort_p
     } else if (dwBytesReceived == 0) {
 	  return NFC_ETIMEOUT;
 	}
-	
+
     if (((DWORD)szRx) > dwTotalBytesReceived) {
       dwBytesToGet -= dwBytesReceived;
     }

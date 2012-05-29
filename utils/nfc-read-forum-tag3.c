@@ -1,12 +1,12 @@
 /*-
  * Public platform independent Near Field Communication (NFC) library examples
- * 
+ *
  * Copyright (C) 2011, Romuald Conty
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  *  1) Redistributions of source code must retain the above copyright notice,
- *  this list of conditions and the following disclaimer. 
+ *  this list of conditions and the following disclaimer.
  *  2 )Redistributions in binary form must reproduce the above copyright
  *  notice, this list of conditions and the following disclaimer in the
  *  documentation and/or other materials provided with the distribution.
@@ -22,7 +22,7 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * Note that this license only applies on the examples, NFC library itself is under LGPL
  *
  */
@@ -85,7 +85,7 @@ build_felica_frame(const nfc_felica_info nfi, const uint8_t command, const uint8
 }
 
 #define CHECK 		0x06
-static int 
+static int
 nfc_forum_tag_type3_check (nfc_device *dev, const nfc_target nt, const uint16_t block, const uint8_t block_count, uint8_t *data, size_t *data_len)
 {
   uint8_t payload[1024] = {
@@ -94,7 +94,7 @@ nfc_forum_tag_type3_check (nfc_device *dev, const nfc_target nt, const uint16_t 
                        block_count,
                        0x80, block, // block 0
                      };
-  
+
   size_t payload_len = 1 + 2 + 1;
   for (uint8_t b = 0; b < block_count; b++) {
     if (block < 0x100) {
@@ -104,7 +104,7 @@ nfc_forum_tag_type3_check (nfc_device *dev, const nfc_target nt, const uint16_t 
       payload[payload_len++] = 0x00;
       payload[payload_len++] = (block + b) >> 8;
       payload[payload_len++] = (block + b) & 0xff;
-    } 
+    }
   }
 
   uint8_t frame[1024];
@@ -117,7 +117,7 @@ nfc_forum_tag_type3_check (nfc_device *dev, const nfc_target nt, const uint16_t 
     return res;
   }
   const int res_overhead = 1 + 1 + 8 + 2;  // 1+1+8+2: LEN + CMD + NFCID2 + STATUS
-  if (res < res_overhead) { 
+  if (res < res_overhead) {
     // Not enough data
     return -1;
   }
@@ -154,44 +154,44 @@ main(int argc, char *argv[])
   (void)argv;
 
   int ch;
-  char *ndef_output = NULL; 
-  while ((ch = getopt (argc, argv, "ho:")) != -1) { 
-    switch (ch) { 
-    case 'h': 
-      print_usage(argv[0]); 
-      exit (EXIT_SUCCESS); 
-      break; 
-    case 'o': 
-      ndef_output = optarg; 
-      break; 
-    case '?': 
-      if (optopt == 'o') 
-        fprintf (stderr, "Option -%c requires an argument.\n", optopt); 
-    default: 
-      print_usage (argv[0]); 
-      exit (EXIT_FAILURE); 
-    } 
-  } 
- 
-  if (ndef_output == NULL) { 
-    print_usage (argv[0]); 
-    exit (EXIT_FAILURE); 
-  } 
-  FILE* message_stream = NULL; 
-  FILE* ndef_stream = NULL; 
- 
-  if ((strlen (ndef_output) == 1) && (ndef_output[0] == '-')) { 
-    message_stream = stderr; 
-    ndef_stream = stdout; 
-  } else { 
-    message_stream = stdout; 
-    ndef_stream = fopen(ndef_output, "wb"); 
-    if (!ndef_stream) { 
-      fprintf (stderr, "Could not open file %s.\n", ndef_output); 
-      exit (EXIT_FAILURE); 
-    } 
+  char *ndef_output = NULL;
+  while ((ch = getopt (argc, argv, "ho:")) != -1) {
+    switch (ch) {
+    case 'h':
+      print_usage(argv[0]);
+      exit (EXIT_SUCCESS);
+      break;
+    case 'o':
+      ndef_output = optarg;
+      break;
+    case '?':
+      if (optopt == 'o')
+        fprintf (stderr, "Option -%c requires an argument.\n", optopt);
+    default:
+      print_usage (argv[0]);
+      exit (EXIT_FAILURE);
+    }
   }
-  
+
+  if (ndef_output == NULL) {
+    print_usage (argv[0]);
+    exit (EXIT_FAILURE);
+  }
+  FILE* message_stream = NULL;
+  FILE* ndef_stream = NULL;
+
+  if ((strlen (ndef_output) == 1) && (ndef_output[0] == '-')) {
+    message_stream = stderr;
+    ndef_stream = stdout;
+  } else {
+    message_stream = stdout;
+    ndef_stream = fopen(ndef_output, "wb");
+    if (!ndef_stream) {
+      fprintf (stderr, "Could not open file %s.\n", ndef_output);
+      exit (EXIT_FAILURE);
+    }
+  }
+
   nfc_init (NULL);
 
   pnd = nfc_open (NULL, NULL);
@@ -214,7 +214,7 @@ main(int argc, char *argv[])
 
   if (nfc_initiator_init (pnd) < 0) {
     nfc_perror (pnd, "nfc_initiator_init");
-    exit (EXIT_FAILURE);    
+    exit (EXIT_FAILURE);
   }
   fprintf (message_stream, "Place your NFC Forum Tag Type 3 in the field...\n");
 
@@ -227,7 +227,7 @@ main(int argc, char *argv[])
     goto error;
   }
 
-  // Check if System Code equals 0x12fc 
+  // Check if System Code equals 0x12fc
   const uint8_t abtNfcForumSysCode[] = { 0x12, 0xfc };
   if (0 != memcmp (nt.nti.nfi.abtSysCode, abtNfcForumSysCode, 2)) {
     // Retry with special polling
@@ -237,7 +237,7 @@ main(int argc, char *argv[])
       error = EXIT_FAILURE;
       goto error;
     }
-    // Check again if System Code equals 0x12fc 
+    // Check again if System Code equals 0x12fc
     if (0 != memcmp (nt.nti.nfi.abtSysCode, abtNfcForumSysCode, 2)) {
       fprintf (stderr, "Tag is not NFC Forum Tag Type 3 compliant.\n");
       error = EXIT_FAILURE;

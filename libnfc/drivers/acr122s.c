@@ -479,7 +479,7 @@ acr122s_probe(nfc_connstring connstrings[], size_t connstrings_len, size_t *pszD
   return false;
 #else /* SERIAL_AUTOPROBE_ENABLED */
   *pszDeviceFound = 0;
-  
+
     serial_port sp;
   char **acPorts = uart_list_ports ();
   const char *acPort;
@@ -488,7 +488,7 @@ acr122s_probe(nfc_connstring connstrings[], size_t connstrings_len, size_t *pszD
   while ((acPort = acPorts[iDevice++])) {
     sp = uart_open (acPort);
     log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "Trying to find ACR122S device on serial port: %s at %d bauds.", acPort, ACR122S_DEFAULT_SPEED);
-    
+
     if ((sp != INVALID_SERIAL_PORT) && (sp != CLAIMED_SERIAL_PORT)) {
       // We need to flush input to be sure first reply does not comes from older byte transceive
       uart_flush_input (sp);
@@ -512,7 +512,7 @@ acr122s_probe(nfc_connstring connstrings[], size_t connstrings_len, size_t *pszD
       pn53x_data_new(pnd, &acr122s_io);
       CHIP_DATA(pnd)->type = PN532;
       CHIP_DATA(pnd)->power_mode = NORMAL;
-      
+
       char version[32];
       int ret = acr122s_get_firmware_version(pnd, version, sizeof(version));
       if (ret == 0 && strncmp("ACR122S", version, 7) != 0) {
@@ -525,11 +525,11 @@ acr122s_probe(nfc_connstring connstrings[], size_t connstrings_len, size_t *pszD
 
       if (ret != 0)
         continue;
-      
+
       // ACR122S reader is found
       memcpy (connstrings[*pszDeviceFound], connstring, sizeof(nfc_connstring));
       (*pszDeviceFound)++;
-      
+
       // Test if we reach the maximum "wanted" devices
       if (*pszDeviceFound >= connstrings_len)
         break;
@@ -551,7 +551,7 @@ acr122s_open(const nfc_connstring connstring)
   nfc_device *pnd;
   struct acr122s_descriptor ndd;
   int connstring_decode_level = acr122s_connstring_decode (connstring, &ndd);
-  
+
   if (connstring_decode_level < 2) {
     return NULL;
   }

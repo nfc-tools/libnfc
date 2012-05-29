@@ -1,13 +1,13 @@
 /*-
  * Public platform independent Near Field Communication (NFC) library examples
- * 
+ *
  * Copyright (C) 2009, Roel Verdult
  * Copyright (C) 2010, Romuald Conty, Romain Tartière
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  *  1) Redistributions of source code must retain the above copyright notice,
- *  this list of conditions and the following disclaimer. 
+ *  this list of conditions and the following disclaimer.
  *  2 )Redistributions in binary form must reproduce the above copyright
  *  notice, this list of conditions and the following disclaimer in the
  *  documentation and/or other materials provided with the distribution.
@@ -23,7 +23,7 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * Note that this license only applies on the examples, NFC library itself is under LGPL
  *
  */
@@ -75,7 +75,7 @@ main (int argc, const char *argv[])
   int res = 0;
 
   nfc_init (NULL);
-  
+
   // Display libnfc version
   acLibnfcVersion = nfc_version ();
   printf ("%s uses libnfc %s\n", argv[0], acLibnfcVersion);
@@ -132,7 +132,7 @@ main (int argc, const char *argv[])
     }
   if (nfc_initiator_init (pnd) < 0) {
     nfc_perror (pnd, "nfc_initiator_init");
-    exit (EXIT_FAILURE);    
+    exit (EXIT_FAILURE);
   }
 
     printf ("NFC device: %s opened\n", nfc_device_get_name (pnd));

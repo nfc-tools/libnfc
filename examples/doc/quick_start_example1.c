@@ -1,4 +1,4 @@
-/** 
+/**
  * @file quick_start_example1.c
  * @brief Quick start example that presents how to use libnfc
  */
@@ -18,7 +18,7 @@ main (int argc, const char *argv[])
 {
   nfc_device *pnd;
   nfc_target nt;
-  
+
   nfc_init (NULL);
 
   // Display libnfc version
@@ -35,7 +35,7 @@ main (int argc, const char *argv[])
   // Set opened NFC device to initiator mode
   if (nfc_initiator_init (pnd) < 0) {
     nfc_perror (pnd, "nfc_initiator_init");
-    exit (EXIT_FAILURE);    
+    exit (EXIT_FAILURE);
   }
 
   printf ("NFC reader: %s opened\n", nfc_device_get_name (pnd));

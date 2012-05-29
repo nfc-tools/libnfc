@@ -1,15 +1,15 @@
 /*-
  * Public platform independent Near Field Communication (NFC) library
- * 
+ *
  * Copyright (C) 2009, Roel Verdult, Romuald Conty
  * Copyright (C) 2010, Roel Verdult, Romuald Conty, Romain Tartière
  * Copyright (C) 2011, Romuald Conty, Romain Tartière
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
  * Free Software Foundation, either version 3 of the License, or (at your
  * option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
@@ -19,7 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
 
-/** 
+/**
  * @file nfc.c
  * @brief NFC library implementation
  */
@@ -30,36 +30,36 @@
  * must not call any libnfc functions after deinitialization.
  */
 /**
- * @defgroup dev NFC Device/Hardware manipulation 
+ * @defgroup dev NFC Device/Hardware manipulation
  * The functionality documented below is designed to help with the following
  * operations:
  * - Enumerating the NFC devices currently attached to the system
  * - Opening and closing the chosen device
- */ 
+ */
 /**
  * @defgroup initiator  NFC initiator
  * This page details how to act as "reader".
- */ 
+ */
 /**
  * @defgroup target  NFC target
  * This page details how to act as tag (i.e. MIFARE Classic) or NFC target device.
- */ 
+ */
 /**
  * @defgroup error  Error reporting
  * Most libnfc functions return 0 on success or one of error codes defined on failure.
- */ 
+ */
 /**
  * @defgroup data  Special data accessors
  * The functionnality documented below allow to access to special data as device name or device connstring.
- */ 
+ */
 /**
  * @defgroup properties  Properties accessors
  * The functionnality documented below allow to configure parameters and registers.
- */ 
+ */
 /**
  * @defgroup misc Miscellaneous
- * 
- */ 
+ *
+ */
 
 /* vim:set ts=2 sw=2 et: */
 
@@ -128,7 +128,7 @@ nfc_exit(nfc_context *context)
 
 /** @ingroup dev
  * @brief Get the defaut NFC device
- * @param connstring \a nfc_connstring pointer where the default connection string will be stored 
+ * @param connstring \a nfc_connstring pointer where the default connection string will be stored
  * @return \e true on success
  *
  * This function fill \e connstring with the LIBNFC_DEFAULT_DEVICE environment variable content
@@ -136,11 +136,11 @@ nfc_exit(nfc_context *context)
  * \e connstring with the corresponding \a nfc_connstring value.
  *
  * This function returns true when LIBNFC_DEFAULT_DEVICE is set or an available device is found.
- * 
+ *
  * @note The \e connstring content can be invalid if LIBNFC_DEFAULT_DEVICE is
  * set with incorrect value.
  */
-bool 
+bool
 nfc_get_default_device (nfc_connstring *connstring)
 {
   char *env_default_connstring = getenv ("LIBNFC_DEFAULT_DEVICE");
@@ -166,14 +166,14 @@ nfc_get_default_device (nfc_connstring *connstring)
  * @return Returns pointer to a \a nfc_device struct if successfull; otherwise returns \c NULL value.
  *
  * If \e connstring is \c NULL, the \a nfc_get_default_device() function is used.
- * 
+ *
  * If \e connstring is set, this function will try to claim the right device using information provided by \e connstring.
  *
  * When it has successfully claimed a NFC device, memory is allocated to save the device information.
  * It will return a pointer to a \a nfc_device struct.
  * This pointer should be supplied by every next functions of libnfc that should perform an action with this device.
  *
- * @note Depending on the desired operation mode, the device needs to be configured by using nfc_initiator_init() or nfc_target_init(), 
+ * @note Depending on the desired operation mode, the device needs to be configured by using nfc_initiator_init() or nfc_target_init(),
  * optionally followed by manual tuning of the parameters if the default parameters are not suiting your goals.
  */
 nfc_device *
@@ -191,12 +191,12 @@ nfc_open (nfc_context *context, const nfc_connstring connstring)
   } else {
     strncpy (ncs, connstring, sizeof (nfc_connstring));
   }
-  
+
   // Search through the device list for an available device
   const struct nfc_driver *ndr;
   const struct nfc_driver **pndr = nfc_drivers;
   while ((ndr = *pndr)) {
-    // Specific device is requested: using device description 
+    // Specific device is requested: using device description
     if (0 != strncmp (ndr->name, ncs, strlen(ndr->name))) {
       pndr++;
       continue;
@@ -209,7 +209,7 @@ nfc_open (nfc_context *context, const nfc_connstring connstring)
       log_fini ();
       return pnd;
     }
-    
+
     log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "\"%s\" (%s) has been claimed.", pnd->name, pnd->connstring);
     log_fini ();
     return pnd;
@@ -233,7 +233,7 @@ nfc_close (nfc_device *pnd)
   if (pnd) {
     // Go in idle mode
     nfc_idle (pnd);
-    // Close, clean up and release the device 
+    // Close, clean up and release the device
     pnd->driver->close (pnd);
 
   }
@@ -245,7 +245,7 @@ nfc_close (nfc_device *pnd)
  * @param context The context to operate on, or NULL for the default context.
  * @param connstrings array of \a nfc_connstring.
  * @param szDevices size of the \a connstrings array.
- * 
+ *
  */
 size_t
 nfc_list_devices (nfc_context *context, nfc_connstring connstrings[] , size_t szDevices)
@@ -282,7 +282,7 @@ nfc_list_devices (nfc_context *context, nfc_connstring connstrings[] , size_t sz
  *
  * @see nfc_property enum values
  */
-int 
+int
 nfc_device_set_property_int (nfc_device *pnd, const nfc_property property, const int value)
 {
   HAL (device_set_property_int, pnd, property, value);
@@ -385,7 +385,7 @@ nfc_initiator_init (nfc_device *pnd)
  *
  * @param[out] pnt \a nfc_target struct pointer which will filled if available
  *
- * The NFC device will try to find one available passive tag or emulated tag. 
+ * The NFC device will try to find one available passive tag or emulated tag.
  *
  * The chip needs to know with what kind of tag it is dealing with, therefore
  * the initial modulation and speed (106, 212 or 424 kbps) should be supplied.
@@ -519,11 +519,11 @@ nfc_initiator_poll_target (nfc_device *pnd,
  * The NFC device will try to find an available D.E.P. target. The standards
  * (ISO18092 and ECMA-340) describe the modulation that can be used for reader
  * to passive communications.
- * 
+ *
  * @note \a nfc_dep_info will be returned when the target was acquired successfully.
  */
 int
-nfc_initiator_select_dep_target (nfc_device *pnd, 
+nfc_initiator_select_dep_target (nfc_device *pnd,
                                  const nfc_dep_mode ndm, const nfc_baud_rate nbr,
                                  const nfc_dep_info *pndiInitiator, nfc_target *pnt, const int timeout)
 {
@@ -544,7 +544,7 @@ nfc_initiator_select_dep_target (nfc_device *pnd,
  * The NFC device will try to find an available D.E.P. target. The standards
  * (ISO18092 and ECMA-340) describe the modulation that can be used for reader
  * to passive communications.
- * 
+ *
  * @note \a nfc_dep_info will be returned when the target was acquired successfully.
  */
 int
@@ -599,7 +599,7 @@ nfc_initiator_deselect_target (nfc_device *pnd)
  * @param[out] pbtRx response from the tags
  * @param szRx size of \a pbtRx (Will return NFC_EOVFLOW if RX exceeds this size)
  * @param timeout in milliseconds
- * 
+ *
  * The NFC device (configured as initiator) will transmit the supplied bytes (\a pbtTx) to the target.
  * It waits for the response and stores the received bytes in the \a pbtRx byte array.
  *
@@ -646,7 +646,7 @@ nfc_initiator_transceive_bytes (nfc_device *pnd, const uint8_t *pbtTx, const siz
  * explain how it works, if you just are sending two bytes with ISO14443-A
  * compliant parity bits you better can use the
  * nfc_initiator_transceive_bytes() function.
- * 
+ *
  * @param[out] pbtRx response from the tag
  * @param[out] pbtRxPar parameter contains a byte array of the corresponding parity bits
  *
@@ -850,7 +850,7 @@ nfc_target_send_bytes (nfc_device *pnd, const uint8_t *pbtTx, const size_t szTx,
 /** @ingroup target
  * @brief Receive bytes and APDU frames
  * @return Returns received bytes count on success, otherwise returns libnfc's error code
- * 
+ *
  * @param pnd \a nfc_device struct pointer that represent currently used device
  * @param pbtRx pointer to Rx buffer
  * @param szRx size of Rx buffer
@@ -928,12 +928,12 @@ static struct sErrorMessage {
 /** @ingroup error
  * @brief Return the last error string
  * @return Returns a string
- * 
+ *
  * @param pnd \a nfc_device struct pointer that represent currently used device
  */
 const char *
 nfc_strerror (const nfc_device *pnd)
-{  
+{
   const char *pcRes = "Unknown error";
   size_t  i;
   for (i = 0; i < (sizeof (sErrorMessages) / sizeof (struct sErrorMessage)); i++) {
@@ -949,7 +949,7 @@ nfc_strerror (const nfc_device *pnd)
 /** @ingroup error
  * @brief Renders the last error in pcStrErrBuf for a maximum size of szBufLen chars
  * @return Returns 0 upon success
- * 
+ *
  * @param pnd \a nfc_device struct pointer that represent currently used device
  * @param pcStrErrBuf a string that contains the last error.
  * @param szBufLen size of buffer
@@ -962,9 +962,9 @@ nfc_strerror_r (const nfc_device *pnd, char *pcStrErrBuf, size_t szBufLen)
 
 /** @ingroup error
  * @brief Display the last error occured on a nfc_device
- * 
+ *
  * @param pnd \a nfc_device struct pointer that represent currently used device
- * @param pcString a string 
+ * @param pcString a string
  */
 void
 nfc_perror (const nfc_device *pnd, const char *pcString)
@@ -975,7 +975,7 @@ nfc_perror (const nfc_device *pnd, const char *pcString)
 /** @ingroup error
  * @brief Returns last error occured on a nfc_device
  * @return Returns an integer that represents to libnfc's error code.
- * 
+ *
  * @param pnd \a nfc_device struct pointer that represent currently used device
  */
 int
@@ -989,7 +989,7 @@ nfc_device_get_last_error (const nfc_device *pnd)
 /** @ingroup data
  * @brief Returns the device name
  * @return Returns a string with the device name
- * 
+ *
  * @param pnd \a nfc_device struct pointer that represent currently used device
  */
 const char *
@@ -1001,7 +1001,7 @@ nfc_device_get_name (nfc_device *pnd)
 /** @ingroup data
  * @brief Returns the device connection string
  * @return Returns a string with the device connstring
- * 
+ *
  * @param pnd \a nfc_device struct pointer that represent currently used device
  */
 const char *
@@ -1016,9 +1016,9 @@ nfc_device_get_connstring (nfc_device *pnd)
  * @param pnd \a nfc_device struct pointer that represent currently used device
  * @param mode \a nfc_mode.
  * @param supported_mt pointer of \a nfc_modulation_type array.
- * 
+ *
  */
-int 
+int
 nfc_device_get_supported_modulation (nfc_device *pnd, const nfc_mode mode, const nfc_modulation_type **const supported_mt)
 {
   HAL (get_supported_modulation, pnd, mode, supported_mt);
@@ -1030,9 +1030,9 @@ nfc_device_get_supported_modulation (nfc_device *pnd, const nfc_mode mode, const
  * @param pnd \a nfc_device struct pointer that represent currently used device
  * @param nmt \a nfc_modulation_type.
  * @param supported_br pointer of \a nfc_baud_rate array.
- * 
+ *
  */
-int 
+int
 nfc_device_get_supported_baud_rate (nfc_device *pnd, const nfc_modulation_type nmt, const nfc_baud_rate **const supported_br)
 {
   HAL (get_supported_baud_rate, pnd, nmt, supported_br);
@@ -1043,7 +1043,7 @@ nfc_device_get_supported_baud_rate (nfc_device *pnd, const nfc_modulation_type n
 /** @ingroup misc
  * @brief Returns the library version
  * @return Returns a string with the library version
- * 
+ *
  * @param pnd \a nfc_device struct pointer that represent currently used device
  */
 const char *
@@ -1063,7 +1063,7 @@ nfc_version (void)
  * @param buf string to print information
  * @param buflen buf length
  */
-int 
+int
 nfc_device_get_information_about (nfc_device *pnd, char *buf, size_t buflen)
 {
   HAL (device_get_information_about, pnd, buf, buflen);

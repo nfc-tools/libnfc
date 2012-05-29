@@ -7,7 +7,7 @@
  *
  */
 
-/* 
+/*
  * $Id: usb.h 1220 2010-05-04 03:14:56Z roger.brown $
  */
 
@@ -18,8 +18,8 @@
 #include <stdlib.h>
 #include <windows.h>
 
-/* 
- * 'interface' is defined somewhere in the Windows header files. This macro 
+/*
+ * 'interface' is defined somewhere in the Windows header files. This macro
  * is deleted here to avoid conflicts and compile errors.
  */
 
@@ -29,7 +29,7 @@
 
 /*
  * PATH_MAX from limits.h can't be used on Windows if the dll and
- * import libraries are build/used by different compilers 
+ * import libraries are build/used by different compilers
  */
 
 #define LIBUSB_PATH_MAX 512
@@ -81,7 +81,7 @@
 
 
 /* ensure byte-packed structures */
-#include <pshpack1.h> 
+#include <pshpack1.h>
 
 
 /* All standard descriptors have these 2 fields in common */
@@ -339,7 +339,7 @@ extern "C" {
   int usb_interrupt_read(usb_dev_handle *dev, int ep, char *bytes, int size,
                          int timeout);
   int usb_control_msg(usb_dev_handle *dev, int requesttype, int request,
-                      int value, int index, char *bytes, int size, 
+                      int value, int index, char *bytes, int size,
                       int timeout);
   int usb_set_configuration(usb_dev_handle *dev, int configuration);
   int usb_claim_interface(usb_dev_handle *dev, int interface);
@@ -365,7 +365,7 @@ extern "C" {
   int usb_install_service_np(void);
   void CALLBACK usb_install_service_np_rundll(HWND wnd, HINSTANCE instance,
                                               LPSTR cmd_line, int cmd_show);
-  
+
   #define LIBUSB_HAS_UNINSTALL_SERVICE_NP 1
   int usb_uninstall_service_np(void);
   void CALLBACK usb_uninstall_service_np_rundll(HWND wnd, HINSTANCE instance,

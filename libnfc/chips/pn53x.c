@@ -1,15 +1,15 @@
 /*-
  * Public platform independent Near Field Communication (NFC) library
- * 
+ *
  * Copyright (C) 2009, Roel Verdult, Romuald Conty
  * Copyright (C) 2010, Roel Verdult, Romuald Conty, Romain Tartière
  * Copyright (C) 2011, Romuald Conty, Romain Tartière
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
  * Free Software Foundation, either version 3 of the License, or (at your
  * option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
@@ -80,11 +80,11 @@ pn53x_init(struct nfc_device *pnd)
       nbSupportedModulation++;
       CHIP_DATA(pnd)->supported_modulation_as_initiator[nbSupportedModulation] = NMT_FELICA;
       nbSupportedModulation++;
-    } 
+    }
     if (pnd->btSupportByte & SUPPORT_ISO14443B) {
       CHIP_DATA(pnd)->supported_modulation_as_initiator[nbSupportedModulation] = NMT_ISO14443B;
       nbSupportedModulation++;
-    } 
+    }
     if(CHIP_DATA(pnd)->type != PN531) {
       CHIP_DATA(pnd)->supported_modulation_as_initiator[nbSupportedModulation] = NMT_JEWEL;
       nbSupportedModulation++;
@@ -93,11 +93,11 @@ pn53x_init(struct nfc_device *pnd)
     nbSupportedModulation++;
     CHIP_DATA(pnd)->supported_modulation_as_initiator[nbSupportedModulation] = 0;
   }
-  
+
   if (!CHIP_DATA(pnd)->supported_modulation_as_target) {
     CHIP_DATA(pnd)->supported_modulation_as_target = (nfc_modulation_type*) pn53x_supported_modulation_as_target;
   }
-    
+
   // CRC handling should be enabled by default as declared in nfc_device_new
   // which is the case by default for pn53x, so nothing to do here
   // Parity handling should be enabled by default as declared in nfc_device_new
@@ -488,7 +488,7 @@ pn53x_decode_target_data (const uint8_t *pbtRawData, size_t szRawData, pn53x_typ
     case NMT_ISO14443BI:
       // Skip V & T Addresses
       pbtRawData++;
-      if (*pbtRawData != 0x07) { // 0x07 = REPGEN 
+      if (*pbtRawData != 0x07) { // 0x07 = REPGEN
         return NFC_ECHIP;
       }
       pbtRawData++;
@@ -757,7 +757,7 @@ pn53x_int_to_timeout (const int ms)
   return res;
 }
 
-int 
+int
 pn53x_set_property_int (struct nfc_device *pnd, const nfc_property property, const int value)
 {
   switch (property) {
@@ -846,7 +846,7 @@ pn53x_set_property_bool (struct nfc_device *pnd, const nfc_property property, co
       // TODO Made some research around this point:
       // timings could be tweak better than this, and maybe we can tweak timings
       // to "gain" a sort-of hardware polling (ie. like PN532 does)
-      if (pn53x_RFConfiguration__MaxRetries (pnd, 
+      if (pn53x_RFConfiguration__MaxRetries (pnd,
         (bEnable) ? 0xff : 0x00,        // MxRtyATR, default: active = 0xff, passive = 0x02
         (bEnable) ? 0xff : 0x01,        // MxRtyPSL, default: 0x01
         (bEnable) ? 0xff : 0x02         // MxRtyPassiveActivation, default: 0xff (0x00 leads to problems with PN531)
@@ -984,7 +984,7 @@ pn53x_check_communication (struct nfc_device *pnd)
   szRx = (size_t) res;
   if ((sizeof(abtExpectedRx) == szRx) && (0 == memcmp (abtRx, abtExpectedRx, sizeof(abtExpectedRx))))
     return NFC_SUCCESS;
-  
+
   return NFC_EIO;
 }
 
@@ -1051,7 +1051,7 @@ pn53x_initiator_select_passive_target_ext (struct nfc_device *pnd,
       const uint8_t abtReqt[]= { 0x10 };
       // Getting product code / fab code & store it in output buffer after the serial nr we'll obtain later
       if ((res = pn53x_initiator_transceive_bytes (pnd, abtReqt, sizeof(abtReqt), abtTargetsData+2, sizeof(abtTargetsData)-2, timeout)) < 0) {
-        return res;        
+        return res;
       }
       szTargetsData = (size_t)res;
     }
@@ -1123,7 +1123,7 @@ pn53x_initiator_poll_target (struct nfc_device *pnd,
                               nfc_target *pnt)
 {
   int res = 0;
-  
+
   if (CHIP_DATA(pnd)->type == PN532) {
     size_t szTargetTypes = 0;
     pn53x_target_type apttTargetTypes[32];
@@ -1167,7 +1167,7 @@ pn53x_initiator_poll_target (struct nfc_device *pnd,
           size_t szInitiatorData;
           prepare_initiator_data (pnmModulations[n], &pbtInitiatorData, &szInitiatorData);
           const int timeout_ms = uiPeriod * 150;
-    
+
           if ((res = pn53x_initiator_select_passive_target_ext (pnd, pnmModulations[n], pbtInitiatorData, szInitiatorData, pnt, timeout_ms)) < 0) {
             if (pnd->last_error != NFC_ETIMEOUT) {
               return pnd->last_error;
@@ -1631,7 +1631,7 @@ pn53x_initiator_deselect_target (struct nfc_device *pnd)
   return pn53x_InDeselect (pnd, 0);   // 0 mean deselect all selected targets
 }
 
-int 
+int
 pn53x_initiator_target_is_present (struct nfc_device *pnd, const nfc_target nt)
 {
   // TODO Check if nt is equal to current target
@@ -1786,7 +1786,7 @@ pn53x_target_init (struct nfc_device *pnd, nfc_target *pnt, uint8_t *pbtRx, cons
       // Set System Code
       abtFeliCaParams[16] = 0x0f;
       abtFeliCaParams[17] = 0xab;
-    
+
       pbtFeliCaParams = abtFeliCaParams;
     break;
     case NMT_ISO14443B:
@@ -1884,7 +1884,7 @@ pn53x_target_receive_bits (struct nfc_device *pnd, uint8_t *pbtRx, const size_t 
   uint8_t  abtRx[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
   size_t  szRx = sizeof (abtRx);
   int res = 0;
-  
+
   // Try to gather a received frame from the reader
   if ((res = pn53x_transceive (pnd, abtCmd, sizeof (abtCmd), abtRx, szRx, -1)) < 0)
     return res;
@@ -2048,7 +2048,7 @@ pn53x_target_send_bytes (struct nfc_device *pnd, const uint8_t *pbtTx, const siz
             return pnd->last_error;
           }
         }
-      // NO BREAK      
+      // NO BREAK
       case NMT_JEWEL:
       case NMT_ISO14443B:
       case NMT_ISO14443BI:
@@ -2064,7 +2064,7 @@ pn53x_target_send_bytes (struct nfc_device *pnd, const uint8_t *pbtTx, const siz
 
   // Copy the data into the command frame
   memcpy (abtCmd + 1, pbtTx, szTx);
-  
+
   // Try to send the bits to the reader
   if ((res = pn53x_transceive (pnd, abtCmd, szTx + 1, NULL, 0, timeout)) < 0)
     return res;
@@ -2565,7 +2565,7 @@ pn53x_TgInitAsTarget (struct nfc_device *pnd, pn53x_target_mode ptm,
     return res;
   szRx = (size_t) res;
 
-  // Note: the first byte is skip: 
+  // Note: the first byte is skip:
   //       its the "mode" byte which contains baudrate, DEP and Framing type (Mifare, active or FeliCa) datas.
   if(pbtModeByte) {
     *pbtModeByte = abtRx[0];
@@ -2573,7 +2573,7 @@ pn53x_TgInitAsTarget (struct nfc_device *pnd, pn53x_target_mode ptm,
 
   // Save the received byte count
   szRx -= 1;
-  
+
   if ((szRx - 1) > szRxLen)
     return NFC_EOVFLOW;
   // Copy the received bytes
@@ -2831,7 +2831,7 @@ pn53x_nm_to_ptt(const nfc_modulation nm)
   return PTT_UNDEFINED;
 }
 
-int    
+int
 pn53x_get_supported_modulation(nfc_device *pnd, const nfc_mode mode, const nfc_modulation_type * *const supported_mt)
 {
   switch (mode) {
@@ -2841,7 +2841,7 @@ pn53x_get_supported_modulation(nfc_device *pnd, const nfc_mode mode, const nfc_m
     case N_INITIATOR:
       *supported_mt = CHIP_DATA(pnd)->supported_modulation_as_initiator;
     break;
-    default: 
+    default:
       return NFC_EINVARG;
   }
   return NFC_SUCCESS;
@@ -2849,12 +2849,12 @@ pn53x_get_supported_modulation(nfc_device *pnd, const nfc_mode mode, const nfc_m
 
 int
 pn53x_get_supported_baud_rate (nfc_device *pnd, const nfc_modulation_type nmt, const nfc_baud_rate * *const supported_br)
-{  
+{
   switch (nmt) {
-    case NMT_FELICA: 
+    case NMT_FELICA:
       *supported_br = (nfc_baud_rate*)pn53x_felica_supported_baud_rates;
     break;
-    case NMT_ISO14443A: 
+    case NMT_ISO14443A:
       *supported_br = (nfc_baud_rate*)pn53x_iso14443a_supported_baud_rates;
     break;
     case NMT_ISO14443B:
@@ -2872,7 +2872,7 @@ pn53x_get_supported_baud_rate (nfc_device *pnd, const nfc_modulation_type nmt, c
     case NMT_JEWEL:
       *supported_br = (nfc_baud_rate*)pn53x_jewel_supported_baud_rates;
     break;
-    case NMT_DEP: 
+    case NMT_DEP:
       *supported_br = (nfc_baud_rate*)pn53x_dep_supported_baud_rates;
     break;
     default:
@@ -2906,7 +2906,7 @@ pn53x_get_information_about (nfc_device *pnd, char *buf, size_t buflen)
   if ((res = nfc_device_get_supported_modulation(pnd, N_INITIATOR, &nmt)) < 0) {
     return res;
   }
-  
+
   for (int i=0; nmt[i]; i++) {
     if ((res = snprintf (buf, buflen, "%s%s (", (i==0)?"":", ", str_nfc_modulation_type (nmt[i]))) < 0) {
       return NFC_ESOFT;
@@ -2920,7 +2920,7 @@ pn53x_get_information_about (nfc_device *pnd, char *buf, size_t buflen)
     if ((res = nfc_device_get_supported_baud_rate (pnd, nmt[i], &nbr)) < 0) {
       return res;
     }
-    
+
     for (int j=0; nbr[j]; j++) {
       if ((res = snprintf (buf, buflen, "%s%s", (j==0)?"":", ", str_nfc_baud_rate (nbr[j]))) < 0) {
         return NFC_ESOFT;
@@ -2960,7 +2960,7 @@ pn53x_get_information_about (nfc_device *pnd, char *buf, size_t buflen)
   if ((res = nfc_device_get_supported_modulation(pnd, N_TARGET, &nmt)) < 0) {
     return res;
   }
-  
+
   for (int i=0; nmt[i]; i++) {
     if ((res = snprintf (buf, buflen, "%s%s (", (i==0)?"":", ", str_nfc_modulation_type (nmt[i]))) < 0) {
       return NFC_ESOFT;
@@ -2974,7 +2974,7 @@ pn53x_get_information_about (nfc_device *pnd, char *buf, size_t buflen)
     if ((res = nfc_device_get_supported_baud_rate (pnd, nmt[i], &nbr)) < 0) {
       return res;
     }
-    
+
     for (int j=0; nbr[j]; j++) {
       if ((res = snprintf (buf, buflen, "%s%s", (j==0)?"":", ", str_nfc_baud_rate (nbr[j]))) < 0) {
         return NFC_ESOFT;
@@ -3043,10 +3043,10 @@ pn53x_data_new (struct nfc_device *pnd, const struct pn53x_io *io)
 
   // Set default communication timeout (52 ms)
   CHIP_DATA (pnd)->timeout_communication = 52;
-  
+
   CHIP_DATA (pnd)->supported_modulation_as_initiator = NULL;
-  
-  CHIP_DATA (pnd)->supported_modulation_as_target = NULL;  
+
+  CHIP_DATA (pnd)->supported_modulation_as_target = NULL;
 }
 
 void

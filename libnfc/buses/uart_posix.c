@@ -1,15 +1,15 @@
 /*-
  * Public platform independent Near Field Communication (NFC) library
- * 
+ *
  * Copyright (C) 2009, 2010, Roel Verdult, Romuald Conty
  * Copyright (C) 2010, Roel Verdult, Romuald Conty
  * Copyright (C) 2011, Romuald Conty, Romain Tartière
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
  * Free Software Foundation, either version 3 of the License, or (at your
  * option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
@@ -138,7 +138,7 @@ void
 uart_set_speed (serial_port sp, const uint32_t uiPortSpeed)
 {
   log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "Serial port speed requested to be set to %d bauds.", uiPortSpeed);
-  
+
   // Portability note: on some systems, B9600 != 9600 so we have to do
   // uint32_t <=> speed_t associations by hand.
   speed_t stPortSpeed = B9600;
@@ -352,13 +352,13 @@ uart_list_ports (void)
 		char **res2 = realloc (res, (szRes+1) * sizeof (char *));
 		if (!res2)
 		    goto oom;
-		
+
 		res = res2;
 		if (!(res[szRes-1] = malloc (6 + strlen (pdDirEnt->d_name))))
 		    goto oom;
 
 		sprintf (res[szRes-1], "/dev/%s", pdDirEnt->d_name);
-		
+
 		szRes++;
 		res[szRes-1] = NULL;
 	    }

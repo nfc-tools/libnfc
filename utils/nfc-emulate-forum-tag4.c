@@ -1,13 +1,13 @@
 /*-
  * Public platform independent Near Field Communication (NFC) library examples
- * 
+ *
  * Copyright (C) 2010, Roel Verdult, Romuald Conty
  * Copyright (C) 2011, Romain Tartière, Romuald Conty
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  *  1) Redistributions of source code must retain the above copyright notice,
- *  this list of conditions and the following disclaimer. 
+ *  this list of conditions and the following disclaimer.
  *  2 )Redistributions in binary form must reproduce the above copyright
  *  notice, this list of conditions and the following disclaimer in the
  *  documentation and/or other materials provided with the distribution.
@@ -23,7 +23,7 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * Note that this license only applies on the examples, NFC library itself is under LGPL
  *
  */
@@ -91,7 +91,7 @@ uint8_t nfcforum_capability_container[] = {
   0x00, 0x0F, /* CCLEN 15 bytes */
   0x20,       /* Mapping version 2.0, use option -1 to force v1.0 */
   0x00, 0x54, /* MLe Maximum R-ADPU data size */
-// Notes: 
+// Notes:
 //  - I (Romuald) don't know why Nokia 6212 Classic refuses the NDEF message if MLe is more than 0xFD (any suggests are welcome);
 //  - ARYGON devices doesn't support extended frame sending, consequently these devices can't sent more than 0xFE bytes as APDU, so 0xFB APDU data bytes.
 //  - I (Romuald) don't know why ARYGON device doesn't ACK when MLe > 0x54 (ARYGON frame length = 0xC2 (192 bytes))
@@ -364,7 +364,7 @@ main (int argc, char *argv[])
       err (EXIT_FAILURE, "Can't load NDEF file '%s'", argv[1 + options]);
     }
   }
-  
+
   nfc_init (NULL);
 
   // Try to open the NFC reader
@@ -391,7 +391,7 @@ main (int argc, char *argv[])
       err (EXIT_FAILURE, "Can't save NDEF file '%s'", argv[2 + options]);
     }
   }
-  
+
   nfc_exit (NULL);
   exit (EXIT_SUCCESS);
 }

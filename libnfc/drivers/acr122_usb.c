@@ -1,15 +1,15 @@
 /*-
  * Public platform independent Near Field Communication (NFC) library
- * 
+ *
  * Copyright (C) 2009, Roel Verdult
  * Copyright (C) 2010, Romain Tartière, Romuald Conty
  * Copyright (C) 2011, Romain Tartière, Romuald Conty
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
  * Free Software Foundation, either version 3 of the License, or (at your
  * option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
@@ -33,7 +33,7 @@
  * Revision 1.1
  * April 22rd, 2005
  * http://www.usb.org/developers/devclass_docs/DWG_Smart-Card_CCID_Rev110.pdf
- * 
+ *
  * ACR122U NFC Reader
  * Application Programming Interface
  * Revision 1.2
@@ -684,7 +684,7 @@ acr122_usb_init (nfc_device *pnd)
 
 /*
   // See ACR122 manual: "Bi-Color LED and Buzzer Control" section
-  uint8_t acr122u_get_led_state_frame[] = { 
+  uint8_t acr122u_get_led_state_frame[] = {
     0x6b, // CCID
     0x09, // lenght of frame
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // padding

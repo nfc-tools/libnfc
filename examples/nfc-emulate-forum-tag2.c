@@ -1,12 +1,12 @@
 /*-
  * Public platform independent Near Field Communication (NFC) library examples
- * 
+ *
  * Copyright (C) 2011, Romuald Conty
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  *  1) Redistributions of source code must retain the above copyright notice,
- *  this list of conditions and the following disclaimer. 
+ *  this list of conditions and the following disclaimer.
  *  2 )Redistributions in binary form must reproduce the above copyright
  *  notice, this list of conditions and the following disclaimer in the
  *  documentation and/or other materials provided with the distribution.
@@ -22,7 +22,7 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * Note that this license only applies on the examples, NFC library itself is under LGPL
  *
  */
@@ -31,7 +31,7 @@
  * @file nfc-emulate-forum-tag2.c
  * @brief Emulates a NFC Forum Tag Type 2 with a NDEF message
  * This example allow to emulate an NFC Forum Tag Type 2 that contains a read-only NDEF message.
- * 
+ *
  * It have been developed using PN533 USB hardware as target and Google Nexus S phone as initiator.
  *
  * This is know to NOT work with Nokia 6212 Classic and could not work with
@@ -51,8 +51,8 @@
  * NFC Forum Type 2 Tag Operation
  *  Technical Specification
  *  NFCForum-TS-Type-2-Tag_1.0 - 2007-07-09
- * 
- * ISO/IEC 14443-3 
+ *
+ * ISO/IEC 14443-3
  *  First edition - 2001-02-01
  *  Identification cards — Contactless integrated circuit(s) cards — Proximity cards
  *  Part 3: Initialization and anticollision
@@ -86,7 +86,7 @@ stop_emulation (int sig)
 
 static uint8_t __nfcforum_tag2_memory_area[] = {
   0x00, 0x00, 0x00, 0x00,  // Block 0
-  0x00, 0x00, 0x00, 0x00, 
+  0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0xFF, 0xFF,  // Block 2 (Static lock bytes: CC area and data area are read-only locked)
   0xE1, 0x10, 0x06, 0x0F,  // Block 3 (CC - NFC-Forum Tag Type 2 version 1.0, Data area (from block 4 to the end) is 48 bytes, Read-only mode)
 
@@ -182,7 +182,7 @@ main(int argc, char *argv[])
   };
 
   signal (SIGINT, stop_emulation);
-  nfc_init (NULL);  
+  nfc_init (NULL);
   pnd = nfc_open (NULL, NULL);
 
   if (pnd == NULL) {

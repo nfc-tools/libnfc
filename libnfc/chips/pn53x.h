@@ -1,15 +1,15 @@
 /*-
  * Public platform independent Near Field Communication (NFC) library
- * 
+ *
  * Copyright (C) 2009, Roel Verdult, Romuald Conty
  * Copyright (C) 2010, Roel Verdult, Romuald Conty, Romain Tartière
  * Copyright (C) 2011, Romuald Conty, Romain Tartière
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
  * Free Software Foundation, either version 3 of the License, or (at your
  * option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
@@ -19,7 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
 
-/** 
+/**
  * @file pn53x.h
  * @brief PN531, PN532 and PN533 common functions
  */
@@ -189,8 +189,8 @@ struct pn53x_data {
   int timeout_atr;
 /** Communication timeout */
   int timeout_communication;
-/** Supported modulation type */  
-  nfc_modulation_type *supported_modulation_as_initiator;  
+/** Supported modulation type */
+  nfc_modulation_type *supported_modulation_as_initiator;
   nfc_modulation_type *supported_modulation_as_target;
 };
 
@@ -210,7 +210,7 @@ typedef enum {
 /** JIS X 6319-4 (Sony Felica) http://en.wikipedia.org/wiki/FeliCa */
   PM_FELICA_424 = 0x02,
 /** ISO14443-B http://en.wikipedia.org/wiki/ISO/IEC_14443 (Not supported by PN531) */
-  PM_ISO14443B_106 = 0x03, 
+  PM_ISO14443B_106 = 0x03,
 /** Jewel Topaz (Innovision Research & Development) (Not supported by PN531) */
   PM_JEWEL_106 = 0x04,
 /** ISO14443-B http://en.wikipedia.org/wiki/ISO/IEC_14443 (Not supported by PN531 nor PN532) */
@@ -322,7 +322,7 @@ int    pn53x_initiator_poll_target (struct nfc_device *pnd,
                                      nfc_target *pnt);
 int    pn53x_initiator_select_dep_target (struct nfc_device *pnd,
                                            const nfc_dep_mode ndm, const nfc_baud_rate nbr,
-                                           const nfc_dep_info *pndiInitiator, 
+                                           const nfc_dep_info *pndiInitiator,
                                            nfc_target *pnt,
                                            const int timeout);
 int    pn53x_initiator_transceive_bits (struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szTxBits,

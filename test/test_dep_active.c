@@ -93,7 +93,7 @@ target_thread (void *arg)
   const uint8_t abtAttRx[] = "Hello DEP target!";
   cut_assert_equal_memory (abtAttRx, sizeof (abtAttRx), abtRx, szRx, cut_message ("Invalid received data"));
   if (res <= 0) { thread_res = -1; return (void*) thread_res; }
-  
+
   const uint8_t abtTx[] = "Hello DEP initiator!";
   res = nfc_target_send_bytes (device, abtTx, sizeof(abtTx), 500);
   cut_assert_operator_int (res, >, 0, cut_message ("Can't send bytes to initiator: %s", nfc_strerror (device)));
@@ -121,7 +121,7 @@ initiator_thread (void *arg)
 
   nfc_target nt;
 
-  // Active mode 
+  // Active mode
   printf ("=========== INITIATOR %s (Active mode / %s Kbps) =========\n", nfc_device_get_name (device), str_nfc_baud_rate(nbr));
   res = nfc_initiator_select_dep_target (device, NDM_ACTIVE, nbr, NULL, &nt, 1000);
   cut_assert_operator_int (res, >, 0, cut_message ("Can't select any DEP target: %s", nfc_strerror (device)));
@@ -159,15 +159,15 @@ test_dep (void)
     .device = devices[TARGET],
     .cut_test_context = test_context,
   };
-  
+
   struct thread_data initiator_data = {
     .device = devices[INITIATOR],
     .cut_test_context = test_context,
   };
-  
+
   for (int i = 0; i < 3; i++) {
     initiator_data.nbr = nbrs[i];
-    
+
     if ((res = pthread_create (&(threads[TARGET]), NULL, target_thread, &target_data)))
       cut_fail ("pthread_create() returned %d", res);
     if ((res = pthread_create (&(threads[INITIATOR]), NULL, initiator_thread, &initiator_data)))
@@ -181,5 +181,5 @@ test_dep (void)
     cut_assert_equal_int (0, result[INITIATOR], cut_message ("Unexpected initiator return code"));
     cut_assert_equal_int (0, result[TARGET], cut_message ("Unexpected target return code"));
   }
-  
+
 }

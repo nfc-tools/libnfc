@@ -11,7 +11,7 @@ test_register_endianness (void)
 {
     nfc_connstring connstrings[MAX_DEVICE_COUNT];
     int res = 0;
-    
+
     nfc_init (NULL);
 
     size_t device_count = nfc_list_devices (NULL, connstrings, MAX_DEVICE_COUNT);

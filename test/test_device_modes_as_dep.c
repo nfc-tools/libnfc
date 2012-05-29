@@ -57,7 +57,7 @@ target_thread (void *arg)
   cut_set_current_test_context (((struct thread_data *) arg)->cut_test_context);
 
   printf ("=========== TARGET %s =========\n", nfc_device_get_name (device));
-  nfc_target nt; 
+  nfc_target nt;
 
   uint8_t abtRx[1024];
   size_t szRx = sizeof (abtRx);
@@ -66,7 +66,7 @@ target_thread (void *arg)
   int res = nfc_target_init (device, &nt, abtRx, szRx, 500);
   cut_assert_operator_int (res, >=, 0, cut_message ("Can't initialize NFC device as target: %s", nfc_strerror (device)));
   if (res < 0) { thread_res = -1; return (void*) thread_res; }
-  
+
   // 2) act as target
   nfc_target nt1 = {
     .nm = {
@@ -96,11 +96,11 @@ target_thread (void *arg)
   res =  nfc_target_receive_bytes (device, abtRx, sizeof (abtRx), 500);
   cut_assert_operator_int (res, >, 0, cut_message ("Can't receive bytes from initiator: %s", nfc_strerror (device)));
   szRx = (size_t) res;
-  
+
   const uint8_t abtAttRx[] = "Hello DEP target!";
   cut_assert_equal_memory (abtAttRx, sizeof (abtAttRx), abtRx, szRx, cut_message ("Invalid received data"));
   if (res <= 0) { thread_res = -1; return (void*) thread_res; }
-  
+
   const uint8_t abtTx[] = "Hello DEP initiator!";
   res = nfc_target_send_bytes (device, abtTx, sizeof(abtTx), 500);
   cut_assert_operator_int (res, >, 0, cut_message ("Can't send bytes to initiator: %s", nfc_strerror (device)));
@@ -130,13 +130,13 @@ initiator_thread (void *arg)
   cut_assert_equal_int (0, res, cut_message ("Can't initialize NFC device as initiator: %s", nfc_strerror (device)));
   if (res < 0) { thread_res = -1; return (void*) thread_res; }
 
-  // 1) As other device should be in idle mode, nfc_initiator_poll_dep_target should return 0 
+  // 1) As other device should be in idle mode, nfc_initiator_poll_dep_target should return 0
   nfc_target nt;
   res = nfc_initiator_poll_dep_target (device, NDM_PASSIVE, NBR_106, NULL, &nt, 1000);
   cut_assert_equal_int (0, res, cut_message ("Problem with nfc_idle"));
   if (res != 0) { thread_res = -1; return (void*) thread_res; }
 
-  
+
   // 2 As other device should be in target mode, nfc_initiator_poll_dep_target should be positive.
   nfc_target nt1;
 
@@ -165,12 +165,12 @@ initiator_thread (void *arg)
   cut_assert_operator_int (res, >=, 0, cut_message ("Can't deselect target: %s", nfc_strerror (device)));
   if (res < 0) { thread_res = -1; return (void*) thread_res; }
 
-  // 3) As other device should be in idle mode, nfc_initiator_poll_dep_target should return 0 
+  // 3) As other device should be in idle mode, nfc_initiator_poll_dep_target should return 0
   nfc_target nt2;
   res = nfc_initiator_poll_dep_target (device, NDM_PASSIVE, NBR_106, NULL, &nt2, 1000);
   cut_assert_equal_int (0, res, cut_message ("Problem with nfc_idle"));
   if (res != 0) { thread_res = -1; return (void*) thread_res; }
-  
+
   return (void *) thread_res;
 }
 
@@ -184,12 +184,12 @@ test_dep_states (void)
     .device = first_device,
     .cut_test_context = test_context,
   };
-  
+
     struct thread_data initiator_data = {
     .device = second_device,
     .cut_test_context = test_context,
   };
-  
+
   for (int i = 0; i < 2; i++) {
     if ((res = pthread_create (&(threads[1]), NULL, target_thread, &target_data)))
       cut_fail ("pthread_create() returned %d", res);
@@ -204,7 +204,7 @@ test_dep_states (void)
 
     cut_assert_equal_int (0, result[0], cut_message ("Unexpected initiator return code"));
     cut_assert_equal_int (0, result[1], cut_message ("Unexpected target return code"));
-    
+
     // initiator --> target, target --> initiator
     target_data.device = second_device;
     initiator_data.device = first_device;

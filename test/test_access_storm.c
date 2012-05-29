@@ -18,7 +18,7 @@ test_access_storm (void)
     int res = 0;
 
     nfc_init (NULL);
-    
+
     size_t ref_device_count = nfc_list_devices (NULL, connstrings, MAX_DEVICE_COUNT);
     if (!ref_device_count)
 	cut_omit ("No NFC device found");

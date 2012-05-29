@@ -41,8 +41,8 @@
     __attribute__((format(printf, 3, 4)))
 #  endif
     ;
-    
-  
+
+
   #define NFC_PRIORITY_FATAL  "fatal"
   #define NFC_PRIORITY_ALERT  "alert"
   #define NFC_PRIORITY_CRIT   "critical"
@@ -59,7 +59,7 @@
   #define log_msg(category, priority, message) do {} while (0)
   #define log_set_appender(category, appender) do {} while (0)
   #define log_put(category, priority, format, ...) do {} while (0)
-  
+
   #define NFC_PRIORITY_FATAL  8
   #define NFC_PRIORITY_ALERT  7
   #define NFC_PRIORITY_CRIT   6

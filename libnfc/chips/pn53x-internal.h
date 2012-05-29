@@ -1,13 +1,13 @@
 /*-
  * Public platform independent Near Field Communication (NFC) library
- * 
+ *
  * Copyright (C) 2011, Romuald Conty, Romain Tartière
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
  * Free Software Foundation, either version 3 of the License, or (at your
  * option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
@@ -74,21 +74,21 @@
 #define TgGetTargetStatus 0x8A
 
 /** @note PN53x's normal frame:
- * 
+ *
  *   .-- Start
  *   |   .-- Packet length
  *   |   |  .-- Length checksum
  *   |   |  |  .-- Direction (D4 Host to PN, D5 PN to Host)
  *   |   |  |  |  .-- Code
  *   |   |  |  |  |  .-- Packet checksum
- *   |   |  |  |  |  |  .-- Postamble 
+ *   |   |  |  |  |  |  .-- Postamble
  *   V   |  |  |  |  |  |
  * ----- V  V  V  V  V  V
  * 00 FF 02 FE D4 02 2A 00
  */
 
 /** @note PN53x's extended frame:
- * 
+ *
  *   .-- Start
  *   |     .-- Fixed to FF to enable extended frame
  *   |     |     .-- Packet length
@@ -96,13 +96,13 @@
  *   |     |     |   |  .-- Direction (D4 Host to PN, D5 PN to Host)
  *   |     |     |   |  |  .-- Code
  *   |     |     |   |  |  |  .-- Packet checksum
- *   |     |     |   |  |  |  |  .-- Postamble 
+ *   |     |     |   |  |  |  |  .-- Postamble
  *   V     V     V   |  |  |  |  |
  * ----- ----- ----- V  V  V  V  V
  * 00 FF FF FF 00 02 FE D4 02 2A 00
  */
 
-/** 
+/**
  * Start bytes, packet length, length checksum, direction, packet checksum and postamble are overhead
  */
 // The TFI is considered part of the overhead
@@ -156,7 +156,7 @@ static const pn53x_command pn53x_commands[] = {
   PNCMD( SAMConfiguration, PN531|PN532 ),
   PNCMD( PowerDown, PN531|PN532 ),
   PNCMD( AlparCommandForTDA, PN533|RCS360 ), // Has another usage on RC-S360...
-  
+
   // RF communication
   PNCMD( RFConfiguration, PN531|PN532|PN533|RCS360 ),
   PNCMD( RFRegulationTest, PN531|PN532|PN533 ),

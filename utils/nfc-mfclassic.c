@@ -1,14 +1,14 @@
 /*-
  * Public platform independent Near Field Communication (NFC) library examples
- * 
+ *
  * Copyright (C) 2009, Roel Verdult
  * Copyright (C) 2010, Romuald Conty, Romain Tartière
  * Copyright (C) 2011, Adam Laurie
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  *  1) Redistributions of source code must retain the above copyright notice,
- *  this list of conditions and the following disclaimer. 
+ *  this list of conditions and the following disclaimer.
  *  2 )Redistributions in binary form must reproduce the above copyright
  *  notice, this list of conditions and the following disclaimer in the
  *  documentation and/or other materials provided with the distribution.
@@ -24,7 +24,7 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * Note that this license only applies on the examples, NFC library itself is under LGPL
  *
  */
@@ -508,7 +508,7 @@ main (int argc, const char *argv[])
     // printf("Successfully opened required files\n");
 
     nfc_init (NULL);
-    
+
     // Try to open the NFC reader
     pnd = nfc_open (NULL, NULL);
     if (pnd == NULL) {
@@ -518,7 +518,7 @@ main (int argc, const char *argv[])
 
     if (nfc_initiator_init (pnd) < 0) {
       nfc_perror (pnd, "nfc_initiator_init");
-      exit (EXIT_FAILURE);    
+      exit (EXIT_FAILURE);
     };
 
     // Let the reader only try once to find a tag
@@ -594,7 +594,7 @@ main (int argc, const char *argv[])
     nfc_close (pnd);
     break;
   };
-  
+
   nfc_exit (NULL);
   exit (EXIT_SUCCESS);
 }

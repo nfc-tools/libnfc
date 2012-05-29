@@ -1,14 +1,14 @@
 /*-
  * Public platform independent Near Field Communication (NFC) library
- * 
+ *
  * Copyright (C) 2009, Roel Verdult
  * Copyright (C) 2010, Romuald Conty
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
  * Free Software Foundation, either version 3 of the License, or (at your
  * option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
@@ -137,47 +137,47 @@ extern  "C" {
 #define NFC_EIO				-1
 /** @ingroup error
  * @hideinitializer
- * Invalid argument(s) 
+ * Invalid argument(s)
  */
 #define NFC_EINVARG			-2
 /** @ingroup error
  * @hideinitializer
- *  Operation not supported by device 
+ *  Operation not supported by device
  */
 #define NFC_EDEVNOTSUPP			-3
 /** @ingroup error
  * @hideinitializer
- * No such device 
+ * No such device
  */
 #define NFC_ENOTSUCHDEV			-4
 /** @ingroup error
  * @hideinitializer
- * Buffer overflow 
+ * Buffer overflow
  */
 #define NFC_EOVFLOW			-5
 /** @ingroup error
  * @hideinitializer
- * Operation timed out 
+ * Operation timed out
  */
 #define NFC_ETIMEOUT			-6
 /** @ingroup error
  * @hideinitializer
- * Operation aborted (by user) 
+ * Operation aborted (by user)
  */
 #define NFC_EOPABORTED			-7
 /** @ingroup error
  * @hideinitializer
- * Not (yet) implemented 
+ * Not (yet) implemented
  */
 #define NFC_ENOTIMPL			-8
 /** @ingroup error
  * @hideinitializer
- * Target released 
+ * Target released
  */
-#define NFC_ETGRELEASED			-10     
+#define NFC_ETGRELEASED			-10
 /** @ingroup error
  * @hideinitializer
- * Error while RF transmission 
+ * Error while RF transmission
  */
 #define NFC_ERFTRANS			-20
 /** @ingroup error
@@ -187,7 +187,7 @@ extern  "C" {
 #define NFC_ESOFT			-80
 /** @ingroup error
  * @hideinitializer
- * Device's internal chip error 
+ * Device's internal chip error
  */
 #define NFC_ECHIP			-90
 

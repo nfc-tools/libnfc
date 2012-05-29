@@ -1,13 +1,13 @@
 /*-
  * Public platform independent Near Field Communication (NFC) library examples
- * 
+ *
  * Copyright (C) 2009, Roel Verdult
  * Copyright (C) 2010, Romuald Conty
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  *  1) Redistributions of source code must retain the above copyright notice,
- *  this list of conditions and the following disclaimer. 
+ *  this list of conditions and the following disclaimer.
  *  2 )Redistributions in binary form must reproduce the above copyright
  *  notice, this list of conditions and the following disclaimer in the
  *  documentation and/or other materials provided with the distribution.
@@ -23,7 +23,7 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * Note that this license only applies on the examples, NFC library itself is under LGPL
  *
  */
@@ -116,9 +116,9 @@ main (int argc, char *argv[])
     ERR ("%zd device found but two opened devices are needed to relay NFC.", szFound);
     return EXIT_FAILURE;
   }
-  
+
   nfc_init (NULL);
-  
+
   // Try to open the NFC emulator device
   pndTag = nfc_open (NULL, connstrings[0]);
   if (pndTag == NULL) {
@@ -168,10 +168,10 @@ main (int argc, char *argv[])
 
   printf ("NFC reader device: %s opened", nfc_device_get_name (pndReader));
   printf ("%s", "Configuring NFC reader settings...");
-  
+
   if (nfc_initiator_init (pndReader) < 0) {
     nfc_perror (pndReader, "nfc_initiator_init");
-    exit (EXIT_FAILURE);    
+    exit (EXIT_FAILURE);
   }
   if ((nfc_device_set_property_bool (pndReader, NP_HANDLE_CRC, false) < 0) ||
       (nfc_device_set_property_bool (pndReader, NP_HANDLE_PARITY, false) < 0) ||
@@ -220,7 +220,7 @@ main (int argc, char *argv[])
     }
   }
 
-  nfc_close (pndTag);  
+  nfc_close (pndTag);
   nfc_close (pndReader);
   nfc_exit (NULL);
   exit (EXIT_SUCCESS);

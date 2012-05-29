@@ -1,15 +1,15 @@
 /**
  * Public platform independent Near Field Communication (NFC) library
- * 
+ *
  * Copyright (C) 2009, Roel Verdult
  * Copyright (C) 2010, Romain Tartière, Romuald Conty
  * Copyright (C) 2011, Romain Tartière, Romuald Conty
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
  * Free Software Foundation, either version 3 of the License, or (at your
  * option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
@@ -19,7 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
 
-/** 
+/**
  * @file nfc-types.h
  * @brief Define NFC types
  */
@@ -48,13 +48,13 @@ typedef char nfc_connstring[1024];
  * Properties
  */
 typedef enum {
-/** 
+/**
  * Default command processing timeout
  * Property value's (duration) unit is ms and 0 means no timeout (infinite).
  * Default value is set by driver layer
  */
   NP_TIMEOUT_COMMAND,
-/** 
+/**
  * Timeout between ATR_REQ and ATR_RES
  * When the device is in initiator mode, a target is considered as mute if no
  * valid ATR_RES is received within this timeout value.

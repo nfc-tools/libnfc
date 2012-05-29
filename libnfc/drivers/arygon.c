@@ -1,15 +1,15 @@
 /*-
  * Public platform independent Near Field Communication (NFC) library
- * 
+ *
  * Copyright (C) 2009, Roel Verdult
  * Copyright (C) 2010, Romuald Conty
  * Copyright (C) 2011, Romain Tartière, Romuald Conty
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
  * Free Software Foundation, either version 3 of the License, or (at your
  * option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
@@ -22,7 +22,7 @@
 /**
  * @file arygon.c
  * @brief ARYGON readers driver
- * 
+ *
  * This driver can handle ARYGON readers that use UART as bus.
  * UART connection can be direct (host<->arygon_uc) or could be provided by internal USB to serial interface (e.g. host<->ftdi_chip<->arygon_uc)
  */
@@ -50,11 +50,11 @@
 #include "uart.h"
 
 /** @def DEV_ARYGON_PROTOCOL_ARYGON_ASCII
- * @brief High level language in ASCII format. (Common µC commands and Mifare® commands) 
+ * @brief High level language in ASCII format. (Common µC commands and Mifare® commands)
  */
 #define DEV_ARYGON_PROTOCOL_ARYGON_ASCII        '0'
 /** @def DEV_ARYGON_MODE_HL_ASCII
- * @brief High level language in Binary format With AddressingByte for party line. (Common µC commands and Mifare® commands) 
+ * @brief High level language in Binary format With AddressingByte for party line. (Common µC commands and Mifare® commands)
  */
 #define DEV_ARYGON_PROTOCOL_ARYGON_BINARY_WAB   '1'
 /** @def DEV_ARYGON_PROTOCOL_TAMA
@@ -541,7 +541,7 @@ arygon_reset_tama (nfc_device *pnd)
   return NFC_SUCCESS;
 }
 
-static int 
+static int
 arygon_abort_command (nfc_device *pnd)
 {
   if (pnd) {

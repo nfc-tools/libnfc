@@ -1,15 +1,15 @@
 /*-
  * Public platform independent Near Field Communication (NFC) library
- * 
+ *
  * Copyright (C) 2009, Roel Verdult
  * Copyright (C) 2010, Romain Tartière, Romuald Conty
  * Copyright (C) 2011, Romain Tartière, Romuald Conty
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
  * Free Software Foundation, either version 3 of the License, or (at your
  * option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
@@ -686,19 +686,19 @@ pn53x_usb_init (nfc_device *pnd)
 
 /*
 On ASK LoGO hardware:
-  LEDs port bits definition: 
+  LEDs port bits definition:
    * LED 1: bit 2 (P32)
    * LED 2: bit 1 (P31)
    * LED 3: bit 0 or 3 (depending of hardware revision) (P30 or P33)
    * LED 4: bit 5 (P35)
-  Notes: 
-   * Set logical 0 to switch LED on; logical 1 to switch LED off. 
+  Notes:
+   * Set logical 0 to switch LED on; logical 1 to switch LED off.
    * Bit 4 should be maintained at 1 to keep RF field on.
 
   Progressive field activation:
    The ASK LoGO hardware can progressively power-up the antenna.
    To use this feature we have to switch on the field by switching on
-   the field on PN533 (RFConfiguration) then set P34 to '1', and cut-off the 
+   the field on PN533 (RFConfiguration) then set P34 to '1', and cut-off the
    field by switching off the field on PN533 then set P34 to '0'.
 */
 

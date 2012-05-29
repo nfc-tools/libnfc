@@ -1,12 +1,12 @@
 /*-
  * Public platform independent Near Field Communication (NFC) library examples
- * 
+ *
  * Copyright (C) 2010, Romuald Conty
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  *  1) Redistributions of source code must retain the above copyright notice,
- *  this list of conditions and the following disclaimer. 
+ *  this list of conditions and the following disclaimer.
  *  2 )Redistributions in binary form must reproduce the above copyright
  *  notice, this list of conditions and the following disclaimer in the
  *  documentation and/or other materials provided with the distribution.
@@ -22,7 +22,7 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * Note that this license only applies on the examples, NFC library itself is under LGPL
  *
  */
@@ -192,7 +192,7 @@ main (int argc, char *argv[])
 #endif
 
   nfc_init (NULL);
-  
+
   nfc_connstring connstrings[MAX_DEVICE_COUNT];
   // List available devices
   size_t szFound = nfc_list_devices (NULL, connstrings, MAX_DEVICE_COUNT);
@@ -277,7 +277,7 @@ main (int argc, char *argv[])
         nfc_exit (NULL);
         exit(EXIT_FAILURE);
       }
-    } 
+    }
   }
   if (initiator_only_mode) {
     printf ("Hint: tag <---> *INITIATOR* (relay) <-FD3/FD4-> target (relay) <---> original reader\n\n");
@@ -352,7 +352,7 @@ main (int argc, char *argv[])
 
     printf("We will emulate:\n");
     print_nfc_iso14443a_info (ntEmulatedTarget.nti.nai, false);
- 
+
     // Try to open the NFC emulator device
     pndTarget = nfc_open (NULL, connstrings[0]);
     if (pndTarget == NULL) {

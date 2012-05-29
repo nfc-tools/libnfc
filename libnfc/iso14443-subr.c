@@ -1,13 +1,13 @@
 /*-
  * Public platform independent Near Field Communication (NFC) library
- * 
+ *
  * Copyright (C) 2009, Roel Verdult
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
  * Free Software Foundation, either version 3 of the License, or (at your
  * option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
@@ -95,28 +95,28 @@ iso14443a_locate_historical_bytes (uint8_t *pbtAts, size_t szAts, size_t *pszTk)
  * @brief Add cascade tags (0x88) in UID
  * @see ISO/IEC 14443-3 (6.4.4 UID contents and cascade levels)
  */
-void 
+void
 iso14443_cascade_uid (const uint8_t abtUID[], const size_t szUID, uint8_t *pbtCascadedUID, size_t *pszCascadedUID)
 {
-  switch (szUID) { 
-    case 7: 
-      pbtCascadedUID[0] = 0x88; 
-      memcpy (pbtCascadedUID + 1, abtUID, 7); 
-      *pszCascadedUID = 8; 
-      break; 
- 
-    case 10: 
-      pbtCascadedUID[0] = 0x88; 
-      memcpy (pbtCascadedUID + 1, abtUID, 3); 
-      pbtCascadedUID[4] = 0x88; 
-      memcpy (pbtCascadedUID + 5, abtUID + 3, 7); 
-      *pszCascadedUID = 12; 
-      break; 
- 
-    case 4: 
-    default: 
-      memcpy (pbtCascadedUID, abtUID, szUID); 
-      *pszCascadedUID = szUID; 
-      break; 
-  } 
+  switch (szUID) {
+    case 7:
+      pbtCascadedUID[0] = 0x88;
+      memcpy (pbtCascadedUID + 1, abtUID, 7);
+      *pszCascadedUID = 8;
+      break;
+
+    case 10:
+      pbtCascadedUID[0] = 0x88;
+      memcpy (pbtCascadedUID + 1, abtUID, 3);
+      pbtCascadedUID[4] = 0x88;
+      memcpy (pbtCascadedUID + 5, abtUID + 3, 7);
+      *pszCascadedUID = 12;
+      break;
+
+    case 4:
+    default:
+      memcpy (pbtCascadedUID, abtUID, szUID);
+      *pszCascadedUID = szUID;
+      break;
+  }
 }
