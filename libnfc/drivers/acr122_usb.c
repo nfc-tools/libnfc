@@ -682,7 +682,7 @@ acr122_usb_init (nfc_device *pnd)
   int res = 0;
   uint8_t  abtRxBuf[ACR122_USB_BUFFER_LEN];
 
-/*
+  /*
   // See ACR122 manual: "Bi-Color LED and Buzzer Control" section
   uint8_t acr122u_get_led_state_frame[] = {
     0x6b, // CCID
@@ -703,7 +703,7 @@ acr122_usb_init (nfc_device *pnd)
 
   if ((res = acr122_usb_bulk_read (DRIVER_DATA (pnd), abtRxBuf, sizeof (abtRxBuf), 1000)) < 0)
     return res;
-*/
+  */
 
   if ((res = pn53x_set_property_int (pnd, NP_TIMEOUT_COMMAND, 1000)) < 0)
     return res;

@@ -222,7 +222,7 @@ main (int argc, char *argv[])
       },
     },
   };
-/*
+  /*
   // Example of a FeliCa
   nfc_target nt = {
     .nm = {
@@ -237,8 +237,8 @@ main (int argc, char *argv[])
       },
     },
   };
-*/
-/*
+  */
+  /*
   // Example of a ISO14443-4 (DESfire)
   nfc_target nt = {
     .nm = {
@@ -256,7 +256,7 @@ main (int argc, char *argv[])
       },
     },
   };
-*/
+  */
 
   printf ("%s will emulate this ISO14443-A tag:\n", argv[0]);
   print_nfc_iso14443a_info (nt.nti.nai, true);
