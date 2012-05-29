@@ -134,7 +134,7 @@ pn532_uart_probe(nfc_connstring connstrings[], size_t connstrings_len, size_t *p
   }
   iDevice = 0;
   while ((acPort = acPorts[iDevice++])) {
-    free((void*)acPort);
+    free((void *)acPort);
   }
   free(acPorts);
 #endif /* SERIAL_AUTOPROBE_ENABLED */
@@ -358,7 +358,7 @@ pn532_uart_receive(nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, in
 #ifndef WIN32
   abort_p = &(DRIVER_DATA(pnd)->iAbortFds[1]);
 #else
-  abort_p = (void*) & (DRIVER_DATA(pnd)->abort_flag);
+  abort_p = (void *) & (DRIVER_DATA(pnd)->abort_flag);
 #endif
 
   pnd->last_error = uart_receive(DRIVER_DATA(pnd)->port, abtRxBuf, 5, abort_p, timeout);

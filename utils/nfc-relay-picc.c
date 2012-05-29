@@ -68,8 +68,8 @@ static bool quiet_output = false;
 static bool initiator_only_mode = false;
 static bool target_only_mode = false;
 static int waiting_time = 0;
-FILE * fd3;
-FILE * fd4;
+FILE *fd3;
+FILE *fd4;
 
 static void
 intr_hdlr(int sig)
@@ -336,7 +336,7 @@ main(int argc, char *argv[])
     // PC/SC pseudo-ATR = 3B 80 80 01 01 if there is no historical bytes
 
     // Creates ATS and copy max 48 bytes of Tk:
-    uint8_t * pbtTk;
+    uint8_t *pbtTk;
     size_t szTk;
     pbtTk = iso14443a_locate_historical_bytes(ntEmulatedTarget.nti.nai.abtAts, ntEmulatedTarget.nti.nai.szAtsLen, &szTk);
     szTk = (szTk > 48) ? 48 : szTk;

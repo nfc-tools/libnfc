@@ -67,14 +67,14 @@
 
 #define MAX_FRAME_LEN 264
 
-int main(int argc, const char* argv[])
+int main(int argc, const char *argv[])
 {
   nfc_device *pnd;
   uint8_t abtRx[MAX_FRAME_LEN];
   uint8_t abtTx[MAX_FRAME_LEN];
   size_t szRx = sizeof(abtRx);
   size_t szTx;
-  FILE* input = NULL;
+  FILE *input = NULL;
 
   if (argc >= 2) {
     if ((input = fopen(argv[1], "r")) == NULL) {

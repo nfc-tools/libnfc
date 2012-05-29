@@ -156,7 +156,7 @@ arygon_probe(nfc_connstring connstrings[], size_t connstrings_len, size_t *pszDe
   }
   iDevice = 0;
   while ((acPort = acPorts[iDevice++])) {
-    free((void*)acPort);
+    free((void *)acPort);
   }
   free(acPorts);
 #endif /* SERIAL_AUTOPROBE_ENABLED */
@@ -378,7 +378,7 @@ arygon_tama_receive(nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, i
 #ifndef WIN32
   abort_p = &(DRIVER_DATA(pnd)->iAbortFds[1]);
 #else
-  abort_p = (void*) & (DRIVER_DATA(pnd)->abort_flag);
+  abort_p = (void *) & (DRIVER_DATA(pnd)->abort_flag);
 #endif
 
   pnd->last_error = uart_receive(DRIVER_DATA(pnd)->port, abtRxBuf, 5, abort_p, timeout);
@@ -508,7 +508,7 @@ arygon_firmware(nfc_device *pnd, char *str)
   if (0 == memcmp(abtRx, arygon_error_none, 6)) {
     uint8_t *p = abtRx + 6;
     unsigned int szData;
-    sscanf((const char*)p, "%02x%s", &szData, p);
+    sscanf((const char *)p, "%02x%s", &szData, p);
     memcpy(str, p, szData);
     *(str + szData) = '\0';
   }

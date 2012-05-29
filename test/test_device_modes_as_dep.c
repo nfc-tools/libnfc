@@ -65,7 +65,7 @@ target_thread(void *arg)
   // 1) nfc_target_init should take target in idle mode
   int res = nfc_target_init(device, &nt, abtRx, szRx, 500);
   cut_assert_operator_int(res, >= , 0, cut_message("Can't initialize NFC device as target: %s", nfc_strerror(device)));
-  if (res < 0) { thread_res = -1; return (void*) thread_res; }
+  if (res < 0) { thread_res = -1; return (void *) thread_res; }
 
   // 2) act as target
   nfc_target nt1 = {
@@ -91,7 +91,7 @@ target_thread(void *arg)
   sleep(6);
   res = nfc_target_init(device, &nt1, abtRx, szRx, 0);
   cut_assert_operator_int(res, > , 0, cut_message("Can't initialize NFC device as target: %s", nfc_strerror(device)));
-  if (res < 0) { thread_res = -1; return (void*) thread_res; }
+  if (res < 0) { thread_res = -1; return (void *) thread_res; }
 
   res =  nfc_target_receive_bytes(device, abtRx, sizeof(abtRx), 500);
   cut_assert_operator_int(res, > , 0, cut_message("Can't receive bytes from initiator: %s", nfc_strerror(device)));
@@ -99,12 +99,12 @@ target_thread(void *arg)
 
   const uint8_t abtAttRx[] = "Hello DEP target!";
   cut_assert_equal_memory(abtAttRx, sizeof(abtAttRx), abtRx, szRx, cut_message("Invalid received data"));
-  if (res <= 0) { thread_res = -1; return (void*) thread_res; }
+  if (res <= 0) { thread_res = -1; return (void *) thread_res; }
 
   const uint8_t abtTx[] = "Hello DEP initiator!";
   res = nfc_target_send_bytes(device, abtTx, sizeof(abtTx), 500);
   cut_assert_operator_int(res, > , 0, cut_message("Can't send bytes to initiator: %s", nfc_strerror(device)));
-  if (res <= 0) { thread_res = -1; return (void*) thread_res; }
+  if (res <= 0) { thread_res = -1; return (void *) thread_res; }
 
   // 3) idle mode
   sleep(1);
@@ -128,13 +128,13 @@ initiator_thread(void *arg)
 
   int res = nfc_initiator_init(device);
   cut_assert_equal_int(0, res, cut_message("Can't initialize NFC device as initiator: %s", nfc_strerror(device)));
-  if (res < 0) { thread_res = -1; return (void*) thread_res; }
+  if (res < 0) { thread_res = -1; return (void *) thread_res; }
 
   // 1) As other device should be in idle mode, nfc_initiator_poll_dep_target should return 0
   nfc_target nt;
   res = nfc_initiator_poll_dep_target(device, NDM_PASSIVE, NBR_106, NULL, &nt, 1000);
   cut_assert_equal_int(0, res, cut_message("Problem with nfc_idle"));
-  if (res != 0) { thread_res = -1; return (void*) thread_res; }
+  if (res != 0) { thread_res = -1; return (void *) thread_res; }
 
 
   // 2 As other device should be in target mode, nfc_initiator_poll_dep_target should be positive.
@@ -149,7 +149,7 @@ initiator_thread(void *arg)
   cut_assert_equal_memory("\x11\x22\x33\x44\x55\x66\x77\x88\x99\xAA", 10, nt1.nti.ndi.abtNFCID3, 10, cut_message("Invalid target NFCID3"));
   cut_assert_equal_int(NDM_PASSIVE, nt1.nti.ndi.ndm, cut_message("Invalid target DEP mode"));
   cut_assert_equal_memory("\x12\x34\x56\x78", 4, nt1.nti.ndi.abtGB, nt1.nti.ndi.szGB, cut_message("Invalid target general bytes"));
-  if (res <= 0) { thread_res = -1; return (void*) thread_res; }
+  if (res <= 0) { thread_res = -1; return (void *) thread_res; }
 
   const uint8_t abtTx[] = "Hello DEP target!";
   uint8_t abtRx[1024];
@@ -159,17 +159,17 @@ initiator_thread(void *arg)
 
   const uint8_t abtAttRx[] = "Hello DEP initiator!";
   cut_assert_equal_memory(abtAttRx, sizeof(abtAttRx), abtRx, szRx, cut_message("Invalid received data"));
-  if (res < 0) { thread_res = -1; return (void*) thread_res; }
+  if (res < 0) { thread_res = -1; return (void *) thread_res; }
 
   res = nfc_initiator_deselect_target(device);
   cut_assert_operator_int(res, >= , 0, cut_message("Can't deselect target: %s", nfc_strerror(device)));
-  if (res < 0) { thread_res = -1; return (void*) thread_res; }
+  if (res < 0) { thread_res = -1; return (void *) thread_res; }
 
   // 3) As other device should be in idle mode, nfc_initiator_poll_dep_target should return 0
   nfc_target nt2;
   res = nfc_initiator_poll_dep_target(device, NDM_PASSIVE, NBR_106, NULL, &nt2, 1000);
   cut_assert_equal_int(0, res, cut_message("Problem with nfc_idle"));
-  if (res != 0) { thread_res = -1; return (void*) thread_res; }
+  if (res != 0) { thread_res = -1; return (void *) thread_res; }
 
   return (void *) thread_res;
 }

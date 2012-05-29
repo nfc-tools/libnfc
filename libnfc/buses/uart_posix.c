@@ -127,7 +127,7 @@ uart_flush_input(serial_port sp)
   if (available_bytes_count == 0) {
     return;
   }
-  char* rx = malloc(available_bytes_count);
+  char *rx = malloc(available_bytes_count);
   // There is something available, read the data
   res = read(UART_DATA(sp)->fd, rx, available_bytes_count);
   log_put(LOG_CATEGORY, NFC_PRIORITY_TRACE, "%d bytes have eatten.", available_bytes_count);
@@ -250,7 +250,7 @@ uart_close(const serial_port sp)
 int
 uart_receive(serial_port sp, uint8_t *pbtRx, const size_t szRx, void *abort_p, int timeout)
 {
-  int iAbortFd = abort_p ? *((int*)abort_p) : 0;
+  int iAbortFd = abort_p ? *((int *)abort_p) : 0;
   int received_bytes_count = 0;
   int available_bytes_count = 0;
   const int expected_bytes_count = (int)szRx;

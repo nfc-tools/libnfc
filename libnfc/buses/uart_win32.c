@@ -139,7 +139,7 @@ uart_get_speed(const serial_port sp)
 }
 
 int
-uart_receive(serial_port sp, uint8_t * pbtRx, const size_t szRx, void * abort_p, int timeout)
+uart_receive(serial_port sp, uint8_t *pbtRx, const size_t szRx, void *abort_p, int timeout)
 {
   DWORD dwBytesToGet = (DWORD)szRx;
   DWORD dwBytesReceived = 0;
@@ -163,7 +163,7 @@ uart_receive(serial_port sp, uint8_t * pbtRx, const size_t szRx, void * abort_p,
 
   // TODO Enhance the reception method
   // - According to MSDN, it could be better to implement nfc_abort_command() mecanism using Cancello()
-  volatile bool * abort_flag_p = (volatile bool *)abort_p;
+  volatile bool *abort_flag_p = (volatile bool *)abort_p;
   do {
     log_put(LOG_CATEGORY, NFC_PRIORITY_TRACE, "ReadFile");
     res = ReadFile(((struct serial_port_windows *) sp)->hPort, pbtRx + dwTotalBytesReceived,
@@ -194,7 +194,7 @@ uart_receive(serial_port sp, uint8_t * pbtRx, const size_t szRx, void * abort_p,
 }
 
 int
-uart_send(serial_port sp, const uint8_t * pbtTx, const size_t szTx, int timeout)
+uart_send(serial_port sp, const uint8_t *pbtTx, const size_t szTx, int timeout)
 {
   DWORD   dwTxLen = 0;
 
@@ -238,12 +238,12 @@ BOOL is_port_available(int nPort)
 char **
 uart_list_ports(void)
 {
-  char **availablePorts = malloc((1 + MAX_SERIAL_PORT_WIN) * sizeof(char*));
+  char **availablePorts = malloc((1 + MAX_SERIAL_PORT_WIN) * sizeof(char *));
   int curIndex = 0;
   int i;
   for (i = 1; i <= MAX_SERIAL_PORT_WIN; i++) {
     if (is_port_available(i)) {
-      availablePorts[curIndex] = (char*)malloc(10);
+      availablePorts[curIndex] = (char *)malloc(10);
       sprintf(availablePorts[curIndex], "COM%d", i);
       // printf("found candidate port: %s\n", availablePorts[curIndex]);
       curIndex++;

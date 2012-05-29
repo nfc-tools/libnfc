@@ -538,7 +538,7 @@ acr122s_probe(nfc_connstring connstrings[], size_t connstrings_len, size_t *pszD
   }
   iDevice = 0;
   while ((acPort = acPorts[iDevice++])) {
-    free((void*)acPort);
+    free((void *)acPort);
   }
   free(acPorts);
 #endif /* SERIAL_AUTOPROBE_ENABLED */

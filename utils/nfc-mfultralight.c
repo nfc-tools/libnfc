@@ -63,7 +63,7 @@ static const nfc_modulation nmMifare = {
 };
 
 static void
-print_success_or_failure(bool bFailure, uint32_t * uiCounter)
+print_success_or_failure(bool bFailure, uint32_t *uiCounter)
 {
   printf("%c", (bFailure) ? 'x' : '.');
   if (uiCounter)

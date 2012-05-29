@@ -177,8 +177,8 @@ main(int argc, char *argv[])
     print_usage(argv[0]);
     exit(EXIT_FAILURE);
   }
-  FILE* message_stream = NULL;
-  FILE* ndef_stream = NULL;
+  FILE *message_stream = NULL;
+  FILE *ndef_stream = NULL;
 
   if ((strlen(ndef_output) == 1) && (ndef_output[0] == '-')) {
     message_stream = stderr;
@@ -220,7 +220,7 @@ main(int argc, char *argv[])
 
   int error = EXIT_SUCCESS;
   // Polling payload (SENSF_REQ) must be present (see NFC Digital Protol)
-  const uint8_t *pbtSensfReq = (uint8_t*)"\x00\xff\xff\x01\x00";
+  const uint8_t *pbtSensfReq = (uint8_t *)"\x00\xff\xff\x01\x00";
   if (nfc_initiator_select_passive_target(pnd, nm, pbtSensfReq, 5, &nt) < 0) {
     nfc_perror(pnd, "nfc_initiator_select_passive_target");
     error = EXIT_FAILURE;
@@ -231,7 +231,7 @@ main(int argc, char *argv[])
   const uint8_t abtNfcForumSysCode[] = { 0x12, 0xfc };
   if (0 != memcmp(nt.nti.nfi.abtSysCode, abtNfcForumSysCode, 2)) {
     // Retry with special polling
-    const uint8_t *pbtSensfReqNfcForum = (uint8_t*)"\x00\x12\xfc\x01\x00";
+    const uint8_t *pbtSensfReqNfcForum = (uint8_t *)"\x00\x12\xfc\x01\x00";
     if (nfc_initiator_select_passive_target(pnd, nm, pbtSensfReqNfcForum, 5, &nt) < 0) {
       nfc_perror(pnd, "nfc_initiator_select_passive_target");
       error = EXIT_FAILURE;

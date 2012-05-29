@@ -120,8 +120,8 @@ extern  "C" {
   NFC_EXPORT int nfc_device_get_information_about(nfc_device *pnd, char *buf, size_t buflen);
 
   /* String converter functions */
-  NFC_EXPORT const char * str_nfc_modulation_type(const nfc_modulation_type nmt);
-  NFC_EXPORT const char * str_nfc_baud_rate(const nfc_baud_rate nbr);
+  NFC_EXPORT const char *str_nfc_modulation_type(const nfc_modulation_type nmt);
+  NFC_EXPORT const char *str_nfc_baud_rate(const nfc_baud_rate nbr);
 
 
   /* Error codes */

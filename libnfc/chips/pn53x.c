@@ -95,7 +95,7 @@ pn53x_init(struct nfc_device *pnd)
   }
 
   if (!CHIP_DATA(pnd)->supported_modulation_as_target) {
-    CHIP_DATA(pnd)->supported_modulation_as_target = (nfc_modulation_type*) pn53x_supported_modulation_as_target;
+    CHIP_DATA(pnd)->supported_modulation_as_target = (nfc_modulation_type *) pn53x_supported_modulation_as_target;
   }
 
   // CRC handling should be enabled by default as declared in nfc_device_new
@@ -1189,7 +1189,7 @@ pn53x_initiator_select_dep_target(struct nfc_device *pnd,
                                   const int timeout)
 {
   const uint8_t abtPassiveInitiatorData[] = { 0x00, 0xff, 0xff, 0x00, 0x0f }; // Only for 212/424 kpbs: First 4 bytes shall be set like this according to NFCIP-1, last byte is TSN (Time Slot Number)
-  const uint8_t * pbtPassiveInitiatorData = NULL;
+  const uint8_t *pbtPassiveInitiatorData = NULL;
 
   switch (nbr) {
     case NBR_212:
@@ -2345,7 +2345,7 @@ pn53x_InRelease(struct nfc_device *pnd, const uint8_t ui8Target)
 int
 pn53x_InAutoPoll(struct nfc_device *pnd,
                  const pn53x_target_type *ppttTargetTypes, const size_t szTargetTypes,
-                 const uint8_t btPollNr, const uint8_t btPeriod, nfc_target * pntTargets, const int timeout)
+                 const uint8_t btPollNr, const uint8_t btPeriod, nfc_target *pntTargets, const int timeout)
 {
   size_t szTargetFound = 0;
   if (CHIP_DATA(pnd)->type != PN532) {
@@ -2849,27 +2849,27 @@ pn53x_get_supported_baud_rate(nfc_device *pnd, const nfc_modulation_type nmt, co
 {
   switch (nmt) {
     case NMT_FELICA:
-      *supported_br = (nfc_baud_rate*)pn53x_felica_supported_baud_rates;
+      *supported_br = (nfc_baud_rate *)pn53x_felica_supported_baud_rates;
       break;
     case NMT_ISO14443A:
-      *supported_br = (nfc_baud_rate*)pn53x_iso14443a_supported_baud_rates;
+      *supported_br = (nfc_baud_rate *)pn53x_iso14443a_supported_baud_rates;
       break;
     case NMT_ISO14443B:
     case NMT_ISO14443BI:
     case NMT_ISO14443B2SR:
     case NMT_ISO14443B2CT: {
       if ((CHIP_DATA(pnd)->type != PN533)) {
-        *supported_br = (nfc_baud_rate*)pn532_iso14443b_supported_baud_rates;
+        *supported_br = (nfc_baud_rate *)pn532_iso14443b_supported_baud_rates;
       } else {
-        *supported_br = (nfc_baud_rate*)pn533_iso14443b_supported_baud_rates;
+        *supported_br = (nfc_baud_rate *)pn533_iso14443b_supported_baud_rates;
       }
     }
     break;
     case NMT_JEWEL:
-      *supported_br = (nfc_baud_rate*)pn53x_jewel_supported_baud_rates;
+      *supported_br = (nfc_baud_rate *)pn53x_jewel_supported_baud_rates;
       break;
     case NMT_DEP:
-      *supported_br = (nfc_baud_rate*)pn53x_dep_supported_baud_rates;
+      *supported_br = (nfc_baud_rate *)pn53x_dep_supported_baud_rates;
       break;
     default:
       return NFC_EINVARG;

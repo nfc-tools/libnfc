@@ -135,27 +135,27 @@
 
 struct nfc_driver {
   const char *name;
-  bool (*probe)(nfc_connstring connstrings[], size_t connstrings_len, size_t * pszDeviceFound);
+  bool (*probe)(nfc_connstring connstrings[], size_t connstrings_len, size_t *pszDeviceFound);
   struct nfc_device *(*open)(const nfc_connstring connstring);
   void (*close)(struct nfc_device *pnd);
   const char *(*strerror)(const struct nfc_device *pnd);
 
   int (*initiator_init)(struct nfc_device *pnd);
-  int (*initiator_select_passive_target)(struct nfc_device *pnd,  const nfc_modulation nm, const uint8_t * pbtInitData, const size_t szInitData, nfc_target * pnt);
-  int (*initiator_poll_target)(struct nfc_device *pnd, const nfc_modulation * pnmModulations, const size_t szModulations, const uint8_t uiPollNr, const uint8_t btPeriod, nfc_target * pnt);
-  int (*initiator_select_dep_target)(struct nfc_device *pnd, const nfc_dep_mode ndm, const nfc_baud_rate nbr, const nfc_dep_info * pndiInitiator, nfc_target * pnt, const int timeout);
+  int (*initiator_select_passive_target)(struct nfc_device *pnd,  const nfc_modulation nm, const uint8_t *pbtInitData, const size_t szInitData, nfc_target *pnt);
+  int (*initiator_poll_target)(struct nfc_device *pnd, const nfc_modulation *pnmModulations, const size_t szModulations, const uint8_t uiPollNr, const uint8_t btPeriod, nfc_target *pnt);
+  int (*initiator_select_dep_target)(struct nfc_device *pnd, const nfc_dep_mode ndm, const nfc_baud_rate nbr, const nfc_dep_info *pndiInitiator, nfc_target *pnt, const int timeout);
   int (*initiator_deselect_target)(struct nfc_device *pnd);
-  int (*initiator_transceive_bytes)(struct nfc_device *pnd, const uint8_t * pbtTx, const size_t szTx, uint8_t * pbtRx, const size_t szRx, int timeout);
-  int (*initiator_transceive_bits)(struct nfc_device *pnd, const uint8_t * pbtTx, const size_t szTxBits, const uint8_t * pbtTxPar, uint8_t * pbtRx, uint8_t * pbtRxPar);
-  int (*initiator_transceive_bytes_timed)(struct nfc_device *pnd, const uint8_t * pbtTx, const size_t szTx, uint8_t * pbtRx, uint32_t * cycles);
-  int (*initiator_transceive_bits_timed)(struct nfc_device *pnd, const uint8_t * pbtTx, const size_t szTxBits, const uint8_t * pbtTxPar, uint8_t * pbtRx, uint8_t * pbtRxPar, uint32_t * cycles);
+  int (*initiator_transceive_bytes)(struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szTx, uint8_t *pbtRx, const size_t szRx, int timeout);
+  int (*initiator_transceive_bits)(struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szTxBits, const uint8_t *pbtTxPar, uint8_t *pbtRx, uint8_t *pbtRxPar);
+  int (*initiator_transceive_bytes_timed)(struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szTx, uint8_t *pbtRx, uint32_t *cycles);
+  int (*initiator_transceive_bits_timed)(struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szTxBits, const uint8_t *pbtTxPar, uint8_t *pbtRx, uint8_t *pbtRxPar, uint32_t *cycles);
   int (*initiator_target_is_present)(struct nfc_device *pnd, const nfc_target nt);
 
-  int (*target_init)(struct nfc_device *pnd, nfc_target * pnt, uint8_t * pbtRx, const size_t szRx, int timeout);
-  int (*target_send_bytes)(struct nfc_device *pnd, const uint8_t * pbtTx, const size_t szTx, int timeout);
-  int (*target_receive_bytes)(struct nfc_device *pnd, uint8_t * pbtRx, const size_t szRxLen, int timeout);
-  int (*target_send_bits)(struct nfc_device *pnd, const uint8_t * pbtTx, const size_t szTxBits, const uint8_t * pbtTxPar);
-  int (*target_receive_bits)(struct nfc_device *pnd, uint8_t * pbtRx, const size_t szRxLen, uint8_t * pbtRxPar);
+  int (*target_init)(struct nfc_device *pnd, nfc_target *pnt, uint8_t *pbtRx, const size_t szRx, int timeout);
+  int (*target_send_bytes)(struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szTx, int timeout);
+  int (*target_receive_bytes)(struct nfc_device *pnd, uint8_t *pbtRx, const size_t szRxLen, int timeout);
+  int (*target_send_bits)(struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szTxBits, const uint8_t *pbtTxPar);
+  int (*target_receive_bits)(struct nfc_device *pnd, uint8_t *pbtRx, const size_t szRxLen, uint8_t *pbtRxPar);
 
   int (*device_set_property_bool)(struct nfc_device *pnd, const nfc_property property, const bool bEnable);
   int (*device_set_property_int)(struct nfc_device *pnd, const nfc_property property, const int value);
@@ -201,8 +201,8 @@ struct nfc_device {
 nfc_device  *nfc_device_new(const nfc_connstring connstring);
 void           nfc_device_free(nfc_device *dev);
 
-void 	iso14443_cascade_uid(const uint8_t abtUID[], const size_t szUID, uint8_t * pbtCascadedUID, size_t * pszCascadedUID);
+void 	iso14443_cascade_uid(const uint8_t abtUID[], const size_t szUID, uint8_t *pbtCascadedUID, size_t *pszCascadedUID);
 
-void 	prepare_initiator_data(const nfc_modulation nm, uint8_t **ppbtInitiatorData, size_t * pszInitiatorData);
+void 	prepare_initiator_data(const nfc_modulation nm, uint8_t **ppbtInitiatorData, size_t *pszInitiatorData);
 
 #endif // __NFC_INTERNAL_H__
