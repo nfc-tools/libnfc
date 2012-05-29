@@ -271,9 +271,9 @@ pn53x_transceive (struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szT
       res = NFC_ECHIP;
       break;
   };
-/*
-  { EMFAUTH, "Mifare Authentication Error" },
-*/
+  /*
+    { EMFAUTH, "Mifare Authentication Error" },
+  */
 
   if (res < 0) {
     pnd->last_error = res;
@@ -551,7 +551,7 @@ pn53x_decode_target_data (const uint8_t *pbtRawData, size_t szRawData, pn53x_typ
       pbtRawData += 2;
       memcpy (pnti->nji.btId, pbtRawData, 4);
       break;
-    // Should not happend...
+      // Should not happend...
     case NMT_DEP:
       return NFC_ECHIP;
       break;
@@ -763,16 +763,16 @@ pn53x_set_property_int (struct nfc_device *pnd, const nfc_property property, con
   switch (property) {
     case NP_TIMEOUT_COMMAND:
       CHIP_DATA (pnd)->timeout_command = value;
-    break;
+      break;
     case NP_TIMEOUT_ATR:
       CHIP_DATA (pnd)->timeout_atr = value;
       return pn53x_RFConfiguration__Various_timings (pnd, pn53x_int_to_timeout(CHIP_DATA (pnd)->timeout_atr), pn53x_int_to_timeout(CHIP_DATA (pnd)->timeout_communication));
-    break;
+      break;
     case NP_TIMEOUT_COM:
       CHIP_DATA (pnd)->timeout_communication = value;
       return pn53x_RFConfiguration__Various_timings (pnd, pn53x_int_to_timeout(CHIP_DATA (pnd)->timeout_atr), pn53x_int_to_timeout(CHIP_DATA (pnd)->timeout_communication));
       break;
-    // Following properties are invalid (not integer)
+      // Following properties are invalid (not integer)
     case NP_HANDLE_CRC:
     case NP_HANDLE_PARITY:
     case NP_ACTIVATE_FIELD:
@@ -847,10 +847,10 @@ pn53x_set_property_bool (struct nfc_device *pnd, const nfc_property property, co
       // timings could be tweak better than this, and maybe we can tweak timings
       // to "gain" a sort-of hardware polling (ie. like PN532 does)
       if (pn53x_RFConfiguration__MaxRetries (pnd,
-        (bEnable) ? 0xff : 0x00,        // MxRtyATR, default: active = 0xff, passive = 0x02
-        (bEnable) ? 0xff : 0x01,        // MxRtyPSL, default: 0x01
-        (bEnable) ? 0xff : 0x02         // MxRtyPassiveActivation, default: 0xff (0x00 leads to problems with PN531)
-      ) == 0)
+                                             (bEnable) ? 0xff : 0x00,        // MxRtyATR, default: active = 0xff, passive = 0x02
+                                             (bEnable) ? 0xff : 0x01,        // MxRtyPSL, default: 0x01
+                                             (bEnable) ? 0xff : 0x02         // MxRtyPassiveActivation, default: 0xff (0x00 leads to problems with PN531)
+                                            ) == 0)
         return NFC_SUCCESS;
     }
     break;
@@ -913,7 +913,7 @@ pn53x_set_property_bool (struct nfc_device *pnd, const nfc_property property, co
       }
       return pn53x_write_register (pnd, PN53X_REG_CIU_RxMode, SYMBOL_RX_SPEED, 0x00);
       break;
-    // Following properties are invalid (not boolean)
+      // Following properties are invalid (not boolean)
     case NP_TIMEOUT_COMMAND:
     case NP_TIMEOUT_ATR:
     case NP_TIMEOUT_COM:
@@ -941,7 +941,7 @@ pn53x_idle (struct nfc_device *pnd)
           return res;
         }
       }
-    break;
+      break;
     case INITIATOR:
       // Deselect all active communications
       if ((res = pn53x_InDeselect (pnd, 0)) < 0) {
@@ -962,9 +962,9 @@ pn53x_idle (struct nfc_device *pnd)
           return res;
         }
       }
-    break;
+      break;
     case IDLE: // Nothing to do.
-    break;
+      break;
   };
   CHIP_DATA (pnd)->operating_mode = IDLE;
   return NFC_SUCCESS;
@@ -1004,10 +1004,10 @@ pn53x_initiator_init (struct nfc_device *pnd)
 
 static int
 pn53x_initiator_select_passive_target_ext (struct nfc_device *pnd,
-                                       const nfc_modulation nm,
-                                       const uint8_t *pbtInitData, const size_t szInitData,
-                                       nfc_target *pnt,
-                                       int timeout)
+                                           const nfc_modulation nm,
+                                           const uint8_t *pbtInitData, const size_t szInitData,
+                                           nfc_target *pnt,
+                                           int timeout)
 {
   uint8_t  abtTargetsData[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
   size_t  szTargetsData = sizeof (abtTargetsData);
@@ -1118,9 +1118,9 @@ pn53x_initiator_select_passive_target (struct nfc_device *pnd,
 
 int
 pn53x_initiator_poll_target (struct nfc_device *pnd,
-                              const nfc_modulation *pnmModulations, const size_t szModulations,
-                              const uint8_t uiPollNr, const uint8_t uiPeriod,
-                              nfc_target *pnt)
+                             const nfc_modulation *pnmModulations, const size_t szModulations,
+                             const uint8_t uiPollNr, const uint8_t uiPeriod,
+                             nfc_target *pnt)
 {
   int res = 0;
 
@@ -1155,7 +1155,7 @@ pn53x_initiator_poll_target (struct nfc_device *pnd,
         break;
       default:
         return NFC_ECHIP;
-      break;
+        break;
     }
   } else {
     pn53x_set_property_bool (pnd, NP_INFINITE_SELECT, true);
@@ -1186,10 +1186,10 @@ pn53x_initiator_poll_target (struct nfc_device *pnd,
 
 int
 pn53x_initiator_select_dep_target (struct nfc_device *pnd,
-                                  const nfc_dep_mode ndm, const nfc_baud_rate nbr,
-                                  const nfc_dep_info *pndiInitiator,
-                                  nfc_target *pnt,
-                                  const int timeout)
+                                   const nfc_dep_mode ndm, const nfc_baud_rate nbr,
+                                   const nfc_dep_info *pndiInitiator,
+                                   nfc_target *pnt,
+                                   const int timeout)
 {
   const uint8_t abtPassiveInitiatorData[] = { 0x00, 0xff, 0xff, 0x00, 0x0f }; // Only for 212/424 kpbs: First 4 bytes shall be set like this according to NFCIP-1, last byte is TSN (Time Slot Number)
   const uint8_t * pbtPassiveInitiatorData = NULL;
@@ -1323,8 +1323,8 @@ pn53x_initiator_transceive_bytes (struct nfc_device *pnd, const uint8_t *pbtTx, 
   // We have to give the amount of bytes + (the two command bytes 0xD4, 0x42)
   uint8_t  abtRx[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
   if ((res = pn53x_transceive (pnd, abtCmd, szTx + szExtraTxLen, abtRx, sizeof(abtRx), timeout)) < 0) {
-      pnd->last_error = res;
-      return pnd->last_error;
+    pnd->last_error = res;
+    return pnd->last_error;
   }
   const size_t szRxLen = (size_t)res - 1;
   if (pbtRx != NULL) {
@@ -1347,9 +1347,9 @@ static void __pn53x_init_timer(struct nfc_device *pnd, const uint32_t max_cycles
 // prescaler =  2 => precision: ~369ns  timer saturates at   ~25ms
 // prescaler = 10 => precision: ~1.5us  timer saturates at  ~100ms
   if (max_cycles > 0xFFFF) {
-      CHIP_DATA (pnd)->timer_prescaler = ((max_cycles/0xFFFF)-1)/2;
+    CHIP_DATA (pnd)->timer_prescaler = ((max_cycles/0xFFFF)-1)/2;
   } else {
-      CHIP_DATA (pnd)->timer_prescaler = 0;
+    CHIP_DATA (pnd)->timer_prescaler = 0;
   }
   uint16_t reloadval = 0xFFFF;
   // Initialize timer
@@ -1404,9 +1404,9 @@ static uint32_t __pn53x_get_timer(struct nfc_device *pnd, const uint8_t last_cmd
     }
     // Correction depending on last parity bit sent
     parity = (last_cmd_byte >> 7) ^ ((last_cmd_byte >> 6) & 1) ^
-    ((last_cmd_byte >> 5) & 1) ^ ((last_cmd_byte >> 4) & 1) ^
-    ((last_cmd_byte >> 3) & 1) ^ ((last_cmd_byte >> 2) & 1) ^
-    ((last_cmd_byte >> 1) & 1) ^ (last_cmd_byte & 1);
+             ((last_cmd_byte >> 5) & 1) ^ ((last_cmd_byte >> 4) & 1) ^
+             ((last_cmd_byte >> 3) & 1) ^ ((last_cmd_byte >> 2) & 1) ^
+             ((last_cmd_byte >> 1) & 1) ^ (last_cmd_byte & 1);
     parity = parity ? 0:1;
     // When sent ...YY (cmd ends with logical 1, so when last parity bit is 1):
     if (parity) {
@@ -1676,17 +1676,17 @@ pn53x_target_init (struct nfc_device *pnd, nfc_target *pnt, uint8_t *pbtRx, cons
           pn53x_set_parameters (pnd, PARAM_14443_4_PICC, false);
         }
       }
-    break;
+      break;
     case NMT_FELICA:
       ptm = PTM_PASSIVE_ONLY;
-    break;
+      break;
     case NMT_DEP:
       pn53x_set_parameters (pnd, PARAM_AUTO_ATR_RES, true);
       ptm = PTM_DEP_ONLY;
       if (pnt->nti.ndi.ndm == NDM_PASSIVE) {
         ptm |= PTM_PASSIVE_ONLY; // We add passive mode restriction
       }
-    break;
+      break;
     case NMT_ISO14443B:
     case NMT_ISO14443BI:
     case NMT_ISO14443B2SR:
@@ -1694,7 +1694,7 @@ pn53x_target_init (struct nfc_device *pnd, nfc_target *pnt, uint8_t *pbtRx, cons
     case NMT_JEWEL:
       pnd->last_error = NFC_EDEVNOTSUPP;
       return pnd->last_error;
-    break;
+      break;
   }
 
   // Let the PN53X be activated by the RF level detector from power down mode
@@ -1741,7 +1741,7 @@ pn53x_target_init (struct nfc_device *pnd, nfc_target *pnt, uint8_t *pbtRx, cons
       // Set SystemCode
       memcpy(abtFeliCaParams+16, pnt->nti.nfi.abtSysCode, 2);
       pbtFeliCaParams = abtFeliCaParams;
-    break;
+      break;
 
     case NMT_DEP:
       // Set NFCID3
@@ -1788,7 +1788,7 @@ pn53x_target_init (struct nfc_device *pnd, nfc_target *pnt, uint8_t *pbtRx, cons
       abtFeliCaParams[17] = 0xab;
 
       pbtFeliCaParams = abtFeliCaParams;
-    break;
+      break;
     case NMT_ISO14443B:
     case NMT_ISO14443BI:
     case NMT_ISO14443B2SR:
@@ -1796,7 +1796,7 @@ pn53x_target_init (struct nfc_device *pnd, nfc_target *pnt, uint8_t *pbtRx, cons
     case NMT_JEWEL:
       pnd->last_error = NFC_EDEVNOTSUPP;
       return pnd->last_error;
-    break;
+      break;
   }
 
   bool targetActivated = false;
@@ -1820,13 +1820,13 @@ pn53x_target_init (struct nfc_device *pnd, nfc_target *pnt, uint8_t *pbtRx, cons
     switch(btActivatedMode & 0x70) { // Baud rate
       case 0x00: // 106kbps
         nm.nbr = NBR_106;
-      break;
+        break;
       case 0x10: // 212kbps
         nm.nbr = NBR_212;
-      break;
+        break;
       case 0x20: // 424kbps
         nm.nbr = NBR_424;
-      break;
+        break;
     };
 
     if (btActivatedMode & 0x04) { // D.E.P.
@@ -1865,8 +1865,8 @@ pn53x_target_init (struct nfc_device *pnd, nfc_target *pnt, uint8_t *pbtRx, cons
       memcpy (CHIP_DATA (pnd)->current_target, pnt, sizeof(nfc_target));
 
       if (ptm & PTM_ISO14443_4_PICC_ONLY) {
-	// When PN532 is in PICC target mode, it automatically reply to RATS so
-	// we don't need to forward this command
+        // When PN532 is in PICC target mode, it automatically reply to RATS so
+        // we don't need to forward this command
         szRx = 0;
       }
     }
@@ -1943,7 +1943,7 @@ pn53x_target_receive_bytes (struct nfc_device *pnd, uint8_t *pbtRx, const size_t
             return pnd->last_error;
           }
         }
-      // NO BREAK
+        // NO BREAK
       case NMT_JEWEL:
       case NMT_ISO14443B:
       case NMT_ISO14443BI:
@@ -2048,7 +2048,7 @@ pn53x_target_send_bytes (struct nfc_device *pnd, const uint8_t *pbtTx, const siz
             return pnd->last_error;
           }
         }
-      // NO BREAK
+        // NO BREAK
       case NMT_JEWEL:
       case NMT_ISO14443B:
       case NMT_ISO14443BI:
@@ -2367,7 +2367,7 @@ pn53x_InAutoPoll (struct nfc_device *pnd,
   uint8_t  abtRx[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
   size_t  szRx = sizeof(abtRx);
   int res = pn53x_transceive (pnd, abtCmd, szTxInAutoPoll, abtRx, szRx, timeout);
-szRx = (size_t) res;
+  szRx = (size_t) res;
   if (res < 0) {
     return res;
   } else if (szRx > 0) {
@@ -2428,18 +2428,18 @@ pn53x_InJumpForDEP (struct nfc_device *pnd,
   switch (nbr) {
     case NBR_106:
       abtCmd[2] = 0x00; // baud rate is 106 kbps
-    break;
+      break;
     case NBR_212:
       abtCmd[2] = 0x01; // baud rate is 212 kbps
-    break;
+      break;
     case NBR_424:
       abtCmd[2] = 0x02; // baud rate is 424 kbps
-    break;
+      break;
     case NBR_847:
     case NBR_UNDEFINED:
       pnd->last_error = NFC_EINVARG;
       return pnd->last_error;
-    break;
+      break;
   }
 
   if (pbtPassiveInitiatorData && (ndm == NDM_PASSIVE)) {        /* can't have passive initiator data when using active mode */
@@ -2448,18 +2448,18 @@ pn53x_InJumpForDEP (struct nfc_device *pnd,
         abtCmd[3] |= 0x01;
         memcpy (abtCmd + offset, pbtPassiveInitiatorData, 4);
         offset += 4;
-      break;
+        break;
       case NBR_212:
       case NBR_424:
         abtCmd[3] |= 0x01;
         memcpy (abtCmd + offset, pbtPassiveInitiatorData, 5);
         offset += 5;
-      break;
+        break;
       case NBR_847:
       case NBR_UNDEFINED:
         pnd->last_error = NFC_EINVARG;
         return pnd->last_error;
-      break;
+        break;
     }
   }
 
@@ -2677,54 +2677,54 @@ pn53x_nm_to_pm(const nfc_modulation nm)
   switch(nm.nmt) {
     case NMT_ISO14443A:
       return PM_ISO14443A_106;
-    break;
+      break;
 
     case NMT_ISO14443B:
       switch(nm.nbr) {
         case NBR_106:
           return PM_ISO14443B_106;
-        break;
+          break;
         case NBR_212:
           return PM_ISO14443B_212;
-        break;
+          break;
         case NBR_424:
           return PM_ISO14443B_424;
-        break;
+          break;
         case NBR_847:
           return PM_ISO14443B_847;
-        break;
+          break;
         case NBR_UNDEFINED:
           // Nothing to do...
-        break;
+          break;
       }
-    break;
+      break;
 
     case NMT_JEWEL:
       return PM_JEWEL_106;
-    break;
+      break;
 
     case NMT_FELICA:
       switch(nm.nbr) {
         case NBR_212:
           return PM_FELICA_212;
-        break;
+          break;
         case NBR_424:
           return PM_FELICA_424;
-        break;
+          break;
         case NBR_106:
         case NBR_847:
         case NBR_UNDEFINED:
           // Nothing to do...
-        break;
+          break;
       }
-    break;
+      break;
 
     case NMT_ISO14443BI:
     case NMT_ISO14443B2SR:
     case NMT_ISO14443B2CT:
     case NMT_DEP:
       // Nothing to do...
-    break;
+      break;
   }
   return PM_UNDEFINED;
 }
@@ -2738,44 +2738,44 @@ pn53x_ptt_to_nm( const pn53x_target_type ptt )
     case PTT_GENERIC_PASSIVE_424:
     case PTT_UNDEFINED:
       // XXX This should not happend, how handle it cleanly ?
-    break;
+      break;
 
     case PTT_MIFARE:
     case PTT_ISO14443_4A_106:
-      return (const nfc_modulation){ .nmt = NMT_ISO14443A, .nbr = NBR_106 };
-    break;
+      return (const nfc_modulation) { .nmt = NMT_ISO14443A, .nbr = NBR_106 };
+      break;
 
     case PTT_ISO14443_4B_106:
     case PTT_ISO14443_4B_TCL_106:
-      return (const nfc_modulation){ .nmt = NMT_ISO14443B, .nbr = NBR_106 };
-    break;
+      return (const nfc_modulation) { .nmt = NMT_ISO14443B, .nbr = NBR_106 };
+      break;
 
     case PTT_JEWEL_106:
-      return (const nfc_modulation){ .nmt = NMT_JEWEL, .nbr = NBR_106 };
-    break;
+      return (const nfc_modulation) { .nmt = NMT_JEWEL, .nbr = NBR_106 };
+      break;
 
     case PTT_FELICA_212:
-      return (const nfc_modulation){ .nmt = NMT_FELICA, .nbr = NBR_212 };
-    break;
+      return (const nfc_modulation) { .nmt = NMT_FELICA, .nbr = NBR_212 };
+      break;
     case PTT_FELICA_424:
-      return (const nfc_modulation){ .nmt = NMT_FELICA, .nbr = NBR_424 };
-    break;
+      return (const nfc_modulation) { .nmt = NMT_FELICA, .nbr = NBR_424 };
+      break;
 
     case PTT_DEP_PASSIVE_106:
     case PTT_DEP_ACTIVE_106:
-      return (const nfc_modulation){ .nmt = NMT_DEP, .nbr = NBR_106 };
-    break;
+      return (const nfc_modulation) { .nmt = NMT_DEP, .nbr = NBR_106 };
+      break;
     case PTT_DEP_PASSIVE_212:
     case PTT_DEP_ACTIVE_212:
-      return (const nfc_modulation){ .nmt = NMT_DEP, .nbr = NBR_212 };
-    break;
+      return (const nfc_modulation) { .nmt = NMT_DEP, .nbr = NBR_212 };
+      break;
     case PTT_DEP_PASSIVE_424:
     case PTT_DEP_ACTIVE_424:
-      return (const nfc_modulation){ .nmt = NMT_DEP, .nbr = NBR_424 };
-    break;
+      return (const nfc_modulation) { .nmt = NMT_DEP, .nbr = NBR_424 };
+      break;
   }
   // We should never be here, this line silent compilation warning
-  return (const nfc_modulation){ .nmt = NMT_ISO14443A, .nbr = NBR_106 };
+  return (const nfc_modulation) { .nmt = NMT_ISO14443A, .nbr = NBR_106 };
 }
 
 pn53x_target_type
@@ -2785,48 +2785,48 @@ pn53x_nm_to_ptt(const nfc_modulation nm)
     case NMT_ISO14443A:
       return PTT_MIFARE;
       // return PTT_ISO14443_4A_106;
-    break;
+      break;
 
     case NMT_ISO14443B:
       switch(nm.nbr) {
         case NBR_106:
           return PTT_ISO14443_4B_106;
-        break;
+          break;
         case NBR_UNDEFINED:
         case NBR_212:
         case NBR_424:
         case NBR_847:
           // Nothing to do...
-        break;
+          break;
       }
-    break;
+      break;
 
     case NMT_JEWEL:
       return PTT_JEWEL_106;
-    break;
+      break;
 
     case NMT_FELICA:
       switch(nm.nbr) {
         case NBR_212:
           return PTT_FELICA_212;
-        break;
+          break;
         case NBR_424:
           return PTT_FELICA_424;
-        break;
+          break;
         case NBR_UNDEFINED:
         case NBR_106:
         case NBR_847:
           // Nothing to do...
-        break;
+          break;
       }
-    break;
+      break;
 
     case NMT_ISO14443BI:
     case NMT_ISO14443B2SR:
     case NMT_ISO14443B2CT:
     case NMT_DEP:
       // Nothing to do...
-    break;
+      break;
   }
   return PTT_UNDEFINED;
 }
@@ -2837,10 +2837,10 @@ pn53x_get_supported_modulation(nfc_device *pnd, const nfc_mode mode, const nfc_m
   switch (mode) {
     case N_TARGET:
       *supported_mt = CHIP_DATA(pnd)->supported_modulation_as_target;
-    break;
+      break;
     case N_INITIATOR:
       *supported_mt = CHIP_DATA(pnd)->supported_modulation_as_initiator;
-    break;
+      break;
     default:
       return NFC_EINVARG;
   }
@@ -2853,10 +2853,10 @@ pn53x_get_supported_baud_rate (nfc_device *pnd, const nfc_modulation_type nmt, c
   switch (nmt) {
     case NMT_FELICA:
       *supported_br = (nfc_baud_rate*)pn53x_felica_supported_baud_rates;
-    break;
+      break;
     case NMT_ISO14443A:
       *supported_br = (nfc_baud_rate*)pn53x_iso14443a_supported_baud_rates;
-    break;
+      break;
     case NMT_ISO14443B:
     case NMT_ISO14443BI:
     case NMT_ISO14443B2SR:
@@ -2871,10 +2871,10 @@ pn53x_get_supported_baud_rate (nfc_device *pnd, const nfc_modulation_type nmt, c
     break;
     case NMT_JEWEL:
       *supported_br = (nfc_baud_rate*)pn53x_jewel_supported_baud_rates;
-    break;
+      break;
     case NMT_DEP:
       *supported_br = (nfc_baud_rate*)pn53x_dep_supported_baud_rates;
-    break;
+      break;
     default:
       return NFC_EINVARG;
   }

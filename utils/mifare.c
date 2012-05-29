@@ -62,34 +62,34 @@ nfc_initiator_mifare_cmd (nfc_device *pnd, const mifare_cmd mc, const uint8_t ui
   abtCmd[1] = ui8Block;         // The block address (1K=0x00..0x39, 4K=0x00..0xff)
 
   switch (mc) {
-    // Read and store command have no parameter
-  case MC_READ:
-  case MC_STORE:
-    szParamLen = 0;
-    break;
+      // Read and store command have no parameter
+    case MC_READ:
+    case MC_STORE:
+      szParamLen = 0;
+      break;
 
-    // Authenticate command
-  case MC_AUTH_A:
-  case MC_AUTH_B:
-    szParamLen = sizeof (struct mifare_param_auth);
-    break;
+      // Authenticate command
+    case MC_AUTH_A:
+    case MC_AUTH_B:
+      szParamLen = sizeof (struct mifare_param_auth);
+      break;
 
-    // Data command
-  case MC_WRITE:
-    szParamLen = sizeof (struct mifare_param_data);
-    break;
+      // Data command
+    case MC_WRITE:
+      szParamLen = sizeof (struct mifare_param_data);
+      break;
 
-    // Value command
-  case MC_DECREMENT:
-  case MC_INCREMENT:
-  case MC_TRANSFER:
-    szParamLen = sizeof (struct mifare_param_value);
-    break;
+      // Value command
+    case MC_DECREMENT:
+    case MC_INCREMENT:
+    case MC_TRANSFER:
+      szParamLen = sizeof (struct mifare_param_value);
+      break;
 
-    // Please fix your code, you never should reach this statement
-  default:
-    return false;
-    break;
+      // Please fix your code, you never should reach this statement
+    default:
+      return false;
+      break;
   }
 
   // When available, copy the parameter bytes

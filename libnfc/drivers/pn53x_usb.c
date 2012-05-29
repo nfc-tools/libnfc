@@ -39,15 +39,15 @@ Thanks to d18c7db and Okko for example code
 #include <errno.h>
 
 #ifndef _WIN32
-  // Under POSIX system, we use libusb (>= 0.1.12)
-  #include <usb.h>
-  #define USB_TIMEDOUT ETIMEDOUT
-  #define _usb_strerror( X ) strerror(-X)
+// Under POSIX system, we use libusb (>= 0.1.12)
+#include <usb.h>
+#define USB_TIMEDOUT ETIMEDOUT
+#define _usb_strerror( X ) strerror(-X)
 #else
-  // Under Windows we use libusb-win32 (>= 1.2.5)
-  #include <lusb0_usb.h>
-  #define USB_TIMEDOUT 116
-  #define _usb_strerror( X ) usb_strerror()
+// Under Windows we use libusb-win32 (>= 1.2.5)
+#include <lusb0_usb.h>
+#define USB_TIMEDOUT 116
+#define _usb_strerror( X ) usb_strerror()
 #endif
 
 #include <string.h>
@@ -139,7 +139,7 @@ pn53x_usb_get_device_model (uint16_t vendor_id, uint16_t product_id)
 {
   for (size_t n = 0; n < sizeof (pn53x_usb_supported_devices) / sizeof (struct pn53x_usb_supported_device); n++) {
     if ((vendor_id == pn53x_usb_supported_devices[n].vendor_id) &&
-       (product_id == pn53x_usb_supported_devices[n].product_id))
+        (product_id == pn53x_usb_supported_devices[n].product_id))
       return pn53x_usb_supported_devices[n].model;
   }
 
@@ -354,7 +354,7 @@ pn53x_usb_open (const nfc_connstring connstring)
     for (dev = bus->devices; dev; dev = dev->next) {
       if (connstring_decode_level > 2)  {
         // A specific dev have been specified
-      if (0 != strcmp (dev->filename, desc.filename))
+        if (0 != strcmp (dev->filename, desc.filename))
           continue;
       }
       // Open the USB device
@@ -392,7 +392,7 @@ pn53x_usb_open (const nfc_connstring connstring)
       pn53x_data_new (pnd, &pn53x_usb_io);
 
       switch (DRIVER_DATA (pnd)->model) {
-        // empirical tuning
+          // empirical tuning
         case ASK_LOGO:
           CHIP_DATA (pnd)->timer_correction = 50;
           break;
@@ -684,23 +684,23 @@ pn53x_usb_init (nfc_device *pnd)
     /* Setup push-pulls for pins from P30 to P35 */
     pn53x_write_register (pnd, PN53X_SFR_P3CFGB, 0xFF, 0x37);
 
-/*
-On ASK LoGO hardware:
-  LEDs port bits definition:
-   * LED 1: bit 2 (P32)
-   * LED 2: bit 1 (P31)
-   * LED 3: bit 0 or 3 (depending of hardware revision) (P30 or P33)
-   * LED 4: bit 5 (P35)
-  Notes:
-   * Set logical 0 to switch LED on; logical 1 to switch LED off.
-   * Bit 4 should be maintained at 1 to keep RF field on.
+    /*
+    On ASK LoGO hardware:
+      LEDs port bits definition:
+       * LED 1: bit 2 (P32)
+       * LED 2: bit 1 (P31)
+       * LED 3: bit 0 or 3 (depending of hardware revision) (P30 or P33)
+       * LED 4: bit 5 (P35)
+      Notes:
+       * Set logical 0 to switch LED on; logical 1 to switch LED off.
+       * Bit 4 should be maintained at 1 to keep RF field on.
 
-  Progressive field activation:
-   The ASK LoGO hardware can progressively power-up the antenna.
-   To use this feature we have to switch on the field by switching on
-   the field on PN533 (RFConfiguration) then set P34 to '1', and cut-off the
-   field by switching off the field on PN533 then set P34 to '0'.
-*/
+      Progressive field activation:
+       The ASK LoGO hardware can progressively power-up the antenna.
+       To use this feature we have to switch on the field by switching on
+       the field on PN533 (RFConfiguration) then set P34 to '1', and cut-off the
+       field by switching off the field on PN533 then set P34 to '0'.
+    */
 
     /* Set P30, P31, P33, P35 to logic 1 and P32, P34 to 0 logic */
     /* ie. Switch LED1 on and turn off progressive field */

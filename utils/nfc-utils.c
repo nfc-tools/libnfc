@@ -38,65 +38,79 @@
 
 struct card_atqa
 {
-    uint16_t atqa;
-    uint16_t mask;
-    char type[128];
-    // list of up to 8 SAK values compatible with this ATQA
-    int saklist[8];
+  uint16_t atqa;
+  uint16_t mask;
+  char type[128];
+  // list of up to 8 SAK values compatible with this ATQA
+  int saklist[8];
 };
 
 struct card_sak
 {
-    uint8_t sak;
-    uint8_t mask;
-    char type[128];
+  uint8_t sak;
+  uint8_t mask;
+  char type[128];
 };
 
 struct card_atqa const_ca[] = {
-    {0x0044, 0xffff, "MIFARE Ultralight",
-      {0, -1} },
-    {0x0044, 0xffff, "MIFARE Ultralight C",
-      {0, -1} },
-    {0x0004, 0xff0f, "MIFARE Mini 0.3K",
-      {1, -1} },
-    {0x0004, 0xff0f, "MIFARE Classic 1K",
-      {2, -1} },
-    {0x0002, 0xff0f, "MIFARE Classic 4K",
-      {3, -1} },
-    {0x0004, 0xffff, "MIFARE Plus (4 Byte UID or 4 Byte RID)",
-      {4, 5, 6, 7, 8, 9, -1} },
-    {0x0002, 0xffff, "MIFARE Plus (4 Byte UID or 4 Byte RID)",
-      {4, 5, 6, 7, 8, 9, -1} },
-    {0x0044, 0xffff, "MIFARE Plus (7 Byte UID)",
-      {4, 5, 6, 7, 8, 9, -1} },
-    {0x0042, 0xffff, "MIFARE Plus (7 Byte UID)",
-      {4, 5, 6, 7, 8, 9, -1} },
-    {0x0344, 0xffff, "MIFARE DESFire",
-      {10, 11, -1} },
-    {0x0044, 0xffff, "P3SR008",
-      {-1} }, // TODO we need SAK info
-    {0x0004, 0xf0ff, "SmartMX with MIFARE 1K emulation",
-      {12, -1} },
-    {0x0002, 0xf0ff, "SmartMX with MIFARE 4K emulation",
-      {12, -1} },
-    {0x0048, 0xf0ff, "SmartMX with 7 Byte UID",
-      {12, -1} }
+  { 0x0044, 0xffff, "MIFARE Ultralight",
+    {0, -1}
+  },
+  { 0x0044, 0xffff, "MIFARE Ultralight C",
+    {0, -1}
+  },
+  { 0x0004, 0xff0f, "MIFARE Mini 0.3K",
+    {1, -1}
+  },
+  { 0x0004, 0xff0f, "MIFARE Classic 1K",
+    {2, -1}
+  },
+  { 0x0002, 0xff0f, "MIFARE Classic 4K",
+    {3, -1}
+  },
+  { 0x0004, 0xffff, "MIFARE Plus (4 Byte UID or 4 Byte RID)",
+    {4, 5, 6, 7, 8, 9, -1}
+  },
+  { 0x0002, 0xffff, "MIFARE Plus (4 Byte UID or 4 Byte RID)",
+    {4, 5, 6, 7, 8, 9, -1}
+  },
+  { 0x0044, 0xffff, "MIFARE Plus (7 Byte UID)",
+    {4, 5, 6, 7, 8, 9, -1}
+  },
+  { 0x0042, 0xffff, "MIFARE Plus (7 Byte UID)",
+    {4, 5, 6, 7, 8, 9, -1}
+  },
+  { 0x0344, 0xffff, "MIFARE DESFire",
+    {10, 11, -1}
+  },
+  { 0x0044, 0xffff, "P3SR008",
+    {-1}
+  }, // TODO we need SAK info
+  { 0x0004, 0xf0ff, "SmartMX with MIFARE 1K emulation",
+    {12, -1}
+  },
+  { 0x0002, 0xf0ff, "SmartMX with MIFARE 4K emulation",
+    {12, -1}
+  },
+  { 0x0048, 0xf0ff, "SmartMX with 7 Byte UID",
+    {12, -1}
+  }
 };
 
 struct card_sak const_cs[] = {
-    {0x00, 0xff, "" },                      // 00 MIFARE Ultralight / Ultralight C
-    {0x09, 0xff, "" },                      // 01 MIFARE Mini 0.3K
-    {0x08, 0xff, "" },                      // 02 MIFARE Classic 1K
-    {0x18, 0xff, "" },                      // 03 MIFARE Classik 4K
-    {0x08, 0xff, " 2K, Security level 1" }, // 04 MIFARE Plus
-    {0x18, 0xff, " 4K, Security level 1" }, // 05 MIFARE Plus
-    {0x10, 0xff, " 2K, Security level 2" }, // 06 MIFARE Plus
-    {0x11, 0xff, " 4K, Security level 2" }, // 07 MIFARE Plus
-    {0x20, 0xff, " 2K, Security level 3" }, // 08 MIFARE Plus
-    {0x20, 0xff, " 4K, Security level 3" }, // 09 MIFARE Plus
-    {0x20, 0xff, " 4K" },                   // 10 MIFARE DESFire
-    {0x20, 0xff, " EV1 2K/4K/8K" },         // 11 MIFARE DESFire
-    {0x00, 0x00, "" },                      // 12 SmartMX
+  {0x00, 0xff, "" },                      // 00 MIFARE Ultralight / Ultralight C
+  {0x09, 0xff, "" },                      // 01 MIFARE Mini 0.3K
+  {0x08, 0xff, "" },                      // 02 MIFARE Classic 1K
+  {0x18, 0xff, "" },                      // 03 MIFARE Classik 4K
+  {0x08, 0xff, " 2K, Security level 1" }, // 04 MIFARE Plus
+  {0x18, 0xff, " 4K, Security level 1" }, // 05 MIFARE Plus
+  {0x10, 0xff, " 2K, Security level 2" }, // 06 MIFARE Plus
+  {0x11, 0xff, " 4K, Security level 2" }, // 07 MIFARE Plus
+  {0x20, 0xff, " 2K, Security level 3" }, // 08 MIFARE Plus
+  {0x20, 0xff, " 4K, Security level 3" }, // 09 MIFARE Plus
+  {0x20, 0xff, " 4K" },                   // 10 MIFARE DESFire
+  {0x20, 0xff, " EV1 2K/4K/8K" },         // 11 MIFARE DESFire
+  {0x00, 0x00, "" },                      // 12 SmartMX
 };
 
 uint8_t
@@ -190,16 +204,16 @@ print_nfc_iso14443a_info (const nfc_iso14443a_info nai, bool verbose)
     switch ((nai.abtAtqa[1] & 0xc0)>>6) {
       case 0:
         printf("single\n");
-      break;
+        break;
       case 1:
         printf("double\n");
-      break;
+        break;
       case 2:
         printf("triple\n");
-      break;
+        break;
       case 3:
         printf("RFU\n");
-      break;
+        break;
     }
     printf("* bit frame anticollision ");
     switch (nai.abtAtqa[1] & 0x1f) {
@@ -209,10 +223,10 @@ print_nfc_iso14443a_info (const nfc_iso14443a_info nai, bool verbose)
       case 0x08:
       case 0x10:
         printf("supported\n");
-      break;
+        break;
       default:
         printf("not supported\n");
-      break;
+        break;
     }
   }
   printf ("       UID (NFCID%c): ", (nai.abtUid[0] == 0x08 ? '3' : '1'));
@@ -327,40 +341,40 @@ print_nfc_iso14443a_info (const nfc_iso14443a_info nai, bool verbose)
             switch (CTC & 0xf0) {
               case 0x00:
                 printf("(Multiple) Virtual Cards\n");
-              break;
+                break;
               case 0x10:
                 printf("Mifare DESFire\n");
-              break;
+                break;
               case 0x20:
                 printf("Mifare Plus\n");
-              break;
+                break;
               default:
                 printf("RFU\n");
-              break;
+                break;
             }
             printf("    * Memory size: ");
             switch (CTC & 0x0f) {
               case 0x00:
                 printf("<1 kbyte\n");
-              break;
+                break;
               case 0x01:
                 printf("1 kbyte\n");
-              break;
+                break;
               case 0x02:
                 printf("2 kbyte\n");
-              break;
+                break;
               case 0x03:
                 printf("4 kbyte\n");
-              break;
+                break;
               case 0x04:
                 printf("8 kbyte\n");
-              break;
+                break;
               case 0x0f:
                 printf("Unspecified\n");
-              break;
+                break;
               default:
                 printf("RFU\n");
-              break;
+                break;
             }
           }
           if ((nai.szAtsLen - offset) > 0) { // Omit 2 CRC bytes
@@ -370,31 +384,31 @@ print_nfc_iso14443a_info (const nfc_iso14443a_info nai, bool verbose)
             switch (CVC & 0xf0) {
               case 0x00:
                 printf("Engineering sample\n");
-              break;
+                break;
               case 0x20:
                 printf("Released\n");
-              break;
+                break;
               default:
                 printf("RFU\n");
-              break;
+                break;
             }
             printf("    * Chip Generation: ");
             switch (CVC & 0x0f) {
               case 0x00:
                 printf("Generation 1\n");
-              break;
+                break;
               case 0x01:
                 printf("Generation 2\n");
-              break;
+                break;
               case 0x02:
                 printf("Generation 3\n");
-              break;
+                break;
               case 0x0f:
                 printf("Unspecified\n");
-              break;
+                break;
               default:
                 printf("RFU\n");
-              break;
+                break;
             }
           }
           if ((nai.szAtsLen - offset) > 0) { // Omit 2 CRC bytes
@@ -474,40 +488,40 @@ print_nfc_iso14443a_info (const nfc_iso14443a_info nai, bool verbose)
       case 0x000488:
         printf("* Mifare Classic 1K Infineon\n");
         found_possible_match = true;
-      break;
+        break;
       case 0x000298:
         printf("* Gemplus MPCOS\n");
         found_possible_match = true;
-      break;
+        break;
       case 0x030428:
         printf("* JCOP31\n");
         found_possible_match = true;
-      break;
+        break;
       case 0x004820:
         printf("* JCOP31 v2.4.1\n");
         printf("* JCOP31 v2.2\n");
         found_possible_match = true;
-      break;
+        break;
       case 0x000428:
         printf("* JCOP31 v2.3.1\n");
         found_possible_match = true;
-      break;
+        break;
       case 0x000453:
         printf("* Fudan FM1208SH01\n");
         found_possible_match = true;
-      break;
+        break;
       case 0x000820:
         printf("* Fudan FM1208\n");
         found_possible_match = true;
-      break;
+        break;
       case 0x000238:
         printf("* MFC 4K emulated by Nokia 6212 Classic\n");
         found_possible_match = true;
-      break;
+        break;
       case 0x000838:
         printf("* MFC 4K emulated by Nokia 6131 NFC\n");
         found_possible_match = true;
-      break;
+        break;
     }
     if (! found_possible_match) {
       printf("* Unknown card, sorry\n");
@@ -609,7 +623,7 @@ print_nfc_iso14443bi_info (const nfc_iso14443bi_info nii, bool verbose)
       printf ("%i\n", version);
     }
 
-    if ((nii.btVerLog & 0x80) && (nii.btConfig & 0x80)){
+    if ((nii.btVerLog & 0x80) && (nii.btConfig & 0x80)) {
       printf ("        Wait Enable: yes");
     }
   }
@@ -663,28 +677,28 @@ print_nfc_target (const nfc_target nt, bool verbose)
   switch(nt.nm.nmt) {
     case NMT_ISO14443A:
       print_nfc_iso14443a_info (nt.nti.nai, verbose);
-    break;
+      break;
     case NMT_JEWEL:
       print_nfc_jewel_info (nt.nti.nji, verbose);
-    break;
+      break;
     case NMT_FELICA:
       print_nfc_felica_info (nt.nti.nfi, verbose);
-    break;
+      break;
     case NMT_ISO14443B:
       print_nfc_iso14443b_info (nt.nti.nbi, verbose);
-    break;
+      break;
     case NMT_ISO14443BI:
       print_nfc_iso14443bi_info (nt.nti.nii, verbose);
-    break;
+      break;
     case NMT_ISO14443B2SR:
       print_nfc_iso14443b2sr_info (nt.nti.nsi, verbose);
-    break;
+      break;
     case NMT_ISO14443B2CT:
       print_nfc_iso14443b2ct_info (nt.nti.nci, verbose);
-    break;
+      break;
     case NMT_DEP:
       print_nfc_dep_info (nt.nti.ndi, verbose);
-    break;
+      break;
   }
 }
 

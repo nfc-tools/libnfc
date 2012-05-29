@@ -13,43 +13,43 @@
 void
 test_access_storm (void)
 {
-    int n = NTESTS;
-    nfc_connstring connstrings[MAX_DEVICE_COUNT];
-    int res = 0;
+  int n = NTESTS;
+  nfc_connstring connstrings[MAX_DEVICE_COUNT];
+  int res = 0;
 
-    nfc_init (NULL);
+  nfc_init (NULL);
 
-    size_t ref_device_count = nfc_list_devices (NULL, connstrings, MAX_DEVICE_COUNT);
-    if (!ref_device_count)
-	cut_omit ("No NFC device found");
+  size_t ref_device_count = nfc_list_devices (NULL, connstrings, MAX_DEVICE_COUNT);
+  if (!ref_device_count)
+    cut_omit ("No NFC device found");
 
-    while (n) {
-	size_t i;
+  while (n) {
+    size_t i;
 
-	size_t device_count = nfc_list_devices (NULL, connstrings, MAX_DEVICE_COUNT);
-	cut_assert_equal_int (ref_device_count, device_count, cut_message ("device count"));
+    size_t device_count = nfc_list_devices (NULL, connstrings, MAX_DEVICE_COUNT);
+    cut_assert_equal_int (ref_device_count, device_count, cut_message ("device count"));
 
-	for (i = 0; i < device_count; i++) {
-	    nfc_device *device;
-	    nfc_target ant[MAX_TARGET_COUNT];
+    for (i = 0; i < device_count; i++) {
+      nfc_device *device;
+      nfc_target ant[MAX_TARGET_COUNT];
 
-	    device = nfc_open (NULL, connstrings[i]);
-	    cut_assert_not_null (device, cut_message ("nfc_open"));
+      device = nfc_open (NULL, connstrings[i]);
+      cut_assert_not_null (device, cut_message ("nfc_open"));
 
-	    res = nfc_initiator_init(device);
-	    cut_assert_equal_int (0, res, cut_message ("nfc_initiator_init"));
+      res = nfc_initiator_init(device);
+      cut_assert_equal_int (0, res, cut_message ("nfc_initiator_init"));
 
-	    const nfc_modulation nm = {
-		.nmt = NMT_ISO14443A,
-		.nbr = NBR_106,
-	    };
-	    res = nfc_initiator_list_passive_targets(device, nm, ant, MAX_TARGET_COUNT);
-	    cut_assert_operator_int (res, >=, 0, cut_message ("nfc_initiator_list_passive_targets"));
+      const nfc_modulation nm = {
+        .nmt = NMT_ISO14443A,
+        .nbr = NBR_106,
+      };
+      res = nfc_initiator_list_passive_targets(device, nm, ant, MAX_TARGET_COUNT);
+      cut_assert_operator_int (res, >=, 0, cut_message ("nfc_initiator_list_passive_targets"));
 
-	    nfc_close (device);
-	}
-
-	n--;
+      nfc_close (device);
     }
-    nfc_exit (NULL);
+
+    n--;
+  }
+  nfc_exit (NULL);
 }

@@ -17,10 +17,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
 
- /**
- * @file nfc-device.c
- * @brief Provide internal function to manipulate nfc_device type
- */
+/**
+* @file nfc-device.c
+* @brief Provide internal function to manipulate nfc_device type
+*/
 
 /* vim:set et sw=2 ts=2: */
 

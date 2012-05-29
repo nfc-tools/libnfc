@@ -105,17 +105,17 @@ uart_set_speed (serial_port sp, const uint32_t uiPortSpeed)
   log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "Serial port speed requested to be set to %d bauds.", uiPortSpeed);
   // Set port speed (Input and Output)
   switch (uiPortSpeed) {
-  case 9600:
-  case 19200:
-  case 38400:
-  case 57600:
-  case 115200:
-  case 230400:
-  case 460800:
-    break;
-  default:
-    log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to set serial port speed to %d bauds. Speed value must be one of these constants: 9600 (default), 19200, 38400, 57600, 115200, 230400 or 460800.", uiPortSpeed);
-    return;
+    case 9600:
+    case 19200:
+    case 38400:
+    case 57600:
+    case 115200:
+    case 230400:
+    case 460800:
+      break;
+    default:
+      log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to set serial port speed to %d bauds. Speed value must be one of these constants: 9600 (default), 19200, 38400, 57600, 115200, 230400 or 460800.", uiPortSpeed);
+      return;
   };
   spw = (struct serial_port_windows *) sp;
 
@@ -167,8 +167,8 @@ uart_receive (serial_port sp, uint8_t * pbtRx, const size_t szRx, void * abort_p
   do {
     log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "ReadFile");
     res = ReadFile (((struct serial_port_windows *) sp)->hPort, pbtRx + dwTotalBytesReceived,
-      dwBytesToGet,
-      &dwBytesReceived, NULL);
+                    dwBytesToGet,
+                    &dwBytesReceived, NULL);
 
     dwTotalBytesReceived += dwBytesReceived;
 
@@ -177,8 +177,8 @@ uart_receive (serial_port sp, uint8_t * pbtRx, const size_t szRx, void * abort_p
       log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "ReadFile error: %u", err);
       return NFC_EIO;
     } else if (dwBytesReceived == 0) {
-	  return NFC_ETIMEOUT;
-	}
+      return NFC_ETIMEOUT;
+    }
 
     if (((DWORD)szRx) > dwTotalBytesReceived) {
       dwBytesToGet -= dwBytesReceived;

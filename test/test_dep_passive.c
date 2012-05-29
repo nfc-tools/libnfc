@@ -227,7 +227,7 @@ initiator_thread (void *arg)
   cut_assert_operator_int (res, >=, 0, cut_message ("Can't deselect target: %s", nfc_strerror (device)));
   if (res < 0) { thread_res = -1; return (void*) thread_res; }
 
-    // Passive mode / 424Kbps
+  // Passive mode / 424Kbps
   printf ("=========== INITIATOR %s (Passive mode / 424Kbps) =========\n", nfc_device_get_name (device));
   res = nfc_initiator_select_dep_target (device, NDM_PASSIVE, NBR_424, NULL, &nt, 1000);
   cut_assert_operator_int (res, >, 0, cut_message ("Can't select any DEP target: %s", nfc_strerror (device)));

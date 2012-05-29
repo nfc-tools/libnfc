@@ -17,10 +17,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
 
- /**
- * @file mirror-subr.c
- * @brief Mirror bytes
- */
+/**
+* @file mirror-subr.c
+* @brief Mirror bytes
+*/
 
 #ifdef HAVE_CONFIG_H
 #  include "config.h"

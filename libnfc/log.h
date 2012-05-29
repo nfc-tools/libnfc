@@ -32,43 +32,43 @@
 #    define __has_attribute_format 1
 #  endif
 
-  // User want debug features
-  #define LOGGING 1
-  int	 log_init (void);
-  int	 log_fini (void);
-  void log_put (const char *category, const char *priority, const char *format, ...)
+// User want debug features
+#define LOGGING 1
+int	 log_init (void);
+int	 log_fini (void);
+void log_put (const char *category, const char *priority, const char *format, ...)
 #  if __has_attribute_format
-    __attribute__((format(printf, 3, 4)))
+__attribute__((format(printf, 3, 4)))
 #  endif
-    ;
+;
 
 
-  #define NFC_PRIORITY_FATAL  "fatal"
-  #define NFC_PRIORITY_ALERT  "alert"
-  #define NFC_PRIORITY_CRIT   "critical"
-  #define NFC_PRIORITY_ERROR  "error"
-  #define NFC_PRIORITY_WARN   "warning"
-  #define NFC_PRIORITY_NOTICE "notice"
-  #define NFC_PRIORITY_INFO   "info"
-  #define NFC_PRIORITY_DEBUG  "debug"
-  #define NFC_PRIORITY_TRACE  "trace"
+#define NFC_PRIORITY_FATAL  "fatal"
+#define NFC_PRIORITY_ALERT  "alert"
+#define NFC_PRIORITY_CRIT   "critical"
+#define NFC_PRIORITY_ERROR  "error"
+#define NFC_PRIORITY_WARN   "warning"
+#define NFC_PRIORITY_NOTICE "notice"
+#define NFC_PRIORITY_INFO   "info"
+#define NFC_PRIORITY_DEBUG  "debug"
+#define NFC_PRIORITY_TRACE  "trace"
 #else
-  // No logging
-  #define log_init() ((void) 0)
-  #define log_fini() ((void) 0)
-  #define log_msg(category, priority, message) do {} while (0)
-  #define log_set_appender(category, appender) do {} while (0)
-  #define log_put(category, priority, format, ...) do {} while (0)
+// No logging
+#define log_init() ((void) 0)
+#define log_fini() ((void) 0)
+#define log_msg(category, priority, message) do {} while (0)
+#define log_set_appender(category, appender) do {} while (0)
+#define log_put(category, priority, format, ...) do {} while (0)
 
-  #define NFC_PRIORITY_FATAL  8
-  #define NFC_PRIORITY_ALERT  7
-  #define NFC_PRIORITY_CRIT   6
-  #define NFC_PRIORITY_ERROR  5
-  #define NFC_PRIORITY_WARN   4
-  #define NFC_PRIORITY_NOTICE 3
-  #define NFC_PRIORITY_INFO   2
-  #define NFC_PRIORITY_DEBUG  1
-  #define NFC_PRIORITY_TRACE  0
+#define NFC_PRIORITY_FATAL  8
+#define NFC_PRIORITY_ALERT  7
+#define NFC_PRIORITY_CRIT   6
+#define NFC_PRIORITY_ERROR  5
+#define NFC_PRIORITY_WARN   4
+#define NFC_PRIORITY_NOTICE 3
+#define NFC_PRIORITY_INFO   2
+#define NFC_PRIORITY_DEBUG  1
+#define NFC_PRIORITY_TRACE  0
 #endif /* HAS_LOG4C, DEBUG */
 
 /**

@@ -17,10 +17,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
 
- /**
- * @file iso14443-subr.c
- * @brief Defines some function extracted for ISO/IEC 14443
- */
+/**
+* @file iso14443-subr.c
+* @brief Defines some function extracted for ISO/IEC 14443
+*/
 
 #ifdef HAVE_CONFIG_H
 #  include "config.h"

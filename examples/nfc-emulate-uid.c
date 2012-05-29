@@ -178,27 +178,27 @@ main (int argc, char *argv[])
     if ((szRecvBits = nfc_target_receive_bits (pnd, abtRecv, sizeof (abtRecv), 0)) > 0) {
       // Prepare the command to send back for the anti-collision request
       switch (szRecvBits) {
-      case 7:                  // Request or Wakeup
-        pbtTx = abtAtqa;
-        szTxBits = 16;
-        // New anti-collsion session started
-        if (!quiet_output)
-          printf ("\n");
-        break;
+        case 7:                  // Request or Wakeup
+          pbtTx = abtAtqa;
+          szTxBits = 16;
+          // New anti-collsion session started
+          if (!quiet_output)
+            printf ("\n");
+          break;
 
-      case 16:                 // Select All
-        pbtTx = abtUidBcc;
-        szTxBits = 40;
-        break;
+        case 16:                 // Select All
+          pbtTx = abtUidBcc;
+          szTxBits = 40;
+          break;
 
-      case 72:                 // Select Tag
-        pbtTx = abtSak;
-        szTxBits = 24;
-        break;
+        case 72:                 // Select Tag
+          pbtTx = abtSak;
+          szTxBits = 24;
+          break;
 
-      default:                 // unknown length?
-        szTxBits = 0;
-        break;
+        default:                 // unknown length?
+          szTxBits = 0;
+          break;
       }
 
       if (!quiet_output) {

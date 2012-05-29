@@ -47,7 +47,7 @@
 #define LOG_CATEGORY "libnfc.bus.uart"
 
 #  if defined(__APPLE__)
-  // FIXME: find UART connection string for PN53X device on Mac OS X when multiples devices are used
+// FIXME: find UART connection string for PN53X device on Mac OS X when multiples devices are used
 const char *serial_ports_device_radix[] = { "tty.SLAB_USBtoUART", NULL };
 #  elif defined (__FreeBSD__) || defined (__OpenBSD__)
 const char *serial_ports_device_radix[] = { "cuaU", "cuau", NULL };
@@ -60,7 +60,7 @@ const char *serial_ports_device_radix[] = { "ttyUSB", "ttyS", NULL };
 // Work-around to claim uart interface using the c_iflag (software input processing) from the termios struct
 #  define CCLAIMED 0x80000000
 
-struct serial_port_unix{
+struct serial_port_unix {
   int 			fd; 			// Serial port file descriptor
   struct termios 	termios_backup; 	// Terminal info before using the port
   struct termios 	termios_new; 		// Terminal info during the transaction
@@ -143,39 +143,39 @@ uart_set_speed (serial_port sp, const uint32_t uiPortSpeed)
   // uint32_t <=> speed_t associations by hand.
   speed_t stPortSpeed = B9600;
   switch (uiPortSpeed) {
-  case 9600:
-    stPortSpeed = B9600;
-    break;
-  case 19200:
-    stPortSpeed = B19200;
-    break;
-  case 38400:
-    stPortSpeed = B38400;
-    break;
+    case 9600:
+      stPortSpeed = B9600;
+      break;
+    case 19200:
+      stPortSpeed = B19200;
+      break;
+    case 38400:
+      stPortSpeed = B38400;
+      break;
 #  ifdef B57600
-  case 57600:
-    stPortSpeed = B57600;
-    break;
+    case 57600:
+      stPortSpeed = B57600;
+      break;
 #  endif
 #  ifdef B115200
-  case 115200:
-    stPortSpeed = B115200;
-    break;
+    case 115200:
+      stPortSpeed = B115200;
+      break;
 #  endif
 #  ifdef B230400
-  case 230400:
-    stPortSpeed = B230400;
-    break;
+    case 230400:
+      stPortSpeed = B230400;
+      break;
 #  endif
 #  ifdef B460800
-  case 460800:
-    stPortSpeed = B460800;
-    break;
+    case 460800:
+      stPortSpeed = B460800;
+      break;
 #  endif
-  default:
-    log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to set serial port speed to %d bauds. Speed value must be one of those defined in termios(3).",
-         uiPortSpeed);
-    return;
+    default:
+      log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to set serial port speed to %d bauds. Speed value must be one of those defined in termios(3).",
+               uiPortSpeed);
+      return;
   };
 
   // Set port speed (Input and Output)
@@ -191,34 +191,34 @@ uart_get_speed (serial_port sp)
 {
   uint32_t uiPortSpeed = 0;
   switch (cfgetispeed (&UART_DATA(sp)->termios_new)) {
-  case B9600:
-    uiPortSpeed = 9600;
-    break;
-  case B19200:
-    uiPortSpeed = 19200;
-    break;
-  case B38400:
-    uiPortSpeed = 38400;
-    break;
+    case B9600:
+      uiPortSpeed = 9600;
+      break;
+    case B19200:
+      uiPortSpeed = 19200;
+      break;
+    case B38400:
+      uiPortSpeed = 38400;
+      break;
 #  ifdef B57600
-  case B57600:
-    uiPortSpeed = 57600;
-    break;
+    case B57600:
+      uiPortSpeed = 57600;
+      break;
 #  endif
 #  ifdef B115200
-  case B115200:
-    uiPortSpeed = 115200;
-    break;
+    case B115200:
+      uiPortSpeed = 115200;
+      break;
 #  endif
 #  ifdef B230400
-  case B230400:
-    uiPortSpeed = 230400;
-    break;
+    case B230400:
+      uiPortSpeed = 230400;
+      break;
 #  endif
 #  ifdef B460800
-  case B460800:
-    uiPortSpeed = 460800;
-    break;
+    case B460800:
+      uiPortSpeed = 460800;
+      break;
 #  endif
   }
 
@@ -335,38 +335,38 @@ uart_send (serial_port sp, const uint8_t *pbtTx, const size_t szTx, int timeout)
 char **
 uart_list_ports (void)
 {
-    char **res = malloc (sizeof (char *));
-    size_t szRes = 1;
+  char **res = malloc (sizeof (char *));
+  size_t szRes = 1;
 
-    res[0] = NULL;
+  res[0] = NULL;
 
-    DIR *pdDir = opendir("/dev");
-    struct dirent *pdDirEnt;
-    while ((pdDirEnt = readdir(pdDir)) != NULL) {
-	if (!isdigit (pdDirEnt->d_name[strlen (pdDirEnt->d_name) - 1]))
-	    continue;
+  DIR *pdDir = opendir("/dev");
+  struct dirent *pdDirEnt;
+  while ((pdDirEnt = readdir(pdDir)) != NULL) {
+    if (!isdigit (pdDirEnt->d_name[strlen (pdDirEnt->d_name) - 1]))
+      continue;
 
-	const char **p = serial_ports_device_radix;
-	while (*p) {
-	    if (!strncmp(pdDirEnt->d_name, *p, strlen (*p))) {
-		char **res2 = realloc (res, (szRes+1) * sizeof (char *));
-		if (!res2)
-		    goto oom;
+    const char **p = serial_ports_device_radix;
+    while (*p) {
+      if (!strncmp(pdDirEnt->d_name, *p, strlen (*p))) {
+        char **res2 = realloc (res, (szRes+1) * sizeof (char *));
+        if (!res2)
+          goto oom;
 
-		res = res2;
-		if (!(res[szRes-1] = malloc (6 + strlen (pdDirEnt->d_name))))
-		    goto oom;
+        res = res2;
+        if (!(res[szRes-1] = malloc (6 + strlen (pdDirEnt->d_name))))
+          goto oom;
 
-		sprintf (res[szRes-1], "/dev/%s", pdDirEnt->d_name);
+        sprintf (res[szRes-1], "/dev/%s", pdDirEnt->d_name);
 
-		szRes++;
-		res[szRes-1] = NULL;
-	    }
-	    p++;
-	}
+        szRes++;
+        res[szRes-1] = NULL;
+      }
+      p++;
     }
+  }
 oom:
-    closedir (pdDir);
+  closedir (pdDir);
 
-    return res;
+  return res;
 }

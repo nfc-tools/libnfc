@@ -223,10 +223,10 @@ acr122s_send_frame(nfc_device *pnd, uint8_t *frame, int timeout)
   if ((ret = uart_receive(port, ack, 4, abort_p, timeout)) < 0)
     return ret;
 
-  if (memcmp(ack, positive_ack, 4) != 0){
-      pnd->last_error = NFC_EIO;
-      return pnd->last_error;
-    }
+  if (memcmp(ack, positive_ack, 4) != 0) {
+    pnd->last_error = NFC_EIO;
+    return pnd->last_error;
+  }
 
   struct xfr_block_req *req = (struct xfr_block_req *) &frame[1];
   DRIVER_DATA(pnd)->seq = req->seq + 1;
@@ -250,9 +250,9 @@ static int
 acr122s_recv_frame(nfc_device *pnd, uint8_t *frame, size_t frame_size, void *abort_p, int timeout)
 {
   if (frame_size < 13)
-  {  pnd->last_error = NFC_EINVARG;
+  { pnd->last_error = NFC_EINVARG;
     return pnd->last_error;
-    }
+  }
   int ret;
   serial_port port = DRIVER_DATA(pnd)->port;
 
@@ -260,7 +260,7 @@ acr122s_recv_frame(nfc_device *pnd, uint8_t *frame, size_t frame_size, void *abo
     return ret;
 
   // Is buffer sufficient to store response?
-  if (frame_size < FRAME_SIZE(frame)){
+  if (frame_size < FRAME_SIZE(frame)) {
     pnd->last_error = NFC_EIO;
     return pnd->last_error;
   }
@@ -286,13 +286,13 @@ acr122s_recv_frame(nfc_device *pnd, uint8_t *frame, size_t frame_size, void *abo
  */
 static uint32_t
 le32(uint32_t val) {
-	uint32_t res;
-	uint8_t *p = (uint8_t *) &res;
-	p[0] = val;
-	p[1] = val >> 8;
-	p[2] = val >> 16;
-	p[3] = val >> 24;
-	return res;
+  uint32_t res;
+  uint8_t *p = (uint8_t *) &res;
+  p[0] = val;
+  p[1] = val >> 8;
+  p[2] = val >> 16;
+  p[3] = val >> 24;
+  return res;
 }
 
 /**
@@ -311,8 +311,8 @@ le32(uint32_t val) {
  */
 static bool
 acr122s_build_frame(nfc_device *pnd,
-    uint8_t *frame, size_t frame_size, uint8_t p1, uint8_t p2,
-    const uint8_t *data, size_t data_size, int should_prefix)
+                    uint8_t *frame, size_t frame_size, uint8_t p1, uint8_t p2,
+                    const uint8_t *data, size_t data_size, int should_prefix)
 {
   if (frame_size < data_size + APDU_OVERHEAD + should_prefix)
     return false;
@@ -333,7 +333,7 @@ acr122s_build_frame(nfc_device *pnd,
   header->ins = 0;
   header->p1 = p1;
   header->p2 = p2;
-	header->length = data_size + should_prefix;
+  header->length = data_size + should_prefix;
 
   uint8_t *buf = (uint8_t *) &frame[16];
   if (should_prefix)
@@ -480,7 +480,7 @@ acr122s_probe(nfc_connstring connstrings[], size_t connstrings_len, size_t *pszD
 #else /* SERIAL_AUTOPROBE_ENABLED */
   *pszDeviceFound = 0;
 
-    serial_port sp;
+  serial_port sp;
   char **acPorts = uart_list_ports ();
   const char *acPort;
   int     iDevice = 0;
@@ -560,17 +560,17 @@ acr122s_open(const nfc_connstring connstring)
   }
 
   log_put(LOG_CATEGORY, NFC_PRIORITY_TRACE,
-      "Attempt to connect to: %s at %d bauds.", ndd.port, ndd.speed);
+          "Attempt to connect to: %s at %d bauds.", ndd.port, ndd.speed);
 
   sp = uart_open(ndd.port);
   if (sp == INVALID_SERIAL_PORT) {
     log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR,
-        "Invalid serial port: %s", ndd.port);
+            "Invalid serial port: %s", ndd.port);
     return NULL;
   }
   if (sp == CLAIMED_SERIAL_PORT) {
     log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR,
-        "Serial port already claimed: %s", ndd.port);
+            "Serial port already claimed: %s", ndd.port);
     return NULL;
   }
 
@@ -607,7 +607,7 @@ acr122s_open(const nfc_connstring connstring)
 
   if (strncmp(version, "ACR122S", 7) != 0) {
     log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "Invalid firmware version: %s",
-        version);
+            version);
     acr122s_close(pnd);
     return NULL;
   }

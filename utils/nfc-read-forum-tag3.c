@@ -60,9 +60,9 @@ static nfc_device *pnd;
 static void
 print_usage(char *progname)
 {
-    fprintf (stderr, "usage: %s -o FILE\n", progname);
-    fprintf (stderr, "\nOptions:\n");
-    fprintf (stderr, "  -o     Extract NDEF message if available in FILE\n");
+  fprintf (stderr, "usage: %s -o FILE\n", progname);
+  fprintf (stderr, "\nOptions:\n");
+  fprintf (stderr, "  -o     Extract NDEF message if available in FILE\n");
 }
 
 static void stop_select (int sig)
@@ -89,11 +89,11 @@ static int
 nfc_forum_tag_type3_check (nfc_device *dev, const nfc_target nt, const uint16_t block, const uint8_t block_count, uint8_t *data, size_t *data_len)
 {
   uint8_t payload[1024] = {
-                       1, // Services
-                       0x0B, 0x00, // NFC Forum Tag Type 3's Service code
-                       block_count,
-                       0x80, block, // block 0
-                     };
+    1, // Services
+    0x0B, 0x00, // NFC Forum Tag Type 3's Service code
+    block_count,
+    0x80, block, // block 0
+  };
 
   size_t payload_len = 1 + 2 + 1;
   for (uint8_t b = 0; b < block_count; b++) {
@@ -157,19 +157,19 @@ main(int argc, char *argv[])
   char *ndef_output = NULL;
   while ((ch = getopt (argc, argv, "ho:")) != -1) {
     switch (ch) {
-    case 'h':
-      print_usage(argv[0]);
-      exit (EXIT_SUCCESS);
-      break;
-    case 'o':
-      ndef_output = optarg;
-      break;
-    case '?':
-      if (optopt == 'o')
-        fprintf (stderr, "Option -%c requires an argument.\n", optopt);
-    default:
-      print_usage (argv[0]);
-      exit (EXIT_FAILURE);
+      case 'h':
+        print_usage(argv[0]);
+        exit (EXIT_SUCCESS);
+        break;
+      case 'o':
+        ndef_output = optarg;
+        break;
+      case '?':
+        if (optopt == 'o')
+          fprintf (stderr, "Option -%c requires an argument.\n", optopt);
+      default:
+        print_usage (argv[0]);
+        exit (EXIT_FAILURE);
     }
   }
 

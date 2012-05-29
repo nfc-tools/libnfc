@@ -395,7 +395,7 @@ main (int argc, char *argv[])
       szCapduLen = (size_t) res;
       if (target_only_mode) {
         if (print_hex_fd4(abtCapdu, szCapduLen, "C-APDU") != EXIT_SUCCESS) {
-        fprintf (stderr, "Error while printing C-APDU to FD4\n");
+          fprintf (stderr, "Error while printing C-APDU to FD4\n");
           nfc_close (pndTarget);
           nfc_exit (NULL);
           exit(EXIT_FAILURE);
@@ -461,7 +461,7 @@ main (int argc, char *argv[])
         }
       } else {
         if (print_hex_fd4(abtRapdu, szRapduLen, "R-APDU") != EXIT_SUCCESS) {
-        fprintf (stderr, "Error while printing R-APDU to FD4\n");
+          fprintf (stderr, "Error while printing R-APDU to FD4\n");
           nfc_close (pndInitiator);
           nfc_exit (NULL);
           exit(EXIT_FAILURE);

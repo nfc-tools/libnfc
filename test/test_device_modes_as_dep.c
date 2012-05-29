@@ -185,7 +185,7 @@ test_dep_states (void)
     .cut_test_context = test_context,
   };
 
-    struct thread_data initiator_data = {
+  struct thread_data initiator_data = {
     .device = second_device,
     .cut_test_context = test_context,
   };

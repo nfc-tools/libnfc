@@ -383,9 +383,9 @@ acr122_pcsc_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szData, 
   }
 
   if (DRIVER_DATA (pnd)->ioCard.dwProtocol == SCARD_PROTOCOL_T0) {
-   /*
-    * Check the MCU response
-    */
+    /*
+     * Check the MCU response
+     */
 
     // Make sure we received the byte-count we expected
     if (dwRxLen != 2) {

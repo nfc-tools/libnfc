@@ -17,10 +17,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
 
- /**
- * @file nfc-internal.c
- * @brief Provide some useful internal functions
- */
+/**
+* @file nfc-internal.c
+* @brief Provide some useful internal functions
+*/
 
 #include <nfc/nfc.h>
 #include "nfc-internal.h"
@@ -64,6 +64,6 @@ prepare_initiator_data (const nfc_modulation nm, uint8_t **ppbtInitiatorData, si
     case NMT_DEP:
       *ppbtInitiatorData = NULL;
       *pszInitiatorData = 0;
-    break;
+      break;
   }
 }

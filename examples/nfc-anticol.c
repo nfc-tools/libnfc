@@ -277,13 +277,13 @@ main (int argc, char *argv[])
 
   // Request ATS, this only applies to tags that support ISO 14443A-4
   if (abtRx[0] & SAK_FLAG_ATS_SUPPORTED) {
-        iso_ats_supported = true;
+    iso_ats_supported = true;
   }
   if ((abtRx[0] & SAK_FLAG_ATS_SUPPORTED) || force_rats) {
     iso14443a_crc_append(abtRats, 2);
     if (transmit_bytes (abtRats, 4)) {
-        memcpy (abtAts, abtRx, szRx);
-        szAts = szRx;
+      memcpy (abtAts, abtRx, szRx);
+      szAts = szRx;
     }
   }
 
@@ -295,25 +295,25 @@ main (int argc, char *argv[])
   switch (szCL) {
     case 1:
       printf ("%02x%02x%02x%02x", abtRawUid[0], abtRawUid[1], abtRawUid[2], abtRawUid[3]);
-    break;
+      break;
     case 2:
       printf ("%02x%02x%02x", abtRawUid[1], abtRawUid[2], abtRawUid[3]);
       printf ("%02x%02x%02x%02x", abtRawUid[4], abtRawUid[5], abtRawUid[6], abtRawUid[7]);
-    break;
+      break;
     case 3:
       printf ("%02x%02x%02x", abtRawUid[1], abtRawUid[2], abtRawUid[3]);
       printf ("%02x%02x%02x", abtRawUid[5], abtRawUid[6], abtRawUid[7]);
       printf ("%02x%02x%02x%02x", abtRawUid[8], abtRawUid[9], abtRawUid[10], abtRawUid[11]);
-    break;
+      break;
   }
   printf("\n");
   printf("ATQA: %02x%02x\n SAK: %02x\n", abtAtqa[1], abtAtqa[0], abtSak);
   if (szAts > 1) { // if = 1, it's not actual ATS but error code
-      if (force_rats && ! iso_ats_supported) {
-          printf(" RATS forced\n");
-      }
-      printf(" ATS: ");
-      print_hex (abtAts, szAts);
+    if (force_rats && ! iso_ats_supported) {
+      printf(" RATS forced\n");
+    }
+    printf(" ATS: ");
+    print_hex (abtAts, szAts);
   }
 
   nfc_close (pnd);

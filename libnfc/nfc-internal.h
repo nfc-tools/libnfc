@@ -73,16 +73,16 @@
  * Initialise a buffer named buffer_name of size bytes.
  */
 #define BUFFER_INIT(buffer_name, size) \
-    uint8_t buffer_name[size]; \
-    size_t __##buffer_name##_n = 0
+  uint8_t buffer_name[size]; \
+  size_t __##buffer_name##_n = 0
 
 /*
  * Create a wrapper for an existing buffer.
  * BEWARE!  It eats children!
  */
 #define BUFFER_ALIAS(buffer_name, origin) \
-    uint8_t *buffer_name = (void *)origin; \
-    size_t __##buffer_name##_n = 0;
+  uint8_t *buffer_name = (void *)origin; \
+  size_t __##buffer_name##_n = 0;
 
 #define BUFFER_SIZE(buffer_name) (__##buffer_name##_n)
 
@@ -91,20 +91,20 @@
  * Append one byte of data to the buffer buffer_name.
  */
 #define BUFFER_APPEND(buffer_name, data) \
-    do { \
-	buffer_name[__##buffer_name##_n++] = data; \
-    } while (0)
+  do { \
+    buffer_name[__##buffer_name##_n++] = data; \
+  } while (0)
 
 /*
  * Append size bytes of data to the buffer buffer_name.
  */
 #define BUFFER_APPEND_BYTES(buffer_name, data, size) \
-    do { \
-	size_t __n = 0; \
-	while (__n < size) { \
-            buffer_name[__##buffer_name##_n++] = ((uint8_t *)data)[__n++]; \
-        } \
-    } while (0)
+  do { \
+    size_t __n = 0; \
+    while (__n < size) { \
+      buffer_name[__##buffer_name##_n++] = ((uint8_t *)data)[__n++]; \
+    } \
+  } while (0)
 
 /*
  * Append data_size bytes of data at the end of the buffer.  Since data is
@@ -117,19 +117,19 @@
 
 #if defined(_BYTE_ORDER) && (_BYTE_ORDER != _LITTLE_ENDIAN)
 #define BUFFER_APPEND_LE(buffer, data, data_size, field_size) \
-    do { \
-        size_t __data_size = data_size; \
-        size_t __field_size = field_size; \
-        while (__field_size--, __data_size--) { \
-            buffer[__##buffer##_n++] = ((uint8_t *)&data)[__field_size]; \
-        } \
-    } while (0)
+  do { \
+    size_t __data_size = data_size; \
+    size_t __field_size = field_size; \
+    while (__field_size--, __data_size--) { \
+      buffer[__##buffer##_n++] = ((uint8_t *)&data)[__field_size]; \
+    } \
+  } while (0)
 #else
 #define BUFFER_APPEND_LE(buffer, data, data_size, field_size) \
-    do { \
-        memcpy (buffer + __##buffer##_n, &data, data_size); \
-        __##buffer##_n += data_size; \
-    } while (0)
+  do { \
+    memcpy (buffer + __##buffer##_n, &data, data_size); \
+    __##buffer##_n += data_size; \
+  } while (0)
 #endif
 
 
@@ -179,22 +179,22 @@ struct nfc_device {
   void *driver_data;
   void *chip_data;
 
-/** Device name string, including device wrapper firmware */
+  /** Device name string, including device wrapper firmware */
   char    name[DEVICE_NAME_LENGTH];
-/** Device connection string */
+  /** Device connection string */
   nfc_connstring connstring;
-/** Is the CRC automaticly added, checked and removed from the frames */
+  /** Is the CRC automaticly added, checked and removed from the frames */
   bool    bCrc;
-/** Does the chip handle parity bits, all parities are handled as data */
+  /** Does the chip handle parity bits, all parities are handled as data */
   bool    bPar;
-/** Should the chip handle frames encapsulation and chaining */
+  /** Should the chip handle frames encapsulation and chaining */
   bool    bEasyFraming;
-/** Should the chip switch automatically activate ISO14443-4 when
-    selecting tags supporting it? */
+  /** Should the chip switch automatically activate ISO14443-4 when
+      selecting tags supporting it? */
   bool    bAutoIso14443_4;
-/** Supported modulation encoded in a byte */
+  /** Supported modulation encoded in a byte */
   uint8_t  btSupportByte;
-/** Last reported error */
+  /** Last reported error */
   int     last_error;
 };
 

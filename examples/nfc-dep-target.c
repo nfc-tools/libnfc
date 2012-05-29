@@ -64,7 +64,7 @@ main (int argc, const char *argv[])
   uint8_t  abtRx[MAX_FRAME_LEN];
   int  szRx;
   uint8_t  abtTx[] = "Hello Mars!";
-  #define MAX_DEVICE_COUNT 2
+#define MAX_DEVICE_COUNT 2
   nfc_connstring connstrings[MAX_DEVICE_COUNT];
   size_t szDeviceFound = nfc_list_devices (NULL, connstrings, MAX_DEVICE_COUNT);
   // Little hack to allow using nfc-dep-initiator & nfc-dep-target from
@@ -96,7 +96,7 @@ main (int argc, const char *argv[])
         .abtNFCID3 = { 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xff, 0x00, 0x00 },
         .szGB = 4,
         .abtGB = { 0x12, 0x34, 0x56, 0x78 },
-	.ndm = NDM_UNDEFINED,
+        .ndm = NDM_UNDEFINED,
         /* These bytes are not used by nfc_target_init: the chip will provide them automatically to the initiator */
         .btDID = 0x00,
         .btBS = 0x00,

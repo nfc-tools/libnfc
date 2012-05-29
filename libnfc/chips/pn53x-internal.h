@@ -133,13 +133,13 @@ typedef enum {
 #else
 #  define PNCMD( X, Y ) { X , Y, #X }
 #  define PNCMD_TRACE( X ) do { \
-     for (size_t i=0; i<(sizeof(pn53x_commands)/sizeof(pn53x_command)); i++) { \
-       if ( X == pn53x_commands[i].ui8Code ) { \
-         log_put( LOG_CATEGORY, NFC_PRIORITY_TRACE, "%s", pn53x_commands[i].abtCommandText ); \
-         break; \
-       } \
-     } \
-   } while(0)
+    for (size_t i=0; i<(sizeof(pn53x_commands)/sizeof(pn53x_command)); i++) { \
+      if ( X == pn53x_commands[i].ui8Code ) { \
+        log_put( LOG_CATEGORY, NFC_PRIORITY_TRACE, "%s", pn53x_commands[i].abtCommandText ); \
+        break; \
+      } \
+    } \
+  } while(0)
 #endif
 
 static const pn53x_command pn53x_commands[] = {
@@ -214,16 +214,16 @@ typedef struct {
 
 #ifndef LOGGING
 #  define PNREG_TRACE( X ) do { \
-   } while(0)
+  } while(0)
 #else
 #  define PNREG_TRACE( X ) do { \
-     for (size_t i=0; i<(sizeof(pn53x_registers)/sizeof(pn53x_register)); i++) { \
-       if ( X == pn53x_registers[i].ui16Address ) { \
-         log_put( LOG_CATEGORY, NFC_PRIORITY_TRACE, "%s (%s)", pn53x_registers[i].abtRegisterText, pn53x_registers[i].abtRegisterDescription ); \
-         break; \
-       } \
-     } \
-   } while(0)
+    for (size_t i=0; i<(sizeof(pn53x_registers)/sizeof(pn53x_register)); i++) { \
+      if ( X == pn53x_registers[i].ui16Address ) { \
+        log_put( LOG_CATEGORY, NFC_PRIORITY_TRACE, "%s (%s)", pn53x_registers[i].abtRegisterText, pn53x_registers[i].abtRegisterDescription ); \
+        break; \
+      } \
+    } \
+  } while(0)
 #endif
 
 // Register addresses

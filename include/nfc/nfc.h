@@ -34,27 +34,27 @@
 #  include <stdbool.h>
 
 #  ifdef _WIN32
-  /* Windows platform */
+/* Windows platform */
 #    ifndef _WINDLL
-    /* CMake compilation */
+/* CMake compilation */
 #      ifdef nfc_EXPORTS
 #        define  NFC_EXPORT __declspec(dllexport)
 #      else
-      /* nfc_EXPORTS */
+/* nfc_EXPORTS */
 #        define  NFC_EXPORT __declspec(dllimport)
 #      endif
-       /* nfc_EXPORTS */
+/* nfc_EXPORTS */
 #    else
-      /* _WINDLL */
-    /* Manual makefile */
+/* _WINDLL */
+/* Manual makefile */
 #      define NFC_EXPORT
 #    endif
-       /* _WINDLL */
+/* _WINDLL */
 #  else
-      /* _WIN32 */
+/* _WIN32 */
 #    define NFC_EXPORT
 #  endif
-       /* _WIN32 */
+/* _WIN32 */
 
 #  include <nfc/nfc-types.h>
 
@@ -62,11 +62,11 @@
 extern  "C" {
 #  endif                        // __cplusplus
 
-/* Library initialization/deinitialization */
+  /* Library initialization/deinitialization */
   NFC_EXPORT void nfc_init(nfc_context *context);
   NFC_EXPORT void nfc_exit(nfc_context *context);
 
-/* NFC Device/Hardware manipulation */
+  /* NFC Device/Hardware manipulation */
   NFC_EXPORT bool nfc_get_default_device (nfc_connstring *connstring);
   NFC_EXPORT nfc_device *nfc_open (nfc_context *context, const nfc_connstring connstring);
   NFC_EXPORT void nfc_close (nfc_device *pnd);
@@ -74,7 +74,7 @@ extern  "C" {
   NFC_EXPORT size_t nfc_list_devices (nfc_context *context, nfc_connstring connstrings[], size_t connstrings_len);
   NFC_EXPORT int nfc_idle (nfc_device *pnd);
 
-/* NFC initiator: act as "reader" */
+  /* NFC initiator: act as "reader" */
   NFC_EXPORT int nfc_initiator_init (nfc_device *pnd);
   NFC_EXPORT int nfc_initiator_select_passive_target (nfc_device *pnd, const nfc_modulation nm, const uint8_t *pbtInitData, const size_t szInitData, nfc_target *pnt);
   NFC_EXPORT int nfc_initiator_list_passive_targets (nfc_device *pnd, const nfc_modulation nm, nfc_target ant[], const size_t szTargets);
@@ -88,30 +88,30 @@ extern  "C" {
   NFC_EXPORT int nfc_initiator_transceive_bits_timed (nfc_device *pnd, const uint8_t *pbtTx, const size_t szTxBits, const uint8_t *pbtTxPar, uint8_t *pbtRx, uint8_t *pbtRxPar, uint32_t *cycles);
   NFC_EXPORT int nfc_initiator_target_is_present (nfc_device *pnd, const nfc_target nt);
 
-/* NFC target: act as tag (i.e. MIFARE Classic) or NFC target device. */
+  /* NFC target: act as tag (i.e. MIFARE Classic) or NFC target device. */
   NFC_EXPORT int nfc_target_init (nfc_device *pnd, nfc_target *pnt, uint8_t *pbtRx, const size_t szRx, int timeout);
   NFC_EXPORT int nfc_target_send_bytes (nfc_device *pnd, const uint8_t *pbtTx, const size_t szTx, int timeout);
   NFC_EXPORT int nfc_target_receive_bytes (nfc_device *pnd, uint8_t *pbtRx, const size_t szRx, int timeout);
   NFC_EXPORT int nfc_target_send_bits (nfc_device *pnd, const uint8_t *pbtTx, const size_t szTxBits, const uint8_t *pbtTxPar);
   NFC_EXPORT int nfc_target_receive_bits (nfc_device *pnd, uint8_t *pbtRx, const size_t szRx, uint8_t *pbtRxPar);
 
-/* Error reporting */
+  /* Error reporting */
   NFC_EXPORT const char *nfc_strerror (const nfc_device *pnd);
   NFC_EXPORT int nfc_strerror_r (const nfc_device *pnd, char *buf, size_t buflen);
   NFC_EXPORT void nfc_perror (const nfc_device *pnd, const char *s);
   NFC_EXPORT int nfc_device_get_last_error (const nfc_device *pnd);
 
-/* Special data accessors */
+  /* Special data accessors */
   NFC_EXPORT const char *nfc_device_get_name (nfc_device *pnd);
   NFC_EXPORT const char *nfc_device_get_connstring (nfc_device *pnd);
   NFC_EXPORT int nfc_device_get_supported_modulation (nfc_device *pnd, const nfc_mode mode,  const nfc_modulation_type **const supported_mt);
   NFC_EXPORT int nfc_device_get_supported_baud_rate (nfc_device *pnd, const nfc_modulation_type nmt, const nfc_baud_rate **const supported_br);
 
-/* Properties accessors */
+  /* Properties accessors */
   NFC_EXPORT int nfc_device_set_property_int (nfc_device *pnd, const nfc_property property, const int value);
   NFC_EXPORT int nfc_device_set_property_bool (nfc_device *pnd, const nfc_property property, const bool bEnable);
 
-/* Misc. functions */
+  /* Misc. functions */
   NFC_EXPORT void iso14443a_crc (uint8_t *pbtData, size_t szLen, uint8_t *pbtCrc);
   NFC_EXPORT void iso14443a_crc_append (uint8_t *pbtData, size_t szLen);
   NFC_EXPORT uint8_t *iso14443a_locate_historical_bytes (uint8_t *pbtAts, size_t szAts, size_t *pszTk);
@@ -119,76 +119,76 @@ extern  "C" {
   NFC_EXPORT const char *nfc_version (void);
   NFC_EXPORT int nfc_device_get_information_about (nfc_device *pnd, char *buf, size_t buflen);
 
-/* String converter functions */
+  /* String converter functions */
   NFC_EXPORT const char * str_nfc_modulation_type (const nfc_modulation_type nmt);
   NFC_EXPORT const char * str_nfc_baud_rate (const nfc_baud_rate nbr);
 
 
-/* Error codes */
-/** @ingroup error
- * @hideinitializer
- * Success (no error)
- */
+  /* Error codes */
+  /** @ingroup error
+   * @hideinitializer
+   * Success (no error)
+   */
 #define NFC_SUCCESS			 0
-/** @ingroup error
- * @hideinitializer
- * Input / output error, device may not be usable anymore without re-open it
- */
+  /** @ingroup error
+   * @hideinitializer
+   * Input / output error, device may not be usable anymore without re-open it
+   */
 #define NFC_EIO				-1
-/** @ingroup error
- * @hideinitializer
- * Invalid argument(s)
- */
+  /** @ingroup error
+   * @hideinitializer
+   * Invalid argument(s)
+   */
 #define NFC_EINVARG			-2
-/** @ingroup error
- * @hideinitializer
- *  Operation not supported by device
- */
+  /** @ingroup error
+   * @hideinitializer
+   *  Operation not supported by device
+   */
 #define NFC_EDEVNOTSUPP			-3
-/** @ingroup error
- * @hideinitializer
- * No such device
- */
+  /** @ingroup error
+   * @hideinitializer
+   * No such device
+   */
 #define NFC_ENOTSUCHDEV			-4
-/** @ingroup error
- * @hideinitializer
- * Buffer overflow
- */
+  /** @ingroup error
+   * @hideinitializer
+   * Buffer overflow
+   */
 #define NFC_EOVFLOW			-5
-/** @ingroup error
- * @hideinitializer
- * Operation timed out
- */
+  /** @ingroup error
+   * @hideinitializer
+   * Operation timed out
+   */
 #define NFC_ETIMEOUT			-6
-/** @ingroup error
- * @hideinitializer
- * Operation aborted (by user)
- */
+  /** @ingroup error
+   * @hideinitializer
+   * Operation aborted (by user)
+   */
 #define NFC_EOPABORTED			-7
-/** @ingroup error
- * @hideinitializer
- * Not (yet) implemented
- */
+  /** @ingroup error
+   * @hideinitializer
+   * Not (yet) implemented
+   */
 #define NFC_ENOTIMPL			-8
-/** @ingroup error
- * @hideinitializer
- * Target released
- */
+  /** @ingroup error
+   * @hideinitializer
+   * Target released
+   */
 #define NFC_ETGRELEASED			-10
-/** @ingroup error
- * @hideinitializer
- * Error while RF transmission
- */
+  /** @ingroup error
+   * @hideinitializer
+   * Error while RF transmission
+   */
 #define NFC_ERFTRANS			-20
-/** @ingroup error
- * @hideinitializer
- * Software error (allocation, file/pipe creation, etc.)
- */
+  /** @ingroup error
+   * @hideinitializer
+   * Software error (allocation, file/pipe creation, etc.)
+   */
 #define NFC_ESOFT			-80
-/** @ingroup error
- * @hideinitializer
- * Device's internal chip error
- */
+  /** @ingroup error
+   * @hideinitializer
+   * Device's internal chip error
+   */
 #define NFC_ECHIP			-90
 
 

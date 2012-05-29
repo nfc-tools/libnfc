@@ -130,10 +130,10 @@ main (int argc, const char *argv[])
       ERR ("Unable to open NFC device: %s", connstrings[i]);
       continue;
     }
-  if (nfc_initiator_init (pnd) < 0) {
-    nfc_perror (pnd, "nfc_initiator_init");
-    exit (EXIT_FAILURE);
-  }
+    if (nfc_initiator_init (pnd) < 0) {
+      nfc_perror (pnd, "nfc_initiator_init");
+      exit (EXIT_FAILURE);
+    }
 
     printf ("NFC device: %s opened\n", nfc_device_get_name (pnd));
 

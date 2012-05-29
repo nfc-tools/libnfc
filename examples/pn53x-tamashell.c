@@ -148,7 +148,7 @@ int main(int argc, const char* argv[])
       sscanf(cmd + offset, "%d", &s);
       printf("Pause for %i msecs\n", s);
       if (s>0) {
-          sleep(s * SUSP_TIME);
+        sleep(s * SUSP_TIME);
       }
       free(cmd);
       continue;

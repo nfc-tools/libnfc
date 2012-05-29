@@ -263,7 +263,7 @@ nfc_list_devices (nfc_context *context, nfc_connstring connstrings[] , size_t sz
       szDeviceFound += szN;
       log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "%ld device(s) found using %s driver", (unsigned long) szN, ndr->name);
       if (szDeviceFound == szDevices)
-	  break;
+        break;
     }
     pndr++;
   }
@@ -400,20 +400,20 @@ nfc_initiator_select_passive_target (nfc_device *pnd,
   size_t  szInit;
 
   switch (nm.nmt) {
-  case NMT_ISO14443A:
-    iso14443_cascade_uid (pbtInitData, szInitData, abtInit, &szInit);
-    break;
+    case NMT_ISO14443A:
+      iso14443_cascade_uid (pbtInitData, szInitData, abtInit, &szInit);
+      break;
 
-  case NMT_JEWEL:
-  case NMT_ISO14443B:
-  case NMT_ISO14443BI:
-  case NMT_ISO14443B2SR:
-  case NMT_ISO14443B2CT:
-  case NMT_FELICA:
-  case NMT_DEP:
-    memcpy (abtInit, pbtInitData, szInitData);
-    szInit = szInitData;
-    break;
+    case NMT_JEWEL:
+    case NMT_ISO14443B:
+    case NMT_ISO14443BI:
+    case NMT_ISO14443B2SR:
+    case NMT_ISO14443B2CT:
+    case NMT_FELICA:
+    case NMT_DEP:
+      memcpy (abtInit, pbtInitData, szInitData);
+      szInit = szInitData;
+      break;
   }
 
   HAL (initiator_select_passive_target, pnd, nm, abtInit, szInit, pnt);
@@ -549,10 +549,10 @@ nfc_initiator_select_dep_target (nfc_device *pnd,
  */
 int
 nfc_initiator_poll_dep_target (struct nfc_device *pnd,
-                                  const nfc_dep_mode ndm, const nfc_baud_rate nbr,
-                                  const nfc_dep_info *pndiInitiator,
-                                  nfc_target *pnt,
-                                  const int timeout)
+                               const nfc_dep_mode ndm, const nfc_baud_rate nbr,
+                               const nfc_dep_info *pndiInitiator,
+                               nfc_target *pnt,
+                               const int timeout)
 {
   const int period = 300;
   int remaining_time = timeout;
@@ -727,7 +727,7 @@ nfc_initiator_target_is_present (nfc_device *pnd, const nfc_target nt)
  */
 int
 nfc_initiator_transceive_bits_timed (nfc_device *pnd, const uint8_t *pbtTx, const size_t szTxBits, const uint8_t *pbtTxPar,
-                               uint8_t *pbtRx, uint8_t *pbtRxPar, uint32_t *cycles)
+                                     uint8_t *pbtRx, uint8_t *pbtRxPar, uint32_t *cycles)
 {
   HAL (initiator_transceive_bits_timed, pnd, pbtTx, szTxBits, pbtTxPar, pbtRx, pbtRxPar, cycles);
 }
@@ -1080,19 +1080,19 @@ str_nfc_baud_rate (const nfc_baud_rate nbr)
   switch(nbr) {
     case NBR_UNDEFINED:
       return "undefined baud rate";
-    break;
+      break;
     case NBR_106:
       return "106 kbps";
-    break;
+      break;
     case NBR_212:
       return "212 kbps";
-    break;
+      break;
     case NBR_424:
       return "424 kbps";
-    break;
+      break;
     case NBR_847:
       return "847 kbps";
-    break;
+      break;
   }
   // Should never go there..
   return "";
@@ -1109,28 +1109,28 @@ str_nfc_modulation_type (const nfc_modulation_type nmt)
   switch(nmt) {
     case NMT_ISO14443A:
       return "ISO/IEC 14443A";
-    break;
+      break;
     case NMT_ISO14443B:
       return "ISO/IEC 14443-4B";
-    break;
+      break;
     case NMT_ISO14443BI:
       return "ISO/IEC 14443-4B'";
-    break;
+      break;
     case NMT_ISO14443B2CT:
       return "ISO/IEC 14443-2B ASK CTx";
-    break;
+      break;
     case NMT_ISO14443B2SR:
       return "ISO/IEC 14443-2B ST SRx";
-    break;
+      break;
     case NMT_FELICA:
       return "FeliCa";
-    break;
+      break;
     case NMT_JEWEL:
       return "Innovision Jewel";
-    break;
+      break;
     case NMT_DEP:
       return "D.E.P.";
-    break;
+      break;
   }
   // Should never go there..
   return "";

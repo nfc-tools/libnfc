@@ -116,8 +116,8 @@ main (int argc, const char *argv[])
       }
       nfc_close (pnd);
     } else {
-		printf("nfc_open failed for %s\n", connstrings[i]);
-	}
+      printf("nfc_open failed for %s\n", connstrings[i]);
+    }
   }
   res = EXIT_SUCCESS;
 

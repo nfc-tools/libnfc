@@ -314,7 +314,7 @@ pn532_uart_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szData, i
     break;
     case NORMAL:
       // Nothing to do :)
-    break;
+      break;
   };
 
   uint8_t  abtFrame[PN532_BUFFER_LEN] = { 0x00, 0x00, 0xff };       // Every packet must start with "00 00 ff"

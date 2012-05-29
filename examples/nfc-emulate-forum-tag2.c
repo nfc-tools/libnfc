@@ -78,7 +78,7 @@ stop_emulation (int sig)
 {
   (void)sig;
   if (pnd) {
-   nfc_abort_command(pnd);
+    nfc_abort_command(pnd);
   } else {
     exit (EXIT_FAILURE);
   }

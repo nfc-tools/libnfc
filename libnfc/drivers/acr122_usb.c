@@ -56,15 +56,15 @@ Thanks to d18c7db and Okko for example code
 #include <errno.h>
 
 #ifndef _WIN32
-  // Under POSIX system, we use libusb (>= 0.1.12)
-  #include <usb.h>
-  #define USB_TIMEDOUT ETIMEDOUT
-  #define _usb_strerror( X ) strerror(-X)
+// Under POSIX system, we use libusb (>= 0.1.12)
+#include <usb.h>
+#define USB_TIMEDOUT ETIMEDOUT
+#define _usb_strerror( X ) strerror(-X)
 #else
-  // Under Windows we use libusb-win32 (>= 1.2.5)
-  #include <lusb0_usb.h>
-  #define USB_TIMEDOUT 116
-  #define _usb_strerror( X ) usb_strerror()
+// Under Windows we use libusb-win32 (>= 1.2.5)
+#include <lusb0_usb.h>
+#define USB_TIMEDOUT 116
+#define _usb_strerror( X ) usb_strerror()
 #endif
 
 #include <string.h>
@@ -158,7 +158,7 @@ acr122_usb_get_device_model (uint16_t vendor_id, uint16_t product_id)
 {
   for (size_t n = 0; n < sizeof (acr122_usb_supported_devices) / sizeof (struct acr122_usb_supported_device); n++) {
     if ((vendor_id == acr122_usb_supported_devices[n].vendor_id) &&
-       (product_id == acr122_usb_supported_devices[n].product_id))
+        (product_id == acr122_usb_supported_devices[n].product_id))
       return acr122_usb_supported_devices[n].model;
   }
 
@@ -363,7 +363,7 @@ acr122_usb_open (const nfc_connstring connstring)
     for (dev = bus->devices; dev; dev = dev->next) {
       if (connstring_decode_level > 2)  {
         // A specific dev have been specified
-      if (0 != strcmp (dev->filename, desc.filename))
+        if (0 != strcmp (dev->filename, desc.filename))
           continue;
       }
       // Open the USB device
@@ -401,7 +401,7 @@ acr122_usb_open (const nfc_connstring connstring)
       pn53x_data_new (pnd, &acr122_usb_io);
 
       switch (DRIVER_DATA (pnd)->model) {
-        // empirical tuning
+          // empirical tuning
         case ACR122:
           CHIP_DATA (pnd)->timer_correction = 46;
           break;
