@@ -50,66 +50,66 @@
 
 static nfc_device *pnd;
 
-static void stop_dep_communication (int sig)
+static void stop_dep_communication(int sig)
 {
   (void) sig;
   if (pnd)
-    nfc_abort_command (pnd);
+    nfc_abort_command(pnd);
   else
-    exit (EXIT_FAILURE);
+    exit(EXIT_FAILURE);
 }
 
 int
-main (int argc, const char *argv[])
+main(int argc, const char *argv[])
 {
   nfc_target nt;
   uint8_t  abtRx[MAX_FRAME_LEN];
   uint8_t  abtTx[] = "Hello World!";
 
   if (argc > 1) {
-    printf ("Usage: %s\n", argv[0]);
+    printf("Usage: %s\n", argv[0]);
     return EXIT_FAILURE;
   }
 
-  nfc_init (NULL);
+  nfc_init(NULL);
 
-  pnd = nfc_open (NULL, NULL);
+  pnd = nfc_open(NULL, NULL);
   if (!pnd) {
     printf("Unable to open NFC device.\n");
     return EXIT_FAILURE;
   }
-  printf ("NFC device: %s\n opened", nfc_device_get_name (pnd));
+  printf("NFC device: %s\n opened", nfc_device_get_name(pnd));
 
-  signal (SIGINT, stop_dep_communication);
+  signal(SIGINT, stop_dep_communication);
 
-  if (nfc_initiator_init (pnd) < 0) {
+  if (nfc_initiator_init(pnd) < 0) {
     nfc_perror(pnd, "nfc_initiator_init");
     goto error;
   }
 
-  if(nfc_initiator_select_dep_target (pnd, NDM_PASSIVE, NBR_212, NULL, &nt, 1000) < 0) {
+  if (nfc_initiator_select_dep_target(pnd, NDM_PASSIVE, NBR_212, NULL, &nt, 1000) < 0) {
     nfc_perror(pnd, "nfc_initiator_select_dep_target");
     goto error;
   }
-  print_nfc_target (nt, false);
+  print_nfc_target(nt, false);
 
-  printf ("Sending: %s\n", abtTx);
+  printf("Sending: %s\n", abtTx);
   int res;
-  if ((res = nfc_initiator_transceive_bytes (pnd, abtTx, sizeof(abtTx), abtRx, sizeof(abtRx), 0)) < 0) {
+  if ((res = nfc_initiator_transceive_bytes(pnd, abtTx, sizeof(abtTx), abtRx, sizeof(abtRx), 0)) < 0) {
     nfc_perror(pnd, "nfc_initiator_transceive_bytes");
     goto error;
   }
 
   abtRx[res] = 0;
-  printf ("Received: %s\n", abtRx);
+  printf("Received: %s\n", abtRx);
 
-  if (nfc_initiator_deselect_target (pnd) < 0) {
+  if (nfc_initiator_deselect_target(pnd) < 0) {
     nfc_perror(pnd, "nfc_initiator_deselect_target");
     goto error;
   }
 
 error:
-  nfc_close (pnd);
-  nfc_exit (NULL);
+  nfc_close(pnd);
+  nfc_exit(NULL);
   return EXIT_SUCCESS;
 }

@@ -52,60 +52,60 @@
 #define TIMEOUT 60              // secs.
 
 static void
-wait_one_minute (void)
+wait_one_minute(void)
 {
   int     secs = 0;
 
-  printf ("|");
-  fflush (stdout);
+  printf("|");
+  fflush(stdout);
 
   while (secs < TIMEOUT) {
-    sleep (1);
+    sleep(1);
     secs++;
-    printf (".");
-    fflush (stdout);
+    printf(".");
+    fflush(stdout);
   }
 
-  printf ("|\n");
+  printf("|\n");
 }
 
 int
-main (int argc, const char *argv[])
+main(int argc, const char *argv[])
 {
   (void) argc;
   (void) argv;
 
   int ret = EXIT_FAILURE;
 
-  nfc_init (NULL);
+  nfc_init(NULL);
 
   // Display libnfc version
-  const char *acLibnfcVersion = nfc_version ();
-  printf ("%s uses libnfc %s\n", argv[0], acLibnfcVersion);
+  const char *acLibnfcVersion = nfc_version();
+  printf("%s uses libnfc %s\n", argv[0], acLibnfcVersion);
 
   // Open using the first available NFC device
   nfc_device *pnd;
-  pnd = nfc_open (NULL, NULL);
+  pnd = nfc_open(NULL, NULL);
 
   if (pnd == NULL) {
-    ERR ("%s", "Unable to open NFC device.");
+    ERR("%s", "Unable to open NFC device.");
     return EXIT_FAILURE;
   }
 
-  printf ("NFC device: %s opened\n", nfc_device_get_name (pnd));
+  printf("NFC device: %s opened\n", nfc_device_get_name(pnd));
 
   // Print the example's menu
-  printf ("\nSelect the communication mode:\n");
-  printf ("[1] Virtual card mode.\n");
-  printf ("[2] Wired card mode.\n");
-  printf ("[3] Dual card mode.\n");
-  printf (">> ");
+  printf("\nSelect the communication mode:\n");
+  printf("[1] Virtual card mode.\n");
+  printf("[2] Wired card mode.\n");
+  printf("[3] Dual card mode.\n");
+  printf(">> ");
 
   // Take user's choice
-  char    input = getchar ();
-  printf ("\n");
+  char    input = getchar();
+  printf("\n");
   if ((input < '1') || (input > '3')) {
-    ERR ("%s", "Invalid selection.");
+    ERR("%s", "Invalid selection.");
     goto error;
   }
 
@@ -119,15 +119,15 @@ main (int argc, const char *argv[])
 
   // Connect with the SAM
   // FIXME: Its a private pn53x function
-  if (pn53x_SAMConfiguration (pnd, mode, 0) < 0) {
-    nfc_perror (pnd, "pn53x_SAMConfiguration");
+  if (pn53x_SAMConfiguration(pnd, mode, 0) < 0) {
+    nfc_perror(pnd, "pn53x_SAMConfiguration");
     goto error;
   }
 
   switch (mode) {
     case PSM_VIRTUAL_CARD: {
-      printf ("Now the SAM is readable for 1 minute from an external reader.\n");
-      wait_one_minute ();
+      printf("Now the SAM is readable for 1 minute from an external reader.\n");
+      wait_one_minute();
     }
     break;
 
@@ -135,14 +135,14 @@ main (int argc, const char *argv[])
       nfc_target nt;
 
       // Set opened NFC device to initiator mode
-      if (nfc_initiator_init (pnd) < 0) {
-        nfc_perror (pnd, "nfc_initiator_init");
+      if (nfc_initiator_init(pnd) < 0) {
+        nfc_perror(pnd, "nfc_initiator_init");
         goto error;
       }
 
       // Let the reader only try once to find a tag
-      if (nfc_device_set_property_bool (pnd, NP_INFINITE_SELECT, false) < 0) {
-        nfc_perror (pnd, "nfc_device_set_property_bool");
+      if (nfc_device_set_property_bool(pnd, NP_INFINITE_SELECT, false) < 0) {
+        nfc_perror(pnd, "nfc_device_set_property_bool");
         goto error;
       }
       // Read the SAM's info
@@ -151,17 +151,17 @@ main (int argc, const char *argv[])
         .nbr = NBR_106,
       };
       int res;
-      if ((res = nfc_initiator_select_passive_target (pnd, nmSAM, NULL, 0, &nt)) < 0) {
-        nfc_perror (pnd, "nfc_initiator_select_passive_target");
+      if ((res = nfc_initiator_select_passive_target(pnd, nmSAM, NULL, 0, &nt)) < 0) {
+        nfc_perror(pnd, "nfc_initiator_select_passive_target");
         goto error;
       } else if (res == 0) {
-        ERR ("No SAM found.");
+        ERR("No SAM found.");
         goto error;
       } else if (res == 1) {
-        printf ("The following ISO14443A tag (SAM) was found:\n");
-        print_nfc_iso14443a_info (nt.nti.nai, true);
+        printf("The following ISO14443A tag (SAM) was found:\n");
+        print_nfc_iso14443a_info(nt.nti.nai, true);
       } else {
-        ERR ("%s", "More than one ISO14442 tag found as SAM.");
+        ERR("%s", "More than one ISO14442 tag found as SAM.");
         goto error;
       }
     }
@@ -185,9 +185,9 @@ main (int argc, const char *argv[])
           },
         },
       };
-      printf ("Now both, NFC device (configured as target) and SAM are readables from an external NFC initiator.\n");
-      printf ("Please note that NFC device (configured as target) stay in target mode until it receive RATS, ATR_REQ or proprietary command.\n");
-      if (nfc_target_init (pnd, &nt, abtRx, sizeof(abtRx), 0) < 0) {
+      printf("Now both, NFC device (configured as target) and SAM are readables from an external NFC initiator.\n");
+      printf("Please note that NFC device (configured as target) stay in target mode until it receive RATS, ATR_REQ or proprietary command.\n");
+      if (nfc_target_init(pnd, &nt, abtRx, sizeof(abtRx), 0) < 0) {
         nfc_perror(pnd, "nfc_target_init");
         return EXIT_FAILURE;
       }
@@ -201,11 +201,11 @@ main (int argc, const char *argv[])
 
 error:
   // Disconnect from the SAM
-  pn53x_SAMConfiguration (pnd, PSM_NORMAL, 0);
+  pn53x_SAMConfiguration(pnd, PSM_NORMAL, 0);
 
   // Close NFC device
-  nfc_close (pnd);
-  nfc_exit (NULL);
+  nfc_close(pnd);
+  nfc_exit(NULL);
 
-  exit (ret);
+  exit(ret);
 }

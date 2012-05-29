@@ -74,13 +74,13 @@
 static nfc_device *pnd;
 
 static void
-stop_emulation (int sig)
+stop_emulation(int sig)
 {
   (void)sig;
   if (pnd) {
     nfc_abort_command(pnd);
   } else {
-    exit (EXIT_FAILURE);
+    exit(EXIT_FAILURE);
   }
 }
 
@@ -112,14 +112,14 @@ static uint8_t __nfcforum_tag2_memory_area[] = {
 
 #define HALT 		0x50
 static int
-nfcforum_tag2_io (struct nfc_emulator *emulator, const uint8_t *data_in, const size_t data_in_len, uint8_t *data_out, const size_t data_out_len)
+nfcforum_tag2_io(struct nfc_emulator *emulator, const uint8_t *data_in, const size_t data_in_len, uint8_t *data_out, const size_t data_out_len)
 {
   int res = 0;
 
   uint8_t *nfcforum_tag2_memory_area = (uint8_t *)(emulator->user_data);
 
-  printf ("    In: ");
-  print_hex (data_in, data_in_len);
+  printf("    In: ");
+  print_hex(data_in, data_in_len);
 
   switch (data_in[0]) {
     case READ:
@@ -131,19 +131,19 @@ nfcforum_tag2_io (struct nfc_emulator *emulator, const uint8_t *data_in, const s
       }
       break;
     case HALT:
-      printf ("HALT sent\n");
+      printf("HALT sent\n");
       res = -ECONNABORTED;
       break;
     default:
-      printf ("Unknown command: 0x%02x\n", data_in[0]);
+      printf("Unknown command: 0x%02x\n", data_in[0]);
       res = -ENOTSUP;
   }
 
   if (res < 0) {
-    ERR ("%s (%d)", strerror (-res), -res);
+    ERR("%s (%d)", strerror(-res), -res);
   } else {
-    printf ("    Out: ");
-    print_hex (data_out, res);
+    printf("    Out: ");
+    print_hex(data_out, res);
   }
 
   return res;
@@ -181,31 +181,31 @@ main(int argc, char *argv[])
     .user_data = __nfcforum_tag2_memory_area,
   };
 
-  signal (SIGINT, stop_emulation);
-  nfc_init (NULL);
-  pnd = nfc_open (NULL, NULL);
+  signal(SIGINT, stop_emulation);
+  nfc_init(NULL);
+  pnd = nfc_open(NULL, NULL);
 
   if (pnd == NULL) {
     ERR("Unable to open NFC device");
-    exit (EXIT_FAILURE);
+    exit(EXIT_FAILURE);
   }
 
-  printf ("NFC device: %s opened\n", nfc_device_get_name (pnd));
-  printf ("Emulating NDEF tag now, please touch it with a second NFC device\n");
+  printf("NFC device: %s opened\n", nfc_device_get_name(pnd));
+  printf("Emulating NDEF tag now, please touch it with a second NFC device\n");
 
-  if (nfc_emulate_target (pnd, &emulator) < 0) {
+  if (nfc_emulate_target(pnd, &emulator) < 0) {
     goto error;
   }
 
   nfc_close(pnd);
-  nfc_exit (NULL);
+  nfc_exit(NULL);
 
-  exit (EXIT_SUCCESS);
+  exit(EXIT_SUCCESS);
 
 error:
   if (pnd) {
-    nfc_perror (pnd, argv[0]);
-    nfc_close (pnd);
-    nfc_exit (NULL);
+    nfc_perror(pnd, argv[0]);
+    nfc_close(pnd);
+    nfc_exit(NULL);
   }
 }

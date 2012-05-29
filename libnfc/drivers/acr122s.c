@@ -270,7 +270,7 @@ acr122s_recv_frame(nfc_device *pnd, uint8_t *frame, size_t frame_size, void *abo
     return ret;
 
   struct xfr_block_res *res = (struct xfr_block_res *) &frame[1];
-  if ((uint8_t) (res->seq + 1) != DRIVER_DATA(pnd)->seq) {
+  if ((uint8_t)(res->seq + 1) != DRIVER_DATA(pnd)->seq) {
     log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Invalid response sequence number.");
     pnd->last_error = NFC_EIO;
     return pnd->last_error;
@@ -418,51 +418,51 @@ struct acr122s_descriptor {
 };
 
 static int
-acr122s_connstring_decode (const nfc_connstring connstring, struct acr122s_descriptor *desc)
+acr122s_connstring_decode(const nfc_connstring connstring, struct acr122s_descriptor *desc)
 {
-  char *cs = malloc (strlen (connstring) + 1);
+  char *cs = malloc(strlen(connstring) + 1);
   if (!cs) {
-    perror ("malloc");
+    perror("malloc");
     return -1;
   }
-  strcpy (cs, connstring);
-  const char *driver_name = strtok (cs, ":");
+  strcpy(cs, connstring);
+  const char *driver_name = strtok(cs, ":");
   if (!driver_name) {
     // Parse error
-    free (cs);
+    free(cs);
     return -1;
   }
 
-  if (0 != strcmp (driver_name, ACR122S_DRIVER_NAME)) {
+  if (0 != strcmp(driver_name, ACR122S_DRIVER_NAME)) {
     // Driver name does not match.
-    free (cs);
+    free(cs);
     return 0;
   }
 
-  const char *port = strtok (NULL, ":");
+  const char *port = strtok(NULL, ":");
   if (!port) {
     // Only driver name was specified (or parsing error)
-    free (cs);
+    free(cs);
     return 1;
   }
-  strncpy (desc->port, port, sizeof(desc->port) - 1);
+  strncpy(desc->port, port, sizeof(desc->port) - 1);
   desc->port[sizeof(desc->port) - 1] = '\0';
 
-  const char *speed_s = strtok (NULL, ":");
+  const char *speed_s = strtok(NULL, ":");
   if (!speed_s) {
     // speed not specified (or parsing error)
-    free (cs);
+    free(cs);
     return 2;
   }
   unsigned long speed;
-  if (sscanf (speed_s, "%lu", &speed) != 1) {
+  if (sscanf(speed_s, "%lu", &speed) != 1) {
     // speed_s is not a number
-    free (cs);
+    free(cs);
     return 2;
   }
   desc->speed = speed;
 
-  free (cs);
+  free(cs);
   return 3;
 }
 
@@ -482,26 +482,26 @@ acr122s_probe(nfc_connstring connstrings[], size_t connstrings_len, size_t *pszD
   *pszDeviceFound = 0;
 
   serial_port sp;
-  char **acPorts = uart_list_ports ();
+  char **acPorts = uart_list_ports();
   const char *acPort;
   int     iDevice = 0;
 
   while ((acPort = acPorts[iDevice++])) {
-    sp = uart_open (acPort);
-    log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "Trying to find ACR122S device on serial port: %s at %d bauds.", acPort, ACR122S_DEFAULT_SPEED);
+    sp = uart_open(acPort);
+    log_put(LOG_CATEGORY, NFC_PRIORITY_TRACE, "Trying to find ACR122S device on serial port: %s at %d bauds.", acPort, ACR122S_DEFAULT_SPEED);
 
     if ((sp != INVALID_SERIAL_PORT) && (sp != CLAIMED_SERIAL_PORT)) {
       // We need to flush input to be sure first reply does not comes from older byte transceive
-      uart_flush_input (sp);
-      uart_set_speed (sp, ACR122S_DEFAULT_SPEED);
+      uart_flush_input(sp);
+      uart_set_speed(sp, ACR122S_DEFAULT_SPEED);
 
       nfc_connstring connstring;
-      snprintf (connstring, sizeof(nfc_connstring), "%s:%s:%"PRIu32, ACR122S_DRIVER_NAME, acPort, ACR122S_DEFAULT_SPEED);
-      nfc_device *pnd = nfc_device_new (connstring);
+      snprintf(connstring, sizeof(nfc_connstring), "%s:%s:%"PRIu32, ACR122S_DRIVER_NAME, acPort, ACR122S_DEFAULT_SPEED);
+      nfc_device *pnd = nfc_device_new(connstring);
 
       pnd->driver = &acr122s_driver;
       pnd->driver_data = malloc(sizeof(struct acr122s_data));
-      DRIVER_DATA (pnd)->port = sp;
+      DRIVER_DATA(pnd)->port = sp;
       DRIVER_DATA(pnd)->seq = 0;
 
 #ifndef WIN32
@@ -528,7 +528,7 @@ acr122s_probe(nfc_connstring connstrings[], size_t connstrings_len, size_t *pszD
         continue;
 
       // ACR122S reader is found
-      memcpy (connstrings[*pszDeviceFound], connstring, sizeof(nfc_connstring));
+      memcpy(connstrings[*pszDeviceFound], connstring, sizeof(nfc_connstring));
       (*pszDeviceFound)++;
 
       // Test if we reach the maximum "wanted" devices
@@ -538,9 +538,9 @@ acr122s_probe(nfc_connstring connstrings[], size_t connstrings_len, size_t *pszD
   }
   iDevice = 0;
   while ((acPort = acPorts[iDevice++])) {
-    free ((void*)acPort);
+    free((void*)acPort);
   }
-  free (acPorts);
+  free(acPorts);
 #endif /* SERIAL_AUTOPROBE_ENABLED */
   return true;
 }
@@ -551,7 +551,7 @@ acr122s_open(const nfc_connstring connstring)
   serial_port sp;
   nfc_device *pnd;
   struct acr122s_descriptor ndd;
-  int connstring_decode_level = acr122s_connstring_decode (connstring, &ndd);
+  int connstring_decode_level = acr122s_connstring_decode(connstring, &ndd);
 
   if (connstring_decode_level < 2) {
     return NULL;
@@ -633,15 +633,15 @@ acr122s_open(const nfc_connstring connstring)
 }
 
 void
-acr122s_close (nfc_device *pnd)
+acr122s_close(nfc_device *pnd)
 {
   acr122s_deactivate_sam(pnd);
   uart_close(DRIVER_DATA(pnd)->port);
 
 #ifndef WIN32
   // Release file descriptors used for abort mecanism
-  close (DRIVER_DATA(pnd)->abort_fds[0]);
-  close (DRIVER_DATA(pnd)->abort_fds[1]);
+  close(DRIVER_DATA(pnd)->abort_fds[0]);
+  close(DRIVER_DATA(pnd)->abort_fds[1]);
 #endif
 
   pn53x_data_free(pnd);
@@ -691,7 +691,7 @@ acr122s_receive(nfc_device *pnd, uint8_t *buf, size_t buf_len, int timeout)
 
   size_t data_len = FRAME_SIZE(tmp) - 17;
   if (data_len > buf_len) {
-    log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "Receive buffer too small. (buf_len: %zu, data_len: %zu)", buf_len, data_len);
+    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "Receive buffer too small. (buf_len: %zu, data_len: %zu)", buf_len, data_len);
     pnd->last_error = NFC_EIO;
     return pnd->last_error;
   }
@@ -707,7 +707,7 @@ acr122s_abort_command(nfc_device *pnd)
 #ifndef WIN32
     close(DRIVER_DATA(pnd)->abort_fds[0]);
     close(DRIVER_DATA(pnd)->abort_fds[1]);
-    if (pipe(DRIVER_DATA(pnd)->abort_fds) < 0 ) {
+    if (pipe(DRIVER_DATA(pnd)->abort_fds) < 0) {
       return NFC_ESOFT;
     }
 #else

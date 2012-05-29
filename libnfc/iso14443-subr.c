@@ -38,20 +38,20 @@
  *
  */
 void
-iso14443a_crc (uint8_t *pbtData, size_t szLen, uint8_t *pbtCrc)
+iso14443a_crc(uint8_t *pbtData, size_t szLen, uint8_t *pbtCrc)
 {
   uint8_t  bt;
   uint32_t wCrc = 0x6363;
 
   do {
     bt = *pbtData++;
-    bt = (bt ^ (uint8_t) (wCrc & 0x00FF));
-    bt = (bt ^ (bt << 4));
-    wCrc = (wCrc >> 8) ^ ((uint32_t) bt << 8) ^ ((uint32_t) bt << 3) ^ ((uint32_t) bt >> 4);
+    bt = (bt ^(uint8_t)(wCrc & 0x00FF));
+    bt = (bt ^(bt << 4));
+    wCrc = (wCrc >> 8) ^((uint32_t) bt << 8) ^((uint32_t) bt << 3) ^((uint32_t) bt >> 4);
   } while (--szLen);
 
-  *pbtCrc++ = (uint8_t) (wCrc & 0xFF);
-  *pbtCrc = (uint8_t) ((wCrc >> 8) & 0xFF);
+  *pbtCrc++ = (uint8_t)(wCrc & 0xFF);
+  *pbtCrc = (uint8_t)((wCrc >> 8) & 0xFF);
 }
 
 /**
@@ -59,9 +59,9 @@ iso14443a_crc (uint8_t *pbtData, size_t szLen, uint8_t *pbtCrc)
  *
  */
 void
-iso14443a_crc_append (uint8_t *pbtData, size_t szLen)
+iso14443a_crc_append(uint8_t *pbtData, size_t szLen)
 {
-  iso14443a_crc (pbtData, szLen, pbtData + szLen);
+  iso14443a_crc(pbtData, szLen, pbtData + szLen);
 }
 
 /**
@@ -69,7 +69,7 @@ iso14443a_crc_append (uint8_t *pbtData, size_t szLen)
  * @see ISO/IEC 14443-4 (5.2.7 Historical bytes)
  */
 uint8_t *
-iso14443a_locate_historical_bytes (uint8_t *pbtAts, size_t szAts, size_t *pszTk)
+iso14443a_locate_historical_bytes(uint8_t *pbtAts, size_t szAts, size_t *pszTk)
 {
   if (szAts) {
     size_t offset = 1;
@@ -96,26 +96,26 @@ iso14443a_locate_historical_bytes (uint8_t *pbtAts, size_t szAts, size_t *pszTk)
  * @see ISO/IEC 14443-3 (6.4.4 UID contents and cascade levels)
  */
 void
-iso14443_cascade_uid (const uint8_t abtUID[], const size_t szUID, uint8_t *pbtCascadedUID, size_t *pszCascadedUID)
+iso14443_cascade_uid(const uint8_t abtUID[], const size_t szUID, uint8_t *pbtCascadedUID, size_t *pszCascadedUID)
 {
   switch (szUID) {
     case 7:
       pbtCascadedUID[0] = 0x88;
-      memcpy (pbtCascadedUID + 1, abtUID, 7);
+      memcpy(pbtCascadedUID + 1, abtUID, 7);
       *pszCascadedUID = 8;
       break;
 
     case 10:
       pbtCascadedUID[0] = 0x88;
-      memcpy (pbtCascadedUID + 1, abtUID, 3);
+      memcpy(pbtCascadedUID + 1, abtUID, 3);
       pbtCascadedUID[4] = 0x88;
-      memcpy (pbtCascadedUID + 5, abtUID + 3, 7);
+      memcpy(pbtCascadedUID + 5, abtUID + 3, 7);
       *pszCascadedUID = 12;
       break;
 
     case 4:
     default:
-      memcpy (pbtCascadedUID, abtUID, szUID);
+      memcpy(pbtCascadedUID, abtUID, szUID);
       *pszCascadedUID = szUID;
       break;
   }

@@ -77,31 +77,31 @@ int main(int argc, const char* argv[])
   FILE* input = NULL;
 
   if (argc >= 2) {
-    if((input = fopen(argv[1], "r")) == NULL) {
-      ERR ("%s", "Cannot open file.");
+    if ((input = fopen(argv[1], "r")) == NULL) {
+      ERR("%s", "Cannot open file.");
       return EXIT_FAILURE;
     }
   }
 
-  nfc_init (NULL);
+  nfc_init(NULL);
 
   // Try to open the NFC reader
   pnd = nfc_open(NULL, NULL);
 
   if (pnd == NULL) {
-    ERR ("%s", "Unable to open NFC device.");
+    ERR("%s", "Unable to open NFC device.");
     return EXIT_FAILURE;
   }
 
-  printf ("NFC reader: %s opened\n", nfc_device_get_name (pnd));
-  if (nfc_initiator_init (pnd) < 0) {
-    nfc_perror (pnd, "nfc_initiator_init");
-    exit (EXIT_FAILURE);
+  printf("NFC reader: %s opened\n", nfc_device_get_name(pnd));
+  if (nfc_initiator_init(pnd) < 0) {
+    nfc_perror(pnd, "nfc_initiator_init");
+    exit(EXIT_FAILURE);
   }
 
   char *cmd;
   const char *prompt = "> ";
-  while(1) {
+  while (1) {
     int offset = 0;
 #if defined(HAVE_READLINE)
     if (input == NULL) { // means we use stdin
@@ -154,14 +154,14 @@ int main(int argc, const char* argv[])
       continue;
     }
     szTx = 0;
-    for(int i = 0; i < MAX_FRAME_LEN - 10; i++) {
+    for (int i = 0; i < MAX_FRAME_LEN - 10; i++) {
       int size;
       unsigned int byte;
       while (isspace(cmd[offset])) {
         offset++;
       }
       size = sscanf(cmd + offset, "%2x", &byte);
-      if (size < 1 ) {
+      if (size < 1) {
         break;
       }
       abtTx[i] = byte;
@@ -181,9 +181,9 @@ int main(int argc, const char* argv[])
 
     szRx = sizeof(abtRx);
     int res = 0;
-    if ((res = pn53x_transceive (pnd, abtTx, szTx, abtRx, szRx, 0)) < 0) {
+    if ((res = pn53x_transceive(pnd, abtTx, szTx, abtRx, szRx, 0)) < 0) {
       free(cmd);
-      nfc_perror (pnd, "Rx");
+      nfc_perror(pnd, "Rx");
       continue;
     }
     szRx = (size_t) res;
@@ -197,6 +197,6 @@ int main(int argc, const char* argv[])
     fclose(input);
   }
   nfc_close(pnd);
-  nfc_exit (NULL);
+  nfc_exit(NULL);
   return 1;
 }

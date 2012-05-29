@@ -116,7 +116,7 @@ uint8_t nfcforum_capability_container[] = {
 #define ISO144434A_RATS 0xE0
 
 static int
-nfcforum_tag4_io (struct nfc_emulator *emulator, const uint8_t *data_in, const size_t data_in_len, uint8_t *data_out, const size_t data_out_len)
+nfcforum_tag4_io(struct nfc_emulator *emulator, const uint8_t *data_in, const size_t data_in_len, uint8_t *data_out, const size_t data_out_len)
 {
   int res = 0;
 
@@ -130,11 +130,11 @@ nfcforum_tag4_io (struct nfc_emulator *emulator, const uint8_t *data_in, const s
 
   // Show transmitted command
   if (!quiet_output) {
-    printf ("    In: ");
-    print_hex (data_in, data_in_len);
+    printf("    In: ");
+    print_hex(data_in, data_in_len);
   }
 
-  if(data_in_len >= 4) {
+  if (data_in_len >= 4) {
     if (data_in[CLA] != 0x00)
       return -ENOTSUP;
 
@@ -142,7 +142,7 @@ nfcforum_tag4_io (struct nfc_emulator *emulator, const uint8_t *data_in, const s
 #define ISO7816_READ_BINARY    0xB0
 #define ISO7816_UPDATE_BINARY  0xD6
 
-    switch(data_in[INS]) {
+    switch (data_in[INS]) {
       case ISO7816_SELECT:
 
         switch (data_in[P1]) {
@@ -152,14 +152,14 @@ nfcforum_tag4_io (struct nfc_emulator *emulator, const uint8_t *data_in, const s
 
             const uint8_t ndef_capability_container[] = { 0xE1, 0x03 };
             const uint8_t ndef_file[] = { 0xE1, 0x04 };
-            if ((data_in[LC] == sizeof (ndef_capability_container)) && (0 == memcmp (ndef_capability_container, data_in + DATA, data_in[LC]))) {
-              memcpy (data_out, "\x90\x00", res = 2);
+            if ((data_in[LC] == sizeof(ndef_capability_container)) && (0 == memcmp(ndef_capability_container, data_in + DATA, data_in[LC]))) {
+              memcpy(data_out, "\x90\x00", res = 2);
               state_machine_data->current_file = CC_FILE;
-            } else if ((data_in[LC] == sizeof (ndef_file)) && (0 == memcmp (ndef_file, data_in + DATA, data_in[LC]))) {
-              memcpy (data_out, "\x90\x00", res = 2);
+            } else if ((data_in[LC] == sizeof(ndef_file)) && (0 == memcmp(ndef_file, data_in + DATA, data_in[LC]))) {
+              memcpy(data_out, "\x90\x00", res = 2);
               state_machine_data->current_file = NDEF_FILE;
             } else {
-              memcpy (data_out, "\x6a\x00", res = 2);
+              memcpy(data_out, "\x6a\x00", res = 2);
               state_machine_data->current_file = NONE;
             }
 
@@ -170,12 +170,12 @@ nfcforum_tag4_io (struct nfc_emulator *emulator, const uint8_t *data_in, const s
 
             const uint8_t ndef_tag_application_name_v1[] = { 0xD2, 0x76, 0x00, 0x00, 0x85, 0x01, 0x00 };
             const uint8_t ndef_tag_application_name_v2[] = { 0xD2, 0x76, 0x00, 0x00, 0x85, 0x01, 0x01 };
-            if ((type4v == 1) && (data_in[LC] == sizeof (ndef_tag_application_name_v1)) && (0 == memcmp (ndef_tag_application_name_v1, data_in + DATA, data_in[LC])))
-              memcpy (data_out, "\x90\x00", res = 2);
-            else if ((type4v == 2) && (data_in[LC] == sizeof (ndef_tag_application_name_v2)) && (0 == memcmp (ndef_tag_application_name_v2, data_in + DATA, data_in[LC])))
-              memcpy (data_out, "\x90\x00", res = 2);
+            if ((type4v == 1) && (data_in[LC] == sizeof(ndef_tag_application_name_v1)) && (0 == memcmp(ndef_tag_application_name_v1, data_in + DATA, data_in[LC])))
+              memcpy(data_out, "\x90\x00", res = 2);
+            else if ((type4v == 2) && (data_in[LC] == sizeof(ndef_tag_application_name_v2)) && (0 == memcmp(ndef_tag_application_name_v2, data_in + DATA, data_in[LC])))
+              memcpy(data_out, "\x90\x00", res = 2);
             else
-              memcpy (data_out, "\x6a\x82", res = 2);
+              memcpy(data_out, "\x6a\x82", res = 2);
 
             break;
           default:
@@ -189,27 +189,27 @@ nfcforum_tag4_io (struct nfc_emulator *emulator, const uint8_t *data_in, const s
         }
         switch (state_machine_data->current_file) {
           case NONE:
-            memcpy (data_out, "\x6a\x82", res = 2);
+            memcpy(data_out, "\x6a\x82", res = 2);
             break;
           case CC_FILE:
-            memcpy (data_out, nfcforum_capability_container + (data_in[P1] << 8) + data_in[P2], data_in[LC]);
-            memcpy (data_out + data_in[LC], "\x90\x00", 2);
+            memcpy(data_out, nfcforum_capability_container + (data_in[P1] << 8) + data_in[P2], data_in[LC]);
+            memcpy(data_out + data_in[LC], "\x90\x00", 2);
             res = data_in[LC] + 2;
             break;
           case NDEF_FILE:
-            memcpy (data_out, ndef_data->ndef_file + (data_in[P1] << 8) + data_in[P2], data_in[LC]);
-            memcpy (data_out + data_in[LC], "\x90\x00", 2);
+            memcpy(data_out, ndef_data->ndef_file + (data_in[P1] << 8) + data_in[P2], data_in[LC]);
+            memcpy(data_out + data_in[LC], "\x90\x00", 2);
             res = data_in[LC] + 2;
             break;
         }
         break;
 
       case ISO7816_UPDATE_BINARY:
-        memcpy (ndef_data->ndef_file + (data_in[P1] << 8) + data_in[P2], data_in + DATA, data_in[LC]);
+        memcpy(ndef_data->ndef_file + (data_in[P1] << 8) + data_in[P2], data_in + DATA, data_in[LC]);
         if ((data_in[P1] << 8) + data_in[P2] == 0) {
           ndef_data->ndef_file_len = (ndef_data->ndef_file[0] << 8) + ndef_data->ndef_file[1] + 2;
         }
-        memcpy (data_out, "\x90\x00", res = 2);
+        memcpy(data_out, "\x90\x00", res = 2);
         break;
       default: // Unknown
         if (!quiet_output) {
@@ -224,34 +224,34 @@ nfcforum_tag4_io (struct nfc_emulator *emulator, const uint8_t *data_in, const s
   // Show transmitted command
   if (!quiet_output) {
     if (res < 0) {
-      ERR ("%s (%d)", strerror (-res), -res);
+      ERR("%s (%d)", strerror(-res), -res);
     } else {
-      printf ("    Out: ");
-      print_hex (data_out, res);
+      printf("    Out: ");
+      print_hex(data_out, res);
     }
   }
   return res;
 }
 
-static void stop_emulation (int sig)
+static void stop_emulation(int sig)
 {
   (void) sig;
   if (pnd)
-    nfc_abort_command (pnd);
+    nfc_abort_command(pnd);
   else
-    exit (EXIT_FAILURE);
+    exit(EXIT_FAILURE);
 }
 
 static size_t
-ndef_message_load (char *filename, struct nfcforum_tag4_ndef_data *tag_data)
+ndef_message_load(char *filename, struct nfcforum_tag4_ndef_data *tag_data)
 {
   struct stat sb;
-  if (stat (filename, &sb) < 0)
+  if (stat(filename, &sb) < 0)
     return 0;
 
   /* Check file size */
   if (sb.st_size > 0xFFFF) {
-    errx (EXIT_FAILURE, "file size too large '%s'", filename);
+    errx(EXIT_FAILURE, "file size too large '%s'", filename);
   }
 
   tag_data->ndef_file_len = sb.st_size + 2;
@@ -260,41 +260,41 @@ ndef_message_load (char *filename, struct nfcforum_tag4_ndef_data *tag_data)
   tag_data->ndef_file[1] = (uint8_t)(sb.st_size);
 
   FILE *F;
-  if (!(F = fopen (filename, "r")))
-    err (EXIT_FAILURE, "fopen (%s, \"r\")", filename);
+  if (!(F = fopen(filename, "r")))
+    err(EXIT_FAILURE, "fopen (%s, \"r\")", filename);
 
-  if (1 != fread (tag_data->ndef_file + 2, sb.st_size, 1, F))
-    err (EXIT_FAILURE, "Can't read from %s", filename);
+  if (1 != fread(tag_data->ndef_file + 2, sb.st_size, 1, F))
+    err(EXIT_FAILURE, "Can't read from %s", filename);
 
-  fclose (F);
+  fclose(F);
   return sb.st_size;
 }
 
 static size_t
-ndef_message_save (char *filename, struct nfcforum_tag4_ndef_data *tag_data)
+ndef_message_save(char *filename, struct nfcforum_tag4_ndef_data *tag_data)
 {
   FILE *F;
-  if (!(F = fopen (filename, "w")))
-    err (EXIT_FAILURE, "fopen (%s, w)", filename);
+  if (!(F = fopen(filename, "w")))
+    err(EXIT_FAILURE, "fopen (%s, w)", filename);
 
-  if (1 != fwrite (tag_data->ndef_file + 2, tag_data->ndef_file_len - 2, 1, F)) {
-    err (EXIT_FAILURE, "fwrite (%d)", (int) tag_data->ndef_file_len - 2);
+  if (1 != fwrite(tag_data->ndef_file + 2, tag_data->ndef_file_len - 2, 1, F)) {
+    err(EXIT_FAILURE, "fwrite (%d)", (int) tag_data->ndef_file_len - 2);
   }
 
-  fclose (F);
+  fclose(F);
 
   return tag_data->ndef_file_len - 2;
 }
 
 static void
-usage (char *progname)
+usage(char *progname)
 {
-  fprintf (stderr, "usage: %s [-1] [infile [outfile]]\n", progname);
-  fprintf (stderr, "      -1: force Tag Type 4 v1.0 (default is v2.0)\n");
+  fprintf(stderr, "usage: %s [-1] [infile [outfile]]\n", progname);
+  fprintf(stderr, "      -1: force Tag Type 4 v1.0 (default is v2.0)\n");
 }
 
 int
-main (int argc, char *argv[])
+main(int argc, char *argv[])
 {
   int options = 0;
   nfc_target nt = {
@@ -342,56 +342,56 @@ main (int argc, char *argv[])
     .user_data = &nfcforum_tag4_data,
   };
 
-  if ((argc > (1 + options)) && (0 == strcmp ("-h", argv[1 + options]))) {
-    usage (argv[0]);
-    exit (EXIT_SUCCESS);
+  if ((argc > (1 + options)) && (0 == strcmp("-h", argv[1 + options]))) {
+    usage(argv[0]);
+    exit(EXIT_SUCCESS);
   }
 
-  if ((argc > (1 + options)) && (0 == strcmp ("-1", argv[1 + options]))) {
+  if ((argc > (1 + options)) && (0 == strcmp("-1", argv[1 + options]))) {
     type4v = 1;
     nfcforum_capability_container[2] = 0x10;
     options += 1;
   }
 
   if (argc > (3 + options)) {
-    usage (argv[0]);
-    exit (EXIT_FAILURE);
+    usage(argv[0]);
+    exit(EXIT_FAILURE);
   }
 
   // If some file is provided load it
   if (argc >= (2 + options)) {
-    if (!ndef_message_load (argv[1 + options], &nfcforum_tag4_data)) {
-      err (EXIT_FAILURE, "Can't load NDEF file '%s'", argv[1 + options]);
+    if (!ndef_message_load(argv[1 + options], &nfcforum_tag4_data)) {
+      err(EXIT_FAILURE, "Can't load NDEF file '%s'", argv[1 + options]);
     }
   }
 
-  nfc_init (NULL);
+  nfc_init(NULL);
 
   // Try to open the NFC reader
-  pnd = nfc_open (NULL, NULL);
+  pnd = nfc_open(NULL, NULL);
 
   if (pnd == NULL) {
     ERR("Unable to open NFC device");
-    exit (EXIT_FAILURE);
+    exit(EXIT_FAILURE);
   }
 
-  signal (SIGINT, stop_emulation);
+  signal(SIGINT, stop_emulation);
 
-  printf ("NFC device: %s opened\n", nfc_device_get_name(pnd));
-  printf ("Emulating NDEF tag now, please touch it with a second NFC device\n");
+  printf("NFC device: %s opened\n", nfc_device_get_name(pnd));
+  printf("Emulating NDEF tag now, please touch it with a second NFC device\n");
 
-  if (0 != nfc_emulate_target (pnd, &emulator)) { // contains already nfc_target_init() call
-    nfc_perror (pnd, "nfc_emulate_target");
+  if (0 != nfc_emulate_target(pnd, &emulator)) {  // contains already nfc_target_init() call
+    nfc_perror(pnd, "nfc_emulate_target");
   }
 
   nfc_close(pnd);
 
   if (argc == (3 + options)) {
-    if (!(ndef_message_save (argv[2 + options], &nfcforum_tag4_data))) {
-      err (EXIT_FAILURE, "Can't save NDEF file '%s'", argv[2 + options]);
+    if (!(ndef_message_save(argv[2 + options], &nfcforum_tag4_data))) {
+      err(EXIT_FAILURE, "Can't save NDEF file '%s'", argv[2 + options]);
     }
   }
 
-  nfc_exit (NULL);
-  exit (EXIT_SUCCESS);
+  nfc_exit(NULL);
+  exit(EXIT_SUCCESS);
 }

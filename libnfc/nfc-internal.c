@@ -26,7 +26,7 @@
 #include "nfc-internal.h"
 
 void
-prepare_initiator_data (const nfc_modulation nm, uint8_t **ppbtInitiatorData, size_t * pszInitiatorData)
+prepare_initiator_data(const nfc_modulation nm, uint8_t **ppbtInitiatorData, size_t * pszInitiatorData)
 {
   switch (nm.nmt) {
     case NMT_ISO14443B: {

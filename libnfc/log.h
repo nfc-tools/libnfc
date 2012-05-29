@@ -34,9 +34,9 @@
 
 // User want debug features
 #define LOGGING 1
-int	 log_init (void);
-int	 log_fini (void);
-void log_put (const char *category, const char *priority, const char *format, ...)
+int	 log_init(void);
+int	 log_fini(void);
+void log_put(const char *category, const char *priority, const char *format, ...)
 #  if __has_attribute_format
 __attribute__((format(printf, 3, 4)))
 #  endif

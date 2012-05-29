@@ -34,12 +34,12 @@
 #include "nfc-internal.h"
 
 nfc_device *
-nfc_device_new (const nfc_connstring connstring)
+nfc_device_new(const nfc_connstring connstring)
 {
-  nfc_device *res = malloc (sizeof (*res));
+  nfc_device *res = malloc(sizeof(*res));
 
   if (!res) {
-    err (EXIT_FAILURE, "nfc_device_new: malloc");
+    err(EXIT_FAILURE, "nfc_device_new: malloc");
   }
 
   // Variables initiatialization
@@ -51,7 +51,7 @@ nfc_device_new (const nfc_connstring connstring)
   res->bEasyFraming    = false;
   res->bAutoIso14443_4 = false;
   res->last_error  = 0;
-  memcpy (res->connstring, connstring, sizeof (res->connstring));
+  memcpy(res->connstring, connstring, sizeof(res->connstring));
   res->driver_data = NULL;
   res->chip_data   = NULL;
 
@@ -59,10 +59,10 @@ nfc_device_new (const nfc_connstring connstring)
 }
 
 void
-nfc_device_free (nfc_device *dev)
+nfc_device_free(nfc_device *dev)
 {
   if (dev) {
-    free (dev->driver_data);
-    free (dev);
+    free(dev->driver_data);
+    free(dev);
   }
 }

@@ -53,39 +53,39 @@
 
 static nfc_device *pnd = NULL;
 
-static void stop_polling (int sig)
+static void stop_polling(int sig)
 {
   (void) sig;
   if (pnd)
-    nfc_abort_command (pnd);
+    nfc_abort_command(pnd);
   else
-    exit (EXIT_FAILURE);
+    exit(EXIT_FAILURE);
 }
 
 static void
-print_usage (const char* progname)
+print_usage(const char* progname)
 {
-  printf ("usage: %s [-v]\n", progname);
-  printf ("  -v\t verbose display\n");
+  printf("usage: %s [-v]\n", progname);
+  printf("  -v\t verbose display\n");
 }
 
 int
-main (int argc, const char *argv[])
+main(int argc, const char *argv[])
 {
   bool verbose = false;
 
-  signal (SIGINT, stop_polling);
+  signal(SIGINT, stop_polling);
 
   // Display libnfc version
-  const char *acLibnfcVersion = nfc_version ();
+  const char *acLibnfcVersion = nfc_version();
 
-  printf ("%s uses libnfc %s\n", argv[0], acLibnfcVersion);
+  printf("%s uses libnfc %s\n", argv[0], acLibnfcVersion);
   if (argc != 1) {
-    if ((argc == 2) && (0 == strcmp ("-v", argv[1]))) {
+    if ((argc == 2) && (0 == strcmp("-v", argv[1]))) {
       verbose = true;
     } else {
-      print_usage (argv[0]);
-      exit (EXIT_FAILURE);
+      print_usage(argv[0]);
+      exit(EXIT_FAILURE);
     }
   }
 
@@ -103,35 +103,35 @@ main (int argc, const char *argv[])
   nfc_target nt;
   int res = 0;
 
-  nfc_init (NULL);
+  nfc_init(NULL);
 
-  pnd = nfc_open (NULL, NULL);
+  pnd = nfc_open(NULL, NULL);
 
   if (pnd == NULL) {
-    ERR ("%s", "Unable to open NFC device.");
-    exit (EXIT_FAILURE);
+    ERR("%s", "Unable to open NFC device.");
+    exit(EXIT_FAILURE);
   }
 
-  if (nfc_initiator_init (pnd) < 0) {
-    nfc_perror (pnd, "nfc_initiator_init");
-    exit (EXIT_FAILURE);
+  if (nfc_initiator_init(pnd) < 0) {
+    nfc_perror(pnd, "nfc_initiator_init");
+    exit(EXIT_FAILURE);
   }
 
-  printf ("NFC reader: %s opened\n", nfc_device_get_name (pnd));
-  printf ("NFC device will poll during %ld ms (%u pollings of %lu ms for %zd modulations)\n", (unsigned long) uiPollNr * szModulations * uiPeriod * 150, uiPollNr, (unsigned long) uiPeriod * 150, szModulations);
-  if ((res = nfc_initiator_poll_target (pnd, nmModulations, szModulations, uiPollNr, uiPeriod, &nt))  < 0) {
-    nfc_perror (pnd, "nfc_initiator_poll_target");
-    nfc_close (pnd);
-    nfc_exit (NULL);
-    exit (EXIT_FAILURE);
+  printf("NFC reader: %s opened\n", nfc_device_get_name(pnd));
+  printf("NFC device will poll during %ld ms (%u pollings of %lu ms for %zd modulations)\n", (unsigned long) uiPollNr * szModulations * uiPeriod * 150, uiPollNr, (unsigned long) uiPeriod * 150, szModulations);
+  if ((res = nfc_initiator_poll_target(pnd, nmModulations, szModulations, uiPollNr, uiPeriod, &nt))  < 0) {
+    nfc_perror(pnd, "nfc_initiator_poll_target");
+    nfc_close(pnd);
+    nfc_exit(NULL);
+    exit(EXIT_FAILURE);
   }
 
   if (res > 0) {
-    print_nfc_target ( nt, verbose );
+    print_nfc_target(nt, verbose);
   } else {
-    printf ("No target found.\n");
+    printf("No target found.\n");
   }
-  nfc_close (pnd);
-  nfc_exit (NULL);
-  exit (EXIT_SUCCESS);
+  nfc_close(pnd);
+  nfc_exit(NULL);
+  exit(EXIT_SUCCESS);
 }

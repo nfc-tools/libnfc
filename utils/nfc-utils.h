@@ -86,22 +86,22 @@
 #define MAX(a,b) (((a) > (b)) ? (a) : (b))
 #endif
 
-uint8_t  oddparity (const uint8_t bt);
-void    oddparity_bytes_ts (const uint8_t *pbtData, const size_t szLen, uint8_t *pbtPar);
+uint8_t  oddparity(const uint8_t bt);
+void    oddparity_bytes_ts(const uint8_t *pbtData, const size_t szLen, uint8_t *pbtPar);
 
-void    print_hex (const uint8_t *pbtData, const size_t szLen);
-void    print_hex_bits (const uint8_t *pbtData, const size_t szBits);
-void    print_hex_par (const uint8_t *pbtData, const size_t szBits, const uint8_t *pbtDataPar);
+void    print_hex(const uint8_t *pbtData, const size_t szLen);
+void    print_hex_bits(const uint8_t *pbtData, const size_t szBits);
+void    print_hex_par(const uint8_t *pbtData, const size_t szBits, const uint8_t *pbtDataPar);
 
-void    print_nfc_iso14443a_info (const nfc_iso14443a_info nai, bool verbose);
-void    print_nfc_iso14443b_info (const nfc_iso14443b_info nbi, bool verbose);
-void    print_nfc_iso14443bi_info (const nfc_iso14443bi_info nii, bool verbose);
-void    print_nfc_iso14443b2sr_info (const nfc_iso14443b2sr_info nsi, bool verbose);
-void    print_nfc_iso14443b2ct_info (const nfc_iso14443b2ct_info nci, bool verbose);
-void    print_nfc_felica_info (const nfc_felica_info nfi, bool verbose);
-void    print_nfc_jewel_info (const nfc_jewel_info nji, bool verbose);
-void    print_nfc_dep_info (const nfc_dep_info ndi, bool verbose);
+void    print_nfc_iso14443a_info(const nfc_iso14443a_info nai, bool verbose);
+void    print_nfc_iso14443b_info(const nfc_iso14443b_info nbi, bool verbose);
+void    print_nfc_iso14443bi_info(const nfc_iso14443bi_info nii, bool verbose);
+void    print_nfc_iso14443b2sr_info(const nfc_iso14443b2sr_info nsi, bool verbose);
+void    print_nfc_iso14443b2ct_info(const nfc_iso14443b2ct_info nci, bool verbose);
+void    print_nfc_felica_info(const nfc_felica_info nfi, bool verbose);
+void    print_nfc_jewel_info(const nfc_jewel_info nji, bool verbose);
+void    print_nfc_dep_info(const nfc_dep_info ndi, bool verbose);
 
-void    print_nfc_target (const nfc_target nt, bool verbose);
+void    print_nfc_target(const nfc_target nt, bool verbose);
 
 #endif

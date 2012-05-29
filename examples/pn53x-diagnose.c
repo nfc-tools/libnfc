@@ -50,7 +50,7 @@
 #define MAX_DEVICE_COUNT 16
 
 int
-main (int argc, const char *argv[])
+main(int argc, const char *argv[])
 {
   size_t  i;
   nfc_device *pnd;
@@ -65,59 +65,59 @@ main (int argc, const char *argv[])
   const uint8_t pncmd_diagnose_ram_test[] = { Diagnose, 0x02 };
 
   if (argc > 1) {
-    errx (1, "usage: %s", argv[0]);
+    errx(1, "usage: %s", argv[0]);
   }
 
-  nfc_init (NULL);
+  nfc_init(NULL);
 
   // Display libnfc version
-  acLibnfcVersion = nfc_version ();
-  printf ("%s uses libnfc %s\n", argv[0], acLibnfcVersion);
+  acLibnfcVersion = nfc_version();
+  printf("%s uses libnfc %s\n", argv[0], acLibnfcVersion);
 
   nfc_connstring connstrings[MAX_DEVICE_COUNT];
-  size_t szFound = nfc_list_devices (NULL, connstrings, MAX_DEVICE_COUNT);
+  size_t szFound = nfc_list_devices(NULL, connstrings, MAX_DEVICE_COUNT);
 
   if (szFound == 0) {
-    printf ("No NFC device found.\n");
+    printf("No NFC device found.\n");
   }
 
   for (i = 0; i < szFound; i++) {
-    pnd = nfc_open (NULL, connstrings[i]);
+    pnd = nfc_open(NULL, connstrings[i]);
 
     if (pnd == NULL) {
-      ERR ("%s", "Unable to open NFC device.");
+      ERR("%s", "Unable to open NFC device.");
       return EXIT_FAILURE;
     }
 
-    printf ("NFC device [%s] opened.\n", nfc_device_get_name (pnd));
+    printf("NFC device [%s] opened.\n", nfc_device_get_name(pnd));
 
-    res = pn53x_transceive (pnd, pncmd_diagnose_communication_line_test, sizeof (pncmd_diagnose_communication_line_test), abtRx, szRx, 0);
+    res = pn53x_transceive(pnd, pncmd_diagnose_communication_line_test, sizeof(pncmd_diagnose_communication_line_test), abtRx, szRx, 0);
     if (res > 0) {
       szRx = (size_t) res;
       // Result of Diagnose ping for RC-S360 doesn't contain status byte so we've to handle both cases
-      result = (memcmp (pncmd_diagnose_communication_line_test + 1, abtRx, sizeof (pncmd_diagnose_communication_line_test) - 1) == 0) ||
-               (memcmp (pncmd_diagnose_communication_line_test + 2, abtRx, sizeof (pncmd_diagnose_communication_line_test) - 2) == 0);
-      printf (" Communication line test: %s\n", result ? "OK" : "Failed");
+      result = (memcmp(pncmd_diagnose_communication_line_test + 1, abtRx, sizeof(pncmd_diagnose_communication_line_test) - 1) == 0) ||
+               (memcmp(pncmd_diagnose_communication_line_test + 2, abtRx, sizeof(pncmd_diagnose_communication_line_test) - 2) == 0);
+      printf(" Communication line test: %s\n", result ? "OK" : "Failed");
     } else {
-      nfc_perror (pnd, "pn53x_transceive: cannot diagnose communication line");
+      nfc_perror(pnd, "pn53x_transceive: cannot diagnose communication line");
     }
 
-    res = pn53x_transceive (pnd, pncmd_diagnose_rom_test, sizeof (pncmd_diagnose_rom_test), abtRx, szRx, 0);
+    res = pn53x_transceive(pnd, pncmd_diagnose_rom_test, sizeof(pncmd_diagnose_rom_test), abtRx, szRx, 0);
     if (res > 0) {
       szRx = (size_t) res;
       result = ((szRx == 1) && (abtRx[0] == 0x00));
-      printf (" ROM test: %s\n", result ? "OK" : "Failed");
+      printf(" ROM test: %s\n", result ? "OK" : "Failed");
     } else {
-      nfc_perror (pnd, "pn53x_transceive: cannot diagnose ROM");
+      nfc_perror(pnd, "pn53x_transceive: cannot diagnose ROM");
     }
 
-    res = pn53x_transceive (pnd, pncmd_diagnose_ram_test, sizeof (pncmd_diagnose_ram_test), abtRx, szRx, 0);
+    res = pn53x_transceive(pnd, pncmd_diagnose_ram_test, sizeof(pncmd_diagnose_ram_test), abtRx, szRx, 0);
     if (res > 0) {
       szRx = (size_t) res;
       result = ((szRx == 1) && (abtRx[0] == 0x00));
-      printf (" RAM test: %s\n", result ? "OK" : "Failed");
+      printf(" RAM test: %s\n", result ? "OK" : "Failed");
     } else {
-      nfc_perror (pnd, "pn53x_transceive: cannot diagnose RAM");
+      nfc_perror(pnd, "pn53x_transceive: cannot diagnose RAM");
     }
   }
 }

@@ -292,102 +292,102 @@ extern const uint8_t pn53x_ack_frame[6];
 extern const uint8_t pn53x_nack_frame[6];
 
 int    pn53x_init(struct nfc_device *pnd);
-int    pn53x_transceive (struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szTx, uint8_t *pbtRx, const size_t szRxLen, int timeout);
+int    pn53x_transceive(struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szTx, uint8_t *pbtRx, const size_t szRxLen, int timeout);
 
-int    pn53x_set_parameters (struct nfc_device *pnd, const uint8_t ui8Value, const bool bEnable);
-int    pn53x_set_tx_bits (struct nfc_device *pnd, const uint8_t ui8Bits);
-int    pn53x_wrap_frame (const uint8_t *pbtTx, const size_t szTxBits, const uint8_t *pbtTxPar, uint8_t *pbtFrame);
-int    pn53x_unwrap_frame (const uint8_t *pbtFrame, const size_t szFrameBits, uint8_t *pbtRx, uint8_t *pbtRxPar);
-int    pn53x_decode_target_data (const uint8_t *pbtRawData, size_t szRawData,
-                                 pn53x_type chip_type, nfc_modulation_type nmt,
-                                 nfc_target_info *pnti);
-int    pn53x_read_register (struct nfc_device *pnd, uint16_t ui16Reg, uint8_t *ui8Value);
-int    pn53x_write_register (struct nfc_device *pnd, uint16_t ui16Reg, uint8_t ui8SymbolMask, uint8_t ui8Value);
-int    pn53x_decode_firmware_version (struct nfc_device *pnd);
-int    pn53x_set_property_int (struct nfc_device *pnd, const nfc_property property, const int value);
-int    pn53x_set_property_bool (struct nfc_device *pnd, const nfc_property property, const bool bEnable);
+int    pn53x_set_parameters(struct nfc_device *pnd, const uint8_t ui8Value, const bool bEnable);
+int    pn53x_set_tx_bits(struct nfc_device *pnd, const uint8_t ui8Bits);
+int    pn53x_wrap_frame(const uint8_t *pbtTx, const size_t szTxBits, const uint8_t *pbtTxPar, uint8_t *pbtFrame);
+int    pn53x_unwrap_frame(const uint8_t *pbtFrame, const size_t szFrameBits, uint8_t *pbtRx, uint8_t *pbtRxPar);
+int    pn53x_decode_target_data(const uint8_t *pbtRawData, size_t szRawData,
+                                pn53x_type chip_type, nfc_modulation_type nmt,
+                                nfc_target_info *pnti);
+int    pn53x_read_register(struct nfc_device *pnd, uint16_t ui16Reg, uint8_t *ui8Value);
+int    pn53x_write_register(struct nfc_device *pnd, uint16_t ui16Reg, uint8_t ui8SymbolMask, uint8_t ui8Value);
+int    pn53x_decode_firmware_version(struct nfc_device *pnd);
+int    pn53x_set_property_int(struct nfc_device *pnd, const nfc_property property, const int value);
+int    pn53x_set_property_bool(struct nfc_device *pnd, const nfc_property property, const bool bEnable);
 
-int    pn53x_check_communication (struct nfc_device *pnd);
-int    pn53x_idle (struct nfc_device *pnd);
+int    pn53x_check_communication(struct nfc_device *pnd);
+int    pn53x_idle(struct nfc_device *pnd);
 
 // NFC device as Initiator functions
-int    pn53x_initiator_init (struct nfc_device *pnd);
-int    pn53x_initiator_select_passive_target (struct nfc_device *pnd,
-                                              const nfc_modulation nm,
-                                              const uint8_t *pbtInitData, const size_t szInitData,
-                                              nfc_target *pnt);
-int    pn53x_initiator_poll_target (struct nfc_device *pnd,
-                                    const nfc_modulation *pnmModulations, const size_t szModulations,
-                                    const uint8_t uiPollNr, const uint8_t uiPeriod,
-                                    nfc_target *pnt);
-int    pn53x_initiator_select_dep_target (struct nfc_device *pnd,
-                                          const nfc_dep_mode ndm, const nfc_baud_rate nbr,
-                                          const nfc_dep_info *pndiInitiator,
-                                          nfc_target *pnt,
-                                          const int timeout);
-int    pn53x_initiator_transceive_bits (struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szTxBits,
-                                        const uint8_t *pbtTxPar, uint8_t *pbtRx, uint8_t *pbtRxPar);
-int    pn53x_initiator_transceive_bytes (struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szTx,
-                                         uint8_t *pbtRx, const size_t szRx, int timeout);
-int    pn53x_initiator_transceive_bits_timed (struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szTxBits,
-                                              const uint8_t *pbtTxPar, uint8_t *pbtRx, uint8_t *pbtRxPar, uint32_t *cycles);
-int    pn53x_initiator_transceive_bytes_timed (struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szTx,
-                                               uint8_t *pbtRx, uint32_t *cycles);
-int    pn53x_initiator_deselect_target (struct nfc_device *pnd);
-int    pn53x_initiator_target_is_present (struct nfc_device *pnd, const nfc_target nt);
+int    pn53x_initiator_init(struct nfc_device *pnd);
+int    pn53x_initiator_select_passive_target(struct nfc_device *pnd,
+                                             const nfc_modulation nm,
+                                             const uint8_t *pbtInitData, const size_t szInitData,
+                                             nfc_target *pnt);
+int    pn53x_initiator_poll_target(struct nfc_device *pnd,
+                                   const nfc_modulation *pnmModulations, const size_t szModulations,
+                                   const uint8_t uiPollNr, const uint8_t uiPeriod,
+                                   nfc_target *pnt);
+int    pn53x_initiator_select_dep_target(struct nfc_device *pnd,
+                                         const nfc_dep_mode ndm, const nfc_baud_rate nbr,
+                                         const nfc_dep_info *pndiInitiator,
+                                         nfc_target *pnt,
+                                         const int timeout);
+int    pn53x_initiator_transceive_bits(struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szTxBits,
+                                       const uint8_t *pbtTxPar, uint8_t *pbtRx, uint8_t *pbtRxPar);
+int    pn53x_initiator_transceive_bytes(struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szTx,
+                                        uint8_t *pbtRx, const size_t szRx, int timeout);
+int    pn53x_initiator_transceive_bits_timed(struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szTxBits,
+                                             const uint8_t *pbtTxPar, uint8_t *pbtRx, uint8_t *pbtRxPar, uint32_t *cycles);
+int    pn53x_initiator_transceive_bytes_timed(struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szTx,
+                                              uint8_t *pbtRx, uint32_t *cycles);
+int    pn53x_initiator_deselect_target(struct nfc_device *pnd);
+int    pn53x_initiator_target_is_present(struct nfc_device *pnd, const nfc_target nt);
 
 // NFC device as Target functions
-int    pn53x_target_init (struct nfc_device *pnd, nfc_target *pnt, uint8_t *pbtRx, const size_t szRxLen, int timeout);
-int    pn53x_target_receive_bits (struct nfc_device *pnd, uint8_t *pbtRx, const size_t szRxLen, uint8_t *pbtRxPar);
-int    pn53x_target_receive_bytes (struct nfc_device *pnd, uint8_t *pbtRx, const size_t szRxLen, int timeout);
-int    pn53x_target_send_bits (struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szTxBits, const uint8_t *pbtTxPar);
-int    pn53x_target_send_bytes (struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szTx, int timeout);
+int    pn53x_target_init(struct nfc_device *pnd, nfc_target *pnt, uint8_t *pbtRx, const size_t szRxLen, int timeout);
+int    pn53x_target_receive_bits(struct nfc_device *pnd, uint8_t *pbtRx, const size_t szRxLen, uint8_t *pbtRxPar);
+int    pn53x_target_receive_bytes(struct nfc_device *pnd, uint8_t *pbtRx, const size_t szRxLen, int timeout);
+int    pn53x_target_send_bits(struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szTxBits, const uint8_t *pbtTxPar);
+int    pn53x_target_send_bytes(struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szTx, int timeout);
 
 // Error handling functions
-const char *pn53x_strerror (const struct nfc_device *pnd);
+const char *pn53x_strerror(const struct nfc_device *pnd);
 
 // C wrappers for PN53x commands
-int    pn53x_SetParameters (struct nfc_device *pnd, const uint8_t ui8Value);
-int    pn53x_SAMConfiguration (struct nfc_device *pnd, const pn532_sam_mode mode, int timeout);
-int    pn53x_PowerDown (struct nfc_device *pnd);
-int    pn53x_InListPassiveTarget (struct nfc_device *pnd, const pn53x_modulation pmInitModulation,
-                                  const uint8_t szMaxTargets, const uint8_t *pbtInitiatorData,
-                                  const size_t szInitiatorDataLen, uint8_t *pbtTargetsData, size_t *pszTargetsData,
-                                  int timeout);
-int    pn53x_InDeselect (struct nfc_device *pnd, const uint8_t ui8Target);
-int    pn53x_InRelease (struct nfc_device *pnd, const uint8_t ui8Target);
-int    pn53x_InAutoPoll (struct nfc_device *pnd, const pn53x_target_type *ppttTargetTypes, const size_t szTargetTypes,
-                         const uint8_t btPollNr, const uint8_t btPeriod, nfc_target *pntTargets,
-                         const int timeout);
-int    pn53x_InJumpForDEP (struct nfc_device *pnd,
-                           const nfc_dep_mode ndm, const nfc_baud_rate nbr,
-                           const uint8_t *pbtPassiveInitiatorData,
-                           const uint8_t *pbtNFCID3i,
-                           const uint8_t *pbtGB, const size_t szGB,
-                           nfc_target *pnt,
-                           const int timeout);
-int    pn53x_TgInitAsTarget (struct nfc_device *pnd, pn53x_target_mode ptm,
-                             const uint8_t *pbtMifareParams,
-                             const uint8_t *pbtTkt, size_t szTkt,
-                             const uint8_t *pbtFeliCaParams,
-                             const uint8_t *pbtNFCID3t, const uint8_t *pbtGB, const size_t szGB,
-                             uint8_t *pbtRx, const size_t szRxLen, uint8_t *pbtModeByte, int timeout);
+int    pn53x_SetParameters(struct nfc_device *pnd, const uint8_t ui8Value);
+int    pn53x_SAMConfiguration(struct nfc_device *pnd, const pn532_sam_mode mode, int timeout);
+int    pn53x_PowerDown(struct nfc_device *pnd);
+int    pn53x_InListPassiveTarget(struct nfc_device *pnd, const pn53x_modulation pmInitModulation,
+                                 const uint8_t szMaxTargets, const uint8_t *pbtInitiatorData,
+                                 const size_t szInitiatorDataLen, uint8_t *pbtTargetsData, size_t *pszTargetsData,
+                                 int timeout);
+int    pn53x_InDeselect(struct nfc_device *pnd, const uint8_t ui8Target);
+int    pn53x_InRelease(struct nfc_device *pnd, const uint8_t ui8Target);
+int    pn53x_InAutoPoll(struct nfc_device *pnd, const pn53x_target_type *ppttTargetTypes, const size_t szTargetTypes,
+                        const uint8_t btPollNr, const uint8_t btPeriod, nfc_target *pntTargets,
+                        const int timeout);
+int    pn53x_InJumpForDEP(struct nfc_device *pnd,
+                          const nfc_dep_mode ndm, const nfc_baud_rate nbr,
+                          const uint8_t *pbtPassiveInitiatorData,
+                          const uint8_t *pbtNFCID3i,
+                          const uint8_t *pbtGB, const size_t szGB,
+                          nfc_target *pnt,
+                          const int timeout);
+int    pn53x_TgInitAsTarget(struct nfc_device *pnd, pn53x_target_mode ptm,
+                            const uint8_t *pbtMifareParams,
+                            const uint8_t *pbtTkt, size_t szTkt,
+                            const uint8_t *pbtFeliCaParams,
+                            const uint8_t *pbtNFCID3t, const uint8_t *pbtGB, const size_t szGB,
+                            uint8_t *pbtRx, const size_t szRxLen, uint8_t *pbtModeByte, int timeout);
 
 // RFConfiguration
-int    pn53x_RFConfiguration__RF_field (struct nfc_device *pnd, bool bEnable);
-int    pn53x_RFConfiguration__Various_timings (struct nfc_device *pnd, const uint8_t fATR_RES_Timeout, const uint8_t fRetryTimeout);
-int    pn53x_RFConfiguration__MaxRtyCOM (struct nfc_device *pnd, const uint8_t MaxRtyCOM);
-int    pn53x_RFConfiguration__MaxRetries (struct nfc_device *pnd, const uint8_t MxRtyATR, const uint8_t MxRtyPSL, const uint8_t MxRtyPassiveActivation);
+int    pn53x_RFConfiguration__RF_field(struct nfc_device *pnd, bool bEnable);
+int    pn53x_RFConfiguration__Various_timings(struct nfc_device *pnd, const uint8_t fATR_RES_Timeout, const uint8_t fRetryTimeout);
+int    pn53x_RFConfiguration__MaxRtyCOM(struct nfc_device *pnd, const uint8_t MaxRtyCOM);
+int    pn53x_RFConfiguration__MaxRetries(struct nfc_device *pnd, const uint8_t MxRtyATR, const uint8_t MxRtyPSL, const uint8_t MxRtyPassiveActivation);
 
 // Misc
-int    pn53x_check_ack_frame (struct nfc_device *pnd, const uint8_t *pbtRxFrame, const size_t szRxFrameLen);
-int    pn53x_check_error_frame (struct nfc_device *pnd, const uint8_t *pbtRxFrame, const size_t szRxFrameLen);
-int    pn53x_build_frame (uint8_t *pbtFrame, size_t *pszFrame, const uint8_t *pbtData, const size_t szData);
-int    pn53x_get_supported_modulation (nfc_device *pnd, const nfc_mode mode, const nfc_modulation_type **const supported_mt);
-int    pn53x_get_supported_baud_rate (nfc_device *pnd, const nfc_modulation_type nmt, const nfc_baud_rate **const supported_br);
-int    pn53x_get_information_about (nfc_device *pnd, char *buf, size_t buflen);
+int    pn53x_check_ack_frame(struct nfc_device *pnd, const uint8_t *pbtRxFrame, const size_t szRxFrameLen);
+int    pn53x_check_error_frame(struct nfc_device *pnd, const uint8_t *pbtRxFrame, const size_t szRxFrameLen);
+int    pn53x_build_frame(uint8_t *pbtFrame, size_t *pszFrame, const uint8_t *pbtData, const size_t szData);
+int    pn53x_get_supported_modulation(nfc_device *pnd, const nfc_mode mode, const nfc_modulation_type **const supported_mt);
+int    pn53x_get_supported_baud_rate(nfc_device *pnd, const nfc_modulation_type nmt, const nfc_baud_rate **const supported_br);
+int    pn53x_get_information_about(nfc_device *pnd, char *buf, size_t buflen);
 
-void    pn53x_data_new (struct nfc_device *pnd, const struct pn53x_io *io);
-void    pn53x_data_free (struct nfc_device *pnd);
+void    pn53x_data_new(struct nfc_device *pnd, const struct pn53x_io *io);
+void    pn53x_data_free(struct nfc_device *pnd);
 
 #endif // __NFC_CHIPS_PN53X_H__

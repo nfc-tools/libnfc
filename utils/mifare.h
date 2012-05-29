@@ -75,7 +75,7 @@ typedef union {
 // Reset struct alignment to default
 #  pragma pack()
 
-bool    nfc_initiator_mifare_cmd (nfc_device *pnd, const mifare_cmd mc, const uint8_t ui8Block, mifare_param *pmp);
+bool    nfc_initiator_mifare_cmd(nfc_device *pnd, const mifare_cmd mc, const uint8_t ui8Block, mifare_param *pmp);
 
 // Compiler directive, set struct alignment to 1 uint8_t for compatibility
 #  pragma pack(1)

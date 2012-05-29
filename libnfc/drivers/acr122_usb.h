@@ -29,11 +29,11 @@
 
 #  include <nfc/nfc-types.h>
 
-bool    acr122_usb_probe (nfc_connstring connstrings[], size_t connstrings_len, size_t *pszDeviceFound);
-nfc_device *acr122_usb_connect (const nfc_connstring connstring);
-int    acr122_usb_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szData, int timeout);
-int    acr122_usb_receive (nfc_device *pnd, uint8_t *pbtData, const size_t szData, int timeout);
-void    acr122_usb_disconnect (nfc_device *pnd);
+bool    acr122_usb_probe(nfc_connstring connstrings[], size_t connstrings_len, size_t *pszDeviceFound);
+nfc_device *acr122_usb_connect(const nfc_connstring connstring);
+int    acr122_usb_send(nfc_device *pnd, const uint8_t *pbtData, const size_t szData, int timeout);
+int    acr122_usb_receive(nfc_device *pnd, uint8_t *pbtData, const size_t szData, int timeout);
+void    acr122_usb_disconnect(nfc_device *pnd);
 
 extern const struct nfc_driver acr122_usb_driver;
 

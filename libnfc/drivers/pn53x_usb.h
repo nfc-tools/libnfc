@@ -31,11 +31,11 @@
 
 #include "nfc-internal.h"
 
-bool    pn53x_usb_probe (nfc_connstring connstrings[], size_t connstrings_len, size_t *pszDeviceFound);
-nfc_device *pn53x_usb_open (const nfc_connstring connstring);
-int    pn53x_usb_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szData, int timeout);
-int    pn53x_usb_receive (nfc_device *pnd, uint8_t *pbtData, const size_t szData, int timeout);
-void    pn53x_usb_close (nfc_device *pnd);
+bool    pn53x_usb_probe(nfc_connstring connstrings[], size_t connstrings_len, size_t *pszDeviceFound);
+nfc_device *pn53x_usb_open(const nfc_connstring connstring);
+int    pn53x_usb_send(nfc_device *pnd, const uint8_t *pbtData, const size_t szData, int timeout);
+int    pn53x_usb_receive(nfc_device *pnd, uint8_t *pbtData, const size_t szData, int timeout);
+void    pn53x_usb_close(nfc_device *pnd);
 
 extern const struct nfc_driver pn53x_usb_driver;
 

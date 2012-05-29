@@ -60,61 +60,61 @@
 static nfc_device *pnd;
 
 static void
-print_usage (const char* progname)
+print_usage(const char* progname)
 {
-  printf ("usage: %s [-v]\n", progname);
-  printf ("  -v\t verbose display\n");
+  printf("usage: %s [-v]\n", progname);
+  printf("  -v\t verbose display\n");
 }
 
 int
-main (int argc, const char *argv[])
+main(int argc, const char *argv[])
 {
   (void) argc;
   const char *acLibnfcVersion;
   size_t  i;
   bool verbose = false;
 
-  nfc_init (NULL);
+  nfc_init(NULL);
 
   // Display libnfc version
-  acLibnfcVersion = nfc_version ();
-  printf ("%s uses libnfc %s\n", argv[0], acLibnfcVersion);
+  acLibnfcVersion = nfc_version();
+  printf("%s uses libnfc %s\n", argv[0], acLibnfcVersion);
   if (argc != 1) {
-    if ((argc == 2) && (0 == strcmp ("-v", argv[1]))) {
+    if ((argc == 2) && (0 == strcmp("-v", argv[1]))) {
       verbose = true;
     } else {
-      print_usage (argv[0]);
-      exit (EXIT_FAILURE);
+      print_usage(argv[0]);
+      exit(EXIT_FAILURE);
     }
   }
 
 #ifdef HAVE_LIBUSB
 #  ifdef DEBUG
-  usb_set_debug (4);
+  usb_set_debug(4);
 #  endif
 #endif
 
   nfc_connstring connstrings[MAX_DEVICE_COUNT];
-  size_t szDeviceFound = nfc_list_devices (NULL, connstrings, MAX_DEVICE_COUNT);
+  size_t szDeviceFound = nfc_list_devices(NULL, connstrings, MAX_DEVICE_COUNT);
 
   int res = EXIT_FAILURE;
   if (szDeviceFound == 0) {
-    printf ("No NFC device found.\n");
+    printf("No NFC device found.\n");
     goto bye;
   }
 
-  printf ("%d NFC device(s) found:\n", (int)szDeviceFound);
+  printf("%d NFC device(s) found:\n", (int)szDeviceFound);
   char strinfo[1024];
   for (i = 0; i < szDeviceFound; i++) {
-    pnd = nfc_open (NULL, connstrings[i]);
+    pnd = nfc_open(NULL, connstrings[i]);
     if (pnd != NULL) {
-      printf ("- %s:\n    %s\n", nfc_device_get_name (pnd), nfc_device_get_connstring (pnd));
+      printf("- %s:\n    %s\n", nfc_device_get_name(pnd), nfc_device_get_connstring(pnd));
       if (verbose) {
-        if (nfc_device_get_information_about (pnd, strinfo, sizeof(strinfo)) >= 0) {
-          printf ("%s", strinfo);
+        if (nfc_device_get_information_about(pnd, strinfo, sizeof(strinfo)) >= 0) {
+          printf("%s", strinfo);
         }
       }
-      nfc_close (pnd);
+      nfc_close(pnd);
     } else {
       printf("nfc_open failed for %s\n", connstrings[i]);
     }
@@ -122,6 +122,6 @@ main (int argc, const char *argv[])
   res = EXIT_SUCCESS;
 
 bye:
-  nfc_exit (NULL);
+  nfc_exit(NULL);
   return res;
 }

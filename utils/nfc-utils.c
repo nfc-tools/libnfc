@@ -126,14 +126,14 @@ struct card_sak const_cs[] = {
 };
 
 uint8_t
-oddparity (const uint8_t bt)
+oddparity(const uint8_t bt)
 {
   // cf http://graphics.stanford.edu/~seander/bithacks.html#ParityParallel
-  return (0x9669 >> ((bt ^ (bt >> 4)) & 0xF)) & 1;
+  return (0x9669 >> ((bt ^(bt >> 4)) & 0xF)) & 1;
 }
 
 void
-oddparity_bytes_ts (const uint8_t *pbtData, const size_t szLen, uint8_t *pbtPar)
+oddparity_bytes_ts(const uint8_t *pbtData, const size_t szLen, uint8_t *pbtPar)
 {
   size_t  szByteNr;
   // Calculate the parity bits for the command
@@ -143,51 +143,51 @@ oddparity_bytes_ts (const uint8_t *pbtData, const size_t szLen, uint8_t *pbtPar)
 }
 
 void
-print_hex (const uint8_t *pbtData, const size_t szBytes)
+print_hex(const uint8_t *pbtData, const size_t szBytes)
 {
   size_t  szPos;
 
   for (szPos = 0; szPos < szBytes; szPos++) {
-    printf ("%02x  ", pbtData[szPos]);
+    printf("%02x  ", pbtData[szPos]);
   }
-  printf ("\n");
+  printf("\n");
 }
 
 void
-print_hex_bits (const uint8_t *pbtData, const size_t szBits)
+print_hex_bits(const uint8_t *pbtData, const size_t szBits)
 {
   uint8_t uRemainder;
   size_t  szPos;
   size_t  szBytes = szBits / 8;
 
   for (szPos = 0; szPos < szBytes; szPos++) {
-    printf ("%02x  ", pbtData[szPos]);
+    printf("%02x  ", pbtData[szPos]);
   }
 
   uRemainder = szBits % 8;
   // Print the rest bits
   if (uRemainder != 0) {
     if (uRemainder < 5)
-      printf ("%01x (%d bits)", pbtData[szBytes], uRemainder);
+      printf("%01x (%d bits)", pbtData[szBytes], uRemainder);
     else
-      printf ("%02x (%d bits)", pbtData[szBytes], uRemainder);
+      printf("%02x (%d bits)", pbtData[szBytes], uRemainder);
   }
-  printf ("\n");
+  printf("\n");
 }
 
 void
-print_hex_par (const uint8_t *pbtData, const size_t szBits, const uint8_t *pbtDataPar)
+print_hex_par(const uint8_t *pbtData, const size_t szBits, const uint8_t *pbtDataPar)
 {
   uint8_t uRemainder;
   size_t  szPos;
   size_t  szBytes = szBits / 8;
 
   for (szPos = 0; szPos < szBytes; szPos++) {
-    printf ("%02x", pbtData[szPos]);
+    printf("%02x", pbtData[szPos]);
     if (oddparity(pbtData[szPos]) != pbtDataPar[szPos]) {
-      printf ("! ");
+      printf("! ");
     } else {
-      printf ("  ");
+      printf("  ");
     }
   }
 
@@ -195,11 +195,11 @@ print_hex_par (const uint8_t *pbtData, const size_t szBits, const uint8_t *pbtDa
   // Print the rest bits, these cannot have parity bit
   if (uRemainder != 0) {
     if (uRemainder < 5)
-      printf ("%01x (%d bits)", pbtData[szBytes], uRemainder);
+      printf("%01x (%d bits)", pbtData[szBytes], uRemainder);
     else
-      printf ("%02x (%d bits)", pbtData[szBytes], uRemainder);
+      printf("%02x (%d bits)", pbtData[szBytes], uRemainder);
   }
-  printf ("\n");
+  printf("\n");
 }
 
 #define SAK_UID_NOT_COMPLETE     0x04
@@ -207,10 +207,10 @@ print_hex_par (const uint8_t *pbtData, const size_t szBits, const uint8_t *pbtDa
 #define SAK_ISO18092_COMPLIANT   0x40
 
 void
-print_nfc_iso14443a_info (const nfc_iso14443a_info nai, bool verbose)
+print_nfc_iso14443a_info(const nfc_iso14443a_info nai, bool verbose)
 {
-  printf ("    ATQA (SENS_RES): ");
-  print_hex (nai.abtAtqa, 2);
+  printf("    ATQA (SENS_RES): ");
+  print_hex(nai.abtAtqa, 2);
   if (verbose) {
     printf("* UID size: ");
     switch ((nai.abtAtqa[1] & 0xc0) >> 6) {
@@ -241,80 +241,80 @@ print_nfc_iso14443a_info (const nfc_iso14443a_info nai, bool verbose)
         break;
     }
   }
-  printf ("       UID (NFCID%c): ", (nai.abtUid[0] == 0x08 ? '3' : '1'));
-  print_hex (nai.abtUid, nai.szUidLen);
+  printf("       UID (NFCID%c): ", (nai.abtUid[0] == 0x08 ? '3' : '1'));
+  print_hex(nai.abtUid, nai.szUidLen);
   if (verbose) {
     if (nai.abtUid[0] == 0x08) {
-      printf ("* Random UID\n");
+      printf("* Random UID\n");
     }
   }
-  printf ("      SAK (SEL_RES): ");
-  print_hex (&nai.btSak, 1);
+  printf("      SAK (SEL_RES): ");
+  print_hex(&nai.btSak, 1);
   if (verbose) {
     if (nai.btSak & SAK_UID_NOT_COMPLETE) {
-      printf ("* Warning! Cascade bit set: UID not complete\n");
+      printf("* Warning! Cascade bit set: UID not complete\n");
     }
     if (nai.btSak & SAK_ISO14443_4_COMPLIANT) {
-      printf ("* Compliant with ISO/IEC 14443-4\n");
+      printf("* Compliant with ISO/IEC 14443-4\n");
     } else {
-      printf ("* Not compliant with ISO/IEC 14443-4\n");
+      printf("* Not compliant with ISO/IEC 14443-4\n");
     }
     if (nai.btSak & SAK_ISO18092_COMPLIANT) {
-      printf ("* Compliant with ISO/IEC 18092\n");
+      printf("* Compliant with ISO/IEC 18092\n");
     } else {
-      printf ("* Not compliant with ISO/IEC 18092\n");
+      printf("* Not compliant with ISO/IEC 18092\n");
     }
   }
   if (nai.szAtsLen) {
-    printf ("                ATS: ");
-    print_hex (nai.abtAts, nai.szAtsLen);
+    printf("                ATS: ");
+    print_hex(nai.abtAts, nai.szAtsLen);
   }
   if (nai.szAtsLen && verbose) {
     // Decode ATS according to ISO/IEC 14443-4 (5.2 Answer to select)
     const int iMaxFrameSizes[] = { 16, 24, 32, 40, 48, 64, 96, 128, 256 };
-    printf ("* Max Frame Size accepted by PICC: %d bytes\n", iMaxFrameSizes[nai.abtAts[0] & 0x0F]);
+    printf("* Max Frame Size accepted by PICC: %d bytes\n", iMaxFrameSizes[nai.abtAts[0] & 0x0F]);
 
     size_t offset = 1;
     if (nai.abtAts[0] & 0x10) { // TA(1) present
       uint8_t TA = nai.abtAts[offset];
       offset++;
-      printf ("* Bit Rate Capability:\n");
+      printf("* Bit Rate Capability:\n");
       if (TA == 0) {
-        printf ("  * PICC supports only 106 kbits/s in both directions\n");
+        printf("  * PICC supports only 106 kbits/s in both directions\n");
       }
       if (TA & 1 << 7) {
-        printf ("  * Same bitrate in both directions mandatory\n");
+        printf("  * Same bitrate in both directions mandatory\n");
       }
       if (TA & 1 << 4) {
-        printf ("  * PICC to PCD, DS=2, bitrate 212 kbits/s supported\n");
+        printf("  * PICC to PCD, DS=2, bitrate 212 kbits/s supported\n");
       }
       if (TA & 1 << 5) {
-        printf ("  * PICC to PCD, DS=4, bitrate 424 kbits/s supported\n");
+        printf("  * PICC to PCD, DS=4, bitrate 424 kbits/s supported\n");
       }
       if (TA & 1 << 6) {
-        printf ("  * PICC to PCD, DS=8, bitrate 847 kbits/s supported\n");
+        printf("  * PICC to PCD, DS=8, bitrate 847 kbits/s supported\n");
       }
       if (TA & 1 << 0) {
-        printf ("  * PCD to PICC, DR=2, bitrate 212 kbits/s supported\n");
+        printf("  * PCD to PICC, DR=2, bitrate 212 kbits/s supported\n");
       }
       if (TA & 1 << 1) {
-        printf ("  * PCD to PICC, DR=4, bitrate 424 kbits/s supported\n");
+        printf("  * PCD to PICC, DR=4, bitrate 424 kbits/s supported\n");
       }
       if (TA & 1 << 2) {
-        printf ("  * PCD to PICC, DR=8, bitrate 847 kbits/s supported\n");
+        printf("  * PCD to PICC, DR=8, bitrate 847 kbits/s supported\n");
       }
       if (TA & 1 << 3) {
-        printf ("  * ERROR unknown value\n");
+        printf("  * ERROR unknown value\n");
       }
     }
     if (nai.abtAts[0] & 0x20) { // TB(1) present
       uint8_t TB = nai.abtAts[offset];
       offset++;
-      printf ("* Frame Waiting Time: %.4g ms\n", 256.0 * 16.0 * (1 << ((TB & 0xf0) >> 4)) / 13560.0);
+      printf("* Frame Waiting Time: %.4g ms\n", 256.0 * 16.0 * (1 << ((TB & 0xf0) >> 4)) / 13560.0);
       if ((TB & 0x0f) == 0) {
-        printf ("* No Start-up Frame Guard Time required\n");
+        printf("* No Start-up Frame Guard Time required\n");
       } else {
-        printf ("* Start-up Frame Guard Time: %.4g ms\n", 256.0 * 16.0 * (1 << (TB & 0x0f)) / 13560.0);
+        printf("* Start-up Frame Guard Time: %.4g ms\n", 256.0 * 16.0 * (1 << (TB & 0x0f)) / 13560.0);
       }
     }
     if (nai.abtAts[0] & 0x40) { // TC(1) present
@@ -332,8 +332,8 @@ print_nfc_iso14443a_info (const nfc_iso14443a_info nai, bool verbose)
       }
     }
     if (nai.szAtsLen > offset) {
-      printf ("* Historical bytes Tk: " );
-      print_hex (nai.abtAts + offset, (nai.szAtsLen - offset));
+      printf("* Historical bytes Tk: ");
+      print_hex(nai.abtAts + offset, (nai.szAtsLen - offset));
       uint8_t CIB = nai.abtAts[offset];
       offset++;
       if (CIB != 0x00 && CIB != 0x10 && (CIB & 0xf0) != 0x80) {
@@ -542,174 +542,174 @@ print_nfc_iso14443a_info (const nfc_iso14443a_info nai, bool verbose)
 }
 
 void
-print_nfc_felica_info (const nfc_felica_info nfi, bool verbose)
+print_nfc_felica_info(const nfc_felica_info nfi, bool verbose)
 {
   (void) verbose;
-  printf ("        ID (NFCID2): ");
-  print_hex (nfi.abtId, 8);
-  printf ("    Parameter (PAD): ");
-  print_hex (nfi.abtPad, 8);
-  printf ("   System Code (SC): ");
-  print_hex (nfi.abtSysCode, 2);
+  printf("        ID (NFCID2): ");
+  print_hex(nfi.abtId, 8);
+  printf("    Parameter (PAD): ");
+  print_hex(nfi.abtPad, 8);
+  printf("   System Code (SC): ");
+  print_hex(nfi.abtSysCode, 2);
 }
 
 void
-print_nfc_jewel_info (const nfc_jewel_info nji, bool verbose)
+print_nfc_jewel_info(const nfc_jewel_info nji, bool verbose)
 {
   (void) verbose;
-  printf ("    ATQA (SENS_RES): ");
-  print_hex (nji.btSensRes, 2);
-  printf ("      4-LSB JEWELID: ");
-  print_hex (nji.btId, 4);
+  printf("    ATQA (SENS_RES): ");
+  print_hex(nji.btSensRes, 2);
+  printf("      4-LSB JEWELID: ");
+  print_hex(nji.btId, 4);
 }
 
 #define PI_ISO14443_4_SUPPORTED 0x01
 #define PI_NAD_SUPPORTED        0x01
 #define PI_CID_SUPPORTED        0x02
 void
-print_nfc_iso14443b_info (const nfc_iso14443b_info nbi, bool verbose)
+print_nfc_iso14443b_info(const nfc_iso14443b_info nbi, bool verbose)
 {
   const int iMaxFrameSizes[] = { 16, 24, 32, 40, 48, 64, 96, 128, 256 };
-  printf ("               PUPI: ");
-  print_hex (nbi.abtPupi, 4);
-  printf ("   Application Data: ");
-  print_hex (nbi.abtApplicationData, 4);
-  printf ("      Protocol Info: ");
-  print_hex (nbi.abtProtocolInfo, 3);
+  printf("               PUPI: ");
+  print_hex(nbi.abtPupi, 4);
+  printf("   Application Data: ");
+  print_hex(nbi.abtApplicationData, 4);
+  printf("      Protocol Info: ");
+  print_hex(nbi.abtProtocolInfo, 3);
   if (verbose) {
-    printf ("* Bit Rate Capability:\n");
+    printf("* Bit Rate Capability:\n");
     if (nbi.abtProtocolInfo[0] == 0) {
-      printf (" * PICC supports only 106 kbits/s in both directions\n");
+      printf(" * PICC supports only 106 kbits/s in both directions\n");
     }
     if (nbi.abtProtocolInfo[0] & 1 << 7) {
-      printf (" * Same bitrate in both directions mandatory\n");
+      printf(" * Same bitrate in both directions mandatory\n");
     }
     if (nbi.abtProtocolInfo[0] & 1 << 4) {
-      printf (" * PICC to PCD, 1etu=64/fc, bitrate 212 kbits/s supported\n");
+      printf(" * PICC to PCD, 1etu=64/fc, bitrate 212 kbits/s supported\n");
     }
     if (nbi.abtProtocolInfo[0] & 1 << 5) {
-      printf (" * PICC to PCD, 1etu=32/fc, bitrate 424 kbits/s supported\n");
+      printf(" * PICC to PCD, 1etu=32/fc, bitrate 424 kbits/s supported\n");
     }
     if (nbi.abtProtocolInfo[0] & 1 << 6) {
-      printf (" * PICC to PCD, 1etu=16/fc, bitrate 847 kbits/s supported\n");
+      printf(" * PICC to PCD, 1etu=16/fc, bitrate 847 kbits/s supported\n");
     }
     if (nbi.abtProtocolInfo[0] & 1 << 0) {
-      printf (" * PCD to PICC, 1etu=64/fc, bitrate 212 kbits/s supported\n");
+      printf(" * PCD to PICC, 1etu=64/fc, bitrate 212 kbits/s supported\n");
     }
     if (nbi.abtProtocolInfo[0] & 1 << 1) {
-      printf (" * PCD to PICC, 1etu=32/fc, bitrate 424 kbits/s supported\n");
+      printf(" * PCD to PICC, 1etu=32/fc, bitrate 424 kbits/s supported\n");
     }
     if (nbi.abtProtocolInfo[0] & 1 << 2) {
-      printf (" * PCD to PICC, 1etu=16/fc, bitrate 847 kbits/s supported\n");
+      printf(" * PCD to PICC, 1etu=16/fc, bitrate 847 kbits/s supported\n");
     }
     if (nbi.abtProtocolInfo[0] & 1 << 3) {
-      printf (" * ERROR unknown value\n");
+      printf(" * ERROR unknown value\n");
     }
-    if( (nbi.abtProtocolInfo[1] & 0xf0) <= 0x80 ) {
-      printf ("* Maximum frame sizes: %d bytes\n", iMaxFrameSizes[((nbi.abtProtocolInfo[1] & 0xf0) >> 4)]);
+    if ((nbi.abtProtocolInfo[1] & 0xf0) <= 0x80) {
+      printf("* Maximum frame sizes: %d bytes\n", iMaxFrameSizes[((nbi.abtProtocolInfo[1] & 0xf0) >> 4)]);
     }
-    if((nbi.abtProtocolInfo[1] & 0x0f) == PI_ISO14443_4_SUPPORTED) {
-      printf ("* Protocol types supported: ISO/IEC 14443-4\n");
+    if ((nbi.abtProtocolInfo[1] & 0x0f) == PI_ISO14443_4_SUPPORTED) {
+      printf("* Protocol types supported: ISO/IEC 14443-4\n");
     }
-    printf ("* Frame Waiting Time: %.4g ms\n", 256.0 * 16.0 * (1 << ((nbi.abtProtocolInfo[2] & 0xf0) >> 4)) / 13560.0);
-    if((nbi.abtProtocolInfo[2] & (PI_NAD_SUPPORTED | PI_CID_SUPPORTED)) != 0) {
-      printf ("* Frame options supported: ");
-      if ((nbi.abtProtocolInfo[2] & PI_NAD_SUPPORTED) != 0) printf ("NAD ");
-      if ((nbi.abtProtocolInfo[2] & PI_CID_SUPPORTED) != 0) printf ("CID ");
+    printf("* Frame Waiting Time: %.4g ms\n", 256.0 * 16.0 * (1 << ((nbi.abtProtocolInfo[2] & 0xf0) >> 4)) / 13560.0);
+    if ((nbi.abtProtocolInfo[2] & (PI_NAD_SUPPORTED | PI_CID_SUPPORTED)) != 0) {
+      printf("* Frame options supported: ");
+      if ((nbi.abtProtocolInfo[2] & PI_NAD_SUPPORTED) != 0) printf("NAD ");
+      if ((nbi.abtProtocolInfo[2] & PI_CID_SUPPORTED) != 0) printf("CID ");
       printf("\n");
     }
   }
 }
 
 void
-print_nfc_iso14443bi_info (const nfc_iso14443bi_info nii, bool verbose)
+print_nfc_iso14443bi_info(const nfc_iso14443bi_info nii, bool verbose)
 {
-  printf ("                DIV: ");
-  print_hex (nii.abtDIV, 4);
+  printf("                DIV: ");
+  print_hex(nii.abtDIV, 4);
   if (verbose) {
     int version = (nii.btVerLog & 0x1e) >> 1;
-    printf ("   Software Version: ");
+    printf("   Software Version: ");
     if (version == 15) {
-      printf ("Undefined\n");
+      printf("Undefined\n");
     } else {
-      printf ("%i\n", version);
+      printf("%i\n", version);
     }
 
     if ((nii.btVerLog & 0x80) && (nii.btConfig & 0x80)) {
-      printf ("        Wait Enable: yes");
+      printf("        Wait Enable: yes");
     }
   }
   if ((nii.btVerLog & 0x80) && (nii.btConfig & 0x40)) {
-    printf ("                ATS: ");
-    print_hex (nii.abtAtr, nii.szAtrLen);
+    printf("                ATS: ");
+    print_hex(nii.abtAtr, nii.szAtrLen);
   }
 }
 
 void
-print_nfc_iso14443b2sr_info (const nfc_iso14443b2sr_info nsi, bool verbose)
+print_nfc_iso14443b2sr_info(const nfc_iso14443b2sr_info nsi, bool verbose)
 {
   (void) verbose;
-  printf ("                UID: ");
-  print_hex (nsi.abtUID, 8);
+  printf("                UID: ");
+  print_hex(nsi.abtUID, 8);
 }
 
 void
-print_nfc_iso14443b2ct_info (const nfc_iso14443b2ct_info nci, bool verbose)
+print_nfc_iso14443b2ct_info(const nfc_iso14443b2ct_info nci, bool verbose)
 {
   (void) verbose;
   uint32_t uid;
   uid = (nci.abtUID[3] << 24) + (nci.abtUID[2] << 16) + (nci.abtUID[1] << 8) + nci.abtUID[0];
-  printf ("                UID: ");
-  print_hex (nci.abtUID, sizeof(nci.abtUID));
-  printf ("      UID (decimal): %010u\n", uid);
-  printf ("       Product Code: %02X\n", nci.btProdCode);
-  printf ("           Fab Code: %02X\n", nci.btFabCode);
+  printf("                UID: ");
+  print_hex(nci.abtUID, sizeof(nci.abtUID));
+  printf("      UID (decimal): %010u\n", uid);
+  printf("       Product Code: %02X\n", nci.btProdCode);
+  printf("           Fab Code: %02X\n", nci.btFabCode);
 }
 
 void
-print_nfc_dep_info (const nfc_dep_info ndi, bool verbose)
+print_nfc_dep_info(const nfc_dep_info ndi, bool verbose)
 {
   (void) verbose;
-  printf ("       NFCID3: ");
-  print_hex (ndi.abtNFCID3, 10);
-  printf ("           BS: %02x\n", ndi.btBS);
-  printf ("           BR: %02x\n", ndi.btBR);
-  printf ("           TO: %02x\n", ndi.btTO);
-  printf ("           PP: %02x\n", ndi.btPP);
+  printf("       NFCID3: ");
+  print_hex(ndi.abtNFCID3, 10);
+  printf("           BS: %02x\n", ndi.btBS);
+  printf("           BR: %02x\n", ndi.btBR);
+  printf("           TO: %02x\n", ndi.btTO);
+  printf("           PP: %02x\n", ndi.btPP);
   if (ndi.szGB) {
-    printf ("General Bytes: ");
-    print_hex (ndi.abtGB, ndi.szGB);
+    printf("General Bytes: ");
+    print_hex(ndi.abtGB, ndi.szGB);
   }
 }
 
 void
-print_nfc_target (const nfc_target nt, bool verbose)
+print_nfc_target(const nfc_target nt, bool verbose)
 {
-  printf ("%s (%s%s) target:\n", str_nfc_modulation_type(nt.nm.nmt), str_nfc_baud_rate(nt.nm.nbr), (nt.nm.nmt != NMT_DEP) ? "" : (nt.nti.ndi.ndm == NDM_ACTIVE) ? "active mode" : "passive mode");
-  switch(nt.nm.nmt) {
+  printf("%s (%s%s) target:\n", str_nfc_modulation_type(nt.nm.nmt), str_nfc_baud_rate(nt.nm.nbr), (nt.nm.nmt != NMT_DEP) ? "" : (nt.nti.ndi.ndm == NDM_ACTIVE) ? "active mode" : "passive mode");
+  switch (nt.nm.nmt) {
     case NMT_ISO14443A:
-      print_nfc_iso14443a_info (nt.nti.nai, verbose);
+      print_nfc_iso14443a_info(nt.nti.nai, verbose);
       break;
     case NMT_JEWEL:
-      print_nfc_jewel_info (nt.nti.nji, verbose);
+      print_nfc_jewel_info(nt.nti.nji, verbose);
       break;
     case NMT_FELICA:
-      print_nfc_felica_info (nt.nti.nfi, verbose);
+      print_nfc_felica_info(nt.nti.nfi, verbose);
       break;
     case NMT_ISO14443B:
-      print_nfc_iso14443b_info (nt.nti.nbi, verbose);
+      print_nfc_iso14443b_info(nt.nti.nbi, verbose);
       break;
     case NMT_ISO14443BI:
-      print_nfc_iso14443bi_info (nt.nti.nii, verbose);
+      print_nfc_iso14443bi_info(nt.nti.nii, verbose);
       break;
     case NMT_ISO14443B2SR:
-      print_nfc_iso14443b2sr_info (nt.nti.nsi, verbose);
+      print_nfc_iso14443b2sr_info(nt.nti.nsi, verbose);
       break;
     case NMT_ISO14443B2CT:
-      print_nfc_iso14443b2ct_info (nt.nti.nci, verbose);
+      print_nfc_iso14443b2ct_info(nt.nti.nci, verbose);
       break;
     case NMT_DEP:
-      print_nfc_dep_info (nt.nti.ndi, verbose);
+      print_nfc_dep_info(nt.nti.ndi, verbose);
       break;
   }
 }

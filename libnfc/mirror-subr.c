@@ -54,13 +54,13 @@ static const uint8_t ByteMirror[256] = {
 };
 
 uint8_t
-mirror (uint8_t bt)
+mirror(uint8_t bt)
 {
   return ByteMirror[bt];
 }
 
 static void
-mirror_bytes (uint8_t *pbts, size_t szLen)
+mirror_bytes(uint8_t *pbts, size_t szLen)
 {
   size_t  szByteNr;
 
@@ -71,15 +71,15 @@ mirror_bytes (uint8_t *pbts, size_t szLen)
 }
 
 uint32_t
-mirror32 (uint32_t ui32Bits)
+mirror32(uint32_t ui32Bits)
 {
-  mirror_bytes ((uint8_t *) & ui32Bits, 4);
+  mirror_bytes((uint8_t *) & ui32Bits, 4);
   return ui32Bits;
 }
 
 uint64_t
-mirror64 (uint64_t ui64Bits)
+mirror64(uint64_t ui64Bits)
 {
-  mirror_bytes ((uint8_t *) & ui64Bits, 8);
+  mirror_bytes((uint8_t *) & ui64Bits, 8);
   return ui64Bits;
 }

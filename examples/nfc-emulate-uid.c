@@ -66,28 +66,28 @@ uint8_t  abtUidBcc[5] = { 0xDE, 0xAD, 0xBE, 0xEF, 0x62 };
 uint8_t  abtSak[9] = { 0x08, 0xb6, 0xdd };
 
 static void
-intr_hdlr (int sig)
+intr_hdlr(int sig)
 {
   (void) sig;
   if (pnd != NULL) {
-    printf ("\nAborting current command...\n");
-    nfc_abort_command (pnd);
+    printf("\nAborting current command...\n");
+    nfc_abort_command(pnd);
   }
 }
 
 static void
-print_usage (char *argv[])
+print_usage(char *argv[])
 {
-  printf ("Usage: %s [OPTIONS] [UID]\n", argv[0]);
-  printf ("Options:\n");
-  printf ("\t-h\tHelp. Print this message.\n");
-  printf ("\t-q\tQuiet mode. Silent output: received and sent frames will not be shown (improves timing).\n");
-  printf ("\n");
-  printf ("\t[UID]\tUID to emulate, specified as 8 HEX digits (default is DEADBEEF).\n");
+  printf("Usage: %s [OPTIONS] [UID]\n", argv[0]);
+  printf("Options:\n");
+  printf("\t-h\tHelp. Print this message.\n");
+  printf("\t-q\tQuiet mode. Silent output: received and sent frames will not be shown (improves timing).\n");
+  printf("\n");
+  printf("\t[UID]\tUID to emulate, specified as 8 HEX digits (default is DEADBEEF).\n");
 }
 
 int
-main (int argc, char *argv[])
+main(int argc, char *argv[])
 {
   uint8_t *pbtTx = NULL;
   size_t  szTxBits;
@@ -98,49 +98,49 @@ main (int argc, char *argv[])
 
   // Get commandline options
   for (arg = 1; arg < argc; arg++) {
-    if (0 == strcmp (argv[arg], "-h")) {
-      print_usage (argv);
+    if (0 == strcmp(argv[arg], "-h")) {
+      print_usage(argv);
       exit(EXIT_SUCCESS);
-    } else if (0 == strcmp (argv[arg], "-q")) {
-      printf ("Quiet mode.\n");
+    } else if (0 == strcmp(argv[arg], "-q")) {
+      printf("Quiet mode.\n");
       quiet_output = true;
-    } else if ((arg == argc - 1) && (strlen (argv[arg]) == 8)) {        // See if UID was specified as HEX string
+    } else if ((arg == argc - 1) && (strlen(argv[arg]) == 8)) {         // See if UID was specified as HEX string
       uint8_t  abtTmp[3] = { 0x00, 0x00, 0x00 };
-      printf ("[+] Using UID: %s\n", argv[arg]);
+      printf("[+] Using UID: %s\n", argv[arg]);
       abtUidBcc[4] = 0x00;
       for (i = 0; i < 4; ++i) {
-        memcpy (abtTmp, argv[arg] + i * 2, 2);
-        abtUidBcc[i] = (uint8_t) strtol ((char *) abtTmp, NULL, 16);
+        memcpy(abtTmp, argv[arg] + i * 2, 2);
+        abtUidBcc[i] = (uint8_t) strtol((char *) abtTmp, NULL, 16);
         abtUidBcc[4] ^= abtUidBcc[i];
       }
     } else {
-      ERR ("%s is not supported option.", argv[arg]);
-      print_usage (argv);
+      ERR("%s is not supported option.", argv[arg]);
+      print_usage(argv);
       exit(EXIT_FAILURE);
     }
   }
 
 #ifdef WIN32
-  signal (SIGINT, (void (__cdecl *) (int)) intr_hdlr);
+  signal(SIGINT, (void (__cdecl *)(int)) intr_hdlr);
 #else
-  signal (SIGINT, intr_hdlr);
+  signal(SIGINT, intr_hdlr);
 #endif
 
-  nfc_init (NULL);
+  nfc_init(NULL);
 
   // Try to open the NFC device
-  pnd = nfc_open (NULL, NULL);
+  pnd = nfc_open(NULL, NULL);
 
   if (pnd == NULL) {
-    printf ("Unable to open NFC device\n");
+    printf("Unable to open NFC device\n");
     exit(EXIT_FAILURE);
   }
 
-  printf ("\n");
-  printf ("NFC device: %s opened\n", nfc_device_get_name (pnd));
-  printf ("[+] Try to break out the auto-emulation, this requires a second NFC device!\n");
-  printf ("[+] To do this, please send any command after the anti-collision\n");
-  printf ("[+] For example, send a RATS command or use the \"nfc-anticol\" or \"nfc-list\" tool.\n");
+  printf("\n");
+  printf("NFC device: %s opened\n", nfc_device_get_name(pnd));
+  printf("[+] Try to break out the auto-emulation, this requires a second NFC device!\n");
+  printf("[+] To do this, please send any command after the anti-collision\n");
+  printf("[+] For example, send a RATS command or use the \"nfc-anticol\" or \"nfc-list\" tool.\n");
 
   // Note: We have to build a "fake" nfc_target in order to do exactly the same that was done before the new nfc_target_init() was introduced.
   nfc_target nt = {
@@ -158,24 +158,24 @@ main (int argc, char *argv[])
       },
     },
   };
-  if ((szRecvBits = nfc_target_init (pnd, &nt, abtRecv, sizeof (abtRecv), 0)) < 0) {
-    nfc_perror (pnd, "nfc_target_init");
-    ERR ("Could not come out of auto-emulation, no command was received");
+  if ((szRecvBits = nfc_target_init(pnd, &nt, abtRecv, sizeof(abtRecv), 0)) < 0) {
+    nfc_perror(pnd, "nfc_target_init");
+    ERR("Could not come out of auto-emulation, no command was received");
     goto error;
   }
-  printf ("[+] Received initiator command: ");
-  print_hex_bits (abtRecv, (size_t) szRecvBits);
-  printf ("[+] Configuring communication\n");
-  if ((nfc_device_set_property_bool (pnd, NP_HANDLE_CRC, false) < 0) || (nfc_device_set_property_bool (pnd, NP_HANDLE_PARITY, true) < 0)) {
-    nfc_perror (pnd, "nfc_device_set_property_bool");
-    exit (EXIT_FAILURE);
+  printf("[+] Received initiator command: ");
+  print_hex_bits(abtRecv, (size_t) szRecvBits);
+  printf("[+] Configuring communication\n");
+  if ((nfc_device_set_property_bool(pnd, NP_HANDLE_CRC, false) < 0) || (nfc_device_set_property_bool(pnd, NP_HANDLE_PARITY, true) < 0)) {
+    nfc_perror(pnd, "nfc_device_set_property_bool");
+    exit(EXIT_FAILURE);
   }
-  printf ("[+] Done, the emulated tag is initialized with UID: %02X%02X%02X%02X\n\n", abtUidBcc[0], abtUidBcc[1],
-          abtUidBcc[2], abtUidBcc[3]);
+  printf("[+] Done, the emulated tag is initialized with UID: %02X%02X%02X%02X\n\n", abtUidBcc[0], abtUidBcc[1],
+         abtUidBcc[2], abtUidBcc[3]);
 
   while (true) {
     // Test if we received a frame
-    if ((szRecvBits = nfc_target_receive_bits (pnd, abtRecv, sizeof (abtRecv), 0)) > 0) {
+    if ((szRecvBits = nfc_target_receive_bits(pnd, abtRecv, sizeof(abtRecv), 0)) > 0) {
       // Prepare the command to send back for the anti-collision request
       switch (szRecvBits) {
         case 7:                  // Request or Wakeup
@@ -183,7 +183,7 @@ main (int argc, char *argv[])
           szTxBits = 16;
           // New anti-collsion session started
           if (!quiet_output)
-            printf ("\n");
+            printf("\n");
           break;
 
         case 16:                 // Select All
@@ -202,29 +202,29 @@ main (int argc, char *argv[])
       }
 
       if (!quiet_output) {
-        printf ("R: ");
-        print_hex_bits (abtRecv, (size_t) szRecvBits);
+        printf("R: ");
+        print_hex_bits(abtRecv, (size_t) szRecvBits);
       }
       // Test if we know how to respond
       if (szTxBits) {
         // Send and print the command to the screen
-        if (nfc_target_send_bits (pnd, pbtTx, szTxBits, NULL) < 0) {
-          nfc_perror (pnd, "nfc_target_send_bits");
+        if (nfc_target_send_bits(pnd, pbtTx, szTxBits, NULL) < 0) {
+          nfc_perror(pnd, "nfc_target_send_bits");
           goto error;
         }
         if (!quiet_output) {
-          printf ("T: ");
-          print_hex_bits (pbtTx, szTxBits);
+          printf("T: ");
+          print_hex_bits(pbtTx, szTxBits);
         }
       }
     }
   }
-  nfc_close (pnd);
-  nfc_exit (NULL);
-  exit (EXIT_SUCCESS);
+  nfc_close(pnd);
+  nfc_exit(NULL);
+  exit(EXIT_SUCCESS);
 
 error:
-  nfc_close (pnd);
-  nfc_exit (NULL);
-  exit (EXIT_FAILURE);
+  nfc_close(pnd);
+  nfc_exit(NULL);
+  exit(EXIT_FAILURE);
 }

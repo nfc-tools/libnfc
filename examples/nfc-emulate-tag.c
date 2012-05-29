@@ -61,30 +61,30 @@ static bool quiet_output = false;
 static bool init_mfc_auth = false;
 
 static void
-intr_hdlr (int sig)
+intr_hdlr(int sig)
 {
   (void) sig;
-  printf ("\nQuitting...\n");
+  printf("\nQuitting...\n");
   if (pnd != NULL) {
     nfc_close(pnd);
   }
-  nfc_exit (NULL);
-  exit (EXIT_FAILURE);
+  nfc_exit(NULL);
+  exit(EXIT_FAILURE);
 }
 
 static bool
-target_io( nfc_target *pnt, const uint8_t *pbtInput, const size_t szInput, uint8_t *pbtOutput, size_t *pszOutput )
+target_io(nfc_target *pnt, const uint8_t *pbtInput, const size_t szInput, uint8_t *pbtOutput, size_t *pszOutput)
 {
   bool loop = true;
   *pszOutput = 0;
 
   // Show transmitted command
   if (!quiet_output) {
-    printf ("    In: ");
-    print_hex (pbtInput, szInput);
+    printf("    In: ");
+    print_hex(pbtInput, szInput);
   }
-  if(szInput) {
-    switch(pbtInput[0]) {
+  if (szInput) {
+    switch (pbtInput[0]) {
       case 0x30: // Mifare read
         // block address is in pbtInput[1]
         *pszOutput = 15;
@@ -110,7 +110,7 @@ target_io( nfc_target *pnt, const uint8_t *pbtInput, const size_t szInput, uint8
         // Send ATS
         *pszOutput = pnt->nti.nai.szAtsLen + 1;
         pbtOutput[0] = pnt->nti.nai.szAtsLen + 1; // ISO14443-4 says that ATS contains ATS_Length as first byte
-        if(pnt->nti.nai.szAtsLen) {
+        if (pnt->nti.nai.szAtsLen) {
           memcpy(pbtOutput + 1, pnt->nti.nai.abtAts, pnt->nti.nai.szAtsLen);
         }
         break;
@@ -129,8 +129,8 @@ target_io( nfc_target *pnt, const uint8_t *pbtInput, const size_t szInput, uint8
   }
   // Show transmitted command
   if ((!quiet_output) && *pszOutput) {
-    printf ("    Out: ");
-    print_hex (pbtOutput, *pszOutput);
+    printf("    Out: ");
+    print_hex(pbtOutput, *pszOutput);
   }
   return loop;
 }
@@ -142,26 +142,26 @@ nfc_target_emulate_tag(nfc_device *dev, nfc_target *pnt)
   uint8_t abtTx[MAX_FRAME_LEN];
   bool loop = true;
 
-  if ((szRx = nfc_target_init (dev, pnt, abtRx, sizeof(abtRx), 0)) < 0) {
-    nfc_perror (dev, "nfc_target_init");
+  if ((szRx = nfc_target_init(dev, pnt, abtRx, sizeof(abtRx), 0)) < 0) {
+    nfc_perror(dev, "nfc_target_init");
     return false;
   }
 
-  while ( loop ) {
-    loop = target_io( pnt, abtRx, (size_t) szRx, abtTx, &szTx );
+  while (loop) {
+    loop = target_io(pnt, abtRx, (size_t) szRx, abtTx, &szTx);
     if (szTx) {
       if (nfc_target_send_bytes(dev, abtTx, szTx, 0) < 0) {
-        nfc_perror (dev, "nfc_target_send_bytes");
+        nfc_perror(dev, "nfc_target_send_bytes");
         return false;
       }
     }
-    if ( loop ) {
-      if ( init_mfc_auth ) {
-        nfc_device_set_property_bool (dev, NP_HANDLE_CRC, false);
+    if (loop) {
+      if (init_mfc_auth) {
+        nfc_device_set_property_bool(dev, NP_HANDLE_CRC, false);
         init_mfc_auth = false;
       }
-      if ((szRx = nfc_target_receive_bytes(dev, abtRx, sizeof (abtRx), 0)) < 0) {
-        nfc_perror (dev, "nfc_target_receive_bytes");
+      if ((szRx = nfc_target_receive_bytes(dev, abtRx, sizeof(abtRx), 0)) < 0) {
+        nfc_perror(dev, "nfc_target_receive_bytes");
         return false;
       }
     }
@@ -170,32 +170,32 @@ nfc_target_emulate_tag(nfc_device *dev, nfc_target *pnt)
 }
 
 int
-main (int argc, char *argv[])
+main(int argc, char *argv[])
 {
   (void) argc;
   const char *acLibnfcVersion;
 
 #ifdef WIN32
-  signal (SIGINT, (void (__cdecl *) (int)) intr_hdlr);
+  signal(SIGINT, (void (__cdecl *)(int)) intr_hdlr);
 #else
-  signal (SIGINT, intr_hdlr);
+  signal(SIGINT, intr_hdlr);
 #endif
 
-  nfc_init (NULL);
+  nfc_init(NULL);
 
   // Try to open the NFC reader
-  pnd = nfc_open (NULL, NULL);
+  pnd = nfc_open(NULL, NULL);
 
   // Display libnfc version
-  acLibnfcVersion = nfc_version ();
-  printf ("%s uses libnfc %s\n", argv[0], acLibnfcVersion);
+  acLibnfcVersion = nfc_version();
+  printf("%s uses libnfc %s\n", argv[0], acLibnfcVersion);
 
   if (pnd == NULL) {
     ERR("Unable to open NFC device");
-    exit (EXIT_FAILURE);
+    exit(EXIT_FAILURE);
   }
 
-  printf ("NFC device: %s opened\n", nfc_device_get_name (pnd));
+  printf("NFC device: %s opened\n", nfc_device_get_name(pnd));
 
   // Notes for ISO14443-A emulated tags:
   // * Only short UIDs are supported
@@ -258,19 +258,19 @@ main (int argc, char *argv[])
   };
   */
 
-  printf ("%s will emulate this ISO14443-A tag:\n", argv[0]);
-  print_nfc_iso14443a_info (nt.nti.nai, true);
+  printf("%s will emulate this ISO14443-A tag:\n", argv[0]);
+  print_nfc_iso14443a_info(nt.nti.nai, true);
 
   // Switch off NP_EASY_FRAMING if target is not ISO14443-4
-  nfc_device_set_property_bool (pnd, NP_EASY_FRAMING, (nt.nti.nai.btSak & SAK_ISO14443_4_COMPLIANT));
-  printf ("NFC device (configured as target) is now emulating the tag, please touch it with a second NFC device (initiator)\n");
-  if (!nfc_target_emulate_tag (pnd, &nt)) {
-    nfc_perror (pnd, "nfc_target_emulate_tag");
-    exit (EXIT_FAILURE);
+  nfc_device_set_property_bool(pnd, NP_EASY_FRAMING, (nt.nti.nai.btSak & SAK_ISO14443_4_COMPLIANT));
+  printf("NFC device (configured as target) is now emulating the tag, please touch it with a second NFC device (initiator)\n");
+  if (!nfc_target_emulate_tag(pnd, &nt)) {
+    nfc_perror(pnd, "nfc_target_emulate_tag");
+    exit(EXIT_FAILURE);
   }
 
   nfc_close(pnd);
-  nfc_exit (NULL);
-  exit (EXIT_SUCCESS);
+  nfc_exit(NULL);
+  exit(EXIT_SUCCESS);
 }
 

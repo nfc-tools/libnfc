@@ -27,7 +27,7 @@
 static uint8_t __log_init_counter = 0;
 
 int
-log_init (void)
+log_init(void)
 {
   int res = 0;
 
@@ -41,7 +41,7 @@ log_init (void)
 }
 
 int
-log_fini (void)
+log_fini(void)
 {
   int res = 0;
   if (__log_init_counter >= 1) {
@@ -56,12 +56,12 @@ log_fini (void)
 }
 
 void
-log_put (const char *category, const char *priority, const char *format, ...)
+log_put(const char *category, const char *priority, const char *format, ...)
 {
   va_list va;
-  va_start (va, format);
-  fprintf (stderr, "%s\t%s\t", priority, category);
-  vfprintf (stderr, format, va);
-  fprintf (stderr, "\n");
-  va_end (va);
+  va_start(va, format);
+  fprintf(stderr, "%s\t%s\t", priority, category);
+  vfprintf(stderr, format, va);
+  fprintf(stderr, "\n");
+  va_end(va);
 }

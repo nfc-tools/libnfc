@@ -48,8 +48,8 @@
 #define PN532_UART_DRIVER_NAME "pn532_uart"
 #define LOG_CATEGORY "libnfc.driver.pn532_uart"
 
-int     pn532_uart_ack (nfc_device *pnd);
-int     pn532_uart_wakeup (nfc_device *pnd);
+int     pn532_uart_ack(nfc_device *pnd);
+int     pn532_uart_wakeup(nfc_device *pnd);
 
 const struct pn53x_io pn532_uart_io;
 
@@ -65,7 +65,7 @@ struct pn532_uart_data {
 #define DRIVER_DATA(pnd) ((struct pn532_uart_data*)(pnd->driver_data))
 
 bool
-pn532_uart_probe (nfc_connstring connstrings[], size_t connstrings_len, size_t *pszDeviceFound)
+pn532_uart_probe(nfc_connstring connstrings[], size_t connstrings_len, size_t *pszDeviceFound)
 {
   /** @note: Due to UART bus we can't know if its really a pn532 without
   * sending some PN53x commands. But using this way to probe devices, we can
@@ -74,57 +74,57 @@ pn532_uart_probe (nfc_connstring connstrings[], size_t connstrings_len, size_t *
   (void) connstrings;
   (void) connstrings_len;
   *pszDeviceFound = 0;
-  log_put (LOG_CATEGORY, NFC_PRIORITY_INFO, "%s", "Serial auto-probing have been disabled at compile time. Skipping autoprobe.");
+  log_put(LOG_CATEGORY, NFC_PRIORITY_INFO, "%s", "Serial auto-probing have been disabled at compile time. Skipping autoprobe.");
   return false;
 #else /* SERIAL_AUTOPROBE_ENABLED */
   *pszDeviceFound = 0;
 
   serial_port sp;
-  char **acPorts = uart_list_ports ();
+  char **acPorts = uart_list_ports();
   const char *acPort;
   int     iDevice = 0;
 
   while ((acPort = acPorts[iDevice++])) {
-    sp = uart_open (acPort);
-    log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "Trying to find PN532 device on serial port: %s at %d bauds.", acPort, PN532_UART_DEFAULT_SPEED);
+    sp = uart_open(acPort);
+    log_put(LOG_CATEGORY, NFC_PRIORITY_TRACE, "Trying to find PN532 device on serial port: %s at %d bauds.", acPort, PN532_UART_DEFAULT_SPEED);
 
     if ((sp != INVALID_SERIAL_PORT) && (sp != CLAIMED_SERIAL_PORT)) {
       // We need to flush input to be sure first reply does not comes from older byte transceive
-      uart_flush_input (sp);
+      uart_flush_input(sp);
       // Serial port claimed but we need to check if a PN532_UART is opened.
-      uart_set_speed (sp, PN532_UART_DEFAULT_SPEED);
+      uart_set_speed(sp, PN532_UART_DEFAULT_SPEED);
 
       nfc_connstring connstring;
-      snprintf (connstring, sizeof(nfc_connstring), "%s:%s:%"PRIu32, PN532_UART_DRIVER_NAME, acPort, PN532_UART_DEFAULT_SPEED);
-      nfc_device *pnd = nfc_device_new (connstring);
+      snprintf(connstring, sizeof(nfc_connstring), "%s:%s:%"PRIu32, PN532_UART_DRIVER_NAME, acPort, PN532_UART_DEFAULT_SPEED);
+      nfc_device *pnd = nfc_device_new(connstring);
       pnd->driver = &pn532_uart_driver;
       pnd->driver_data = malloc(sizeof(struct pn532_uart_data));
-      DRIVER_DATA (pnd)->port = sp;
+      DRIVER_DATA(pnd)->port = sp;
 
       // Alloc and init chip's data
-      pn53x_data_new (pnd, &pn532_uart_io);
+      pn53x_data_new(pnd, &pn532_uart_io);
       // SAMConfiguration command if needed to wakeup the chip and pn53x_SAMConfiguration check if the chip is a PN532
-      CHIP_DATA (pnd)->type = PN532;
+      CHIP_DATA(pnd)->type = PN532;
       // This device starts in LowVBat power mode
-      CHIP_DATA (pnd)->power_mode = LOWVBAT;
+      CHIP_DATA(pnd)->power_mode = LOWVBAT;
 
 #ifndef WIN32
       // pipe-based abort mecanism
-      pipe (DRIVER_DATA (pnd)->iAbortFds);
+      pipe(DRIVER_DATA(pnd)->iAbortFds);
 #else
-      DRIVER_DATA (pnd)->abort_flag = false;
+      DRIVER_DATA(pnd)->abort_flag = false;
 #endif
 
       // Check communication using "Diagnose" command, with "Communication test" (0x00)
-      int res = pn53x_check_communication (pnd);
-      pn53x_data_free (pnd);
-      nfc_device_free (pnd);
-      uart_close (sp);
-      if(res < 0) {
+      int res = pn53x_check_communication(pnd);
+      pn53x_data_free(pnd);
+      nfc_device_free(pnd);
+      uart_close(sp);
+      if (res < 0) {
         continue;
       }
 
-      memcpy (connstrings[*pszDeviceFound], connstring, sizeof (nfc_connstring));
+      memcpy(connstrings[*pszDeviceFound], connstring, sizeof(nfc_connstring));
       (*pszDeviceFound)++;
 
       // Test if we reach the maximum "wanted" devices
@@ -134,9 +134,9 @@ pn532_uart_probe (nfc_connstring connstrings[], size_t connstrings_len, size_t *
   }
   iDevice = 0;
   while ((acPort = acPorts[iDevice++])) {
-    free ((void*)acPort);
+    free((void*)acPort);
   }
-  free (acPorts);
+  free(acPorts);
 #endif /* SERIAL_AUTOPROBE_ENABLED */
   return true;
 }
@@ -147,59 +147,59 @@ struct pn532_uart_descriptor {
 };
 
 static int
-pn532_connstring_decode (const nfc_connstring connstring, struct pn532_uart_descriptor *desc)
+pn532_connstring_decode(const nfc_connstring connstring, struct pn532_uart_descriptor *desc)
 {
-  char *cs = malloc (strlen (connstring) + 1);
+  char *cs = malloc(strlen(connstring) + 1);
   if (!cs) {
-    perror ("malloc");
+    perror("malloc");
     return -1;
   }
-  strcpy (cs, connstring);
-  const char *driver_name = strtok (cs, ":");
+  strcpy(cs, connstring);
+  const char *driver_name = strtok(cs, ":");
   if (!driver_name) {
     // Parse error
-    free (cs);
+    free(cs);
     return -1;
   }
 
-  if (0 != strcmp (driver_name, PN532_UART_DRIVER_NAME)) {
+  if (0 != strcmp(driver_name, PN532_UART_DRIVER_NAME)) {
     // Driver name does not match.
-    free (cs);
+    free(cs);
     return 0;
   }
 
-  const char *port = strtok (NULL, ":");
+  const char *port = strtok(NULL, ":");
   if (!port) {
     // Only driver name was specified (or parsing error)
-    free (cs);
+    free(cs);
     return 1;
   }
-  strncpy (desc->port, port, sizeof(desc->port) - 1);
+  strncpy(desc->port, port, sizeof(desc->port) - 1);
   desc->port[sizeof(desc->port) - 1] = '\0';
 
-  const char *speed_s = strtok (NULL, ":");
+  const char *speed_s = strtok(NULL, ":");
   if (!speed_s) {
     // speed not specified (or parsing error)
-    free (cs);
+    free(cs);
     return 2;
   }
   unsigned long speed;
-  if (sscanf (speed_s, "%lu", &speed) != 1) {
+  if (sscanf(speed_s, "%lu", &speed) != 1) {
     // speed_s is not a number
-    free (cs);
+    free(cs);
     return 2;
   }
   desc->speed = speed;
 
-  free (cs);
+  free(cs);
   return 3;
 }
 
 nfc_device *
-pn532_uart_open (const nfc_connstring connstring)
+pn532_uart_open(const nfc_connstring connstring)
 {
   struct pn532_uart_descriptor ndd;
-  int connstring_decode_level = pn532_connstring_decode (connstring, &ndd);
+  int connstring_decode_level = pn532_connstring_decode(connstring, &ndd);
 
   if (connstring_decode_level < 2) {
     return NULL;
@@ -210,31 +210,31 @@ pn532_uart_open (const nfc_connstring connstring)
   serial_port sp;
   nfc_device *pnd = NULL;
 
-  log_put (LOG_CATEGORY, NFC_PRIORITY_TRACE, "Attempt to open: %s at %d bauds.", ndd.port, ndd.speed);
-  sp = uart_open (ndd.port);
+  log_put(LOG_CATEGORY, NFC_PRIORITY_TRACE, "Attempt to open: %s at %d bauds.", ndd.port, ndd.speed);
+  sp = uart_open(ndd.port);
 
   if (sp == INVALID_SERIAL_PORT)
-    log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "Invalid serial port: %s", ndd.port);
+    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "Invalid serial port: %s", ndd.port);
   if (sp == CLAIMED_SERIAL_PORT)
-    log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "Serial port already claimed: %s", ndd.port);
+    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "Serial port already claimed: %s", ndd.port);
   if ((sp == CLAIMED_SERIAL_PORT) || (sp == INVALID_SERIAL_PORT))
     return NULL;
 
   // We need to flush input to be sure first reply does not comes from older byte transceive
-  uart_flush_input (sp);
-  uart_set_speed (sp, ndd.speed);
+  uart_flush_input(sp);
+  uart_set_speed(sp, ndd.speed);
 
   // We have a connection
-  pnd = nfc_device_new (connstring);
-  snprintf (pnd->name, sizeof (pnd->name), "%s:%s", PN532_UART_DRIVER_NAME, ndd.port);
+  pnd = nfc_device_new(connstring);
+  snprintf(pnd->name, sizeof(pnd->name), "%s:%s", PN532_UART_DRIVER_NAME, ndd.port);
 
   pnd->driver_data = malloc(sizeof(struct pn532_uart_data));
-  DRIVER_DATA (pnd)->port = sp;
+  DRIVER_DATA(pnd)->port = sp;
 
   // Alloc and init chip's data
-  pn53x_data_new (pnd, &pn532_uart_io);
+  pn53x_data_new(pnd, &pn532_uart_io);
   // SAMConfiguration command if needed to wakeup the chip and pn53x_SAMConfiguration check if the chip is a PN532
-  CHIP_DATA (pnd)->type = PN532;
+  CHIP_DATA(pnd)->type = PN532;
   // This device starts in LowVBat mode
   CHIP_DATA(pnd)->power_mode = LOWVBAT;
 
@@ -244,15 +244,15 @@ pn532_uart_open (const nfc_connstring connstring)
 
 #ifndef WIN32
   // pipe-based abort mecanism
-  pipe (DRIVER_DATA (pnd)->iAbortFds);
+  pipe(DRIVER_DATA(pnd)->iAbortFds);
 #else
-  DRIVER_DATA (pnd)->abort_flag = false;
+  DRIVER_DATA(pnd)->abort_flag = false;
 #endif
 
   // Check communication using "Diagnose" command, with "Communication test" (0x00)
-  if (pn53x_check_communication (pnd) < 0) {
-    nfc_perror (pnd, "pn53x_check_communication");
-    pn532_uart_close (pnd);
+  if (pn53x_check_communication(pnd) < 0) {
+    nfc_perror(pnd, "pn53x_check_communication");
+    pn532_uart_close(pnd);
     return NULL;
   }
 
@@ -261,38 +261,38 @@ pn532_uart_open (const nfc_connstring connstring)
 }
 
 void
-pn532_uart_close (nfc_device *pnd)
+pn532_uart_close(nfc_device *pnd)
 {
   // Release UART port
-  uart_close (DRIVER_DATA(pnd)->port);
+  uart_close(DRIVER_DATA(pnd)->port);
 
 #ifndef WIN32
   // Release file descriptors used for abort mecanism
-  close (DRIVER_DATA (pnd)->iAbortFds[0]);
-  close (DRIVER_DATA (pnd)->iAbortFds[1]);
+  close(DRIVER_DATA(pnd)->iAbortFds[0]);
+  close(DRIVER_DATA(pnd)->iAbortFds[1]);
 #endif
 
-  pn53x_data_free (pnd);
-  nfc_device_free (pnd);
+  pn53x_data_free(pnd);
+  nfc_device_free(pnd);
 }
 
 int
-pn532_uart_wakeup (nfc_device *pnd)
+pn532_uart_wakeup(nfc_device *pnd)
 {
   /* High Speed Unit (HSU) wake up consist to send 0x55 and wait a "long" delay for PN532 being wakeup. */
   const uint8_t pn532_wakeup_preamble[] = { 0x55, 0x55, 0x00, 0x00, 0x00 };
-  int res = uart_send (DRIVER_DATA(pnd)->port, pn532_wakeup_preamble, sizeof (pn532_wakeup_preamble), 0);
+  int res = uart_send(DRIVER_DATA(pnd)->port, pn532_wakeup_preamble, sizeof(pn532_wakeup_preamble), 0);
   CHIP_DATA(pnd)->power_mode = NORMAL; // PN532 should now be awake
   return res;
 }
 
 #define PN532_BUFFER_LEN (PN53x_EXTENDED_FRAME__DATA_MAX_LEN + PN53x_EXTENDED_FRAME__OVERHEAD)
 int
-pn532_uart_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szData, int timeout)
+pn532_uart_send(nfc_device *pnd, const uint8_t *pbtData, const size_t szData, int timeout)
 {
   int res = 0;
   // Before sending anything, we need to discard from any junk bytes
-  uart_flush_input (DRIVER_DATA(pnd)->port);
+  uart_flush_input(DRIVER_DATA(pnd)->port);
 
   switch (CHIP_DATA(pnd)->power_mode) {
     case LOWVBAT: {
@@ -301,7 +301,7 @@ pn532_uart_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szData, i
         return res;
       }
       // According to PN532 application note, C106 appendix: to go out Low Vbat mode and enter in normal mode we need to send a SAMConfiguration command
-      if ((res = pn53x_SAMConfiguration (pnd, 0x01, 1000)) < 0) {
+      if ((res = pn53x_SAMConfiguration(pnd, 0x01, 1000)) < 0) {
         return res;
       }
     }
@@ -320,27 +320,27 @@ pn532_uart_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szData, i
   uint8_t  abtFrame[PN532_BUFFER_LEN] = { 0x00, 0x00, 0xff };       // Every packet must start with "00 00 ff"
   size_t szFrame = 0;
 
-  if ((res = pn53x_build_frame (abtFrame, &szFrame, pbtData, szData)) < 0) {
+  if ((res = pn53x_build_frame(abtFrame, &szFrame, pbtData, szData)) < 0) {
     pnd->last_error = res;
     return pnd->last_error;
   }
 
-  res = uart_send (DRIVER_DATA(pnd)->port, abtFrame, szFrame, timeout);
+  res = uart_send(DRIVER_DATA(pnd)->port, abtFrame, szFrame, timeout);
   if (res != 0) {
-    log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Unable to transmit data. (TX)");
+    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Unable to transmit data. (TX)");
     pnd->last_error = res;
     return pnd->last_error;
   }
 
   uint8_t abtRxBuf[6];
-  res = uart_receive (DRIVER_DATA(pnd)->port, abtRxBuf, 6, 0, timeout);
+  res = uart_receive(DRIVER_DATA(pnd)->port, abtRxBuf, 6, 0, timeout);
   if (res != 0) {
-    log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Unable to read ACK");
+    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Unable to read ACK");
     pnd->last_error = res;
     return pnd->last_error;
   }
 
-  if (pn53x_check_ack_frame (pnd, abtRxBuf, sizeof(abtRxBuf)) == 0) {
+  if (pn53x_check_ack_frame(pnd, abtRxBuf, sizeof(abtRxBuf)) == 0) {
     // The PN53x is running the sent command
   } else {
     return pnd->last_error;
@@ -349,22 +349,22 @@ pn532_uart_send (nfc_device *pnd, const uint8_t *pbtData, const size_t szData, i
 }
 
 int
-pn532_uart_receive (nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, int timeout)
+pn532_uart_receive(nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, int timeout)
 {
   uint8_t  abtRxBuf[5];
   size_t len;
   void *abort_p = NULL;
 
 #ifndef WIN32
-  abort_p = &(DRIVER_DATA (pnd)->iAbortFds[1]);
+  abort_p = &(DRIVER_DATA(pnd)->iAbortFds[1]);
 #else
-  abort_p = (void*) & (DRIVER_DATA (pnd)->abort_flag);
+  abort_p = (void*) & (DRIVER_DATA(pnd)->abort_flag);
 #endif
 
-  pnd->last_error = uart_receive (DRIVER_DATA (pnd)->port, abtRxBuf, 5, abort_p, timeout);
+  pnd->last_error = uart_receive(DRIVER_DATA(pnd)->port, abtRxBuf, 5, abort_p, timeout);
 
   if (abort_p && (NFC_EOPABORTED == pnd->last_error)) {
-    return pn532_uart_ack (pnd);
+    return pn532_uart_ack(pnd);
   }
 
   if (pnd->last_error < 0) {
@@ -372,29 +372,29 @@ pn532_uart_receive (nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, i
   }
 
   const uint8_t pn53x_preamble[3] = { 0x00, 0x00, 0xff };
-  if (0 != (memcmp (abtRxBuf, pn53x_preamble, 3))) {
-    log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Frame preamble+start code mismatch");
+  if (0 != (memcmp(abtRxBuf, pn53x_preamble, 3))) {
+    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Frame preamble+start code mismatch");
     pnd->last_error = NFC_EIO;
     goto error;
   }
 
   if ((0x01 == abtRxBuf[3]) && (0xff == abtRxBuf[4])) {
     // Error frame
-    uart_receive (DRIVER_DATA (pnd)->port, abtRxBuf, 3, 0, timeout);
-    log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Application level error detected");
+    uart_receive(DRIVER_DATA(pnd)->port, abtRxBuf, 3, 0, timeout);
+    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Application level error detected");
     pnd->last_error = NFC_EIO;
     goto error;
   } else if ((0xff == abtRxBuf[3]) && (0xff == abtRxBuf[4])) {
     // Extended frame
-    pnd->last_error = uart_receive (DRIVER_DATA(pnd)->port, abtRxBuf, 3, 0, timeout);
+    pnd->last_error = uart_receive(DRIVER_DATA(pnd)->port, abtRxBuf, 3, 0, timeout);
     if (pnd->last_error != 0) {
-      log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Unable to receive data. (RX)");
+      log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Unable to receive data. (RX)");
       goto error;
     }
     // (abtRxBuf[0] << 8) + abtRxBuf[1] (LEN) include TFI + (CC+1)
     len = (abtRxBuf[0] << 8) + abtRxBuf[1] - 2;
     if (((abtRxBuf[0] + abtRxBuf[1] + abtRxBuf[2]) % 256) != 0) {
-      log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Length checksum mismatch");
+      log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Length checksum mismatch");
       pnd->last_error = NFC_EIO;
       goto error;
     }
@@ -402,7 +402,7 @@ pn532_uart_receive (nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, i
     // Normal frame
     if (256 != (abtRxBuf[3] + abtRxBuf[4])) {
       // TODO: Retry
-      log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Length checksum mismatch");
+      log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Length checksum mismatch");
       pnd->last_error = NFC_EIO;
       goto error;
     }
@@ -412,70 +412,70 @@ pn532_uart_receive (nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, i
   }
 
   if (len > szDataLen) {
-    log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to receive data: buffer too small. (szDataLen: %zu, len: %zu)", szDataLen, len);
+    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to receive data: buffer too small. (szDataLen: %zu, len: %zu)", szDataLen, len);
     pnd->last_error = NFC_EIO;
     goto error;
   }
 
   // TFI + PD0 (CC+1)
-  pnd->last_error = uart_receive (DRIVER_DATA (pnd)->port, abtRxBuf, 2, 0, timeout);
+  pnd->last_error = uart_receive(DRIVER_DATA(pnd)->port, abtRxBuf, 2, 0, timeout);
   if (pnd->last_error != 0) {
-    log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Unable to receive data. (RX)");
+    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Unable to receive data. (RX)");
     goto error;
   }
 
   if (abtRxBuf[0] != 0xD5) {
-    log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "TFI Mismatch");
+    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "TFI Mismatch");
     pnd->last_error = NFC_EIO;
     goto error;
   }
 
-  if (abtRxBuf[1] != CHIP_DATA (pnd)->last_command + 1) {
-    log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Command Code verification failed");
+  if (abtRxBuf[1] != CHIP_DATA(pnd)->last_command + 1) {
+    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Command Code verification failed");
     pnd->last_error = NFC_EIO;
     goto error;
   }
 
   if (len) {
-    pnd->last_error = uart_receive (DRIVER_DATA (pnd)->port, pbtData, len, 0, timeout);
+    pnd->last_error = uart_receive(DRIVER_DATA(pnd)->port, pbtData, len, 0, timeout);
     if (pnd->last_error != 0) {
-      log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Unable to receive data. (RX)");
+      log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Unable to receive data. (RX)");
       goto error;
     }
   }
 
-  pnd->last_error = uart_receive (DRIVER_DATA (pnd)->port, abtRxBuf, 2, 0, timeout);
+  pnd->last_error = uart_receive(DRIVER_DATA(pnd)->port, abtRxBuf, 2, 0, timeout);
   if (pnd->last_error != 0) {
-    log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Unable to receive data. (RX)");
+    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Unable to receive data. (RX)");
     goto error;
   }
 
   uint8_t btDCS = (256 - 0xD5);
-  btDCS -= CHIP_DATA (pnd)->last_command + 1;
+  btDCS -= CHIP_DATA(pnd)->last_command + 1;
   for (size_t szPos = 0; szPos < len; szPos++) {
     btDCS -= pbtData[szPos];
   }
 
   if (btDCS != abtRxBuf[0]) {
-    log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Data checksum mismatch");
+    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Data checksum mismatch");
     pnd->last_error = NFC_EIO;
     goto error;
   }
 
   if (0x00 != abtRxBuf[1]) {
-    log_put (LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Frame postamble mismatch");
+    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Frame postamble mismatch");
     pnd->last_error = NFC_EIO;
     goto error;
   }
   // The PN53x command is done and we successfully received the reply
   return len;
 error:
-  uart_flush_input (DRIVER_DATA (pnd)->port);
+  uart_flush_input(DRIVER_DATA(pnd)->port);
   return pnd->last_error;
 }
 
 int
-pn532_uart_ack (nfc_device *pnd)
+pn532_uart_ack(nfc_device *pnd)
 {
   int res = 0;
   if (POWERDOWN == CHIP_DATA(pnd)->power_mode) {
@@ -483,18 +483,18 @@ pn532_uart_ack (nfc_device *pnd)
       return res;
     }
   }
-  return (uart_send (DRIVER_DATA(pnd)->port, pn53x_ack_frame, sizeof (pn53x_ack_frame),  0));
+  return (uart_send(DRIVER_DATA(pnd)->port, pn53x_ack_frame, sizeof(pn53x_ack_frame),  0));
 }
 
 static int
-pn532_uart_abort_command (nfc_device *pnd)
+pn532_uart_abort_command(nfc_device *pnd)
 {
   if (pnd) {
 #ifndef WIN32
-    close (DRIVER_DATA (pnd)->iAbortFds[0]);
-    pipe (DRIVER_DATA (pnd)->iAbortFds);
+    close(DRIVER_DATA(pnd)->iAbortFds[0]);
+    pipe(DRIVER_DATA(pnd)->iAbortFds);
 #else
-    DRIVER_DATA (pnd)->abort_flag = true;
+    DRIVER_DATA(pnd)->abort_flag = true;
 #endif
   }
   return NFC_SUCCESS;
