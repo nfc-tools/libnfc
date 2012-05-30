@@ -844,12 +844,11 @@ pn53x_set_property_bool(struct nfc_device *pnd, const nfc_property property, con
       // TODO Made some research around this point:
       // timings could be tweak better than this, and maybe we can tweak timings
       // to "gain" a sort-of hardware polling (ie. like PN532 does)
-      if (pn53x_RFConfiguration__MaxRetries(pnd,
+      return pn53x_RFConfiguration__MaxRetries(pnd,
                                             (bEnable) ? 0xff : 0x00,        // MxRtyATR, default: active = 0xff, passive = 0x02
                                             (bEnable) ? 0xff : 0x01,        // MxRtyPSL, default: 0x01
                                             (bEnable) ? 0xff : 0x02         // MxRtyPassiveActivation, default: 0xff (0x00 leads to problems with PN531)
-                                           ) == 0)
-        return NFC_SUCCESS;
+                                           );
     }
     break;
 
