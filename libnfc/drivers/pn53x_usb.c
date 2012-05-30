@@ -649,7 +649,7 @@ read:
 int
 pn53x_usb_ack(nfc_device *pnd)
 {
-  return pn53x_usb_bulk_write(DRIVER_DATA(pnd), (uint8_t *) pn53x_ack_frame, sizeof(pn53x_ack_frame), 0);
+  return pn53x_usb_bulk_write(DRIVER_DATA(pnd), (uint8_t *) pn53x_ack_frame, sizeof(pn53x_ack_frame), -1);
 }
 
 int
@@ -659,13 +659,13 @@ pn53x_usb_init(nfc_device *pnd)
   // Sometimes PN53x USB doesn't reply ACK one the first frame, so we need to send a dummy one...
   //pn53x_check_communication (pnd); // Sony RC-S360 doesn't support this command for now so let's use a get_firmware_version instead:
   const uint8_t abtCmd[] = { GetFirmwareVersion };
-  pn53x_transceive(pnd, abtCmd, sizeof(abtCmd), NULL, 0, 0);
+  pn53x_transceive(pnd, abtCmd, sizeof(abtCmd), NULL, 0, -1);
   // ...and we don't care about error
   pnd->last_error = 0;
   if (SONY_RCS360 == DRIVER_DATA(pnd)->model) {
     log_put(LOG_CATEGORY, NFC_PRIORITY_TRACE, "%s", "SONY RC-S360 initialization.");
     const uint8_t abtCmd2[] = { 0x18, 0x01 };
-    pn53x_transceive(pnd, abtCmd2, sizeof(abtCmd2), NULL, 0, 0);
+    pn53x_transceive(pnd, abtCmd2, sizeof(abtCmd2), NULL, 0, -1);
     pn53x_usb_ack(pnd);
   }
 
