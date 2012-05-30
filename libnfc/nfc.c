@@ -456,10 +456,6 @@ nfc_initiator_list_passive_targets(nfc_device *pnd,
   prepare_initiator_data(nm, &pbtInitData, &szInitDataLen);
 
   while (nfc_initiator_select_passive_target(pnd, nm, pbtInitData, szInitDataLen, &nt) > 0) {
-    nfc_initiator_deselect_target(pnd);
-    if (szTargets == szTargetFound) {
-      break;
-    }
     size_t i;
     bool seen = false;
     // Check if we've already seen this tag
@@ -473,6 +469,10 @@ nfc_initiator_list_passive_targets(nfc_device *pnd,
     }
     memcpy(&(ant[szTargetFound]), &nt, sizeof(nfc_target));
     szTargetFound++;
+    if (szTargets == szTargetFound) {
+      break;
+    }
+    nfc_initiator_deselect_target(pnd);
     // deselect has no effect on FeliCa and Jewel cards so we'll stop after one...
     // ISO/IEC 14443 B' cards are polled at 100% probability so it's not possible to detect correctly two cards at the same time
     if ((nm.nmt == NMT_FELICA) || (nm.nmt == NMT_JEWEL) || (nm.nmt == NMT_ISO14443BI) || (nm.nmt == NMT_ISO14443B2SR) || (nm.nmt == NMT_ISO14443B2CT)) {
