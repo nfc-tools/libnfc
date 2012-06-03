@@ -1325,6 +1325,7 @@ pn53x_initiator_transceive_bytes(struct nfc_device *pnd, const uint8_t *pbtTx, c
   const size_t szRxLen = (size_t)res - 1;
   if (pbtRx != NULL) {
     if (szRxLen >  szRx) {
+      log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "Buffer size is too short: %zuo available(s), %zuo needed", szRx, szRxLen);
       return NFC_EOVFLOW;
     }
     // Copy the received bytes
