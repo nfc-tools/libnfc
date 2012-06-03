@@ -614,6 +614,9 @@ nfc_initiator_deselect_target(nfc_device *pnd)
  * Tests show that on average this way of communicating is much faster than using the regular driver/middle-ware (often supplied by manufacturers).
  *
  * @warning The configuration option \a NP_HANDLE_PARITY must be set to \c true (the default value).
+ * 
+ * @note When used with MIFARE Classic, NFC_ETGRELEASED error is returned if authentication command failed. You need to re-select the tag to operate with.
+ * 
  */
 int
 nfc_initiator_transceive_bytes(nfc_device *pnd, const uint8_t *pbtTx, const size_t szTx, uint8_t *pbtRx,

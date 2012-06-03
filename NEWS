@@ -14,6 +14,8 @@ API Changes:
       take a constant size for Rx buffer
     - New nfc_initiator_target_is_present() to test is the previously selected
       target is available in the field
+    - nfc_initiator_transceive_bytes() returns NFC_ETGRELEASED when AUTH
+      command failed on a Mifare Classic.
 
 New in 1.6.0-rc1:
 
