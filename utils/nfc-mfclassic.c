@@ -175,7 +175,7 @@ authenticate(uint32_t uiBlock)
   size_t  key_index;
 
   // Set the authentication information (uid)
-  memcpy(mp.mpa.abtUid, nt.nti.nai.abtUid + nt.nti.nai.szUidLen - 4, 4);
+  memcpy(mp.mpa.abtAuthUid, nt.nti.nai.abtUid + nt.nti.nai.szUidLen - 4, 4);
 
   // Should we use key A or B?
   mc = (bUseKeyA) ? MC_AUTH_A : MC_AUTH_B;
