@@ -839,18 +839,16 @@ pn53x_set_property_bool(struct nfc_device *pnd, const nfc_property property, con
       return NFC_SUCCESS;
       break;
 
-    case NP_ACTIVATE_FIELD: {
-      if (pn53x_RFConfiguration__RF_field(pnd, bEnable) == 0)
-        return NFC_SUCCESS;
-    }
-    break;
+    case NP_ACTIVATE_FIELD:
+      return pn53x_RFConfiguration__RF_field(pnd, bEnable);
+      break;
 
     case NP_ACTIVATE_CRYPTO1:
       btValue = (bEnable) ? SYMBOL_MF_CRYPTO1_ON : 0x00;
       return pn53x_write_register(pnd, PN53X_REG_CIU_Status2, SYMBOL_MF_CRYPTO1_ON, btValue);
       break;
 
-    case NP_INFINITE_SELECT: {
+    case NP_INFINITE_SELECT:
       // TODO Made some research around this point:
       // timings could be tweak better than this, and maybe we can tweak timings
       // to "gain" a sort-of hardware polling (ie. like PN532 does)
@@ -859,8 +857,7 @@ pn53x_set_property_bool(struct nfc_device *pnd, const nfc_property property, con
                                                (bEnable) ? 0xff : 0x01,        // MxRtyPSL, default: 0x01
                                                (bEnable) ? 0xff : 0x02         // MxRtyPassiveActivation, default: 0xff (0x00 leads to problems with PN531)
                                               );
-    }
-    break;
+      break;
 
     case NP_ACCEPT_INVALID_FRAMES:
       btValue = (bEnable) ? SYMBOL_RX_NO_ERROR : 0x00;
