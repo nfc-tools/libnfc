@@ -2,7 +2,7 @@
  * Public platform independent Near Field Communication (NFC) library
  *
  * Copyright (C) 2009, Roel Verdult
- * Copyright (C) 2010, Romuald Conty
+ * Copyright (C) 2010-2012, Romuald Conty
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -76,6 +76,7 @@ extern  "C" {
 
   /* NFC initiator: act as "reader" */
   NFC_EXPORT int nfc_initiator_init(nfc_device *pnd);
+  NFC_EXPORT int nfc_initiator_init_secure_element(nfc_device *pnd);
   NFC_EXPORT int nfc_initiator_select_passive_target(nfc_device *pnd, const nfc_modulation nm, const uint8_t *pbtInitData, const size_t szInitData, nfc_target *pnt);
   NFC_EXPORT int nfc_initiator_list_passive_targets(nfc_device *pnd, const nfc_modulation nm, nfc_target ant[], const size_t szTargets);
   NFC_EXPORT int nfc_initiator_poll_target(nfc_device *pnd, const nfc_modulation *pnmTargetTypes, const size_t szTargetTypes, const uint8_t uiPollNr, const uint8_t uiPeriod, nfc_target *pnt);

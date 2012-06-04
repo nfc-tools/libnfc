@@ -571,6 +571,7 @@ const struct nfc_driver arygon_driver = {
   .strerror                         = pn53x_strerror,
 
   .initiator_init                   = pn53x_initiator_init,
+  .initiator_init_secure_element    = NULL, // No secure-element support
   .initiator_select_passive_target  = pn53x_initiator_select_passive_target,
   .initiator_poll_target            = pn53x_initiator_poll_target,
   .initiator_select_dep_target      = pn53x_initiator_select_dep_target,

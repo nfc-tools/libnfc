@@ -135,6 +135,17 @@ typedef enum {
 } pn53x_operating_mode;
 
 /**
+ * @enum pn532_sam_mode
+ * @brief PN532 SAM mode enumeration
+ */
+typedef enum {
+  PSM_NORMAL = 0x01,
+  PSM_VIRTUAL_CARD = 0x02,
+  PSM_WIRED_CARD = 0x03,
+  PSM_DUAL_CARD = 0x04
+} pn532_sam_mode;
+
+/**
  * @internal
  * @struct pn53x_io
  * @brief PN53x I/O structure
@@ -165,6 +176,8 @@ struct pn53x_data {
   pn53x_operating_mode operating_mode;
   /** Current emulated target */
   nfc_target *current_target;
+  /** Current sam mode (only applicable for PN532) */
+  pn532_sam_mode sam_mode;
   /** PN53x I/O functions stored in struct */
   const struct pn53x_io *io;
   /** Last status byte returned by PN53x */
@@ -263,17 +276,6 @@ typedef enum {
 } pn53x_target_type;
 
 /**
- * @enum pn532_sam_mode
- * @brief PN53x SAM mode enumeration
- */
-typedef enum {
-  PSM_NORMAL = 0x01,
-  PSM_VIRTUAL_CARD = 0x02,
-  PSM_WIRED_CARD = 0x03,
-  PSM_DUAL_CARD = 0x04
-} pn532_sam_mode;
-
-/**
  * @enum pn53x_target_mode
  * @brief PN53x target mode enumeration
  */
@@ -312,6 +314,7 @@ int    pn53x_idle(struct nfc_device *pnd);
 
 // NFC device as Initiator functions
 int    pn53x_initiator_init(struct nfc_device *pnd);
+int    pn532_initiator_init_secure_element(struct nfc_device *pnd);
 int    pn53x_initiator_select_passive_target(struct nfc_device *pnd,
                                              const nfc_modulation nm,
                                              const uint8_t *pbtInitData, const size_t szInitData,
@@ -348,7 +351,7 @@ const char *pn53x_strerror(const struct nfc_device *pnd);
 
 // C wrappers for PN53x commands
 int    pn53x_SetParameters(struct nfc_device *pnd, const uint8_t ui8Value);
-int    pn53x_SAMConfiguration(struct nfc_device *pnd, const pn532_sam_mode mode, int timeout);
+int    pn532_SAMConfiguration(struct nfc_device *pnd, const pn532_sam_mode mode, int timeout);
 int    pn53x_PowerDown(struct nfc_device *pnd);
 int    pn53x_InListPassiveTarget(struct nfc_device *pnd, const pn53x_modulation pmInitModulation,
                                  const uint8_t szMaxTargets, const uint8_t *pbtInitiatorData,

@@ -371,6 +371,21 @@ nfc_initiator_init(nfc_device *pnd)
 }
 
 /** @ingroup initiator
+ * @brief Initialize NFC device as initiator with its secure element initiator (reader)
+ * @return Returns 0 on success, otherwise returns libnfc's error code (negative value)
+ * @param pnd \a nfc_device struct pointer that represent currently used device
+ *
+ * The NFC device is configured to function as secure element reader.
+ * After initialization it can be used to communicate with the secure element.
+ * @note RF field is desactvated in order to some power
+ */
+int
+nfc_initiator_init_secure_element(nfc_device *pnd)
+{
+  HAL(initiator_init_secure_element, pnd);
+}
+
+/** @ingroup initiator
  * @brief Select a passive or emulated tag
  * @return Returns selected passive target count on success, otherwise returns libnfc's error code (negative value)
  *

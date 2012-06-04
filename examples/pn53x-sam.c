@@ -118,25 +118,23 @@ main(int argc, const char *argv[])
   pn532_sam_mode mode = iMode;
 
   // Connect with the SAM
-  // FIXME: Its a private pn53x function
-  if (pn53x_SAMConfiguration(pnd, mode, 0) < 0) {
-    nfc_perror(pnd, "pn53x_SAMConfiguration");
-    goto error;
-  }
 
   switch (mode) {
     case PSM_VIRTUAL_CARD: {
+      // FIXME Its a private pn53x function
+      if (pn532_SAMConfiguration(pnd, mode, 0) < 0) {
+        nfc_perror(pnd, "pn53x_SAMConfiguration");
+        goto error;
+      }
       printf("Now the SAM is readable for 1 minute from an external reader.\n");
       wait_one_minute();
     }
     break;
 
     case PSM_WIRED_CARD: {
-      nfc_target nt;
-
       // Set opened NFC device to initiator mode
-      if (nfc_initiator_init(pnd) < 0) {
-        nfc_perror(pnd, "nfc_initiator_init");
+      if (nfc_initiator_init_secure_element(pnd) < 0) {
+        nfc_perror(pnd, "nfc_initiator_init_secure_element");
         goto error;
       }
 
@@ -150,6 +148,8 @@ main(int argc, const char *argv[])
         .nmt = NMT_ISO14443A,
         .nbr = NBR_106,
       };
+      nfc_target nt;
+
       int res;
       if ((res = nfc_initiator_select_passive_target(pnd, nmSAM, NULL, 0, &nt)) < 0) {
         nfc_perror(pnd, "nfc_initiator_select_passive_target");
@@ -168,6 +168,11 @@ main(int argc, const char *argv[])
     break;
 
     case PSM_DUAL_CARD: {
+      // FIXME Its a private pn53x function
+      if (pn532_SAMConfiguration(pnd, mode, 0) < 0) {
+        nfc_perror(pnd, "pn53x_SAMConfiguration");
+        goto error;
+      }
       uint8_t  abtRx[MAX_FRAME_LEN];
 
       nfc_target nt = {
@@ -195,13 +200,14 @@ main(int argc, const char *argv[])
     }
     break;
     case PSM_NORMAL:
+      // This should not happend... nothing to do.
       break;
   }
   ret = EXIT_SUCCESS;
 
 error:
   // Disconnect from the SAM
-  pn53x_SAMConfiguration(pnd, PSM_NORMAL, 0);
+  pn532_SAMConfiguration(pnd, PSM_NORMAL, -1);
 
   // Close NFC device
   nfc_close(pnd);

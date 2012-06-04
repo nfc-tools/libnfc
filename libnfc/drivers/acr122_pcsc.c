@@ -494,6 +494,7 @@ const struct nfc_driver acr122_pcsc_driver = {
   .strerror                         = pn53x_strerror,
 
   .initiator_init                   = pn53x_initiator_init,
+  .initiator_init_secure_element    = NULL, // No secure-element support
   .initiator_select_passive_target  = pn53x_initiator_select_passive_target,
   .initiator_poll_target            = pn53x_initiator_poll_target,
   .initiator_select_dep_target      = pn53x_initiator_select_dep_target,
@@ -516,7 +517,7 @@ const struct nfc_driver acr122_pcsc_driver = {
   .get_supported_baud_rate      = pn53x_get_supported_baud_rate,
   .device_get_information_about = pn53x_get_information_about,
 
-  .abort_command  = NULL,  // FIXME: abort is not supported in this driver
-  .idle  = NULL,           // FIXME: idle is not supported in this driver
+  .abort_command  = NULL,  // Abort is not supported in this driver
+  .idle  = NULL,           // Idle is not supported in this driver
 };
 

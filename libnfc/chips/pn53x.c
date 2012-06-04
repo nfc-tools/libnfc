@@ -998,7 +998,12 @@ int
 pn53x_initiator_init(struct nfc_device *pnd)
 {
   pn53x_reset_settings(pnd);
-  int res = 0;
+  int res;
+  if (CHIP_DATA(pnd)->sam_mode != PSM_NORMAL) {
+    if ((res = pn532_SAMConfiguration(pnd, PSM_NORMAL, -1)) < 0) {
+      return res;
+    }
+  }
 
   // Configure the PN53X to be an Initiator or Reader/Writer
   if ((res = pn53x_write_register(pnd, PN53X_REG_CIU_Control, SYMBOL_INITIATOR, 0x10)) < 0)
@@ -1006,6 +1011,12 @@ pn53x_initiator_init(struct nfc_device *pnd)
 
   CHIP_DATA(pnd)->operating_mode = INITIATOR;
   return NFC_SUCCESS;
+}
+
+int
+pn532_initiator_init_secure_element(struct nfc_device *pnd)
+{
+  return pn532_SAMConfiguration(pnd, PSM_WIRED_CARD, -1);
 }
 
 static int
@@ -2204,9 +2215,9 @@ pn53x_SetParameters(struct nfc_device *pnd, const uint8_t ui8Value)
 }
 
 int
-pn53x_SAMConfiguration(struct nfc_device *pnd, const pn532_sam_mode ui8Mode, int timeout)
+pn532_SAMConfiguration(struct nfc_device *pnd, const pn532_sam_mode sam_mode, int timeout)
 {
-  uint8_t  abtCmd[] = { SAMConfiguration, ui8Mode, 0x00, 0x00 };
+  uint8_t abtCmd[] = { SAMConfiguration, sam_mode, 0x00, 0x00 };
   size_t szCmd = sizeof(abtCmd);
 
   if (CHIP_DATA(pnd)->type != PN532) {
@@ -2215,12 +2226,12 @@ pn53x_SAMConfiguration(struct nfc_device *pnd, const pn532_sam_mode ui8Mode, int
     return pnd->last_error;
   }
 
-  switch (ui8Mode) {
+  switch (sam_mode) {
     case PSM_NORMAL: // Normal mode
+    case PSM_WIRED_CARD: // Wired card mode
       szCmd = 2;
       break;
     case PSM_VIRTUAL_CARD: // Virtual card mode
-    case PSM_WIRED_CARD: // Wired card mode
     case PSM_DUAL_CARD: // Dual card mode
       // TODO Implement timeout handling
       szCmd = 3;
@@ -2229,6 +2240,7 @@ pn53x_SAMConfiguration(struct nfc_device *pnd, const pn532_sam_mode ui8Mode, int
       pnd->last_error = NFC_EINVARG;
       return pnd->last_error;
   }
+  CHIP_DATA(pnd)->sam_mode = sam_mode;
   return (pn53x_transceive(pnd, abtCmd, szCmd, NULL, 0, timeout));
 }
 
@@ -3079,6 +3091,9 @@ pn53x_data_new(struct nfc_device *pnd, const struct pn53x_io *io)
 
   // Set current target to NULL
   CHIP_DATA(pnd)->current_target = NULL;
+
+  // Set current sam_mode to normal mode
+  CHIP_DATA(pnd)->sam_mode = PSM_NORMAL;
 
   // WriteBack cache is clean
   CHIP_DATA(pnd)->wb_trigged = false;

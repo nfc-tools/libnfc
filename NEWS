@@ -3,7 +3,8 @@ New in TBD:
 API Changes:
 
   * Types
-    - New NFC_ESOFT error to handle software errors (allocations, pie creation, etc.)
+    - New NFC_ESOFT error to handle software errors (allocations, pipe
+      creation, etc.)
 
   * Functions
     - New enum-to-string converter functions str_nfc_modulation_type() and
@@ -15,7 +16,9 @@ API Changes:
     - New nfc_initiator_target_is_present() to test is the previously selected
       target is available in the field
     - nfc_initiator_transceive_bytes() returns NFC_ETGRELEASED when AUTH
-      command failed on a Mifare Classic.
+      command failed on a Mifare Classic
+    - New nfc_initiator_init_secure_element() to initiate a connection with
+      secure element (Only supported with a PN532 with SAM equipped)
 
 New in 1.6.0-rc1:
 

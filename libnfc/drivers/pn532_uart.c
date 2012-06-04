@@ -301,7 +301,7 @@ pn532_uart_send(nfc_device *pnd, const uint8_t *pbtData, const size_t szData, in
         return res;
       }
       // According to PN532 application note, C106 appendix: to go out Low Vbat mode and enter in normal mode we need to send a SAMConfiguration command
-      if ((res = pn53x_SAMConfiguration(pnd, 0x01, 1000)) < 0) {
+      if ((res = pn532_SAMConfiguration(pnd, PSM_NORMAL, 1000)) < 0) {
         return res;
       }
     }
@@ -513,6 +513,7 @@ const struct nfc_driver pn532_uart_driver = {
   .strerror                         = pn53x_strerror,
 
   .initiator_init                   = pn53x_initiator_init,
+  .initiator_init_secure_element    = pn532_initiator_init_secure_element, // No secure-element support
   .initiator_select_passive_target  = pn53x_initiator_select_passive_target,
   .initiator_poll_target            = pn53x_initiator_poll_target,
   .initiator_select_dep_target      = pn53x_initiator_select_dep_target,
