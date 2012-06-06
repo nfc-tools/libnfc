@@ -198,13 +198,21 @@ nfc_open(nfc_context *context, const nfc_connstring connstring)
   while ((ndr = *pndr)) {
     // Specific device is requested: using device description
     if (0 != strncmp(ndr->name, ncs, strlen(ndr->name))) {
-      pndr++;
-      continue;
+      // Check if connstring driver is usb -> accept any driver *_usb
+      if ((0 != strncmp("usb", ncs, strlen("usb"))) || 0 != strncmp ("_usb", ndr->name + (strlen(ndr->name) - 4), 4)) {
+        pndr++;
+        continue;
+      }
     }
 
     pnd = ndr->open(ncs);
     // Test if the opening was successful
     if (pnd == NULL) {
+      if (0 == strncmp("usb", ncs, strlen("usb"))) {
+        // We've to test the other usb drivers before giving up
+        pndr++;
+        continue;
+      }
       log_put(LOG_CATEGORY, NFC_PRIORITY_TRACE, "Unable to open \"%s\".", ncs);
       log_fini();
       return pnd;

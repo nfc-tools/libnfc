@@ -275,7 +275,7 @@ acr122_usb_connstring_decode(const nfc_connstring connstring, struct acr122_usb_
 
   int res = sscanf(connstring, "%[^:]:%[^:]:%[^:]", driver_name, dirname, filename);
 
-  if (!res || (0 != strcmp(driver_name, ACR122_USB_DRIVER_NAME))) {
+  if (!res || ((0 != strcmp(driver_name, ACR122_USB_DRIVER_NAME)) && (0 != strcmp(driver_name, "usb")))) {
     // Driver name does not match.
     res = 0;
   } else {
