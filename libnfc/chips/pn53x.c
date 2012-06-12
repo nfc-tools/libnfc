@@ -1681,7 +1681,10 @@ pn53x_initiator_target_is_present(struct nfc_device *pnd, const nfc_target nt)
   uint8_t abtRx[1];
   int res = 0;
 
-  if ((res = pn53x_transceive(pnd, abtCmd, sizeof(abtCmd), abtRx, sizeof(abtRx), -1)) < 0)
+  // Card Presence command can take more time than default one: when a card is
+  // removed from the field, the PN53x took few hundred ms more to reply
+  // correctly. (ie. 700 ms should be enough to detect all tested cases)
+  if ((res = pn53x_transceive(pnd, abtCmd, sizeof(abtCmd), abtRx, sizeof(abtRx), 700)) < 0)
     return res;
   if (res == 1) {
     return NFC_SUCCESS;
