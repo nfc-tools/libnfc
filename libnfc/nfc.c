@@ -363,18 +363,6 @@ nfc_initiator_init(nfc_device *pnd)
   // Disallow multiple frames
   if ((res = nfc_device_set_property_bool(pnd, NP_ACCEPT_MULTIPLE_FRAMES, false)) < 0)
     return res;
-  // Make sure we reset the CRC and parity to chip handling.
-  if ((res = nfc_device_set_property_bool(pnd, NP_HANDLE_CRC, true)) < 0)
-    return res;
-  if ((res = nfc_device_set_property_bool(pnd, NP_HANDLE_PARITY, true)) < 0)
-    return res;
-  // Activate "easy framing" feature by default
-  if ((res = nfc_device_set_property_bool(pnd, NP_EASY_FRAMING, true)) < 0)
-    return res;
-  // Deactivate the CRYPTO1 cipher, it may could cause problems when still active
-  if ((res = nfc_device_set_property_bool(pnd, NP_ACTIVATE_CRYPTO1, false)) < 0)
-    return res;
-
   HAL(initiator_init, pnd);
 }
 

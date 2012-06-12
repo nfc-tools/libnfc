@@ -129,6 +129,18 @@ pn53x_reset_settings(struct nfc_device *pnd)
   if ((res = pn53x_write_register(pnd, PN53X_REG_CIU_BitFraming, SYMBOL_TX_LAST_BITS, 0x00)) < 0) {
     return res;
   }
+  // Make sure we reset the CRC and parity to chip handling.
+  if ((res = pn53x_set_property_bool(pnd, NP_HANDLE_CRC, true)) < 0)
+    return res;
+  if ((res = pn53x_set_property_bool(pnd, NP_HANDLE_PARITY, true)) < 0)
+    return res;
+  // Activate "easy framing" feature by default
+  if ((res = pn53x_set_property_bool(pnd, NP_EASY_FRAMING, true)) < 0)
+    return res;
+  // Deactivate the CRYPTO1 cipher, it may could cause problems when still active
+  if ((res = pn53x_set_property_bool(pnd, NP_ACTIVATE_CRYPTO1, false)) < 0)
+    return res;
+
   return NFC_SUCCESS;
 }
 
