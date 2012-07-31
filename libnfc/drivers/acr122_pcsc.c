@@ -89,6 +89,7 @@ const char *supported_devices[] = {
   "ACS ACR122",         // ACR122U & Touchatag, last version
   "ACS ACR 38U-CCID",   // Touchatag, early version
   "ACS ACR38U-CCID",    // Touchatag, early version, under MacOSX
+  "ACS AET65",          // Touchatag using CCID driver version >= 1.4.6
   "    CCID USB",       // ??
   NULL
 };
