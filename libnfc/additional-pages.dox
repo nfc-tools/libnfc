@@ -33,7 +33,7 @@
  *
  * @section example_1_sec Simple tag UID reader.
  * This short commented code example should be helpful to quick start development with \b libnfc, it grab the first available NFC device and print the first found ISO14443-A tag (e.g. MIFARE Classic, MIFARE Ultralight).
- * @include quick_start_example1.c
+ * @include examples/doc/quick_start_example1.c
  */
 
 /**
