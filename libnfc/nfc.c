@@ -60,8 +60,10 @@
  * @defgroup misc Miscellaneous
  *
  */
-
-/* vim:set ts=2 sw=2 et: */
+/**
+ * @defgroup string-converter  To-string converters
+ * The functionnality documented below allow to retreive some information in text format.
+ */
 
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
