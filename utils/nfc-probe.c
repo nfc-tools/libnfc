@@ -104,14 +104,15 @@ main(int argc, const char *argv[])
   }
 
   printf("%d NFC device(s) found:\n", (int)szDeviceFound);
-  char strinfo[1024];
+  char *strinfo = NULL;
   for (i = 0; i < szDeviceFound; i++) {
     pnd = nfc_open(NULL, connstrings[i]);
     if (pnd != NULL) {
       printf("- %s:\n    %s\n", nfc_device_get_name(pnd), nfc_device_get_connstring(pnd));
       if (verbose) {
-        if (nfc_device_get_information_about(pnd, strinfo, sizeof(strinfo)) >= 0) {
+        if (nfc_device_get_information_about(pnd, &strinfo) >= 0) {
           printf("%s", strinfo);
+          free(strinfo);
         }
       }
       nfc_close(pnd);

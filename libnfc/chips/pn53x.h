@@ -388,7 +388,7 @@ int    pn53x_check_error_frame(struct nfc_device *pnd, const uint8_t *pbtRxFrame
 int    pn53x_build_frame(uint8_t *pbtFrame, size_t *pszFrame, const uint8_t *pbtData, const size_t szData);
 int    pn53x_get_supported_modulation(nfc_device *pnd, const nfc_mode mode, const nfc_modulation_type **const supported_mt);
 int    pn53x_get_supported_baud_rate(nfc_device *pnd, const nfc_modulation_type nmt, const nfc_baud_rate **const supported_br);
-int    pn53x_get_information_about(nfc_device *pnd, char *buf, size_t buflen);
+int    pn53x_get_information_about(nfc_device *pnd, char **pbuf);
 
 void    pn53x_data_new(struct nfc_device *pnd, const struct pn53x_io *io);
 void    pn53x_data_free(struct nfc_device *pnd);

@@ -201,7 +201,7 @@ nfc_open(nfc_context *context, const nfc_connstring connstring)
     // Specific device is requested: using device description
     if (0 != strncmp(ndr->name, ncs, strlen(ndr->name))) {
       // Check if connstring driver is usb -> accept any driver *_usb
-      if ((0 != strncmp("usb", ncs, strlen("usb"))) || 0 != strncmp ("_usb", ndr->name + (strlen(ndr->name) - 4), 4)) {
+      if ((0 != strncmp("usb", ncs, strlen("usb"))) || 0 != strncmp("_usb", ndr->name + (strlen(ndr->name) - 4), 4)) {
         pndr++;
         continue;
       }
@@ -1076,13 +1076,14 @@ nfc_version(void)
  * @brief Print information about NFC device
  * @return Upon successful return, this function returns the number of characters printed (excluding the null byte used to end output to strings), otherwise returns libnfc's error code (negative value)
  * @param pnd \a nfc_device struct pointer that represent currently used device
- * @param buf string to print information
- * @param buflen buf length
+ * @param buf pointer where string will be allocated, then information printed
+ *
+ * @warning *buf must be freed.
  */
 int
-nfc_device_get_information_about(nfc_device *pnd, char *buf, size_t buflen)
+nfc_device_get_information_about(nfc_device *pnd, char **buf)
 {
-  HAL(device_get_information_about, pnd, buf, buflen);
+  HAL(device_get_information_about, pnd, buf);
 }
 
 /** @ingroup string-converter
