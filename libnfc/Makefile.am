@@ -8,7 +8,9 @@ noinst_HEADERS = \
 		 iso7816.h \
 		 log.h \
 		 mirror-subr.h \
-		 nfc-internal.h
+		 nfc-internal.h \
+		 target-subr.h
+
 lib_LTLIBRARIES = libnfc.la
 libnfc_la_SOURCES = \
 		    iso14443-subr.c \
@@ -16,7 +18,8 @@ libnfc_la_SOURCES = \
 		    nfc.c \
 		    nfc-device.c \
 		    nfc-emulation.c \
-		    nfc-internal.c
+		    nfc-internal.c \
+		    target-subr.c
 
 libnfc_la_LDFLAGS = -no-undefined -version-info 3:0:0 -export-symbols-regex '^nfc_|^iso14443a_|^str_nfc_|pn53x_transceive|pn532_SAMConfiguration'
 libnfc_la_CFLAGS = @DRIVERS_CFLAGS@

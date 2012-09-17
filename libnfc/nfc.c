@@ -78,6 +78,7 @@
 #include <nfc/nfc.h>
 
 #include "nfc-internal.h"
+#include "target-subr.h"
 #include "drivers.h"
 
 #define LOG_CATEGORY "libnfc.general"
@@ -1151,4 +1152,21 @@ str_nfc_modulation_type(const nfc_modulation_type nmt)
   }
   // Should never go there..
   return "";
+}
+
+/** @ingroup string-converter
+ * @brief Convert \a nfc_modulation_type value to string
+ * @return Upon successful return, this function returns the number of characters printed (excluding the null byte used to end output to strings), otherwise returns libnfc's error code (negative value)
+ * @param nt \a nfc_target struct to print
+ * @param buf pointer where string will be allocated, then nfc target information printed
+ *
+ * @warning *buf must be freed.
+*/
+int
+str_nfc_target(char **buf, const nfc_target nt, bool verbose)
+{
+  *buf = malloc(4096);
+  (*buf)[0] = '\0';
+  sprint_nfc_target(*buf, nt, verbose);
+  return strlen(*buf);
 }

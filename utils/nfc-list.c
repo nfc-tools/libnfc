@@ -148,7 +148,7 @@ main(int argc, const char *argv[])
         printf("%d ISO14443A passive target(s) found%s\n", res, (res == 0) ? ".\n" : ":");
       }
       for (n = 0; n < res; n++) {
-        print_nfc_iso14443a_info(ant[n].nti.nai, verbose);
+        print_nfc_target(ant[n], verbose);
         printf("\n");
       }
     }
@@ -162,7 +162,7 @@ main(int argc, const char *argv[])
         printf("%d Felica (212 kbps) passive target(s) found%s\n", res, (res == 0) ? ".\n" : ":");
       }
       for (n = 0; n < res; n++) {
-        print_nfc_felica_info(ant[n].nti.nfi, verbose);
+        print_nfc_target(ant[n], verbose);
         printf("\n");
       }
     }
@@ -174,7 +174,7 @@ main(int argc, const char *argv[])
         printf("%d Felica (424 kbps) passive target(s) found%s\n", res, (res == 0) ? ".\n" : ":");
       }
       for (n = 0; n < res; n++) {
-        print_nfc_felica_info(ant[n].nti.nfi, verbose);
+        print_nfc_target(ant[n], verbose);
         printf("\n");
       }
     }
@@ -188,7 +188,7 @@ main(int argc, const char *argv[])
         printf("%d ISO14443B passive target(s) found%s\n", res, (res == 0) ? ".\n" : ":");
       }
       for (n = 0; n < res; n++) {
-        print_nfc_iso14443b_info(ant[n].nti.nbi, verbose);
+        print_nfc_target(ant[n], verbose);
         printf("\n");
       }
     }
@@ -202,7 +202,7 @@ main(int argc, const char *argv[])
         printf("%d ISO14443B' passive target(s) found%s\n", res, (res == 0) ? ".\n" : ":");
       }
       for (n = 0; n < res; n++) {
-        print_nfc_iso14443bi_info(ant[n].nti.nii, verbose);
+        print_nfc_target(ant[n], verbose);
         printf("\n");
       }
     }
@@ -216,7 +216,7 @@ main(int argc, const char *argv[])
         printf("%d ISO14443B-2 ST SRx passive target(s) found%s\n", res, (res == 0) ? ".\n" : ":");
       }
       for (n = 0; n < res; n++) {
-        print_nfc_iso14443b2sr_info(ant[n].nti.nsi, verbose);
+        print_nfc_target(ant[n], verbose);
         printf("\n");
       }
     }
@@ -230,7 +230,7 @@ main(int argc, const char *argv[])
         printf("%d ISO14443B-2 ASK CTx passive target(s) found%s\n", res, (res == 0) ? ".\n" : ":");
       }
       for (n = 0; n < res; n++) {
-        print_nfc_iso14443b2ct_info(ant[n].nti.nci, verbose);
+        print_nfc_target(ant[n], verbose);
         printf("\n");
       }
     }
@@ -244,7 +244,7 @@ main(int argc, const char *argv[])
         printf("%d Jewel passive target(s) found%s\n", res, (res == 0) ? ".\n" : ":");
       }
       for (n = 0; n < res; n++) {
-        print_nfc_jewel_info(ant[n].nti.nji, verbose);
+        print_nfc_target(ant[n], verbose);
         printf("\n");
       }
     }

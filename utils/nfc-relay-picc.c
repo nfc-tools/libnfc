@@ -250,7 +250,7 @@ main(int argc, char *argv[])
     }
 
     printf("Found tag:\n");
-    print_nfc_iso14443a_info(ntRealTarget.nti.nai, false);
+    print_nfc_target(ntRealTarget, false);
     if (initiator_only_mode) {
       if (print_hex_fd4(ntRealTarget.nti.nai.abtUid, ntRealTarget.nti.nai.szUidLen, "UID") != EXIT_SUCCESS) {
         fprintf(stderr, "Error while printing UID to FD4\n");
@@ -350,7 +350,7 @@ main(int argc, char *argv[])
     memcpy(&(ntEmulatedTarget.nti.nai.abtAts[4]), pbtTkt, szTk);
 
     printf("We will emulate:\n");
-    print_nfc_iso14443a_info(ntEmulatedTarget.nti.nai, false);
+    print_nfc_target(ntEmulatedTarget, false);
 
     // Try to open the NFC emulator device
     pndTarget = nfc_open(NULL, connstrings[0]);

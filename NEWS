@@ -9,6 +9,7 @@ API Changes:
   * Functions
     - New enum-to-string converter functions str_nfc_modulation_type() and
       str_nfc_baud_rate()
+    - New str_nfc_target() to convert nfc_target struct into allocated string
     - New nfc_device_get_information_about() function to retreive some device's
       information
     - No more in/out function parameter: nfc_initiator_transceive_bytes() now

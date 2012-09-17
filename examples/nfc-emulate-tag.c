@@ -259,7 +259,7 @@ main(int argc, char *argv[])
   */
 
   printf("%s will emulate this ISO14443-A tag:\n", argv[0]);
-  print_nfc_iso14443a_info(nt.nti.nai, true);
+  print_nfc_target(nt, true);
 
   // Switch off NP_EASY_FRAMING if target is not ISO14443-4
   nfc_device_set_property_bool(pnd, NP_EASY_FRAMING, (nt.nti.nai.btSak & SAK_ISO14443_4_COMPLIANT));
