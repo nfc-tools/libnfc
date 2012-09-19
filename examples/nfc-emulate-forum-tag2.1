@@ -1,0 +1,52 @@
+.Dd September 19, 2012
+.Dt NFC-EMULATE-FORUM-TAG2 1 URM
+.Sh NAME
+.Nm nfc-emulate-forum-tag2
+.Nd NFC Forum tag type 2 emulation command line demonstration tool
+.Sh SYNOPSIS
+.Nm
+.Sh DESCRIPTION
+.Nm 
+is a demonstration tool that emulates a NFC-Forum Tag Type 2 with NDEF content.
+.Pp
+Some devices compliant with NFC-Forum Tag Type 2 can be used with this example,
+in read mode only.
+.Sh IMPORTANT
+This example has been developed using PN533 USB hardware as target and Google
+Nexus S phone as initiator.
+.Pp
+This is know to NOT work with Nokia 6212 Classic and could fail with several
+NFC Forum compliant devices due to the following reasons:
+.Pp
+- The emulated target has only a 4-byte UID while most devices assume a
+Tag Type 2 has always a 7-byte UID (as a real Mifare Ultralight tag);
+.Pp
+- The chip is emulating an ISO/IEC 14443-3 tag, without any hardware helper.
+If the initiator have too strict timeouts for software-based emulation
+(which is usually the case), this example will fail.
+This is not a bug and we can't do anything using this hardware (PN531/PN533).
+.Pp
+ACR122 devices (like touchatag, etc.) can be used by this example, but if
+something goes wrong, you will have to unplug/replug your device.
+This is not a
+.Em libnfc's
+bug, this problem is due to ACR122's internal MCU in front of NFC chip (PN532).
+.Sh BUGS
+Please report any bugs on the
+.Em libnfc
+issue tracker at:
+.Em http://code.google.com/p/libnfc/issues
+.Sh LICENCE
+.Em libnfc
+is licensed under the GNU Lesser General Public License (LGPL), version 3.
+.Em libnfc-utils
+and 
+.Em libnfc-examples
+are covered by the BSD 2-Clause license.
+.Sh AUTHORS
+.An Roel Verdult Aq roel@libnfc.org
+.An Romain Tartière Aq romain@libnfc.org
+.An Romuald Conty Aq romuald@libnfc.org
+.Pp
+This manual page was written by Romuald Conty.
+It is licensed under the terms of the GNU GPL (version 2 or later).

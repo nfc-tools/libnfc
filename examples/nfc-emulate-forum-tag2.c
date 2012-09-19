@@ -29,19 +29,21 @@
 
 /**
  * @file nfc-emulate-forum-tag2.c
- * @brief Emulates a NFC Forum Tag Type 2 with a NDEF message
- * This example allow to emulate an NFC Forum Tag Type 2 that contains a read-only NDEF message.
+ * @brief Emulates a NFC-Forum Tag Type 2 with a NDEF message
+ * This example allow to emulate an NFC-Forum Tag Type 2 that contains
+ * a read-only NDEF message.
  *
- * It have been developed using PN533 USB hardware as target and Google Nexus S phone as initiator.
+ * This example has been developed using PN533 USB hardware as target and
+ * Google Nexus S phone as initiator.
  *
- * This is know to NOT work with Nokia 6212 Classic and could not work with
- * several NFC Forum compliant devices due to these reasons:
- *  - The emulated target only have a 4 bytes UID where 7 bytes UID (as a real
- *  Mifare Ultralight tag) are usually attempted;
- *  - The chip is emulating a ISO/IEC 14443-3 tag, without any hardware helper.
- *  If the initiator have too short timeouts for software-based emulation
- *  (which is usually the case), this example will failed, this is not a bug
- *  and we can't do anything using this kind of hardware (PN531/PN533).
+ * This is know to NOT work with Nokia 6212 Classic and could fail with
+ * several NFC Forum compliant devices due to the following reasons:
+ *  - The emulated target has only a 4-byte UID while most devices assume a Tag
+ *  Type 2 has always a 7-byte UID (as a real Mifare Ultralight tag);
+ *  - The chip is emulating an ISO/IEC 14443-3 tag, without any hardware helper.
+ *  If the initiator has too strict timeouts for software-based emulation
+ *  (which is usually the case), this example will fail. This is not a bug
+ *  and we can't do anything using this hardware (PN531/PN533).
  */
 
 /*
