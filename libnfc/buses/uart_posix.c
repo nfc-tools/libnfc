@@ -1,9 +1,9 @@
 /*-
  * Public platform independent Near Field Communication (NFC) library
  *
- * Copyright (C) 2009, 2010, Roel Verdult, Romuald Conty
- * Copyright (C) 2010, Roel Verdult, Romuald Conty
- * Copyright (C) 2011, Romuald Conty, Romain Tartière
+ * Copyright (C) 2009-2011, Roel Verdult
+ * Copyright (C) 2009-2012, Romuald Conty
+ * Copyright (C) 2011, Romain Tartière
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -24,8 +24,6 @@
  * @file uart_posix.c
  * @brief POSIX UART driver
  */
-
-/* vim: set ts=2 sw=2 et: */
 
 #include <sys/ioctl.h>
 #include <sys/select.h>
@@ -48,7 +46,7 @@
 
 #  if defined(__APPLE__)
 // FIXME: find UART connection string for PN53X device on Mac OS X when multiples devices are used
-const char *serial_ports_device_radix[] = { "tty.SLAB_USBtoUART", NULL };
+const char *serial_ports_device_radix[] = { "tty.SLAB_USBtoUART", "tty.usbserial-", NULL };
 #  elif defined (__FreeBSD__) || defined (__OpenBSD__)
 const char *serial_ports_device_radix[] = { "cuaU", "cuau", NULL };
 #  elif defined (__linux__)
@@ -343,9 +341,10 @@ uart_list_ports(void)
   DIR *pdDir = opendir("/dev");
   struct dirent *pdDirEnt;
   while ((pdDirEnt = readdir(pdDir)) != NULL) {
+#if !defined(__APPLE__)
     if (!isdigit(pdDirEnt->d_name[strlen(pdDirEnt->d_name) - 1]))
       continue;
-
+#endif
     const char **p = serial_ports_device_radix;
     while (*p) {
       if (!strncmp(pdDirEnt->d_name, *p, strlen(*p))) {
