@@ -106,33 +106,6 @@
     } \
   } while (0)
 
-/*
- * Append data_size bytes of data at the end of the buffer.  Since data is
- * copied as a little endian value, the storage size of the value has to be
- * passed as the field_size parameter.
- *
- * Example: to copy 24 bits of data from a 32 bits value:
- * BUFFER_APPEND_LE (buffer, data, 3, 4);
- */
-
-#if defined(_BYTE_ORDER) && (_BYTE_ORDER != _LITTLE_ENDIAN)
-#define BUFFER_APPEND_LE(buffer, data, data_size, field_size) \
-  do { \
-    size_t __data_size = data_size; \
-    size_t __field_size = field_size; \
-    while (__field_size--, __data_size--) { \
-      buffer[__##buffer##_n++] = ((uint8_t *)&data)[__field_size]; \
-    } \
-  } while (0)
-#else
-#define BUFFER_APPEND_LE(buffer, data, data_size, field_size) \
-  do { \
-    memcpy (buffer + __##buffer##_n, &data, data_size); \
-    __##buffer##_n += data_size; \
-  } while (0)
-#endif
-
-
 struct nfc_driver {
   const char *name;
   bool (*probe)(nfc_connstring connstrings[], size_t connstrings_len, size_t *pszDeviceFound);
