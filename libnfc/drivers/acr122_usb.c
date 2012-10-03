@@ -89,6 +89,87 @@ typedef enum {
   TOUCHATAG,
 } acr122_usb_model;
 
+/*
+USB activity trace for PN533, ACR122 and Touchatag
+
+--------------------------------------------------------------------
+PN533
+                     0000ff02fe d402          2a00
+                     0000ff00ff00
+                     ACK
+                     0000ff06fa d50333020707  e500
+
+--------------------------------------------------------------------
+Acr122U PICC    pseudo-APDU through PCSC Escape mechanism:
+6b07000000000a000000 ff00000002 d402
+PC_to_RDR_Escape     APDU
+  Len.....           ClInP1P2Lc
+          Slot=0     pseudo-APDU DirectTransmit
+            Seq=0a
+              RFU=000000
+8308000000000a028100            d50332010407  9000
+RDR_to_PC_Escape                              SW: OK
+  Len.....
+          Slot=0
+            Seq=0a
+              Slot Status=02  ??
+                Slot Error=81 ??
+                  RFU=00
+
+
+--------------------------------------------------------------------
+Touchatag (Acr122U SAM) pseudo-APDU mechanism:
+6f07000000000e000000 ff00000002 d402
+PC_to_RDR_XfrBlock   APDU
+  Len.....           ClInP1P2Lc
+          Slot=0     pseudo-APDU DirectTransmit
+            Seq=0e
+              BWI=00
+                RFU=0000
+8002000000000e000000                          6108
+RDR_to_PC_DataBlock                           SW: more data: 8 bytes
+          Slot=0
+            Seq=0e
+              Slot Status=00
+                Slot Error=00
+                  RFU=00
+6f05000000000f000000 ffc0000008
+                     pseudo-ADPU GetResponse
+8008000000000f000000            d50332010407  9000
+                                              SW: OK
+*/
+
+#pragma pack(1)
+struct ccid_header {
+  uint8_t bMessageType;
+  uint32_t dwLength;
+  uint8_t bSlot;
+  uint8_t bSeq;
+  uint8_t bMessageSpecific[3];
+};
+
+struct apdu_header {
+  uint8_t bClass;
+  uint8_t bIns;
+  uint8_t bP1;
+  uint8_t bP2;
+  uint8_t bLen;
+};
+
+struct acr122_usb_tama_frame {
+  struct ccid_header ccid_header;
+  struct apdu_header apdu_header;
+  uint8_t tama_header;
+  uint8_t tama_payload[254]; // According to ACR122U manual: Pseudo APDUs (Section 6.0), Lc is 1-byte long (Data In: 255-bytes).
+};
+
+struct acr122_usb_apdu_frame {
+  struct ccid_header ccid_header;
+  struct apdu_header apdu_header;
+  uint8_t apdu_payload[255]; // APDU Lc is 1-byte long
+};
+#pragma pack()
+
 struct acr122_usb_data {
   usb_dev_handle *pudh;
   acr122_usb_model model;
@@ -96,12 +177,38 @@ struct acr122_usb_data {
   uint32_t uiEndPointOut;
   uint32_t uiMaxPacketSize;
   volatile bool abort_flag;
+  // Keep some buffers to reduce memcpy() usage
+  struct acr122_usb_tama_frame tama_frame;
+  struct acr122_usb_apdu_frame apdu_frame;
 };
+
+// CCID Bulk-Out messages type
+#define PC_to_RDR_IccPowerOn	0x62
+#define PC_to_RDR_XfrBlock	0x6f
+#define PC_to_RDR_Escape	0x6b
+
+#define RDR_to_PC_DataBlock	0x80
+#define RDR_to_PC_Escape	0x83
+
+// This frame template is copied at init time
+// Its designed for TAMA sending but is also used for simple ADPU frame: acr122_build_frame_from_apdu() will overwrite needed bytes
+const uint8_t acr122_usb_frame_template[] = {
+  PC_to_RDR_Escape, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // CCID header (first byte will be filled by acr122_init() depending on model)
+  0xff, 0x00, 0x00, 0x00, 0x00, // ADPU header
+  0xd4, // PN532 direction
+};
+
+// APDUs instructions
+#define APDU_GetAdditionnalData 0xc0
 
 const struct pn53x_io acr122_usb_io;
 bool acr122_usb_get_usb_device_name(struct usb_device *dev, usb_dev_handle *udev, char *buffer, size_t len);
 int  acr122_usb_init(nfc_device *pnd);
 int  acr122_usb_ack(nfc_device *pnd);
+
+static int acr122_usb_send_apdu(nfc_device *pnd,
+                     const uint8_t ins, const uint8_t p1, const uint8_t p2, const uint8_t *const data, size_t data_len, const uint8_t le,
+                     uint8_t *out, const size_t out_size);
 
 static int
 acr122_usb_bulk_read(struct acr122_usb_data *data, uint8_t abtRx[], const size_t szRx, const int timeout)
@@ -242,7 +349,7 @@ acr122_usb_probe(nfc_connstring connstrings[], size_t connstrings_len, size_t *p
 
           // Set configuration
           // acr122_usb_get_usb_device_name (dev, udev, pnddDevices[*pszDeviceFound].acDevice, sizeof (pnddDevices[*pszDeviceFound].acDevice));
-          log_put(LOG_CATEGORY, NFC_PRIORITY_TRACE, "device found: Bus %s Device %s", bus->dirname, dev->filename);
+          log_put(LOG_CATEGORY, NFC_PRIORITY_TRACE, "device found: Bus %s Device %s Name %s", bus->dirname, dev->filename, acr122_usb_supported_devices[n].name);
           usb_close(udev);
           snprintf(connstrings[*pszDeviceFound], sizeof(nfc_connstring), "%s:%s:%s", ACR122_USB_DRIVER_NAME, bus->dirname, dev->filename);
           (*pszDeviceFound)++;
@@ -400,13 +507,16 @@ acr122_usb_open(const nfc_connstring connstring)
       // Alloc and init chip's data
       pn53x_data_new(pnd, &acr122_usb_io);
 
+      memcpy(&(DRIVER_DATA(pnd)->tama_frame), acr122_usb_frame_template, sizeof(acr122_usb_frame_template));
+      memcpy(&(DRIVER_DATA(pnd)->apdu_frame), acr122_usb_frame_template, sizeof(acr122_usb_frame_template));
       switch (DRIVER_DATA(pnd)->model) {
-          // empirical tuning
         case ACR122:
-          CHIP_DATA(pnd)->timer_correction = 46;
+          CHIP_DATA(pnd)->timer_correction = 46; // empirical tuning
           break;
         case TOUCHATAG:
-          CHIP_DATA(pnd)->timer_correction = 50;
+          CHIP_DATA(pnd)->timer_correction = 50; // empirical tuning
+          DRIVER_DATA(pnd)->tama_frame.ccid_header.bMessageType = PC_to_RDR_XfrBlock;
+          DRIVER_DATA(pnd)->apdu_frame.ccid_header.bMessageType = PC_to_RDR_XfrBlock;
           break;
         case UNKNOWN:
           break;
@@ -453,107 +563,57 @@ acr122_usb_close(nfc_device *pnd)
   nfc_device_free(pnd);
 }
 
-/*
-USB activity trace for PN533, ACR122 and Touchatag
+uint32_t htole32(uint32_t u32);
 
---------------------------------------------------------------------
-PN533
-                     0000ff02fe d402          2a00
-                     0000ff00ff00
-                     ACK
-                     0000ff06fa d50333020707  e500
-
---------------------------------------------------------------------
-Acr122U PICC    pseudo-APDU through PCSC Escape mechanism:
-6b07000000000a000000 ff00000002 d402
-PC_to_RDR_Escape     APDU
-  Len.....           ClInP1P2Lc
-          Slot=0     pseudo-APDU DirectTransmit
-            Seq=0a
-              RFU=000000
-8308000000000a028100            d50332010407  9000
-RDR_to_PC_Escape                              SW: OK
-  Len.....
-          Slot=0
-            Seq=0a
-              Slot Status=02  ??
-                Slot Error=81 ??
-                  RFU=00
-
-
---------------------------------------------------------------------
-Touchatag (Acr122U SAM) pseudo-APDU mechanism:
-6f07000000000e000000 ff00000002 d402
-PC_to_RDR_XfrBlock   APDU
-  Len.....           ClInP1P2Lc
-          Slot=0     pseudo-APDU DirectTransmit
-            Seq=0e
-              BWI=00
-                RFU=0000
-8002000000000e000000                          6108
-RDR_to_PC_DataBlock                           SW: more data: 8 bytes
-          Slot=0
-            Seq=0e
-              Slot Status=00
-                Slot Error=00
-                  RFU=00
-6f05000000000f000000 ffc0000008
-                     pseudo-ADPU GetResponse
-8008000000000f000000            d50332010407  9000
-                                              SW: OK
-*/
-// FIXME ACR122_USB_BUFFER_LEN don't have the correct lenght value
-#define ACR122_USB_BUFFER_LEN (PN53x_EXTENDED_FRAME__DATA_MAX_LEN + PN53x_EXTENDED_FRAME__OVERHEAD)
-static int
-acr122_build_frame_from_apdu(uint8_t **frame, const uint8_t *apdu, const size_t apdu_len)
+uint32_t 
+htole32(uint32_t u32)
 {
-  static uint8_t  abtFrame[ACR122_USB_BUFFER_LEN] = {
-    0x6b, // PC_to_RDR_Escape
-    0x00, // len
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // padding
-  };
-  if ((apdu_len + 10) > ACR122_USB_BUFFER_LEN)
-    return NFC_EINVARG;
-
-  abtFrame[1] = apdu_len;
-  memcpy(abtFrame + 10, apdu, apdu_len);
-  *frame = abtFrame;
-  return (apdu_len + 10);
+  uint8_t u8[4];
+  for(int i=0; i<4; i++) {
+    u8[i] = (u32 & 0xff);
+    u32 >>= 8;
+  }
+  uint32_t *pu32 = (uint32_t*)u8;
+  return *pu32;
 }
 
 static int
-acr122_build_frame_from_tama(uint8_t **frame, const uint8_t *tama, const size_t tama_len)
+acr122_build_frame_from_apdu(nfc_device *pnd, const uint8_t ins, const uint8_t p1, const uint8_t p2, const uint8_t *data, const size_t data_len, const uint8_t le)
 {
-  static uint8_t  abtFrame[ACR122_USB_BUFFER_LEN] = {
-    0x6b, // PC_to_RDR_Escape
-    0x00, // len
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // padding
-    // APDU
-    0xff, 0x00, 0x00, 0x00,
-    0x00, // PN532 command length
-    0xd4, // PN532 direction
-  };
-  if ((tama_len + 16) > ACR122_USB_BUFFER_LEN)
+  if (data_len > sizeof(DRIVER_DATA(pnd)->apdu_frame.apdu_payload))
     return NFC_EINVARG;
 
-  abtFrame[1] = tama_len + 6;
-  abtFrame[14] = tama_len + 1;
-  memcpy(abtFrame + 16, tama, tama_len);
-  *frame = abtFrame;
-  return (tama_len + 16);
+  DRIVER_DATA(pnd)->apdu_frame.ccid_header.dwLength = htole32(data_len + sizeof(struct apdu_header));
+  DRIVER_DATA(pnd)->apdu_frame.apdu_header.bIns = ins;
+  DRIVER_DATA(pnd)->apdu_frame.apdu_header.bP1 = p1;
+  DRIVER_DATA(pnd)->apdu_frame.apdu_header.bP2 = p2;
+  DRIVER_DATA(pnd)->apdu_frame.apdu_header.bLen = (data ? data_len : le); // XXX This line is a bit tricky ^^: bLen is Lc when data != NULL... otherwise its Le.
+  memcpy(DRIVER_DATA(pnd)->apdu_frame.apdu_payload, data, data_len);
+  return (sizeof(struct ccid_header) + sizeof(struct apdu_header) + data_len);
+}
+
+static int
+acr122_build_frame_from_tama(nfc_device *pnd, const uint8_t *tama, const size_t tama_len)
+{
+  if (tama_len > sizeof(DRIVER_DATA(pnd)->tama_frame.tama_payload))
+    return NFC_EINVARG;
+
+  DRIVER_DATA(pnd)->tama_frame.ccid_header.dwLength = htole32(tama_len + sizeof(struct apdu_header) + 1);
+  DRIVER_DATA(pnd)->tama_frame.apdu_header.bLen = tama_len + 1;
+  memcpy(DRIVER_DATA(pnd)->tama_frame.tama_payload, tama, tama_len);
+  return (sizeof(struct ccid_header) + sizeof(struct apdu_header) + 1 + tama_len);
 }
 
 int
 acr122_usb_send(nfc_device *pnd, const uint8_t *pbtData, const size_t szData, const int timeout)
 {
-  uint8_t *frame;
   int res;
-  if ((res = acr122_build_frame_from_tama(&frame, pbtData, szData)) < 0) {
+  if ((res = acr122_build_frame_from_tama(pnd, pbtData, szData)) < 0) {
     pnd->last_error = NFC_EINVARG;
     return pnd->last_error;
   }
 
-  if ((res = acr122_usb_bulk_write(DRIVER_DATA(pnd), frame, res, timeout)) < 0) {
+  if ((res = acr122_usb_bulk_write(DRIVER_DATA(pnd), (unsigned char*)&(DRIVER_DATA(pnd)->tama_frame), res, timeout)) < 0) {
     pnd->last_error = res;
     return pnd->last_error;
   }
@@ -566,7 +626,7 @@ acr122_usb_receive(nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, co
 {
   off_t offset = 0;
 
-  uint8_t  abtRxBuf[ACR122_USB_BUFFER_LEN];
+  uint8_t  abtRxBuf[255 + sizeof(struct ccid_header)];
   int res;
 
   /*
@@ -591,6 +651,43 @@ read:
 
   res = acr122_usb_bulk_read(DRIVER_DATA(pnd), abtRxBuf, sizeof(abtRxBuf), usb_timeout);
 
+  uint8_t attempted_response = RDR_to_PC_Escape; // ACR122U attempted response
+  size_t len;
+
+  switch(DRIVER_DATA(pnd)->model) {
+    case TOUCHATAG:
+      attempted_response = RDR_to_PC_DataBlock;
+      if (res == NFC_ETIMEOUT) {
+        if (DRIVER_DATA(pnd)->abort_flag) {
+          DRIVER_DATA(pnd)->abort_flag = false;
+          acr122_usb_ack(pnd);
+          pnd->last_error = NFC_EOPABORTED;
+          return pnd->last_error;
+        } else {
+          goto read;
+        }
+      }
+      if (abtRxBuf[offset] != attempted_response) {
+        log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Frame header mismatch");
+  	  pnd->last_error = NFC_EIO;
+        return pnd->last_error;
+      }
+      offset++;
+  
+      len = abtRxBuf[offset++];
+      if (len != 2) {
+        log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Wrong reply");
+        pnd->last_error = NFC_EIO;
+        return pnd->last_error;
+      }
+      acr122_usb_send_apdu(pnd, APDU_GetAdditionnalData, 0x00, 0x00, NULL, 0, abtRxBuf[11], abtRxBuf, sizeof(abtRxBuf));
+      offset = 0;
+    break;
+    case ACR122:
+      break;
+    case UNKNOWN:
+      break;
+  }
   if (res == NFC_ETIMEOUT) {
     if (DRIVER_DATA(pnd)->abort_flag) {
       DRIVER_DATA(pnd)->abort_flag = false;
@@ -598,7 +695,7 @@ read:
       pnd->last_error = NFC_EOPABORTED;
       return pnd->last_error;
     } else {
-      goto read;
+      goto read; // FIXME May cause some trouble on Touchatag, right ?
     }
   }
 
@@ -609,14 +706,14 @@ read:
     return pnd->last_error;
   }
 
-  if (abtRxBuf[offset] != 0x83) {
+  if (abtRxBuf[offset] != attempted_response) {
     log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Frame header mismatch");
     pnd->last_error = NFC_EIO;
     return pnd->last_error;
   }
   offset++;
 
-  size_t len = abtRxBuf[offset++];
+  len = abtRxBuf[offset++];
   if (len < 4) {
     log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Too small reply");
     pnd->last_error = NFC_EIO;
@@ -630,13 +727,23 @@ read:
     return pnd->last_error;
   }
 
-  const uint8_t acr122_preamble[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x81, 0x00 };
-  if (0 != (memcmp(abtRxBuf + offset, acr122_preamble, sizeof(acr122_preamble)))) {
-    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Frame preamble mismatch");
-    pnd->last_error = NFC_EIO;
-    return pnd->last_error;
+  switch(DRIVER_DATA(pnd)->model) {
+    case TOUCHATAG:
+      offset += 8; // Skip CCID remaining bytes
+      break;
+    case ACR122:
+    {
+      const uint8_t acr122_preamble[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x81, 0x00 };
+      if (0 != (memcmp(abtRxBuf + offset, acr122_preamble, sizeof(acr122_preamble)))) {
+        log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Frame preamble mismatch");
+          pnd->last_error = NFC_EIO;
+          return pnd->last_error;
+      }
+      offset += sizeof(acr122_preamble);
+    } break;
+    case UNKNOWN:
+      break;
   }
-  offset += sizeof(acr122_preamble);
 
   // TFI + PD0 (CC+1)
   if (abtRxBuf[offset] != 0xD5) {
@@ -666,13 +773,26 @@ acr122_usb_ack(nfc_device *pnd)
   int res = 0;
   uint8_t acr122_ack_frame[] = { GetFirmwareVersion }; // We can't send a PN532's ACK frame, so we use a normal command to cancel current command
   log_put(LOG_CATEGORY, NFC_PRIORITY_DEBUG, "%s", "ACR122 Abort");
-  uint8_t *frame;
-  if ((res = acr122_build_frame_from_tama(&frame, acr122_ack_frame, sizeof(acr122_ack_frame))) < 0)
+  if ((res = acr122_build_frame_from_tama(pnd, acr122_ack_frame, sizeof(acr122_ack_frame))) < 0)
     return res;
 
-  res = acr122_usb_bulk_write(DRIVER_DATA(pnd), frame, res, 1000);
-  uint8_t  abtRxBuf[ACR122_USB_BUFFER_LEN];
+  res = acr122_usb_bulk_write(DRIVER_DATA(pnd), (unsigned char*)&(DRIVER_DATA(pnd)->tama_frame), res, 1000);
+  uint8_t  abtRxBuf[255 + sizeof(struct ccid_header)];
   res = acr122_usb_bulk_read(DRIVER_DATA(pnd), abtRxBuf, sizeof(abtRxBuf), 1000);
+  return res;
+}
+
+static int 
+acr122_usb_send_apdu(nfc_device *pnd, 
+                     const uint8_t ins, const uint8_t p1, const uint8_t p2, const uint8_t *const data, size_t data_len, const uint8_t le,
+                     uint8_t *out, const size_t out_size)
+{
+  int res;
+  size_t frame_len = acr122_build_frame_from_apdu(pnd, ins, p1, p2, data, data_len, le);
+  if ((res = acr122_usb_bulk_write(DRIVER_DATA(pnd), (unsigned char*)&(DRIVER_DATA(pnd)->apdu_frame), frame_len, 1000)) < 0)
+    return res;
+  if ((res = acr122_usb_bulk_read(DRIVER_DATA(pnd), out, out_size, 1000)) < 0)
+    return res;
   return res;
 }
 
@@ -680,7 +800,7 @@ int
 acr122_usb_init(nfc_device *pnd)
 {
   int res = 0;
-  uint8_t  abtRxBuf[ACR122_USB_BUFFER_LEN];
+  uint8_t  abtRxBuf[255 + sizeof(struct ccid_header)];
 
   /*
   // See ACR122 manual: "Bi-Color LED and Buzzer Control" section
@@ -708,21 +828,22 @@ acr122_usb_init(nfc_device *pnd)
   if ((res = pn53x_set_property_int(pnd, NP_TIMEOUT_COMMAND, 1000)) < 0)
     return res;
 
-  uint8_t acr122u_set_picc_operating_parameters_off_frame[] = {
-    0xff, // Class
-    0x00, // INS
-    0x51, // P1: Set PICC Operating Parameters
-    0x00, // P2: New PICC Operating Parameters
-    0x00, // Le
+  // Power On ICC
+  struct ccid_header ccid_frame = {
+    .bMessageType = PC_to_RDR_IccPowerOn,
+    .dwLength = 0,
+    .bSlot = 0,
+    .bSeq = 0,
+    .bMessageSpecific = { 0x01, 0x00, 0x00 },
   };
-  uint8_t *frame;
 
-  log_put(LOG_CATEGORY, NFC_PRIORITY_DEBUG, "%s", "ACR122 PICC Operating Parameters");
-  if ((res = acr122_build_frame_from_apdu(&frame, acr122u_set_picc_operating_parameters_off_frame, sizeof(acr122u_set_picc_operating_parameters_off_frame))) < 0)
-    return res;
-  if ((res = acr122_usb_bulk_write(DRIVER_DATA(pnd), frame, res, 1000)) < 0)
+  if ((res = acr122_usb_bulk_write(DRIVER_DATA(pnd), (unsigned char*)&ccid_frame, sizeof(struct ccid_header), 1000)) < 0)
     return res;
   if ((res = acr122_usb_bulk_read(DRIVER_DATA(pnd), abtRxBuf, sizeof(abtRxBuf), 1000)) < 0)
+    return res;
+
+  log_put(LOG_CATEGORY, NFC_PRIORITY_DEBUG, "%s", "ACR122 PICC Operating Parameters");
+  if ((res = acr122_usb_send_apdu(pnd, 0x00, 0x51, 0x00, NULL, 0, 0, abtRxBuf, sizeof(abtRxBuf))) < 0)
     return res;
 
   if ((res = pn53x_init(pnd)) < 0)
