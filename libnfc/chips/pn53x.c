@@ -1088,7 +1088,7 @@ pn53x_initiator_select_passive_target_ext(struct nfc_device *pnd,
     }
     if (nm.nmt == NMT_ISO14443B2CT) {
       if (szTargetsData != 2)
-        return NFC_ECHIP; // FIXME: It should not return a NFC_ECHIP here!
+        return 0; // Target is not ISO14443B2CT
       uint8_t abtRead[] = { 0xC4 }; // Reading UID_MSB (Read address 4)
       if ((res = pn53x_initiator_transceive_bytes(pnd, abtRead, sizeof(abtRead), abtTargetsData + 4, sizeof(abtTargetsData) - 4, timeout) < 0)) {
         return res;
