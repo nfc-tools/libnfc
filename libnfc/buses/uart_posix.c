@@ -45,7 +45,6 @@
 #define LOG_CATEGORY "libnfc.bus.uart"
 
 #  if defined(__APPLE__)
-// FIXME: find UART connection string for PN53X device on Mac OS X when multiples devices are used
 const char *serial_ports_device_radix[] = { "tty.SLAB_USBtoUART", "tty.usbserial-", NULL };
 #  elif defined (__FreeBSD__) || defined (__OpenBSD__)
 const char *serial_ports_device_radix[] = { "cuaU", "cuau", NULL };
