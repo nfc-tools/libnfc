@@ -713,37 +713,31 @@ read:
   }
   offset++;
 
+  // XXX In CCID specification, len is a 32-bits (dword), do we need to decode more than 1 byte ? (0-255 bytes for PN532 reply)
   len = abtRxBuf[offset++];
+  if ((abtRxBuf[++] != 0x00) && (abtRxBuf[++] != 0x00) && (abtRxBuf[++] != 0x00)) {
+    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Not implemented: only 1-byte length is supported, please report this bug with a full trace.");
+    pnd->last_error = NFC_EIO;
+    return pnd->last_error;
+  }
+
   if (len < 4) {
     log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Too small reply");
     pnd->last_error = NFC_EIO;
     return pnd->last_error;
   }
-  len -= 4;
+  len -= 4; // We skip 2 bytes for PN532 direction byte (D5) and command byte (CMD+1), then 2 bytes for APDU status (90 00).
 
   if (len > szDataLen) {
     log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to receive data: buffer too small. (szDataLen: %zu, len: %zu)", szDataLen, len);
-    pnd->last_error = NFC_EIO;
+    pnd->last_error = NFC_EOVFLOW;
     return pnd->last_error;
   }
 
-  switch(DRIVER_DATA(pnd)->model) {
-    case TOUCHATAG:
-      offset += 8; // Skip CCID remaining bytes
-      break;
-    case ACR122:
-    {
-      const uint8_t acr122_preamble[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x81, 0x00 };
-      if (0 != (memcmp(abtRxBuf + offset, acr122_preamble, sizeof(acr122_preamble)))) {
-        log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Frame preamble mismatch");
-          pnd->last_error = NFC_EIO;
-          return pnd->last_error;
-      }
-      offset += sizeof(acr122_preamble);
-    } break;
-    case UNKNOWN:
-      break;
-  }
+  // Skip CCID remaining bytes
+  offset += 2; // bSlot and bSeq are not used
+  offset += 2; // XXX bStatus and bError should maybe checked ?
+  offset += 1; // bRFU should be 0x00
 
   // TFI + PD0 (CC+1)
   if (abtRxBuf[offset] != 0xD5) {
