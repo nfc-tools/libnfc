@@ -715,11 +715,12 @@ read:
 
   // XXX In CCID specification, len is a 32-bits (dword), do we need to decode more than 1 byte ? (0-255 bytes for PN532 reply)
   len = abtRxBuf[offset++];
-  if ((abtRxBuf[++] != 0x00) && (abtRxBuf[++] != 0x00) && (abtRxBuf[++] != 0x00)) {
+  if ((abtRxBuf[offset] != 0x00) && (abtRxBuf[offset+1] != 0x00) && (abtRxBuf[offset+2] != 0x00)) {
     log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Not implemented: only 1-byte length is supported, please report this bug with a full trace.");
     pnd->last_error = NFC_EIO;
     return pnd->last_error;
   }
+  offset += 3;
 
   if (len < 4) {
     log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Too small reply");
