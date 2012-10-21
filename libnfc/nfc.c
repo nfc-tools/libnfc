@@ -150,8 +150,8 @@ nfc_get_default_device(nfc_connstring *connstring)
   if (NULL == env_default_connstring) {
     // LIBNFC_DEFAULT_DEVICE is not set, we fallback on probing for the first available device
     nfc_connstring listed_cs[1];
-    size_t szDeviceFound = nfc_list_devices(NULL, listed_cs, 1);
-    if (szDeviceFound) {
+    size_t device_found = nfc_list_devices(NULL, listed_cs, 1);
+    if (device_found) {
       strncpy(*connstring, listed_cs[0], sizeof(nfc_connstring));
     } else {
       return false;
@@ -255,31 +255,31 @@ nfc_close(nfc_device *pnd)
  * @return Returns the number of devices found.
  * @param context The context to operate on, or NULL for the default context.
  * @param connstrings array of \a nfc_connstring.
- * @param szDevices size of the \a connstrings array.
+ * @param connstrings_len size of the \a connstrings array.
  *
  */
 size_t
-nfc_list_devices(nfc_context *context, nfc_connstring connstrings[] , size_t szDevices)
+nfc_list_devices(nfc_context *context, nfc_connstring connstrings[], const size_t connstrings_len)
 {
-  size_t szN;
-  size_t szDeviceFound = 0;
+  size_t device_found = 0;
   const struct nfc_driver *ndr;
   const struct nfc_driver **pndr = nfc_drivers;
 
   (void) context;
 
   while ((ndr = *pndr)) {
-    szN = 0;
-    if (ndr->probe(connstrings + (szDeviceFound), szDevices - (szDeviceFound), &szN)) {
-      szDeviceFound += szN;
-      log_put(LOG_CATEGORY, NFC_PRIORITY_TRACE, "%ld device(s) found using %s driver", (unsigned long) szN, ndr->name);
-      if (szDeviceFound == szDevices)
+    size_t _device_found = 0;
+    _device_found = ndr->scan(connstrings + (device_found), connstrings_len - (device_found));
+    log_put(LOG_CATEGORY, NFC_PRIORITY_TRACE, "%ld device(s) found using %s driver", (unsigned long) _device_found, ndr->name);
+    if (_device_found > 0) {
+      device_found += _device_found;
+      if (device_found == connstrings_len)
         break;
     }
     pndr++;
   }
   log_fini();
-  return szDeviceFound;
+  return device_found;
 }
 
 /** @ingroup properties

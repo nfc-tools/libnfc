@@ -135,15 +135,14 @@ acr122_pcsc_free_scardcontext(void)
 /**
  * @brief List opened devices
  *
- * Probe PCSC to find NFC capable hardware.
+ * Probe PCSC to find ACR122 devices (ACR122U and Touchatag/Tikitag).
  *
- * @param pnddDevices Array of nfc_device_desc_t previously allocated by the caller.
- * @param szDevices size of the pnddDevices array.
- * @param pszDeviceFound number of devices found.
- * @return true if succeeded, false otherwise.
+ * @param connstring array of nfc_connstring where found device's connection strings will be stored.
+ * @param connstrings_len size of connstrings array.
+ * @return number of devices found.
  */
-static bool
-acr122_pcsc_probe(nfc_connstring connstrings[], size_t connstrings_len, size_t *pszDeviceFound)
+static size_t
+acr122_pcsc_scan(nfc_connstring connstrings[], const size_t connstrings_len)
 {
   size_t  szPos = 0;
   char    acDeviceNames[256 + 64 * PCSC_MAX_DEVICES];
@@ -155,22 +154,18 @@ acr122_pcsc_probe(nfc_connstring connstrings[], size_t connstrings_len, size_t *
   // Clear the reader list
   memset(acDeviceNames, '\0', szDeviceNamesLen);
 
-  *pszDeviceFound = 0;
-
   // Test if context succeeded
   if (!(pscc = acr122_pcsc_get_scardcontext())) {
     log_put(LOG_CATEGORY, NFC_PRIORITY_WARN, "%s", "PCSC context not found (make sure PCSC daemon is running).");
-    return false;
+    return 0;
   }
   // Retrieve the string array of all available pcsc readers
   DWORD dwDeviceNamesLen = szDeviceNamesLen;
   if (SCardListReaders(*pscc, NULL, acDeviceNames, &dwDeviceNamesLen) != SCARD_S_SUCCESS)
-    return false;
+    return 0;
 
-  while ((acDeviceNames[szPos] != '\0') && ((*pszDeviceFound) < connstrings_len)) {
-
-    // DBG("- %s (pos=%ld)", acDeviceNames + szPos, (unsigned long) szPos);
-
+  size_t device_found = 0;
+  while ((acDeviceNames[szPos] != '\0') && (device_found < connstrings_len)) {
     bSupported = false;
     for (i = 0; supported_devices[i] && !bSupported; i++) {
       int     l = strlen(supported_devices[i]);
@@ -179,8 +174,8 @@ acr122_pcsc_probe(nfc_connstring connstrings[], size_t connstrings_len, size_t *
 
     if (bSupported) {
       // Supported ACR122 device found
-      snprintf(connstrings[*pszDeviceFound], sizeof(nfc_connstring), "%s:%s", ACR122_PCSC_DRIVER_NAME, acDeviceNames + szPos);
-      (*pszDeviceFound)++;
+      snprintf(connstrings[device_found], sizeof(nfc_connstring), "%s:%s", ACR122_PCSC_DRIVER_NAME, acDeviceNames + szPos);
+      device_found++;
     } else {
       log_put(LOG_CATEGORY, NFC_PRIORITY_TRACE, "PCSC device [%s] is not NFC capable or not supported by libnfc.", acDeviceNames + szPos);
     }
@@ -190,7 +185,7 @@ acr122_pcsc_probe(nfc_connstring connstrings[], size_t connstrings_len, size_t *
   }
   acr122_pcsc_free_scardcontext();
 
-  return true;
+  return device_found;
 }
 
 struct acr122_pcsc_descriptor {
@@ -248,8 +243,7 @@ acr122_pcsc_open(const nfc_connstring connstring)
   nfc_connstring fullconnstring;
   if (connstring_decode_level == 1) {
     // Device was not specified, take the first one we can find
-    size_t szDeviceFound;
-    acr122_pcsc_probe(&fullconnstring, 1, &szDeviceFound);
+    size_t szDeviceFound = acr122_pcsc_scan(&fullconnstring, 1);
     if (szDeviceFound < 1)
       return NULL;
     connstring_decode_level = acr122_pcsc_connstring_decode(fullconnstring, &ndd);
@@ -265,8 +259,7 @@ acr122_pcsc_open(const nfc_connstring connstring)
     if (sscanf(ndd.pcsc_device_name, "%lu", &index) != 1)
       return NULL;
     nfc_connstring *ncs = malloc(sizeof(nfc_connstring) * (index + 1));
-    size_t szDeviceFound;
-    acr122_pcsc_probe(ncs, index + 1, &szDeviceFound);
+    size_t szDeviceFound = acr122_pcsc_scan(ncs, index + 1);
     if (szDeviceFound < index + 1)
       return NULL;
     strncpy(fullconnstring, ncs[index], sizeof(nfc_connstring));
@@ -491,7 +484,7 @@ const struct pn53x_io acr122_pcsc_io = {
 
 const struct nfc_driver acr122_pcsc_driver = {
   .name                             = ACR122_PCSC_DRIVER_NAME,
-  .probe                            = acr122_pcsc_probe,
+  .scan                             = acr122_pcsc_scan,
   .open                             = acr122_pcsc_open,
   .close                            = acr122_pcsc_close,
   .strerror                         = pn53x_strerror,

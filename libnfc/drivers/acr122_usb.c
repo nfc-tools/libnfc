@@ -303,8 +303,8 @@ acr122_usb_get_end_points(struct usb_device *dev, struct acr122_usb_data *data)
   }
 }
 
-static bool
-acr122_usb_probe(nfc_connstring connstrings[], size_t connstrings_len, size_t *device_found)
+static size_t
+acr122_usb_scan(nfc_connstring connstrings[], const size_t connstrings_len)
 {
   usb_init();
 
@@ -314,17 +314,17 @@ acr122_usb_probe(nfc_connstring connstrings[], size_t connstrings_len, size_t *d
   // busses and busses removed).
   if ((res = usb_find_busses() < 0)) {
     log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to find USB busses (%s)", _usb_strerror(res));
-    return false;
+    return 0;
   }
   // usb_find_devices will find all of the devices on each bus. This should be
   // called after usb_find_busses. Returns the number of changes since the
   // previous call to this function (total of new device and devices removed).
   if ((res = usb_find_devices() < 0)) {
     log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to find USB devices (%s)", _usb_strerror(res));
-    return false;
+    return 0;
   }
 
-  *device_found = 0;
+  size_t device_found = 0;
 
   uint32_t uiBusIndex = 0;
   struct usb_bus *bus;
@@ -349,21 +349,21 @@ acr122_usb_probe(nfc_connstring connstrings[], size_t connstrings_len, size_t *d
           usb_dev_handle *udev = usb_open(dev);
 
           // Set configuration
-          // acr122_usb_get_usb_device_name (dev, udev, pnddDevices[*device_found].acDevice, sizeof (pnddDevices[*device_found].acDevice));
+          // acr122_usb_get_usb_device_name (dev, udev, pnddDevices[device_found].acDevice, sizeof (pnddDevices[device_found].acDevice));
           log_put(LOG_CATEGORY, NFC_PRIORITY_TRACE, "device found: Bus %s Device %s Name %s", bus->dirname, dev->filename, acr122_usb_supported_devices[n].name);
           usb_close(udev);
-          snprintf(connstrings[*device_found], sizeof(nfc_connstring), "%s:%s:%s", ACR122_USB_DRIVER_NAME, bus->dirname, dev->filename);
-          (*device_found)++;
+          snprintf(connstrings[device_found], sizeof(nfc_connstring), "%s:%s:%s", ACR122_USB_DRIVER_NAME, bus->dirname, dev->filename);
+          device_found++;
           // Test if we reach the maximum "wanted" devices
-          if ((*device_found) == connstrings_len) {
-            return true;
+          if (device_found == connstrings_len) {
+            return device_found;
           }
         }
       }
     }
   }
 
-  return true;
+  return device_found;
 }
 
 struct acr122_usb_descriptor {
@@ -862,7 +862,7 @@ const struct pn53x_io acr122_usb_io = {
 
 const struct nfc_driver acr122_usb_driver = {
   .name                             = ACR122_USB_DRIVER_NAME,
-  .probe                            = acr122_usb_probe,
+  .scan                             = acr122_usb_scan,
   .open                             = acr122_usb_open,
   .close                            = acr122_usb_close,
   .strerror                         = pn53x_strerror,

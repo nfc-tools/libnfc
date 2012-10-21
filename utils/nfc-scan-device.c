@@ -30,7 +30,7 @@
  */
 
 /**
- * @file nfc-probe.c
+ * @file nfc-scan-device.c
  * @brief Lists each available NFC device
  */
 

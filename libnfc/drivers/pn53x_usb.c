@@ -181,29 +181,27 @@ pn53x_usb_get_end_points(struct usb_device *dev, struct pn53x_usb_data *data)
   }
 }
 
-static bool
-pn53x_usb_probe(nfc_connstring connstrings[], size_t connstrings_len, size_t *pszDeviceFound)
+static size_t
+pn53x_usb_scan(nfc_connstring connstrings[], const size_t connstrings_len)
 {
   usb_init();
-
   int res;
   // usb_find_busses will find all of the busses on the system. Returns the
   // number of changes since previous call to this function (total of new
   // busses and busses removed).
   if ((res = usb_find_busses() < 0)) {
     log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to find USB busses (%s)", _usb_strerror(res));
-    return false;
+    return 0;
   }
   // usb_find_devices will find all of the devices on each bus. This should be
   // called after usb_find_busses. Returns the number of changes since the
   // previous call to this function (total of new device and devices removed).
   if ((res = usb_find_devices() < 0)) {
     log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to find USB devices (%s)", _usb_strerror(res));
-    return false;
+    return 0;
   }
 
-  *pszDeviceFound = 0;
-
+  size_t device_found = 0;
   uint32_t uiBusIndex = 0;
   struct usb_bus *bus;
   for (bus = usb_get_busses(); bus; bus = bus->next) {
@@ -235,21 +233,21 @@ pn53x_usb_probe(nfc_connstring connstrings[], size_t connstrings_len, size_t *ps
             continue;
           }
 
-          // pn53x_usb_get_usb_device_name (dev, udev, pnddDevices[*pszDeviceFound].acDevice, sizeof (pnddDevices[*pszDeviceFound].acDevice));
+          // pn53x_usb_get_usb_device_name (dev, udev, pnddDevices[device_found].acDevice, sizeof (pnddDevices[device_found].acDevice));
           log_put(LOG_CATEGORY, NFC_PRIORITY_TRACE, "device found: Bus %s Device %s", bus->dirname, dev->filename);
           usb_close(udev);
-          snprintf(connstrings[*pszDeviceFound], sizeof(nfc_connstring), "%s:%s:%s", PN53X_USB_DRIVER_NAME, bus->dirname, dev->filename);
-          (*pszDeviceFound)++;
+          snprintf(connstrings[device_found], sizeof(nfc_connstring), "%s:%s:%s", PN53X_USB_DRIVER_NAME, bus->dirname, dev->filename);
+          device_found++;
           // Test if we reach the maximum "wanted" devices
-          if ((*pszDeviceFound) == connstrings_len) {
-            return true;
+          if (device_found == connstrings_len) {
+            return device_found;
           }
         }
       }
     }
   }
 
-  return true;
+  return device_found;
 }
 
 struct pn53x_usb_descriptor {
@@ -761,7 +759,7 @@ const struct pn53x_io pn53x_usb_io = {
 
 const struct nfc_driver pn53x_usb_driver = {
   .name                             = PN53X_USB_DRIVER_NAME,
-  .probe                            = pn53x_usb_probe,
+  .scan                             = pn53x_usb_scan,
   .open                             = pn53x_usb_open,
   .close                            = pn53x_usb_close,
   .strerror                         = pn53x_strerror,

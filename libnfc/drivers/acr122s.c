@@ -447,21 +447,19 @@ acr122s_connstring_decode(const nfc_connstring connstring, struct acr122s_descri
   return 3;
 }
 
-static bool
-acr122s_probe(nfc_connstring connstrings[], size_t connstrings_len, size_t *pszDeviceFound)
+static size_t
+acr122s_scan(nfc_connstring connstrings[], const size_t connstrings_len)
 {
   /** @note: Due to UART bus we can't know if its really an ACR122S without
-  * sending some commands. But using this way to probe devices, we can
+  * sending some commands. But using this way to scan devices, we can
   * have serious problem with other device on this bus */
 #ifndef SERIAL_AUTOPROBE_ENABLED
   (void) connstrings;
   (void) connstrings_len;
-  *pszDeviceFound = 0;
-  log_put(LOG_CATEGORY, NFC_PRIORITY_INFO, "%s", "Serial auto-probing have been disabled at compile time. Skipping autoprobe.");
-  return false;
+  log_put(LOG_CATEGORY, NFC_PRIORITY_INFO, "%s", "Serial auto-probing have been disabled at compile time. Skipping autoscan.");
+  return 0;
 #else /* SERIAL_AUTOPROBE_ENABLED */
-  *pszDeviceFound = 0;
-
+  size_t device_found = 0;
   serial_port sp;
   char **acPorts = uart_list_ports();
   const char *acPort;
@@ -509,11 +507,11 @@ acr122s_probe(nfc_connstring connstrings[], size_t connstrings_len, size_t *pszD
         continue;
 
       // ACR122S reader is found
-      memcpy(connstrings[*pszDeviceFound], connstring, sizeof(nfc_connstring));
-      (*pszDeviceFound)++;
+      memcpy(connstrings[device_found], connstring, sizeof(nfc_connstring));
+      device_found++;
 
       // Test if we reach the maximum "wanted" devices
-      if (*pszDeviceFound >= connstrings_len)
+      if (device_found >= connstrings_len)
         break;
     }
   }
@@ -522,8 +520,8 @@ acr122s_probe(nfc_connstring connstrings[], size_t connstrings_len, size_t *pszD
     free((void *)acPort);
   }
   free(acPorts);
+  return device_found;
 #endif /* SERIAL_AUTOPROBE_ENABLED */
-  return true;
 }
 
 static void
@@ -705,7 +703,7 @@ const struct pn53x_io acr122s_io = {
 
 const struct nfc_driver acr122s_driver = {
   .name       = ACR122S_DRIVER_NAME,
-  .probe      = acr122s_probe,
+  .scan       = acr122s_scan,
   .open       = acr122s_open,
   .close      = acr122s_close,
   .strerror   = pn53x_strerror,

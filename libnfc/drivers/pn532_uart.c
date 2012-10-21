@@ -64,21 +64,19 @@ int     pn532_uart_wakeup(nfc_device *pnd);
 
 #define DRIVER_DATA(pnd) ((struct pn532_uart_data*)(pnd->driver_data))
 
-static bool
-pn532_uart_probe(nfc_connstring connstrings[], size_t connstrings_len, size_t *pszDeviceFound)
+static size_t
+pn532_uart_scan(nfc_connstring connstrings[], const size_t connstrings_len)
 {
   /** @note: Due to UART bus we can't know if its really a pn532 without
-  * sending some PN53x commands. But using this way to probe devices, we can
+  * sending some PN53x commands. But using this way to scan devices, we can
   * have serious problem with other device on this bus */
 #ifndef SERIAL_AUTOPROBE_ENABLED
   (void) connstrings;
   (void) connstrings_len;
-  *pszDeviceFound = 0;
-  log_put(LOG_CATEGORY, NFC_PRIORITY_INFO, "%s", "Serial auto-probing have been disabled at compile time. Skipping autoprobe.");
-  return false;
+  log_put(LOG_CATEGORY, NFC_PRIORITY_INFO, "%s", "Serial auto-probing have been disabled at compile time. Skipping autoscan.");
+  return 0;
 #else /* SERIAL_AUTOPROBE_ENABLED */
-  *pszDeviceFound = 0;
-
+  size_t device_found = 0;
   serial_port sp;
   char **acPorts = uart_list_ports();
   const char *acPort;
@@ -124,11 +122,11 @@ pn532_uart_probe(nfc_connstring connstrings[], size_t connstrings_len, size_t *p
         continue;
       }
 
-      memcpy(connstrings[*pszDeviceFound], connstring, sizeof(nfc_connstring));
-      (*pszDeviceFound)++;
+      memcpy(connstrings[device_found], connstring, sizeof(nfc_connstring));
+      device_found++;
 
       // Test if we reach the maximum "wanted" devices
-      if ((*pszDeviceFound) >= connstrings_len)
+      if (device_found >= connstrings_len)
         break;
     }
   }
@@ -137,8 +135,8 @@ pn532_uart_probe(nfc_connstring connstrings[], size_t connstrings_len, size_t *p
     free((void *)acPort);
   }
   free(acPorts);
+  return device_found;
 #endif /* SERIAL_AUTOPROBE_ENABLED */
-  return true;
 }
 
 struct pn532_uart_descriptor {
@@ -507,7 +505,7 @@ const struct pn53x_io pn532_uart_io = {
 
 const struct nfc_driver pn532_uart_driver = {
   .name                             = PN532_UART_DRIVER_NAME,
-  .probe                            = pn532_uart_probe,
+  .scan                             = pn532_uart_scan,
   .open                             = pn532_uart_open,
   .close                            = pn532_uart_close,
   .strerror                         = pn53x_strerror,

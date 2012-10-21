@@ -91,21 +91,19 @@ static const uint8_t arygon_error_unknown_mode[] = "FF060000\x0d\x0a";
 int     arygon_reset_tama(nfc_device *pnd);
 void    arygon_firmware(nfc_device *pnd, char *str);
 
-static bool
-arygon_probe(nfc_connstring connstrings[], size_t connstrings_len, size_t *pszDeviceFound)
+static size_t
+arygon_scan(nfc_connstring connstrings[], const size_t connstrings_len)
 {
   /** @note: Due to UART bus we can't know if its really an ARYGON without
-  * sending some commands. But using this way to probe devices, we can
+  * sending some commands. But using this way to scan devices, we can
   * have serious problem with other device on this bus */
 #ifndef SERIAL_AUTOPROBE_ENABLED
   (void) connstrings;
   (void) connstrings_len;
-  *pszDeviceFound = 0;
-  log_put(LOG_CATEGORY, NFC_PRIORITY_INFO, "%s", "Serial auto-probing have been disabled at compile time. Skipping autoprobe.");
-  return false;
+  log_put(LOG_CATEGORY, NFC_PRIORITY_INFO, "%s", "Serial auto-probing have been disabled at compile time. Skipping autoscan.");
+  return 0;
 #else /* SERIAL_AUTOPROBE_ENABLED */
-  *pszDeviceFound = 0;
-
+  size_t device_found = 0;
   serial_port sp;
   char **acPorts = uart_list_ports();
   const char *acPort;
@@ -147,11 +145,11 @@ arygon_probe(nfc_connstring connstrings[], size_t connstrings_len, size_t *pszDe
       }
 
       // ARYGON reader is found
-      memcpy(connstrings[*pszDeviceFound], connstring, sizeof(nfc_connstring));
-      (*pszDeviceFound)++;
+      memcpy(connstrings[device_found], connstring, sizeof(nfc_connstring));
+      device_found++;
 
       // Test if we reach the maximum "wanted" devices
-      if ((*pszDeviceFound) >= connstrings_len)
+      if (device_found >= connstrings_len)
         break;
     }
   }
@@ -160,8 +158,8 @@ arygon_probe(nfc_connstring connstrings[], size_t connstrings_len, size_t *pszDe
     free((void *)acPort);
   }
   free(acPorts);
+  return device_found;
 #endif /* SERIAL_AUTOPROBE_ENABLED */
-  return true;
 }
 
 struct arygon_descriptor {
@@ -566,7 +564,7 @@ const struct pn53x_io arygon_tama_io = {
 
 const struct nfc_driver arygon_driver = {
   .name                             = ARYGON_DRIVER_NAME,
-  .probe                            = arygon_probe,
+  .scan                             = arygon_scan,
   .open                             = arygon_open,
   .close                            = arygon_close,
   .strerror                         = pn53x_strerror,

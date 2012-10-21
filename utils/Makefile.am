@@ -3,7 +3,7 @@ bin_PROGRAMS = \
 		nfc-list \
 		nfc-mfclassic \
 		nfc-mfultralight \
-		nfc-probe \
+		nfc-scan-device \
 		nfc-read-forum-tag3 \
 		nfc-relay-picc
 
@@ -30,8 +30,8 @@ nfc_mfclassic_LDADD = $(top_builddir)/libnfc/libnfc.la \
 nfc_mfultralight_SOURCES = nfc-mfultralight.c mifare.c mifare.h
 nfc_mfultralight_LDADD = $(top_builddir)/libnfc/libnfc.la
 
-nfc_probe_SOURCES = nfc-probe.c
-nfc_probe_LDADD = $(top_builddir)/libnfc/libnfc.la \
+nfc_scan_device_SOURCES = nfc-scan-device.c
+nfc_scan_device_LDADD = $(top_builddir)/libnfc/libnfc.la \
 		 libnfcutils.la
 
 nfc_read_forum_tag3_SOURCES = nfc-read-forum-tag3.c
