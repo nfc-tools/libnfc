@@ -1,8 +1,9 @@
 /*-
  * Public platform independent Near Field Communication (NFC) library
  *
- * Copyright (C) 2010, Roel Verdult, Romuald Conty
- * Copyright (C) 2011, Romuald Conty, Romain Tartière
+ * Copyright (C) 2010 Roel Verdult
+ * Copyright (C) 2011 Romain Tartière
+ * Copyright (C) 2010, 2011 Romuald Conty
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -22,8 +23,6 @@
  * @file pn532_uart.c
  * @brief PN532 driver using UART bus (UART, RS232, etc.)
  */
-
-/* vim: set ts=2 sw=2 et: */
 
 #ifdef HAVE_CONFIG_H
 #  include "config.h"

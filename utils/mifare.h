@@ -1,8 +1,9 @@
 /*-
  * Public platform independent Near Field Communication (NFC) library examples
  *
- * Copyright (C) 2009, Roel Verdult
- * Copyright (C) 2010, Romuald Conty, Romain Tartière
+ * Copyright (C) 2009 Roel Verdult
+ * Copyright (C) 2010 Romain Tartière
+ * Copyright (C) 2010, 2011 Romuald Conty
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:

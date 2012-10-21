@@ -1,7 +1,7 @@
 /*-
  * Public platform independent Near Field Communication (NFC) library examples
  *
- * Copyright (C) 2010, Romuald Conty
+ * Copyright (C) 2010 Romuald Conty
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -31,8 +31,6 @@
  * @file pn53x-diagnose.c
  * @brief Small application to diagnose PN53x using dedicated commands
  */
-
-/* vim:set ts=2 sw=2 et: */
 
 #ifdef HAVE_CONFIG_H
 #  include "config.h"

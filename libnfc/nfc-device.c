@@ -1,7 +1,8 @@
 /*-
  * Public platform independent Near Field Communication (NFC) library
  *
- * Copyright (C) 2011, Romain Tartière, Romuald Conty
+ * Copyright (C) 2011 Romain Tartière
+ * Copyright (C) 2011 Romuald Conty
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -21,8 +22,6 @@
 * @file nfc-device.c
 * @brief Provide internal function to manipulate nfc_device type
 */
-
-/* vim:set et sw=2 ts=2: */
 
 #include <stdlib.h>
 #include <string.h>

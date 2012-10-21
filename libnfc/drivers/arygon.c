@@ -1,9 +1,9 @@
 /*-
  * Public platform independent Near Field Communication (NFC) library
  *
- * Copyright (C) 2009, Roel Verdult
- * Copyright (C) 2010, Romuald Conty
- * Copyright (C) 2011, Romain Tartière, Romuald Conty
+ * Copyright (C) 2009 Roel Verdult
+ * Copyright (C) 2011 Romain Tartière
+ * Copyright (C) 2010, 2011 Romuald Conty
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -26,8 +26,6 @@
  * This driver can handle ARYGON readers that use UART as bus.
  * UART connection can be direct (host<->arygon_uc) or could be provided by internal USB to serial interface (e.g. host<->ftdi_chip<->arygon_uc)
  */
-
-/* vim: set ts=2 sw=2 et: */
 
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
