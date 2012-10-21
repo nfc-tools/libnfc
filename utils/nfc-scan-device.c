@@ -60,16 +60,18 @@
 static nfc_device *pnd;
 
 static void
-print_usage(const char *progname)
+print_usage(const char *argv[])
 {
-  printf("usage: %s [-v]\n", progname);
-  printf("  -v\t verbose display\n");
+  printf("Usage: %s [OPTIONS]\n", argv[0]);
+  printf("Options:\n");
+  printf("\t-h\tPrint this help message.\n");
+  printf("\t-v\tSet verbose display.\n");
+  printf("\t-i\tAllow intrusive scan.\n");
 }
 
 int
 main(int argc, const char *argv[])
 {
-  (void) argc;
   const char *acLibnfcVersion;
   size_t  i;
   bool verbose = false;
@@ -79,12 +81,20 @@ main(int argc, const char *argv[])
   // Display libnfc version
   acLibnfcVersion = nfc_version();
   printf("%s uses libnfc %s\n", argv[0], acLibnfcVersion);
-  if (argc != 1) {
-    if ((argc == 2) && (0 == strcmp("-v", argv[1]))) {
+
+  // Get commandline options
+  for (int arg = 1; arg < argc; arg++) {
+    if (0 == strcmp(argv[arg], "-h")) {
+      print_usage(argv);
+      return EXIT_SUCCESS;
+    } else if (0 == strcmp(argv[arg], "-v")) {
       verbose = true;
+    } else if (0 == strcmp(argv[arg], "-i")) {
+      setenv("LIBNFC_INTRUSIVE_SCAN", "yes", 1);
     } else {
-      print_usage(argv[0]);
-      exit(EXIT_FAILURE);
+      ERR("%s is not supported option.", argv[arg]);
+      print_usage(argv);
+      return EXIT_FAILURE;
     }
   }
 

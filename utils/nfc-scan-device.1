@@ -1,0 +1,59 @@
+.TH nfc-scan-device 1 "October 21, 2012" "libnfc" "NFC Utilities"
+.SH NAME
+nfc-scan-device \- Scan NFC devices
+.SH SYNOPSIS
+.B nfc-scan-device
+[
+.I options
+]
+.SH DESCRIPTION
+.B nfc-scan-device
+is a utility for listing any available device compliant with libnfc.
+It can optionnally display device's capabilities.
+
+.SH OPTIONS
+.TP
+.B \-v
+Tells
+.I
+nfc-scan-device
+to be verbose and display detailed information about the devices found.
+.TP
+.B \-i
+Tells
+.I
+nfc-scan-device
+to allow intrusive scan (eg. serial ports scan). This is equivalent to set environment variable LIBNFC_INTRUSIVE_SCAN to "yes".
+
+.SH EXAMPLE
+For a SCL3711 device (in verbose mode):
+
+- ACS / ACR122U PICC Interface:
+    acr122_usb:002:005
+ chip: PN532 v1.4
+ initator mode modulations: ISO/IEC 14443A (106 kbps), FeliCa (424 kbps, 212 kbps), ISO/IEC 14443-4B (106 kbps), Innovision Jewel (106 kbps), D.E.P. (424 kbps, 212 kbps, 106 kbps)
+ target mode modulations: ISO/IEC 14443A (106 kbps), FeliCa (424 kbps, 212 kbps), D.E.P. (424 kbps, 212 kbps, 106 kbps)
+
+.SH BUGS
+Please report any bugs on the
+.B libnfc
+issue tracker at:
+.br
+.BR http://code.google.com/p/libnfc/issues
+.SH LICENCE
+.B libnfc
+is licensed under the GNU Lesser General Public License (LGPL), version 3.
+.br
+.B libnfc-utils
+and
+.B libnfc-examples
+are covered by the the BSD 2-Clause license.
+.SH AUTHORS
+Roel Verdult <roel@libnfc.org>, 
+.br
+Romain Tartière <romain@libnfc.org>, 
+.br
+Romuald Conty <romuald@libnfc.org>.
+.PP
+This manual page was written by Romuald Conty <romuald@libnfc.org>.
+It is licensed under the terms of the GNU GPL (version 2 or later).

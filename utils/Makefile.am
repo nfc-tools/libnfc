@@ -3,9 +3,9 @@ bin_PROGRAMS = \
 		nfc-list \
 		nfc-mfclassic \
 		nfc-mfultralight \
-		nfc-scan-device \
 		nfc-read-forum-tag3 \
-		nfc-relay-picc
+		nfc-relay-picc \
+		nfc-scan-device
 
 # set the include path found by configure
 AM_CPPFLAGS = $(all_includes) $(LIBNFC_CFLAGS)
@@ -30,10 +30,6 @@ nfc_mfclassic_LDADD = $(top_builddir)/libnfc/libnfc.la \
 nfc_mfultralight_SOURCES = nfc-mfultralight.c mifare.c mifare.h
 nfc_mfultralight_LDADD = $(top_builddir)/libnfc/libnfc.la
 
-nfc_scan_device_SOURCES = nfc-scan-device.c
-nfc_scan_device_LDADD = $(top_builddir)/libnfc/libnfc.la \
-		 libnfcutils.la
-
 nfc_read_forum_tag3_SOURCES = nfc-read-forum-tag3.c
 nfc_read_forum_tag3_LDADD = $(top_builddir)/libnfc/libnfc.la \
 		            libnfcutils.la
@@ -42,11 +38,16 @@ nfc_relay_picc_SOURCES = nfc-relay-picc.c
 nfc_relay_picc_LDADD = $(top_builddir)/libnfc/libnfc.la \
 		       libnfcutils.la
 
+nfc_scan_device_SOURCES = nfc-scan-device.c
+nfc_scan_device_LDADD = $(top_builddir)/libnfc/libnfc.la \
+		 libnfcutils.la
+
 dist_man_MANS = \
 		nfc-emulate-forum-tag4.1 \
 		nfc-list.1 \
 		nfc-mfclassic.1 \
 		nfc-mfultralight.1 \
-		nfc-relay-picc.1
+		nfc-relay-picc.1 \
+		nfc-scan-device.1
 
 EXTRA_DIST = CMakeLists.txt
