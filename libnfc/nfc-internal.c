@@ -1,7 +1,7 @@
 /*-
  * Public platform independent Near Field Communication (NFC) library
  *
- * Copyright (C) 2011 Romuald Conty
+ * Copyright (C) 2011, 2012 Romuald Conty
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -24,6 +24,44 @@
 
 #include <nfc/nfc.h>
 #include "nfc-internal.h"
+
+#include <stdlib.h>
+#include <string.h>
+
+static bool
+string_as_boolean(const char* s)
+{
+  if ((s) && (
+    (strcmp(s, "yes") == 0) ||
+    (strcmp(s, "true") == 0) ||
+    (strcmp(s, "1") == 0))) {
+    return true;
+  }
+  return false;
+}
+
+nfc_context *
+nfc_context_new(void)
+{
+  nfc_context *res = malloc(sizeof(*res));
+
+  if (!res) {
+    err(EXIT_FAILURE, "nfc_context_new: malloc");
+  }
+
+  // Load "intrusive scan" option
+  // XXX: Load this option from configuration file too ?
+  char *envvar = getenv("LIBNFC_INTRUSIVE_SCAN");
+  res->allow_intrusive_scan = string_as_boolean(envvar);
+  log_put ("libnfc", NFC_PRIORITY_DEBUG, "allow_intrusive_scan is set to %s", (res->allow_intrusive_scan)?"true":"false");
+  return res;
+}
+
+void
+nfc_context_free(nfc_context *context)
+{
+  free(context);
+}
 
 void
 prepare_initiator_data(const nfc_modulation nm, uint8_t **ppbtInitiatorData, size_t *pszInitiatorData)

@@ -107,8 +107,15 @@
     } \
   } while (0)
 
+typedef enum {
+ NOT_INTRUSIVE,
+ INTRUSIVE,
+ NOT_AVAILABLE,
+} scan_type_enum;
+
 struct nfc_driver {
   const char *name;
+  const scan_type_enum scan_type;
   size_t (*scan)(nfc_connstring connstrings[], const size_t connstrings_len);
   struct nfc_device *(*open)(const nfc_connstring connstring);
   void (*close)(struct nfc_device *pnd);
@@ -146,6 +153,18 @@ struct nfc_driver {
 #  define DEVICE_PORT_LENGTH  64
 
 /**
+ * @struct nfc_context
+ * @brief NFC library context
+ * Struct which contains internal options, references, pointers, etc. used by library
+ */
+struct nfc_context {
+  bool allow_intrusive_scan;
+};
+
+nfc_context *nfc_context_new(void);
+void nfc_context_free(nfc_context *context);
+
+/**
  * @struct nfc_device
  * @brief NFC device information
  */
@@ -173,11 +192,11 @@ struct nfc_device {
   int     last_error;
 };
 
-nfc_device  *nfc_device_new(const nfc_connstring connstring);
-void           nfc_device_free(nfc_device *dev);
+nfc_device *nfc_device_new(const nfc_connstring connstring);
+void        nfc_device_free(nfc_device *dev);
 
-void 	iso14443_cascade_uid(const uint8_t abtUID[], const size_t szUID, uint8_t *pbtCascadedUID, size_t *pszCascadedUID);
+void iso14443_cascade_uid(const uint8_t abtUID[], const size_t szUID, uint8_t *pbtCascadedUID, size_t *pszCascadedUID);
 
-void 	prepare_initiator_data(const nfc_modulation nm, uint8_t **ppbtInitiatorData, size_t *pszInitiatorData);
+void prepare_initiator_data(const nfc_modulation nm, uint8_t **ppbtInitiatorData, size_t *pszInitiatorData);
 
 #endif // __NFC_INTERNAL_H__

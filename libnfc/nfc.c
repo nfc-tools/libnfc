@@ -125,7 +125,7 @@ nfc_init(nfc_context *context)
 void
 nfc_exit(nfc_context *context)
 {
-  (void) context;
+  if(context) nfc_context_free(context);
   log_fini();
 }
 
@@ -251,7 +251,7 @@ nfc_close(nfc_device *pnd)
 }
 
 /** @ingroup dev
- * @brief Probe for discoverable supported devices (ie. only available for some drivers)
+ * @brief Scan for discoverable supported devices (ie. only available for some drivers)
  * @return Returns the number of devices found.
  * @param context The context to operate on, or NULL for the default context.
  * @param connstrings array of \a nfc_connstring.
@@ -265,17 +265,20 @@ nfc_list_devices(nfc_context *context, nfc_connstring connstrings[], const size_
   const struct nfc_driver *ndr;
   const struct nfc_driver **pndr = nfc_drivers;
 
-  (void) context;
+  if (!context) context = nfc_context_new(); // Should we support NULL context ?
+  // FIXME: Load device(s) from configuration file(s)
 
   while ((ndr = *pndr)) {
     size_t _device_found = 0;
-    _device_found = ndr->scan(connstrings + (device_found), connstrings_len - (device_found));
-    log_put(LOG_CATEGORY, NFC_PRIORITY_TRACE, "%ld device(s) found using %s driver", (unsigned long) _device_found, ndr->name);
-    if (_device_found > 0) {
-      device_found += _device_found;
-      if (device_found == connstrings_len)
-        break;
-    }
+    if((ndr->scan_type == NOT_INTRUSIVE) || ((context->allow_intrusive_scan) && (ndr->scan_type == INTRUSIVE))) {
+      _device_found = ndr->scan(connstrings + (device_found), connstrings_len - (device_found));
+      log_put(LOG_CATEGORY, NFC_PRIORITY_TRACE, "%ld device(s) found using %s driver", (unsigned long) _device_found, ndr->name);
+      if (_device_found > 0) {
+        device_found += _device_found;
+        if (device_found == connstrings_len)
+          break;
+      }
+    } // scan_type is INTRUSIVE but not allowed or NOT_AVAILABLE
     pndr++;
   }
   log_fini();

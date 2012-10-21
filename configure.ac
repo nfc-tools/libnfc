@@ -84,17 +84,6 @@ fi
 # Handle --with-drivers option
 LIBNFC_ARG_WITH_DRIVERS
 
-# Serial autoprobing support (default:no)
-AC_ARG_ENABLE([serial-autoprobe],AS_HELP_STRING([--enable-serial-autoprobe],[Allow serial ports to be probed (can seriously disturb connected serial devices)]),[enable_serial_autoprobe=$enableval],[enable_serial_autoprobe="no"])
- 
-AC_MSG_CHECKING(for serial autoprobe flag)
-AC_MSG_RESULT($enable_serial_autoprobe)
-
-if test x"$enable_serial_autoprobe" = "xyes"
-then
-  CFLAGS="$CFLAGS -DSERIAL_AUTOPROBE_ENABLED"
-fi
-
 # Documentation (default: no)
 AC_ARG_ENABLE([doc],AS_HELP_STRING([--enable-doc],[Enable documentation generation.]),[enable_doc=$enableval],[enable_doc="no"])
 

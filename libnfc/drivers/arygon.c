@@ -94,15 +94,6 @@ void    arygon_firmware(nfc_device *pnd, char *str);
 static size_t
 arygon_scan(nfc_connstring connstrings[], const size_t connstrings_len)
 {
-  /** @note: Due to UART bus we can't know if its really an ARYGON without
-  * sending some commands. But using this way to scan devices, we can
-  * have serious problem with other device on this bus */
-#ifndef SERIAL_AUTOPROBE_ENABLED
-  (void) connstrings;
-  (void) connstrings_len;
-  log_put(LOG_CATEGORY, NFC_PRIORITY_INFO, "%s", "Serial auto-probing have been disabled at compile time. Skipping autoscan.");
-  return 0;
-#else /* SERIAL_AUTOPROBE_ENABLED */
   size_t device_found = 0;
   serial_port sp;
   char **acPorts = uart_list_ports();
@@ -159,7 +150,6 @@ arygon_scan(nfc_connstring connstrings[], const size_t connstrings_len)
   }
   free(acPorts);
   return device_found;
-#endif /* SERIAL_AUTOPROBE_ENABLED */
 }
 
 struct arygon_descriptor {
@@ -564,6 +554,7 @@ const struct pn53x_io arygon_tama_io = {
 
 const struct nfc_driver arygon_driver = {
   .name                             = ARYGON_DRIVER_NAME,
+  .scan_type                        = INTRUSIVE,
   .scan                             = arygon_scan,
   .open                             = arygon_open,
   .close                            = arygon_close,

@@ -325,7 +325,6 @@ acr122_usb_scan(nfc_connstring connstrings[], const size_t connstrings_len)
   }
 
   size_t device_found = 0;
-
   uint32_t uiBusIndex = 0;
   struct usb_bus *bus;
   for (bus = usb_get_busses(); bus; bus = bus->next) {
@@ -862,6 +861,7 @@ const struct pn53x_io acr122_usb_io = {
 
 const struct nfc_driver acr122_usb_driver = {
   .name                             = ACR122_USB_DRIVER_NAME,
+  .scan_type                        = NOT_INTRUSIVE,
   .scan                             = acr122_usb_scan,
   .open                             = acr122_usb_open,
   .close                            = acr122_usb_close,

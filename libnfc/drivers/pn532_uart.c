@@ -67,15 +67,6 @@ int     pn532_uart_wakeup(nfc_device *pnd);
 static size_t
 pn532_uart_scan(nfc_connstring connstrings[], const size_t connstrings_len)
 {
-  /** @note: Due to UART bus we can't know if its really a pn532 without
-  * sending some PN53x commands. But using this way to scan devices, we can
-  * have serious problem with other device on this bus */
-#ifndef SERIAL_AUTOPROBE_ENABLED
-  (void) connstrings;
-  (void) connstrings_len;
-  log_put(LOG_CATEGORY, NFC_PRIORITY_INFO, "%s", "Serial auto-probing have been disabled at compile time. Skipping autoscan.");
-  return 0;
-#else /* SERIAL_AUTOPROBE_ENABLED */
   size_t device_found = 0;
   serial_port sp;
   char **acPorts = uart_list_ports();
@@ -136,7 +127,6 @@ pn532_uart_scan(nfc_connstring connstrings[], const size_t connstrings_len)
   }
   free(acPorts);
   return device_found;
-#endif /* SERIAL_AUTOPROBE_ENABLED */
 }
 
 struct pn532_uart_descriptor {
@@ -505,6 +495,7 @@ const struct pn53x_io pn532_uart_io = {
 
 const struct nfc_driver pn532_uart_driver = {
   .name                             = PN532_UART_DRIVER_NAME,
+  .scan_type                        = INTRUSIVE,
   .scan                             = pn532_uart_scan,
   .open                             = pn532_uart_open,
   .close                            = pn532_uart_close,
