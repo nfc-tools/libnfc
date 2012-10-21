@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2010 Roel Verdult
  * Copyright (C) 2011 Romain Tartière
- * Copyright (C) 2010, 2011 Romuald Conty
+ * Copyright (C) 2010, 2011, 2012 Romuald Conty
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -47,11 +47,8 @@
 #define PN532_UART_DRIVER_NAME "pn532_uart"
 #define LOG_CATEGORY "libnfc.driver.pn532_uart"
 
-int     pn532_uart_ack(nfc_device *pnd);
-int     pn532_uart_wakeup(nfc_device *pnd);
-
+// Internal data structs
 const struct pn53x_io pn532_uart_io;
-
 struct pn532_uart_data {
   serial_port port;
 #ifndef WIN32
@@ -61,9 +58,13 @@ struct pn532_uart_data {
 #endif
 };
 
+// Prototypes
+int     pn532_uart_ack(nfc_device *pnd);
+int     pn532_uart_wakeup(nfc_device *pnd);
+
 #define DRIVER_DATA(pnd) ((struct pn532_uart_data*)(pnd->driver_data))
 
-bool
+static bool
 pn532_uart_probe(nfc_connstring connstrings[], size_t connstrings_len, size_t *pszDeviceFound)
 {
   /** @note: Due to UART bus we can't know if its really a pn532 without
@@ -194,7 +195,23 @@ pn532_connstring_decode(const nfc_connstring connstring, struct pn532_uart_descr
   return 3;
 }
 
-nfc_device *
+static void
+pn532_uart_close(nfc_device *pnd)
+{
+  // Release UART port
+  uart_close(DRIVER_DATA(pnd)->port);
+
+#ifndef WIN32
+  // Release file descriptors used for abort mecanism
+  close(DRIVER_DATA(pnd)->iAbortFds[0]);
+  close(DRIVER_DATA(pnd)->iAbortFds[1]);
+#endif
+
+  pn53x_data_free(pnd);
+  nfc_device_free(pnd);
+}
+
+static nfc_device *
 pn532_uart_open(const nfc_connstring connstring)
 {
   struct pn532_uart_descriptor ndd;
@@ -259,22 +276,6 @@ pn532_uart_open(const nfc_connstring connstring)
   return pnd;
 }
 
-void
-pn532_uart_close(nfc_device *pnd)
-{
-  // Release UART port
-  uart_close(DRIVER_DATA(pnd)->port);
-
-#ifndef WIN32
-  // Release file descriptors used for abort mecanism
-  close(DRIVER_DATA(pnd)->iAbortFds[0]);
-  close(DRIVER_DATA(pnd)->iAbortFds[1]);
-#endif
-
-  pn53x_data_free(pnd);
-  nfc_device_free(pnd);
-}
-
 int
 pn532_uart_wakeup(nfc_device *pnd)
 {
@@ -286,7 +287,7 @@ pn532_uart_wakeup(nfc_device *pnd)
 }
 
 #define PN532_BUFFER_LEN (PN53x_EXTENDED_FRAME__DATA_MAX_LEN + PN53x_EXTENDED_FRAME__OVERHEAD)
-int
+static int
 pn532_uart_send(nfc_device *pnd, const uint8_t *pbtData, const size_t szData, int timeout)
 {
   int res = 0;
@@ -347,7 +348,7 @@ pn532_uart_send(nfc_device *pnd, const uint8_t *pbtData, const size_t szData, in
   return NFC_SUCCESS;
 }
 
-int
+static int
 pn532_uart_receive(nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, int timeout)
 {
   uint8_t  abtRxBuf[5];
@@ -512,7 +513,7 @@ const struct nfc_driver pn532_uart_driver = {
   .strerror                         = pn53x_strerror,
 
   .initiator_init                   = pn53x_initiator_init,
-  .initiator_init_secure_element    = pn532_initiator_init_secure_element, // No secure-element support
+  .initiator_init_secure_element    = pn532_initiator_init_secure_element,
   .initiator_select_passive_target  = pn53x_initiator_select_passive_target,
   .initiator_poll_target            = pn53x_initiator_poll_target,
   .initiator_select_dep_target      = pn53x_initiator_select_dep_target,

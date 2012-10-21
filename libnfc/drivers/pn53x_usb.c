@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2009 Roel Verdult
  * Copyright (C) 2010, 2011 Romain Tartière
- * Copyright (C) 2010, 2011 Romuald Conty
+ * Copyright (C) 2010, 2011, 2012 Romuald Conty
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -76,6 +76,7 @@ typedef enum {
   SONY_RCS360
 } pn53x_usb_model;
 
+// Internal data structs
 struct pn53x_usb_data {
   usb_dev_handle *pudh;
   pn53x_usb_model model;
@@ -86,6 +87,8 @@ struct pn53x_usb_data {
 };
 
 const struct pn53x_io pn53x_usb_io;
+
+// Prototypes
 bool pn53x_usb_get_usb_device_name(struct usb_device *dev, usb_dev_handle *udev, char *buffer, size_t len);
 int pn53x_usb_init(nfc_device *pnd);
 
@@ -178,7 +181,7 @@ pn53x_usb_get_end_points(struct usb_device *dev, struct pn53x_usb_data *data)
   }
 }
 
-bool
+static bool
 pn53x_usb_probe(nfc_connstring connstrings[], size_t connstrings_len, size_t *pszDeviceFound)
 {
   usb_init();
@@ -308,7 +311,7 @@ pn53x_usb_get_usb_device_name(struct usb_device *dev, usb_dev_handle *udev, char
   return false;
 }
 
-nfc_device *
+static nfc_device *
 pn53x_usb_open(const nfc_connstring connstring)
 {
   nfc_device *pnd = NULL;
@@ -439,7 +442,7 @@ free_mem:
   return pnd;
 }
 
-void
+static void
 pn53x_usb_close(nfc_device *pnd)
 {
   pn53x_usb_ack(pnd);
@@ -466,7 +469,7 @@ pn53x_usb_close(nfc_device *pnd)
 
 #define PN53X_USB_BUFFER_LEN (PN53x_EXTENDED_FRAME__DATA_MAX_LEN + PN53x_EXTENDED_FRAME__OVERHEAD)
 
-int
+static int
 pn53x_usb_send(nfc_device *pnd, const uint8_t *pbtData, const size_t szData, const int timeout)
 {
   uint8_t  abtFrame[PN53X_USB_BUFFER_LEN] = { 0x00, 0x00, 0xff };  // Every packet must start with "00 00 ff"
@@ -510,7 +513,7 @@ pn53x_usb_send(nfc_device *pnd, const uint8_t *pbtData, const size_t szData, con
 }
 
 #define USB_TIMEOUT_PER_PASS 200
-int
+static int
 pn53x_usb_receive(nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, const int timeout)
 {
   size_t len;

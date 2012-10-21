@@ -81,8 +81,10 @@
 
 #define LOG_CATEGORY "libnfc.driver.acr122"
 
+// Internal data struct
 const struct pn53x_io acr122_pcsc_io;
 
+// Prototypes
 char   *acr122_pcsc_firmware(nfc_device *pnd);
 
 const char *supported_devices[] = {
@@ -140,7 +142,7 @@ acr122_pcsc_free_scardcontext(void)
  * @param pszDeviceFound number of devices found.
  * @return true if succeeded, false otherwise.
  */
-bool
+static bool
 acr122_pcsc_probe(nfc_connstring connstrings[], size_t connstrings_len, size_t *pszDeviceFound)
 {
   size_t  szPos = 0;
@@ -233,7 +235,7 @@ acr122_pcsc_connstring_decode(const nfc_connstring connstring, struct acr122_pcs
   return 3;
 }
 
-nfc_device *
+static nfc_device *
 acr122_pcsc_open(const nfc_connstring connstring)
 {
   struct acr122_pcsc_descriptor ndd;
@@ -324,7 +326,7 @@ error:
   return NULL;
 }
 
-void
+static void
 acr122_pcsc_close(nfc_device *pnd)
 {
   SCardDisconnect(DRIVER_DATA(pnd)->hCard, SCARD_LEAVE_CARD);
@@ -334,7 +336,7 @@ acr122_pcsc_close(nfc_device *pnd)
   nfc_device_free(pnd);
 }
 
-int
+static int
 acr122_pcsc_send(nfc_device *pnd, const uint8_t *pbtData, const size_t szData, int timeout)
 {
   // FIXME: timeout is not handled
@@ -405,7 +407,7 @@ acr122_pcsc_send(nfc_device *pnd, const uint8_t *pbtData, const size_t szData, i
   return NFC_SUCCESS;
 }
 
-int
+static int
 acr122_pcsc_receive(nfc_device *pnd, uint8_t *pbtData, const size_t szData, int timeout)
 {
   // FIXME: timeout is not handled

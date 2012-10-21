@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2009 Roel Verdult
  * Copyright (C) 2010, 2011 Romain Tartière
- * Copyright (C) 2010, 2011 Romuald Conty
+ * Copyright (C) 2010, 2011, 2012 Romuald Conty
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -201,11 +201,12 @@ const uint8_t acr122_usb_frame_template[] = {
 // APDUs instructions
 #define APDU_GetAdditionnalData 0xc0
 
+// Internal data struct
 const struct pn53x_io acr122_usb_io;
-bool acr122_usb_get_usb_device_name(struct usb_device *dev, usb_dev_handle *udev, char *buffer, size_t len);
-int  acr122_usb_init(nfc_device *pnd);
-int  acr122_usb_ack(nfc_device *pnd);
 
+// Prototypes
+static int acr122_usb_init(nfc_device *pnd);
+static int acr122_usb_ack(nfc_device *pnd);
 static int acr122_usb_send_apdu(nfc_device *pnd,
                      const uint8_t ins, const uint8_t p1, const uint8_t p2, const uint8_t *const data, size_t data_len, const uint8_t le,
                      uint8_t *out, const size_t out_size);
@@ -302,8 +303,8 @@ acr122_usb_get_end_points(struct usb_device *dev, struct acr122_usb_data *data)
   }
 }
 
-bool
-acr122_usb_probe(nfc_connstring connstrings[], size_t connstrings_len, size_t *pszDeviceFound)
+static bool
+acr122_usb_probe(nfc_connstring connstrings[], size_t connstrings_len, size_t *device_found)
 {
   usb_init();
 
@@ -323,7 +324,7 @@ acr122_usb_probe(nfc_connstring connstrings[], size_t connstrings_len, size_t *p
     return false;
   }
 
-  *pszDeviceFound = 0;
+  *device_found = 0;
 
   uint32_t uiBusIndex = 0;
   struct usb_bus *bus;
@@ -348,13 +349,13 @@ acr122_usb_probe(nfc_connstring connstrings[], size_t connstrings_len, size_t *p
           usb_dev_handle *udev = usb_open(dev);
 
           // Set configuration
-          // acr122_usb_get_usb_device_name (dev, udev, pnddDevices[*pszDeviceFound].acDevice, sizeof (pnddDevices[*pszDeviceFound].acDevice));
+          // acr122_usb_get_usb_device_name (dev, udev, pnddDevices[*device_found].acDevice, sizeof (pnddDevices[*device_found].acDevice));
           log_put(LOG_CATEGORY, NFC_PRIORITY_TRACE, "device found: Bus %s Device %s Name %s", bus->dirname, dev->filename, acr122_usb_supported_devices[n].name);
           usb_close(udev);
-          snprintf(connstrings[*pszDeviceFound], sizeof(nfc_connstring), "%s:%s:%s", ACR122_USB_DRIVER_NAME, bus->dirname, dev->filename);
-          (*pszDeviceFound)++;
+          snprintf(connstrings[*device_found], sizeof(nfc_connstring), "%s:%s:%s", ACR122_USB_DRIVER_NAME, bus->dirname, dev->filename);
+          (*device_found)++;
           // Test if we reach the maximum "wanted" devices
-          if ((*pszDeviceFound) == connstrings_len) {
+          if ((*device_found) == connstrings_len) {
             return true;
           }
         }
@@ -397,7 +398,7 @@ acr122_usb_connstring_decode(const nfc_connstring connstring, struct acr122_usb_
   return res;
 }
 
-bool
+static bool
 acr122_usb_get_usb_device_name(struct usb_device *dev, usb_dev_handle *udev, char *buffer, size_t len)
 {
   *buffer = '\0';
@@ -604,7 +605,7 @@ acr122_build_frame_from_tama(nfc_device *pnd, const uint8_t *tama, const size_t 
   return (sizeof(struct ccid_header) + sizeof(struct apdu_header) + 1 + tama_len);
 }
 
-int
+static int
 acr122_usb_send(nfc_device *pnd, const uint8_t *pbtData, const size_t szData, const int timeout)
 {
   int res;
@@ -621,7 +622,7 @@ acr122_usb_send(nfc_device *pnd, const uint8_t *pbtData, const size_t szData, co
 }
 
 #define USB_TIMEOUT_PER_PASS 200
-int
+static int
 acr122_usb_receive(nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, const int timeout)
 {
   off_t offset = 0;

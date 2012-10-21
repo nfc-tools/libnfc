@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2009 Roel Verdult
  * Copyright (C) 2011 Romain Tartière
- * Copyright (C) 2010, 2011 Romuald Conty
+ * Copyright (C) 2010, 2011, 2012 Romuald Conty
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -70,6 +70,7 @@
 
 #define DRIVER_DATA(pnd) ((struct arygon_data*)(pnd->driver_data))
 
+// Internal data structs
 const struct pn53x_io arygon_tama_io;
 
 struct arygon_data {
@@ -81,14 +82,16 @@ struct arygon_data {
 #endif
 };
 
+// ARYGON frames
 static const uint8_t arygon_error_none[] = "FF000000\x0d\x0a";
 static const uint8_t arygon_error_incomplete_command[] = "FF0C0000\x0d\x0a";
 static const uint8_t arygon_error_unknown_mode[] = "FF060000\x0d\x0a";
 
-int    arygon_reset_tama(nfc_device *pnd);
+// Prototypes
+int     arygon_reset_tama(nfc_device *pnd);
 void    arygon_firmware(nfc_device *pnd, char *str);
 
-bool
+static bool
 arygon_probe(nfc_connstring connstrings[], size_t connstrings_len, size_t *pszDeviceFound)
 {
   /** @note: Due to UART bus we can't know if its really an ARYGON without
@@ -215,7 +218,23 @@ arygon_connstring_decode(const nfc_connstring connstring, struct arygon_descript
   return 3;
 }
 
-nfc_device *
+static void
+arygon_close(nfc_device *pnd)
+{
+  // Release UART port
+  uart_close(DRIVER_DATA(pnd)->port);
+
+#ifndef WIN32
+  // Release file descriptors used for abort mecanism
+  close(DRIVER_DATA(pnd)->iAbortFds[0]);
+  close(DRIVER_DATA(pnd)->iAbortFds[1]);
+#endif
+
+  pn53x_data_free(pnd);
+  nfc_device_free(pnd);
+}
+
+static nfc_device *
 arygon_open(const nfc_connstring connstring)
 {
   struct arygon_descriptor ndd;
@@ -287,25 +306,9 @@ arygon_open(const nfc_connstring connstring)
   return pnd;
 }
 
-void
-arygon_close(nfc_device *pnd)
-{
-  // Release UART port
-  uart_close(DRIVER_DATA(pnd)->port);
-
-#ifndef WIN32
-  // Release file descriptors used for abort mecanism
-  close(DRIVER_DATA(pnd)->iAbortFds[0]);
-  close(DRIVER_DATA(pnd)->iAbortFds[1]);
-#endif
-
-  pn53x_data_free(pnd);
-  nfc_device_free(pnd);
-}
-
 #define ARYGON_TX_BUFFER_LEN (PN53x_NORMAL_FRAME__DATA_MAX_LEN + PN53x_NORMAL_FRAME__OVERHEAD + 1)
 #define ARYGON_RX_BUFFER_LEN (PN53x_EXTENDED_FRAME__DATA_MAX_LEN + PN53x_EXTENDED_FRAME__OVERHEAD)
-int
+static int
 arygon_tama_send(nfc_device *pnd, const uint8_t *pbtData, const size_t szData, int timeout)
 {
   int res = 0;
@@ -366,7 +369,7 @@ arygon_abort(nfc_device *pnd)
   return pn53x_check_communication(pnd);
 }
 
-int
+static int
 arygon_tama_receive(nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, int timeout)
 {
   uint8_t  abtRxBuf[5];

@@ -2,6 +2,7 @@
  * Public platform independent Near Field Communication (NFC) library
  *
  * Copyright (C) 2011 Anugrah Redja Kusuma <anugrah.redja@gmail.com>
+ * Copyright (C) 2012 Romuald Conty
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -46,6 +47,7 @@
 #define ACR122S_DRIVER_NAME "ACR122S"
 #define LOG_CATEGORY "libnfc.driver.acr122s"
 
+// Internal data structs
 struct acr122s_data {
   serial_port port;
   uint8_t seq;
@@ -151,28 +153,7 @@ struct apdu_header {
 
 #pragma pack(pop)
 
-#define TRACE do { printf("%s:%d\n", __func__, __LINE__); } while (0)
-
 #define DRIVER_DATA(pnd) ((struct acr122s_data *) (pnd->driver_data))
-
-/**
- * Print a debuggin hex string to stdout.
- *
- * @param caption is buffer label
- * @param buf is buffer to be print
- * @param buf_len is buffer length
- */
-#if 0
-static void
-print_hex(const char *caption, uint8_t *buf, size_t buf_len)
-{
-  printf("%s:", caption);
-  for (size_t i = 0; i < buf_len; i++) {
-    printf(" %02x", buf[i]);
-  }
-  puts("");
-}
-#endif
 
 /**
  * Fix a command frame with a valid prefix, checksum, and suffix.
@@ -466,7 +447,7 @@ acr122s_connstring_decode(const nfc_connstring connstring, struct acr122s_descri
   return 3;
 }
 
-bool
+static bool
 acr122s_probe(nfc_connstring connstrings[], size_t connstrings_len, size_t *pszDeviceFound)
 {
   /** @note: Due to UART bus we can't know if its really an ACR122S without
@@ -545,7 +526,23 @@ acr122s_probe(nfc_connstring connstrings[], size_t connstrings_len, size_t *pszD
   return true;
 }
 
-nfc_device *
+static void
+acr122s_close(nfc_device *pnd)
+{
+  acr122s_deactivate_sam(pnd);
+  uart_close(DRIVER_DATA(pnd)->port);
+
+#ifndef WIN32
+  // Release file descriptors used for abort mecanism
+  close(DRIVER_DATA(pnd)->abort_fds[0]);
+  close(DRIVER_DATA(pnd)->abort_fds[1]);
+#endif
+
+  pn53x_data_free(pnd);
+  nfc_device_free(pnd);
+}
+
+static nfc_device *
 acr122s_open(const nfc_connstring connstring)
 {
   serial_port sp;
@@ -632,23 +629,7 @@ acr122s_open(const nfc_connstring connstring)
   return pnd;
 }
 
-void
-acr122s_close(nfc_device *pnd)
-{
-  acr122s_deactivate_sam(pnd);
-  uart_close(DRIVER_DATA(pnd)->port);
-
-#ifndef WIN32
-  // Release file descriptors used for abort mecanism
-  close(DRIVER_DATA(pnd)->abort_fds[0]);
-  close(DRIVER_DATA(pnd)->abort_fds[1]);
-#endif
-
-  pn53x_data_free(pnd);
-  nfc_device_free(pnd);
-}
-
-int
+static int
 acr122s_send(nfc_device *pnd, const uint8_t *buf, const size_t buf_len, int timeout)
 {
   uart_flush_input(DRIVER_DATA(pnd)->port);
@@ -665,7 +646,7 @@ acr122s_send(nfc_device *pnd, const uint8_t *buf, const size_t buf_len, int time
   return NFC_SUCCESS;
 }
 
-int
+static int
 acr122s_receive(nfc_device *pnd, uint8_t *buf, size_t buf_len, int timeout)
 {
   void *abort_p;
