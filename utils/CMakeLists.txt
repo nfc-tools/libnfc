@@ -3,9 +3,9 @@ SET(UTILS-SOURCES
   nfc-list
   nfc-mfclassic
   nfc-mfultralight
-  nfc-probe
   nfc-read-forum-tag3
   nfc-relay-picc
+  nfc-scan-device
 )
 
 ADD_LIBRARY(nfcutils STATIC 
