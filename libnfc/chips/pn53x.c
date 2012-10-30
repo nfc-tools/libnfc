@@ -2366,12 +2366,12 @@ pn53x_InDeselect(struct nfc_device *pnd, const uint8_t ui8Target)
 int
 pn53x_InRelease(struct nfc_device *pnd, const uint8_t ui8Target)
 {
+  int res = 0;
   if (CHIP_DATA(pnd)->type == RCS360) {
     // We should do act here *only* if a target was previously selected
     uint8_t  abtStatus[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
     size_t  szStatus = sizeof(abtStatus);
     uint8_t  abtCmdGetStatus[] = { GetGeneralStatus };
-    int res = 0;
     if ((res = pn53x_transceive(pnd, abtCmdGetStatus, sizeof(abtCmdGetStatus), abtStatus, szStatus, -1)) < 0) {
       return res;
     }
@@ -2381,10 +2381,12 @@ pn53x_InRelease(struct nfc_device *pnd, const uint8_t ui8Target)
     }
     // No much choice what to release actually...
     uint8_t  abtCmdRcs360[] = { InRelease, 0x01, 0x01 };
-    return (pn53x_transceive(pnd, abtCmdRcs360, sizeof(abtCmdRcs360), NULL, 0, -1));
+    res = pn53x_transceive(pnd, abtCmdRcs360, sizeof(abtCmdRcs360), NULL, 0, -1);
+    return (res>=0) ? NFC_SUCCESS : res;
   }
   uint8_t  abtCmd[] = { InRelease, ui8Target };
-  return (pn53x_transceive(pnd, abtCmd, sizeof(abtCmd), NULL, 0, -1));
+  res = pn53x_transceive(pnd, abtCmd, sizeof(abtCmd), NULL, 0, -1);
+  return (res>=0) ? NFC_SUCCESS : res;
 }
 
 int
