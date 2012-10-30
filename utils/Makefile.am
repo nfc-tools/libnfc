@@ -47,6 +47,7 @@ dist_man_MANS = \
 		nfc-list.1 \
 		nfc-mfclassic.1 \
 		nfc-mfultralight.1 \
+		nfc-read-forum-tag3.1 \
 		nfc-relay-picc.1 \
 		nfc-scan-device.1
 
