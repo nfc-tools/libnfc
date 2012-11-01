@@ -183,6 +183,11 @@ extern  "C" {
 #define NFC_ERFTRANS			-20
   /** @ingroup error
    * @hideinitializer
+   * MIFARE Classic: authentication failed
+   */
+#define NFC_EMFCAUTHFAIL		-30
+  /** @ingroup error
+   * @hideinitializer
    * Software error (allocation, file/pipe creation, etc.)
    */
 #define NFC_ESOFT			-80

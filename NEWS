@@ -16,7 +16,7 @@ API Changes:
       take a constant size for Rx buffer
     - New nfc_initiator_target_is_present() to test is the previously selected
       target is available in the field
-    - nfc_initiator_transceive_bytes() returns NFC_ETGRELEASED when AUTH
+    - nfc_initiator_transceive_bytes() returns NFC_EMFCAUTHFAIL when AUTH
       command failed on a Mifare Classic
     - New nfc_initiator_init_secure_element() to initiate a connection with
       secure element (Only supported with a PN532 with SAM equipped)

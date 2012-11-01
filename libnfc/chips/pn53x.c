@@ -285,15 +285,12 @@ pn53x_transceive(struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szTx
       break;
     case EMFAUTH:
       // When a MIFARE Classic AUTH fails, the tag is automatically in HALT state
-      res = NFC_ETGRELEASED;
+      res = NFC_EMFCAUTHFAIL;
       break;
     default:
       res = NFC_ECHIP;
       break;
   };
-  /*
-    { EMFAUTH, "Mifare Authentication Error" },
-  */
 
   if (res < 0) {
     pnd->last_error = res;

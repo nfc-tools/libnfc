@@ -632,7 +632,7 @@ nfc_initiator_deselect_target(nfc_device *pnd)
  *
  * @warning The configuration option \a NP_HANDLE_PARITY must be set to \c true (the default value).
  *
- * @note When used with MIFARE Classic, NFC_ETGRELEASED error is returned if authentication command failed. You need to re-select the tag to operate with.
+ * @note When used with MIFARE Classic, NFC_EMFCAUTHFAIL error is returned if authentication command failed. You need to re-select the tag to operate with.
  *
  */
 int
