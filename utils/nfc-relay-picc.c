@@ -67,6 +67,7 @@ static bool quitting = false;
 static bool quiet_output = false;
 static bool initiator_only_mode = false;
 static bool target_only_mode = false;
+static bool swap_devices = false;
 static int waiting_time = 0;
 FILE *fd3;
 FILE *fd4;
@@ -168,6 +169,9 @@ main(int argc, char *argv[])
       printf("INFO: %s\n", "Initiator mode only.");
       initiator_only_mode = true;
       target_only_mode = false;
+    } else if (0 == strcmp(argv[arg], "-s")) {
+      printf("INFO: %s\n", "Swapping devices.");
+      swap_devices = true;
     } else if (0 == strcmp(argv[arg], "-n")) {
       if (++arg == argc || (sscanf(argv[arg], "%i", &waiting_time) < 1)) {
         ERR("Missing or wrong waiting time value: %s.", argv[arg]);
@@ -217,7 +221,7 @@ main(int argc, char *argv[])
     // there is already a target used locally or not on the same machine:
     // if there is more than one readers opened we open the second reader
     // (we hope they're always detected in the same order)
-    if (szFound == 1) {
+    if ((szFound == 1) || swap_devices) {
       pndInitiator = nfc_open(NULL, connstrings[0]);
     } else {
       pndInitiator = nfc_open(NULL, connstrings[1]);
@@ -353,7 +357,11 @@ main(int argc, char *argv[])
     print_nfc_target(ntEmulatedTarget, false);
 
     // Try to open the NFC emulator device
-    pndTarget = nfc_open(NULL, connstrings[0]);
+    if (swap_devices) {
+      pndTarget = nfc_open(NULL, connstrings[1]);
+    } else {
+      pndTarget = nfc_open(NULL, connstrings[0]);
+    }
     if (pndTarget == NULL) {
       printf("Error opening NFC emulator device\n");
       if (!target_only_mode) {
