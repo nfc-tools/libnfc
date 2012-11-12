@@ -1554,7 +1554,7 @@ pn53x_initiator_transceive_bits_timed(struct nfc_device *pnd, const uint8_t *pbt
 }
 
 int
-pn53x_initiator_transceive_bytes_timed(struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szTx, uint8_t *pbtRx, uint32_t *cycles)
+pn53x_initiator_transceive_bytes_timed(struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szTx, uint8_t *pbtRx, const size_t szRx, uint32_t *cycles)
 {
   uint16_t i;
   uint8_t sz;
@@ -1602,7 +1602,7 @@ pn53x_initiator_transceive_bytes_timed(struct nfc_device *pnd, const uint8_t *pb
   }
 
   // Recv data
-  size_t szRx = 0;
+  size_t szRxLen = 0;
   // we've to watch for coming data until we decide to timeout.
   // our PN53x timer saturates after 4.8ms so this function shouldn't be used for
   // responses coming very late anyway.
@@ -1632,10 +1632,17 @@ pn53x_initiator_transceive_bytes_timed(struct nfc_device *pnd, const uint8_t *pb
     if ((res = pn53x_transceive(pnd, abtReadRegisterCmd, BUFFER_SIZE(abtReadRegisterCmd), abtRes, szRes, -1)) < 0) {
       return res;
     }
-    for (i = 0; i < sz; i++) {
-      pbtRx[i + szRx] = abtRes[i + off];
+    if (pbtRx != NULL) {
+      if ((szRxLen + sz) > szRx) {
+        log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "Buffer size is too short: %zuo available(s), %zuo needed", szRx, szRxLen + sz);
+        return NFC_EOVFLOW;
+      }
+      // Copy the received bytes
+      for (i = 0; i < sz; i++) {
+        pbtRx[i + szRxLen] = abtRes[i + off];
+      }
     }
-    szRx += (size_t)(sz & SYMBOL_FIFO_LEVEL);
+    szRxLen += (size_t)(sz & SYMBOL_FIFO_LEVEL);
     sz = abtRes[sz + off];
     if (sz == 0)
       break;
@@ -1653,7 +1660,7 @@ pn53x_initiator_transceive_bytes_timed(struct nfc_device *pnd, const uint8_t *pb
   } else {
     *cycles = __pn53x_get_timer(pnd, pbtTx[szTx - 1]);
   }
-  return szRx;
+  return szRxLen;
 }
 
 int
