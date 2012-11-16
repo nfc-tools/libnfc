@@ -1,29 +1,21 @@
 /**
- * @file quick_start_example1.c
+ * @file quick_start_example2.c
  * @brief Quick start example that presents how to use libnfc
  */
 
-// To compile this simple example:
-// $ gcc -o quick_start_example1 -lnfc  quick_start_example1.c
+// This is same example as quick_start_example1.c but using
+// some helper functions existing in libnfc.
+// Those functions are not available yet in a library
+// so binary object must be linked statically:
+// $ gcc -o quick_start_example2 -lnfc -I../.. quick_start_example2.c ../../utils/nfc-utils.o
 
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif // HAVE_CONFIG_H
 
 #include <stdlib.h>
-#include <err.h>
 #include <nfc/nfc.h>
-
-static void
-print_hex(const uint8_t *pbtData, const size_t szBytes)
-{
-  size_t  szPos;
-
-  for (szPos = 0; szPos < szBytes; szPos++) {
-    printf("%02x  ", pbtData[szPos]);
-  }
-  printf("\n");
-}
+#include "utils/nfc-utils.h"
 
 int
 main(int argc, const char *argv[])
@@ -41,7 +33,7 @@ main(int argc, const char *argv[])
   pnd = nfc_open(NULL, NULL);
 
   if (pnd == NULL) {
-    warnx("ERROR: %s", "Unable to open NFC device.");
+    ERR("%s", "Unable to open NFC device.");
     return EXIT_FAILURE;
   }
   // Set opened NFC device to initiator mode
