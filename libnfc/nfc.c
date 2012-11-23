@@ -678,8 +678,10 @@ nfc_initiator_transceive_bytes(nfc_device *pnd, const uint8_t *pbtTx, const size
  * CRC bytes. Using this feature you are able to simulate these frames.
  */
 int
-nfc_initiator_transceive_bits(nfc_device *pnd, const uint8_t *pbtTx, const size_t szTxBits, const uint8_t *pbtTxPar,
-                              uint8_t *pbtRx, uint8_t *pbtRxPar)
+nfc_initiator_transceive_bits(nfc_device *pnd, 
+                              const uint8_t *pbtTx, const size_t szTxBits, const uint8_t *pbtTxPar,
+                              uint8_t *pbtRx, const size_t szRx,
+                              uint8_t *pbtRxPar)
 {
   HAL(initiator_transceive_bits, pnd, pbtTx, szTxBits, pbtTxPar, pbtRx, pbtRxPar);
 }
@@ -705,7 +707,10 @@ nfc_initiator_transceive_bits(nfc_device *pnd, const uint8_t *pbtTx, const size_
  * @warning The configuration option \a NP_HANDLE_PARITY must be set to \c true (the default value).
  */
 int
-nfc_initiator_transceive_bytes_timed(nfc_device *pnd, const uint8_t *pbtTx, const size_t szTx, uint8_t *pbtRx, const size_t szRx, uint32_t *cycles)
+nfc_initiator_transceive_bytes_timed(nfc_device *pnd, 
+                                     const uint8_t *pbtTx, const size_t szTx, 
+                                     uint8_t *pbtRx, const size_t szRx,
+                                     uint32_t *cycles)
 {
   HAL(initiator_transceive_bytes_timed, pnd, pbtTx, szTx, pbtRx, szRx, cycles);
 }
@@ -746,8 +751,11 @@ nfc_initiator_target_is_present(nfc_device *pnd, const nfc_target nt)
  * @warning The configuration option \a NP_HANDLE_PARITY must be set to \c true (the default value).
  */
 int
-nfc_initiator_transceive_bits_timed(nfc_device *pnd, const uint8_t *pbtTx, const size_t szTxBits, const uint8_t *pbtTxPar,
-                                    uint8_t *pbtRx, uint8_t *pbtRxPar, uint32_t *cycles)
+nfc_initiator_transceive_bits_timed(nfc_device *pnd, 
+                                    const uint8_t *pbtTx, const size_t szTxBits, const uint8_t *pbtTxPar,
+                                    uint8_t *pbtRx, const size_t szRx, 
+                                    uint8_t *pbtRxPar, 
+                                    uint32_t *cycles)
 {
   HAL(initiator_transceive_bits_timed, pnd, pbtTx, szTxBits, pbtTxPar, pbtRx, pbtRxPar, cycles);
 }
