@@ -949,6 +949,7 @@ static struct sErrorMessage {
   { NFC_EOPABORTED, "Operation Aborted" },
   { NFC_ENOTIMPL, "Not (yet) Implemented" },
   { NFC_ETGRELEASED, "Target Released" },
+  { NFC_EMFCAUTHFAIL, "Mifare Authentication Failed" },
   { NFC_ERFTRANS, "RF Transmission Error" },
   { NFC_ECHIP, "Device's Internal Chip Error" },
 };
