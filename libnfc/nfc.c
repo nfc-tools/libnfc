@@ -613,7 +613,7 @@ nfc_initiator_deselect_target(nfc_device *pnd)
  * @param pnd \a nfc_device struct pointer that represents currently used device
  * @param pbtTx contains a byte array of the frame that needs to be transmitted.
  * @param szTx contains the length in bytes.
- * @param[out] pbtRx response from the tags
+ * @param[out] pbtRx response from the target
  * @param szRx size of \a pbtRx (Will return NFC_EOVFLOW if RX exceeds this size)
  * @param timeout in milliseconds
  *
@@ -667,7 +667,8 @@ nfc_initiator_transceive_bytes(nfc_device *pnd, const uint8_t *pbtTx, const size
  * compliant parity bits you better can use the
  * nfc_initiator_transceive_bytes() function.
  *
- * @param[out] pbtRx response from the tag
+ * @param[out] pbtRx response from the target
+ * @param szRx size of \a pbtRx (Will return NFC_EOVFLOW if RX exceeds this size)
  * @param[out] pbtRxPar parameter contains a byte array of the corresponding parity bits
  *
  * The NFC device (configured as \e initiator) will transmit low-level messages
@@ -689,6 +690,12 @@ nfc_initiator_transceive_bits(nfc_device *pnd,
 /** @ingroup initiator
  * @brief Send data to target then retrieve data from target
  * @return Returns received bytes count on success, otherwise returns libnfc's error code.
+ *
+ * @param pnd \a nfc_device struct pointer that represents currently used device
+ * @param pbtTx contains a byte array of the frame that needs to be transmitted.
+ * @param szTx contains the length in bytes.
+ * @param[out] pbtRx response from the target
+ * @param szRx size of \a pbtRx (Will return NFC_EOVFLOW if RX exceeds this size)
  *
  * This function is similar to nfc_initiator_transceive_bytes() with the following differences:
  * - A precise cycles counter will indicate the number of cycles between emission & reception of frames.
