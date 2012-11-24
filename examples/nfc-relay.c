@@ -205,7 +205,7 @@ main(int argc, char *argv[])
       }
       // Forward the frame to the original tag
       if ((szTagRxBits = nfc_initiator_transceive_bits
-                         (pndReader, abtReaderRx, (size_t) szReaderRxBits, abtReaderRxPar, abtTagRx, abtTagRxPar)) > 0) {
+                         (pndReader, abtReaderRx, (size_t) szReaderRxBits, abtReaderRxPar, abtTagRx, sizeof(abtTagRx), abtTagRxPar)) > 0) {
         // Redirect the answer back to the reader
         if (nfc_target_send_bits(pndTag, abtTagRx, szTagRxBits, abtTagRxPar) < 0) {
           nfc_perror(pndTag, "nfc_target_send_bits");

@@ -83,7 +83,7 @@ transmit_bits(const uint8_t *pbtTx, const size_t szTxBits)
     print_hex_bits(pbtTx, szTxBits);
   }
   // Transmit the bit frame command, we don't use the arbitrary parity feature
-  if ((szRxBits = nfc_initiator_transceive_bits(pnd, pbtTx, szTxBits, NULL, abtRx, NULL)) < 0)
+  if ((szRxBits = nfc_initiator_transceive_bits(pnd, pbtTx, szTxBits, NULL, abtRx, sizeof(abtRx), NULL)) < 0)
     return false;
 
   // Show received answer

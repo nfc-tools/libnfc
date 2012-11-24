@@ -120,7 +120,7 @@ nfc_init(nfc_context *context)
 /** @ingroup lib
  * @brief Deinitialize libnfc.
  * Should be called after closing all open devices and before your application terminates.
- *@param context The context to deinitialize
+ * @param context The context to deinitialize
  */
 void
 nfc_exit(nfc_context *context)
@@ -684,6 +684,7 @@ nfc_initiator_transceive_bits(nfc_device *pnd,
                               uint8_t *pbtRx, const size_t szRx,
                               uint8_t *pbtRxPar)
 {
+  (void)szRx;
   HAL(initiator_transceive_bits, pnd, pbtTx, szTxBits, pbtTxPar, pbtRx, pbtRxPar);
 }
 
@@ -764,6 +765,7 @@ nfc_initiator_transceive_bits_timed(nfc_device *pnd,
                                     uint8_t *pbtRxPar, 
                                     uint32_t *cycles)
 {
+  (void)szRx;
   HAL(initiator_transceive_bits_timed, pnd, pbtTx, szTxBits, pbtTxPar, pbtRx, pbtRxPar, cycles);
 }
 
