@@ -108,12 +108,16 @@ const struct nfc_driver *nfc_drivers[] = {
 /** @ingroup lib
  * @brief Initialize libnfc.
  * This function must be called before calling any other libnfc function
- * @param context Optional output location for context pointer
+ * @param context Output location for nfc_context
  */
 void
-nfc_init(nfc_context *context)
+nfc_init(nfc_context **context)
 {
-  (void) context;
+  if (!context) {
+    printf("Error: NULL context is not supported anymore, please fix your code.\n");
+    exit(EXIT_FAILURE);
+  }
+  *context = nfc_context_new();
   log_init();
 }
 
@@ -265,23 +269,29 @@ nfc_list_devices(nfc_context *context, nfc_connstring connstrings[], const size_
   const struct nfc_driver *ndr;
   const struct nfc_driver **pndr = nfc_drivers;
 
-  if (!context) context = nfc_context_new(); // Should we support NULL context ?
-  // FIXME: Load device(s) from configuration file(s)
-
-  while ((ndr = *pndr)) {
-    size_t _device_found = 0;
-    if((ndr->scan_type == NOT_INTRUSIVE) || ((context->allow_intrusive_scan) && (ndr->scan_type == INTRUSIVE))) {
-      _device_found = ndr->scan(connstrings + (device_found), connstrings_len - (device_found));
-      log_put(LOG_CATEGORY, NFC_PRIORITY_TRACE, "%ld device(s) found using %s driver", (unsigned long) _device_found, ndr->name);
-      if (_device_found > 0) {
-        device_found += _device_found;
-        if (device_found == connstrings_len)
-          break;
-      }
-    } // scan_type is INTRUSIVE but not allowed or NOT_AVAILABLE
-    pndr++;
+  if (!context) {
+    printf ("NULL context is not supported anymore! Please fix your code.");
   }
-  log_fini();
+
+  // TODO Load manually configured devices (from config file and env variables)
+
+  // Device auto-detection
+  if (context->allow_autoscan) {
+    while ((ndr = *pndr)) {
+      size_t _device_found = 0;
+      if((ndr->scan_type == NOT_INTRUSIVE) || ((context->allow_intrusive_scan) && (ndr->scan_type == INTRUSIVE))) {
+        _device_found = ndr->scan(connstrings + (device_found), connstrings_len - (device_found));
+        log_put(LOG_CATEGORY, NFC_PRIORITY_TRACE, "%ld device(s) found using %s driver", (unsigned long) _device_found, ndr->name);
+        if (_device_found > 0) {
+          device_found += _device_found;
+          if (device_found == connstrings_len)
+            break;
+        }
+      } // scan_type is INTRUSIVE but not allowed or NOT_AVAILABLE
+      pndr++;
+    }
+  }
+
   return device_found;
 }
 

@@ -158,6 +158,7 @@ struct nfc_driver {
  * Struct which contains internal options, references, pointers, etc. used by library
  */
 struct nfc_context {
+  bool allow_autoscan;
   bool allow_intrusive_scan;
 };
 
@@ -194,6 +195,8 @@ struct nfc_device {
 
 nfc_device *nfc_device_new(const nfc_connstring connstring);
 void        nfc_device_free(nfc_device *dev);
+
+void string_as_boolean(const char* s, bool *value);
 
 void iso14443_cascade_uid(const uint8_t abtUID[], const size_t szUID, uint8_t *pbtCascadedUID, size_t *pszCascadedUID);
 

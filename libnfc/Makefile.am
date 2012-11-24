@@ -4,6 +4,7 @@ SUBDIRS = chips buses drivers .
 AM_CPPFLAGS = $(all_includes) $(LIBNFC_CFLAGS)
 
 noinst_HEADERS = \
+		 conf.h \
 		 drivers.h \
 		 iso7816.h \
 		 log.h \
@@ -13,6 +14,7 @@ noinst_HEADERS = \
 
 lib_LTLIBRARIES = libnfc.la
 libnfc_la_SOURCES = \
+		    conf.c \
 		    iso14443-subr.c \
 		    mirror-subr.c \
 		    nfc.c \

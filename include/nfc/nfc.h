@@ -63,7 +63,7 @@ extern  "C" {
 #  endif                        // __cplusplus
 
   /* Library initialization/deinitialization */
-  NFC_EXPORT void nfc_init(nfc_context *context);
+  NFC_EXPORT void nfc_init(nfc_context **context);
   NFC_EXPORT void nfc_exit(nfc_context *context);
 
   /* NFC Device/Hardware manipulation */

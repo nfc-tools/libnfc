@@ -24,20 +24,31 @@
 
 #include <nfc/nfc.h>
 #include "nfc-internal.h"
+#include "conf.h"
 
 #include <stdlib.h>
 #include <string.h>
 
-static bool
-string_as_boolean(const char* s)
+void 
+string_as_boolean(const char* s, bool *value)
 {
-  if ((s) && (
-    (strcmp(s, "yes") == 0) ||
-    (strcmp(s, "true") == 0) ||
-    (strcmp(s, "1") == 0))) {
-    return true;
+  if (s) {
+    if (!(*value)) {
+      if ( (strcmp(s, "yes") == 0) ||
+           (strcmp(s, "true") == 0) ||
+           (strcmp(s, "1") == 0) ) {
+           *value = true;
+           return;
+      }
+    } else {
+      if ( (strcmp(s, "no") == 0) ||
+           (strcmp(s, "false") == 0) ||
+           (strcmp(s, "0") == 0) ) {
+           *value = false;
+           return;
+      }
+    }
   }
-  return false;
 }
 
 nfc_context *
@@ -49,10 +60,20 @@ nfc_context_new(void)
     err(EXIT_FAILURE, "nfc_context_new: malloc");
   }
 
+  // Set default context values
+  res->allow_autoscan = true;
+  res->allow_intrusive_scan = false;
+
+  // Load options from configuration file (ie. /etc/nfc/libnfc.conf)
+  conf_load(res);
+
+  // Environment variables
   // Load "intrusive scan" option
-  // XXX: Load this option from configuration file too ?
   char *envvar = getenv("LIBNFC_INTRUSIVE_SCAN");
-  res->allow_intrusive_scan = string_as_boolean(envvar);
+  string_as_boolean(envvar, &(res->allow_intrusive_scan));
+
+  // Debug context state
+  log_put ("libnfc", NFC_PRIORITY_DEBUG, "allow_autoscan is set to %s", (res->allow_autoscan)?"true":"false");
   log_put ("libnfc", NFC_PRIORITY_DEBUG, "allow_intrusive_scan is set to %s", (res->allow_intrusive_scan)?"true":"false");
   return res;
 }
