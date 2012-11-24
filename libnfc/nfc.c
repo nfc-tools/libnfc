@@ -1097,8 +1097,8 @@ nfc_device_get_supported_baud_rate(nfc_device *pnd, const nfc_modulation_type nm
 const char *
 nfc_version(void)
 {
-#ifdef SVN_REVISION
-  return PACKAGE_VERSION " (r" SVN_REVISION ")";
+#ifdef GIT_REVISION
+  return GIT_REVISION;
 #else
   return PACKAGE_VERSION;
 #endif // SVN_REVISION

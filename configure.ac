@@ -7,10 +7,10 @@ AC_CONFIG_MACRO_DIR([m4])
 
 AC_CONFIG_HEADER(config.h)
 
-# SVN revison
-define([svn_revision], esyscmd([sh -c "svnversion -n"]))
-SVN_REVISION=svn_revision
-AC_DEFINE_UNQUOTED([SVN_REVISION], ["$SVN_REVISION"], [SVN revision])
+# GIT revison
+define([git_revision], esyscmd([sh -c "git describe"]))
+GIT_REVISION=git_revision
+AC_DEFINE_UNQUOTED([GIT_REVISION], ["$GIT_REVISION"], [GIT revision])
 
 AM_INIT_AUTOMAKE
 m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
