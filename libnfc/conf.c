@@ -15,6 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
 
+#include "conf.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <dirent.h>
@@ -27,13 +29,14 @@
 #include "log.h"
 
 #define LOG_CATEGORY "libnfc.config"
+#define LOG_GROUP    NFC_LOG_GROUP_CONFIG
 
 #define LIBNFC_SYSCONFDIR      "/etc/nfc"
 #define LIBNFC_CONFFILE        LIBNFC_SYSCONFDIR"/libnfc.conf"
 #define LIBNFC_DEVICECONFDIR   LIBNFC_SYSCONFDIR"/devices.d"
 
-
-bool conf_parse_file(const char* filename, void (*conf_keyvalue)(void* data, const char* key, const char* value), void* data)
+static bool 
+conf_parse_file(const char* filename, void (*conf_keyvalue)(void* data, const char* key, const char* value), void* data)
 {
   FILE *f = fopen (filename, "r");
   if (!f) {
@@ -73,7 +76,7 @@ bool conf_parse_file(const char* filename, void (*conf_keyvalue)(void* data, con
           strncpy(value, line+(pmatch[value_pmatch].rm_so), value_size); value[value_size]='\0';
           conf_keyvalue(data, key, value);
         } else {
-          log_put( LOG_CATEGORY, NFC_PRIORITY_TRACE, "parse error on line #%d: %s", lineno, line);
+          log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "parse error on line #%d: %s", lineno, line);
         }
       }
       break;
@@ -82,7 +85,7 @@ bool conf_parse_file(const char* filename, void (*conf_keyvalue)(void* data, con
   return false;
 }
 
-void 
+static void 
 conf_keyvalue_context(void *data, const char* key, const char* value)
 {
   nfc_context *context = (nfc_context*)data;
@@ -91,8 +94,10 @@ conf_keyvalue_context(void *data, const char* key, const char* value)
     string_as_boolean(value, &(context->allow_autoscan));
   } else if (strcmp(key, "allow_intrusive_scan") == 0) {
     string_as_boolean(value, &(context->allow_intrusive_scan));
+  } else if (strcmp(key, "log_level") == 0) {
+    context->log_level = atoi(value);
   } else {
-    log_put( LOG_CATEGORY, NFC_PRIORITY_INFO, "unknown key in config line: %s = %s", key, value);
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_INFO, "unknown key in config line: %s = %s", key, value);
   }
 }
 

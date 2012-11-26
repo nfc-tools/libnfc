@@ -1,6 +1,6 @@
 /*-
  * Copyright (C) 2011 Romain Tartière
- * Copyright (C) 2011 Romuald Conty
+ * Copyright (C) 2011, 2012 Romuald Conty
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -16,53 +16,54 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
 
-#include "config.h"
+#include "log.h"
 
+#include <stdlib.h>
 #include <stdint.h>
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include <fcntl.h>
 
-#include "log.h"
-
-static uint8_t __log_init_counter = 0;
-
-int
-log_init(void)
+void 
+log_init(const nfc_context *context)
 {
-  int res = 0;
-
-  if (__log_init_counter == 0) {
-    res = 0;
-  }
-  if (!res) {
-    __log_init_counter++;
-  }
-  return res;
-}
-
-int
-log_fini(void)
-{
-  int res = 0;
-  if (__log_init_counter >= 1) {
-    if (__log_init_counter == 1) {
-      res = 0;
-    }
-    __log_init_counter--;
-  } else {
-    res = -1;
-  }
-  return res;
+  char str[32];
+  sprintf(str, "%"PRIu32, context->log_level);
+  setenv("LIBNFC_LOG_LEVEL", str, 1);
 }
 
 void
-log_put(const char *category, const char *priority, const char *format, ...)
+log_exit(void)
 {
-  va_list va;
-  va_start(va, format);
-  fprintf(stderr, "%s\t%s\t", priority, category);
-  vfprintf(stderr, format, va);
-  fprintf(stderr, "\n");
-  va_end(va);
+}
+
+void
+log_put(const uint8_t group, const char *category, const uint8_t priority, const char *format, ...)
+{
+  char *env_log_level = getenv("LIBNFC_LOG_LEVEL");
+  uint32_t log_level;
+  if (NULL == env_log_level) {
+    // LIBNFC_LOG_LEVEL is not set
+#ifdef DEBUG
+    log_level = 3;
+#else
+    log_level = 1;
+#endif
+  } else {
+    log_level = atoi(env_log_level);
+  }
+
+  //  printf("log_level = %"PRIu32" group = %"PRIu8" priority = %"PRIu8"\n", log_level, group, priority);
+  if (log_level) { // If log is not disabled by log_level=none
+    if ( ((log_level & 0x00000003) >= priority) ||  // Global log level
+         (((log_level >> (group*2)) & 0x00000003) >= priority) ) { // Group log level
+      va_list va;
+      va_start(va, format);
+      fprintf(stderr, "%s\t%s\t", log_priority_to_str(priority), category);
+      vfprintf(stderr, format, va);
+      fprintf(stderr, "\n");
+      va_end(va);
+    }
+  }
 }

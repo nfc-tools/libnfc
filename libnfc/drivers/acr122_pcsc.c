@@ -79,6 +79,7 @@
 #define ACR122_PCSC_COMMAND_LEN 266
 #define ACR122_PCSC_RESPONSE_LEN 268
 
+#define LOG_GROUP    NFC_LOG_GROUP_DRIVER
 #define LOG_CATEGORY "libnfc.driver.acr122"
 
 // Internal data struct
@@ -142,8 +143,9 @@ acr122_pcsc_free_scardcontext(void)
  * @return number of devices found.
  */
 static size_t
-acr122_pcsc_scan(nfc_connstring connstrings[], const size_t connstrings_len)
+acr122_pcsc_scan(const nfc_context *context, nfc_connstring connstrings[], const size_t connstrings_len)
 {
+  (void) context;
   size_t  szPos = 0;
   char    acDeviceNames[256 + 64 * PCSC_MAX_DEVICES];
   size_t  szDeviceNamesLen = sizeof(acDeviceNames);
@@ -156,7 +158,7 @@ acr122_pcsc_scan(nfc_connstring connstrings[], const size_t connstrings_len)
 
   // Test if context succeeded
   if (!(pscc = acr122_pcsc_get_scardcontext())) {
-    log_put(LOG_CATEGORY, NFC_PRIORITY_WARN, "%s", "PCSC context not found (make sure PCSC daemon is running).");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_INFO, "Warning: %s", "PCSC context not found (make sure PCSC daemon is running).");
     return 0;
   }
   // Retrieve the string array of all available pcsc readers
@@ -177,7 +179,7 @@ acr122_pcsc_scan(nfc_connstring connstrings[], const size_t connstrings_len)
       snprintf(connstrings[device_found], sizeof(nfc_connstring), "%s:%s", ACR122_PCSC_DRIVER_NAME, acDeviceNames + szPos);
       device_found++;
     } else {
-      log_put(LOG_CATEGORY, NFC_PRIORITY_TRACE, "PCSC device [%s] is not NFC capable or not supported by libnfc.", acDeviceNames + szPos);
+      log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "PCSC device [%s] is not NFC capable or not supported by libnfc.", acDeviceNames + szPos);
     }
 
     // Find next device name position
@@ -231,7 +233,7 @@ acr122_pcsc_connstring_decode(const nfc_connstring connstring, struct acr122_pcs
 }
 
 static nfc_device *
-acr122_pcsc_open(const nfc_connstring connstring)
+acr122_pcsc_open(const nfc_context *context, const nfc_connstring connstring)
 {
   struct acr122_pcsc_descriptor ndd;
   int connstring_decode_level = acr122_pcsc_connstring_decode(connstring, &ndd);
@@ -243,7 +245,7 @@ acr122_pcsc_open(const nfc_connstring connstring)
   nfc_connstring fullconnstring;
   if (connstring_decode_level == 1) {
     // Device was not specified, take the first one we can find
-    size_t szDeviceFound = acr122_pcsc_scan(&fullconnstring, 1);
+    size_t szDeviceFound = acr122_pcsc_scan(context, &fullconnstring, 1);
     if (szDeviceFound < 1)
       return NULL;
     connstring_decode_level = acr122_pcsc_connstring_decode(fullconnstring, &ndd);
@@ -259,7 +261,7 @@ acr122_pcsc_open(const nfc_connstring connstring)
     if (sscanf(ndd.pcsc_device_name, "%lu", &index) != 1)
       return NULL;
     nfc_connstring *ncs = malloc(sizeof(nfc_connstring) * (index + 1));
-    size_t szDeviceFound = acr122_pcsc_scan(ncs, index + 1);
+    size_t szDeviceFound = acr122_pcsc_scan(context, ncs, index + 1);
     if (szDeviceFound < index + 1)
       return NULL;
     strncpy(fullconnstring, ncs[index], sizeof(nfc_connstring));
@@ -271,7 +273,7 @@ acr122_pcsc_open(const nfc_connstring connstring)
   }
 
   char   *pcFirmware;
-  nfc_device *pnd = nfc_device_new(fullconnstring);
+  nfc_device *pnd = nfc_device_new(context, fullconnstring);
   pnd->driver_data = malloc(sizeof(struct acr122_pcsc_data));
 
   // Alloc and init chip's data
@@ -279,7 +281,7 @@ acr122_pcsc_open(const nfc_connstring connstring)
 
   SCARDCONTEXT *pscc;
 
-  log_put(LOG_CATEGORY, NFC_PRIORITY_TRACE, "Attempt to open %s", ndd.pcsc_device_name);
+  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Attempt to open %s", ndd.pcsc_device_name);
   // Test if context succeeded
   if (!(pscc = acr122_pcsc_get_scardcontext()))
     goto error;
@@ -288,7 +290,7 @@ acr122_pcsc_open(const nfc_connstring connstring)
     // Connect to ACR122 firmware version >2.0
     if (SCardConnect(*pscc, ndd.pcsc_device_name, SCARD_SHARE_DIRECT, 0, &(DRIVER_DATA(pnd)->hCard), (void *) & (DRIVER_DATA(pnd)->ioCard.dwProtocol)) != SCARD_S_SUCCESS) {
       // We can not connect to this device.
-      log_put(LOG_CATEGORY, NFC_PRIORITY_TRACE, "%s", "PCSC connect failed");
+      log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "PCSC connect failed");
       goto error;
     }
   }
@@ -345,7 +347,7 @@ acr122_pcsc_send(nfc_device *pnd, const uint8_t *pbtData, const size_t szData, i
   const size_t szTxBuf = szData + 6;
   uint8_t  abtTxBuf[ACR122_PCSC_WRAP_LEN + ACR122_PCSC_COMMAND_LEN] = { 0xFF, 0x00, 0x00, 0x00, szData + 1, 0xD4 };
   memcpy(abtTxBuf + 6, pbtData, szData);
-  LOG_HEX("TX", abtTxBuf, szTxBuf);
+  LOG_HEX(NFC_LOG_GROUP_COM, "TX", abtTxBuf, szTxBuf);
 
   DRIVER_DATA(pnd)->szRx = 0;
 
@@ -425,7 +427,7 @@ acr122_pcsc_receive(nfc_device *pnd, uint8_t *pbtData, const size_t szData, int 
      * We already have the PN532 answer, it was saved by acr122_pcsc_send().
      */
   }
-  LOG_HEX("RX", DRIVER_DATA(pnd)->abtRx, DRIVER_DATA(pnd)->szRx);
+  LOG_HEX(NFC_LOG_GROUP_COM, "RX", DRIVER_DATA(pnd)->abtRx, DRIVER_DATA(pnd)->szRx);
 
   // Make sure we have an emulated answer that fits the return buffer
   if (DRIVER_DATA(pnd)->szRx < 4 || (DRIVER_DATA(pnd)->szRx - 4) > szData) {
@@ -455,7 +457,7 @@ acr122_pcsc_firmware(nfc_device *pnd)
   }
 
   if (uiResult != SCARD_S_SUCCESS) {
-    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "No ACR122 firmware received, Error: %08x", uiResult);
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "No ACR122 firmware received, Error: %08x", uiResult);
   }
 
   return abtFw;

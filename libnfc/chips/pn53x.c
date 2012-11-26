@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2009, 2010 Roel Verdult
  * Copyright (C) 2010, 2011 Romain Tartière
- * Copyright (C) 2009, 2010, 2011 Romuald Conty
+ * Copyright (C) 2009, 2010, 2011, 2012 Romuald Conty
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -41,6 +41,7 @@
 #include "mirror-subr.h"
 
 #define LOG_CATEGORY "libnfc.chip.pn53x"
+#define LOG_GROUP NFC_LOG_GROUP_CHIP
 
 const uint8_t pn53x_ack_frame[] = { 0x00, 0x00, 0xff, 0x00, 0xff, 0x00 };
 const uint8_t pn53x_nack_frame[] = { 0x00, 0x00, 0xff, 0xff, 0x00, 0x00 };
@@ -154,13 +155,13 @@ pn53x_transceive(struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szTx
 
   PNCMD_TRACE(pbtTx[0]);
   if (timeout > 0) {
-    log_put(LOG_CATEGORY, NFC_PRIORITY_TRACE, "Timeout values: %d", timeout);
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Timeout values: %d", timeout);
   } else if (timeout == 0) {
-    log_put(LOG_CATEGORY, NFC_PRIORITY_TRACE, "%s", "No timeout");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "No timeout");
   } else if (timeout == -1) {
     timeout = CHIP_DATA(pnd)->timeout_command;
   } else {
-    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "Invalid timeout value: %d", timeout);
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Invalid timeout value: %d", timeout);
   }
 
   uint8_t  abtRx[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
@@ -294,7 +295,7 @@ pn53x_transceive(struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szTx
 
   if (res < 0) {
     pnd->last_error = res;
-    log_put(LOG_CATEGORY, NFC_PRIORITY_TRACE, "Chip error: \"%s\" (%02x), returned error: \"%s\" (%d))", pn53x_strerror(pnd), CHIP_DATA(pnd)->last_status_byte, nfc_strerror(pnd), res);
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Chip error: \"%s\" (%02x), returned error: \"%s\" (%d))", pn53x_strerror(pnd), CHIP_DATA(pnd)->last_status_byte, nfc_strerror(pnd), res);
   } else {
     pnd->last_error = 0;
   }
@@ -1359,7 +1360,7 @@ pn53x_initiator_transceive_bytes(struct nfc_device *pnd, const uint8_t *pbtTx, c
   const size_t szRxLen = (size_t)res - 1;
   if (pbtRx != NULL) {
     if (szRxLen >  szRx) {
-      log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "Buffer size is too short: %zuo available(s), %zuo needed", szRx, szRxLen);
+      log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Buffer size is too short: %zuo available(s), %zuo needed", szRx, szRxLen);
       return NFC_EOVFLOW;
     }
     // Copy the received bytes
@@ -1634,7 +1635,7 @@ pn53x_initiator_transceive_bytes_timed(struct nfc_device *pnd, const uint8_t *pb
     }
     if (pbtRx != NULL) {
       if ((szRxLen + sz) > szRx) {
-        log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "Buffer size is too short: %zuo available(s), %zuo needed", szRx, szRxLen + sz);
+        log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Buffer size is too short: %zuo available(s), %zuo needed", szRx, szRxLen + sz);
         return NFC_EOVFLOW;
       }
       // Copy the received bytes
@@ -2635,12 +2636,12 @@ pn53x_check_ack_frame(struct nfc_device *pnd, const uint8_t *pbtRxFrame, const s
 {
   if (szRxFrameLen >= sizeof(pn53x_ack_frame)) {
     if (0 == memcmp(pbtRxFrame, pn53x_ack_frame, sizeof(pn53x_ack_frame))) {
-      log_put(LOG_CATEGORY, NFC_PRIORITY_TRACE, "%s", "PN53x ACKed");
+      log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "PN53x ACKed");
       return NFC_SUCCESS;
     }
   }
   pnd->last_error = NFC_EIO;
-  log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Unexpected PN53x reply!");
+  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Unexpected PN53x reply!");
   return pnd->last_error;
 }
 
@@ -2649,7 +2650,7 @@ pn53x_check_error_frame(struct nfc_device *pnd, const uint8_t *pbtRxFrame, const
 {
   if (szRxFrameLen >= sizeof(pn53x_error_frame)) {
     if (0 == memcmp(pbtRxFrame, pn53x_error_frame, sizeof(pn53x_error_frame))) {
-      log_put(LOG_CATEGORY, NFC_PRIORITY_TRACE, "%s", "PN53x sent an error frame");
+      log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "PN53x sent an error frame");
       pnd->last_error = NFC_EIO;
       return pnd->last_error;
     }
@@ -2714,7 +2715,7 @@ pn53x_build_frame(uint8_t *pbtFrame, size_t *pszFrame, const uint8_t *pbtData, c
 
     (*pszFrame) = szData + PN53x_EXTENDED_FRAME__OVERHEAD;
   } else {
-    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "We can't send more than %d bytes in a raw (requested: %zd)", PN53x_EXTENDED_FRAME__DATA_MAX_LEN, szData);
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "We can't send more than %d bytes in a raw (requested: %zd)", PN53x_EXTENDED_FRAME__DATA_MAX_LEN, szData);
     return NFC_ECHIP;
   }
   return NFC_SUCCESS;

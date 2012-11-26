@@ -6,3 +6,8 @@
 # Allow intrusive auto-detection (default: false)
 # Warning: intrusive auto-detection can seriously disturb other devices
 #allow_intrusive_autoscan = false
+
+# Set log level (default: error)
+# Valid log levels are (in order of verbosity): 0 (none), 1 (error), 2 (info), 3 (debug)
+# Note: if you set --enable-debug option, the default log level is "debug"
+#log_level = 1

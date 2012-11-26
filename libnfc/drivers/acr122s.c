@@ -45,7 +45,9 @@
 
 #define ACR122S_DEFAULT_SPEED 9600
 #define ACR122S_DRIVER_NAME "ACR122S"
+
 #define LOG_CATEGORY "libnfc.driver.acr122s"
+#define LOG_GROUP     NFC_LOG_GROUP_DRIVER
 
 // Internal data structs
 struct acr122s_data {
@@ -252,7 +254,7 @@ acr122s_recv_frame(nfc_device *pnd, uint8_t *frame, size_t frame_size, void *abo
 
   struct xfr_block_res *res = (struct xfr_block_res *) &frame[1];
   if ((uint8_t)(res->seq + 1) != DRIVER_DATA(pnd)->seq) {
-    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Invalid response sequence number.");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Invalid response sequence number.");
     pnd->last_error = NFC_EIO;
     return pnd->last_error;
   }
@@ -448,7 +450,7 @@ acr122s_connstring_decode(const nfc_connstring connstring, struct acr122s_descri
 }
 
 static size_t
-acr122s_scan(nfc_connstring connstrings[], const size_t connstrings_len)
+acr122s_scan(const nfc_context *context, nfc_connstring connstrings[], const size_t connstrings_len)
 {
   size_t device_found = 0;
   serial_port sp;
@@ -458,7 +460,7 @@ acr122s_scan(nfc_connstring connstrings[], const size_t connstrings_len)
 
   while ((acPort = acPorts[iDevice++])) {
     sp = uart_open(acPort);
-    log_put(LOG_CATEGORY, NFC_PRIORITY_TRACE, "Trying to find ACR122S device on serial port: %s at %d bauds.", acPort, ACR122S_DEFAULT_SPEED);
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Trying to find ACR122S device on serial port: %s at %d bauds.", acPort, ACR122S_DEFAULT_SPEED);
 
     if ((sp != INVALID_SERIAL_PORT) && (sp != CLAIMED_SERIAL_PORT)) {
       // We need to flush input to be sure first reply does not comes from older byte transceive
@@ -467,7 +469,7 @@ acr122s_scan(nfc_connstring connstrings[], const size_t connstrings_len)
 
       nfc_connstring connstring;
       snprintf(connstring, sizeof(nfc_connstring), "%s:%s:%"PRIu32, ACR122S_DRIVER_NAME, acPort, ACR122S_DEFAULT_SPEED);
-      nfc_device *pnd = nfc_device_new(connstring);
+      nfc_device *pnd = nfc_device_new(context, connstring);
 
       pnd->driver = &acr122s_driver;
       pnd->driver_data = malloc(sizeof(struct acr122s_data));
@@ -531,7 +533,7 @@ acr122s_close(nfc_device *pnd)
 }
 
 static nfc_device *
-acr122s_open(const nfc_connstring connstring)
+acr122s_open(const nfc_context *context, const nfc_connstring connstring)
 {
   serial_port sp;
   nfc_device *pnd;
@@ -545,17 +547,17 @@ acr122s_open(const nfc_connstring connstring)
     ndd.speed = ACR122S_DEFAULT_SPEED;
   }
 
-  log_put(LOG_CATEGORY, NFC_PRIORITY_TRACE,
+  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG,
           "Attempt to connect to: %s at %d bauds.", ndd.port, ndd.speed);
 
   sp = uart_open(ndd.port);
   if (sp == INVALID_SERIAL_PORT) {
-    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR,
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR,
             "Invalid serial port: %s", ndd.port);
     return NULL;
   }
   if (sp == CLAIMED_SERIAL_PORT) {
-    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR,
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR,
             "Serial port already claimed: %s", ndd.port);
     return NULL;
   }
@@ -563,7 +565,7 @@ acr122s_open(const nfc_connstring connstring)
   uart_flush_input(sp);
   uart_set_speed(sp, ndd.speed);
 
-  pnd = nfc_device_new(connstring);
+  pnd = nfc_device_new(context, connstring);
   pnd->driver = &acr122s_driver;
   strcpy(pnd->name, ACR122S_DRIVER_NAME);
 
@@ -586,13 +588,13 @@ acr122s_open(const nfc_connstring connstring)
   // Retrieve firmware version
   char version[DEVICE_NAME_LENGTH];
   if (acr122s_get_firmware_version(pnd, version, sizeof(version)) != 0) {
-    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Cannot get reader firmware.");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Cannot get reader firmware.");
     acr122s_close(pnd);
     return NULL;
   }
 
   if (strncmp(version, "ACR122S", 7) != 0) {
-    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "Invalid firmware version: %s",
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Invalid firmware version: %s",
             version);
     acr122s_close(pnd);
     return NULL;
@@ -602,14 +604,14 @@ acr122s_open(const nfc_connstring connstring)
 
   // Activate SAM before operating
   if (acr122s_activate_sam(pnd) != 0) {
-    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Cannot activate SAM.");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Cannot activate SAM.");
     acr122s_close(pnd);
     return NULL;
   }
 #endif
 
   if (pn53x_init(pnd) < 0) {
-    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Failed initializing PN532 chip.");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Failed initializing PN532 chip.");
     acr122s_close(pnd);
     return NULL;
   }
@@ -626,7 +628,7 @@ acr122s_send(nfc_device *pnd, const uint8_t *buf, const size_t buf_len, int time
   acr122s_build_frame(pnd, cmd, sizeof(cmd), 0, 0, buf, buf_len, 1);
   int ret;
   if ((ret = acr122s_send_frame(pnd, cmd, timeout)) != 0) {
-    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Unable to transmit data. (TX)");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Unable to transmit data. (TX)");
     pnd->last_error = ret;
     return pnd->last_error;
   }
@@ -654,13 +656,13 @@ acr122s_receive(nfc_device *pnd, uint8_t *buf, size_t buf_len, int timeout)
   }
 
   if (pnd->last_error < 0) {
-    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Unable to receive data. (RX)");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Unable to receive data. (RX)");
     return -1;
   }
 
   size_t data_len = FRAME_SIZE(tmp) - 17;
   if (data_len > buf_len) {
-    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "Receive buffer too small. (buf_len: %zu, data_len: %zu)", buf_len, data_len);
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Receive buffer too small. (buf_len: %zu, data_len: %zu)", buf_len, data_len);
     pnd->last_error = NFC_EIO;
     return pnd->last_error;
   }

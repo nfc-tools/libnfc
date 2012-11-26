@@ -2,7 +2,7 @@
  * Public platform independent Near Field Communication (NFC) library
  *
  * Copyright (C) 2011 Romain Tartière
- * Copyright (C) 2011 Romuald Conty
+ * Copyright (C) 2011, 2012 Romuald Conty
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -115,7 +115,7 @@
 typedef struct {
   uint8_t ui8Code;
   uint8_t ui8CompatFlags;
-#ifdef LOGGING
+#ifdef LOG
   const char *abtCommandText;
 #endif
 } pn53x_command;
@@ -128,7 +128,7 @@ typedef enum {
   RCS360  = 0x08
 } pn53x_type;
 
-#ifndef LOGGING
+#ifndef LOG
 #  define PNCMD( X, Y ) { X , Y }
 #  define PNCMD_TRACE( X ) do {} while(0)
 #else
@@ -136,7 +136,7 @@ typedef enum {
 #  define PNCMD_TRACE( X ) do { \
     for (size_t i=0; i<(sizeof(pn53x_commands)/sizeof(pn53x_command)); i++) { \
       if ( X == pn53x_commands[i].ui8Code ) { \
-        log_put( LOG_CATEGORY, NFC_PRIORITY_TRACE, "%s", pn53x_commands[i].abtCommandText ); \
+        log_put( LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", pn53x_commands[i].abtCommandText ); \
         break; \
       } \
     } \
@@ -201,7 +201,7 @@ static const pn53x_command pn53x_commands[] = {
 #define P35 5
 
 // Registers part
-#ifdef LOGGING
+#ifdef LOG
 typedef struct {
   uint16_t ui16Address;
   const char *abtRegisterText;
@@ -210,17 +210,17 @@ typedef struct {
 
 #  define PNREG( X, Y ) { X , #X, Y }
 
-#endif /* LOGGING */
+#endif /* LOG */
 
 
-#ifndef LOGGING
+#ifndef LOG
 #  define PNREG_TRACE( X ) do { \
   } while(0)
 #else
 #  define PNREG_TRACE( X ) do { \
     for (size_t i=0; i<(sizeof(pn53x_registers)/sizeof(pn53x_register)); i++) { \
       if ( X == pn53x_registers[i].ui16Address ) { \
-        log_put( LOG_CATEGORY, NFC_PRIORITY_TRACE, "%s (%s)", pn53x_registers[i].abtRegisterText, pn53x_registers[i].abtRegisterDescription ); \
+        log_put( LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s (%s)", pn53x_registers[i].abtRegisterText, pn53x_registers[i].abtRegisterDescription ); \
         break; \
       } \
     } \
@@ -329,7 +329,7 @@ typedef struct {
 #define EOVCURRENT	0x2d
 #define ENAD		0x2e
 
-#ifdef LOGGING
+#ifdef LOG
 static const pn53x_register pn53x_registers[] = {
   PNREG(PN53X_REG_CIU_Mode, "Defines general modes for transmitting and receiving"),
   PNREG(PN53X_REG_CIU_TxMode, "Defines the transmission data rate and framing during transmission"),

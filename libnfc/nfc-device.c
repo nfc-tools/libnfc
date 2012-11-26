@@ -2,7 +2,7 @@
  * Public platform independent Near Field Communication (NFC) library
  *
  * Copyright (C) 2011 Romain Tartière
- * Copyright (C) 2011 Romuald Conty
+ * Copyright (C) 2011, 2012 Romuald Conty
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -33,13 +33,16 @@
 #include "nfc-internal.h"
 
 nfc_device *
-nfc_device_new(const nfc_connstring connstring)
+nfc_device_new(const nfc_context *context, const nfc_connstring connstring)
 {
   nfc_device *res = malloc(sizeof(*res));
 
   if (!res) {
     err(EXIT_FAILURE, "nfc_device_new: malloc");
   }
+
+  // Store associated context
+  res->context = context;
 
   // Variables initiatialization
   // Note: Actually, these initialization will be overwritten while the device

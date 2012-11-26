@@ -45,7 +45,9 @@
 
 #define PN532_UART_DEFAULT_SPEED 115200
 #define PN532_UART_DRIVER_NAME "pn532_uart"
+
 #define LOG_CATEGORY "libnfc.driver.pn532_uart"
+#define LOG_GROUP    NFC_LOG_GROUP_DRIVER
 
 // Internal data structs
 const struct pn53x_io pn532_uart_io;
@@ -65,7 +67,7 @@ int     pn532_uart_wakeup(nfc_device *pnd);
 #define DRIVER_DATA(pnd) ((struct pn532_uart_data*)(pnd->driver_data))
 
 static size_t
-pn532_uart_scan(nfc_connstring connstrings[], const size_t connstrings_len)
+pn532_uart_scan(const nfc_context *context, nfc_connstring connstrings[], const size_t connstrings_len)
 {
   size_t device_found = 0;
   serial_port sp;
@@ -75,7 +77,7 @@ pn532_uart_scan(nfc_connstring connstrings[], const size_t connstrings_len)
 
   while ((acPort = acPorts[iDevice++])) {
     sp = uart_open(acPort);
-    log_put(LOG_CATEGORY, NFC_PRIORITY_TRACE, "Trying to find PN532 device on serial port: %s at %d bauds.", acPort, PN532_UART_DEFAULT_SPEED);
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Trying to find PN532 device on serial port: %s at %d bauds.", acPort, PN532_UART_DEFAULT_SPEED);
 
     if ((sp != INVALID_SERIAL_PORT) && (sp != CLAIMED_SERIAL_PORT)) {
       // We need to flush input to be sure first reply does not comes from older byte transceive
@@ -85,7 +87,7 @@ pn532_uart_scan(nfc_connstring connstrings[], const size_t connstrings_len)
 
       nfc_connstring connstring;
       snprintf(connstring, sizeof(nfc_connstring), "%s:%s:%"PRIu32, PN532_UART_DRIVER_NAME, acPort, PN532_UART_DEFAULT_SPEED);
-      nfc_device *pnd = nfc_device_new(connstring);
+      nfc_device *pnd = nfc_device_new(context, connstring);
       pnd->driver = &pn532_uart_driver;
       pnd->driver_data = malloc(sizeof(struct pn532_uart_data));
       DRIVER_DATA(pnd)->port = sp;
@@ -200,7 +202,7 @@ pn532_uart_close(nfc_device *pnd)
 }
 
 static nfc_device *
-pn532_uart_open(const nfc_connstring connstring)
+pn532_uart_open(const nfc_context *context, const nfc_connstring connstring)
 {
   struct pn532_uart_descriptor ndd;
   int connstring_decode_level = pn532_connstring_decode(connstring, &ndd);
@@ -214,13 +216,13 @@ pn532_uart_open(const nfc_connstring connstring)
   serial_port sp;
   nfc_device *pnd = NULL;
 
-  log_put(LOG_CATEGORY, NFC_PRIORITY_TRACE, "Attempt to open: %s at %d bauds.", ndd.port, ndd.speed);
+  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Attempt to open: %s at %d bauds.", ndd.port, ndd.speed);
   sp = uart_open(ndd.port);
 
   if (sp == INVALID_SERIAL_PORT)
-    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "Invalid serial port: %s", ndd.port);
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Invalid serial port: %s", ndd.port);
   if (sp == CLAIMED_SERIAL_PORT)
-    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "Serial port already claimed: %s", ndd.port);
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Serial port already claimed: %s", ndd.port);
   if ((sp == CLAIMED_SERIAL_PORT) || (sp == INVALID_SERIAL_PORT))
     return NULL;
 
@@ -229,7 +231,7 @@ pn532_uart_open(const nfc_connstring connstring)
   uart_set_speed(sp, ndd.speed);
 
   // We have a connection
-  pnd = nfc_device_new(connstring);
+  pnd = nfc_device_new(context, connstring);
   snprintf(pnd->name, sizeof(pnd->name), "%s:%s", PN532_UART_DRIVER_NAME, ndd.port);
 
   pnd->driver_data = malloc(sizeof(struct pn532_uart_data));
@@ -315,7 +317,7 @@ pn532_uart_send(nfc_device *pnd, const uint8_t *pbtData, const size_t szData, in
 
   res = uart_send(DRIVER_DATA(pnd)->port, abtFrame, szFrame, timeout);
   if (res != 0) {
-    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Unable to transmit data. (TX)");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Unable to transmit data. (TX)");
     pnd->last_error = res;
     return pnd->last_error;
   }
@@ -323,7 +325,7 @@ pn532_uart_send(nfc_device *pnd, const uint8_t *pbtData, const size_t szData, in
   uint8_t abtRxBuf[6];
   res = uart_receive(DRIVER_DATA(pnd)->port, abtRxBuf, 6, 0, timeout);
   if (res != 0) {
-    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Unable to read ACK");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Unable to read ACK");
     pnd->last_error = res;
     return pnd->last_error;
   }
@@ -361,7 +363,7 @@ pn532_uart_receive(nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, in
 
   const uint8_t pn53x_preamble[3] = { 0x00, 0x00, 0xff };
   if (0 != (memcmp(abtRxBuf, pn53x_preamble, 3))) {
-    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Frame preamble+start code mismatch");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Frame preamble+start code mismatch");
     pnd->last_error = NFC_EIO;
     goto error;
   }
@@ -369,20 +371,20 @@ pn532_uart_receive(nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, in
   if ((0x01 == abtRxBuf[3]) && (0xff == abtRxBuf[4])) {
     // Error frame
     uart_receive(DRIVER_DATA(pnd)->port, abtRxBuf, 3, 0, timeout);
-    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Application level error detected");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Application level error detected");
     pnd->last_error = NFC_EIO;
     goto error;
   } else if ((0xff == abtRxBuf[3]) && (0xff == abtRxBuf[4])) {
     // Extended frame
     pnd->last_error = uart_receive(DRIVER_DATA(pnd)->port, abtRxBuf, 3, 0, timeout);
     if (pnd->last_error != 0) {
-      log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Unable to receive data. (RX)");
+      log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Unable to receive data. (RX)");
       goto error;
     }
     // (abtRxBuf[0] << 8) + abtRxBuf[1] (LEN) include TFI + (CC+1)
     len = (abtRxBuf[0] << 8) + abtRxBuf[1] - 2;
     if (((abtRxBuf[0] + abtRxBuf[1] + abtRxBuf[2]) % 256) != 0) {
-      log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Length checksum mismatch");
+      log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Length checksum mismatch");
       pnd->last_error = NFC_EIO;
       goto error;
     }
@@ -390,7 +392,7 @@ pn532_uart_receive(nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, in
     // Normal frame
     if (256 != (abtRxBuf[3] + abtRxBuf[4])) {
       // TODO: Retry
-      log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Length checksum mismatch");
+      log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Length checksum mismatch");
       pnd->last_error = NFC_EIO;
       goto error;
     }
@@ -400,7 +402,7 @@ pn532_uart_receive(nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, in
   }
 
   if (len > szDataLen) {
-    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to receive data: buffer too small. (szDataLen: %zu, len: %zu)", szDataLen, len);
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to receive data: buffer too small. (szDataLen: %zu, len: %zu)", szDataLen, len);
     pnd->last_error = NFC_EIO;
     goto error;
   }
@@ -408,18 +410,18 @@ pn532_uart_receive(nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, in
   // TFI + PD0 (CC+1)
   pnd->last_error = uart_receive(DRIVER_DATA(pnd)->port, abtRxBuf, 2, 0, timeout);
   if (pnd->last_error != 0) {
-    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Unable to receive data. (RX)");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Unable to receive data. (RX)");
     goto error;
   }
 
   if (abtRxBuf[0] != 0xD5) {
-    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "TFI Mismatch");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "TFI Mismatch");
     pnd->last_error = NFC_EIO;
     goto error;
   }
 
   if (abtRxBuf[1] != CHIP_DATA(pnd)->last_command + 1) {
-    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Command Code verification failed");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Command Code verification failed");
     pnd->last_error = NFC_EIO;
     goto error;
   }
@@ -427,14 +429,14 @@ pn532_uart_receive(nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, in
   if (len) {
     pnd->last_error = uart_receive(DRIVER_DATA(pnd)->port, pbtData, len, 0, timeout);
     if (pnd->last_error != 0) {
-      log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Unable to receive data. (RX)");
+      log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Unable to receive data. (RX)");
       goto error;
     }
   }
 
   pnd->last_error = uart_receive(DRIVER_DATA(pnd)->port, abtRxBuf, 2, 0, timeout);
   if (pnd->last_error != 0) {
-    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Unable to receive data. (RX)");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Unable to receive data. (RX)");
     goto error;
   }
 
@@ -445,13 +447,13 @@ pn532_uart_receive(nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, in
   }
 
   if (btDCS != abtRxBuf[0]) {
-    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Data checksum mismatch");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Data checksum mismatch");
     pnd->last_error = NFC_EIO;
     goto error;
   }
 
   if (0x00 != abtRxBuf[1]) {
-    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Frame postamble mismatch");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Frame postamble mismatch");
     pnd->last_error = NFC_EIO;
     goto error;
   }

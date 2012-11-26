@@ -82,6 +82,7 @@
 #include "drivers.h"
 
 #define LOG_CATEGORY "libnfc.general"
+#define LOG_GROUP    NFC_LOG_GROUP_GENERAL
 
 const struct nfc_driver *nfc_drivers[] = {
 #  if defined (DRIVER_PN53X_USB_ENABLED)
@@ -118,7 +119,7 @@ nfc_init(nfc_context **context)
     exit(EXIT_FAILURE);
   }
   *context = nfc_context_new();
-  log_init();
+  log_init(*context);
 }
 
 /** @ingroup lib
@@ -129,8 +130,8 @@ nfc_init(nfc_context **context)
 void
 nfc_exit(nfc_context *context)
 {
-  if(context) nfc_context_free(context);
-  log_fini();
+  nfc_context_free(context);
+  log_exit();
 }
 
 /** @ingroup dev
@@ -186,13 +187,11 @@ nfc_get_default_device(nfc_connstring *connstring)
 nfc_device *
 nfc_open(nfc_context *context, const nfc_connstring connstring)
 {
-  (void) context;
   nfc_device *pnd = NULL;
 
   nfc_connstring ncs;
   if (connstring == NULL) {
     if (!nfc_get_default_device(&ncs)) {
-      log_fini();
       return NULL;
     }
   } else {
@@ -212,7 +211,7 @@ nfc_open(nfc_context *context, const nfc_connstring connstring)
       }
     }
 
-    pnd = ndr->open(ncs);
+    pnd = ndr->open(context, ncs);
     // Test if the opening was successful
     if (pnd == NULL) {
       if (0 == strncmp("usb", ncs, strlen("usb"))) {
@@ -220,19 +219,16 @@ nfc_open(nfc_context *context, const nfc_connstring connstring)
         pndr++;
         continue;
       }
-      log_put(LOG_CATEGORY, NFC_PRIORITY_TRACE, "Unable to open \"%s\".", ncs);
-      log_fini();
+      log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Unable to open \"%s\".", ncs);
       return pnd;
     }
 
-    log_put(LOG_CATEGORY, NFC_PRIORITY_TRACE, "\"%s\" (%s) has been claimed.", pnd->name, pnd->connstring);
-    log_fini();
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "\"%s\" (%s) has been claimed.", pnd->name, pnd->connstring);
     return pnd;
   }
 
   // Too bad, no driver can decode connstring
-  log_put(LOG_CATEGORY, NFC_PRIORITY_TRACE, "No driver available to handle \"%s\".", ncs);
-  log_fini();
+  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "No driver available to handle \"%s\".", ncs);
   return NULL;
 }
 
@@ -280,8 +276,8 @@ nfc_list_devices(nfc_context *context, nfc_connstring connstrings[], const size_
     while ((ndr = *pndr)) {
       size_t _device_found = 0;
       if((ndr->scan_type == NOT_INTRUSIVE) || ((context->allow_intrusive_scan) && (ndr->scan_type == INTRUSIVE))) {
-        _device_found = ndr->scan(connstrings + (device_found), connstrings_len - (device_found));
-        log_put(LOG_CATEGORY, NFC_PRIORITY_TRACE, "%ld device(s) found using %s driver", (unsigned long) _device_found, ndr->name);
+        _device_found = ndr->scan(context, connstrings + (device_found), connstrings_len - (device_found));
+        log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%ld device(s) found using %s driver", (unsigned long) _device_found, ndr->name);
         if (_device_found > 0) {
           device_found += _device_found;
           if (device_found == connstrings_len)

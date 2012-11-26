@@ -66,7 +66,9 @@
 
 #define ARYGON_DEFAULT_SPEED 9600
 #define ARYGON_DRIVER_NAME "arygon"
+
 #define LOG_CATEGORY "libnfc.driver.arygon"
+#define LOG_GROUP     NFC_LOG_GROUP_DRIVER
 
 #define DRIVER_DATA(pnd) ((struct arygon_data*)(pnd->driver_data))
 
@@ -92,7 +94,7 @@ int     arygon_reset_tama(nfc_device *pnd);
 void    arygon_firmware(nfc_device *pnd, char *str);
 
 static size_t
-arygon_scan(nfc_connstring connstrings[], const size_t connstrings_len)
+arygon_scan(const nfc_context *context, nfc_connstring connstrings[], const size_t connstrings_len)
 {
   size_t device_found = 0;
   serial_port sp;
@@ -102,7 +104,7 @@ arygon_scan(nfc_connstring connstrings[], const size_t connstrings_len)
 
   while ((acPort = acPorts[iDevice++])) {
     sp = uart_open(acPort);
-    log_put(LOG_CATEGORY, NFC_PRIORITY_TRACE, "Trying to find ARYGON device on serial port: %s at %d bauds.", acPort, ARYGON_DEFAULT_SPEED);
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Trying to find ARYGON device on serial port: %s at %d bauds.", acPort, ARYGON_DEFAULT_SPEED);
 
     if ((sp != INVALID_SERIAL_PORT) && (sp != CLAIMED_SERIAL_PORT)) {
       // We need to flush input to be sure first reply does not comes from older byte transceive
@@ -111,7 +113,7 @@ arygon_scan(nfc_connstring connstrings[], const size_t connstrings_len)
 
       nfc_connstring connstring;
       snprintf(connstring, sizeof(nfc_connstring), "%s:%s:%"PRIu32, ARYGON_DRIVER_NAME, acPort, ARYGON_DEFAULT_SPEED);
-      nfc_device *pnd = nfc_device_new(connstring);
+      nfc_device *pnd = nfc_device_new(context, connstring);
 
       pnd->driver = &arygon_driver;
       pnd->driver_data = malloc(sizeof(struct arygon_data));
@@ -223,7 +225,7 @@ arygon_close(nfc_device *pnd)
 }
 
 static nfc_device *
-arygon_open(const nfc_connstring connstring)
+arygon_open(const nfc_context *context, const nfc_connstring connstring)
 {
   struct arygon_descriptor ndd;
   int connstring_decode_level = arygon_connstring_decode(connstring, &ndd);
@@ -237,13 +239,13 @@ arygon_open(const nfc_connstring connstring)
   serial_port sp;
   nfc_device *pnd = NULL;
 
-  log_put(LOG_CATEGORY, NFC_PRIORITY_TRACE, "Attempt to open: %s at %d bauds.", ndd.port, ndd.speed);
+  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Attempt to open: %s at %d bauds.", ndd.port, ndd.speed);
   sp = uart_open(ndd.port);
 
   if (sp == INVALID_SERIAL_PORT)
-    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "Invalid serial port: %s", ndd.port);
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Invalid serial port: %s", ndd.port);
   if (sp == CLAIMED_SERIAL_PORT)
-    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "Serial port already claimed: %s", ndd.port);
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Serial port already claimed: %s", ndd.port);
   if ((sp == CLAIMED_SERIAL_PORT) || (sp == INVALID_SERIAL_PORT))
     return NULL;
 
@@ -252,7 +254,7 @@ arygon_open(const nfc_connstring connstring)
   uart_set_speed(sp, ndd.speed);
 
   // We have a connection
-  pnd = nfc_device_new(connstring);
+  pnd = nfc_device_new(context, connstring);
   snprintf(pnd->name, sizeof(pnd->name), "%s:%s", ARYGON_DRIVER_NAME, ndd.port);
 
   pnd->driver_data = malloc(sizeof(struct arygon_data));
@@ -308,7 +310,7 @@ arygon_tama_send(nfc_device *pnd, const uint8_t *pbtData, const size_t szData, i
   size_t szFrame = 0;
   if (szData > PN53x_NORMAL_FRAME__DATA_MAX_LEN) {
     // ARYGON Reader with PN532 equipped does not support extended frame (bug in ARYGON firmware?)
-    log_put(LOG_CATEGORY, NFC_PRIORITY_TRACE, "ARYGON device does not support more than %d bytes as payload (requested: %zd)", PN53x_NORMAL_FRAME__DATA_MAX_LEN, szData);
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "ARYGON device does not support more than %d bytes as payload (requested: %zd)", PN53x_NORMAL_FRAME__DATA_MAX_LEN, szData);
     pnd->last_error = NFC_EDEVNOTSUPP;
     return pnd->last_error;
   }
@@ -319,14 +321,14 @@ arygon_tama_send(nfc_device *pnd, const uint8_t *pbtData, const size_t szData, i
   }
 
   if ((res = uart_send(DRIVER_DATA(pnd)->port, abtFrame, szFrame + 1, timeout)) != 0) {
-    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Unable to transmit data. (TX)");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Unable to transmit data. (TX)");
     pnd->last_error = res;
     return pnd->last_error;
   }
 
   uint8_t abtRxBuf[6];
   if ((res = uart_receive(DRIVER_DATA(pnd)->port, abtRxBuf, sizeof(abtRxBuf), 0, timeout)) != 0) {
-    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Unable to read ACK");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Unable to read ACK");
     pnd->last_error = res;
     return pnd->last_error;
   }
@@ -334,7 +336,7 @@ arygon_tama_send(nfc_device *pnd, const uint8_t *pbtData, const size_t szData, i
   if (pn53x_check_ack_frame(pnd, abtRxBuf, sizeof(abtRxBuf)) == 0) {
     // The PN53x is running the sent command
   } else if (0 == memcmp(arygon_error_unknown_mode, abtRxBuf, sizeof(abtRxBuf))) {
-    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Bad frame format.");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Bad frame format.");
     // We have already read 6 bytes and arygon_error_unknown_mode is 10 bytes long
     // so we have to read 4 remaining bytes to be synchronized at the next receiving pass.
     pnd->last_error = uart_receive(DRIVER_DATA(pnd)->port, abtRxBuf, 4, 0, timeout);
@@ -381,13 +383,13 @@ arygon_tama_receive(nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, i
   }
 
   if (pnd->last_error != 0) {
-    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Unable to receive data. (RX)");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Unable to receive data. (RX)");
     return pnd->last_error;
   }
 
   const uint8_t pn53x_preamble[3] = { 0x00, 0x00, 0xff };
   if (0 != (memcmp(abtRxBuf, pn53x_preamble, 3))) {
-    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Frame preamble+start code mismatch");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Frame preamble+start code mismatch");
     pnd->last_error = NFC_EIO;
     return pnd->last_error;
   }
@@ -395,7 +397,7 @@ arygon_tama_receive(nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, i
   if ((0x01 == abtRxBuf[3]) && (0xff == abtRxBuf[4])) {
     // Error frame
     uart_receive(DRIVER_DATA(pnd)->port, abtRxBuf, 3, 0, timeout);
-    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Application level error detected");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Application level error detected");
     pnd->last_error = NFC_EIO;
     return pnd->last_error;
   } else if ((0xff == abtRxBuf[3]) && (0xff == abtRxBuf[4])) {
@@ -406,7 +408,7 @@ arygon_tama_receive(nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, i
     // Normal frame
     if (256 != (abtRxBuf[3] + abtRxBuf[4])) {
       // TODO: Retry
-      log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Length checksum mismatch");
+      log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Length checksum mismatch");
       pnd->last_error = NFC_EIO;
       return pnd->last_error;
     }
@@ -416,7 +418,7 @@ arygon_tama_receive(nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, i
   }
 
   if (len > szDataLen) {
-    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to receive data: buffer too small. (szDataLen: %zu, len: %zu)", szDataLen, len);
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to receive data: buffer too small. (szDataLen: %zu, len: %zu)", szDataLen, len);
     pnd->last_error = NFC_EIO;
     return pnd->last_error;
   }
@@ -424,18 +426,18 @@ arygon_tama_receive(nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, i
   // TFI + PD0 (CC+1)
   pnd->last_error = uart_receive(DRIVER_DATA(pnd)->port, abtRxBuf, 2, 0, timeout);
   if (pnd->last_error != 0) {
-    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Unable to receive data. (RX)");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Unable to receive data. (RX)");
     return pnd->last_error;
   }
 
   if (abtRxBuf[0] != 0xD5) {
-    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "TFI Mismatch");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "TFI Mismatch");
     pnd->last_error = NFC_EIO;
     return pnd->last_error;
   }
 
   if (abtRxBuf[1] != CHIP_DATA(pnd)->last_command + 1) {
-    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Command Code verification failed");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Command Code verification failed");
     pnd->last_error = NFC_EIO;
     return pnd->last_error;
   }
@@ -443,14 +445,14 @@ arygon_tama_receive(nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, i
   if (len) {
     pnd->last_error = uart_receive(DRIVER_DATA(pnd)->port, pbtData, len, 0, timeout);
     if (pnd->last_error != 0) {
-      log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Unable to receive data. (RX)");
+      log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Unable to receive data. (RX)");
       return pnd->last_error;
     }
   }
 
   pnd->last_error = uart_receive(DRIVER_DATA(pnd)->port, abtRxBuf, 2, 0, timeout);
   if (pnd->last_error != 0) {
-    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Unable to receive data. (RX)");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Unable to receive data. (RX)");
     return pnd->last_error;
   }
 
@@ -461,13 +463,13 @@ arygon_tama_receive(nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, i
   }
 
   if (btDCS != abtRxBuf[0]) {
-    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Data checksum mismatch");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Data checksum mismatch");
     pnd->last_error = NFC_EIO;
     return pnd->last_error;
   }
 
   if (0x00 != abtRxBuf[1]) {
-    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Frame postamble mismatch");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Frame postamble mismatch");
     pnd->last_error = NFC_EIO;
     return pnd->last_error;
   }
@@ -485,12 +487,12 @@ arygon_firmware(nfc_device *pnd, char *str)
 
   int res = uart_send(DRIVER_DATA(pnd)->port, arygon_firmware_version_cmd, sizeof(arygon_firmware_version_cmd), 0);
   if (res != 0) {
-    log_put(LOG_CATEGORY, NFC_PRIORITY_TRACE, "%s", "Unable to send ARYGON firmware command.");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "Unable to send ARYGON firmware command.");
     return;
   }
   res = uart_receive(DRIVER_DATA(pnd)->port, abtRx, szRx, 0, 0);
   if (res != 0) {
-    log_put(LOG_CATEGORY, NFC_PRIORITY_TRACE, "%s", "Unable to retrieve ARYGON firmware version.");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "Unable to retrieve ARYGON firmware version.");
     return;
   }
 
@@ -517,7 +519,7 @@ arygon_reset_tama(nfc_device *pnd)
   // or arygon_error_unknown_mode (ie. in case of the first byte was bad-transmitted)
   res = uart_receive(DRIVER_DATA(pnd)->port, abtRx, szRx, 0, 1000);
   if (res != 0) {
-    log_put(LOG_CATEGORY, NFC_PRIORITY_TRACE, "%s", "No reply to 'reset TAMA' command.");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "No reply to 'reset TAMA' command.");
     pnd->last_error = res;
     return pnd->last_error;
   }

@@ -77,6 +77,8 @@ Thanks to d18c7db and Okko for example code
 #include "drivers/acr122_usb.h"
 
 #define ACR122_USB_DRIVER_NAME "acr122_usb"
+
+#define LOG_GROUP     NFC_LOG_GROUP_DRIVER
 #define LOG_CATEGORY "libnfc.driver.acr122_usb"
 
 #define USB_INFINITE_TIMEOUT   0
@@ -216,11 +218,11 @@ acr122_usb_bulk_read(struct acr122_usb_data *data, uint8_t abtRx[], const size_t
 {
   int res = usb_bulk_read(data->pudh, data->uiEndPointIn, (char *) abtRx, szRx, timeout);
   if (res > 0) {
-    LOG_HEX("RX", abtRx, res);
+    LOG_HEX(NFC_LOG_GROUP_COM, "RX", abtRx, res);
   } else if (res < 0) {
     if (res != -USB_TIMEDOUT) {
       res = NFC_EIO;
-      log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to read from USB (%s)", _usb_strerror(res));
+      log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to read from USB (%s)", _usb_strerror(res));
     } else {
       res = NFC_ETIMEOUT;
     }
@@ -231,7 +233,7 @@ acr122_usb_bulk_read(struct acr122_usb_data *data, uint8_t abtRx[], const size_t
 static int
 acr122_usb_bulk_write(struct acr122_usb_data *data, uint8_t abtTx[], const size_t szTx, const int timeout)
 {
-  LOG_HEX("TX", abtTx, szTx);
+  LOG_HEX(NFC_LOG_GROUP_COM, "TX", abtTx, szTx);
   int res = usb_bulk_write(data->pudh, data->uiEndPointOut, (char *) abtTx, szTx, timeout);
   if (res > 0) {
     // HACK This little hack is a well know problem of USB, see http://www.libusb.org/ticket/6 for more details
@@ -239,7 +241,7 @@ acr122_usb_bulk_write(struct acr122_usb_data *data, uint8_t abtTx[], const size_
       usb_bulk_write(data->pudh, data->uiEndPointOut, "\0", 0, timeout);
     }
   } else if (res < 0) {
-    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to write to USB (%s)", _usb_strerror(res));
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to write to USB (%s)", _usb_strerror(res));
     if (res == -USB_TIMEDOUT) {
       res = NFC_ETIMEOUT;
     } else {
@@ -304,8 +306,9 @@ acr122_usb_get_end_points(struct usb_device *dev, struct acr122_usb_data *data)
 }
 
 static size_t
-acr122_usb_scan(nfc_connstring connstrings[], const size_t connstrings_len)
+acr122_usb_scan(const nfc_context *context, nfc_connstring connstrings[], const size_t connstrings_len)
 {
+  (void)context;
   usb_init();
 
   int res;
@@ -313,14 +316,14 @@ acr122_usb_scan(nfc_connstring connstrings[], const size_t connstrings_len)
   // number of changes since previous call to this function (total of new
   // busses and busses removed).
   if ((res = usb_find_busses() < 0)) {
-    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to find USB busses (%s)", _usb_strerror(res));
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to find USB busses (%s)", _usb_strerror(res));
     return 0;
   }
   // usb_find_devices will find all of the devices on each bus. This should be
   // called after usb_find_busses. Returns the number of changes since the
   // previous call to this function (total of new device and devices removed).
   if ((res = usb_find_devices() < 0)) {
-    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to find USB devices (%s)", _usb_strerror(res));
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to find USB devices (%s)", _usb_strerror(res));
     return 0;
   }
 
@@ -349,7 +352,7 @@ acr122_usb_scan(nfc_connstring connstrings[], const size_t connstrings_len)
 
           // Set configuration
           // acr122_usb_get_usb_device_name (dev, udev, pnddDevices[device_found].acDevice, sizeof (pnddDevices[device_found].acDevice));
-          log_put(LOG_CATEGORY, NFC_PRIORITY_TRACE, "device found: Bus %s Device %s Name %s", bus->dirname, dev->filename, acr122_usb_supported_devices[n].name);
+          log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "device found: Bus %s Device %s Name %s", bus->dirname, dev->filename, acr122_usb_supported_devices[n].name);
           usb_close(udev);
           snprintf(connstrings[device_found], sizeof(nfc_connstring), "%s:%s:%s", ACR122_USB_DRIVER_NAME, bus->dirname, dev->filename);
           device_found++;
@@ -425,12 +428,12 @@ acr122_usb_get_usb_device_name(struct usb_device *dev, usb_dev_handle *udev, cha
 }
 
 static nfc_device *
-acr122_usb_open(const nfc_connstring connstring)
+acr122_usb_open(const nfc_context *context, const nfc_connstring connstring)
 {
   nfc_device *pnd = NULL;
   struct acr122_usb_descriptor desc = { NULL, NULL };
   int connstring_decode_level = acr122_usb_connstring_decode(connstring, &desc);
-  log_put(LOG_CATEGORY, NFC_PRIORITY_TRACE, "%d element(s) have been decoded from \"%s\"", connstring_decode_level, connstring);
+  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%d element(s) have been decoded from \"%s\"", connstring_decode_level, connstring);
   if (connstring_decode_level < 1) {
     goto free_mem;
   }
@@ -450,14 +453,14 @@ acr122_usb_open(const nfc_connstring connstring)
   // number of changes since previous call to this function (total of new
   // busses and busses removed).
   if ((res = usb_find_busses() < 0)) {
-    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to find USB busses (%s)", _usb_strerror(res));
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to find USB busses (%s)", _usb_strerror(res));
     goto free_mem;
   }
   // usb_find_devices will find all of the devices on each bus. This should be
   // called after usb_find_busses. Returns the number of changes since the
   // previous call to this function (total of new device and devices removed).
   if ((res = usb_find_devices() < 0)) {
-    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to find USB devices (%s)", _usb_strerror(res));
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to find USB devices (%s)", _usb_strerror(res));
     goto free_mem;
   }
 
@@ -482,7 +485,7 @@ acr122_usb_open(const nfc_connstring connstring)
       // Claim interface
       res = usb_claim_interface(data.pudh, 0);
       if (res < 0) {
-        log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to claim USB interface (%s)", _usb_strerror(res));
+        log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to claim USB interface (%s)", _usb_strerror(res));
         usb_close(data.pudh);
         // we failed to use the specified device
         goto free_mem;
@@ -490,7 +493,7 @@ acr122_usb_open(const nfc_connstring connstring)
 
       res = usb_set_altinterface(data.pudh, 0);
       if (res < 0) {
-        log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to set alternate setting on USB interface (%s)", _usb_strerror(res));
+        log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to set alternate setting on USB interface (%s)", _usb_strerror(res));
         usb_close(data.pudh);
         // we failed to use the specified device
         goto free_mem;
@@ -498,7 +501,7 @@ acr122_usb_open(const nfc_connstring connstring)
 
       data.model = acr122_usb_get_device_model(dev->descriptor.idVendor, dev->descriptor.idProduct);
       // Allocate memory for the device info and specification, fill it and return the info
-      pnd = nfc_device_new(connstring);
+      pnd = nfc_device_new(context, connstring);
       acr122_usb_get_usb_device_name(dev, data.pudh, pnd->name, sizeof(pnd->name));
 
       pnd->driver_data = malloc(sizeof(struct acr122_usb_data));
@@ -553,11 +556,11 @@ acr122_usb_close(nfc_device *pnd)
 
   int res;
   if ((res = usb_release_interface(DRIVER_DATA(pnd)->pudh, 0)) < 0) {
-    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to release USB interface (%s)", _usb_strerror(res));
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to release USB interface (%s)", _usb_strerror(res));
   }
 
   if ((res = usb_close(DRIVER_DATA(pnd)->pudh)) < 0) {
-    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to close USB connection (%s)", _usb_strerror(res));
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to close USB connection (%s)", _usb_strerror(res));
   }
   pn53x_data_free(pnd);
   nfc_device_free(pnd);
@@ -668,7 +671,7 @@ read:
         }
       }
       if (abtRxBuf[offset] != attempted_response) {
-        log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Frame header mismatch");
+        log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Frame header mismatch");
   	  pnd->last_error = NFC_EIO;
         return pnd->last_error;
       }
@@ -676,7 +679,7 @@ read:
   
       len = abtRxBuf[offset++];
       if (len != 2) {
-        log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Wrong reply");
+        log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Wrong reply");
         pnd->last_error = NFC_EIO;
         return pnd->last_error;
       }
@@ -707,7 +710,7 @@ read:
   }
 
   if (abtRxBuf[offset] != attempted_response) {
-    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Frame header mismatch");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Frame header mismatch");
     pnd->last_error = NFC_EIO;
     return pnd->last_error;
   }
@@ -716,21 +719,21 @@ read:
   // XXX In CCID specification, len is a 32-bits (dword), do we need to decode more than 1 byte ? (0-255 bytes for PN532 reply)
   len = abtRxBuf[offset++];
   if ((abtRxBuf[offset] != 0x00) && (abtRxBuf[offset+1] != 0x00) && (abtRxBuf[offset+2] != 0x00)) {
-    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Not implemented: only 1-byte length is supported, please report this bug with a full trace.");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Not implemented: only 1-byte length is supported, please report this bug with a full trace.");
     pnd->last_error = NFC_EIO;
     return pnd->last_error;
   }
   offset += 3;
 
   if (len < 4) {
-    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Too small reply");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Too small reply");
     pnd->last_error = NFC_EIO;
     return pnd->last_error;
   }
   len -= 4; // We skip 2 bytes for PN532 direction byte (D5) and command byte (CMD+1), then 2 bytes for APDU status (90 00).
 
   if (len > szDataLen) {
-    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to receive data: buffer too small. (szDataLen: %zu, len: %zu)", szDataLen, len);
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to receive data: buffer too small. (szDataLen: %zu, len: %zu)", szDataLen, len);
     pnd->last_error = NFC_EOVFLOW;
     return pnd->last_error;
   }
@@ -742,14 +745,14 @@ read:
 
   // TFI + PD0 (CC+1)
   if (abtRxBuf[offset] != 0xD5) {
-    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "TFI Mismatch");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "TFI Mismatch");
     pnd->last_error = NFC_EIO;
     return pnd->last_error;
   }
   offset += 1;
 
   if (abtRxBuf[offset] != CHIP_DATA(pnd)->last_command + 1) {
-    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Command Code verification failed");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Command Code verification failed");
     pnd->last_error = NFC_EIO;
     return pnd->last_error;
   }
@@ -767,7 +770,7 @@ acr122_usb_ack(nfc_device *pnd)
   (void) pnd;
   int res = 0;
   uint8_t acr122_ack_frame[] = { GetFirmwareVersion }; // We can't send a PN532's ACK frame, so we use a normal command to cancel current command
-  log_put(LOG_CATEGORY, NFC_PRIORITY_DEBUG, "%s", "ACR122 Abort");
+  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "ACR122 Abort");
   if ((res = acr122_build_frame_from_tama(pnd, acr122_ack_frame, sizeof(acr122_ack_frame))) < 0)
     return res;
 
@@ -812,7 +815,7 @@ acr122_usb_init(nfc_device *pnd)
     0x00, 0x00, 0x00, 0x00, // Blinking duration control
   };
 
-  log_put (LOG_CATEGORY, NFC_PRIORITY_DEBUG, "%s", "ACR122 Get LED state");
+  log_put (LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "ACR122 Get LED state");
   if ((res = acr122_usb_bulk_write (DRIVER_DATA (pnd), (uint8_t *) acr122u_get_led_state_frame, sizeof (acr122u_get_led_state_frame), 1000)) < 0)
     return res;
 
@@ -837,7 +840,7 @@ acr122_usb_init(nfc_device *pnd)
   if ((res = acr122_usb_bulk_read(DRIVER_DATA(pnd), abtRxBuf, sizeof(abtRxBuf), 1000)) < 0)
     return res;
 
-  log_put(LOG_CATEGORY, NFC_PRIORITY_DEBUG, "%s", "ACR122 PICC Operating Parameters");
+  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "ACR122 PICC Operating Parameters");
   if ((res = acr122_usb_send_apdu(pnd, 0x00, 0x51, 0x00, NULL, 0, 0, abtRxBuf, sizeof(abtRxBuf))) < 0)
     return res;
 

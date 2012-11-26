@@ -28,6 +28,10 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <inttypes.h>
+
+#define LOG_GROUP    NFC_LOG_GROUP_GENERAL
+#define LOG_CATEGORY "libnfc.general"
 
 void 
 string_as_boolean(const char* s, bool *value)
@@ -63,6 +67,11 @@ nfc_context_new(void)
   // Set default context values
   res->allow_autoscan = true;
   res->allow_intrusive_scan = false;
+#ifdef DEBUG
+  res->log_level = 3;
+#else
+  res->log_level = 1;
+#endif
 
   // Load options from configuration file (ie. /etc/nfc/libnfc.conf)
   conf_load(res);
@@ -72,9 +81,16 @@ nfc_context_new(void)
   char *envvar = getenv("LIBNFC_INTRUSIVE_SCAN");
   string_as_boolean(envvar, &(res->allow_intrusive_scan));
 
+  // log level
+  envvar = getenv("LIBNFC_LOG_LEVEL");
+  if (envvar) {
+    res->log_level = atoi(envvar);
+  }
+
   // Debug context state
-  log_put ("libnfc", NFC_PRIORITY_DEBUG, "allow_autoscan is set to %s", (res->allow_autoscan)?"true":"false");
-  log_put ("libnfc", NFC_PRIORITY_DEBUG, "allow_intrusive_scan is set to %s", (res->allow_intrusive_scan)?"true":"false");
+  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_NONE,  "log_level is set to %"PRIu32, res->log_level);
+  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "allow_autoscan is set to %s", (res->allow_autoscan)?"true":"false");
+  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "allow_intrusive_scan is set to %s", (res->allow_intrusive_scan)?"true":"false");
   return res;
 }
 

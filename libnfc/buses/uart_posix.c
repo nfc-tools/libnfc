@@ -42,6 +42,7 @@
 
 #include "nfc-internal.h"
 
+#define LOG_GROUP    NFC_LOG_GROUP_COM
 #define LOG_CATEGORY "libnfc.bus.uart"
 
 #  if defined(__APPLE__)
@@ -127,14 +128,14 @@ uart_flush_input(serial_port sp)
   char *rx = malloc(available_bytes_count);
   // There is something available, read the data
   res = read(UART_DATA(sp)->fd, rx, available_bytes_count);
-  log_put(LOG_CATEGORY, NFC_PRIORITY_TRACE, "%d bytes have eatten.", available_bytes_count);
+  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%d bytes have eatten.", available_bytes_count);
   free(rx);
 }
 
 void
 uart_set_speed(serial_port sp, const uint32_t uiPortSpeed)
 {
-  log_put(LOG_CATEGORY, NFC_PRIORITY_TRACE, "Serial port speed requested to be set to %d bauds.", uiPortSpeed);
+  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Serial port speed requested to be set to %d bauds.", uiPortSpeed);
 
   // Portability note: on some systems, B9600 != 9600 so we have to do
   // uint32_t <=> speed_t associations by hand.
@@ -170,7 +171,7 @@ uart_set_speed(serial_port sp, const uint32_t uiPortSpeed)
       break;
 #  endif
     default:
-      log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to set serial port speed to %d bauds. Speed value must be one of those defined in termios(3).",
+      log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to set serial port speed to %d bauds. Speed value must be one of those defined in termios(3).",
               uiPortSpeed);
       return;
   };
@@ -179,7 +180,7 @@ uart_set_speed(serial_port sp, const uint32_t uiPortSpeed)
   cfsetispeed(&(UART_DATA(sp)->termios_new), stPortSpeed);
   cfsetospeed(&(UART_DATA(sp)->termios_new), stPortSpeed);
   if (tcsetattr(UART_DATA(sp)->fd, TCSADRAIN, &(UART_DATA(sp)->termios_new)) == -1) {
-    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Unable to apply new speed settings.");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Unable to apply new speed settings.");
   }
 }
 
@@ -279,18 +280,18 @@ select:
 
     // Read error
     if (res < 0) {
-      log_put(LOG_CATEGORY, NFC_PRIORITY_TRACE, "Error: %s", strerror(errno));
+      log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Error: %s", strerror(errno));
       return NFC_EIO;
     }
     // Read time-out
     if (res == 0) {
-      log_put(LOG_CATEGORY, NFC_PRIORITY_TRACE, "%s", "Timeout!");
+      log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "Timeout!");
       return NFC_ETIMEOUT;
     }
 
     if (FD_ISSET(iAbortFd, &rfds)) {
       // Abort requested
-      log_put(LOG_CATEGORY, NFC_PRIORITY_TRACE, "%s", "Abort!");
+      log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "Abort!");
       close(iAbortFd);
       return NFC_EOPABORTED;
     }
@@ -309,7 +310,7 @@ select:
     received_bytes_count += res;
 
   } while (expected_bytes_count > received_bytes_count);
-  LOG_HEX("RX", pbtRx, szRx);
+  LOG_HEX(LOG_GROUP, "RX", pbtRx, szRx);
   return NFC_SUCCESS;
 }
 
@@ -322,7 +323,7 @@ int
 uart_send(serial_port sp, const uint8_t *pbtTx, const size_t szTx, int timeout)
 {
   (void) timeout;
-  LOG_HEX("TX", pbtTx, szTx);
+  LOG_HEX(LOG_GROUP, "TX", pbtTx, szTx);
   if ((int) szTx == write(UART_DATA(sp)->fd, pbtTx, szTx))
     return NFC_SUCCESS;
   else
