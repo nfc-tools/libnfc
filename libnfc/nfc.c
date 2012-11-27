@@ -1097,7 +1097,7 @@ nfc_version(void)
   return GIT_REVISION;
 #else
   return PACKAGE_VERSION;
-#endif // SVN_REVISION
+#endif // GIT_REVISION
 }
 
 /** @ingroup misc

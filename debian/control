@@ -5,8 +5,8 @@ Maintainer: Thomas Hood <jdthood@gmail.com>
 Build-Depends: debhelper (>= 7.0.50~), dh-autoreconf, libtool, pkg-config, libusb-dev
 Standards-Version: 3.9.2
 Homepage: http://www.libnfc.org/
-Vcs-Svn: http://libnfc.googlecode.com/svn/trunk
-Vcs-Browser: http://code.google.com/p/libnfc/source/browse/#svn/trunk
+Vcs-Git: https://code.googlecode.com/p/libnfc/
+Vcs-Browser: http://code.google.com/p/libnfc/source/browse/
 
 Package: libnfc3
 Architecture: any

@@ -13,7 +13,7 @@ echo ">>> Cleaning sources..."
 # First, clean what we can
 rm -f configure config.h config.h.in
 autoreconf -is && ./configure && make distclean
-svn propget svn:ignore . | xargs rm -rf
+git clean -dfX
 echo "<<< Sources cleaned."
 
 if [ ! -f $LIBNFC_AUTOTOOLS_ARCHIVE ]; then
