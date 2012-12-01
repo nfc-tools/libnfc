@@ -133,6 +133,14 @@ Two possible solutions:
 * Either you don't install SCL3711 driver at all
 * Or you stop the PCSC daemon when you want to use libnfc-based tools
 
+PN533 USB device on Linux >= 3.1:
+---------------------------------
+Since Linux kernel version 3.1, two kernel-modules must not be loaded in order
+to use libnfc : "nfc" and "pn533".
+To prevent kernel from loading automatically these modules, you can blacklist
+them in a modprobe conf file. This file is provided within libnfc archive:
+  sudo cp contrib/linux/blacklist-libnfc.conf /etc/modprobe.d/blacklist-libnfc.conf
+
 Proprietary Notes
 =================
 

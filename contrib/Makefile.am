@@ -1,5 +1,6 @@
 SUBDIRS = \
 	devd \
+	linux \
 	udev \
 	win32
 
