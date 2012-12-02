@@ -1,5 +1,17 @@
 New in TBD:
 
+Configuration:
+  libnfc can now uses a configuration file for special setups, or features
+  activation. This file (/etc/nfc/libnfc.conf under GNU/Linux systems) already
+  support some keywords:
+    - "allow_autoscan" to enable/disable device auto-detection feature;
+    - "allow_intrusive_autoscan" to enable/disable intrusive auto-detection
+      (ie. serial port probing);
+    - "log_level" to select library verbosity;
+    - "device.name" and "device.connstring" to define a user device,
+      this is the recommended method if user have a not-easily detectable
+      device (ie.  serial ones).
+
 API Changes:
 
   * Types

@@ -11,3 +11,9 @@
 # Valid log levels are (in order of verbosity): 0 (none), 1 (error), 2 (info), 3 (debug)
 # Note: if you set --enable-debug option, the default log level is "debug"
 #log_level = 1
+
+# Manually set default device (no default)
+# To set a default device, you must set both name and connstring for your device
+# Note: if autoscan is enabled, default device will be the first device available is device list.
+#device.name = "microBuilder.eu"
+#device.connstring = "pn532_uart:/dev/ttyUSB0"

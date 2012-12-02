@@ -73,6 +73,13 @@ nfc_context_new(void)
   res->log_level = 1;
 #endif
 
+  // Clear user defined devices array
+  for (int i=0; i<MAX_USER_DEFINED_DEVICES; i++) {
+    strcpy(res->user_defined_devices[i].name, "");
+    strcpy(res->user_defined_devices[i].connstring, "");
+  }
+  res->user_defined_device_count = 0;
+
   // Load options from configuration file (ie. /etc/nfc/libnfc.conf)
   conf_load(res);
 
@@ -87,16 +94,29 @@ nfc_context_new(void)
     res->log_level = atoi(envvar);
   }
 
+  // Initialize log before use it...
+  log_init(res);
+
   // Debug context state
+#if defined DEBUG
   log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_NONE,  "log_level is set to %"PRIu32, res->log_level);
+#else
+  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG,  "log_level is set to %"PRIu32, res->log_level);
+#endif
   log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "allow_autoscan is set to %s", (res->allow_autoscan)?"true":"false");
   log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "allow_intrusive_scan is set to %s", (res->allow_intrusive_scan)?"true":"false");
+
+  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%d device(s) defined by user", res->user_defined_device_count);
+  for(uint32_t i=0; i<res->user_defined_device_count; i++) {
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "  #%d name: \"%s\", connstring: \"%s\"", i, res->user_defined_devices[i].name, res->user_defined_devices[i].connstring);
+  }
   return res;
 }
 
 void
 nfc_context_free(nfc_context *context)
 {
+  log_exit();
   free(context);
 }
 

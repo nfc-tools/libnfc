@@ -119,7 +119,6 @@ nfc_init(nfc_context **context)
     exit(EXIT_FAILURE);
   }
   *context = nfc_context_new();
-  log_init(*context);
 }
 
 /** @ingroup lib
@@ -131,7 +130,6 @@ void
 nfc_exit(nfc_context *context)
 {
   nfc_context_free(context);
-  log_exit();
 }
 
 /** @ingroup dev
@@ -222,7 +220,13 @@ nfc_open(nfc_context *context, const nfc_connstring connstring)
       log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Unable to open \"%s\".", ncs);
       return pnd;
     }
-
+    for (uint32_t i=0; i>context->user_defined_device_count; i++) {
+      if (strcmp(ncs, context->user_defined_devices[i].connstring) == 0) {
+        // This is a device sets by user, we use the device name given by user
+        strcpy(pnd->name, context->user_defined_devices[i].name);
+        break;
+      }
+    }
     log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "\"%s\" (%s) has been claimed.", pnd->name, pnd->connstring);
     return pnd;
   }
@@ -266,10 +270,18 @@ nfc_list_devices(nfc_context *context, nfc_connstring connstrings[], const size_
   const struct nfc_driver **pndr = nfc_drivers;
 
   if (!context) {
-    printf ("NULL context is not supported anymore! Please fix your code.");
+    printf ("NULL context is not supported anymore! Please fix your code.\n");
+    exit(EXIT_FAILURE);
   }
 
-  // TODO Load manually configured devices (from config file and env variables)
+  // Load manually configured devices (from config file and env variables)
+  // TODO From env var...
+  for (uint32_t i=0; i<context->user_defined_device_count; i++) {
+    strcpy((char*)(connstrings+device_found), context->user_defined_devices[i].connstring);
+    device_found++;
+    if(device_found >= connstrings_len)
+      return device_found;
+  }
 
   // Device auto-detection
   if (context->allow_autoscan) {
@@ -286,6 +298,8 @@ nfc_list_devices(nfc_context *context, nfc_connstring connstrings[], const size_
       } // scan_type is INTRUSIVE but not allowed or NOT_AVAILABLE
       pndr++;
     }
+  } else if (context->user_defined_device_count) {
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_INFO, "Warning: autoscan have been disabled but no other devices have bet set.");
   }
 
   return device_found;

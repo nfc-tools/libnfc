@@ -44,7 +44,7 @@ conf_parse_file(const char* filename, void (*conf_keyvalue)(void* data, const ch
     return false;
   }
   char line[BUFSIZ];
-  const char *str_regex = "^[[:space:]]*([[:alnum:]_]+)[[:space:]]*=[[:space:]]*(\"(.+)\"|([^[:space:]]+))[[:space:]]*$";
+  const char *str_regex = "^[[:space:]]*([[:alnum:]_.]+)[[:space:]]*=[[:space:]]*(\"(.+)\"|([^[:space:]]+))[[:space:]]*$";
   regex_t preg;
   if(regcomp (&preg, str_regex, REG_EXTENDED|REG_NOTEOL) != 0) {
     printf ("regcomp error\n");
@@ -89,16 +89,34 @@ static void
 conf_keyvalue_context(void *data, const char* key, const char* value)
 {
   nfc_context *context = (nfc_context*)data;
-  printf ("key: [%s], value: [%s]\n", key, value);
+  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "key: [%s], value: [%s]", key, value);
   if (strcmp(key, "allow_autoscan") == 0) {
     string_as_boolean(value, &(context->allow_autoscan));
   } else if (strcmp(key, "allow_intrusive_scan") == 0) {
     string_as_boolean(value, &(context->allow_intrusive_scan));
   } else if (strcmp(key, "log_level") == 0) {
     context->log_level = atoi(value);
+  } else if (strcmp(key, "device.name") == 0) {
+    if ((context->user_defined_device_count == 0) || strcmp(context->user_defined_devices[context->user_defined_device_count-1].name, "") != 0) {
+      context->user_defined_device_count++;
+    }
+    strcpy(context->user_defined_devices[context->user_defined_device_count-1].name, value);
+  } else if (strcmp(key, "device.connstring") == 0) {
+    if ((context->user_defined_device_count == 0) || strcmp(context->user_defined_devices[context->user_defined_device_count-1].connstring, "") != 0) {
+      context->user_defined_device_count++;
+    }
+    strcpy(context->user_defined_devices[context->user_defined_device_count-1].connstring, value);
   } else {
     log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_INFO, "unknown key in config line: %s = %s", key, value);
   }
+}
+
+static void
+conf_keyvalue_device(void *data, const char* key, const char* value)
+{
+  char newkey[BUFSIZ];
+  sprintf(newkey, "device.%s", key);
+  conf_keyvalue_context(data, newkey, value);
 }
 
 void 
