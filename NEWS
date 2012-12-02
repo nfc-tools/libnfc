@@ -11,6 +11,8 @@ Configuration:
     - "device.name" and "device.connstring" to define a user device,
       this is the recommended method if user have a not-easily detectable
       device (ie.  serial ones).
+  Its also possible to define devices using dedicated configuration files and
+  put them into device search directory (/etc/nfc/devices.d under GNU/Linux).
 
 API Changes:
 

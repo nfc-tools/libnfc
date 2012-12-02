@@ -19,9 +19,9 @@
  */
 
 /**
-* @file nfc-device.c
-* @brief Provide internal function to manipulate nfc_device type
-*/
+ * @file nfc-device.c
+ * @brief Provide internal function to manipulate nfc_device type
+ */
 
 #include <stdlib.h>
 #include <string.h>

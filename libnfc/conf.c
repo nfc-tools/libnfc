@@ -119,36 +119,39 @@ conf_keyvalue_device(void *data, const char* key, const char* value)
   conf_keyvalue_context(data, newkey, value);
 }
 
-void 
-conf_load(nfc_context *context)
+static void 
+conf_devices_load(const char *dirname, nfc_context *context)
 {
-  conf_parse_file(LIBNFC_CONFFILE, conf_keyvalue_context, context);
-}
-
-/*
-int 
-main(int argc, char *argv[])
-{
-  DIR *d = opendir(LIBNFC_DEVICECONFDIR);
+  DIR *d = opendir(dirname);
   if (!d) {
     perror ("opendir");
   } else {
     struct dirent* de;
-    while (de = readdir(d)) {
+    while ((de = readdir(d))) {
       if (de->d_name[0]!='.') {
-        printf ("\t%s\n", de->d_name);
-        char filename[BUFSIZ] = LIBNFC_DEVICECONFDIR"/";
-        strcat (filename, de->d_name);
-        struct stat s;
-        if (stat(filename, &s) == -1) {
-          perror("stat");
-          continue;
-        }
-        if(S_ISREG(s.st_mode)) {
-          nfc_open_from_file (filename);
+        const size_t filename_len = strlen(de->d_name);
+        const size_t extension_len = strlen(".conf");
+        if ((filename_len > extension_len) && (strncmp(".conf", de->d_name + (filename_len-extension_len), extension_len) == 0)) {
+          char filename[BUFSIZ] = LIBNFC_DEVICECONFDIR"/";
+          strcat (filename, de->d_name);
+          struct stat s;
+          if (stat(filename, &s) == -1) {
+            perror("stat");
+            continue;
+          }
+          if(S_ISREG(s.st_mode)) {
+            conf_parse_file (filename, conf_keyvalue_device, context);
+          }
         }
       }
     }
   }
 }
-*/
+
+void 
+conf_load(nfc_context *context)
+{
+  conf_parse_file(LIBNFC_CONFFILE, conf_keyvalue_context, context);
+  conf_devices_load(LIBNFC_DEVICECONFDIR, context);
+}
+

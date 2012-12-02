@@ -1,0 +1,3 @@
+## Typical configuration file for Arygon/IDentive device (with Arygon-MCU on board)
+name = "IDentive"
+connstring = arygon:/dev/ttyS0
