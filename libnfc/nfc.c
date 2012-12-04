@@ -133,45 +133,12 @@ nfc_exit(nfc_context *context)
 }
 
 /** @ingroup dev
- * @brief Get the defaut NFC device
- * @param connstring \a nfc_connstring pointer where the default connection string will be stored
- * @return \e true on success
- *
- * This function fill \e connstring with the LIBNFC_DEFAULT_DEVICE environment variable content
- * if is set otherwise it will search for the first available device, and fill
- * \e connstring with the corresponding \a nfc_connstring value.
- *
- * This function returns true when LIBNFC_DEFAULT_DEVICE is set or an available device is found.
- *
- * @note The \e connstring content can be invalid if LIBNFC_DEFAULT_DEVICE is
- * set with incorrect value.
- */
-bool
-nfc_get_default_device(nfc_connstring *connstring)
-{
-  char *env_default_connstring = getenv("LIBNFC_DEFAULT_DEVICE");
-  if (NULL == env_default_connstring) {
-    // LIBNFC_DEFAULT_DEVICE is not set, we fallback on probing for the first available device
-    nfc_connstring listed_cs[1];
-    size_t device_found = nfc_list_devices(NULL, listed_cs, 1);
-    if (device_found) {
-      strncpy(*connstring, listed_cs[0], sizeof(nfc_connstring));
-    } else {
-      return false;
-    }
-  } else {
-    strncpy(*connstring, env_default_connstring, sizeof(nfc_connstring));
-  }
-  return true;
-}
-
-/** @ingroup dev
  * @brief Open a NFC device
- * @param context The context to operate on, or NULL for the default context.
+ * @param context The context to operate on.
  * @param connstring The device connection string if specific device is wanted, \c NULL otherwise
  * @return Returns pointer to a \a nfc_device struct if successfull; otherwise returns \c NULL value.
  *
- * If \e connstring is \c NULL, the \a nfc_get_default_device() function is used.
+ * If \e connstring is \c NULL, the first available device from \a nfc_list_devices function is used.
  *
  * If \e connstring is set, this function will try to claim the right device using information provided by \e connstring.
  *
@@ -189,7 +156,7 @@ nfc_open(nfc_context *context, const nfc_connstring connstring)
 
   nfc_connstring ncs;
   if (connstring == NULL) {
-    if (!nfc_get_default_device(&ncs)) {
+    if (!nfc_list_devices(context, &ncs, 1)) {
       return NULL;
     }
   } else {

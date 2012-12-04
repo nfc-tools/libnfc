@@ -21,6 +21,9 @@ API Changes:
       creation, etc.)
 
   * Functions
+    - Remove nfc_get_default_device() function: the default device is now the
+      first in nfc_list_devices() or could be open using NULL connstring with
+      nfc_open() function.
     - New enum-to-string converter functions str_nfc_modulation_type() and
       str_nfc_baud_rate()
     - New str_nfc_target() to convert nfc_target struct into allocated string
