@@ -77,7 +77,8 @@ main(int argc, const char *argv[])
 
   int ret = EXIT_FAILURE;
 
-  nfc_init(NULL);
+  nfc_context *context;
+  nfc_init(&context);
 
   // Display libnfc version
   const char *acLibnfcVersion = nfc_version();
@@ -85,7 +86,7 @@ main(int argc, const char *argv[])
 
   // Open using the first available NFC device
   nfc_device *pnd;
-  pnd = nfc_open(NULL, NULL);
+  pnd = nfc_open(context, NULL);
 
   if (pnd == NULL) {
     ERR("%s", "Unable to open NFC device.");
@@ -211,7 +212,7 @@ error:
 
   // Close NFC device
   nfc_close(pnd);
-  nfc_exit(NULL);
+  nfc_exit(context);
 
   exit(ret);
 }

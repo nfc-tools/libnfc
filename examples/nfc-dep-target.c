@@ -64,18 +64,20 @@ main(int argc, const char *argv[])
   uint8_t  abtRx[MAX_FRAME_LEN];
   int  szRx;
   uint8_t  abtTx[] = "Hello Mars!";
+
+  nfc_context *context;
+  nfc_init(&context);
 #define MAX_DEVICE_COUNT 2
   nfc_connstring connstrings[MAX_DEVICE_COUNT];
-  size_t szDeviceFound = nfc_list_devices(NULL, connstrings, MAX_DEVICE_COUNT);
+  size_t szDeviceFound = nfc_list_devices(context, connstrings, MAX_DEVICE_COUNT);
   // Little hack to allow using nfc-dep-initiator & nfc-dep-target from
   // the same machine: if there is more than one readers opened
   // nfc-dep-target will open the second reader
   // (we hope they're always detected in the same order)
-  nfc_init(NULL);
   if (szDeviceFound == 1) {
-    pnd = nfc_open(NULL, connstrings[0]);
+    pnd = nfc_open(context, connstrings[0]);
   } else if (szDeviceFound > 1) {
-    pnd = nfc_open(NULL, connstrings[1]);
+    pnd = nfc_open(context, connstrings[1]);
   } else {
     printf("No device found.\n");
     return EXIT_FAILURE;
@@ -141,6 +143,6 @@ main(int argc, const char *argv[])
 
 error:
   nfc_close(pnd);
-  nfc_exit(NULL);
+  nfc_exit(context);
   return EXIT_SUCCESS;
 }

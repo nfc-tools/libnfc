@@ -149,10 +149,11 @@ main(int argc, char *argv[])
     }
   }
 
-  nfc_init(NULL);
+  nfc_context *context;
+  nfc_init(&context);
 
   // Try to open the NFC reader
-  pnd = nfc_open(NULL, NULL);
+  pnd = nfc_open(context, NULL);
 
   if (!pnd) {
     printf("Error opening NFC reader\n");
@@ -187,8 +188,8 @@ main(int argc, char *argv[])
   if (!transmit_bits(abtReqa, 7)) {
     printf("Error: No tag available\n");
     nfc_close(pnd);
-    nfc_exit(NULL);
-    return 1;
+    nfc_exit(context);
+    return EXIT_FAILURE;
   }
   memcpy(abtAtqa, abtRx, 2);
 
@@ -317,6 +318,6 @@ main(int argc, char *argv[])
   }
 
   nfc_close(pnd);
-  nfc_exit(NULL);
-  return 0;
+  nfc_exit(context);
+  return EXIT_SUCCESS;
 }

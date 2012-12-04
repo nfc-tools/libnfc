@@ -253,6 +253,6 @@ main(int argc, const char *argv[])
     nfc_close(pnd);
   }
 
-  nfc_exit(NULL);
-  return 0;
+  nfc_exit(context);
+  return EXIT_SUCCESS;
 }

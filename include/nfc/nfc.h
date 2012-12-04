@@ -58,19 +58,33 @@
 
 #  include <nfc/nfc-types.h>
 
+#  ifndef __has_attribute
+#    define __has_attribute(x) 0
+#  endif
+
+#  if __has_attribute(nonnull) || defined(__GNUC__)
+#    define __has_attribute_nonnull 1
+#  endif
+
+#  if __has_attribute_nonnull
+#    define ATTRIBUTE_NONNULL( param ) __attribute__((nonnull (param)))
+#  else
+#  define ATTRIBUTE_NONNULL( param )
+#  endif
+
 #  ifdef __cplusplus
 extern  "C" {
 #  endif                        // __cplusplus
 
   /* Library initialization/deinitialization */
-  NFC_EXPORT void nfc_init(nfc_context **context);
-  NFC_EXPORT void nfc_exit(nfc_context *context);
+  NFC_EXPORT void nfc_init(nfc_context **context) ATTRIBUTE_NONNULL(1);
+  NFC_EXPORT void nfc_exit(nfc_context *context) ATTRIBUTE_NONNULL(1);
 
   /* NFC Device/Hardware manipulation */
-  NFC_EXPORT nfc_device *nfc_open(nfc_context *context, const nfc_connstring connstring);
+  NFC_EXPORT nfc_device *nfc_open(nfc_context *context, const nfc_connstring connstring) ATTRIBUTE_NONNULL(1);
   NFC_EXPORT void nfc_close(nfc_device *pnd);
   NFC_EXPORT int nfc_abort_command(nfc_device *pnd);
-  NFC_EXPORT size_t nfc_list_devices(nfc_context *context, nfc_connstring connstrings[], size_t connstrings_len);
+  NFC_EXPORT size_t nfc_list_devices(nfc_context *context, nfc_connstring connstrings[], size_t connstrings_len) ATTRIBUTE_NONNULL(1);
   NFC_EXPORT int nfc_idle(nfc_device *pnd);
 
   /* NFC initiator: act as "reader" */

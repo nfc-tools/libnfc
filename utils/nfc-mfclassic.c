@@ -53,6 +53,7 @@
 #include "mifare.h"
 #include "nfc-utils.h"
 
+static nfc_context *context;
 static nfc_device *pnd;
 static nfc_target nt;
 static mifare_param mp;
@@ -508,10 +509,10 @@ main(int argc, const char *argv[])
       }
       // printf("Successfully opened required files\n");
 
-      nfc_init(NULL);
+      nfc_init(&context);
 
       // Try to open the NFC reader
-      pnd = nfc_open(NULL, NULL);
+      pnd = nfc_open(context, NULL);
       if (pnd == NULL) {
         printf("Error opening NFC reader\n");
         exit(EXIT_FAILURE);
@@ -536,7 +537,7 @@ main(int argc, const char *argv[])
       if (nfc_initiator_select_passive_target(pnd, nmMifare, NULL, 0, &nt) < 0) {
         printf("Error: no tag was found\n");
         nfc_close(pnd);
-        nfc_exit(NULL);
+        nfc_exit(context);
         exit(EXIT_FAILURE);
       }
       // Test if we are dealing with a MIFARE compatible tag
@@ -596,6 +597,6 @@ main(int argc, const char *argv[])
       break;
   };
 
-  nfc_exit(NULL);
+  nfc_exit(context);
   exit(EXIT_SUCCESS);
 }

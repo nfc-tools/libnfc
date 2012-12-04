@@ -66,21 +66,22 @@ main(int argc, const char *argv[])
     errx(1, "usage: %s", argv[0]);
   }
 
-  nfc_init(NULL);
+  nfc_context *context;
+  nfc_init(&context);
 
   // Display libnfc version
   acLibnfcVersion = nfc_version();
   printf("%s uses libnfc %s\n", argv[0], acLibnfcVersion);
 
   nfc_connstring connstrings[MAX_DEVICE_COUNT];
-  size_t szFound = nfc_list_devices(NULL, connstrings, MAX_DEVICE_COUNT);
+  size_t szFound = nfc_list_devices(context, connstrings, MAX_DEVICE_COUNT);
 
   if (szFound == 0) {
     printf("No NFC device found.\n");
   }
 
   for (i = 0; i < szFound; i++) {
-    pnd = nfc_open(NULL, connstrings[i]);
+    pnd = nfc_open(context, connstrings[i]);
 
     if (pnd == NULL) {
       ERR("%s", "Unable to open NFC device.");

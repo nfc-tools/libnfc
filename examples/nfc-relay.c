@@ -108,19 +108,19 @@ main(int argc, char *argv[])
   signal(SIGINT, intr_hdlr);
 #endif
 
+  nfc_context *context;
+  nfc_init(&context);
   nfc_connstring connstrings[MAX_DEVICE_COUNT];
   // List available devices
-  size_t szFound = nfc_list_devices(NULL, connstrings, MAX_DEVICE_COUNT);
+  size_t szFound = nfc_list_devices(context, connstrings, MAX_DEVICE_COUNT);
 
   if (szFound < 2) {
     ERR("%zd device found but two opened devices are needed to relay NFC.", szFound);
     return EXIT_FAILURE;
   }
 
-  nfc_init(NULL);
-
   // Try to open the NFC emulator device
-  pndTag = nfc_open(NULL, connstrings[0]);
+  pndTag = nfc_open(context, connstrings[0]);
   if (pndTag == NULL) {
     printf("Error opening NFC emulator device\n");
     return EXIT_FAILURE;
@@ -152,7 +152,7 @@ main(int argc, char *argv[])
   if ((szReaderRxBits = nfc_target_init(pndTag, &nt, abtReaderRx, sizeof(abtReaderRx), 0)) < 0) {
     ERR("%s", "Initialization of NFC emulator failed");
     nfc_close(pndTag);
-    nfc_exit(NULL);
+    nfc_exit(context);
     return EXIT_FAILURE;
   }
   printf("%s", "Configuring emulator settings...");
@@ -164,7 +164,7 @@ main(int argc, char *argv[])
   printf("%s", "Done, emulated tag is initialized");
 
   // Try to open the NFC reader
-  pndReader = nfc_open(NULL, connstrings[1]);
+  pndReader = nfc_open(context, connstrings[1]);
 
   printf("NFC reader device: %s opened", nfc_device_get_name(pndReader));
   printf("%s", "Configuring NFC reader settings...");
@@ -222,6 +222,6 @@ main(int argc, char *argv[])
 
   nfc_close(pndTag);
   nfc_close(pndReader);
-  nfc_exit(NULL);
+  nfc_exit(context);
   exit(EXIT_SUCCESS);
 }

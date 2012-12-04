@@ -204,10 +204,11 @@ main(int argc, const char *argv[])
   }
   DBG("Successfully opened the dump file\n");
 
-  nfc_init(NULL);
+  nfc_context *context;
+  nfc_init(&context);
 
   // Try to open the NFC device
-  pnd = nfc_open(NULL, NULL);
+  pnd = nfc_open(context, NULL);
   if (pnd == NULL) {
     ERR("Error opening NFC device\n");
     return 1;
@@ -230,15 +231,15 @@ main(int argc, const char *argv[])
   if (nfc_initiator_select_passive_target(pnd, nmMifare, NULL, 0, &nt) < 0) {
     ERR("no tag was found\n");
     nfc_close(pnd);
-    nfc_exit(NULL);
-    return 1;
+    nfc_exit(context);
+    return EXIT_FAILURE;
   }
   // Test if we are dealing with a MIFARE compatible tag
 
   if (nt.nti.nai.abtAtqa[1] != 0x44) {
     ERR("tag is not a MIFARE Ultralight card\n");
     nfc_close(pnd);
-    nfc_exit(NULL);
+    nfc_exit(context);
     return EXIT_FAILURE;
   }
   // Get the info from the current tag
@@ -270,6 +271,6 @@ main(int argc, const char *argv[])
   }
 
   nfc_close(pnd);
-  nfc_exit(NULL);
+  nfc_exit(context);
   return EXIT_SUCCESS;
 }

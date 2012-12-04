@@ -56,6 +56,7 @@
 
 static uint8_t abtRx[MAX_FRAME_LEN];
 static int szRx;
+static nfc_context *context;
 static nfc_device *pnd;
 static bool quiet_output = false;
 static bool init_mfc_auth = false;
@@ -68,7 +69,7 @@ intr_hdlr(int sig)
   if (pnd != NULL) {
     nfc_close(pnd);
   }
-  nfc_exit(NULL);
+  nfc_exit(context);
   exit(EXIT_FAILURE);
 }
 
@@ -181,10 +182,10 @@ main(int argc, char *argv[])
   signal(SIGINT, intr_hdlr);
 #endif
 
-  nfc_init(NULL);
+  nfc_init(&context);
 
   // Try to open the NFC reader
-  pnd = nfc_open(NULL, NULL);
+  pnd = nfc_open(context, NULL);
 
   // Display libnfc version
   acLibnfcVersion = nfc_version();
@@ -270,7 +271,7 @@ main(int argc, char *argv[])
   }
 
   nfc_close(pnd);
-  nfc_exit(NULL);
+  nfc_exit(context);
   exit(EXIT_SUCCESS);
 }
 
