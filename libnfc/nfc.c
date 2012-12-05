@@ -266,7 +266,7 @@ nfc_list_devices(nfc_context *context, nfc_connstring connstrings[], const size_
       pndr++;
     }
   } else if (context->user_defined_device_count) {
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_INFO, "Warning: autoscan have been disabled but no other devices have bet set.");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_INFO, "Warning: %s" , "autoscan have been disabled but no other devices have bet set.");
   }
 
   return device_found;

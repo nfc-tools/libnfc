@@ -47,13 +47,13 @@ conf_parse_file(const char* filename, void (*conf_keyvalue)(void* data, const ch
   const char *str_regex = "^[[:space:]]*([[:alnum:]_.]+)[[:space:]]*=[[:space:]]*(\"(.+)\"|([^[:space:]]+))[[:space:]]*$";
   regex_t preg;
   if(regcomp (&preg, str_regex, REG_EXTENDED|REG_NOTEOL) != 0) {
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Regular expression used for configuration file parsing is not valid.");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Regular expression used for configuration file parsing is not valid.");
     return false;
   }
   size_t nmatch = preg.re_nsub + 1;
   regmatch_t *pmatch = malloc (sizeof (*pmatch) * nmatch);
   if(!pmatch) {
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Not enough memory: malloc failed.");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Not enough memory: malloc failed.");
     return false;
   }
 
@@ -101,7 +101,7 @@ conf_keyvalue_context(void *data, const char* key, const char* value)
   } else if (strcmp(key, "device.name") == 0) {
     if ((context->user_defined_device_count == 0) || strcmp(context->user_defined_devices[context->user_defined_device_count-1].name, "") != 0) {
       if(context->user_defined_device_count >= MAX_USER_DEFINED_DEVICES) {
-        log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Configuration exceeded maximum user-defined devices.");
+        log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Configuration exceeded maximum user-defined devices.");
         return;
       }
       context->user_defined_device_count++;
@@ -110,7 +110,7 @@ conf_keyvalue_context(void *data, const char* key, const char* value)
   } else if (strcmp(key, "device.connstring") == 0) {
     if ((context->user_defined_device_count == 0) || strcmp(context->user_defined_devices[context->user_defined_device_count-1].connstring, "") != 0) {
       if(context->user_defined_device_count >= MAX_USER_DEFINED_DEVICES) {
-        log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Configuration exceeded maximum user-defined devices.");
+        log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Configuration exceeded maximum user-defined devices.");
         return;
       }
       context->user_defined_device_count++;
