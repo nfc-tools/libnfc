@@ -2,7 +2,7 @@
  * Public platform independent Near Field Communication (NFC) library
  *
  * Copyright (C) 2009, 2010 Roel Verdult
- * Copyright (C) 2009, 2010 Romuald Conty
+ * Copyright (C) 2009, 2010, 2012 Romuald Conty
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -26,6 +26,7 @@
 
 #include "log.h"
 
+#define LOG_GROUP    NFC_LOG_GROUP_COM
 #define LOG_CATEGORY "libnfc.bus.uart_win32"
 
 // Handle platform specific includes
@@ -103,7 +104,7 @@ uart_set_speed(serial_port sp, const uint32_t uiPortSpeed)
 {
   struct serial_port_windows *spw;
 
-  log_put(LOG_CATEGORY, NFC_PRIORITY_TRACE, "Serial port speed requested to be set to %d bauds.", uiPortSpeed);
+  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Serial port speed requested to be set to %d bauds.", uiPortSpeed);
   // Set port speed (Input and Output)
   switch (uiPortSpeed) {
     case 9600:
@@ -115,7 +116,7 @@ uart_set_speed(serial_port sp, const uint32_t uiPortSpeed)
     case 460800:
       break;
     default:
-      log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to set serial port speed to %d bauds. Speed value must be one of these constants: 9600 (default), 19200, 38400, 57600, 115200, 230400 or 460800.", uiPortSpeed);
+      log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to set serial port speed to %d bauds. Speed value must be one of these constants: 9600 (default), 19200, 38400, 57600, 115200, 230400 or 460800.", uiPortSpeed);
       return;
   };
   spw = (struct serial_port_windows *) sp;
@@ -123,7 +124,7 @@ uart_set_speed(serial_port sp, const uint32_t uiPortSpeed)
   // Set baud rate
   spw->dcb.BaudRate = uiPortSpeed;
   if (!SetCommState(spw->hPort, &spw->dcb)) {
-    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "%s", "Unable to apply new speed settings.");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Unable to apply new speed settings.");
     return;
   }
   PurgeComm(spw->hPort, PURGE_RXABORT | PURGE_RXCLEAR);
@@ -157,16 +158,16 @@ uart_receive(serial_port sp, uint8_t *pbtRx, const size_t szRx, void *abort_p, i
   timeouts.WriteTotalTimeoutConstant = timeout_ms;
 
   if (!SetCommTimeouts(((struct serial_port_windows *) sp)->hPort, &timeouts)) {
-    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to apply new timeout settings.");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to apply new timeout settings.");
     return NFC_EIO;
   }
-  log_put(LOG_CATEGORY, NFC_PRIORITY_TRACE, "Timeouts are set to %u ms", timeout_ms);
+  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Timeouts are set to %u ms", timeout_ms);
 
   // TODO Enhance the reception method
   // - According to MSDN, it could be better to implement nfc_abort_command() mecanism using Cancello()
   volatile bool *abort_flag_p = (volatile bool *)abort_p;
   do {
-    log_put(LOG_CATEGORY, NFC_PRIORITY_TRACE, "ReadFile");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "ReadFile");
     res = ReadFile(((struct serial_port_windows *) sp)->hPort, pbtRx + dwTotalBytesReceived,
                    dwBytesToGet,
                    &dwBytesReceived, NULL);
@@ -175,7 +176,7 @@ uart_receive(serial_port sp, uint8_t *pbtRx, const size_t szRx, void *abort_p, i
 
     if (!res) {
       DWORD err = GetLastError();
-      log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "ReadFile error: %u", err);
+      log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "ReadFile error: %u", err);
       return NFC_EIO;
     } else if (dwBytesReceived == 0) {
       return NFC_ETIMEOUT;
@@ -189,7 +190,7 @@ uart_receive(serial_port sp, uint8_t *pbtRx, const size_t szRx, void *abort_p, i
       return NFC_EOPABORTED;
     }
   } while (((DWORD)szRx) > dwTotalBytesReceived);
-  LOG_HEX("RX", pbtRx, szRx);
+  LOG_HEX(LOG_GROUP, "RX", pbtRx, szRx);
 
   return (dwTotalBytesReceived == (DWORD) szRx) ? 0 : NFC_EIO;
 }
@@ -207,11 +208,11 @@ uart_send(serial_port sp, const uint8_t *pbtTx, const size_t szTx, int timeout)
   timeouts.WriteTotalTimeoutConstant = timeout;
 
   if (!SetCommTimeouts(((struct serial_port_windows *) sp)->hPort, &timeouts)) {
-    log_put(LOG_CATEGORY, NFC_PRIORITY_ERROR, "Unable to apply new timeout settings.");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to apply new timeout settings.");
     return NFC_EIO;
   }
 
-  LOG_HEX("TX", pbtTx, szTx);
+  LOG_HEX(LOG_GROUP, "TX", pbtTx, szTx);
   if (!WriteFile(((struct serial_port_windows *) sp)->hPort, pbtTx, szTx, &dwTxLen, NULL)) {
     return NFC_EIO;
   }

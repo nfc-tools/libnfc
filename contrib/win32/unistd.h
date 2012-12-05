@@ -1,7 +1,7 @@
 /*-
  * Public platform independent Near Field Communication (NFC) library
  *
- * Copyright (C) 2011 Romuald Conty
+ * Copyright (C) 2011, 2012 Romuald Conty
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -24,6 +24,8 @@
 
 #ifndef _UNISTD_H_
 #define _UNISTD_H_
+
+#include "../windows.h"
 
 // Needed by Sleep() under Windows
 #  include <winbase.h>
