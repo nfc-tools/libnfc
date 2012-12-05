@@ -31,14 +31,22 @@ main(int argc, const char *argv[])
   nfc_device *pnd;
   nfc_target nt;
 
-  nfc_init(NULL);
+  // Allocate only a pointer to nfc_context
+  nfc_context *context;
+
+  // Initialize libnfc and set the nfc_context
+  nfc_init(&context);
 
   // Display libnfc version
   const char *acLibnfcVersion = nfc_version();
   printf("%s uses libnfc %s\n", argv[0], acLibnfcVersion);
 
-  // Open, using the first available NFC device
-  pnd = nfc_open(NULL, NULL);
+  // Open, using the first available NFC device which can be in order of selection:
+  //   - default device specified using environment variable or
+  //   - first specified device in libnfc.conf (/etc/nfc) or
+  //   - first specified device in device-configuration directory (/etc/nfc/devices.d) or
+  //   - first auto-detected (if feature is not disabled in libnfc.conf) device
+  pnd = nfc_open(context, NULL);
 
   if (pnd == NULL) {
     warnx("ERROR: %s", "Unable to open NFC device.");
@@ -72,6 +80,7 @@ main(int argc, const char *argv[])
   }
   // Close NFC device
   nfc_close(pnd);
-  nfc_exit(NULL);
+  // Release the context
+  nfc_exit(context);
   return EXIT_SUCCESS;
 }
