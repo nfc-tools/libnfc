@@ -40,20 +40,20 @@ conf_parse_file(const char* filename, void (*conf_keyvalue)(void* data, const ch
 {
   FILE *f = fopen (filename, "r");
   if (!f) {
-    perror ("fopen");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_INFO, "Unable to open file: %s", filename);
     return false;
   }
   char line[BUFSIZ];
   const char *str_regex = "^[[:space:]]*([[:alnum:]_.]+)[[:space:]]*=[[:space:]]*(\"(.+)\"|([^[:space:]]+))[[:space:]]*$";
   regex_t preg;
   if(regcomp (&preg, str_regex, REG_EXTENDED|REG_NOTEOL) != 0) {
-    printf ("regcomp error\n");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Regular expression used for configuration file parsing is not valid.");
     return false;
   }
   size_t nmatch = preg.re_nsub + 1;
   regmatch_t *pmatch = malloc (sizeof (*pmatch) * nmatch);
   if(!pmatch) {
-    perror ("malloc");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Not enough memory: malloc failed.");
     return false;
   }
 
@@ -76,7 +76,7 @@ conf_parse_file(const char* filename, void (*conf_keyvalue)(void* data, const ch
           strncpy(value, line+(pmatch[value_pmatch].rm_so), value_size); value[value_size]='\0';
           conf_keyvalue(data, key, value);
         } else {
-          log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "parse error on line #%d: %s", lineno, line);
+          log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Parse error on line #%d: %s", lineno, line);
         }
       }
       break;
@@ -107,7 +107,7 @@ conf_keyvalue_context(void *data, const char* key, const char* value)
     }
     strcpy(context->user_defined_devices[context->user_defined_device_count-1].connstring, value);
   } else {
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_INFO, "unknown key in config line: %s = %s", key, value);
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_INFO, "Unknown key in config line: %s = %s", key, value);
   }
 }
 
@@ -124,14 +124,15 @@ conf_devices_load(const char *dirname, nfc_context *context)
 {
   DIR *d = opendir(dirname);
   if (!d) {
-    perror ("opendir");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Unable to open directory: %s", dirname);
   } else {
     struct dirent* de;
     while ((de = readdir(d))) {
       if (de->d_name[0]!='.') {
         const size_t filename_len = strlen(de->d_name);
         const size_t extension_len = strlen(".conf");
-        if ((filename_len > extension_len) && (strncmp(".conf", de->d_name + (filename_len-extension_len), extension_len) == 0)) {
+        if ((filename_len > extension_len) && 
+            (strncmp(".conf", de->d_name + (filename_len-extension_len), extension_len) == 0)) {
           char filename[BUFSIZ] = LIBNFC_DEVICECONFDIR"/";
           strcat (filename, de->d_name);
           struct stat s;

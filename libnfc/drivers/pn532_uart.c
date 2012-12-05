@@ -325,7 +325,7 @@ pn532_uart_send(nfc_device *pnd, const uint8_t *pbtData, const size_t szData, in
   uint8_t abtRxBuf[6];
   res = uart_receive(DRIVER_DATA(pnd)->port, abtRxBuf, 6, 0, timeout);
   if (res != 0) {
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Unable to read ACK");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "Unable to read ACK");
     pnd->last_error = res;
     return pnd->last_error;
   }
