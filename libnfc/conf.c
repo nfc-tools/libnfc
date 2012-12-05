@@ -82,6 +82,8 @@ conf_parse_file(const char* filename, void (*conf_keyvalue)(void* data, const ch
       break;
     }
   }
+
+  free(pmatch);
   return false;
 }
 
@@ -98,11 +100,19 @@ conf_keyvalue_context(void *data, const char* key, const char* value)
     context->log_level = atoi(value);
   } else if (strcmp(key, "device.name") == 0) {
     if ((context->user_defined_device_count == 0) || strcmp(context->user_defined_devices[context->user_defined_device_count-1].name, "") != 0) {
+      if(context->user_defined_device_count >= MAX_USER_DEFINED_DEVICES) {
+        log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Configuration exceeded maximum user-defined devices.");
+        return;
+      }
       context->user_defined_device_count++;
     }
     strcpy(context->user_defined_devices[context->user_defined_device_count-1].name, value);
   } else if (strcmp(key, "device.connstring") == 0) {
     if ((context->user_defined_device_count == 0) || strcmp(context->user_defined_devices[context->user_defined_device_count-1].connstring, "") != 0) {
+      if(context->user_defined_device_count >= MAX_USER_DEFINED_DEVICES) {
+        log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Configuration exceeded maximum user-defined devices.");
+        return;
+      }
       context->user_defined_device_count++;
     }
     strcpy(context->user_defined_devices[context->user_defined_device_count-1].connstring, value);
