@@ -1,20 +1,20 @@
 # Allow device auto-detection (default: true)
-# Note: if this auto-detection is disabled, user have to set manually a device
-# configuration using file or environnement variable
+# Note: if this auto-detection is disabled, user has to set manually a device
+# configuration using file or environment variable
 #allow_autoscan = true
 
 # Allow intrusive auto-detection (default: false)
 # Warning: intrusive auto-detection can seriously disturb other devices
-# This option is not recommended, user should prefers to add manually its device.
+# This option is not recommended, user should prefer to add manually his device.
 #allow_intrusive_autoscan = false
 
 # Set log level (default: error)
 # Valid log levels are (in order of verbosity): 0 (none), 1 (error), 2 (info), 3 (debug)
-# Note: if you set --enable-debug option, the default log level is "debug"
+# Note: if you compiled with --enable-debug option, the default log level is "debug"
 #log_level = 1
 
 # Manually set default device (no default)
 # To set a default device, you must set both name and connstring for your device
-# Note: if autoscan is enabled, default device will be the first device available is device list.
+# Note: if autoscan is enabled, default device will be the first device available in device list.
 #device.name = "microBuilder.eu"
 #device.connstring = "pn532_uart:/dev/ttyUSB0"
