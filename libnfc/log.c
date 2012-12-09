@@ -24,7 +24,7 @@
 #include <string.h>
 
 /*
-int 
+int
 log_priority_to_int(const char* priority)
 {
   if (strcmp("none", priority) == 0) {
@@ -54,10 +54,10 @@ log_priority_to_int(const char* priority)
 }
 */
 
-const char* 
+const char *
 log_priority_to_str(const int priority)
 {
-  switch(priority) {
+  switch (priority) {
     case NFC_LOG_PRIORITY_ERROR:
       return  "error";
     case NFC_LOG_PRIORITY_INFO:

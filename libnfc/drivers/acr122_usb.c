@@ -210,8 +210,8 @@ const struct pn53x_io acr122_usb_io;
 static int acr122_usb_init(nfc_device *pnd);
 static int acr122_usb_ack(nfc_device *pnd);
 static int acr122_usb_send_apdu(nfc_device *pnd,
-                     const uint8_t ins, const uint8_t p1, const uint8_t p2, const uint8_t *const data, size_t data_len, const uint8_t le,
-                     uint8_t *out, const size_t out_size);
+                                const uint8_t ins, const uint8_t p1, const uint8_t p2, const uint8_t *const data, size_t data_len, const uint8_t le,
+                                uint8_t *out, const size_t out_size);
 
 static int
 acr122_usb_bulk_read(struct acr122_usb_data *data, uint8_t abtRx[], const size_t szRx, const int timeout)
@@ -568,15 +568,15 @@ acr122_usb_close(nfc_device *pnd)
 
 uint32_t htole32(uint32_t u32);
 
-uint32_t 
+uint32_t
 htole32(uint32_t u32)
 {
   uint8_t u8[4];
-  for(int i=0; i<4; i++) {
+  for (int i = 0; i < 4; i++) {
     u8[i] = (u32 & 0xff);
     u32 >>= 8;
   }
-  uint32_t *pu32 = (uint32_t*)u8;
+  uint32_t *pu32 = (uint32_t *)u8;
   return *pu32;
 }
 
@@ -616,7 +616,7 @@ acr122_usb_send(nfc_device *pnd, const uint8_t *pbtData, const size_t szData, co
     return pnd->last_error;
   }
 
-  if ((res = acr122_usb_bulk_write(DRIVER_DATA(pnd), (unsigned char*)&(DRIVER_DATA(pnd)->tama_frame), res, timeout)) < 0) {
+  if ((res = acr122_usb_bulk_write(DRIVER_DATA(pnd), (unsigned char *) & (DRIVER_DATA(pnd)->tama_frame), res, timeout)) < 0) {
     pnd->last_error = res;
     return pnd->last_error;
   }
@@ -657,7 +657,7 @@ read:
   uint8_t attempted_response = RDR_to_PC_Escape; // ACR122U attempted response
   size_t len;
 
-  switch(DRIVER_DATA(pnd)->model) {
+  switch (DRIVER_DATA(pnd)->model) {
     case TOUCHATAG:
       attempted_response = RDR_to_PC_DataBlock;
       if (res == NFC_ETIMEOUT) {
@@ -672,11 +672,11 @@ read:
       }
       if (abtRxBuf[offset] != attempted_response) {
         log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Frame header mismatch");
-  	  pnd->last_error = NFC_EIO;
+        pnd->last_error = NFC_EIO;
         return pnd->last_error;
       }
       offset++;
-  
+
       len = abtRxBuf[offset++];
       if (len != 2) {
         log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Wrong reply");
@@ -685,7 +685,7 @@ read:
       }
       acr122_usb_send_apdu(pnd, APDU_GetAdditionnalData, 0x00, 0x00, NULL, 0, abtRxBuf[11], abtRxBuf, sizeof(abtRxBuf));
       offset = 0;
-    break;
+      break;
     case ACR122:
       break;
     case UNKNOWN:
@@ -718,7 +718,7 @@ read:
 
   // XXX In CCID specification, len is a 32-bits (dword), do we need to decode more than 1 byte ? (0-255 bytes for PN532 reply)
   len = abtRxBuf[offset++];
-  if ((abtRxBuf[offset] != 0x00) && (abtRxBuf[offset+1] != 0x00) && (abtRxBuf[offset+2] != 0x00)) {
+  if ((abtRxBuf[offset] != 0x00) && (abtRxBuf[offset + 1] != 0x00) && (abtRxBuf[offset + 2] != 0x00)) {
     log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Not implemented: only 1-byte length is supported, please report this bug with a full trace.");
     pnd->last_error = NFC_EIO;
     return pnd->last_error;
@@ -774,20 +774,20 @@ acr122_usb_ack(nfc_device *pnd)
   if ((res = acr122_build_frame_from_tama(pnd, acr122_ack_frame, sizeof(acr122_ack_frame))) < 0)
     return res;
 
-  res = acr122_usb_bulk_write(DRIVER_DATA(pnd), (unsigned char*)&(DRIVER_DATA(pnd)->tama_frame), res, 1000);
+  res = acr122_usb_bulk_write(DRIVER_DATA(pnd), (unsigned char *) & (DRIVER_DATA(pnd)->tama_frame), res, 1000);
   uint8_t  abtRxBuf[255 + sizeof(struct ccid_header)];
   res = acr122_usb_bulk_read(DRIVER_DATA(pnd), abtRxBuf, sizeof(abtRxBuf), 1000);
   return res;
 }
 
-static int 
-acr122_usb_send_apdu(nfc_device *pnd, 
+static int
+acr122_usb_send_apdu(nfc_device *pnd,
                      const uint8_t ins, const uint8_t p1, const uint8_t p2, const uint8_t *const data, size_t data_len, const uint8_t le,
                      uint8_t *out, const size_t out_size)
 {
   int res;
   size_t frame_len = acr122_build_frame_from_apdu(pnd, ins, p1, p2, data, data_len, le);
-  if ((res = acr122_usb_bulk_write(DRIVER_DATA(pnd), (unsigned char*)&(DRIVER_DATA(pnd)->apdu_frame), frame_len, 1000)) < 0)
+  if ((res = acr122_usb_bulk_write(DRIVER_DATA(pnd), (unsigned char *) & (DRIVER_DATA(pnd)->apdu_frame), frame_len, 1000)) < 0)
     return res;
   if ((res = acr122_usb_bulk_read(DRIVER_DATA(pnd), out, out_size, 1000)) < 0)
     return res;
@@ -835,7 +835,7 @@ acr122_usb_init(nfc_device *pnd)
     .bMessageSpecific = { 0x01, 0x00, 0x00 },
   };
 
-  if ((res = acr122_usb_bulk_write(DRIVER_DATA(pnd), (unsigned char*)&ccid_frame, sizeof(struct ccid_header), 1000)) < 0)
+  if ((res = acr122_usb_bulk_write(DRIVER_DATA(pnd), (unsigned char *)&ccid_frame, sizeof(struct ccid_header), 1000)) < 0)
     return res;
   if ((res = acr122_usb_bulk_read(DRIVER_DATA(pnd), abtRxBuf, sizeof(abtRxBuf), 1000)) < 0)
     return res;

@@ -50,7 +50,7 @@
 */
 
 //int log_priority_to_int(const char* priority);
-const char* log_priority_to_str(const int priority);
+const char *log_priority_to_str(const int priority);
 
 #if defined LOG
 

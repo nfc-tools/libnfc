@@ -25,7 +25,7 @@
 #include <stdarg.h>
 #include <fcntl.h>
 
-void 
+void
 log_init(const nfc_context *context)
 {
   char str[32];
@@ -56,8 +56,8 @@ log_put(const uint8_t group, const char *category, const uint8_t priority, const
 
   //  printf("log_level = %"PRIu32" group = %"PRIu8" priority = %"PRIu8"\n", log_level, group, priority);
   if (log_level) { // If log is not disabled by log_level=none
-    if ( ((log_level & 0x00000003) >= priority) ||  // Global log level
-         (((log_level >> (group*2)) & 0x00000003) >= priority) ) { // Group log level
+    if (((log_level & 0x00000003) >= priority) ||   // Global log level
+        (((log_level >> (group * 2)) & 0x00000003) >= priority)) { // Group log level
       va_list va;
       va_start(va, format);
       fprintf(stderr, "%s\t%s\t", log_priority_to_str(priority), category);

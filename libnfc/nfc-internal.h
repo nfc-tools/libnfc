@@ -108,9 +108,9 @@
   } while (0)
 
 typedef enum {
- NOT_INTRUSIVE,
- INTRUSIVE,
- NOT_AVAILABLE,
+  NOT_INTRUSIVE,
+  INTRUSIVE,
+  NOT_AVAILABLE,
 } scan_type_enum;
 
 struct nfc_driver {
@@ -207,7 +207,7 @@ struct nfc_device {
 nfc_device *nfc_device_new(const nfc_context *context, const nfc_connstring connstring);
 void        nfc_device_free(nfc_device *dev);
 
-void string_as_boolean(const char* s, bool *value);
+void string_as_boolean(const char *s, bool *value);
 
 void iso14443_cascade_uid(const uint8_t abtUID[], const size_t szUID, uint8_t *pbtCascadedUID, size_t *pszCascadedUID);
 

@@ -2387,11 +2387,11 @@ pn53x_InRelease(struct nfc_device *pnd, const uint8_t ui8Target)
     // No much choice what to release actually...
     uint8_t  abtCmdRcs360[] = { InRelease, 0x01, 0x01 };
     res = pn53x_transceive(pnd, abtCmdRcs360, sizeof(abtCmdRcs360), NULL, 0, -1);
-    return (res>=0) ? NFC_SUCCESS : res;
+    return (res >= 0) ? NFC_SUCCESS : res;
   }
   uint8_t  abtCmd[] = { InRelease, ui8Target };
   res = pn53x_transceive(pnd, abtCmd, sizeof(abtCmd), NULL, 0, -1);
-  return (res>=0) ? NFC_SUCCESS : res;
+  return (res >= 0) ? NFC_SUCCESS : res;
 }
 
 int

@@ -33,23 +33,23 @@
 #define LOG_GROUP    NFC_LOG_GROUP_GENERAL
 #define LOG_CATEGORY "libnfc.general"
 
-void 
-string_as_boolean(const char* s, bool *value)
+void
+string_as_boolean(const char *s, bool *value)
 {
   if (s) {
     if (!(*value)) {
-      if ( (strcmp(s, "yes") == 0) ||
-           (strcmp(s, "true") == 0) ||
-           (strcmp(s, "1") == 0) ) {
-           *value = true;
-           return;
+      if ((strcmp(s, "yes") == 0) ||
+          (strcmp(s, "true") == 0) ||
+          (strcmp(s, "1") == 0)) {
+        *value = true;
+        return;
       }
     } else {
-      if ( (strcmp(s, "no") == 0) ||
-           (strcmp(s, "false") == 0) ||
-           (strcmp(s, "0") == 0) ) {
-           *value = false;
-           return;
+      if ((strcmp(s, "no") == 0) ||
+          (strcmp(s, "false") == 0) ||
+          (strcmp(s, "0") == 0)) {
+        *value = false;
+        return;
       }
     }
   }
@@ -74,7 +74,7 @@ nfc_context_new(void)
 #endif
 
   // Clear user defined devices array
-  for (int i=0; i<MAX_USER_DEFINED_DEVICES; i++) {
+  for (int i = 0; i < MAX_USER_DEFINED_DEVICES; i++) {
     strcpy(res->user_defined_devices[i].name, "");
     strcpy(res->user_defined_devices[i].connstring, "");
   }
@@ -111,11 +111,11 @@ nfc_context_new(void)
 #else
   log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG,  "log_level is set to %"PRIu32, res->log_level);
 #endif
-  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "allow_autoscan is set to %s", (res->allow_autoscan)?"true":"false");
-  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "allow_intrusive_scan is set to %s", (res->allow_intrusive_scan)?"true":"false");
+  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "allow_autoscan is set to %s", (res->allow_autoscan) ? "true" : "false");
+  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "allow_intrusive_scan is set to %s", (res->allow_intrusive_scan) ? "true" : "false");
 
   log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%d device(s) defined by user", res->user_defined_device_count);
-  for(uint32_t i=0; i<res->user_defined_device_count; i++) {
+  for (uint32_t i = 0; i < res->user_defined_device_count; i++) {
     log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "  #%d name: \"%s\", connstring: \"%s\"", i, res->user_defined_devices[i].name, res->user_defined_devices[i].connstring);
   }
   return res;
