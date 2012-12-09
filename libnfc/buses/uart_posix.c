@@ -50,7 +50,7 @@ const char *serial_ports_device_radix[] = { "tty.SLAB_USBtoUART", "tty.usbserial
 #  elif defined (__FreeBSD__) || defined (__OpenBSD__)
 const char *serial_ports_device_radix[] = { "cuaU", "cuau", NULL };
 #  elif defined (__linux__)
-const char *serial_ports_device_radix[] = { "ttyUSB", "ttyS", "ttyACM", NULL };
+const char *serial_ports_device_radix[] = { "ttyUSB", "ttyS", "ttyACM", "ttyAMA", NULL };
 #  else
 #    error "Can't determine serial string for your system"
 #  endif
