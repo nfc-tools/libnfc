@@ -25,7 +25,7 @@
 #ifndef _UNISTD_H_
 #define _UNISTD_H_
 
-#include "../windows.h"
+#include "contrib/windows.h"
 
 // Needed by Sleep() under Windows
 #  include <winbase.h>
