@@ -1,14 +1,20 @@
+libnfc (1.7.0rc1-0) unstable; urgency=low
+  
+  * New upstream release
+
+ -- romuald conty <romuald@libnfc.org>  Thu, 9 Dec 2012 12:42:42 +0100
+
 libnfc (1.6.0rc1-0) unstable; urgency=low
   
   * New upstream release
 
- -- romuald conty <romuald@libnfc.org>  fri, 9 dec 2011 12:42:42 +0100
+ -- romuald conty <romuald@libnfc.org>  Mon, 27 Feb 2012 12:42:42 +0100
 
 libnfc (1.5.1pre2.1-0) unstable; urgency=low
   
   * udev rules file renamed accordingly to udev's readme file
 
- -- romuald conty <romuald@libnfc.org>  fri, 9 dec 2011 15:42:42 +0100
+ -- romuald conty <romuald@libnfc.org>  Fri, 9 Dec 2011 15:42:42 +0100
 
 libnfc (1.5.1-0) unstable; urgency=low
   
