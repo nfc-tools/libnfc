@@ -1,4 +1,4 @@
-New in TBD:
+New in 1.7.0-rc1:
 
 Configuration:
   libnfc can now use a configuration file for special setups, or features

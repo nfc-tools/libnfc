@@ -1,5 +1,55 @@
+Dec 09, 2012 - 1.7.0-rc1 (release candidate)
+--------------------------------------------
+
+Fixes:
+ - nfc_initiator_deselect_target() now returns 0 on success (as expected by caller)
+ - example/pn532-sam: Fix few bugs
+ - Fix ACR122S device detection when no ACR122S device available (endless UART receive)
+ - Suppress a lot of compiler warnings !.. which fixes many potential bugs
+ - Display right driver name while detecting PCSC
+ - Correctly handle PCSC header files on Mac OS X
+ - Fix nfc-emulation (now works with utils/nfc-emulate-forum-tag4 and Nexus S)
+
+Improvements:
+ - New nfc_initiator_init_secure_element() function to set SAM as wired card (only relevant with a PN532 SAM-equipped)
+ - New str_nfc_target(), str_nfc_modulation_type(), str_nfc_baud_rate() function to convert some libnfc's types into allocated string
+ - New nfc_device_target_is_present() to check if passed target is in the field
+ - --enable-serial-autoprobe option at compile time to replace it with some run-time options
+ - New -i option to nfc-scan-device to allow intrusive scan
+ - New feature, libnfc now uses configuration files:
+   * main configuration file can be used to set options (ie. intrusive, autoscan, log-level)
+   * main configuration file can contains a device as default device, HIGHLY recommended for UART devices users
+   * multiple devices files can be used to declare multiple devices and ordered them
+ - UART port scan now includes ttyAMA* to detect UART-devices connected on Raspberry Pi (e.g. `nfc-scan-device -i`)
+ - Support for OpenPCD2 (with a dedicated firmware)
+ - Support for FTDI dongle under MacOS
+ - Enhance messages display
+ - Provides modprobe configuration file and instructions for Linux >3.1 with PN533 users.
+ - Greatly improve log facility with log level filter, configurable using conf file (ie. /etc/nfc/libnfc.conf) or environment var LIBNFC_LOG_LEVEL
+ - New man page for nfc-read-forum-tag3 utility (Thanks to UNFORGiVEN512)
+ - New man page for nfc-scan-device utility
+ - New man page for  nfc-emulate-forum-tag2 example
+ - README: Add few words about device permissions and udev/devd rules available in package
+ - utils/nfc-emulate-forum-tag4: add support for v2.0 of the spec
+ - New "make style" command to have a beautiful code
+ - Code cleanup (indentation, white spaces, etc.)
+
+Changes:
+ - New nfc_device_get_information_about() now allocates returned string
+ - No more in/out paramaters in nfc_initiator_transceive_*() functions
+ - Rename nfc-probe to nfc-scan-device
+ - Rename abtUid from struct mifare_param_auth into abtAuthUid: this is not the UID while using 7-bytes UID MIFARE Classic tags.
+ - utils/nfc-list: always display the card type when a card is found
+ - nfc-utils: new fingerprinting method closer to AN10833, (Thanks to Balazs Bucsay)
+
+See NEWS file for major changes (ie. API changes)
+
+Special thanks to:
+ - Ludovic Rousseau (Code cleanup, tests under MacOS, etc.)
+ - Frank Morgner
+
 Feb 27, 2012 - 1.6.0-rc1 (release candidate)
--------------------------------
+--------------------------------------------
 
 Fixes:
  - utils/nfc-mfclassic: use MIFARE instead of Mifare typo
