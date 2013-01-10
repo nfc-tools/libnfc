@@ -17,7 +17,7 @@ override_dh_installchangelogs:
 
 override_dh_auto_configure: 
 #	dh_auto_configure -- --enable-debug --with-drivers=all
-	dh_auto_configure -- --enable-debug --with-drivers=acr122_usb,acr122s,arygon,pn532_uart,pn53x_usb
+	dh_auto_configure -- --with-drivers=acr122_usb,acr122s,arygon,pn532_uart,pn53x_usb
 
 %:
 	dh --with autoreconf $@
