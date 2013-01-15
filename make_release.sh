@@ -12,7 +12,7 @@ LIBNFC_AUTOTOOLS_ARCHIVE=libnfc-$LIBNFC_VERSION.tar.gz
 echo ">>> Cleaning sources..."
 # First, clean what we can
 rm -f configure config.h config.h.in
-autoreconf -is && ./configure && make distclean
+autoreconf -is --force && ./configure && make distclean
 git clean -dfX
 echo "<<< Sources cleaned."
 
@@ -20,7 +20,7 @@ if [ ! -f $LIBNFC_AUTOTOOLS_ARCHIVE ]; then
 	echo ">>> Autotooled archive generation..."
 
 	# Second, generate dist archive (and test it)
-	autoreconf -is && ./configure && make distcheck
+	autoreconf -is --force && ./configure && make distcheck
 
 	# Finally, clean up
 	make distclean
@@ -40,7 +40,7 @@ if [ ! -f $LIBNFC_DOC_ARCHIVE ]; then
 	fi
 
 	# Build documentation
-	autoreconf -is && ./configure --enable-doc && make doc || false
+	autoreconf -is --force && ./configure --enable-doc && make doc || false
 
 	# Create archive
 	cp -r doc/html $LIBNFC_DOC_DIR
