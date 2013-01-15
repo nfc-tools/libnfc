@@ -8,7 +8,7 @@ Homepage: http://www.libnfc.org/
 Vcs-Git: https://code.googlecode.com/p/libnfc/
 Vcs-Browser: http://code.google.com/p/libnfc/source/browse/
 
-Package: libnfc3
+Package: libnfc4
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, libusb-0.1-4
 Description: Near Field Communication (NFC) library
