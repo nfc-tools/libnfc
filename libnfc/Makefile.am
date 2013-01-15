@@ -24,7 +24,7 @@ libnfc_la_SOURCES = \
 		    nfc-internal.c \
 		    target-subr.c
 
-libnfc_la_LDFLAGS = -no-undefined -version-info 3:0:0 -export-symbols-regex '^nfc_|^iso14443a_|^str_nfc_|pn53x_transceive|pn532_SAMConfiguration'
+libnfc_la_LDFLAGS = -no-undefined -version-info 4:0:0 -export-symbols-regex '^nfc_|^iso14443a_|^str_nfc_|pn53x_transceive|pn532_SAMConfiguration'
 libnfc_la_CFLAGS = @DRIVERS_CFLAGS@
 libnfc_la_LIBADD = \
 	$(top_builddir)/libnfc/chips/libnfcchips.la \
