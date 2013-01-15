@@ -4,8 +4,9 @@
 set -e
 
 # Retrieve libnfc version from configure.ac
-LIBNFC_VERSION=$(grep AC_INIT configure.ac | sed 's/^.*(\(.*\))/\1/g' | awk -F', ' '{ print $2 }')
+LIBNFC_VERSION=$(grep AC_INIT configure.ac | sed 's/^.*\[libnfc\],\[\(.*\)\],\[.*/\1/g')
 
+echo "=== Building release archive for libnfc $LIBNFC_VERSION ==="
 # Easiest part: GNU/linux, BSD and other POSIX systems.
 LIBNFC_AUTOTOOLS_ARCHIVE=libnfc-$LIBNFC_VERSION.tar.gz
 
@@ -30,6 +31,7 @@ else
 fi
 
 # Documentation part
+echo "=== Building documentation archive for libnfc $LIBNFC_VERSION ==="
 LIBNFC_DOC_DIR=libnfc-doc-$LIBNFC_VERSION
 LIBNFC_DOC_ARCHIVE=$LIBNFC_DOC_DIR.zip
 
