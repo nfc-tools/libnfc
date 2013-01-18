@@ -5,15 +5,18 @@
 
 #include "nfc/nfc.h"
 
+void test_dep_passive(void);
+
 #define INITIATOR 0
 #define TARGET    1
 
 pthread_t threads[2];
+nfc_context *context;
 nfc_connstring connstrings[2];
 nfc_device *devices[2];
 intptr_t result[2];
 
-void
+static void
 abort_test_by_keypress(int sig)
 {
   (void) sig;
@@ -26,14 +29,14 @@ abort_test_by_keypress(int sig)
 void
 cut_setup(void)
 {
-  size_t n = nfc_list_devices(NULL, connstrings, 2);
+  nfc_init(&context);
+  size_t n = nfc_list_devices(context, connstrings, 2);
   if (n < 2) {
     cut_omit("At least two NFC devices must be plugged-in to run this test");
   }
 
-  nfc_init(NULL);
-  devices[TARGET] = nfc_open(NULL, connstrings[TARGET]);
-  devices[INITIATOR] = nfc_open(NULL, connstrings[INITIATOR]);
+  devices[TARGET] = nfc_open(context, connstrings[TARGET]);
+  devices[INITIATOR] = nfc_open(context, connstrings[INITIATOR]);
 
   signal(SIGINT, abort_test_by_keypress);
 }
@@ -43,7 +46,7 @@ cut_teardown(void)
 {
   nfc_close(devices[TARGET]);
   nfc_close(devices[INITIATOR]);
-  nfc_exit(NULL);
+  nfc_exit(context);
 }
 
 struct thread_data {
@@ -51,7 +54,7 @@ struct thread_data {
   void *cut_test_context;
 };
 
-void *
+static void *
 target_thread(void *arg)
 {
   intptr_t thread_res = 0;
@@ -89,10 +92,9 @@ target_thread(void *arg)
   // First pass
   res =  nfc_target_receive_bytes(device, abtRx, sizeof(abtRx), 500);
   cut_assert_operator_int(res, > , 0, cut_message("Can't receive bytes from initiator: %s", nfc_strerror(device)));
-  szRx = (size_t) res;
 
   const uint8_t abtAttRx[] = "Hello DEP target!";
-  cut_assert_equal_memory(abtAttRx, sizeof(abtAttRx), abtRx, szRx, cut_message("Invalid received data"));
+  cut_assert_equal_memory(abtAttRx, sizeof(abtAttRx), abtRx, res, cut_message("Invalid received data"));
   if (res <= 0) { thread_res = -1; return (void *) thread_res; }
 
   const uint8_t abtTx[] = "Hello DEP initiator!";
@@ -105,7 +107,7 @@ target_thread(void *arg)
   cut_assert_operator_int(res, > , 0, cut_message("Can't receive bytes from initiator: %s", nfc_strerror(device)));
   szRx = (size_t) res;
 
-  cut_assert_equal_memory(abtAttRx, sizeof(abtAttRx), abtRx, szRx, cut_message("Invalid received data"));
+  cut_assert_equal_memory(abtAttRx, sizeof(abtAttRx), abtRx, res, cut_message("Invalid received data"));
   if (res <= 0) { thread_res = -1; return (void *) thread_res; }
 
   res = nfc_target_send_bytes(device, abtTx, sizeof(abtTx), 500);
@@ -117,7 +119,7 @@ target_thread(void *arg)
   cut_assert_operator_int(res, > , 0, cut_message("Can't receive bytes from initiator: %s", nfc_strerror(device)));
   szRx = (size_t) res;
 
-  cut_assert_equal_memory(abtAttRx, sizeof(abtAttRx), abtRx, szRx, cut_message("Invalid received data"));
+  cut_assert_equal_memory(abtAttRx, sizeof(abtAttRx), abtRx, res, cut_message("Invalid received data"));
   if (res <= 0) { thread_res = -1; return (void *) thread_res; }
 
   res = nfc_target_send_bytes(device, abtTx, sizeof(abtTx), 500);
@@ -129,7 +131,7 @@ target_thread(void *arg)
   cut_assert_operator_int(res, > , 0, cut_message("Can't receive bytes from initiator: %s", nfc_strerror(device)));
   szRx = (size_t) res;
 
-  cut_assert_equal_memory(abtAttRx, sizeof(abtAttRx), abtRx, szRx, cut_message("Invalid received data"));
+  cut_assert_equal_memory(abtAttRx, sizeof(abtAttRx), abtRx, res, cut_message("Invalid received data"));
   if (res <= 0) { thread_res = -1; return (void *) thread_res; }
 
   res = nfc_target_send_bytes(device, abtTx, sizeof(abtTx), 500);
@@ -139,7 +141,7 @@ target_thread(void *arg)
   return (void *) thread_res;
 }
 
-void *
+static void *
 initiator_thread(void *arg)
 {
   intptr_t thread_res = 0;
@@ -171,12 +173,11 @@ initiator_thread(void *arg)
 
   const uint8_t abtTx[] = "Hello DEP target!";
   uint8_t abtRx[1024];
-  size_t szRx = sizeof(abtRx);
-  res = nfc_initiator_transceive_bytes(device, abtTx, sizeof(abtTx), abtRx, &szRx, 500);
+  res = nfc_initiator_transceive_bytes(device, abtTx, sizeof(abtTx), abtRx, sizeof(abtRx), 500);
   cut_assert_operator_int(res, >= , 0, cut_message("Can't transceive bytes to target: %s", nfc_strerror(device)));
 
   const uint8_t abtAttRx[] = "Hello DEP initiator!";
-  cut_assert_equal_memory(abtAttRx, sizeof(abtAttRx), abtRx, szRx, cut_message("Invalid received data"));
+  cut_assert_equal_memory(abtAttRx, sizeof(abtAttRx), abtRx, res, cut_message("Invalid received data"));
   if (res < 0) { thread_res = -1; return (void *) thread_res; }
 
   res = nfc_initiator_deselect_target(device);
@@ -194,11 +195,10 @@ initiator_thread(void *arg)
   cut_assert_equal_memory("\x12\x34\x56\x78", 4, nt.nti.ndi.abtGB, nt.nti.ndi.szGB, cut_message("Invalid target general bytes"));
   if (res <= 0) { thread_res = -1; return (void *) thread_res; }
 
-  szRx = sizeof(abtRx);
-  res = nfc_initiator_transceive_bytes(device, abtTx, sizeof(abtTx), abtRx, &szRx, 1000);
+  res = nfc_initiator_transceive_bytes(device, abtTx, sizeof(abtTx), abtRx, sizeof(abtRx), 1000);
   cut_assert_operator_int(res, >= , 0, cut_message("Can't transceive bytes to target: %s", nfc_strerror(device)));
 
-  cut_assert_equal_memory(abtAttRx, sizeof(abtAttRx), abtRx, szRx, cut_message("Invalid received data"));
+  cut_assert_equal_memory(abtAttRx, sizeof(abtAttRx), abtRx, res, cut_message("Invalid received data"));
   if (res < 0) { thread_res = -1; return (void *) thread_res; }
 
   res = nfc_initiator_deselect_target(device);
@@ -216,11 +216,10 @@ initiator_thread(void *arg)
   cut_assert_equal_memory("\x12\x34\x56\x78", 4, nt.nti.ndi.abtGB, nt.nti.ndi.szGB, cut_message("Invalid target general bytes"));
   if (res <= 0) { thread_res = -1; return (void *) thread_res; }
 
-  szRx = sizeof(abtRx);
-  res = nfc_initiator_transceive_bytes(device, abtTx, sizeof(abtTx), abtRx, &szRx, 5000);
+  res = nfc_initiator_transceive_bytes(device, abtTx, sizeof(abtTx), abtRx, sizeof(abtRx), 5000);
   cut_assert_operator_int(res, >= , 0, cut_message("Can't transceive bytes to target: %s", nfc_strerror(device)));
 
-  cut_assert_equal_memory(abtAttRx, sizeof(abtAttRx), abtRx, szRx, cut_message("Invalid received data"));
+  cut_assert_equal_memory(abtAttRx, sizeof(abtAttRx), abtRx, res, cut_message("Invalid received data"));
   if (res < 0) { thread_res = -1; return (void *) thread_res; }
 
   res = nfc_initiator_deselect_target(device);
@@ -238,11 +237,10 @@ initiator_thread(void *arg)
   cut_assert_equal_memory("\x12\x34\x56\x78", 4, nt.nti.ndi.abtGB, nt.nti.ndi.szGB, cut_message("Invalid target general bytes"));
   if (res <= 0) { thread_res = -1; return (void *) thread_res; }
 
-  szRx = sizeof(abtRx);
-  res = nfc_initiator_transceive_bytes(device, abtTx, sizeof(abtTx), abtRx, &szRx, 5000);
+  res = nfc_initiator_transceive_bytes(device, abtTx, sizeof(abtTx), abtRx, sizeof(abtRx), 5000);
   cut_assert_operator_int(res, >= , 0, cut_message("Can't transceive bytes to target: %s", nfc_strerror(device)));
 
-  cut_assert_equal_memory(abtAttRx, sizeof(abtAttRx), abtRx, szRx, cut_message("Invalid received data"));
+  cut_assert_equal_memory(abtAttRx, sizeof(abtAttRx), abtRx, res, cut_message("Invalid received data"));
   if (res < 0) { thread_res = -1; return (void *) thread_res; }
 
   res = nfc_initiator_deselect_target(device);
@@ -253,7 +251,7 @@ initiator_thread(void *arg)
 }
 
 void
-test_dep(void)
+test_dep_passive(void)
 {
   int res;
 

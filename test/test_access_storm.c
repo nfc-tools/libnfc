@@ -10,6 +10,8 @@
  * This is basically a stress-test to ensure we don't left a device in an
  * inconsistent state after use.
  */
+void test_access_storm(void);
+
 void
 test_access_storm(void)
 {
@@ -17,23 +19,22 @@ test_access_storm(void)
   nfc_connstring connstrings[MAX_DEVICE_COUNT];
   int res = 0;
 
-  nfc_init(NULL);
+  nfc_context *context;
+  nfc_init(&context);
 
-  size_t ref_device_count = nfc_list_devices(NULL, connstrings, MAX_DEVICE_COUNT);
+  size_t ref_device_count = nfc_list_devices(context, connstrings, MAX_DEVICE_COUNT);
   if (!ref_device_count)
     cut_omit("No NFC device found");
 
   while (n) {
-    size_t i;
-
-    size_t device_count = nfc_list_devices(NULL, connstrings, MAX_DEVICE_COUNT);
+    size_t device_count = nfc_list_devices(context, connstrings, MAX_DEVICE_COUNT);
     cut_assert_equal_int(ref_device_count, device_count, cut_message("device count"));
 
-    for (i = 0; i < device_count; i++) {
+    for (size_t i = 0; i < device_count; i++) {
       nfc_device *device;
       nfc_target ant[MAX_TARGET_COUNT];
 
-      device = nfc_open(NULL, connstrings[i]);
+      device = nfc_open(context, connstrings[i]);
       cut_assert_not_null(device, cut_message("nfc_open"));
 
       res = nfc_initiator_init(device);
@@ -51,5 +52,5 @@ test_access_storm(void)
 
     n--;
   }
-  nfc_exit(NULL);
+  nfc_exit(context);
 }
