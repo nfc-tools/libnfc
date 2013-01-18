@@ -91,7 +91,11 @@ m4/ltversion.m4
 m4/lt~obsolete.m4
 missing
 stamp-h1
+test/*.la
+test/*.lo
+test/*.o
 test/.deps/
+test/.libs/
 test/Makefile
 test/Makefile.in
 utils/*.la
