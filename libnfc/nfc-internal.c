@@ -77,6 +77,7 @@ nfc_context_new(void)
   for (int i = 0; i < MAX_USER_DEFINED_DEVICES; i++) {
     strcpy(res->user_defined_devices[i].name, "");
     strcpy(res->user_defined_devices[i].connstring, "");
+    res->user_defined_devices[i].optional = false;
   }
   res->user_defined_device_count = 0;
 

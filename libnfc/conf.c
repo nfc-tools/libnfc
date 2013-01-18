@@ -118,6 +118,16 @@ conf_keyvalue_context(void *data, const char *key, const char *value)
       context->user_defined_device_count++;
     }
     strcpy(context->user_defined_devices[context->user_defined_device_count - 1].connstring, value);
+  } else if (strcmp(key, "device.optional") == 0) {
+    if ((context->user_defined_device_count == 0) || context->user_defined_devices[context->user_defined_device_count - 1].optional) {
+      if (context->user_defined_device_count >= MAX_USER_DEFINED_DEVICES) {
+        log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Configuration exceeded maximum user-defined devices.");
+        return;
+      }
+      context->user_defined_device_count++;
+    }
+    if ((strcmp(value, "true") == 0) || (strcmp(value, "True") == 0) || (strcmp(value, "1") == 0)) //optional
+      context->user_defined_devices[context->user_defined_device_count - 1].optional = true;
   } else {
     log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_INFO, "Unknown key in config line: %s = %s", key, value);
   }
