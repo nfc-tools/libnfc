@@ -1082,6 +1082,7 @@ pn53x_initiator_select_passive_target_ext(struct nfc_device *pnd,
     if ((res = pn53x_initiator_transceive_bytes(pnd, pbtInitData, szInitData, abtTargetsData, sizeof(abtTargetsData), timeout)) < 0) {
       return res;
     }
+    szTargetsData = (size_t)res;
     if (nm.nmt == NMT_ISO14443B2CT) {
       if (szTargetsData != 2)
         return 0; // Target is not ISO14443B2CT
