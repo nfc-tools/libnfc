@@ -48,6 +48,8 @@ examples/pn53x-sam
 examples/pn53x-tamashell
 examples/pn53x-tamashell-scripts/Makefile
 examples/pn53x-tamashell-scripts/Makefile.in
+examples/quick_start_example1
+examples/quick_start_example2
 include/Makefile
 include/Makefile.in
 include/nfc/Makefile

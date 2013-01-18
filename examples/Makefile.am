@@ -19,7 +19,8 @@ bin_PROGRAMS += \
 endif
 
 check_PROGRAMS = \
-		quick_start_example1
+		quick_start_example1 \
+		quick_start_example2
 
 # set the include path found by configure
 AM_CPPFLAGS = $(all_includes) $(LIBNFC_CFLAGS)
@@ -77,6 +78,10 @@ pn53x_tamashell_LDFLAGS = @READLINE_LIBS@
 
 quick_start_example1_SOURCES = doc/quick_start_example1.c
 quick_start_example1_LDADD =  $(top_builddir)/libnfc/libnfc.la \
+		  $(top_builddir)/utils/libnfcutils.la
+
+quick_start_example2_SOURCES = doc/quick_start_example2.c
+quick_start_example2_LDADD =  $(top_builddir)/libnfc/libnfc.la \
 		  $(top_builddir)/utils/libnfcutils.la
 
 
