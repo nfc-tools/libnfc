@@ -251,7 +251,6 @@ nfc_list_devices(nfc_context *context, nfc_connstring connstrings[], const size_
       char *old_env_log_level = NULL;
       // do it silently
       if (env_log_level) {
-        old_env_log_level = malloc(strlen(env_log_level)+1);
         if ((old_env_log_level = malloc(strlen(env_log_level)+1)) == NULL)
           exit(EXIT_FAILURE);
         strcpy(old_env_log_level, env_log_level);
