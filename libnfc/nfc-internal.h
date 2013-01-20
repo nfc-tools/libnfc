@@ -157,6 +157,7 @@ struct nfc_driver {
 struct nfc_user_defined_device {
   char name[DEVICE_NAME_LENGTH];
   nfc_connstring connstring;
+  bool optional;
 };
 
 /**

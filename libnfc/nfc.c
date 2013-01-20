@@ -185,7 +185,7 @@ nfc_open(nfc_context *context, const nfc_connstring connstring)
         continue;
       }
       log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Unable to open \"%s\".", ncs);
-      return pnd;
+      return NULL;
     }
     for (uint32_t i = 0; i > context->user_defined_device_count; i++) {
       if (strcmp(ncs, context->user_defined_devices[i].connstring) == 0) {
@@ -244,10 +244,40 @@ nfc_list_devices(nfc_context *context, nfc_connstring connstrings[], const size_
   // Load manually configured devices (from config file and env variables)
   // TODO From env var...
   for (uint32_t i = 0; i < context->user_defined_device_count; i++) {
-    strcpy((char *)(connstrings + device_found), context->user_defined_devices[i].connstring);
-    device_found++;
-    if (device_found >= connstrings_len)
-      return device_found;
+    if (context->user_defined_devices[i].optional) {
+      // let's make sure the device exists
+      nfc_device *pnd = NULL;
+      char *env_log_level = getenv("LIBNFC_LOG_LEVEL");
+      char *old_env_log_level = NULL;
+      // do it silently
+      if (env_log_level) {
+        if ((old_env_log_level = malloc(strlen(env_log_level)+1)) == NULL)
+          exit(EXIT_FAILURE);
+        strcpy(old_env_log_level, env_log_level);
+      }
+      setenv("LIBNFC_LOG_LEVEL", "0", 1);
+      pnd = nfc_open(context, context->user_defined_devices[i].connstring);
+      if (old_env_log_level) {
+        setenv("LIBNFC_LOG_LEVEL", old_env_log_level, 1);
+        free(old_env_log_level);
+      } else {
+        unsetenv("LIBNFC_LOG_LEVEL");
+      }
+      if (pnd) {
+        nfc_close(pnd);
+        log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "User device %s found", context->user_defined_devices[i].name);
+        strcpy((char *)(connstrings + device_found), context->user_defined_devices[i].connstring);
+        device_found ++;
+        if (device_found == connstrings_len)
+          break;
+      }
+    } else {
+      // manual choice is not marked as optional so let's take it blindly
+      strcpy((char *)(connstrings + device_found), context->user_defined_devices[i].connstring);
+      device_found++;
+      if (device_found >= connstrings_len)
+        return device_found;
+    }
   }
 
   // Device auto-detection
