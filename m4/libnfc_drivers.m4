@@ -4,7 +4,7 @@ AC_DEFUN([LIBNFC_ARG_WITH_DRIVERS],
 [
   AC_MSG_CHECKING(which drivers to build)
   AC_ARG_WITH(drivers,
-  AS_HELP_STRING([--with-drivers=DRIVERS], [Use a custom driver set, where DRIVERS is a coma-separated list of drivers to build support for. Available drivers are: 'acr122_pcsc', 'acr122_usb', 'acr122s', 'arygon', 'pn532_uart' and 'pn53x_usb'. Default drivers set is 'acr122_usb,acr122s,arygon,pn53x_usb'. The special driver set 'all' compile all available drivers.]),
+  AS_HELP_STRING([--with-drivers=DRIVERS], [Use a custom driver set, where DRIVERS is a coma-separated list of drivers to build support for. Available drivers are: 'acr122_pcsc', 'acr122_usb', 'acr122s', 'arygon', 'pn532_uart' and 'pn53x_usb'. Default drivers set is 'acr122_usb,acr122s,arygon,pn532_uart,pn53x_usb'. The special driver set 'all' compile all available drivers.]),
   [       case "${withval}" in
           yes | no)
                   dnl ignore calls without any arguments
@@ -25,7 +25,7 @@ AC_DEFUN([LIBNFC_ARG_WITH_DRIVERS],
   
   case "${DRIVER_BUILD_LIST}" in
     default)
-                  DRIVER_BUILD_LIST="acr122_usb acr122s arygon pn53x_usb"
+                  DRIVER_BUILD_LIST="acr122_usb acr122s arygon pn53x_usb pn532_uart"
                   ;;
     all)
                   DRIVER_BUILD_LIST="acr122_pcsc acr122_usb acr122s arygon pn53x_usb pn532_uart"

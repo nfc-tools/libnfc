@@ -10,6 +10,9 @@ Fixes:
 Improvements:
  - Allow device.optional=true to tolerate missing device
 
+Changes:
+ - pn532_uart driver is now enabled by default
+
 Dec 09, 2012 - 1.7.0-rc1 (release candidate)
 --------------------------------------------
 
