@@ -1,4 +1,4 @@
-New in 1.7.0-rc1:
+New in 1.7.0-rc2:
 
 Configuration:
   libnfc can now use a configuration file for special setups, or features
@@ -13,6 +13,12 @@ Configuration:
       device (ie. a serial one).
   It is also possible to define devices using dedicated configuration files and
   put them into device search directory (/etc/nfc/devices.d under GNU/Linux).
+  Example for the OpenPCD2: create /etc/nfc/devices.d/openpcd2.conf with:
+    name = "OpenPCD2"
+    connstring = "pn532_uart:/dev/ttyACM0"
+    optional = true
+  The keyword "optional" does not mandate the device to be present always
+  (it detects if the reader is indeed present before using it)
 
 API Changes:
 
