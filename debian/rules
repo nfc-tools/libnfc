@@ -15,8 +15,9 @@ export DEB_BUILD_OPTIONS=nocheck
 override_dh_installchangelogs:
 	dh_installchangelogs ChangeLog
 
-#override_dh_auto_configure: 
-#	dh_auto_configure -- --enable-debug --with-drivers=all
+override_dh_auto_configure: 
+	dh_auto_configure -- --disable-silent-rules
+	# --enable-debug --with-drivers=all
 
 %:
 	dh --with autoreconf $@
