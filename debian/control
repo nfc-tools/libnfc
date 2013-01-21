@@ -12,7 +12,7 @@ Package: libnfc4
 Architecture: any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: ${shlibs:Depends}, ${misc:Depends}, libusb-0.1-4
+Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: Near Field Communication (NFC) library
  libnfc is a Free Software library for Near Field Communication.
  Supported NFC hardware devices are, theorically, all hardware
