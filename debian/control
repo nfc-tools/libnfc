@@ -1,7 +1,7 @@
 Source: libnfc
 Section: libs
 Priority: extra
-Maintainer: Thomas Hood <jdthood@gmail.com>
+Maintainer: Nobuhiro Iwamatsu <iwamatsu@debian.org>
 Build-Depends: debhelper (>= 8), dh-autoreconf, libtool, pkg-config, libusb-dev
 Standards-Version: 3.9.4
 Homepage: http://www.libnfc.org/
