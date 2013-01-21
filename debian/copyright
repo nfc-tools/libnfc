@@ -50,6 +50,7 @@ License: BSD-2-clause
 Files: debian/*
 Copyright: 2009-2011, Romuald Conty <romuald@libnfc.org>
            2011, Thomas Hood <jdthood@gmail.com>
+           2013, Nobuhiro Iwamatsu <iwamatsu@debian.org>
 License: GPL-2
  The Debian packaging is licensed under the GPL, version 2.
  .
