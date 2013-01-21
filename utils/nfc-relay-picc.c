@@ -428,7 +428,7 @@ main(int argc, char *argv[])
       if ((res = nfc_initiator_transceive_bytes(pndInitiator, abtCapdu, szCapduLen, abtRapdu, sizeof(abtRapdu), -1) < 0)) {
         ret = false;
       } else {
-        szCapduLen = (size_t) res;
+        szRapduLen = (size_t) res;
         ret = true;
       }
     } else {
