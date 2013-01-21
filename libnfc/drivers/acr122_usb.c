@@ -315,14 +315,14 @@ acr122_usb_scan(const nfc_context *context, nfc_connstring connstrings[], const 
   // usb_find_busses will find all of the busses on the system. Returns the
   // number of changes since previous call to this function (total of new
   // busses and busses removed).
-  if ((res = usb_find_busses() < 0)) {
+  if ((res = usb_find_busses()) < 0) {
     log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to find USB busses (%s)", _usb_strerror(res));
     return 0;
   }
   // usb_find_devices will find all of the devices on each bus. This should be
   // called after usb_find_busses. Returns the number of changes since the
   // previous call to this function (total of new device and devices removed).
-  if ((res = usb_find_devices() < 0)) {
+  if ((res = usb_find_devices()) < 0) {
     log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to find USB devices (%s)", _usb_strerror(res));
     return 0;
   }
@@ -452,14 +452,14 @@ acr122_usb_open(const nfc_context *context, const nfc_connstring connstring)
   // usb_find_busses will find all of the busses on the system. Returns the
   // number of changes since previous call to this function (total of new
   // busses and busses removed).
-  if ((res = usb_find_busses() < 0)) {
+  if ((res = usb_find_busses()) < 0) {
     log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to find USB busses (%s)", _usb_strerror(res));
     goto free_mem;
   }
   // usb_find_devices will find all of the devices on each bus. This should be
   // called after usb_find_busses. Returns the number of changes since the
   // previous call to this function (total of new device and devices removed).
-  if ((res = usb_find_devices() < 0)) {
+  if ((res = usb_find_devices()) < 0) {
     log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to find USB devices (%s)", _usb_strerror(res));
     goto free_mem;
   }
