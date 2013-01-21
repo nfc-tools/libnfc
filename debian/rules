@@ -20,4 +20,4 @@ override_dh_auto_configure:
 	# --enable-debug --with-drivers=all
 
 %:
-	dh --with autoreconf $@
+	dh $@ --with autoreconf
