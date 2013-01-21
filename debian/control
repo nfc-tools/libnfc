@@ -3,7 +3,7 @@ Section: libs
 Priority: extra
 Maintainer: Thomas Hood <jdthood@gmail.com>
 Build-Depends: debhelper (>= 7.0.50~), dh-autoreconf, libtool, pkg-config, libusb-dev
-Standards-Version: 3.9.2
+Standards-Version: 3.9.4
 Homepage: http://www.libnfc.org/
 Vcs-Git: https://code.googlecode.com/p/libnfc/
 Vcs-Browser: http://code.google.com/p/libnfc/source/browse/
