@@ -1,10 +1,10 @@
-libnfc (1.7.0rc2-0) unstable; urgency=low
+libnfc (1.7.0~rc2-0) unstable; urgency=low
   
   * New upstream release
 
  -- romuald conty <romuald@libnfc.org>  Sun, 20 Jan 2013 12:42:42 +0100
 
-libnfc (1.7.0rc1-0) unstable; urgency=low
+libnfc (1.7.0~rc1-0) unstable; urgency=low
   
   * New upstream release
 
