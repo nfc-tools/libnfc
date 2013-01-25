@@ -67,6 +67,6 @@ log_priority_to_str(const int priority)
     default:
       break;
   }
-  return "unkown";
+  return "unknown";
 }
 
