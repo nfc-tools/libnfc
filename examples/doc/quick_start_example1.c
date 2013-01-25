@@ -4,7 +4,7 @@
  */
 
 // To compile this simple example:
-// $ gcc -o quick_start_example1 -lnfc  quick_start_example1.c
+// $ gcc -o quick_start_example1 quick_start_example1.c -lnfc
 
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
