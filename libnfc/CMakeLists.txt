@@ -8,6 +8,16 @@ INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/buses)
 
 INCLUDE(LibnfcDrivers)
 
+IF(WIN32)
+  # Windows now requires regex, so we utilize PCRE
+  # since Windows doesn't get the benefit of finding in CMake
+  # it has to be added manually
+  IF(PCRE_FOUND)
+    INCLUDE_DIRECTORIES(${PCRE_INCLUDE_DIRS})
+    LINK_DIRECTORIES(${PCRE_LIBRARY_DIRS})
+  ENDIF(PCRE_FOUND)
+ENDIF(WIN32)
+
 IF(PCSC_FOUND)
   INCLUDE_DIRECTORIES(${PCSC_INCLUDE_DIRS})
   LINK_DIRECTORIES(${PCSC_LIBRARY_DIRS})
@@ -40,6 +50,10 @@ ENDIF(WIN32)
 SET_TARGET_PROPERTIES(nfc PROPERTIES SOVERSION 0)
 
 IF(WIN32)
+  IF(PCRE_FOUND)
+    TARGET_LINK_LIBRARIES(nfc ${PCRE_LIBRARIES})
+  ENDIF(PCRE_FOUND)
+
   # On Windows the shared (runtime) library should be either in the same 
   # directory as the excutables or in the path, we add it to same directory
   INSTALL(TARGETS nfc RUNTIME DESTINATION bin COMPONENT libraries)
