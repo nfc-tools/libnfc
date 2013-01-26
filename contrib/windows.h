@@ -30,7 +30,12 @@
 #  include <winerror.h>
 #  include "win32/err.h"
 #  if defined (__MINGW32__)
-#    define snprintf(S, n, F, ...) sprintf(S, F, __VA_ARGS__)
+/*
+ * Cheating here on the snprintf to incorporate the format argument
+ * into the VA_ARGS. Else we get MinGW errors regarding number of arguments
+ * if doing a fixed string with no arguments.
+*/
+#    define snprintf(S, n, ...) sprintf(S, __VA_ARGS__)
 #    define pipe(fds) _pipe(fds, 5000, _O_BINARY)
 #    define ETIMEDOUT     WSAETIMEDOUT
 #    define ENOTSUP       WSAEOPNOTSUPP
