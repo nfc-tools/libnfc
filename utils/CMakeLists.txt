@@ -11,6 +11,7 @@ SET(UTILS-SOURCES
 ADD_LIBRARY(nfcutils STATIC 
   nfc-utils.c
 )
+TARGET_LINK_LIBRARIES(nfcutils nfc)
 
 # Examples
 FOREACH(source ${UTILS-SOURCES})
