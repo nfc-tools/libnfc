@@ -114,10 +114,6 @@ const struct nfc_driver *nfc_drivers[] = {
 void
 nfc_init(nfc_context **context)
 {
-  if (!context) {
-    printf("Error: NULL context is not supported anymore, please fix your code.\n");
-    exit(EXIT_FAILURE);
-  }
   *context = nfc_context_new();
 }
 
@@ -236,11 +232,6 @@ nfc_list_devices(nfc_context *context, nfc_connstring connstrings[], const size_
   const struct nfc_driver *ndr;
   const struct nfc_driver **pndr = nfc_drivers;
 
-  if (!context) {
-    printf("NULL context is not supported anymore! Please fix your code.\n");
-    exit(EXIT_FAILURE);
-  }
-
   // Load manually configured devices (from config file and env variables)
   // TODO From env var...
   for (uint32_t i = 0; i < context->user_defined_device_count; i++) {
@@ -251,8 +242,10 @@ nfc_list_devices(nfc_context *context, nfc_connstring connstrings[], const size_
       char *old_env_log_level = NULL;
       // do it silently
       if (env_log_level) {
-        if ((old_env_log_level = malloc(strlen(env_log_level) + 1)) == NULL)
-          exit(EXIT_FAILURE);
+        if ((old_env_log_level = malloc(strlen(env_log_level) + 1)) == NULL) {
+          log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Unable to malloc()");
+          return 0;
+        }
         strcpy(old_env_log_level, env_log_level);
       }
       setenv("LIBNFC_LOG_LEVEL", "0", 1);
