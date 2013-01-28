@@ -1,3 +1,11 @@
+# Windows MinGW workarounds
+IF(WIN32)
+  message("Adding in contrib win32 sources")
+  SET(WINDOWS_SOURCES ../contrib/win32/nfc_win32)
+  INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/../contrib/win32)
+  message("Win32: " ${WINDOWS_SOURCES})
+ENDIF(WIN32)
+
 # Library's chips
 SET(CHIPS_SOURCES chips/pn53x)
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/chips)
@@ -29,7 +37,7 @@ IF(LIBUSB_FOUND)
 ENDIF(LIBUSB_FOUND)
 
 # Library
-SET(LIBRARY_SOURCES nfc nfc-device nfc-emulation nfc-internal conf iso14443-subr mirror-subr target-subr ${DRIVERS_SOURCES} ${BUSES_SOURCES} ${CHIPS_SOURCES})
+SET(LIBRARY_SOURCES nfc nfc-device nfc-emulation nfc-internal conf iso14443-subr mirror-subr target-subr log ${DRIVERS_SOURCES} ${BUSES_SOURCES} ${CHIPS_SOURCES} ${WINDOWS_SOURCES})
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 IF(LIBNFC_DEBUG_OUTPUT)
   LIST(APPEND LIBRARY_SOURCES log-printf)
