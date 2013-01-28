@@ -15,13 +15,23 @@ TARGET_LINK_LIBRARIES(nfcutils nfc)
 
 # Examples
 FOREACH(source ${UTILS-SOURCES})
+  SET (TARGETS ${source}.c)
+
   IF((${source} MATCHES "nfc-mfultralight") OR (${source} MATCHES "nfc-mfclassic"))
-    ADD_EXECUTABLE(${source} ${source}.c mifare)
-  ELSE()
-    ADD_EXECUTABLE(${source} ${source}.c)
+    LIST(APPEND TARGETS mifare)
   ENDIF((${source} MATCHES "nfc-mfultralight") OR (${source} MATCHES "nfc-mfclassic"))
+
+  IF(${source} MATCHES "nfc-scan-device")
+    LIST(APPEND TARGETS ../contrib/win32/nfc_win32)
+    INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/../contrib/win32)
+  ENDIF(${source} MATCHES "nfc-scan-device")
+
+  ADD_EXECUTABLE(${source} ${TARGETS})
+
   TARGET_LINK_LIBRARIES(${source} nfc)
   TARGET_LINK_LIBRARIES(${source} nfcutils)
+
+
   INSTALL(TARGETS ${source} RUNTIME DESTINATION bin COMPONENT utils)
 ENDFOREACH(source)
 
