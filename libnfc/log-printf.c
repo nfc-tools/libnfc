@@ -25,6 +25,12 @@
 #include <stdarg.h>
 #include <fcntl.h>
 
+#ifndef LOG
+ // Leaving in a preprocessor error, as the build system should skip this
+ // file otherwise.
+ #error "No logging defined, but log-printf.c still compiled."
+#else // LOG
+
 void
 log_init(const nfc_context *context)
 {
@@ -67,3 +73,5 @@ log_put(const uint8_t group, const char *category, const uint8_t priority, const
     }
   }
 }
+
+#endif // LOG
