@@ -1,6 +1,9 @@
 Jan TBD, 2013 - 1.7.0-rc3 (release candidate)
 --------------------------------------------
 
+Fixes:
+ - Fix pn53x_usb bulk write timeout
+
 Changes:
  - nfc_emulate_target() now takes timeout parameter
 

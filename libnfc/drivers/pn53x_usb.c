@@ -652,7 +652,7 @@ read:
 int
 pn53x_usb_ack(nfc_device *pnd)
 {
-  return pn53x_usb_bulk_write(DRIVER_DATA(pnd), (uint8_t *) pn53x_ack_frame, sizeof(pn53x_ack_frame), -1);
+  return pn53x_usb_bulk_write(DRIVER_DATA(pnd), (uint8_t *) pn53x_ack_frame, sizeof(pn53x_ack_frame), 1000);
 }
 
 int
