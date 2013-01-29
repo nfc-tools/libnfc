@@ -382,7 +382,7 @@ main(int argc, char *argv[])
   printf("NFC device: %s opened\n", nfc_device_get_name(pnd));
   printf("Emulating NDEF tag now, please touch it with a second NFC device\n");
 
-  if (0 != nfc_emulate_target(pnd, &emulator)) {  // contains already nfc_target_init() call
+  if (0 != nfc_emulate_target(pnd, &emulator, 0)) {  // contains already nfc_target_init() call
     nfc_perror(pnd, "nfc_emulate_target");
   }
 
