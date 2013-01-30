@@ -552,8 +552,6 @@ acr122_usb_close(nfc_device *pnd)
 {
   acr122_usb_ack(pnd);
 
-  pn53x_idle(pnd);
-
   int res;
   if ((res = usb_release_interface(DRIVER_DATA(pnd)->pudh, 0)) < 0) {
     log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to release USB interface (%s)", _usb_strerror(res));
@@ -895,5 +893,5 @@ const struct nfc_driver acr122_usb_driver = {
   .device_get_information_about = pn53x_get_information_about,
 
   .abort_command  = acr122_usb_abort_command,
-  .idle  = pn53x_idle,
+  .idle  = NULL, // Even with a PN532, PowerDown doesn't seem a good idea here
 };
