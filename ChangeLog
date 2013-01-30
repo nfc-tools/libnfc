@@ -3,6 +3,12 @@ Jan TBD, 2013 - 1.7.0-rc3 (release candidate)
 
 Fixes:
  - Fix pn53x_usb bulk write timeout
+ - Fix BCC in nfc-emulate-uid example
+ - Fix nfc-relay-picc example
+ - Fix a miss returned value within some internal functions (user program could
+   be affected)
+ - Fix nfc-scan-device -i option
+ - Remove wrong exit() calls in library
 
 Changes:
  - nfc_emulate_target() now takes timeout parameter
