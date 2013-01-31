@@ -1,7 +1,7 @@
 /*-
  * Public platform independent Near Field Communication (NFC) library
  *
- * Copyright (C) 2011, 2012 Romuald Conty
+ * Copyright (C) 2011, 2012, 2013 Romuald Conty
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -30,6 +30,12 @@
 // Needed by Sleep() under Windows
 #  include <winbase.h>
 #  define sleep(X) Sleep( X * 1000)
+
+// With MinGW, getopt(3) is provided as separate header
+#if defined(WIN32) && defined(__GNUC__) /* mingw compiler */
+ #include <getopt.h>
+#endif
+
 
 #endif /* _UNISTD_H_ */
 
