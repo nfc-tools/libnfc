@@ -726,5 +726,7 @@ const struct nfc_driver acr122s_driver = {
   .device_get_information_about = pn53x_get_information_about,
 
   .abort_command  = acr122s_abort_command,
-  .idle  = NULL,
+  .idle           = pn53x_idle,
+  /* Even if PN532, PowerDown is not recommended on those devices */
+  .powerdown      = NULL,
 };
