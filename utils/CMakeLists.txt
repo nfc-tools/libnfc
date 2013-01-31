@@ -23,7 +23,7 @@ FOREACH(source ${UTILS-SOURCES})
 
   IF(WIN32)
     IF(${source} MATCHES "nfc-scan-device")
-      LIST(APPEND TARGETS ../contrib/win32/nfc_win32)
+      LIST(APPEND TARGETS ../contrib/win32/stdlib)
       INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/../contrib/win32)
     ENDIF(${source} MATCHES "nfc-scan-device")
   ENDIF(WIN32)
