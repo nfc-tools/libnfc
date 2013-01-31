@@ -45,7 +45,7 @@
 #    define strdup _strdup
 #  endif
 
-/* 
+/*
  * setenv and unsetenv are not Windows compliant nor implemented in MinGW.
  * These declarations get rid of the "implicit declaration warning."
  */

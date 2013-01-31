@@ -33,7 +33,7 @@
 
 // With MinGW, getopt(3) is provided as separate header
 #if defined(WIN32) && defined(__GNUC__) /* mingw compiler */
- #include <getopt.h>
+#include <getopt.h>
 #endif
 
 

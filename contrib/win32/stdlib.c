@@ -29,10 +29,8 @@
 int setenv(const char *name, const char *value, int overwrite)
 {
   int exists = GetEnvironmentVariableA(name, NULL, 0);
-  if ((exists && overwrite) || (!exists))
-  {
-    if (!SetEnvironmentVariableA(name, value))
-    {
+  if ((exists && overwrite) || (!exists)) {
+    if (!SetEnvironmentVariableA(name, value)) {
       // Set errno here correctly
       return -1;
     }
