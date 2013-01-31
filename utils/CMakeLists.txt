@@ -21,10 +21,12 @@ FOREACH(source ${UTILS-SOURCES})
     LIST(APPEND TARGETS mifare)
   ENDIF((${source} MATCHES "nfc-mfultralight") OR (${source} MATCHES "nfc-mfclassic"))
 
-  IF(${source} MATCHES "nfc-scan-device")
-    LIST(APPEND TARGETS ../contrib/win32/nfc_win32)
-    INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/../contrib/win32)
-  ENDIF(${source} MATCHES "nfc-scan-device")
+  IF(WIN32)
+    IF(${source} MATCHES "nfc-scan-device")
+      LIST(APPEND TARGETS ../contrib/win32/nfc_win32)
+      INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/../contrib/win32)
+    ENDIF(${source} MATCHES "nfc-scan-device")
+  ENDIF(WIN32)
 
   ADD_EXECUTABLE(${source} ${TARGETS})
 
