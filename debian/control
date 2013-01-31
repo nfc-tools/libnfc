@@ -4,7 +4,7 @@ Priority: extra
 Maintainer: Nobuhiro Iwamatsu <iwamatsu@debian.org>
 Build-Depends: debhelper (>= 8), dh-autoreconf, libtool, pkg-config, libusb-dev
 Standards-Version: 3.9.4
-Homepage: http://www.libnfc.org/
+Homepage: http://www.nfc-tools.org/
 Vcs-Git: https://code.googlecode.com/p/libnfc/
 Vcs-Browser: http://code.google.com/p/libnfc/source/browse/
 

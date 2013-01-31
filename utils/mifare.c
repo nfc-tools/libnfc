@@ -47,7 +47,7 @@
  * @note There are three different types of information (Authenticate, Data and Value).
  *
  * First an authentication must take place using Key A or B. It requires a 48 bit Key (6 bytes) and the UID.
- * They are both used to initialize the internal cipher-state of the PN53X chip (http://libnfc.org/hardware/pn53x-chip).
+ * They are both used to initialize the internal cipher-state of the PN53X chip.
  * After a successful authentication it will be possible to execute other commands (e.g. Read/Write).
  * The MIFARE Classic Specification (http://www.nxp.com/acrobat/other/identification/M001053_MF1ICS50_rev5_3.pdf) explains more about this process.
  */

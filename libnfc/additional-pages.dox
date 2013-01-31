@@ -4,7 +4,7 @@
  * @section intro_sec Introduction
  * This is the developer manual for \b libnfc.
  * libnfc is an open source library that allows you to communicate with NFC devices. For more info, see the 
- * <a href="http://www.libnfc.org">libnfc homepage</a>.
+ * <a href="http://www.nfc-tools.org">libnfc homepage</a>.
  * 
  * @section quick_start_sec Quick start
  * If you are looking for libnfc's public API, you should start with the Modules page which links to the different categories of libnfc's functionality.
