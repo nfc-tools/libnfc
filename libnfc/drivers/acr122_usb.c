@@ -551,6 +551,7 @@ static void
 acr122_usb_close(nfc_device *pnd)
 {
   acr122_usb_ack(pnd);
+  pn53x_idle(pnd);
 
   int res;
   if ((res = usb_release_interface(DRIVER_DATA(pnd)->pudh, 0)) < 0) {

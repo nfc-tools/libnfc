@@ -10,6 +10,7 @@ Fixes:
  - Fix nfc-scan-device -i option
  - Remove wrong exit() calls in library
  - Fix issue in driver acr122_usb affecting Touchatag
+ - Reenable some idle in all drivers, add selectively PowerDown when possible
 
 Changes:
  - nfc_emulate_target() now takes timeout parameter

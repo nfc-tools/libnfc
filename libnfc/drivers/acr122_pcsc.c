@@ -324,6 +324,8 @@ error:
 static void
 acr122_pcsc_close(nfc_device *pnd)
 {
+  pn53x_idle(pnd);
+
   SCardDisconnect(DRIVER_DATA(pnd)->hCard, SCARD_LEAVE_CARD);
   acr122_pcsc_free_scardcontext();
 

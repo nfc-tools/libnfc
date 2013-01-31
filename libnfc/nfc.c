@@ -209,11 +209,8 @@ void
 nfc_close(nfc_device *pnd)
 {
   if (pnd) {
-    // Go in idle mode
-    nfc_idle(pnd);
     // Close, clean up and release the device
     pnd->driver->close(pnd);
-
   }
 }
 

@@ -211,6 +211,8 @@ arygon_connstring_decode(const nfc_connstring connstring, struct arygon_descript
 static void
 arygon_close(nfc_device *pnd)
 {
+  pn53x_idle(pnd);
+
   // Release UART port
   uart_close(DRIVER_DATA(pnd)->port);
 

@@ -520,6 +520,8 @@ static void
 acr122s_close(nfc_device *pnd)
 {
   acr122s_deactivate_sam(pnd);
+  pn53x_idle(pnd);
+
   uart_close(DRIVER_DATA(pnd)->port);
 
 #ifndef WIN32
