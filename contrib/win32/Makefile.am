@@ -1,4 +1,6 @@
 SUBDIRS = sys .
 
 EXTRA_DIST = \
-	err.h
+	err.h		\
+	stdlib.c	\
+	unistd.h 
