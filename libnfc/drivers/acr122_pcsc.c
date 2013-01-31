@@ -80,7 +80,7 @@
 #define ACR122_PCSC_RESPONSE_LEN 268
 
 #define LOG_GROUP    NFC_LOG_GROUP_DRIVER
-#define LOG_CATEGORY "libnfc.driver.acr122"
+#define LOG_CATEGORY "libnfc.driver.acr122_pcsc"
 
 // Internal data struct
 const struct pn53x_io acr122_pcsc_io;
