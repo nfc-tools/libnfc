@@ -1,5 +1,5 @@
 /*-
- * Copyright (C) 2012 Romuald Conty
+ * Copyright (C) 2012, 2013 Romuald Conty
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -17,6 +17,10 @@
 
 #include "conf.h"
 
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif // HAVE_CONFIG_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <dirent.h>
@@ -31,7 +35,14 @@
 #define LOG_CATEGORY "libnfc.config"
 #define LOG_GROUP    NFC_LOG_GROUP_CONFIG
 
-#define LIBNFC_SYSCONFDIR      "/etc/nfc"
+#ifndef LIBNFC_SYSCONFDIR
+// If this define does not already exists, we build it using SYSCONFDIR
+#ifndef SYSCONFDIR
+#error "SYSCONFDIR is not defined but required."
+#endif // SYSCONFDIR
+#define LIBNFC_SYSCONFDIR      SYSCONFDIR"/nfc"
+#endif // LIBNFC_SYSCONFDIR
+
 #define LIBNFC_CONFFILE        LIBNFC_SYSCONFDIR"/libnfc.conf"
 #define LIBNFC_DEVICECONFDIR   LIBNFC_SYSCONFDIR"/devices.d"
 
