@@ -1,6 +1,6 @@
 Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: libnfc
-Source: http://www.libnfc.org/
+Source: http://libnfc.googlecode.com/
 
 Files: *
 Copyright: 2009, Roel Verdult <roel@libnfc.org>, Romuald Conty <romuald@libnfc.org>

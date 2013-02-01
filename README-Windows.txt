@@ -1,6 +1,8 @@
 *-
 * Public platform independent Near Field Communication (NFC) library
+* Windows-specific parts:
 * Copyright (C) 2010, Glenn Ergeerts
+* Copyright (C) 2013, Alex Lian
 -*
 
 Requirements

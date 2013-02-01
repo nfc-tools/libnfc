@@ -21,7 +21,7 @@
 
 ; #define? COMPANY_PRODUCT_ICON     ..\win32\libnfc.ico  ;; override from company.mmh
 #define? UISAMPLE_DIALOG_FILE_dlgbmp	nfcleft.bmp     ;; override uisample.mmh
-#define? UISAMPLE_BLINE_TEXT           www.libnfc.org
+#define? UISAMPLE_BLINE_TEXT           www.nfc-tools.org
 #define? COMPANY_WANT_TO_INSTALL_DOCUMENTATION   N
 
 ;--- Include MAKEMSI support (with my customisations and MSI branding) ------

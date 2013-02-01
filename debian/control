@@ -4,7 +4,7 @@ Priority: extra
 Maintainer: Nobuhiro Iwamatsu <iwamatsu@debian.org>
 Build-Depends: debhelper (>= 8), dh-autoreconf, libtool, pkg-config, libusb-dev
 Standards-Version: 3.9.4
-Homepage: http://www.libnfc.org/
+Homepage: http://www.nfc-tools.org/
 Vcs-Git: https://code.googlecode.com/p/libnfc/
 Vcs-Browser: http://code.google.com/p/libnfc/source/browse/
 
@@ -14,9 +14,14 @@ Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: Near Field Communication (NFC) library
- libnfc is a Free Software library for Near Field Communication.
- Supported NFC hardware devices are, theorically, all hardware
- based on the NXP PN531, PN532 or PN533 NFC controller chip.
+ libnfc is a library for Near Field Communication. It abstracts the
+ low-level details of communicating with the devices away behind an
+ easy-to-use high-level API.
+ It supports most hardware based on the NXP PN531, PN532 or PN533
+ controller chips.
+ .
+ This package contains the runtime library files needed to run software
+ using libnfc.
 
 Package: libnfc-dev
 Section: libdevel
@@ -24,24 +29,57 @@ Architecture: any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends}, libnfc4 (= ${binary:Version}), libusb-dev
-Description: Near Field Communication library (development files)
- libnfc is a free software library for near-field communication.
+Description: Near Field Communication (NFC) library (development files)
+ libnfc is a library for Near Field Communication. It abstracts the
+ low-level details of communicating with the devices away behind an
+ easy-to-use high-level API.
  It supports most hardware based on the NXP PN531, PN532 or PN533
  controller chips.
+ .
+ This package contains the header and development files needed to build
+ programs and packages using libnfc.
+
+Package: libnfc4-dbg
+Section: debug
+Architecture: any
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${misc:Depends}, libnfc4 (= ${binary:Version})
+Description: Near Field Communication (NFC) library (debugging information)
+ libnfc is a library for Near Field Communication. It abstracts the
+ low-level details of communicating with the devices away behind an
+ easy-to-use high-level API.
+ It supports most hardware based on the NXP PN531, PN532 or PN533
+ controller chips.
+ .
+ This package contains the debugging information.
 
 Package: libnfc-bin
 Section: utils
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, libnfc4 (>= ${binary:Version})
-Description: Near Field Communication binaries
- Some binaries are provided with libnfc useful for development
- purposes (nfc-list, nfc-mfclassic, nfc-mfultralight, etc.).
+Description: Near Field Communication (NFC) binaries
+ libnfc is a library for Near Field Communication. It abstracts the
+ low-level details of communicating with the devices away behind an
+ easy-to-use high-level API.
+ It supports most hardware based on the NXP PN531, PN532 or PN533
+ controller chips.
+ .
+ This package contains some utils that come along with libnfc, for
+ development or debugging purposes (including nfc-list, nfc-mfclassic,
+ nfc-mfultralight, etc).
 
 Package: libnfc-examples
 Section: utils
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, libnfc4 (>= ${binary:Version})
-Description: Near Field Communication examples
+Description: Near Field Communication (NFC) examples
+ libnfc is a library for Near Field Communication. It abstracts the
+ low-level details of communicating with the devices away behind an
+ easy-to-use high-level API.
+ It supports most hardware based on the NXP PN531, PN532 or PN533
+ controller chips.
+ .
  Some examples are provided with libnfc for debugging and/or
  educational purposes (nfc-anticol, nfc-emulate, etc.).
 
@@ -49,6 +87,12 @@ Package: libnfc-pn53x-examples
 Section: utils
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, libnfc4 (>= ${binary:Version})
-Description: Near Field Communication examples for PN53x chips only
+Description: Near Field Communication (NFC) examples for PN53x chips only
+ libnfc is a library for Near Field Communication. It abstracts the
+ low-level details of communicating with the devices away behind an
+ easy-to-use high-level API.
+ It supports most hardware based on the NXP PN531, PN532 or PN533
+ controller chips.
+ .
  Some PN53x-only examples are provided with libnfc for debugging
  and/or educational purposes (pn53x-sam, pn53x-tamashell, etc.).
