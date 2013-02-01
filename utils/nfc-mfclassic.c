@@ -282,7 +282,7 @@ read_card(int read_unlocked)
       // Show if the readout went well
       if (bFailure) {
         // When a failure occured we need to redo the anti-collision
-        if (nfc_initiator_select_passive_target(pnd, nmMifare, NULL, 0, &nt) < 0) {
+        if (nfc_initiator_select_passive_target(pnd, nmMifare, NULL, 0, &nt) <= 0) {
           printf("!\nError: tag was removed\n");
           return false;
         }
@@ -355,7 +355,7 @@ write_card(int write_block_zero)
       // Show if the readout went well
       if (bFailure) {
         // When a failure occured we need to redo the anti-collision
-        if (nfc_initiator_select_passive_target(pnd, nmMifare, NULL, 0, &nt) < 0) {
+        if (nfc_initiator_select_passive_target(pnd, nmMifare, NULL, 0, &nt) <= 0) {
           printf("!\nError: tag was removed\n");
           return false;
         }
@@ -534,7 +534,7 @@ main(int argc, const char *argv[])
       printf("NFC reader: %s opened\n", nfc_device_get_name(pnd));
 
       // Try to find a MIFARE Classic tag
-      if (nfc_initiator_select_passive_target(pnd, nmMifare, NULL, 0, &nt) < 0) {
+      if (nfc_initiator_select_passive_target(pnd, nmMifare, NULL, 0, &nt) <= 0) {
         printf("Error: no tag was found\n");
         nfc_close(pnd);
         nfc_exit(context);

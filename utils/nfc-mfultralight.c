@@ -142,7 +142,7 @@ write_card(void)
     // Show if the readout went well
     if (bFailure) {
       // When a failure occured we need to redo the anti-collision
-      if (nfc_initiator_select_passive_target(pnd, nmMifare, NULL, 0, &nt) < 0) {
+      if (nfc_initiator_select_passive_target(pnd, nmMifare, NULL, 0, &nt) <= 0) {
         ERR("tag was removed");
         return false;
       }
@@ -228,7 +228,7 @@ main(int argc, const char *argv[])
   printf("NFC device: %s opened\n", nfc_device_get_name(pnd));
 
   // Try to find a MIFARE Ultralight tag
-  if (nfc_initiator_select_passive_target(pnd, nmMifare, NULL, 0, &nt) < 0) {
+  if (nfc_initiator_select_passive_target(pnd, nmMifare, NULL, 0, &nt) <= 0) {
     ERR("no tag was found\n");
     nfc_close(pnd);
     nfc_exit(context);
