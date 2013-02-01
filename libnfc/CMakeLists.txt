@@ -1,7 +1,7 @@
 # Windows MinGW workarounds
 IF(WIN32)
   message("Adding in contrib win32 sources")
-  SET(WINDOWS_SOURCES ../contrib/win32/nfc_win32)
+  SET(WINDOWS_SOURCES ../contrib/win32/stdlib)
   INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/../contrib/win32)
   message("Win32: " ${WINDOWS_SOURCES})
 ENDIF(WIN32)

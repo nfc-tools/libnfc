@@ -1,7 +1,7 @@
 /*-
  * Public platform independent Near Field Communication (NFC) library
  *
- * Copyright (C) 2011, 2012, 2013 Romuald Conty
+ * Copyright (C) 2013 Alex Lian
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -15,27 +15,32 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
+ *
  */
 
 /**
- * @file unistd.h
- * @brief This file intended to serve as a drop-in replacement for unistd.h on Windows
+ * @file stdlib.c
+ * @brief Windows System compatibility
  */
 
-#ifndef _UNISTD_H_
-#define _UNISTD_H_
-
+// Handle platform specific includes
 #include "contrib/windows.h"
 
-// Needed by Sleep() under Windows
-#  include <winbase.h>
-#  define sleep(X) Sleep( X * 1000)
+int setenv(const char *name, const char *value, int overwrite)
+{
+  int exists = GetEnvironmentVariableA(name, NULL, 0);
+  if ((exists && overwrite) || (!exists)) {
+    if (!SetEnvironmentVariableA(name, value)) {
+      // Set errno here correctly
+      return -1;
+    }
+    return 0;
+  }
+  // Exists and overwrite is 0.
+  return -1;
+}
 
-// With MinGW, getopt(3) is provided as separate header
-#if defined(WIN32) && defined(__GNUC__) /* mingw compiler */
-#include <getopt.h>
-#endif
-
-
-#endif /* _UNISTD_H_ */
-
+void unsetenv(const char *name)
+{
+  SetEnvironmentVariableA(name, NULL);
+}

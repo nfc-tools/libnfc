@@ -188,6 +188,8 @@ pn532_connstring_decode(const nfc_connstring connstring, struct pn532_uart_descr
 static void
 pn532_uart_close(nfc_device *pnd)
 {
+  pn53x_idle(pnd);
+
   // Release UART port
   uart_close(DRIVER_DATA(pnd)->port);
 
@@ -528,6 +530,7 @@ const struct nfc_driver pn532_uart_driver = {
   .device_get_information_about = pn53x_get_information_about,
 
   .abort_command  = pn532_uart_abort_command,
-  .idle  = pn53x_idle,
+  .idle           = pn53x_idle,
+  .powerdown      = pn53x_PowerDown,
 };
 

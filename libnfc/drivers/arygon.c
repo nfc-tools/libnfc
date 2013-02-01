@@ -211,6 +211,8 @@ arygon_connstring_decode(const nfc_connstring connstring, struct arygon_descript
 static void
 arygon_close(nfc_device *pnd)
 {
+  pn53x_idle(pnd);
+
   // Release UART port
   uart_close(DRIVER_DATA(pnd)->port);
 
@@ -587,6 +589,8 @@ const struct nfc_driver arygon_driver = {
   .device_get_information_about = pn53x_get_information_about,
 
   .abort_command  = arygon_abort_command,
-  .idle  = NULL,  // FIXME arygon driver does not support idle()
+  .idle           = pn53x_idle,
+  /* Even if PN532, PowerDown is not recommended on those devices */
+  .powerdown      = NULL,
 };
 

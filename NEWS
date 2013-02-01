@@ -1,3 +1,10 @@
+New in 1.7.0-rc3:
+
+API Changes:
+
+  * Functions
+    - Add timeout param to nfc_emulate_target()
+
 New in 1.7.0-rc2:
 
 Configuration:

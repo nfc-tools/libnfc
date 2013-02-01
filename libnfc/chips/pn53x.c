@@ -947,30 +947,25 @@ pn53x_idle(struct nfc_device *pnd)
       if ((res = pn53x_InRelease(pnd, 0)) < 0) {
         return res;
       }
-      if (CHIP_DATA(pnd)->type == PN532) {
+      if ((CHIP_DATA(pnd)->type == PN532) && (pnd->driver->powerdown)) {
         // Use PowerDown to go in "Low VBat" power mode
-        if ((res = pn53x_PowerDown(pnd)) < 0) {
+        if ((res = pnd->driver->powerdown(pnd)) < 0) {
           return res;
         }
       }
       break;
     case INITIATOR:
-      // Deselect all active communications
-      if ((res = pn53x_InDeselect(pnd, 0)) < 0) {
+      // Use InRelease to go in "Standby mode"
+      if ((res = pn53x_InRelease(pnd, 0)) < 0) {
         return res;
       }
       // Disable RF field to avoid heating
       if ((res = nfc_device_set_property_bool(pnd, NP_ACTIVATE_FIELD, false)) < 0) {
         return res;
       }
-      if (CHIP_DATA(pnd)->type == PN532) {
+      if ((CHIP_DATA(pnd)->type == PN532) && (pnd->driver->powerdown)) {
         // Use PowerDown to go in "Low VBat" power mode
-        if ((res = pn53x_PowerDown(pnd)) < 0) {
-          return res;
-        }
-      } else {
-        // Use InRelease to go in "Standby mode"
-        if ((res = pn53x_InRelease(pnd, 0)) < 0) {
+        if ((res = pnd->driver->powerdown(pnd)) < 0) {
           return res;
         }
       }

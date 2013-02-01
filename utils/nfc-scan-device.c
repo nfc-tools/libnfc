@@ -77,11 +77,6 @@ main(int argc, const char *argv[])
   bool verbose = false;
 
   nfc_context *context;
-  nfc_init(&context);
-
-  // Display libnfc version
-  acLibnfcVersion = nfc_version();
-  printf("%s uses libnfc %s\n", argv[0], acLibnfcVersion);
 
   // Get commandline options
   for (int arg = 1; arg < argc; arg++) {
@@ -91,6 +86,7 @@ main(int argc, const char *argv[])
     } else if (0 == strcmp(argv[arg], "-v")) {
       verbose = true;
     } else if (0 == strcmp(argv[arg], "-i")) {
+      // This has to be done before the call to nfc_init()
       setenv("LIBNFC_INTRUSIVE_SCAN", "yes", 1);
     } else {
       ERR("%s is not supported option.", argv[arg]);
@@ -98,6 +94,12 @@ main(int argc, const char *argv[])
       return EXIT_FAILURE;
     }
   }
+
+  nfc_init(&context);
+
+  // Display libnfc version
+  acLibnfcVersion = nfc_version();
+  printf("%s uses libnfc %s\n", argv[0], acLibnfcVersion);
 
 #ifdef HAVE_LIBUSB
 #  ifdef DEBUG

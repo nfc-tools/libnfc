@@ -96,6 +96,7 @@ dist_man_MANS = \
 		nfc-mfsetuid.1 \
 		pn53x-diagnose.1 \
 		pn53x-sam.1 \
-		pn53x-tamashell.1
+		pn53x-tamashell.1 \
+		nfc-emulate-forum-tag2.1
 
 EXTRA_DIST = CMakeLists.txt

@@ -1,3 +1,23 @@
+Jan TBD, 2013 - 1.7.0-rc3 (release candidate)
+--------------------------------------------
+
+Fixes:
+ - Fix pn53x_usb bulk write timeout
+ - Fix BCC in nfc-emulate-uid example
+ - Fix nfc-relay-picc example
+ - Fix a miss returned value within some internal functions (user program could
+   be affected)
+ - Fix nfc-scan-device -i option
+ - Remove wrong exit() calls in library
+ - Fix issue in driver acr122_usb affecting Touchatag
+ - Reenable some idle in all drivers, add selectively PowerDown when possible
+
+Changes:
+ - nfc_emulate_target() now takes timeout parameter
+
+Special thanks to:
+ - Alex Lian (Windows support refresh)
+
 Jan 20, 2013 - 1.7.0-rc2 (release candidate)
 --------------------------------------------
 

@@ -80,7 +80,7 @@
 #define ACR122_PCSC_RESPONSE_LEN 268
 
 #define LOG_GROUP    NFC_LOG_GROUP_DRIVER
-#define LOG_CATEGORY "libnfc.driver.acr122"
+#define LOG_CATEGORY "libnfc.driver.acr122_pcsc"
 
 // Internal data struct
 const struct pn53x_io acr122_pcsc_io;
@@ -324,6 +324,8 @@ error:
 static void
 acr122_pcsc_close(nfc_device *pnd)
 {
+  pn53x_idle(pnd);
+
   SCardDisconnect(DRIVER_DATA(pnd)->hCard, SCARD_LEAVE_CARD);
   acr122_pcsc_free_scardcontext();
 
@@ -516,6 +518,8 @@ const struct nfc_driver acr122_pcsc_driver = {
   .device_get_information_about = pn53x_get_information_about,
 
   .abort_command  = NULL,  // Abort is not supported in this driver
-  .idle  = NULL,           // Idle is not supported in this driver
+  .idle           = pn53x_idle,
+  /* Even if PN532, PowerDown is not recommended on those devices */
+  .powerdown      = NULL,
 };
 

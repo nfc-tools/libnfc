@@ -520,6 +520,8 @@ static void
 acr122s_close(nfc_device *pnd)
 {
   acr122s_deactivate_sam(pnd);
+  pn53x_idle(pnd);
+
   uart_close(DRIVER_DATA(pnd)->port);
 
 #ifndef WIN32
@@ -726,5 +728,7 @@ const struct nfc_driver acr122s_driver = {
   .device_get_information_about = pn53x_get_information_about,
 
   .abort_command  = acr122s_abort_command,
-  .idle  = NULL,
+  .idle           = pn53x_idle,
+  /* Even if PN532, PowerDown is not recommended on those devices */
+  .powerdown      = NULL,
 };

@@ -10,7 +10,7 @@ General Information
 libnfc is a library which allows userspace application access to NFC devices.
 
 The official web site is:
-  http://www.libnfc.org/
+  http://www.nfc-tools.org/
 
 The official forum site is:
   http://www.libnfc.org/community/
@@ -23,17 +23,17 @@ Important note: this file covers POSIX systems, for Windows please read README-W
 Requirements
 ============
 
-Some NFC drivers depends on third party software:
+Some NFC drivers depend on third party software:
 
-* pn53x_usb:
+* pn53x_usb & acr122_usb:
 
    - libusb-0.1 http://libusb.sf.net
 
-* acr122:
+* acr122_pcsc:
 
    - pcsc-lite http://pcsclite.alioth.debian.org/
 
-The regression test suite depend on the cutter framework:
+The regression test suite depends on the cutter framework:
 http://cutter.sf.net
 
 Installation
@@ -69,7 +69,14 @@ Please make sure to include:
 
   And anything else you think is relevant.
 
-* How to reproduce the bug. 
+* A trace with debug activated.
+
+  Reproduce the bug with debug, e.g. if it was:
+  $ nfc-list -v
+  run it as:
+  $ LIBNFC_LOG_LEVEL=3 nfc-list -v
+
+* How to reproduce the bug.
 
   Please include a short test program that exhibits the behavior. 
   As a last resort, you can also provide a pointer to a larger piece 
@@ -85,7 +92,8 @@ Patches
 =======
 
 Patches can be posted to http://code.google.com/p/libnfc/issues/list or
-can be sent directly to libnfc's developers: http://www.libnfc.org/contact
+can be sent directly to libnfc's developers:
+http://nfc-tools.org/index.php?title=Contact
 
 If the patch fixes a bug, it is usually a good idea to include
 all the information described in "How to Report Bugs".
