@@ -207,8 +207,14 @@ main(int argc, char *argv[])
       ERR("No device found");
       return EXIT_FAILURE;
     }
-    fd3 = fdopen(3, "r");
-    fd4 = fdopen(4, "w");
+    if ((fd3 = fdopen(3, "r")) == NULL) {
+      ERR("Could not open file descriptor 3");
+      return EXIT_FAILURE;
+    }
+    if ((fd4 = fdopen(4, "r")) == NULL) {
+      ERR("Could not open file descriptor 4");
+      return EXIT_FAILURE;
+    }
   } else {
     if (szFound < 2) {
       ERR("%zd device found but two opened devices are needed to relay NFC.", szFound);
