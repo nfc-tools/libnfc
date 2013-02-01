@@ -39,6 +39,21 @@ Description: Near Field Communication (NFC) library (development files)
  This package contains the header and development files needed to build
  programs and packages using libnfc.
 
+Package: libnfc4-dbg
+Section: debug
+Architecture: any
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${misc:Depends}, libnfc4 (= ${binary:Version})
+Description: Near Field Communication (NFC) library (debugging information)
+ libnfc is a library for Near Field Communication. It abstracts the
+ low-level details of communicating with the devices away behind an
+ easy-to-use high-level API.
+ It supports most hardware based on the NXP PN531, PN532 or PN533
+ controller chips.
+ .
+ This package contains the debugging information.
+
 Package: libnfc-bin
 Section: utils
 Architecture: any
