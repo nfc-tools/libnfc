@@ -1,7 +1,7 @@
 SUBDIRS = chips buses drivers .
 
 # set the include path found by configure
-AM_CPPFLAGS = $(all_includes) $(LIBNFC_CFLAGS)
+AM_CPPFLAGS = $(all_includes) $(LIBNFC_CFLAGS) -DSYSCONFDIR='"$(sysconfdir)"'
 
 noinst_HEADERS = \
 		 conf.h \
