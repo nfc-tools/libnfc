@@ -43,6 +43,11 @@ typedef struct nfc_context nfc_context;
 typedef struct nfc_device nfc_device;
 
 /**
+ * NFC device driver
+ */
+typedef struct nfc_driver nfc_driver;
+
+/**
  * Connection string
  */
 typedef char nfc_connstring[1024];
