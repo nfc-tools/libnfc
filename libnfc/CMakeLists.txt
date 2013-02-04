@@ -1,9 +1,10 @@
 # Windows MinGW workarounds
 IF(WIN32)
-  message("Adding in contrib win32 sources")
   SET(WINDOWS_SOURCES ../contrib/win32/stdlib)
   INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/../contrib/win32)
-  message("Win32: " ${WINDOWS_SOURCES})
+
+  # Add in the rc for version information in the dll
+  LIST(APPEND WINDOWS_SOURCES ${CMAKE_CURRENT_BINARY_DIR}/../windows/libnfc.rc)
 ENDIF(WIN32)
 
 # Library's chips
@@ -53,15 +54,21 @@ IF(LIBUSB_FOUND)
   TARGET_LINK_LIBRARIES(nfc ${LIBUSB_LIBRARIES})
 ENDIF(LIBUSB_FOUND)
 
-IF(WIN32)
-  TARGET_LINK_LIBRARIES(nfc wsock32)
-ENDIF(WIN32)
 SET_TARGET_PROPERTIES(nfc PROPERTIES SOVERSION 0)
 
 IF(WIN32)
+  # Libraries that are windows specific
+  TARGET_LINK_LIBRARIES(nfc wsock32)
   IF(PCRE_FOUND)
     TARGET_LINK_LIBRARIES(nfc ${PCRE_LIBRARIES})
   ENDIF(PCRE_FOUND)
+
+  ADD_CUSTOM_COMMAND(
+    OUTPUT libnfc.lib
+    COMMAND dlltool -d ${CMAKE_CURRENT_SOURCE_DIR}/../windows/win32/nfc.def -l ${CMAKE_CURRENT_BINARY_DIR}/libnfc.lib ${CMAKE_CURRENT_BINARY_DIR}/libnfc.dll
+    DEPENDS nfc ${CMAKE_CURRENT_SOURCE_DIR}/../windows/win32/nfc.def
+  )
+  ADD_CUSTOM_TARGET(win32lib ALL DEPENDS libnfc.lib)
 
   # On Windows the shared (runtime) library should be either in the same 
   # directory as the excutables or in the path, we add it to same directory
