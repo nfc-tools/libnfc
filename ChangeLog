@@ -1,4 +1,23 @@
-Jan TBD, 2013 - 1.7.0-rc3 (release candidate)
+Feb 04, 2013 - 1.7.0-rc4 (release candidate)
+--------------------------------------------
+
+Fixes:
+ - Fix tag selection for nfc-mfclassic, nfc-mfultralight, nfc-read-forum-tag3
+   and nfc-relay-picc
+ - Fix crash in nfc-relay-picc -i/-t if fd3 or fd4 is missing
+
+Improvements:
+ - Windows support build with CMake
+
+Changes:
+ - Configuration directory (ie. libnfc.conf) can now be set a compile-time
+ - Log can be enabled/disabled using CMake
+
+Special thanks to:
+ - Alex Lian (Windows support improvements)
+ - Nobuhiro Iwamatsu (Debian package improvements)
+
+Jan 31, 2013 - 1.7.0-rc3 (release candidate)
 --------------------------------------------
 
 Fixes:
