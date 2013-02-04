@@ -10,4 +10,5 @@ libnfc-examples/
 libnfc-pn53x-examples/
 libnfc4.debhelper.log
 libnfc4/
+libnfc4-dbg/
 tmp/
