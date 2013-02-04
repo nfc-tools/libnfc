@@ -14,7 +14,18 @@ INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/../libnfc)
 
 # Examples
 FOREACH(source ${EXAMPLES-SOURCES})
-  ADD_EXECUTABLE(${source} ${source}.c)
+  SET (TARGETS ${source}.c)
+
+  IF(WIN32)
+    SET(RC_COMMENT "${PACKAGE_NAME} example")
+    SET(RC_INTERNAL_NAME ${source})
+    SET(RC_ORIGINAL_NAME ${source}.exe)
+    SET(RC_FILE_TYPE VFT_APP)
+    CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/../windows/version.rc.in ${CMAKE_CURRENT_BINARY_DIR}/../windows/${source}.rc @ONLY)
+    LIST(APPEND TARGETS ${CMAKE_CURRENT_BINARY_DIR}/../windows/${source}.rc)
+  ENDIF(WIN32)
+
+  ADD_EXECUTABLE(${source} ${TARGETS})
   TARGET_LINK_LIBRARIES(${source} nfc)
   TARGET_LINK_LIBRARIES(${source} nfcutils)
   INSTALL(TARGETS ${source} RUNTIME DESTINATION bin COMPONENT examples)

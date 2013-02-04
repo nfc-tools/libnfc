@@ -11,6 +11,7 @@ Requirements
 - MinGW-w64 compiler toolchain [1]
 - LibUsb-Win32 1.2.5.0 (or greater) [2]
 - CMake 2.8 [3]
+- PCRE for Windows [4]
 
 This was tested on Windows 7 64 bit, but should work on Windows Vista and
 Windows XP and 32 bit as well. 
@@ -57,3 +58,4 @@ References
         http://sourceforge.net/projects/tdm-gcc/files/TDM-GCC%20Installer/tdm64-gcc-4.5.1.exe/download
 [2] http://sourceforge.net/projects/libusb-win32/files/
 [3] http://www.cmake.org
+[4] http://gnuwin32.sourceforge.net/packages/pcre.htm
