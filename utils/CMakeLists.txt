@@ -22,7 +22,7 @@ FOREACH(source ${UTILS-SOURCES})
     SET(RC_INTERNAL_NAME ${source})
     SET(RC_ORIGINAL_NAME ${source}.exe)
     SET(RC_FILE_TYPE VFT_APP)
-    CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/../windows/version.rc.in ${CMAKE_CURRENT_BINARY_DIR}/../windows/${source}.rc @ONLY)
+    CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/../contrib/win32/version.rc.in ${CMAKE_CURRENT_BINARY_DIR}/../windows/${source}.rc @ONLY)
     LIST(APPEND TARGETS ${CMAKE_CURRENT_BINARY_DIR}/../windows/${source}.rc)
   ENDIF(WIN32)
 
