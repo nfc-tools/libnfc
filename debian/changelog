@@ -1,3 +1,9 @@
+libnfc (1.7.0~rc4-0) unstable; urgency=low
+
+  * New upstream release
+
+ -- yobibe <yobibe@gmail.com>  Wed, 6 Feb 2013 12:42:42 +0100
+
 libnfc (1.7.0~rc3-1) unstable; urgency=low
 
   * Upload to Debian. (Closes: #672795)
