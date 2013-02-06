@@ -1,3 +1,10 @@
+New in 1.7.0-rc5:
+
+API Changes:
+
+  * Functions
+    - New nfc_register_driver() function allowing to hook custom drivers.
+
 New in 1.7.0-rc3:
 
 API Changes:
