@@ -27,7 +27,6 @@ Package: libnfc-dev
 Section: libdevel
 Architecture: any
 Multi-Arch: same
-Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends}, libnfc4 (= ${binary:Version}), libusb-dev
 Description: Near Field Communication (NFC) library (development files)
  libnfc is a library for Near Field Communication. It abstracts the
@@ -43,7 +42,6 @@ Package: libnfc4-dbg
 Section: debug
 Architecture: any
 Multi-Arch: same
-Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends}, libnfc4 (= ${binary:Version})
 Description: Near Field Communication (NFC) library (debugging information)
  libnfc is a library for Near Field Communication. It abstracts the
