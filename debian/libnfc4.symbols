@@ -37,6 +37,7 @@ libnfc.so.4 libnfc4 #MINVER#
  nfc_list_devices@Base 1.7.0~rc4
  nfc_open@Base 1.7.0~rc4
  nfc_perror@Base 1.7.0~rc4
+ nfc_register_driver@Base 1.7.0~rc4-0
  nfc_strerror@Base 1.7.0~rc4
  nfc_strerror_r@Base 1.7.0~rc4
  nfc_target_init@Base 1.7.0~rc4
