@@ -79,6 +79,7 @@ extern  "C" {
   /* Library initialization/deinitialization */
   NFC_EXPORT void nfc_init(nfc_context **context) ATTRIBUTE_NONNULL(1);
   NFC_EXPORT void nfc_exit(nfc_context *context) ATTRIBUTE_NONNULL(1);
+  NFC_EXPORT int nfc_register_driver(const nfc_driver *driver);
 
   /* NFC Device/Hardware manipulation */
   NFC_EXPORT nfc_device *nfc_open(nfc_context *context, const nfc_connstring connstring) ATTRIBUTE_NONNULL(1);
