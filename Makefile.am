@@ -10,7 +10,8 @@ pkgconfig_DATA = libnfc.pc
 EXTRA_DIST = \
 	CMakeLists.txt \
 	Doxyfile \
-	README-Windows.txt
+	README-Windows.txt \
+	libnfc.conf.sample
 
 CLEANFILES = Doxygen.log coverage.info libnfc.pc
 
