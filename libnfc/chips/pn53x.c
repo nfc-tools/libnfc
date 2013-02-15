@@ -882,8 +882,7 @@ pn53x_set_property_bool(struct nfc_device *pnd, const nfc_property property, con
         // Nothing to do
         return NFC_SUCCESS;
       pnd->bAutoIso14443_4 = bEnable;
-      if (pn53x_set_parameters(pnd, PARAM_AUTO_RATS, bEnable) == 0)
-        return NFC_SUCCESS;
+      return pn53x_set_parameters(pnd, PARAM_AUTO_RATS, bEnable);
       break;
 
     case NP_FORCE_ISO14443_A:
