@@ -1171,7 +1171,7 @@ nfc_version(void)
 /** @ingroup misc
  * @brief Free buffer allocated by libnfc
  *
- * @param pointer on buffer that need to be freed
+ * @param pointer on buffer that needs to be freed
  */
 void
 nfc_free(void *p)
@@ -1185,7 +1185,7 @@ nfc_free(void *p)
  * @param pnd \a nfc_device struct pointer that represent currently used device
  * @param buf pointer where string will be allocated, then information printed
  *
- * @warning *buf must be freed.
+ * @warning *buf must be freed using nfc_free()
  */
 int
 nfc_device_get_information_about(nfc_device *pnd, char **buf)
