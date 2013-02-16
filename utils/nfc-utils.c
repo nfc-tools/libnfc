@@ -120,5 +120,5 @@ print_nfc_target(const nfc_target nt, bool verbose)
   char *s;
   str_nfc_target(&s, nt, verbose);
   printf("%s", s);
-  free(s);
+  nfc_free(s);
 }

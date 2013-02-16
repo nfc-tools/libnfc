@@ -125,7 +125,7 @@ main(int argc, const char *argv[])
       if (verbose) {
         if (nfc_device_get_information_about(pnd, &strinfo) >= 0) {
           printf("%s", strinfo);
-          free(strinfo);
+          nfc_free(strinfo);
         }
       }
       nfc_close(pnd);

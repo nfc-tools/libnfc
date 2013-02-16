@@ -1169,6 +1169,17 @@ nfc_version(void)
 }
 
 /** @ingroup misc
+ * @brief Free buffer allocated by libnfc
+ *
+ * @param pointer on buffer that need to be freed
+ */
+void
+nfc_free(void *p)
+{
+  free(p);
+}
+
+/** @ingroup misc
  * @brief Print information about NFC device
  * @return Upon successful return, this function returns the number of characters printed (excluding the null byte used to end output to strings), otherwise returns libnfc's error code (negative value)
  * @param pnd \a nfc_device struct pointer that represent currently used device
@@ -1255,7 +1266,7 @@ str_nfc_modulation_type(const nfc_modulation_type nmt)
  * @param nt \a nfc_target struct to print
  * @param buf pointer where string will be allocated, then nfc target information printed
  *
- * @warning *buf must be freed.
+ * @warning *buf must be freed using nfc_free()
 */
 int
 str_nfc_target(char **buf, const nfc_target nt, bool verbose)

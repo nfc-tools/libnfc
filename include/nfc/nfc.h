@@ -131,6 +131,7 @@ extern  "C" {
   NFC_EXPORT void iso14443a_crc_append(uint8_t *pbtData, size_t szLen);
   NFC_EXPORT uint8_t *iso14443a_locate_historical_bytes(uint8_t *pbtAts, size_t szAts, size_t *pszTk);
 
+  NFC_EXPORT void nfc_free(void *p);
   NFC_EXPORT const char *nfc_version(void);
   NFC_EXPORT int nfc_device_get_information_about(nfc_device *pnd, char **buf);
 
