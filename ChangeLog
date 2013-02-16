@@ -1,8 +1,14 @@
-next...
--------
+Feb TBD, 2013 - 1.7.0-rc5 (release candidate)
+
+Fixes:
+ - Add missing sample configuration file in archive
+ - Add missing windows files in archive
+ - Preserve error code while using pn53x_set_property_bool() with
+   NP_AUTO_ISO14443_4 flag
 
 Improvements:
  - New nfc_register_driver() function allowing to hook custom drivers
+ - New nfc_free() function to free allocated buffers
 
 Special thanks to:
  - Ahti Legonkov (new nfc_register_driver())
