@@ -25,12 +25,12 @@
  */
 
 #ifndef __NFC_TYPES_H__
-#  define __NFC_TYPES_H__
+#define __NFC_TYPES_H__
 
-#  include <stddef.h>
-#  include <stdint.h>
-#  include <stdbool.h>
-#  include <stdio.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include <stdio.h>
 
 #ifndef NFC_BUFSIZE_CONNSTRING
 #define NFC_BUFSIZE_CONNSTRING 1024

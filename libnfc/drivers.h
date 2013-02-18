@@ -25,10 +25,10 @@
  */
 
 #ifndef __NFC_DRIVERS_H__
-#  define __NFC_DRIVERS_H__
+#define __NFC_DRIVERS_H__
 
-#  include <nfc/nfc-types.h>
+#include <nfc/nfc-types.h>
 
-extern const struct nfc_driver_list* nfc_drivers;
+extern const struct nfc_driver_list *nfc_drivers;
 
 #endif // __NFC_DRIVERS_H__

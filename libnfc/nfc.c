@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2009, 2010 Roel Verdult
  * Copyright (C) 2010, 2011 Romain Tartière
- * Copyright (C) 2009, 2010, 2011, 2012 Romuald Conty
+ * Copyright (C) 2009, 2010, 2011, 2012, 2013 Romuald Conty
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -109,13 +109,12 @@
 #define LOG_CATEGORY "libnfc.general"
 #define LOG_GROUP    NFC_LOG_GROUP_GENERAL
 
-struct nfc_driver_list
-{
-    const struct nfc_driver_list *next;
-    const struct nfc_driver *driver;
+struct nfc_driver_list {
+  const struct nfc_driver_list *next;
+  const struct nfc_driver *driver;
 };
 
-const struct nfc_driver_list* nfc_drivers = NULL;
+const struct nfc_driver_list *nfc_drivers = NULL;
 
 static void
 nfc_drivers_init()
@@ -153,7 +152,7 @@ nfc_register_driver(const struct nfc_driver *ndr)
   if (!ndr)
     return NFC_EINVARG;
 
-  struct nfc_driver_list *pndl = (struct nfc_driver_list*)malloc(sizeof(struct nfc_driver_list));
+  struct nfc_driver_list *pndl = (struct nfc_driver_list *)malloc(sizeof(struct nfc_driver_list));
   if (!pndl)
     return NFC_ESOFT;
 

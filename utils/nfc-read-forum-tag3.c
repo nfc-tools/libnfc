@@ -56,7 +56,7 @@
 #include "nfc-utils.h"
 
 #if defined(WIN32) && defined(__GNUC__) /* mingw compiler */
- #include <getopt.h>
+#include <getopt.h>
 #endif
 
 static nfc_device *pnd;
