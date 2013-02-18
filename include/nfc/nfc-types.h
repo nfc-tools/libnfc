@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2009 Roel Verdult
  * Copyright (C) 2010, 2011 Romain Tartière
- * Copyright (C) 2010, 2011, 2012 Romuald Conty
+ * Copyright (C) 2010, 2011, 2012, 2013 Romuald Conty
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -32,6 +32,10 @@
 #  include <stdbool.h>
 #  include <stdio.h>
 
+#ifndef NFC_BUFSIZE_CONNSTRING
+#define NFC_BUFSIZE_CONNSTRING 1024
+#endif
+
 /**
  * NFC context
  */
@@ -50,7 +54,7 @@ typedef struct nfc_driver nfc_driver;
 /**
  * Connection string
  */
-typedef char nfc_connstring[1024];
+typedef char nfc_connstring[NFC_BUFSIZE_CONNSTRING];
 
 /**
  * Properties
