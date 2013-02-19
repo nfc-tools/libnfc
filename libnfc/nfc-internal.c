@@ -24,7 +24,14 @@
 
 #include <nfc/nfc.h>
 #include "nfc-internal.h"
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#ifdef CONF
 #include "conf.h"
+#endif
 
 #include <stdlib.h>
 #include <string.h>
@@ -81,6 +88,7 @@ nfc_context_new(void)
   }
   res->user_defined_device_count = 0;
 
+#ifdef CONF
   // Load user defined device from environment variable at first
   char *envvar = getenv("LIBNFC_DEFAULT_DEVICE");
   if (envvar) {
@@ -102,6 +110,7 @@ nfc_context_new(void)
   if (envvar) {
     res->log_level = atoi(envvar);
   }
+#endif // CONF
 
   // Initialize log before use it...
   log_init(res);

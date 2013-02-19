@@ -81,6 +81,17 @@ then
   AC_DEFINE([LOG], [1], [Enable log])
 fi
 
+# Conf support (default:yes)
+AC_ARG_ENABLE([conf],AS_HELP_STRING([--disable-conf],[Disable use of config files and environment variables]),[enable_conf=$enableval],[enable_conf="yes"])
+AC_MSG_CHECKING(for conf flag)
+AC_MSG_RESULT($enable_conf)
+AM_CONDITIONAL([WITH_CONF], [test "$enable_conf" != "no"])
+ 
+if test x"$enable_conf" = "xyes"
+then
+  AC_DEFINE([CONF], [1], [Enable conf])
+fi
+
 # Debug support (default:no)
 AC_ARG_ENABLE([debug],AS_HELP_STRING([--enable-debug],[Enable debug mode]),[enable_debug=$enableval],[enable_debug="no"])
 AC_MSG_CHECKING(for debug flag)

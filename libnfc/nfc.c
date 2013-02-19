@@ -294,6 +294,7 @@ nfc_list_devices(nfc_context *context, nfc_connstring connstrings[], const size_
 {
   size_t device_found = 0;
 
+#ifdef CONF
   // Load manually configured devices (from config file and env variables)
   // TODO From env var...
   for (uint32_t i = 0; i < context->user_defined_device_count; i++) {
@@ -334,6 +335,7 @@ nfc_list_devices(nfc_context *context, nfc_connstring connstrings[], const size_
         return device_found;
     }
   }
+#endif // CONF
 
   // Device auto-detection
   if (context->allow_autoscan) {

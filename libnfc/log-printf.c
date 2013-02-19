@@ -34,9 +34,13 @@
 void
 log_init(const nfc_context *context)
 {
+#ifdef CONF
   char str[32];
   sprintf(str, "%"PRIu32, context->log_level);
   setenv("LIBNFC_LOG_LEVEL", str, 1);
+#else
+  (void)context;
+#endif
 }
 
 void
@@ -47,7 +51,10 @@ log_exit(void)
 void
 log_put(const uint8_t group, const char *category, const uint8_t priority, const char *format, ...)
 {
-  char *env_log_level = getenv("LIBNFC_LOG_LEVEL");
+  char *env_log_level = NULL;
+#ifdef CONF
+  env_log_level = getenv("LIBNFC_LOG_LEVEL");
+#endif
   uint32_t log_level;
   if (NULL == env_log_level) {
     // LIBNFC_LOG_LEVEL is not set
