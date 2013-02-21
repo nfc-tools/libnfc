@@ -101,7 +101,9 @@ pn532_uart_scan(const nfc_context *context, nfc_connstring connstrings[], const 
 
 #ifndef WIN32
       // pipe-based abort mecanism
-      pipe(DRIVER_DATA(pnd)->iAbortFds);
+      if (pipe(DRIVER_DATA(pnd)->iAbortFds) < 0) {
+        return 0;
+      }
 #else
       DRIVER_DATA(pnd)->abort_flag = false;
 #endif
@@ -252,7 +254,9 @@ pn532_uart_open(const nfc_context *context, const nfc_connstring connstring)
 
 #ifndef WIN32
   // pipe-based abort mecanism
-  pipe(DRIVER_DATA(pnd)->iAbortFds);
+  if (pipe(DRIVER_DATA(pnd)->iAbortFds) < 0) {
+    return NULL;
+  }
 #else
   DRIVER_DATA(pnd)->abort_flag = false;
 #endif
@@ -484,7 +488,9 @@ pn532_uart_abort_command(nfc_device *pnd)
   if (pnd) {
 #ifndef WIN32
     close(DRIVER_DATA(pnd)->iAbortFds[0]);
-    pipe(DRIVER_DATA(pnd)->iAbortFds);
+    if (pipe(DRIVER_DATA(pnd)->iAbortFds) < 0) {
+      return NFC_ESOFT;
+    }
 #else
     DRIVER_DATA(pnd)->abort_flag = true;
 #endif

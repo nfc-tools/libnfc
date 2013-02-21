@@ -477,7 +477,9 @@ acr122s_scan(const nfc_context *context, nfc_connstring connstrings[], const siz
       DRIVER_DATA(pnd)->seq = 0;
 
 #ifndef WIN32
-      pipe(DRIVER_DATA(pnd)->abort_fds);
+      if (pipe(DRIVER_DATA(pnd)->abort_fds) < 0) {
+        return 0;
+      }
 #else
       DRIVER_DATA(pnd)->abort_flag = false;
 #endif

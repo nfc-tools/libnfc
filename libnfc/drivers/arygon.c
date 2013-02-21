@@ -124,7 +124,9 @@ arygon_scan(const nfc_context *context, nfc_connstring connstrings[], const size
 
 #ifndef WIN32
       // pipe-based abort mecanism
-      pipe(DRIVER_DATA(pnd)->iAbortFds);
+      if (pipe(DRIVER_DATA(pnd)->iAbortFds) < 0) {
+        return 0;
+      }
 #else
       DRIVER_DATA(pnd)->abort_flag = false;
 #endif
