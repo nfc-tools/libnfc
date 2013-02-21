@@ -188,7 +188,7 @@ nfc_exit(nfc_context *context)
   while (nfc_drivers) {
     struct nfc_driver_list *pndl = nfc_drivers;
     nfc_drivers = pndl->next;
-    free (pndl);
+    free(pndl);
   }
 
   nfc_context_free(context);
