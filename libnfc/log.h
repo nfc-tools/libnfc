@@ -81,6 +81,7 @@ __attribute__((format(printf, 4, 5)))
 /**
  * @macro LOG_HEX
  * @brief Log a byte-array in hexadecimal format
+ * Max values:  pcTag of 121 bytes + ": " + 300 bytes of data+ "\0" => acBuf of 1024 bytes
  */
 #  ifdef LOG
 #    define LOG_HEX(group, pcTag, pbtData, szBytes) do { \
@@ -95,9 +96,9 @@ __attribute__((format(printf, 4, 5)))
     } \
     snprintf (__acBuf + __szBuf, sizeof(__acBuf) - __szBuf, "%s: ", pcTag); \
     __szBuf += strlen (pcTag) + 2; \
-    for (__szPos=0; __szPos < (size_t)(szBytes); __szPos++) { \
-      snprintf (__acBuf + __szBuf, sizeof(__acBuf) - __szBuf, "%02x  ",((uint8_t *)(pbtData))[__szPos]); \
-      __szBuf += 4; \
+    for (__szPos=0; (__szPos < (size_t)(szBytes)) && (__szBuf < sizeof(__acBuf)); __szPos++) { \
+      snprintf (__acBuf + __szBuf, sizeof(__acBuf) - __szBuf, "%02x ",((uint8_t *)(pbtData))[__szPos]); \
+      __szBuf += 3; \
     } \
     log_put (group, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", __acBuf); \
   } while (0);
