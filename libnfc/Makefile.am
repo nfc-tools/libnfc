@@ -3,15 +3,6 @@ SUBDIRS = chips buses drivers .
 # set the include path found by configure
 AM_CPPFLAGS = $(all_includes) $(LIBNFC_CFLAGS) -DSYSCONFDIR='"$(sysconfdir)"'
 
-noinst_HEADERS = \
-		 conf.h \
-		 drivers.h \
-		 iso7816.h \
-		 log.h \
-		 mirror-subr.h \
-		 nfc-internal.h \
-		 target-subr.h
-
 lib_LTLIBRARIES = libnfc.la
 libnfc_la_SOURCES = \
 		    conf.c \
@@ -22,7 +13,14 @@ libnfc_la_SOURCES = \
 		    nfc-device.c \
 		    nfc-emulation.c \
 		    nfc-internal.c \
-		    target-subr.c
+		    target-subr.c \
+		    conf.h \
+		    drivers.h \
+		    iso7816.h \
+		    log.h \
+		    mirror-subr.h \
+		    nfc-internal.h \
+		    target-subr.h
 
 libnfc_la_LDFLAGS = -no-undefined -version-info 4:0:0 -export-symbols-regex '^nfc_|^iso14443a_|^str_nfc_|pn53x_transceive|pn532_SAMConfiguration|pn53x_read_register|pn53x_write_register'
 libnfc_la_CFLAGS = @DRIVERS_CFLAGS@
