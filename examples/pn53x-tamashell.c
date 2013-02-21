@@ -115,7 +115,7 @@ int main(int argc, const char *argv[])
       add_history(cmd);
     } else {
 #endif //HAVE_READLINE
-      size_t n = 255;
+      size_t n = 512;
       char *ret = NULL;
       cmd = malloc(n);
       printf("%s", prompt);
@@ -155,7 +155,7 @@ int main(int argc, const char *argv[])
       continue;
     }
     szTx = 0;
-    for (int i = 0; i < MAX_FRAME_LEN - 10; i++) {
+    for (int i = 0; i < MAX_FRAME_LEN; i++) {
       int size;
       unsigned int byte;
       while (isspace(cmd[offset])) {
