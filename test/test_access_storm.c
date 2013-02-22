@@ -30,7 +30,7 @@ test_access_storm(void)
     size_t device_count = nfc_list_devices(context, connstrings, MAX_DEVICE_COUNT);
     cut_assert_equal_int(ref_device_count, device_count, cut_message("device count"));
 
-    for (size_t i = 0; i < device_count; i++) {
+    for (volatile size_t i = 0; i < device_count; i++) {
       nfc_device *device;
       nfc_target ant[MAX_TARGET_COUNT];
 
