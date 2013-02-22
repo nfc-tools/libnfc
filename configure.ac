@@ -81,15 +81,26 @@ then
   AC_DEFINE([LOG], [1], [Enable log])
 fi
 
-# Conf support (default:yes)
-AC_ARG_ENABLE([conf],AS_HELP_STRING([--disable-conf],[Disable use of config files and environment variables]),[enable_conf=$enableval],[enable_conf="yes"])
-AC_MSG_CHECKING(for conf flag)
-AC_MSG_RESULT($enable_conf)
-AM_CONDITIONAL([WITH_CONF], [test "$enable_conf" != "no"])
+# Conffiles support (default:yes)
+AC_ARG_ENABLE([conffiles],AS_HELP_STRING([--disable-conffiles],[Disable use of config files]),[enable_conffiles=$enableval],[enable_conffiles="yes"])
+AC_MSG_CHECKING(for conffiles flag)
+AC_MSG_RESULT($enable_conffiles)
+AM_CONDITIONAL([WITH_CONFFILES], [test "$enable_conffiles" != "no"])
  
-if test x"$enable_conf" = "xyes"
+if test x"$enable_conffiles" = "xyes"
 then
-  AC_DEFINE([CONF], [1], [Enable conf])
+  AC_DEFINE([CONFFILES], [1], [Enable conffiles])
+fi
+
+# Envvars support (default:yes)
+AC_ARG_ENABLE([envvars],AS_HELP_STRING([--disable-envvars],[Disable use of environment variables]),[enable_envvars=$enableval],[enable_envvars="yes"])
+AC_MSG_CHECKING(for envvars flag)
+AC_MSG_RESULT($enable_envvars)
+AM_CONDITIONAL([WITH_ENVVARS], [test "$enable_envvars" != "no"])
+ 
+if test x"$enable_envvars" = "xyes"
+then
+  AC_DEFINE([ENVVARS], [1], [Enable envvars])
 fi
 
 # Debug support (default:no)

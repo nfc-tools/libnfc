@@ -294,13 +294,15 @@ nfc_list_devices(nfc_context *context, nfc_connstring connstrings[], const size_
 {
   size_t device_found = 0;
 
-#ifdef CONF
+#ifdef CONFFILES
   // Load manually configured devices (from config file and env variables)
   // TODO From env var...
   for (uint32_t i = 0; i < context->user_defined_device_count; i++) {
     if (context->user_defined_devices[i].optional) {
       // let's make sure the device exists
       nfc_device *pnd = NULL;
+
+#ifdef ENVVARS
       char *env_log_level = getenv("LIBNFC_LOG_LEVEL");
       char *old_env_log_level = NULL;
       // do it silently
@@ -312,13 +314,19 @@ nfc_list_devices(nfc_context *context, nfc_connstring connstrings[], const size_
         strcpy(old_env_log_level, env_log_level);
       }
       setenv("LIBNFC_LOG_LEVEL", "0", 1);
+#endif // ENVVARS
+
       pnd = nfc_open(context, context->user_defined_devices[i].connstring);
+
+#ifdef ENVVARS
       if (old_env_log_level) {
         setenv("LIBNFC_LOG_LEVEL", old_env_log_level, 1);
         free(old_env_log_level);
       } else {
         unsetenv("LIBNFC_LOG_LEVEL");
       }
+#endif // ENVVARS
+
       if (pnd) {
         nfc_close(pnd);
         log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "User device %s found", context->user_defined_devices[i].name);
@@ -335,7 +343,7 @@ nfc_list_devices(nfc_context *context, nfc_connstring connstrings[], const size_
         return device_found;
     }
   }
-#endif // CONF
+#endif // CONFFILES
 
   // Device auto-detection
   if (context->allow_autoscan) {

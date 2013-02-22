@@ -29,7 +29,7 @@
 #include "config.h"
 #endif
 
-#ifdef CONF
+#ifdef CONFFILES
 #include "conf.h"
 #endif
 
@@ -88,7 +88,7 @@ nfc_context_new(void)
   }
   res->user_defined_device_count = 0;
 
-#ifdef CONF
+#ifdef ENVVARS
   // Load user defined device from environment variable at first
   char *envvar = getenv("LIBNFC_DEFAULT_DEVICE");
   if (envvar) {
@@ -97,9 +97,14 @@ nfc_context_new(void)
     res->user_defined_device_count++;
   }
 
+#endif // ENVVARS
+
+#ifdef CONFFILES
   // Load options from configuration file (ie. /etc/nfc/libnfc.conf)
   conf_load(res);
+#endif // CONFFILES
 
+#ifdef ENVVARS
   // Environment variables
   // Load "intrusive scan" option
   envvar = getenv("LIBNFC_INTRUSIVE_SCAN");
@@ -110,7 +115,7 @@ nfc_context_new(void)
   if (envvar) {
     res->log_level = atoi(envvar);
   }
-#endif // CONF
+#endif // ENVVARS
 
   // Initialize log before use it...
   log_init(res);

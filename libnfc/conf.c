@@ -21,7 +21,7 @@
 #  include "config.h"
 #endif // HAVE_CONFIG_H
 
-#ifdef CONF
+#ifdef CONFFILES
 #include <stdio.h>
 #include <stdlib.h>
 #include <dirent.h>
@@ -190,5 +190,5 @@ conf_load(nfc_context *context)
   conf_devices_load(LIBNFC_DEVICECONFDIR, context);
 }
 
-#endif // CONF
+#endif // CONFFILES
 
