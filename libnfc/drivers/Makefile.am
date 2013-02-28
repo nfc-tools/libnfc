@@ -3,9 +3,9 @@ AM_CPPFLAGS = $(all_includes) $(LIBNFC_CFLAGS)
 
 noinst_LTLIBRARIES = libnfcdrivers.la
 
-libnfcdrivers_la_SOURCES = 
+libnfcdrivers_la_SOURCES =
 libnfcdrivers_la_CFLAGS = @DRIVERS_CFLAGS@ -I$(top_srcdir)/libnfc -I$(top_srcdir)/libnfc/buses
-libnfcdrivers_la_LIBADD = 
+libnfcdrivers_la_LIBADD =
 
 if DRIVER_ACR122_PCSC_ENABLED
 libnfcdrivers_la_SOURCES += acr122_pcsc.c acr122_pcsc.h
@@ -29,6 +29,10 @@ endif
 
 if DRIVER_PN532_UART_ENABLED
 libnfcdrivers_la_SOURCES += pn532_uart.c pn532_uart.h
+endif
+
+if DRIVER_PN532_SPI_ENABLED
+libnfcdrivers_la_SOURCES += pn532_spi.c pn532_spi.h
 endif
 
 if PCSC_ENABLED

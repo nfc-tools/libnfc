@@ -3,8 +3,8 @@
 AM_CPPFLAGS = $(all_includes) $(LIBNFC_CFLAGS)
 
 noinst_LTLIBRARIES = libnfcbuses.la
-libnfcbuses_la_SOURCES = uart.c uart.h
+libnfcbuses_la_SOURCES = uart.c uart.h spi.c spi.h
 libnfcbuses_la_CFLAGS = -I$(top_srcdir)/libnfc
 
-EXTRA_DIST = uart_posix.c uart_win32.c
+EXTRA_DIST = uart_posix.c uart_win32.c spi_posix.c
 

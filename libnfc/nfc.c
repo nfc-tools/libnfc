@@ -105,6 +105,10 @@
 #  include "drivers/pn532_uart.h"
 #endif /* DRIVER_PN532_UART_ENABLED */
 
+#if defined (DRIVER_PN532_SPI_ENABLED)
+#  include "drivers/pn532_spi.h"
+#endif /* DRIVER_PN532_SPI_ENABLED */
+
 
 #define LOG_CATEGORY "libnfc.general"
 #define LOG_GROUP    NFC_LOG_GROUP_GENERAL
@@ -134,6 +138,9 @@ nfc_drivers_init()
 #if defined (DRIVER_PN532_UART_ENABLED)
   nfc_register_driver(&pn532_uart_driver);
 #endif /* DRIVER_PN532_UART_ENABLED */
+#if defined (DRIVER_PN532_SPI_ENABLED)
+  nfc_register_driver(&pn532_spi_driver);
+#endif /* DRIVER_PN532_SPI_ENABLED */
 #if defined (DRIVER_ARYGON_ENABLED)
   nfc_register_driver(&arygon_driver);
 #endif /* DRIVER_ARYGON_ENABLED */
