@@ -1,7 +1,7 @@
 # General init
 
 # /!\ Don't forget to update 'CMakeLists.txt' too /!\
-AC_INIT([libnfc],[1.7.0-rc5],[info@libnfc.org])
+AC_INIT([libnfc],[1.7.0-rc5],[nfc-tools@googlegroups.com])
 
 AC_CONFIG_MACRO_DIR([m4])
 
