@@ -561,13 +561,21 @@ acr122_build_frame_from_apdu(nfc_device *pnd, const uint8_t ins, const uint8_t p
 {
   if (data_len > sizeof(DRIVER_DATA(pnd)->apdu_frame.apdu_payload))
     return NFC_EINVARG;
+  if ((data == NULL) && (data_len != 0))
+    return NFC_EINVARG;
 
   DRIVER_DATA(pnd)->apdu_frame.ccid_header.dwLength = htole32(data_len + sizeof(struct apdu_header));
   DRIVER_DATA(pnd)->apdu_frame.apdu_header.bIns = ins;
   DRIVER_DATA(pnd)->apdu_frame.apdu_header.bP1 = p1;
   DRIVER_DATA(pnd)->apdu_frame.apdu_header.bP2 = p2;
-  DRIVER_DATA(pnd)->apdu_frame.apdu_header.bLen = (data ? data_len : le); // XXX This line is a bit tricky ^^: bLen is Lc when data != NULL... otherwise its Le.
-  memcpy(DRIVER_DATA(pnd)->apdu_frame.apdu_payload, data, data_len);
+  if (data) {
+    // bLen is Lc when data != NULL
+    DRIVER_DATA(pnd)->apdu_frame.apdu_header.bLen = data_len;
+    memcpy(DRIVER_DATA(pnd)->apdu_frame.apdu_payload, data, data_len);
+  } else {
+    // bLen is Le when no data.
+    DRIVER_DATA(pnd)->apdu_frame.apdu_header.bLen = le;
+  }
   return (sizeof(struct ccid_header) + sizeof(struct apdu_header) + data_len);
 }
 
@@ -735,7 +743,6 @@ read:
   offset += 1;
 
   memcpy(pbtData, abtRxBuf + offset, len);
-  offset += len;
 
   return len;
 }
@@ -749,8 +756,8 @@ acr122_usb_ack(nfc_device *pnd)
   log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "ACR122 Abort");
   if ((res = acr122_build_frame_from_tama(pnd, acr122_ack_frame, sizeof(acr122_ack_frame))) < 0)
     return res;
-
-  res = acr122_usb_bulk_write(DRIVER_DATA(pnd), (unsigned char *) & (DRIVER_DATA(pnd)->tama_frame), res, 1000);
+  if ((res = acr122_usb_bulk_write(DRIVER_DATA(pnd), (unsigned char *) & (DRIVER_DATA(pnd)->tama_frame), res, 1000)) < 0)
+    return res;
   uint8_t  abtRxBuf[255 + sizeof(struct ccid_header)];
   res = acr122_usb_bulk_read(DRIVER_DATA(pnd), abtRxBuf, sizeof(abtRxBuf), 1000);
   return res;
