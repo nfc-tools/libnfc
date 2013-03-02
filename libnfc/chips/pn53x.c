@@ -1456,7 +1456,7 @@ pn53x_initiator_transceive_bits_timed(struct nfc_device *pnd, const uint8_t *pbt
   (void) pbtTxPar;
   (void) pbtRxPar;
   uint16_t i;
-  uint8_t sz;
+  uint8_t sz = 0;
   int res = 0;
   size_t szRxBits = 0;
 
@@ -1555,7 +1555,7 @@ int
 pn53x_initiator_transceive_bytes_timed(struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szTx, uint8_t *pbtRx, const size_t szRx, uint32_t *cycles)
 {
   uint16_t i;
-  uint8_t sz;
+  uint8_t sz = 0;
   int res = 0;
 
   // We can not just send bytes without parity while the PN53X expects we handled them
