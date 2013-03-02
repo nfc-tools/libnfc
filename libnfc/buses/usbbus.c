@@ -33,9 +33,10 @@
 #define LOG_GROUP    NFC_LOG_GROUP_DRIVER
 
 // Global flag to know if usb_init() has already been called or not
-bool usb_initialized=false;
+bool usb_initialized = false;
 
-int usb_prepare(void) {
+int usb_prepare(void)
+{
   if (usb_initialized)
     return 0;
   usb_init();
