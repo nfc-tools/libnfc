@@ -234,8 +234,23 @@ pn53x_usb_connstring_decode(const nfc_connstring connstring, struct pn53x_usb_de
 {
   int n = strlen(connstring) + 1;
   char *driver_name = malloc(n);
+  if (!driver_name) {
+    perror("malloc");
+    return 0;
+  }
   char *dirname     = malloc(n);
+  if (!dirname) {
+    perror("malloc");
+    free(driver_name);
+    return 0;
+  }
   char *filename    = malloc(n);
+  if (!filename) {
+    perror("malloc");
+    free(driver_name);
+    free(dirname);
+    return 0;
+  }
 
   driver_name[0] = '\0';
 
@@ -345,6 +360,10 @@ pn53x_usb_open(const nfc_context *context, const nfc_connstring connstring)
       pn53x_usb_get_usb_device_name(dev, data.pudh, pnd->name, sizeof(pnd->name));
 
       pnd->driver_data = malloc(sizeof(struct pn53x_usb_data));
+      if (!pnd->driver_data) {
+        perror("malloc");
+        goto error;
+      }
       *DRIVER_DATA(pnd) = data;
 
       // Alloc and init chip's data

@@ -90,6 +90,10 @@ pn532_uart_scan(const nfc_context *context, nfc_connstring connstrings[], const 
       nfc_device *pnd = nfc_device_new(context, connstring);
       pnd->driver = &pn532_uart_driver;
       pnd->driver_data = malloc(sizeof(struct pn532_uart_data));
+      if (!pnd->driver_data) {
+        perror("malloc");
+        return 0;
+      }
       DRIVER_DATA(pnd)->port = sp;
 
       // Alloc and init chip's data
@@ -239,6 +243,10 @@ pn532_uart_open(const nfc_context *context, const nfc_connstring connstring)
   snprintf(pnd->name, sizeof(pnd->name), "%s:%s", PN532_UART_DRIVER_NAME, ndd.port);
 
   pnd->driver_data = malloc(sizeof(struct pn532_uart_data));
+  if (!pnd->driver_data) {
+    perror("malloc");
+    return NULL;
+  }
   DRIVER_DATA(pnd)->port = sp;
 
   // Alloc and init chip's data
