@@ -183,6 +183,7 @@ conf_devices_load(const char *dirname, nfc_context *context)
       }
     }
   }
+  closedir(d);
 }
 
 void
