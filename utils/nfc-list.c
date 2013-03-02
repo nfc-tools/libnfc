@@ -38,12 +38,6 @@
 #  include "config.h"
 #endif // HAVE_CONFIG_H
 
-#ifdef HAVE_LIBUSB
-#  ifdef DEBUG
-#    include <usb.h>
-#  endif
-#endif
-
 #include <err.h>
 #include <stdio.h>
 #include <stddef.h>
@@ -89,12 +83,6 @@ main(int argc, const char *argv[])
       exit(EXIT_FAILURE);
     }
   }
-
-#ifdef HAVE_LIBUSB
-#  ifdef DEBUG
-  usb_set_debug(4);
-#  endif
-#endif
 
   /* Lazy way to open an NFC device */
 #if 0

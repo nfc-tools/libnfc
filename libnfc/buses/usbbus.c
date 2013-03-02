@@ -38,6 +38,16 @@ int usb_prepare(void)
   if (usb_initialized) {
     return 0;
   }
+
+#ifdef ENVVARS
+  char *env_log_level = getenv("LIBNFC_LOG_LEVEL");
+  // Set libusb debug only if asked explicitely:
+  // LIBUSB_LOG_LEVEL=12288 (= NFC_LOG_PRIORITY_DEBUG * 2 ^ NFC_LOG_GROUP_LIBUSB)
+  if (env_log_level && (((atoi(env_log_level) >> (NFC_LOG_GROUP_LIBUSB * 2)) & 0x00000003) >= NFC_LOG_PRIORITY_DEBUG)) {
+    setenv("USB_DEBUG", "255", 1);
+  }
+#endif
+
   usb_init();
   usb_initialized = true;
 
