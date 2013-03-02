@@ -117,7 +117,7 @@ struct nfc_driver_list {
 const struct nfc_driver_list *nfc_drivers = NULL;
 
 static void
-nfc_drivers_init()
+nfc_drivers_init(void)
 {
 #if defined (DRIVER_PN53X_USB_ENABLED)
   nfc_register_driver(&pn53x_usb_driver);
