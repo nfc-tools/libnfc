@@ -316,7 +316,6 @@ read_card(int read_unlocked)
         if (nfc_initiator_mifare_cmd(pnd, MC_READ, iBlock, &mp)) {
           memcpy(mtDump.amb[iBlock].mbd.abtData, mp.mpd.abtData, 16);
         } else {
-          bFailure = true;
           printf("!\nError: unable to read block 0x%02x\n", iBlock);
           return false;
         }
