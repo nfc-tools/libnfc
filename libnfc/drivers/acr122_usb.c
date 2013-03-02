@@ -160,6 +160,7 @@ struct acr122_usb_apdu_frame {
 };
 #pragma pack()
 
+// Internal data struct
 struct acr122_usb_data {
   usb_dev_handle *pudh;
   acr122_usb_model model;
@@ -191,7 +192,7 @@ const uint8_t acr122_usb_frame_template[] = {
 // APDUs instructions
 #define APDU_GetAdditionnalData 0xc0
 
-// Internal data struct
+// Internal io struct
 const struct pn53x_io acr122_usb_io;
 
 // Prototypes

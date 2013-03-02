@@ -65,7 +65,7 @@ typedef enum {
   SONY_RCS360
 } pn53x_usb_model;
 
-// Internal data structs
+// Internal data struct
 struct pn53x_usb_data {
   usb_dev_handle *pudh;
   pn53x_usb_model model;
@@ -75,6 +75,7 @@ struct pn53x_usb_data {
   volatile bool abort_flag;
 };
 
+// Internal io struct
 const struct pn53x_io pn53x_usb_io;
 
 // Prototypes
@@ -174,7 +175,9 @@ static size_t
 pn53x_usb_scan(const nfc_context *context, nfc_connstring connstrings[], const size_t connstrings_len)
 {
   (void)context;
+
   usb_prepare();
+
   size_t device_found = 0;
   uint32_t uiBusIndex = 0;
   struct usb_bus *bus;
@@ -736,6 +739,7 @@ const struct pn53x_io pn53x_usb_io = {
 
 const struct nfc_driver pn53x_usb_driver = {
   .name                             = PN53X_USB_DRIVER_NAME,
+  .scan_type                        = NOT_INTRUSIVE,
   .scan                             = pn53x_usb_scan,
   .open                             = pn53x_usb_open,
   .close                            = pn53x_usb_close,
