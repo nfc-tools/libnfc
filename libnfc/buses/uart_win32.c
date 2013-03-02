@@ -56,7 +56,6 @@ uart_open(const char *pcPortName)
   sp->hPort = CreateFileA(acPortName, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
   if (sp->hPort == INVALID_HANDLE_VALUE) {
     uart_close(sp);
-    free(sp);
     return INVALID_SERIAL_PORT;
   }
   // Prepare the device control
@@ -64,13 +63,11 @@ uart_open(const char *pcPortName)
   sp->dcb.DCBlength = sizeof(DCB);
   if (!BuildCommDCBA("baud=9600 data=8 parity=N stop=1", &sp->dcb)) {
     uart_close(sp);
-    free(sp);
     return INVALID_SERIAL_PORT;
   }
   // Update the active serial port
   if (!SetCommState(sp->hPort, &sp->dcb)) {
     uart_close(sp);
-    free(sp);
     return INVALID_SERIAL_PORT;
   }
 
@@ -82,7 +79,6 @@ uart_open(const char *pcPortName)
 
   if (!SetCommTimeouts(sp->hPort, &sp->ct)) {
     uart_close(sp);
-    free(sp);
     return INVALID_SERIAL_PORT;
   }
 
