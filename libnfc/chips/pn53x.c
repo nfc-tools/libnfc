@@ -520,7 +520,6 @@ pn53x_decode_target_data(const uint8_t *pbtRawData, size_t szRawData, pn53x_type
         pnti->nii.btConfig = *(pbtRawData++);
         if (pnti->nii.btConfig & 0x40) {
           memcpy(pnti->nii.abtAtr, pbtRawData, szRawData - 8);
-          pbtRawData += szRawData - 8;
           pnti->nii.szAtrLen = szRawData - 8;
         }
       }
@@ -529,7 +528,6 @@ pn53x_decode_target_data(const uint8_t *pbtRawData, size_t szRawData, pn53x_type
     case NMT_ISO14443B2SR:
       // Store the UID
       memcpy(pnti->nsi.abtUID, pbtRawData, 8);
-      pbtRawData += 8;
       break;
 
     case NMT_ISO14443B2CT:
@@ -541,7 +539,6 @@ pn53x_decode_target_data(const uint8_t *pbtRawData, size_t szRawData, pn53x_type
       pnti->nci.btFabCode = *(pbtRawData++);
       // Store UID MSB
       memcpy(pnti->nci.abtUID + 2, pbtRawData, 2);
-      pbtRawData += 2;
       break;
 
     case NMT_FELICA:
@@ -3077,12 +3074,12 @@ pn53x_get_information_about(nfc_device *pnd, char **pbuf)
     free(*pbuf);
     return NFC_ESOFT;
   }
-  buf += res;
+  //buf += res;
   if (buflen <= (size_t)res) {
     free(*pbuf);
     return NFC_EOVFLOW;
   }
-  buflen -= res;
+  //buflen -= res;
 
   return NFC_SUCCESS;
 }
