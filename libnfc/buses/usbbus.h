@@ -41,9 +41,6 @@
 #include <stdbool.h>
 #include <string.h>
 
-// Global flag to know if usb_init() has already been called or not
-extern bool usb_initialized;
-
 int usb_prepare(void);
 
 #endif // __NFC_BUS_USB_H__

@@ -54,5 +54,4 @@ libnfc.so.4 libnfc4 #MINVER#
  str_nfc_baud_rate@Base 1.7.0~rc2
  str_nfc_modulation_type@Base 1.7.0~rc2
  str_nfc_target@Base 1.7.0~rc2
- usb_initialized@Base 1.7.0~rc6-0
  usb_prepare@Base 1.7.0~rc6-0
