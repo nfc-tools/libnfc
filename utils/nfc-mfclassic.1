@@ -4,7 +4,7 @@ nfc-mfclassic \- MIFARE Classic command line tool
 .SH SYNOPSIS
 .B nfc-mfclassic
 .RI \fR\fBr\fR|\fR\fBR\fR|\fBw\fR\fR|\fBW\fR
-.RI \fR\fBa\fR|\fBb\fR
+.RI \fR\fBa\fR|\fR\fBA\fR|\fBb\fR\fR|\fBB\fR
 .IR DUMP
 .IR [KEYS]
 
@@ -27,16 +27,36 @@ to store the keys and data for all sectors.
 Be cautious that some parts of a MIFARE Classic memory are used for r/w access
 of the rest of the memory, so please read the tag documentation before experimenting too much!
 
-The 'W' option allows writing of special MIFARE cards that can be 'unlocked' to allow block 0
+The
+.B W
+option allows writing of special MIFARE cards that can be 'unlocked' to allow block 0
 to be overwritten. This includes UID and manufacturer data. Take care when amending UIDs to set
 the correct BCC (UID checksum). Currently only 4 byte UIDs are supported.
 
-Similarly, the 'R' option allows an 'unlocked' read. This bypasses authentication and allows 
+Similarly, the
+.B R
+option allows an 'unlocked' read. This bypasses authentication and allows
 reading of the Key A and Key B data regardless of ACLs.
 
-*** Note that 'W' and 'R' options only work on special versions of MIFARE 1K cards (Chinese clones).
+R/W errors on some blocks can be either considered as critical or ignored.
+To halt on first error, specify keys with lowercase (
+.B a
+or
+.B b
+). To ignore such errors, use uppercase (
+.B A
+or
+.B B
+).
+
+*** Note that
+.B W
+and
+.B R
+options only work on special versions of MIFARE 1K cards (Chinese clones).
 
 .SH OPTIONS
+.TP
 .BR r " | " R " | " w " | " W
 Perform read from (
 .B r
@@ -48,8 +68,18 @@ Perform read from (
 .B W
 ) card.
 .TP
-.BR a " | " b
+.BR a " | " A " | " b " | " B
 Use A or B MIFARE keys.
+Halt on errors (
+.B a
+|
+.B b
+) or tolerate errors (
+.B A
+|
+.B
+B
+).
 .TP
 .IR DUMP
 MiFare Dump (MFD) used to write (card to MFD) or (MFD to card)
