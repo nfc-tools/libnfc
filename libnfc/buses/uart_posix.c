@@ -79,16 +79,19 @@ uart_open(const char *pcPortName)
   sp->fd = open(pcPortName, O_RDWR | O_NOCTTY | O_NONBLOCK);
   if (sp->fd == -1) {
     uart_close_ext(sp, false);
+    free(sp);
     return INVALID_SERIAL_PORT;
   }
 
   if (tcgetattr(sp->fd, &sp->termios_backup) == -1) {
     uart_close_ext(sp, false);
+    free(sp);
     return INVALID_SERIAL_PORT;
   }
   // Make sure the port is not claimed already
   if (sp->termios_backup.c_iflag & CCLAIMED) {
     uart_close_ext(sp, false);
+    free(sp);
     return CLAIMED_SERIAL_PORT;
   }
   // Copy the old terminal info struct
@@ -104,6 +107,7 @@ uart_open(const char *pcPortName)
 
   if (tcsetattr(sp->fd, TCSANOW, &sp->termios_new) == -1) {
     uart_close_ext(sp, true);
+    free(sp);
     return INVALID_SERIAL_PORT;
   }
   return sp;
