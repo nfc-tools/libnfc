@@ -2,10 +2,21 @@ TBD dd, 2013 - 1.7.0-rc6 (release candidate)
 --------------------------------------------
 
 Fixes:
- - Fix minor memory leak with nfc_drivers
+ - Fix several memory leaks (nfc_drivers, libusb, config parser)
  - Fix stack smash while displaying long data transmission (LOG_HEX)
  - pn53x-tamashell: allow larger commands up to full extended frame
  - Add missing windows file in archive (version.rc.in)
+ - Fix compilation warnings & potential bugs
+ - Fix documentation
+ - Fix missing malloc() calls checks
+ - Fix missing free() calls in some error handlers
+
+Improvements:
+ - Allow to disable conffils & envvar supports on embedded platforms
+ - Add option to nfc-mfclassic to tolerate RW errors
+
+Changes:
+ - Replace usb_set_debug() in applications by LIBNFC_LOG_LEVEL libusb group 
 
 Feb 16, 2013 - 1.7.0-rc5 (release candidate)
 --------------------------------------------
