@@ -181,26 +181,28 @@ spi_send_receive(spi_port sp, const uint8_t *pbtTx, const size_t szTx, uint8_t *
       pbtTx = pbtTxLSB;
     }
 
-    struct spi_ioc_transfer tr_send = { .tx_buf = (unsigned long) pbtTx,
-                                        .rx_buf = 0,
-                                        .len = szTx ,
-                                        .delay_usecs = 0,
-                                        .speed_hz = 0,
-                                        .bits_per_word = 0,
-                                      };
+    struct spi_ioc_transfer tr_send = {
+      .tx_buf = (unsigned long) pbtTx,
+      .rx_buf = 0,
+      .len = szTx ,
+      .delay_usecs = 0,
+      .speed_hz = 0,
+      .bits_per_word = 0,
+    };
     tr[transfers] = tr_send;
 
     ++transfers;
   }
 
   if (szRx) {
-    struct spi_ioc_transfer tr_receive = {  .tx_buf = 0,
-                                            .rx_buf = (unsigned long) pbtRx,
-                                            .len = szRx,
-                                            .delay_usecs = 0,
-                                            .speed_hz = 0,
-                                            .bits_per_word = 0,
-                                         };
+    struct spi_ioc_transfer tr_receive = {
+      .tx_buf = 0,
+      .rx_buf = (unsigned long) pbtRx,
+      .len = szRx,
+      .delay_usecs = 0,
+      .speed_hz = 0,
+      .bits_per_word = 0,
+    };
     tr[transfers] = tr_receive;
     ++transfers;
   }
@@ -213,7 +215,7 @@ spi_send_receive(spi_port sp, const uint8_t *pbtTx, const size_t szTx, uint8_t *
       free(pbtTxLSB);
     }
 
-    if (ret != (int) (szRx + szTx)) {
+    if (ret != (int)(szRx + szTx)) {
       return NFC_EIO;
     }
 

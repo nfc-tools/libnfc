@@ -287,20 +287,20 @@ pn532_spi_wakeup(nfc_device *pnd)
   uint8_t spi_byte = 0;
   res = spi_receive(DRIVER_DATA(pnd)->port, &spi_byte, 1, true);
   if (res != NFC_SUCCESS) {
-	  return res;
+    return res;
   }
 
   log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Got %x byte from SPI line before wakeup", spi_byte);
 
   CHIP_DATA(pnd)->power_mode = NORMAL; // PN532 will be awake soon
 
-  if(spi_byte == 0xff) {
-	  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "Wakeup is needed");
-	  spi_set_speed(DRIVER_DATA(pnd)->port, 5000); // set slow speed
+  if (spi_byte == 0xff) {
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "Wakeup is needed");
+    spi_set_speed(DRIVER_DATA(pnd)->port, 5000); // set slow speed
 
-	  res = pn532_SAMConfiguration(pnd, PSM_NORMAL, 1000); // wakeup by sending SAMConfiguration, which works just fine
+    res = pn532_SAMConfiguration(pnd, PSM_NORMAL, 1000); // wakeup by sending SAMConfiguration, which works just fine
 
-	  spi_set_speed(DRIVER_DATA(pnd)->port, prev_port_speed);
+    spi_set_speed(DRIVER_DATA(pnd)->port, prev_port_speed);
   }
 
 
@@ -320,14 +320,14 @@ pn532_spi_wait_for_data(nfc_device *pnd, int timeout)
   int timer = 0;
 
   int ret;
-  while ( (ret = pn532_spi_read_spi_status(pnd, timeout)) != pn532_spi_ready) {
+  while ((ret = pn532_spi_read_spi_status(pnd, timeout)) != pn532_spi_ready) {
     if (ret < 0) {
-        return ret;
+      return ret;
     }
 
     if (DRIVER_DATA(pnd)->abort_flag) {
-	  DRIVER_DATA(pnd)->abort_flag = false;
-	  return NFC_EOPABORTED;
+      DRIVER_DATA(pnd)->abort_flag = false;
+      return NFC_EOPABORTED;
     }
 
     if (timeout > 0) {
@@ -415,7 +415,7 @@ pn532_spi_receive(nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, int
     // long preamble
 
     // omit first byte
-    for (size_t i = 0; i < 3; ++i){
+    for (size_t i = 0; i < 3; ++i) {
       abtRxBuf[i] = abtRxBuf[i + 1];
     }
 
@@ -626,7 +626,7 @@ static int
 pn532_spi_abort_command(nfc_device *pnd)
 {
   if (pnd) {
-	  DRIVER_DATA(pnd)->abort_flag = true;
+    DRIVER_DATA(pnd)->abort_flag = true;
   }
 
   return NFC_SUCCESS;
