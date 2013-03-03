@@ -1,6 +1,7 @@
 /*-
  * Copyright (C) 2011 Romain Tartière
  * Copyright (C) 2011, 2012 Romuald Conty
+ * Copyright (C) 2013 Alex Lian
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -30,6 +31,12 @@
 // file otherwise.
 #error "No logging defined, but log-printf.c still compiled."
 #else // LOG
+
+// Internal methods so different platforms can route the logging
+// Offering both forms of the variadic function
+// These are implemented in the log_<platform> specific file
+void log_put_internal(const char *format, ...);
+void log_vput_internal(const char *format, va_list args);
 
 void
 log_init(const nfc_context *context)
@@ -71,11 +78,17 @@ log_put(const uint8_t group, const char *category, const uint8_t priority, const
   if (log_level) { // If log is not disabled by log_level=none
     if (((log_level & 0x00000003) >= priority) ||   // Global log level
         (((log_level >> (group * 2)) & 0x00000003) >= priority)) { // Group log level
+
       va_list va;
       va_start(va, format);
-      fprintf(stderr, "%s\t%s\t", log_priority_to_str(priority), category);
-      vfprintf(stderr, format, va);
-      fprintf(stderr, "\n");
+
+//      fprintf(stderr, "%s\t%s\t", log_priority_to_str(priority), category);
+//      vfprintf(stderr, format, va);
+//      fprintf(stderr, "\n");
+
+      log_put_internal("%s\t%s\t", log_priority_to_str(priority), category);
+      log_vput_internal(format, va);
+      log_put_internal("\n");
       va_end(va);
     }
   }

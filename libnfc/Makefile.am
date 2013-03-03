@@ -45,5 +45,7 @@ endif
 
 EXTRA_DIST = \
 	CMakeLists.txt \
-	log-printf.c
+	log-printf.c \
+	log_posix.c \
+	log_win32.c
 
