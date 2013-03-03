@@ -37,7 +37,9 @@ Here are some directions to get you started:
       $ make clean
       $ scan-build make
     2.3 When Debianizing
-      $ lintian *deb
+      $ lintian --info --display-info --display-experimental *deb
+      or (shorter version)
+      $ lintian -iIE *deb
 
   3. Preserve cross-platform compatility
      The source code should remain compilable across various platforms,
