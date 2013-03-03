@@ -1,4 +1,4 @@
-TBD dd, 2013 - 1.7.0-rc6 (release candidate)
+Mar 03, 2013 - 1.7.0-rc6 (release candidate)
 --------------------------------------------
 
 Fixes:
@@ -16,7 +16,7 @@ Improvements:
  - Add option to nfc-mfclassic to tolerate RW errors
 
 Changes:
- - Replace usb_set_debug() in applications by LIBNFC_LOG_LEVEL libusb group 
+ - Replace usb_set_debug() in applications by LIBNFC_LOG_LEVEL libusb group
 
 Feb 16, 2013 - 1.7.0-rc5 (release candidate)
 --------------------------------------------
