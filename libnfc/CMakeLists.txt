@@ -12,7 +12,7 @@ SET(CHIPS_SOURCES chips/pn53x)
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/chips)
 
 # Library's buses
-SET(BUSES_SOURCES buses/uart)
+SET(BUSES_SOURCES buses/uart buses/usbbus)
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/buses)
 
 INCLUDE(LibnfcDrivers)
