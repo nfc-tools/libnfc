@@ -137,7 +137,7 @@ spi_close(const spi_port sp)
  * @return reversed byte
  */
 
-uint8_t
+static uint8_t
 bit_reversal(const uint8_t x)
 {
   uint8_t ret = x;

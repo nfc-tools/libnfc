@@ -255,7 +255,7 @@ pn532_spi_open(const nfc_context *context, const nfc_connstring connstring)
 }
 
 static int
-pn532_spi_read_spi_status(nfc_device *pnd, int timeout)
+pn532_spi_read_spi_status(nfc_device *pnd)
 {
   static const uint8_t pn532_spi_statread_cmd = 0x02;
 
@@ -320,7 +320,7 @@ pn532_spi_wait_for_data(nfc_device *pnd, int timeout)
   int timer = 0;
 
   int ret;
-  while ((ret = pn532_spi_read_spi_status(pnd, timeout)) != pn532_spi_ready) {
+  while ((ret = pn532_spi_read_spi_status(pnd)) != pn532_spi_ready) {
     if (ret < 0) {
       return ret;
     }
