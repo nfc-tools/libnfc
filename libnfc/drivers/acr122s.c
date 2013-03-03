@@ -473,6 +473,10 @@ acr122s_scan(const nfc_context *context, nfc_connstring connstrings[], const siz
 
       pnd->driver = &acr122s_driver;
       pnd->driver_data = malloc(sizeof(struct acr122s_data));
+      if (!pnd->driver_data) {
+        perror("malloc");
+        return -1;
+      }
       DRIVER_DATA(pnd)->port = sp;
       DRIVER_DATA(pnd)->seq = 0;
 
@@ -574,6 +578,12 @@ acr122s_open(const nfc_context *context, const nfc_connstring connstring)
   strcpy(pnd->name, ACR122S_DRIVER_NAME);
 
   pnd->driver_data = malloc(sizeof(struct acr122s_data));
+  if (!pnd->driver_data) {
+    perror("malloc");
+    acr122s_close(pnd);
+    return NULL;
+  }
+
   DRIVER_DATA(pnd)->port = sp;
   DRIVER_DATA(pnd)->seq = 0;
 

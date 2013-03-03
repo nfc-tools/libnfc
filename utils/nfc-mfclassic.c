@@ -61,6 +61,7 @@ static mifare_classic_tag mtKeys;
 static mifare_classic_tag mtDump;
 static bool bUseKeyA;
 static bool bUseKeyFile;
+static bool bTolerateFailures;
 static uint8_t uiBlocks;
 static uint8_t keys[] = {
   0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
@@ -268,18 +269,11 @@ read_card(int read_unlocked)
     if (!unlock_card())
       return false;
 
-
   printf("Reading out %d blocks |", uiBlocks + 1);
-
   // Read the card from end to begin
   for (iBlock = uiBlocks; iBlock >= 0; iBlock--) {
     // Authenticate everytime we reach a trailer block
     if (is_trailer_block(iBlock)) {
-      // Skip this the first time, bFailure it means nothing (yet)
-      if (iBlock != uiBlocks)
-        print_success_or_failure(bFailure, &uiReadBlocks);
-
-      // Show if the readout went well
       if (bFailure) {
         // When a failure occured we need to redo the anti-collision
         if (nfc_initiator_select_passive_target(pnd, nmMifare, NULL, 0, &nt) <= 0) {
@@ -307,7 +301,8 @@ read_card(int read_unlocked)
           memcpy(mtDump.amb[iBlock].mbt.abtKeyB, mtKeys.amb[iBlock].mbt.abtKeyB, 6);
         }
       } else {
-        printf("!\nError: unable to read trailer block 0x%02x\n", iBlock);
+        printf("!\nfailed to read trailer block 0x%02x\n", iBlock);
+        bFailure = true;
       }
     } else {
       // Make sure a earlier readout did not fail
@@ -316,14 +311,16 @@ read_card(int read_unlocked)
         if (nfc_initiator_mifare_cmd(pnd, MC_READ, iBlock, &mp)) {
           memcpy(mtDump.amb[iBlock].mbd.abtData, mp.mpd.abtData, 16);
         } else {
-          bFailure = true;
           printf("!\nError: unable to read block 0x%02x\n", iBlock);
-          return false;
+          bFailure = true;
         }
       }
     }
+    // Show if the readout went well for each block
+    print_success_or_failure(bFailure, &uiReadBlocks);
+    if ((! bTolerateFailures) && bFailure)
+      return false;
   }
-  print_success_or_failure(bFailure, &uiReadBlocks);
   printf("|\n");
   printf("Done, %d of %d blocks read.\n", uiReadBlocks, uiBlocks + 1);
   fflush(stdout);
@@ -338,7 +335,6 @@ write_card(int write_block_zero)
   bool    bFailure = false;
   uint32_t uiWriteBlocks = 0;
 
-
   if (write_block_zero)
     if (!unlock_card())
       return false;
@@ -348,11 +344,6 @@ write_card(int write_block_zero)
   for (uiBlock = 0; uiBlock <= uiBlocks; uiBlock++) {
     // Authenticate everytime we reach the first sector of a new block
     if (is_first_block(uiBlock)) {
-      // Skip this the first time, bFailure it means nothing (yet)
-      if (uiBlock != 0)
-        print_success_or_failure(bFailure, &uiWriteBlocks);
-
-      // Show if the readout went well
       if (bFailure) {
         // When a failure occured we need to redo the anti-collision
         if (nfc_initiator_select_passive_target(pnd, nmMifare, NULL, 0, &nt) <= 0) {
@@ -403,8 +394,11 @@ write_card(int write_block_zero)
           bFailure = true;
       }
     }
+    // Show if the write went well for each block
+    print_success_or_failure(bFailure, &uiWriteBlocks);
+    if ((! bTolerateFailures) && bFailure)
+      return false;
   }
-  print_success_or_failure(bFailure, &uiWriteBlocks);
   printf("|\n");
   printf("Done, %d of %d blocks written.\n", uiWriteBlocks, uiBlocks + 1);
   fflush(stdout);
@@ -427,7 +421,7 @@ print_usage(const char *pcProgramName)
   printf("                  *** note that unlocked write will attempt to overwrite block 0 including UID\n");
   printf("                  *** unlocked read does not require authentication and will reveal A and B keys\n");
   printf("                  *** unlocking only works with special Mifare 1K cards (Chinese clones)\n");
-  printf("  a|b           - Use A or B keys for action\n");
+  printf("  a|A|b|B       - Use A or B keys for action; Halt on errors (a|b) or tolerate errors (A|B)\n");
   printf("  <dump.mfd>    - MiFare Dump (MFD) used to write (card to MFD) or (MFD to card)\n");
   printf("  <keys.mfd>    - MiFare Dump (MFD) that contain the keys (optional)\n");
 }
@@ -456,6 +450,7 @@ main(int argc, const char *argv[])
     if (strcmp(command, "R") == 0)
       unlock = 1;
     bUseKeyA = tolower((int)((unsigned char) * (argv[2]))) == 'a';
+    bTolerateFailures = tolower((int)((unsigned char) * (argv[2]))) != (int)((unsigned char) * (argv[2]));
     bUseKeyFile = (argc > 4);
   } else if (strcmp(command, "w") == 0 || strcmp(command, "W") == 0) {
     if (argc < 4) {
@@ -466,6 +461,7 @@ main(int argc, const char *argv[])
     if (strcmp(command, "W") == 0)
       unlock = 1;
     bUseKeyA = tolower((int)((unsigned char) * (argv[2]))) == 'a';
+    bTolerateFailures = tolower((int)((unsigned char) * (argv[2]))) != (int)((unsigned char) * (argv[2]));
     bUseKeyFile = (argc > 4);
   }
 

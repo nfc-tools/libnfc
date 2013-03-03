@@ -30,7 +30,12 @@ Here are some directions to get you started:
         -Wmissing-prototypes -Wstrict-prototypes -Wold-style-definition \
         -Wbad-function-cast -Wnested-externs -Wmissing-declarations"
       $ ./configure
+      $ make clean
       $ make
+      You can chase even more issues by using clang:
+      $ scan-build ./configure
+      $ make clean
+      $ scan-build make
     2.3 When Debianizing
       $ lintian *deb
 

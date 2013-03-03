@@ -261,9 +261,15 @@ acr122_pcsc_open(const nfc_context *context, const nfc_connstring connstring)
     if (sscanf(ndd.pcsc_device_name, "%lu", &index) != 1)
       return NULL;
     nfc_connstring *ncs = malloc(sizeof(nfc_connstring) * (index + 1));
-    size_t szDeviceFound = acr122_pcsc_scan(context, ncs, index + 1);
-    if (szDeviceFound < index + 1)
+    if (!ncs) {
+      perror("malloc");
       return NULL;
+    }
+    size_t szDeviceFound = acr122_pcsc_scan(context, ncs, index + 1);
+    if (szDeviceFound < index + 1) {
+      free(ncs);
+      return NULL;
+    }
     strncpy(fullconnstring, ncs[index], sizeof(nfc_connstring));
     free(ncs);
     connstring_decode_level = acr122_pcsc_connstring_decode(fullconnstring, &ndd);
@@ -275,6 +281,10 @@ acr122_pcsc_open(const nfc_context *context, const nfc_connstring connstring)
   char   *pcFirmware;
   nfc_device *pnd = nfc_device_new(context, fullconnstring);
   pnd->driver_data = malloc(sizeof(struct acr122_pcsc_data));
+  if (!pnd->driver_data) {
+    perror("malloc");
+    goto error;
+  }
 
   // Alloc and init chip's data
   pn53x_data_new(pnd, &acr122_pcsc_io);

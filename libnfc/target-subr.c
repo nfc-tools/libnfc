@@ -463,7 +463,7 @@ sprint_nfc_iso14443a_info(char *dst, const nfc_iso14443a_info nai, bool verbose)
         break;
     }
     if (! found_possible_match) {
-      dst += sprintf(dst, "* Unknown card, sorry\n");
+      sprintf(dst, "* Unknown card, sorry\n");
     }
   }
 }
@@ -477,7 +477,7 @@ sprint_nfc_felica_info(char *dst, const nfc_felica_info nfi, bool verbose)
   dst += sprintf(dst, "    Parameter (PAD): ");
   dst += sprint_hex(dst, nfi.abtPad, 8);
   dst += sprintf(dst, "   System Code (SC): ");
-  dst += sprint_hex(dst, nfi.abtSysCode, 2);
+  sprint_hex(dst, nfi.abtSysCode, 2);
 }
 
 void
@@ -487,7 +487,7 @@ sprint_nfc_jewel_info(char *dst, const nfc_jewel_info nji, bool verbose)
   dst += sprintf(dst, "    ATQA (SENS_RES): ");
   dst += sprint_hex(dst, nji.btSensRes, 2);
   dst += sprintf(dst, "      4-LSB JEWELID: ");
-  dst += sprint_hex(dst, nji.btId, 4);
+  sprint_hex(dst, nji.btId, 4);
 }
 
 #define PI_ISO14443_4_SUPPORTED 0x01
@@ -543,7 +543,7 @@ sprint_nfc_iso14443b_info(char *dst, const nfc_iso14443b_info nbi, bool verbose)
       dst += sprintf(dst, "* Frame options supported: ");
       if ((nbi.abtProtocolInfo[2] & PI_NAD_SUPPORTED) != 0) dst += sprintf(dst, "NAD ");
       if ((nbi.abtProtocolInfo[2] & PI_CID_SUPPORTED) != 0) dst += sprintf(dst, "CID ");
-      dst += sprintf(dst, "\n");
+      sprintf(dst, "\n");
     }
   }
 }
@@ -568,7 +568,7 @@ sprint_nfc_iso14443bi_info(char *dst, const nfc_iso14443bi_info nii, bool verbos
   }
   if ((nii.btVerLog & 0x80) && (nii.btConfig & 0x40)) {
     dst += sprintf(dst, "                ATS: ");
-    dst += sprint_hex(dst, nii.abtAtr, nii.szAtrLen);
+    sprint_hex(dst, nii.abtAtr, nii.szAtrLen);
   }
 }
 
@@ -577,7 +577,7 @@ sprint_nfc_iso14443b2sr_info(char *dst, const nfc_iso14443b2sr_info nsi, bool ve
 {
   (void) verbose;
   dst += sprintf(dst, "                UID: ");
-  dst += sprint_hex(dst, nsi.abtUID, 8);
+  sprint_hex(dst, nsi.abtUID, 8);
 }
 
 void
@@ -590,7 +590,7 @@ sprint_nfc_iso14443b2ct_info(char *dst, const nfc_iso14443b2ct_info nci, bool ve
   dst += sprint_hex(dst, nci.abtUID, sizeof(nci.abtUID));
   dst += sprintf(dst, "      UID (decimal): %010u\n", uid);
   dst += sprintf(dst, "       Product Code: %02X\n", nci.btProdCode);
-  dst += sprintf(dst, "           Fab Code: %02X\n", nci.btFabCode);
+  sprintf(dst, "           Fab Code: %02X\n", nci.btFabCode);
 }
 
 void
@@ -605,7 +605,7 @@ sprint_nfc_dep_info(char *dst, const nfc_dep_info ndi, bool verbose)
   dst += sprintf(dst, "           PP: %02x\n", ndi.btPP);
   if (ndi.szGB) {
     dst += sprintf(dst, "General Bytes: ");
-    dst += sprint_hex(dst, ndi.abtGB, ndi.szGB);
+    sprint_hex(dst, ndi.abtGB, ndi.szGB);
   }
 }
 

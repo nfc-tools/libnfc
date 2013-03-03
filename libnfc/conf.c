@@ -66,6 +66,7 @@ conf_parse_file(const char *filename, void (*conf_keyvalue)(void *data, const ch
   regmatch_t *pmatch = malloc(sizeof(*pmatch) * nmatch);
   if (!pmatch) {
     log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Not enough memory: malloc failed.");
+    regfree(&preg);
     return false;
   }
 
@@ -98,6 +99,7 @@ conf_parse_file(const char *filename, void (*conf_keyvalue)(void *data, const ch
   }
 
   free(pmatch);
+  regfree(&preg);
   return false;
 }
 
@@ -180,6 +182,7 @@ conf_devices_load(const char *dirname, nfc_context *context)
         }
       }
     }
+    closedir(d);
   }
 }
 

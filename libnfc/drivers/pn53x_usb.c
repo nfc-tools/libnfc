@@ -37,24 +37,12 @@ Thanks to d18c7db and Okko for example code
 #include <inttypes.h>
 #include <sys/select.h>
 #include <errno.h>
-
-#ifndef _WIN32
-// Under POSIX system, we use libusb (>= 0.1.12)
-#include <usb.h>
-#define USB_TIMEDOUT ETIMEDOUT
-#define _usb_strerror( X ) strerror(-X)
-#else
-// Under Windows we use libusb-win32 (>= 1.2.5)
-#include <lusb0_usb.h>
-#define USB_TIMEDOUT 116
-#define _usb_strerror( X ) usb_strerror()
-#endif
-
 #include <string.h>
 
 #include <nfc/nfc.h>
 
 #include "nfc-internal.h"
+#include "buses/usbbus.h"
 #include "chips/pn53x.h"
 #include "chips/pn53x-internal.h"
 #include "drivers/pn53x_usb.h"
@@ -77,7 +65,7 @@ typedef enum {
   SONY_RCS360
 } pn53x_usb_model;
 
-// Internal data structs
+// Internal data struct
 struct pn53x_usb_data {
   usb_dev_handle *pudh;
   pn53x_usb_model model;
@@ -87,6 +75,7 @@ struct pn53x_usb_data {
   volatile bool abort_flag;
 };
 
+// Internal io struct
 const struct pn53x_io pn53x_usb_io;
 
 // Prototypes
@@ -186,22 +175,8 @@ static size_t
 pn53x_usb_scan(const nfc_context *context, nfc_connstring connstrings[], const size_t connstrings_len)
 {
   (void)context;
-  usb_init();
-  int res;
-  // usb_find_busses will find all of the busses on the system. Returns the
-  // number of changes since previous call to this function (total of new
-  // busses and busses removed).
-  if ((res = usb_find_busses()) < 0) {
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to find USB busses (%s)", _usb_strerror(res));
-    return 0;
-  }
-  // usb_find_devices will find all of the devices on each bus. This should be
-  // called after usb_find_busses. Returns the number of changes since the
-  // previous call to this function (total of new device and devices removed).
-  if ((res = usb_find_devices()) < 0) {
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to find USB devices (%s)", _usb_strerror(res));
-    return 0;
-  }
+
+  usb_prepare();
 
   size_t device_found = 0;
   uint32_t uiBusIndex = 0;
@@ -227,7 +202,7 @@ pn53x_usb_scan(const nfc_context *context, nfc_connstring connstrings[], const s
           usb_dev_handle *udev = usb_open(dev);
 
           // Set configuration
-          res = usb_set_configuration(udev, 1);
+          int res = usb_set_configuration(udev, 1);
           if (res < 0) {
             log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to set USB configuration (%s)", _usb_strerror(res));
             usb_close(udev);
@@ -262,8 +237,23 @@ pn53x_usb_connstring_decode(const nfc_connstring connstring, struct pn53x_usb_de
 {
   int n = strlen(connstring) + 1;
   char *driver_name = malloc(n);
+  if (!driver_name) {
+    perror("malloc");
+    return 0;
+  }
   char *dirname     = malloc(n);
+  if (!dirname) {
+    perror("malloc");
+    free(driver_name);
+    return 0;
+  }
   char *filename    = malloc(n);
+  if (!filename) {
+    perror("malloc");
+    free(driver_name);
+    free(dirname);
+    return 0;
+  }
 
   driver_name[0] = '\0';
 
@@ -330,23 +320,7 @@ pn53x_usb_open(const nfc_context *context, const nfc_connstring connstring)
   struct usb_bus *bus;
   struct usb_device *dev;
 
-  usb_init();
-
-  int res;
-  // usb_find_busses will find all of the busses on the system. Returns the
-  // number of changes since previous call to this function (total of new
-  // busses and busses removed).
-  if ((res = usb_find_busses()) < 0) {
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to find USB busses (%s)", _usb_strerror(res));
-    goto free_mem;
-  }
-  // usb_find_devices will find all of the devices on each bus. This should be
-  // called after usb_find_busses. Returns the number of changes since the
-  // previous call to this function (total of new device and devices removed).
-  if ((res = usb_find_devices()) < 0) {
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to find USB devices (%s)", _usb_strerror(res));
-    goto free_mem;
-  }
+  usb_prepare();
 
   for (bus = usb_get_busses(); bus; bus = bus->next) {
     if (connstring_decode_level > 1)  {
@@ -365,7 +339,7 @@ pn53x_usb_open(const nfc_context *context, const nfc_connstring connstring)
       // Retrieve end points
       pn53x_usb_get_end_points(dev, &data);
       // Set configuration
-      res = usb_set_configuration(data.pudh, 1);
+      int res = usb_set_configuration(data.pudh, 1);
       if (res < 0) {
         log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to set USB configuration (%s)", _usb_strerror(res));
         if (EPERM == -res) {
@@ -389,6 +363,10 @@ pn53x_usb_open(const nfc_context *context, const nfc_connstring connstring)
       pn53x_usb_get_usb_device_name(dev, data.pudh, pnd->name, sizeof(pnd->name));
 
       pnd->driver_data = malloc(sizeof(struct pn53x_usb_data));
+      if (!pnd->driver_data) {
+        perror("malloc");
+        goto error;
+      }
       *DRIVER_DATA(pnd) = data;
 
       // Alloc and init chip's data
@@ -761,6 +739,7 @@ const struct pn53x_io pn53x_usb_io = {
 
 const struct nfc_driver pn53x_usb_driver = {
   .name                             = PN53X_USB_DRIVER_NAME,
+  .scan_type                        = NOT_INTRUSIVE,
   .scan                             = pn53x_usb_scan,
   .open                             = pn53x_usb_open,
   .close                            = pn53x_usb_close,

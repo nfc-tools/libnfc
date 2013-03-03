@@ -78,6 +78,8 @@ pn53x_init(struct nfc_device *pnd)
 
   if (!CHIP_DATA(pnd)->supported_modulation_as_initiator) {
     CHIP_DATA(pnd)->supported_modulation_as_initiator = malloc(sizeof(nfc_modulation) * 9);
+    if (! CHIP_DATA(pnd)->supported_modulation_as_initiator)
+      return NFC_ESOFT;
     int nbSupportedModulation = 0;
     if ((pnd->btSupportByte & SUPPORT_ISO14443A)) {
       CHIP_DATA(pnd)->supported_modulation_as_initiator[nbSupportedModulation] = NMT_ISO14443A;
@@ -518,7 +520,6 @@ pn53x_decode_target_data(const uint8_t *pbtRawData, size_t szRawData, pn53x_type
         pnti->nii.btConfig = *(pbtRawData++);
         if (pnti->nii.btConfig & 0x40) {
           memcpy(pnti->nii.abtAtr, pbtRawData, szRawData - 8);
-          pbtRawData += szRawData - 8;
           pnti->nii.szAtrLen = szRawData - 8;
         }
       }
@@ -527,7 +528,6 @@ pn53x_decode_target_data(const uint8_t *pbtRawData, size_t szRawData, pn53x_type
     case NMT_ISO14443B2SR:
       // Store the UID
       memcpy(pnti->nsi.abtUID, pbtRawData, 8);
-      pbtRawData += 8;
       break;
 
     case NMT_ISO14443B2CT:
@@ -539,7 +539,6 @@ pn53x_decode_target_data(const uint8_t *pbtRawData, size_t szRawData, pn53x_type
       pnti->nci.btFabCode = *(pbtRawData++);
       // Store UID MSB
       memcpy(pnti->nci.abtUID + 2, pbtRawData, 2);
-      pbtRawData += 2;
       break;
 
     case NMT_FELICA:
@@ -1454,7 +1453,7 @@ pn53x_initiator_transceive_bits_timed(struct nfc_device *pnd, const uint8_t *pbt
   (void) pbtTxPar;
   (void) pbtRxPar;
   uint16_t i;
-  uint8_t sz;
+  uint8_t sz = 0;
   int res = 0;
   size_t szRxBits = 0;
 
@@ -1553,7 +1552,7 @@ int
 pn53x_initiator_transceive_bytes_timed(struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szTx, uint8_t *pbtRx, const size_t szRx, uint32_t *cycles)
 {
   uint16_t i;
-  uint8_t sz;
+  uint8_t sz = 0;
   int res = 0;
 
   // We can not just send bytes without parity while the PN53X expects we handled them
@@ -1649,6 +1648,8 @@ pn53x_initiator_transceive_bytes_timed(struct nfc_device *pnd, const uint8_t *pb
     // We've to compute CRC ourselves to know last byte actually sent
     uint8_t *pbtTxRaw;
     pbtTxRaw = (uint8_t *) malloc(szTx + 2);
+    if (!pbtTxRaw)
+      return NFC_ESOFT;
     memcpy(pbtTxRaw, pbtTx, szTx);
     iso14443a_crc_append(pbtTxRaw, szTx);
     *cycles = __pn53x_get_timer(pnd, pbtTxRaw[szTx + 1]);
@@ -2929,127 +2930,156 @@ pn53x_get_information_about(nfc_device *pnd, char **pbuf)
 {
   size_t buflen = 2048;
   *pbuf = malloc(buflen);
+  if (! *pbuf) {
+    return NFC_ESOFT;
+  }
   char *buf = *pbuf;
 
   int res;
   if ((res = snprintf(buf, buflen, "chip: %s\n", CHIP_DATA(pnd)->firmware_text)) < 0) {
+    free(*pbuf);
     return NFC_ESOFT;
   }
   buf += res;
   if (buflen <= (size_t)res) {
+    free(*pbuf);
     return NFC_EOVFLOW;
   }
   buflen -= res;
 
   if ((res = snprintf(buf, buflen, "initator mode modulations: ")) < 0) {
+    free(*pbuf);
     return NFC_ESOFT;
   }
   buf += res;
   if (buflen <= (size_t)res) {
+    free(*pbuf);
     return NFC_EOVFLOW;
   }
   buflen -= res;
   const nfc_modulation_type *nmt;
   if ((res = nfc_device_get_supported_modulation(pnd, N_INITIATOR, &nmt)) < 0) {
+    free(*pbuf);
     return res;
   }
 
   for (int i = 0; nmt[i]; i++) {
     if ((res = snprintf(buf, buflen, "%s%s (", (i == 0) ? "" : ", ", str_nfc_modulation_type(nmt[i]))) < 0) {
+      free(*pbuf);
       return NFC_ESOFT;
     }
     buf += res;
     if (buflen <= (size_t)res) {
+      free(*pbuf);
       return NFC_EOVFLOW;
     }
     buflen -= res;
     const nfc_baud_rate *nbr;
     if ((res = nfc_device_get_supported_baud_rate(pnd, nmt[i], &nbr)) < 0) {
+      free(*pbuf);
       return res;
     }
 
     for (int j = 0; nbr[j]; j++) {
       if ((res = snprintf(buf, buflen, "%s%s", (j == 0) ? "" : ", ", str_nfc_baud_rate(nbr[j]))) < 0) {
+        free(*pbuf);
         return NFC_ESOFT;
       }
       buf += res;
       if (buflen <= (size_t)res) {
+        free(*pbuf);
         return NFC_EOVFLOW;
       }
       buflen -= res;
     }
     if ((res = snprintf(buf, buflen, ")")) < 0) {
+      free(*pbuf);
       return NFC_ESOFT;
     }
     buf += res;
     if (buflen <= (size_t)res) {
+      free(*pbuf);
       return NFC_EOVFLOW;
     }
     buflen -= res;
 
   }
   if ((res = snprintf(buf, buflen, "\n")) < 0) {
+    free(*pbuf);
     return NFC_ESOFT;
   }
   buf += res;
   if (buflen <= (size_t)res) {
+    free(*pbuf);
     return NFC_EOVFLOW;
   }
   buflen -= res;
   if ((res = snprintf(buf, buflen, "target mode modulations: ")) < 0) {
+    free(*pbuf);
     return NFC_ESOFT;
   }
   buf += res;
   if (buflen <= (size_t)res) {
+    free(*pbuf);
     return NFC_EOVFLOW;
   }
   buflen -= res;
   if ((res = nfc_device_get_supported_modulation(pnd, N_TARGET, &nmt)) < 0) {
+    free(*pbuf);
     return res;
   }
 
   for (int i = 0; nmt[i]; i++) {
     if ((res = snprintf(buf, buflen, "%s%s (", (i == 0) ? "" : ", ", str_nfc_modulation_type(nmt[i]))) < 0) {
+      free(*pbuf);
       return NFC_ESOFT;
     }
     buf += res;
     if (buflen <= (size_t)res) {
+      free(*pbuf);
       return NFC_EOVFLOW;
     }
     buflen -= res;
     const nfc_baud_rate *nbr;
     if ((res = nfc_device_get_supported_baud_rate(pnd, nmt[i], &nbr)) < 0) {
+      free(*pbuf);
       return res;
     }
 
     for (int j = 0; nbr[j]; j++) {
       if ((res = snprintf(buf, buflen, "%s%s", (j == 0) ? "" : ", ", str_nfc_baud_rate(nbr[j]))) < 0) {
+        free(*pbuf);
         return NFC_ESOFT;
       }
       buf += res;
       if (buflen <= (size_t)res) {
+        free(*pbuf);
         return NFC_EOVFLOW;
       }
       buflen -= res;
     }
     if ((res = snprintf(buf, buflen, ")")) < 0) {
+      free(*pbuf);
       return NFC_ESOFT;
     }
     buf += res;
     if (buflen <= (size_t)res) {
+      free(*pbuf);
       return NFC_EOVFLOW;
     }
     buflen -= res;
 
   }
   if ((res = snprintf(buf, buflen, "\n")) < 0) {
+    free(*pbuf);
     return NFC_ESOFT;
   }
-  buf += res;
+  //buf += res;
   if (buflen <= (size_t)res) {
+    free(*pbuf);
     return NFC_EOVFLOW;
   }
-  buflen -= res;
+  //buflen -= res;
 
   return NFC_SUCCESS;
 }

@@ -38,12 +38,6 @@
 #  include "config.h"
 #endif // HAVE_CONFIG_H
 
-#ifdef HAVE_LIBUSB
-#  ifdef DEBUG
-#    include <usb.h>
-#  endif
-#endif
-
 #include <err.h>
 #include <stdio.h>
 #include <stddef.h>
@@ -100,12 +94,6 @@ main(int argc, const char *argv[])
   // Display libnfc version
   acLibnfcVersion = nfc_version();
   printf("%s uses libnfc %s\n", argv[0], acLibnfcVersion);
-
-#ifdef HAVE_LIBUSB
-#  ifdef DEBUG
-  usb_set_debug(4);
-#  endif
-#endif
 
   nfc_connstring connstrings[MAX_DEVICE_COUNT];
   size_t szDeviceFound = nfc_list_devices(context, connstrings, MAX_DEVICE_COUNT);

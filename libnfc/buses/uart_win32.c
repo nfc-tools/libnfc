@@ -45,6 +45,9 @@ uart_open(const char *pcPortName)
   char    acPortName[255];
   struct serial_port_windows *sp = malloc(sizeof(struct serial_port_windows));
 
+  if (sp == 0)
+    return INVALID_SERIAL_PORT;
+
   // Copy the input "com?" to "\\.\COM?" format
   sprintf(acPortName, "\\\\.\\%s", pcPortName);
   _strupr(acPortName);
