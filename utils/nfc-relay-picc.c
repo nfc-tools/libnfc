@@ -42,6 +42,7 @@
 #  include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -100,7 +101,7 @@ static int print_hex_fd4(const uint8_t *pbtData, const size_t szBytes, const cha
   if (szBytes > MAX_FRAME_LEN) {
     return -1;
   }
-  if (fprintf(fd4, "#%s %04zx: ", pchPrefix, szBytes) < 0) {
+  if (fprintf(fd4, "#%s %04" PRIxPTR ": ", pchPrefix, szBytes) < 0) {
     return -1;
   }
 
@@ -225,7 +226,7 @@ main(int argc, char *argv[])
     }
   } else {
     if (szFound < 2) {
-      ERR("%zd device found but two opened devices are needed to relay NFC.", szFound);
+      ERR("%" PRIdPTR " device found but two opened devices are needed to relay NFC.", szFound);
       nfc_exit(context);
       exit(EXIT_FAILURE);
     }

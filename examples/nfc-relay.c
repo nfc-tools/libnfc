@@ -37,6 +37,7 @@
 #  include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -119,7 +120,7 @@ main(int argc, char *argv[])
   size_t szFound = nfc_list_devices(context, connstrings, MAX_DEVICE_COUNT);
 
   if (szFound < 2) {
-    ERR("%zd device found but two opened devices are needed to relay NFC.", szFound);
+    ERR("%" PRIdPTR " device found but two opened devices are needed to relay NFC.", szFound);
     nfc_exit(context);
     exit(EXIT_FAILURE);
   }

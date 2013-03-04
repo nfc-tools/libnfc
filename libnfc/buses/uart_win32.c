@@ -24,6 +24,7 @@
  * @brief Windows UART driver
  */
 
+#include <inttypes.h>
 #include "log.h"
 
 #define LOG_GROUP    NFC_LOG_GROUP_COM
@@ -164,7 +165,7 @@ uart_receive(serial_port sp, uint8_t *pbtRx, const size_t szRx, void *abort_p, i
     log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to apply new timeout settings.");
     return NFC_EIO;
   }
-  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Timeouts are set to %u ms", timeout_ms);
+  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Timeouts are set to %lu ms", timeout_ms);
 
   // TODO Enhance the reception method
   // - According to MSDN, it could be better to implement nfc_abort_command() mecanism using Cancello()
@@ -179,7 +180,7 @@ uart_receive(serial_port sp, uint8_t *pbtRx, const size_t szRx, void *abort_p, i
 
     if (!res) {
       DWORD err = GetLastError();
-      log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "ReadFile error: %u", err);
+      log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "ReadFile error: %lu", err);
       return NFC_EIO;
     } else if (dwBytesReceived == 0) {
       return NFC_ETIMEOUT;

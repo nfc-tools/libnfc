@@ -79,9 +79,9 @@ ADD_DEFINITIONS(-Du_int8_t=uint8_t -Du_int16_t=uint16_t)
 IF(MINGW)
   # force MinGW-w64 in 32bit mode
   SET(CMAKE_C_FLAGS "-m32 ${CMAKE_C_FLAGS}")
-  SET(CMAKE_MODULE_LINKER_FLAGS "-m32 --enable-stdcall-fixup ${CMAKE_SHARED_LINKER_FLAGS}")
-  SET(CMAKE_SHARED_LINKER_FLAGS "-m32 --enable-stdcall-fixup ${CMAKE_SHARED_LINKER_FLAGS}")
-  SET(CMAKE_EXE_LINKER_FLAGS "-m32 --enable-stdcall-fixup ${CMAKE_EXE_LINKER_FLAGS}")
+  SET(CMAKE_MODULE_LINKER_FLAGS "-m32 -Wl,--enable-stdcall-fixup ${CMAKE_SHARED_LINKER_FLAGS}")
+  SET(CMAKE_SHARED_LINKER_FLAGS "-m32 -Wl,--enable-stdcall-fixup ${CMAKE_SHARED_LINKER_FLAGS}")
+  SET(CMAKE_EXE_LINKER_FLAGS "-m32 -Wl,--enable-stdcall-fixup ${CMAKE_EXE_LINKER_FLAGS}")
   SET(CMAKE_RC_FLAGS "--target=pe-i386 --output-format=coff ${CMAKE_RC_FLAGS}")
 ENDIF(MINGW)
 

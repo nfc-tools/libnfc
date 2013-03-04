@@ -23,6 +23,7 @@
  * @file target-subr.c
  * @brief Target-related subroutines. (ie. determine target type, print target, etc.)
  */
+#include <inttypes.h>
 #include <nfc/nfc.h>
 
 #include "target-subr.h"
@@ -248,9 +249,9 @@ snprint_nfc_iso14443a_info(char *dst, size_t size, const nfc_iso14443a_info *pna
       uint8_t TC = pnai->abtAts[offset];
       offset++;
       if (TC & 0x1) {
-        off += snprintf(dst + off, size - off, "* Node ADdress supported\n");
+        off += snprintf(dst + off, size - off, "* Node Address supported\n");
       } else {
-        off += snprintf(dst + off, size - off, "* Node ADdress not supported\n");
+        off += snprintf(dst + off, size - off, "* Node Address not supported\n");
       }
       if (TC & 0x2) {
         off += snprintf(dst + off, size - off, "* Card IDentifier supported\n");
@@ -271,7 +272,7 @@ snprint_nfc_iso14443a_info(char *dst, size_t size, const nfc_iso14443a_info *pna
           offset++;
           if (L != (pnai->szAtsLen - offset)) {
             off += snprintf(dst + off, size - off, "    * Warning: Type Identification Coding length (%i)", L);
-            off += snprintf(dst + off, size - off, " not matching Tk length (%zi)\n", (pnai->szAtsLen - offset));
+            off += snprintf(dst + off, size - off, " not matching Tk length (%" PRIdPTR ")\n", (pnai->szAtsLen - offset));
           }
           if ((pnai->szAtsLen - offset - 2) > 0) { // Omit 2 CRC bytes
             uint8_t CTC = pnai->abtAts[offset];

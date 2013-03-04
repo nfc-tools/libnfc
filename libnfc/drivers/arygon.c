@@ -330,7 +330,7 @@ arygon_tama_send(nfc_device *pnd, const uint8_t *pbtData, const size_t szData, i
   size_t szFrame = 0;
   if (szData > PN53x_NORMAL_FRAME__DATA_MAX_LEN) {
     // ARYGON Reader with PN532 equipped does not support extended frame (bug in ARYGON firmware?)
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "ARYGON device does not support more than %d bytes as payload (requested: %zd)", PN53x_NORMAL_FRAME__DATA_MAX_LEN, szData);
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "ARYGON device does not support more than %d bytes as payload (requested: %" PRIdPTR ")", PN53x_NORMAL_FRAME__DATA_MAX_LEN, szData);
     pnd->last_error = NFC_EDEVNOTSUPP;
     return pnd->last_error;
   }
@@ -438,7 +438,7 @@ arygon_tama_receive(nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, i
   }
 
   if (len > szDataLen) {
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to receive data: buffer too small. (szDataLen: %zu, len: %zu)", szDataLen, len);
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to receive data: buffer too small. (szDataLen: %" PRIuPTR ", len: %" PRIuPTR ")", szDataLen, len);
     pnd->last_error = NFC_EIO;
     return pnd->last_error;
   }

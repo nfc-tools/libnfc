@@ -718,7 +718,7 @@ read:
   len -= 4; // We skip 2 bytes for PN532 direction byte (D5) and command byte (CMD+1), then 2 bytes for APDU status (90 00).
 
   if (len > szDataLen) {
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to receive data: buffer too small. (szDataLen: %zu, len: %zu)", szDataLen, len);
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to receive data: buffer too small. (szDataLen: %" PRIuPTR ", len: %" PRIuPTR ")", szDataLen, len);
     pnd->last_error = NFC_EOVFLOW;
     return pnd->last_error;
   }

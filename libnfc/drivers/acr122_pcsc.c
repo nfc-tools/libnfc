@@ -255,7 +255,7 @@ acr122_pcsc_open(const nfc_context *context, const nfc_connstring connstring)
   if (strlen(ndd.pcsc_device_name) < 5) { // We can assume it's a reader ID as pcsc_name always ends with "NN NN"
     // Device was not specified, only ID, retrieve it
     size_t index;
-    if (sscanf(ndd.pcsc_device_name, "%4lu", &index) != 1)
+    if (sscanf(ndd.pcsc_device_name, "%4" SCNuPTR, &index) != 1)
       return NULL;
     nfc_connstring *ncs = malloc(sizeof(nfc_connstring) * (index + 1));
     if (!ncs) {

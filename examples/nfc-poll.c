@@ -38,6 +38,7 @@
 #endif // HAVE_CONFIG_H
 
 #include <err.h>
+#include <inttypes.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stddef.h>
@@ -128,7 +129,7 @@ main(int argc, const char *argv[])
   }
 
   printf("NFC reader: %s opened\n", nfc_device_get_name(pnd));
-  printf("NFC device will poll during %ld ms (%u pollings of %lu ms for %zd modulations)\n", (unsigned long) uiPollNr * szModulations * uiPeriod * 150, uiPollNr, (unsigned long) uiPeriod * 150, szModulations);
+  printf("NFC device will poll during %ld ms (%u pollings of %lu ms for %" PRIdPTR " modulations)\n", (unsigned long) uiPollNr * szModulations * uiPeriod * 150, uiPollNr, (unsigned long) uiPeriod * 150, szModulations);
   if ((res = nfc_initiator_poll_target(pnd, nmModulations, szModulations, uiPollNr, uiPeriod, &nt))  < 0) {
     nfc_perror(pnd, "nfc_initiator_poll_target");
     nfc_close(pnd);

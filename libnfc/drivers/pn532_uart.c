@@ -424,7 +424,7 @@ pn532_uart_receive(nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, in
   }
 
   if (len > szDataLen) {
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to receive data: buffer too small. (szDataLen: %zu, len: %zu)", szDataLen, len);
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to receive data: buffer too small. (szDataLen: %" PRIuPTR ", len: %" PRIuPTR ")", szDataLen, len);
     pnd->last_error = NFC_EIO;
     goto error;
   }

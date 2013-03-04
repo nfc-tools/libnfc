@@ -684,7 +684,7 @@ acr122s_receive(nfc_device *pnd, uint8_t *buf, size_t buf_len, int timeout)
 
   size_t data_len = FRAME_SIZE(tmp) - 17;
   if (data_len > buf_len) {
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Receive buffer too small. (buf_len: %zu, data_len: %zu)", buf_len, data_len);
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Receive buffer too small. (buf_len: %" PRIuPTR ", data_len: %" PRIuPTR ")", buf_len, data_len);
     pnd->last_error = NFC_EIO;
     return pnd->last_error;
   }
