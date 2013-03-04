@@ -103,7 +103,7 @@ main(int argc, const char *argv[])
     nfc_exit(context);
     exit(EXIT_FAILURE);
   }
-  print_nfc_target(nt, false);
+  print_nfc_target(&nt, false);
 
   printf("Sending: %s\n", abtTx);
   int res;

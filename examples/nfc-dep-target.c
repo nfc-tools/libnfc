@@ -126,7 +126,7 @@ main(int argc, const char *argv[])
   signal(SIGINT, stop_dep_communication);
 
   printf("NFC device will now act as: ");
-  print_nfc_target(nt, false);
+  print_nfc_target(&nt, false);
 
   printf("Waiting for initiator request...\n");
   if ((szRx = nfc_target_init(pnd, &nt, abtRx, sizeof(abtRx), 0)) < 0) {

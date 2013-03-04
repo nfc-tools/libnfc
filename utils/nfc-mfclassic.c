@@ -558,7 +558,7 @@ main(int argc, const char *argv[])
     }
   }
   printf("Found MIFARE Classic card:\n");
-  print_nfc_target(nt, false);
+  print_nfc_target(&nt, false);
 
 // Guessing size
   if ((nt.nti.nai.abtAtqa[1] & 0x02) == 0x02)

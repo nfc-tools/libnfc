@@ -1668,10 +1668,10 @@ pn53x_initiator_deselect_target(struct nfc_device *pnd)
 }
 
 int
-pn53x_initiator_target_is_present(struct nfc_device *pnd, const nfc_target nt)
+pn53x_initiator_target_is_present(struct nfc_device *pnd, const nfc_target *pnt)
 {
   // Check if the argument target nt is equals to current saved target
-  if (!pn53x_current_target_is(pnd, &nt)) {
+  if (!pn53x_current_target_is(pnd, pnt)) {
     return NFC_ETGRELEASED;
   }
 

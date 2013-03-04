@@ -137,7 +137,7 @@ main(int argc, const char *argv[])
   }
 
   if (res > 0) {
-    print_nfc_target(nt, verbose);
+    print_nfc_target(&nt, verbose);
   } else {
     printf("No target found.\n");
   }

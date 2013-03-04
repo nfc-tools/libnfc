@@ -821,9 +821,9 @@ nfc_initiator_transceive_bytes_timed(nfc_device *pnd,
  * @warning To run the test, one or more commands will be sent to target
 */
 int
-nfc_initiator_target_is_present(nfc_device *pnd, const nfc_target nt)
+nfc_initiator_target_is_present(nfc_device *pnd, const nfc_target *pnt)
 {
-  HAL(initiator_target_is_present, pnd, nt);
+  HAL(initiator_target_is_present, pnd, pnt);
 }
 
 /** @ingroup initiator
@@ -1287,12 +1287,12 @@ str_nfc_modulation_type(const nfc_modulation_type nmt)
  * @warning *buf must be freed using nfc_free()
 */
 int
-str_nfc_target(char **buf, const nfc_target nt, bool verbose)
+str_nfc_target(char **buf, const nfc_target *pnt, bool verbose)
 {
   *buf = malloc(4096);
   if (! *buf)
     return NFC_ESOFT;
   (*buf)[0] = '\0';
-  snprint_nfc_target(*buf, 4096, nt, verbose);
+  snprint_nfc_target(*buf, 4096, pnt, verbose);
   return strlen(*buf);
 }

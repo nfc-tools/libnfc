@@ -133,14 +133,14 @@ snprint_hex(char *dst, size_t size, const uint8_t *pbtData, const size_t szBytes
 #define SAK_ISO18092_COMPLIANT   0x40
 
 void
-snprint_nfc_iso14443a_info(char *dst, size_t size, const nfc_iso14443a_info nai, bool verbose)
+snprint_nfc_iso14443a_info(char *dst, size_t size, const nfc_iso14443a_info *pnai, bool verbose)
 {
   int off = 0;
   off += snprintf(dst + off, size - off, "    ATQA (SENS_RES): ");
-  off += snprint_hex(dst + off, size - off, nai.abtAtqa, 2);
+  off += snprint_hex(dst + off, size - off, pnai->abtAtqa, 2);
   if (verbose) {
     off += snprintf(dst + off, size - off, "* UID size: ");
-    switch ((nai.abtAtqa[1] & 0xc0) >> 6) {
+    switch ((pnai->abtAtqa[1] & 0xc0) >> 6) {
       case 0:
         off += snprintf(dst + off, size - off, "single\n");
         break;
@@ -155,7 +155,7 @@ snprint_nfc_iso14443a_info(char *dst, size_t size, const nfc_iso14443a_info nai,
         break;
     }
     off += snprintf(dst + off, size - off, "* bit frame anticollision ");
-    switch (nai.abtAtqa[1] & 0x1f) {
+    switch (pnai->abtAtqa[1] & 0x1f) {
       case 0x01:
       case 0x02:
       case 0x04:
@@ -168,42 +168,42 @@ snprint_nfc_iso14443a_info(char *dst, size_t size, const nfc_iso14443a_info nai,
         break;
     }
   }
-  off += snprintf(dst + off, size - off, "       UID (NFCID%c): ", (nai.abtUid[0] == 0x08 ? '3' : '1'));
-  off += snprint_hex(dst + off, size - off, nai.abtUid, nai.szUidLen);
+  off += snprintf(dst + off, size - off, "       UID (NFCID%c): ", (pnai->abtUid[0] == 0x08 ? '3' : '1'));
+  off += snprint_hex(dst + off, size - off, pnai->abtUid, pnai->szUidLen);
   if (verbose) {
-    if (nai.abtUid[0] == 0x08) {
+    if (pnai->abtUid[0] == 0x08) {
       off += snprintf(dst + off, size - off, "* Random UID\n");
     }
   }
   off += snprintf(dst + off, size - off, "      SAK (SEL_RES): ");
-  off += snprint_hex(dst + off, size - off, &nai.btSak, 1);
+  off += snprint_hex(dst + off, size - off, &pnai->btSak, 1);
   if (verbose) {
-    if (nai.btSak & SAK_UID_NOT_COMPLETE) {
+    if (pnai->btSak & SAK_UID_NOT_COMPLETE) {
       off += snprintf(dst + off, size - off, "* Warning! Cascade bit set: UID not complete\n");
     }
-    if (nai.btSak & SAK_ISO14443_4_COMPLIANT) {
+    if (pnai->btSak & SAK_ISO14443_4_COMPLIANT) {
       off += snprintf(dst + off, size - off, "* Compliant with ISO/IEC 14443-4\n");
     } else {
       off += snprintf(dst + off, size - off, "* Not compliant with ISO/IEC 14443-4\n");
     }
-    if (nai.btSak & SAK_ISO18092_COMPLIANT) {
+    if (pnai->btSak & SAK_ISO18092_COMPLIANT) {
       off += snprintf(dst + off, size - off, "* Compliant with ISO/IEC 18092\n");
     } else {
       off += snprintf(dst + off, size - off, "* Not compliant with ISO/IEC 18092\n");
     }
   }
-  if (nai.szAtsLen) {
+  if (pnai->szAtsLen) {
     off += snprintf(dst + off, size - off, "                ATS: ");
-    off += snprint_hex(dst + off, size - off, nai.abtAts, nai.szAtsLen);
+    off += snprint_hex(dst + off, size - off, pnai->abtAts, pnai->szAtsLen);
   }
-  if (nai.szAtsLen && verbose) {
+  if (pnai->szAtsLen && verbose) {
     // Decode ATS according to ISO/IEC 14443-4 (5.2 Answer to select)
     const int iMaxFrameSizes[] = { 16, 24, 32, 40, 48, 64, 96, 128, 256 };
-    off += snprintf(dst + off, size - off, "* Max Frame Size accepted by PICC: %d bytes\n", iMaxFrameSizes[nai.abtAts[0] & 0x0F]);
+    off += snprintf(dst + off, size - off, "* Max Frame Size accepted by PICC: %d bytes\n", iMaxFrameSizes[pnai->abtAts[0] & 0x0F]);
 
     size_t offset = 1;
-    if (nai.abtAts[0] & 0x10) { // TA(1) present
-      uint8_t TA = nai.abtAts[offset];
+    if (pnai->abtAts[0] & 0x10) { // TA(1) present
+      uint8_t TA = pnai->abtAts[offset];
       offset++;
       off += snprintf(dst + off, size - off, "* Bit Rate Capability:\n");
       if (TA == 0) {
@@ -234,8 +234,8 @@ snprint_nfc_iso14443a_info(char *dst, size_t size, const nfc_iso14443a_info nai,
         off += snprintf(dst + off, size - off, "  * ERROR unknown value\n");
       }
     }
-    if (nai.abtAts[0] & 0x20) { // TB(1) present
-      uint8_t TB = nai.abtAts[offset];
+    if (pnai->abtAts[0] & 0x20) { // TB(1) present
+      uint8_t TB = pnai->abtAts[offset];
       offset++;
       off += snprintf(dst + off, size - off, "* Frame Waiting Time: %.4g ms\n", 256.0 * 16.0 * (1 << ((TB & 0xf0) >> 4)) / 13560.0);
       if ((TB & 0x0f) == 0) {
@@ -244,8 +244,8 @@ snprint_nfc_iso14443a_info(char *dst, size_t size, const nfc_iso14443a_info nai,
         off += snprintf(dst + off, size - off, "* Start-up Frame Guard Time: %.4g ms\n", 256.0 * 16.0 * (1 << (TB & 0x0f)) / 13560.0);
       }
     }
-    if (nai.abtAts[0] & 0x40) { // TC(1) present
-      uint8_t TC = nai.abtAts[offset];
+    if (pnai->abtAts[0] & 0x40) { // TC(1) present
+      uint8_t TC = pnai->abtAts[offset];
       offset++;
       if (TC & 0x1) {
         off += snprintf(dst + off, size - off, "* Node ADdress supported\n");
@@ -258,23 +258,23 @@ snprint_nfc_iso14443a_info(char *dst, size_t size, const nfc_iso14443a_info nai,
         off += snprintf(dst + off, size - off, "* Card IDentifier not supported\n");
       }
     }
-    if (nai.szAtsLen > offset) {
+    if (pnai->szAtsLen > offset) {
       off += snprintf(dst + off, size - off, "* Historical bytes Tk: ");
-      off += snprint_hex(dst + off, size - off, nai.abtAts + offset, (nai.szAtsLen - offset));
-      uint8_t CIB = nai.abtAts[offset];
+      off += snprint_hex(dst + off, size - off, pnai->abtAts + offset, (pnai->szAtsLen - offset));
+      uint8_t CIB = pnai->abtAts[offset];
       offset++;
       if (CIB != 0x00 && CIB != 0x10 && (CIB & 0xf0) != 0x80) {
         off += snprintf(dst + off, size - off, "  * Proprietary format\n");
         if (CIB == 0xc1) {
           off += snprintf(dst + off, size - off, "    * Tag byte: Mifare or virtual cards of various types\n");
-          uint8_t L = nai.abtAts[offset];
+          uint8_t L = pnai->abtAts[offset];
           offset++;
-          if (L != (nai.szAtsLen - offset)) {
+          if (L != (pnai->szAtsLen - offset)) {
             off += snprintf(dst + off, size - off, "    * Warning: Type Identification Coding length (%i)", L);
-            off += snprintf(dst + off, size - off, " not matching Tk length (%zi)\n", (nai.szAtsLen - offset));
+            off += snprintf(dst + off, size - off, " not matching Tk length (%zi)\n", (pnai->szAtsLen - offset));
           }
-          if ((nai.szAtsLen - offset - 2) > 0) { // Omit 2 CRC bytes
-            uint8_t CTC = nai.abtAts[offset];
+          if ((pnai->szAtsLen - offset - 2) > 0) { // Omit 2 CRC bytes
+            uint8_t CTC = pnai->abtAts[offset];
             offset++;
             off += snprintf(dst + off, size - off, "    * Chip Type: ");
             switch (CTC & 0xf0) {
@@ -316,8 +316,8 @@ snprint_nfc_iso14443a_info(char *dst, size_t size, const nfc_iso14443a_info nai,
                 break;
             }
           }
-          if ((nai.szAtsLen - offset) > 0) { // Omit 2 CRC bytes
-            uint8_t CVC = nai.abtAts[offset];
+          if ((pnai->szAtsLen - offset) > 0) { // Omit 2 CRC bytes
+            uint8_t CVC = pnai->abtAts[offset];
             offset++;
             off += snprintf(dst + off, size - off, "    * Chip Status: ");
             switch (CVC & 0xf0) {
@@ -350,8 +350,8 @@ snprint_nfc_iso14443a_info(char *dst, size_t size, const nfc_iso14443a_info nai,
                 break;
             }
           }
-          if ((nai.szAtsLen - offset) > 0) { // Omit 2 CRC bytes
-            uint8_t VCS = nai.abtAts[offset];
+          if ((pnai->szAtsLen - offset) > 0) { // Omit 2 CRC bytes
+            uint8_t VCS = pnai->abtAts[offset];
             offset++;
             off += snprintf(dst + off, size - off, "    * Specifics (Virtual Card Selection):\n");
             if ((VCS & 0x09) == 0x00) {
@@ -379,10 +379,10 @@ snprint_nfc_iso14443a_info(char *dst, size_t size, const nfc_iso14443a_info nai,
           off += snprintf(dst + off, size - off, "    See ISO/IEC 7816-4 8.1.1.3 for more info\n");
         }
         if (CIB == 0x10) {
-          off += snprintf(dst + off, size - off, "  * DIR data reference: %02x\n", nai.abtAts[offset]);
+          off += snprintf(dst + off, size - off, "  * DIR data reference: %02x\n", pnai->abtAts[offset]);
         }
         if (CIB == 0x80) {
-          if (nai.szAtsLen == offset) {
+          if (pnai->szAtsLen == offset) {
             off += snprintf(dst + off, size - off, "  * No COMPACT-TLV objects found, no status found\n");
           } else {
             off += snprintf(dst + off, size - off, "  * Tk after 0x80 consist of optional consecutive COMPACT-TLV data objects;\n");
@@ -400,9 +400,9 @@ snprint_nfc_iso14443a_info(char *dst, size_t size, const nfc_iso14443a_info nai,
     uint8_t i, j;
     bool found_possible_match = false;
 
-    atqa = (((uint16_t)nai.abtAtqa[0] & 0xff) << 8);
-    atqa += (((uint16_t)nai.abtAtqa[1] & 0xff));
-    sak = ((uint8_t)nai.btSak & 0xff);
+    atqa = (((uint16_t)pnai->abtAtqa[0] & 0xff) << 8);
+    atqa += (((uint16_t)pnai->abtAtqa[1] & 0xff));
+    sak = ((uint8_t)pnai->btSak & 0xff);
 
     for (i = 0; i < sizeof(const_ca) / sizeof(const_ca[0]); i++) {
       if ((atqa & const_ca[i].mask) == const_ca[i].atqa) {
@@ -420,9 +420,9 @@ snprint_nfc_iso14443a_info(char *dst, size_t size, const nfc_iso14443a_info nai,
     // but seen in the field:
     off += snprintf(dst + off, size - off, "Other possible matches based on ATQA & SAK values:\n");
     uint32_t atqasak = 0;
-    atqasak += (((uint32_t)nai.abtAtqa[0] & 0xff) << 16);
-    atqasak += (((uint32_t)nai.abtAtqa[1] & 0xff) << 8);
-    atqasak += ((uint32_t)nai.btSak & 0xff);
+    atqasak += (((uint32_t)pnai->abtAtqa[0] & 0xff) << 16);
+    atqasak += (((uint32_t)pnai->abtAtqa[1] & 0xff) << 8);
+    atqasak += ((uint32_t)pnai->btSak & 0xff);
     switch (atqasak) {
       case 0x000488:
         off += snprintf(dst + off, size - off, "* Mifare Classic 1K Infineon\n");
@@ -469,96 +469,96 @@ snprint_nfc_iso14443a_info(char *dst, size_t size, const nfc_iso14443a_info nai,
 }
 
 void
-snprint_nfc_felica_info(char *dst, size_t size, const nfc_felica_info nfi, bool verbose)
+snprint_nfc_felica_info(char *dst, size_t size, const nfc_felica_info *pnfi, bool verbose)
 {
   (void) verbose;
   int off = 0;
   off += snprintf(dst + off, size - off, "        ID (NFCID2): ");
-  off += snprint_hex(dst + off, size - off, nfi.abtId, 8);
+  off += snprint_hex(dst + off, size - off, pnfi->abtId, 8);
   off += snprintf(dst + off, size - off, "    Parameter (PAD): ");
-  off += snprint_hex(dst + off, size - off, nfi.abtPad, 8);
+  off += snprint_hex(dst + off, size - off, pnfi->abtPad, 8);
   off += snprintf(dst + off, size - off, "   System Code (SC): ");
-  snprint_hex(dst + off, size - off, nfi.abtSysCode, 2);
+  snprint_hex(dst + off, size - off, pnfi->abtSysCode, 2);
 }
 
 void
-snprint_nfc_jewel_info(char *dst, size_t size, const nfc_jewel_info nji, bool verbose)
+snprint_nfc_jewel_info(char *dst, size_t size, const nfc_jewel_info *pnji, bool verbose)
 {
   (void) verbose;
   int off = 0;
   off += snprintf(dst + off, size - off, "    ATQA (SENS_RES): ");
-  off += snprint_hex(dst + off, size - off, nji.btSensRes, 2);
+  off += snprint_hex(dst + off, size - off, pnji->btSensRes, 2);
   off += snprintf(dst + off, size - off, "      4-LSB JEWELID: ");
-  snprint_hex(dst + off, size - off, nji.btId, 4);
+  snprint_hex(dst + off, size - off, pnji->btId, 4);
 }
 
 #define PI_ISO14443_4_SUPPORTED 0x01
 #define PI_NAD_SUPPORTED        0x01
 #define PI_CID_SUPPORTED        0x02
 void
-snprint_nfc_iso14443b_info(char *dst, size_t size, const nfc_iso14443b_info nbi, bool verbose)
+snprint_nfc_iso14443b_info(char *dst, size_t size, const nfc_iso14443b_info *pnbi, bool verbose)
 {
   int off = 0;
   off += snprintf(dst + off, size - off, "               PUPI: ");
-  off += snprint_hex(dst + off, size - off, nbi.abtPupi, 4);
+  off += snprint_hex(dst + off, size - off, pnbi->abtPupi, 4);
   off += snprintf(dst + off, size - off, "   Application Data: ");
-  off += snprint_hex(dst + off, size - off, nbi.abtApplicationData, 4);
+  off += snprint_hex(dst + off, size - off, pnbi->abtApplicationData, 4);
   off += snprintf(dst + off, size - off, "      Protocol Info: ");
-  off += snprint_hex(dst + off, size - off, nbi.abtProtocolInfo, 3);
+  off += snprint_hex(dst + off, size - off, pnbi->abtProtocolInfo, 3);
   if (verbose) {
     off += snprintf(dst + off, size - off, "* Bit Rate Capability:\n");
-    if (nbi.abtProtocolInfo[0] == 0) {
+    if (pnbi->abtProtocolInfo[0] == 0) {
       off += snprintf(dst + off, size - off, " * PICC supports only 106 kbits/s in both directions\n");
     }
-    if (nbi.abtProtocolInfo[0] & 1 << 7) {
+    if (pnbi->abtProtocolInfo[0] & 1 << 7) {
       off += snprintf(dst + off, size - off, " * Same bitrate in both directions mandatory\n");
     }
-    if (nbi.abtProtocolInfo[0] & 1 << 4) {
+    if (pnbi->abtProtocolInfo[0] & 1 << 4) {
       off += snprintf(dst + off, size - off, " * PICC to PCD, 1etu=64/fc, bitrate 212 kbits/s supported\n");
     }
-    if (nbi.abtProtocolInfo[0] & 1 << 5) {
+    if (pnbi->abtProtocolInfo[0] & 1 << 5) {
       off += snprintf(dst + off, size - off, " * PICC to PCD, 1etu=32/fc, bitrate 424 kbits/s supported\n");
     }
-    if (nbi.abtProtocolInfo[0] & 1 << 6) {
+    if (pnbi->abtProtocolInfo[0] & 1 << 6) {
       off += snprintf(dst + off, size - off, " * PICC to PCD, 1etu=16/fc, bitrate 847 kbits/s supported\n");
     }
-    if (nbi.abtProtocolInfo[0] & 1 << 0) {
+    if (pnbi->abtProtocolInfo[0] & 1 << 0) {
       off += snprintf(dst + off, size - off, " * PCD to PICC, 1etu=64/fc, bitrate 212 kbits/s supported\n");
     }
-    if (nbi.abtProtocolInfo[0] & 1 << 1) {
+    if (pnbi->abtProtocolInfo[0] & 1 << 1) {
       off += snprintf(dst + off, size - off, " * PCD to PICC, 1etu=32/fc, bitrate 424 kbits/s supported\n");
     }
-    if (nbi.abtProtocolInfo[0] & 1 << 2) {
+    if (pnbi->abtProtocolInfo[0] & 1 << 2) {
       off += snprintf(dst + off, size - off, " * PCD to PICC, 1etu=16/fc, bitrate 847 kbits/s supported\n");
     }
-    if (nbi.abtProtocolInfo[0] & 1 << 3) {
+    if (pnbi->abtProtocolInfo[0] & 1 << 3) {
       off += snprintf(dst + off, size - off, " * ERROR unknown value\n");
     }
-    if ((nbi.abtProtocolInfo[1] & 0xf0) <= 0x80) {
+    if ((pnbi->abtProtocolInfo[1] & 0xf0) <= 0x80) {
       const int iMaxFrameSizes[] = { 16, 24, 32, 40, 48, 64, 96, 128, 256 };
-      off += snprintf(dst + off, size - off, "* Maximum frame sizes: %d bytes\n", iMaxFrameSizes[((nbi.abtProtocolInfo[1] & 0xf0) >> 4)]);
+      off += snprintf(dst + off, size - off, "* Maximum frame sizes: %d bytes\n", iMaxFrameSizes[((pnbi->abtProtocolInfo[1] & 0xf0) >> 4)]);
     }
-    if ((nbi.abtProtocolInfo[1] & 0x0f) == PI_ISO14443_4_SUPPORTED) {
+    if ((pnbi->abtProtocolInfo[1] & 0x0f) == PI_ISO14443_4_SUPPORTED) {
       off += snprintf(dst + off, size - off, "* Protocol types supported: ISO/IEC 14443-4\n");
     }
-    off += snprintf(dst + off, size - off, "* Frame Waiting Time: %.4g ms\n", 256.0 * 16.0 * (1 << ((nbi.abtProtocolInfo[2] & 0xf0) >> 4)) / 13560.0);
-    if ((nbi.abtProtocolInfo[2] & (PI_NAD_SUPPORTED | PI_CID_SUPPORTED)) != 0) {
+    off += snprintf(dst + off, size - off, "* Frame Waiting Time: %.4g ms\n", 256.0 * 16.0 * (1 << ((pnbi->abtProtocolInfo[2] & 0xf0) >> 4)) / 13560.0);
+    if ((pnbi->abtProtocolInfo[2] & (PI_NAD_SUPPORTED | PI_CID_SUPPORTED)) != 0) {
       off += snprintf(dst + off, size - off, "* Frame options supported: ");
-      if ((nbi.abtProtocolInfo[2] & PI_NAD_SUPPORTED) != 0) off += snprintf(dst + off, size - off, "NAD ");
-      if ((nbi.abtProtocolInfo[2] & PI_CID_SUPPORTED) != 0) off += snprintf(dst + off, size - off, "CID ");
+      if ((pnbi->abtProtocolInfo[2] & PI_NAD_SUPPORTED) != 0) off += snprintf(dst + off, size - off, "NAD ");
+      if ((pnbi->abtProtocolInfo[2] & PI_CID_SUPPORTED) != 0) off += snprintf(dst + off, size - off, "CID ");
       snprintf(dst + off, size - off, "\n");
     }
   }
 }
 
 void
-snprint_nfc_iso14443bi_info(char *dst, size_t size, const nfc_iso14443bi_info nii, bool verbose)
+snprint_nfc_iso14443bi_info(char *dst, size_t size, const nfc_iso14443bi_info *pnii, bool verbose)
 {
   int off = 0;
   off += snprintf(dst + off, size - off, "                DIV: ");
-  off += snprint_hex(dst + off, size - off, nii.abtDIV, 4);
+  off += snprint_hex(dst + off, size - off, pnii->abtDIV, 4);
   if (verbose) {
-    int version = (nii.btVerLog & 0x1e) >> 1;
+    int version = (pnii->btVerLog & 0x1e) >> 1;
     off += snprintf(dst + off, size - off, "   Software Version: ");
     if (version == 15) {
       off += snprintf(dst + off, size - off, "Undefined\n");
@@ -566,86 +566,88 @@ snprint_nfc_iso14443bi_info(char *dst, size_t size, const nfc_iso14443bi_info ni
       off += snprintf(dst + off, size - off, "%i\n", version);
     }
 
-    if ((nii.btVerLog & 0x80) && (nii.btConfig & 0x80)) {
+    if ((pnii->btVerLog & 0x80) && (pnii->btConfig & 0x80)) {
       off += snprintf(dst + off, size - off, "        Wait Enable: yes");
     }
   }
-  if ((nii.btVerLog & 0x80) && (nii.btConfig & 0x40)) {
+  if ((pnii->btVerLog & 0x80) && (pnii->btConfig & 0x40)) {
     off += snprintf(dst + off, size - off, "                ATS: ");
-    snprint_hex(dst + off, size - off, nii.abtAtr, nii.szAtrLen);
+    snprint_hex(dst + off, size - off, pnii->abtAtr, pnii->szAtrLen);
   }
 }
 
 void
-snprint_nfc_iso14443b2sr_info(char *dst, size_t size, const nfc_iso14443b2sr_info nsi, bool verbose)
+snprint_nfc_iso14443b2sr_info(char *dst, size_t size, const nfc_iso14443b2sr_info *pnsi, bool verbose)
 {
   (void) verbose;
   int off = 0;
   off += snprintf(dst + off, size - off, "                UID: ");
-  snprint_hex(dst + off, size - off, nsi.abtUID, 8);
+  snprint_hex(dst + off, size - off, pnsi->abtUID, 8);
 }
 
 void
-snprint_nfc_iso14443b2ct_info(char *dst, size_t size, const nfc_iso14443b2ct_info nci, bool verbose)
+snprint_nfc_iso14443b2ct_info(char *dst, size_t size, const nfc_iso14443b2ct_info *pnci, bool verbose)
 {
   (void) verbose;
   int off = 0;
   uint32_t uid;
-  uid = (nci.abtUID[3] << 24) + (nci.abtUID[2] << 16) + (nci.abtUID[1] << 8) + nci.abtUID[0];
+  uid = (pnci->abtUID[3] << 24) + (pnci->abtUID[2] << 16) + (pnci->abtUID[1] << 8) + pnci->abtUID[0];
   off += snprintf(dst + off, size - off, "                UID: ");
-  off += snprint_hex(dst + off, size - off, nci.abtUID, sizeof(nci.abtUID));
+  off += snprint_hex(dst + off, size - off, pnci->abtUID, sizeof(pnci->abtUID));
   off += snprintf(dst + off, size - off, "      UID (decimal): %010u\n", uid);
-  off += snprintf(dst + off, size - off, "       Product Code: %02X\n", nci.btProdCode);
-  snprintf(dst + off, size - off, "           Fab Code: %02X\n", nci.btFabCode);
+  off += snprintf(dst + off, size - off, "       Product Code: %02X\n", pnci->btProdCode);
+  snprintf(dst + off, size - off, "           Fab Code: %02X\n", pnci->btFabCode);
 }
 
 void
-snprint_nfc_dep_info(char *dst, size_t size, const nfc_dep_info ndi, bool verbose)
+snprint_nfc_dep_info(char *dst, size_t size, const nfc_dep_info *pndi, bool verbose)
 {
   (void) verbose;
   int off = 0;
   off += snprintf(dst + off, size - off, "       NFCID3: ");
-  off += snprint_hex(dst + off, size - off, ndi.abtNFCID3, 10);
-  off += snprintf(dst + off, size - off, "           BS: %02x\n", ndi.btBS);
-  off += snprintf(dst + off, size - off, "           BR: %02x\n", ndi.btBR);
-  off += snprintf(dst + off, size - off, "           TO: %02x\n", ndi.btTO);
-  off += snprintf(dst + off, size - off, "           PP: %02x\n", ndi.btPP);
-  if (ndi.szGB) {
+  off += snprint_hex(dst + off, size - off, pndi->abtNFCID3, 10);
+  off += snprintf(dst + off, size - off, "           BS: %02x\n", pndi->btBS);
+  off += snprintf(dst + off, size - off, "           BR: %02x\n", pndi->btBR);
+  off += snprintf(dst + off, size - off, "           TO: %02x\n", pndi->btTO);
+  off += snprintf(dst + off, size - off, "           PP: %02x\n", pndi->btPP);
+  if (pndi->szGB) {
     off += snprintf(dst + off, size - off, "General Bytes: ");
-    snprint_hex(dst + off, size - off, ndi.abtGB, ndi.szGB);
+    snprint_hex(dst + off, size - off, pndi->abtGB, pndi->szGB);
   }
 }
 
 void
-snprint_nfc_target(char *dst, size_t size, const nfc_target nt, bool verbose)
+snprint_nfc_target(char *dst, size_t size, const nfc_target *pnt, bool verbose)
 {
-  int off = 0;
-  off += snprintf(dst + off, size - off, "%s (%s%s) target:\n", str_nfc_modulation_type(nt.nm.nmt), str_nfc_baud_rate(nt.nm.nbr), (nt.nm.nmt != NMT_DEP) ? "" : (nt.nti.ndi.ndm == NDM_ACTIVE) ? "active mode" : "passive mode");
-  switch (nt.nm.nmt) {
-    case NMT_ISO14443A:
-      snprint_nfc_iso14443a_info(dst + off, size - off, nt.nti.nai, verbose);
-      break;
-    case NMT_JEWEL:
-      snprint_nfc_jewel_info(dst + off, size - off, nt.nti.nji, verbose);
-      break;
-    case NMT_FELICA:
-      snprint_nfc_felica_info(dst + off, size - off, nt.nti.nfi, verbose);
-      break;
-    case NMT_ISO14443B:
-      snprint_nfc_iso14443b_info(dst + off, size - off, nt.nti.nbi, verbose);
-      break;
-    case NMT_ISO14443BI:
-      snprint_nfc_iso14443bi_info(dst + off, size - off, nt.nti.nii, verbose);
-      break;
-    case NMT_ISO14443B2SR:
-      snprint_nfc_iso14443b2sr_info(dst + off, size - off, nt.nti.nsi, verbose);
-      break;
-    case NMT_ISO14443B2CT:
-      snprint_nfc_iso14443b2ct_info(dst + off, size - off, nt.nti.nci, verbose);
-      break;
-    case NMT_DEP:
-      snprint_nfc_dep_info(dst + off, size - off, nt.nti.ndi, verbose);
-      break;
+  if (NULL != pnt) {
+    int off = 0;
+    off += snprintf(dst + off, size - off, "%s (%s%s) target:\n", str_nfc_modulation_type(pnt->nm.nmt), str_nfc_baud_rate(pnt->nm.nbr), (pnt->nm.nmt != NMT_DEP) ? "" : (pnt->nti.ndi.ndm == NDM_ACTIVE) ? "active mode" : "passive mode");
+    switch (pnt->nm.nmt) {
+      case NMT_ISO14443A:
+        snprint_nfc_iso14443a_info(dst + off, size - off, &pnt->nti.nai, verbose);
+        break;
+      case NMT_JEWEL:
+        snprint_nfc_jewel_info(dst + off, size - off, &pnt->nti.nji, verbose);
+        break;
+      case NMT_FELICA:
+        snprint_nfc_felica_info(dst + off, size - off, &pnt->nti.nfi, verbose);
+        break;
+      case NMT_ISO14443B:
+        snprint_nfc_iso14443b_info(dst + off, size - off, &pnt->nti.nbi, verbose);
+        break;
+      case NMT_ISO14443BI:
+        snprint_nfc_iso14443bi_info(dst + off, size - off, &pnt->nti.nii, verbose);
+        break;
+      case NMT_ISO14443B2SR:
+        snprint_nfc_iso14443b2sr_info(dst + off, size - off, &pnt->nti.nsi, verbose);
+        break;
+      case NMT_ISO14443B2CT:
+        snprint_nfc_iso14443b2ct_info(dst + off, size - off, &pnt->nti.nci, verbose);
+        break;
+      case NMT_DEP:
+        snprint_nfc_dep_info(dst + off, size - off, &pnt->nti.ndi, verbose);
+        break;
+    }
   }
 }
 
