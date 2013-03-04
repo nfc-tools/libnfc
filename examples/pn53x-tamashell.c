@@ -91,12 +91,18 @@ int main(int argc, const char *argv[])
 
   if (pnd == NULL) {
     ERR("%s", "Unable to open NFC device.");
+    if (input != NULL) {
+      fclose(input);
+    }
     return EXIT_FAILURE;
   }
 
   printf("NFC reader: %s opened\n", nfc_device_get_name(pnd));
   if (nfc_initiator_init(pnd) < 0) {
     nfc_perror(pnd, "nfc_initiator_init");
+    if (input != NULL) {
+      fclose(input);
+    }
     exit(EXIT_FAILURE);
   }
 

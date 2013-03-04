@@ -261,6 +261,7 @@ main(int argc, const char *argv[])
       }
       if (fwrite(&mtDump, 1, sizeof(mtDump), pfDump) != sizeof(mtDump)) {
         printf("Could not write to file: %s\n", argv[2]);
+        fclose(pfDump);
         return EXIT_FAILURE;
       }
       fclose(pfDump);
