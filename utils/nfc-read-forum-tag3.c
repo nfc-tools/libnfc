@@ -278,9 +278,8 @@ main(int argc, char *argv[])
 
   uint8_t data[1024];
   size_t data_len = sizeof(data);
-  int len;
 
-  if (0 >= (len = nfc_forum_tag_type3_check(pnd, nt, 0, 1, data, &data_len))) {
+  if (nfc_forum_tag_type3_check(pnd, nt, 0, 1, data, &data_len) <= 0) {
     nfc_perror(pnd, "nfc_forum_tag_type3_check");
     fclose(ndef_stream);
     nfc_close(pnd);

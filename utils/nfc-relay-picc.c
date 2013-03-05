@@ -389,8 +389,7 @@ main(int argc, char *argv[])
     }
 
     printf("NFC emulator device: %s opened\n", nfc_device_get_name(pndTarget));
-    int res;
-    if ((res = nfc_target_init(pndTarget, &ntEmulatedTarget, abtCapdu, sizeof(abtCapdu), 0)) < 0) {
+    if (nfc_target_init(pndTarget, &ntEmulatedTarget, abtCapdu, sizeof(abtCapdu), 0) < 0) {
       ERR("%s", "Initialization of NFC emulator failed");
       if (!target_only_mode) {
         nfc_close(pndInitiator);
