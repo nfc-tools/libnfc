@@ -60,6 +60,7 @@
 #endif
 
 static nfc_device *pnd;
+static nfc_context *context;
 
 static void
 print_usage(char *progname)
@@ -198,7 +199,6 @@ main(int argc, char *argv[])
     }
   }
 
-  nfc_context *context;
   nfc_init(&context);
   if (context == NULL) {
     ERR("Unable to init libnfc (malloc)\n");

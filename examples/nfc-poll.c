@@ -52,6 +52,7 @@
 #define MAX_DEVICE_COUNT 16
 
 static nfc_device *pnd = NULL;
+static nfc_context *context;
 
 static void stop_polling(int sig)
 {
@@ -105,7 +106,6 @@ main(int argc, const char *argv[])
   nfc_target nt;
   int res = 0;
 
-  nfc_context *context;
   nfc_init(&context);
   if (context == NULL) {
     ERR("Unable to init libnfc (malloc)");

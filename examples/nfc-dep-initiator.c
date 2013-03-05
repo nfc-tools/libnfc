@@ -49,6 +49,7 @@
 #define MAX_FRAME_LEN 264
 
 static nfc_device *pnd;
+static nfc_context *context;
 
 static void stop_dep_communication(int sig)
 {
@@ -73,7 +74,6 @@ main(int argc, const char *argv[])
     exit(EXIT_FAILURE);
   }
 
-  nfc_context *context;
   nfc_init(&context);
   if (context == NULL) {
     ERR("Unable to init libnfc (malloc)");

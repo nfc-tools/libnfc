@@ -74,6 +74,7 @@
 #include "utils/nfc-utils.h"
 
 static nfc_device *pnd;
+static nfc_context *context;
 
 static void
 stop_emulation(int sig)
@@ -186,7 +187,6 @@ main(int argc, char *argv[])
 
   signal(SIGINT, stop_emulation);
 
-  nfc_context *context;
   nfc_init(&context);
   if (context == NULL) {
     ERR("Unable to init libnfc (malloc)");

@@ -59,6 +59,7 @@
 static uint8_t abtRecv[MAX_FRAME_LEN];
 static int szRecvBits;
 static nfc_device *pnd;
+static nfc_context *context;
 
 // ISO14443A Anti-Collision response
 uint8_t  abtAtqa[2] = { 0x04, 0x00 };
@@ -126,7 +127,6 @@ main(int argc, char *argv[])
   signal(SIGINT, intr_hdlr);
 #endif
 
-  nfc_context *context;
   nfc_init(&context);
   if (context == NULL) {
     ERR("Unable to init libnfc (malloc)");

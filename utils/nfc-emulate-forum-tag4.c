@@ -71,6 +71,7 @@
 #include "nfc-utils.h"
 
 static nfc_device *pnd;
+static nfc_context *context;
 static bool quiet_output = false;
 // Version of the emulated type4 tag:
 static int type4v = 2;
@@ -380,7 +381,6 @@ main(int argc, char *argv[])
     }
   }
 
-  nfc_context *context;
   nfc_init(&context);
   if (context == NULL) {
     ERR("Unable to init libnfc (malloc)\n");
