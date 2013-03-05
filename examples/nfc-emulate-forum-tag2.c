@@ -79,7 +79,7 @@ static void
 stop_emulation(int sig)
 {
   (void)sig;
-  if (pnd) {
+  if (pnd != NULL) {
     nfc_abort_command(pnd);
   } else {
     exit(EXIT_FAILURE);
@@ -191,6 +191,7 @@ main(int argc, char *argv[])
 
   if (pnd == NULL) {
     ERR("Unable to open NFC device");
+    nfc_exit(context);
     exit(EXIT_FAILURE);
   }
 
@@ -198,18 +199,13 @@ main(int argc, char *argv[])
   printf("Emulating NDEF tag now, please touch it with a second NFC device\n");
 
   if (nfc_emulate_target(pnd, &emulator, 0) < 0) {
-    goto error;
+    nfc_perror(pnd, argv[0]);
+    nfc_close(pnd);
+    nfc_exit(context);
+    exit(EXIT_FAILURE);
   }
 
   nfc_close(pnd);
   nfc_exit(context);
-
   exit(EXIT_SUCCESS);
-
-error:
-  if (pnd) {
-    nfc_perror(pnd, argv[0]);
-    nfc_close(pnd);
-    nfc_exit(context);
-  }
 }

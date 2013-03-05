@@ -42,7 +42,7 @@ main(int argc, const char *argv[])
 
   if (pnd == NULL) {
     ERR("%s", "Unable to open NFC device.");
-    return EXIT_FAILURE;
+    exit(EXIT_FAILURE);
   }
   // Set opened NFC device to initiator mode
   if (nfc_initiator_init(pnd) < 0) {
@@ -74,5 +74,5 @@ main(int argc, const char *argv[])
   nfc_close(pnd);
   // Release the context
   nfc_exit(context);
-  return EXIT_SUCCESS;
+  exit(EXIT_SUCCESS);
 }

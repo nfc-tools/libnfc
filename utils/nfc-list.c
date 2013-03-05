@@ -122,6 +122,7 @@ main(int argc, const char *argv[])
     }
     if (nfc_initiator_init(pnd) < 0) {
       nfc_perror(pnd, "nfc_initiator_init");
+      nfc_exit(context);
       exit(EXIT_FAILURE);
     }
 
@@ -242,5 +243,5 @@ main(int argc, const char *argv[])
   }
 
   nfc_exit(context);
-  return EXIT_SUCCESS;
+  exit(EXIT_SUCCESS);
 }

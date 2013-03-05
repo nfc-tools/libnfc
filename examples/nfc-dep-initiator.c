@@ -53,7 +53,7 @@ static nfc_device *pnd;
 static void stop_dep_communication(int sig)
 {
   (void) sig;
-  if (pnd)
+  if (pnd != NULL)
     nfc_abort_command(pnd);
   else
     exit(EXIT_FAILURE);
@@ -68,16 +68,17 @@ main(int argc, const char *argv[])
 
   if (argc > 1) {
     printf("Usage: %s\n", argv[0]);
-    return EXIT_FAILURE;
+    exit(EXIT_FAILURE);
   }
 
   nfc_context *context;
   nfc_init(&context);
 
   pnd = nfc_open(context, NULL);
-  if (!pnd) {
+  if (pnd == NULL) {
     printf("Unable to open NFC device.\n");
-    return EXIT_FAILURE;
+    nfc_exit(context);
+    exit(EXIT_FAILURE);
   }
   printf("NFC device: %s\n opened", nfc_device_get_name(pnd));
 
@@ -85,12 +86,16 @@ main(int argc, const char *argv[])
 
   if (nfc_initiator_init(pnd) < 0) {
     nfc_perror(pnd, "nfc_initiator_init");
-    goto error;
+    nfc_close(pnd);
+    nfc_exit(context);
+    exit(EXIT_FAILURE);
   }
 
   if (nfc_initiator_select_dep_target(pnd, NDM_PASSIVE, NBR_212, NULL, &nt, 1000) < 0) {
     nfc_perror(pnd, "nfc_initiator_select_dep_target");
-    goto error;
+    nfc_close(pnd);
+    nfc_exit(context);
+    exit(EXIT_FAILURE);
   }
   print_nfc_target(nt, false);
 
@@ -98,7 +103,9 @@ main(int argc, const char *argv[])
   int res;
   if ((res = nfc_initiator_transceive_bytes(pnd, abtTx, sizeof(abtTx), abtRx, sizeof(abtRx), 0)) < 0) {
     nfc_perror(pnd, "nfc_initiator_transceive_bytes");
-    goto error;
+    nfc_close(pnd);
+    nfc_exit(context);
+    exit(EXIT_FAILURE);
   }
 
   abtRx[res] = 0;
@@ -106,11 +113,12 @@ main(int argc, const char *argv[])
 
   if (nfc_initiator_deselect_target(pnd) < 0) {
     nfc_perror(pnd, "nfc_initiator_deselect_target");
-    goto error;
+    nfc_close(pnd);
+    nfc_exit(context);
+    exit(EXIT_FAILURE);
   }
 
-error:
   nfc_close(pnd);
   nfc_exit(context);
-  return EXIT_SUCCESS;
+  exit(EXIT_SUCCESS);
 }

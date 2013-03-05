@@ -56,7 +56,7 @@ static nfc_device *pnd = NULL;
 static void stop_polling(int sig)
 {
   (void) sig;
-  if (pnd)
+  if (pnd != NULL)
     nfc_abort_command(pnd);
   else
     exit(EXIT_FAILURE);
@@ -110,11 +110,14 @@ main(int argc, const char *argv[])
 
   if (pnd == NULL) {
     ERR("%s", "Unable to open NFC device.");
+    nfc_exit(context);
     exit(EXIT_FAILURE);
   }
 
   if (nfc_initiator_init(pnd) < 0) {
     nfc_perror(pnd, "nfc_initiator_init");
+    nfc_close(pnd);
+    nfc_exit(context);
     exit(EXIT_FAILURE);
   }
 

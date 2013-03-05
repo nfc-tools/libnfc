@@ -79,7 +79,7 @@ int main(int argc, const char *argv[])
   if (argc >= 2) {
     if ((input = fopen(argv[1], "r")) == NULL) {
       ERR("%s", "Cannot open file.");
-      return EXIT_FAILURE;
+      exit(EXIT_FAILURE);
     }
   }
 
@@ -94,7 +94,8 @@ int main(int argc, const char *argv[])
     if (input != NULL) {
       fclose(input);
     }
-    return EXIT_FAILURE;
+    nfc_exit(context);
+    exit(EXIT_FAILURE);
   }
 
   printf("NFC reader: %s opened\n", nfc_device_get_name(pnd));
@@ -103,6 +104,8 @@ int main(int argc, const char *argv[])
     if (input != NULL) {
       fclose(input);
     }
+    nfc_close(pnd);
+    nfc_exit(context);
     exit(EXIT_FAILURE);
   }
 
@@ -205,5 +208,5 @@ int main(int argc, const char *argv[])
   }
   nfc_close(pnd);
   nfc_exit(context);
-  return EXIT_SUCCESS;
+  exit(EXIT_SUCCESS);
 }

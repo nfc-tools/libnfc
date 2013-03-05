@@ -75,8 +75,6 @@ main(int argc, const char *argv[])
   (void) argc;
   (void) argv;
 
-  int ret = EXIT_FAILURE;
-
   nfc_context *context;
   nfc_init(&context);
 
@@ -90,7 +88,8 @@ main(int argc, const char *argv[])
 
   if (pnd == NULL) {
     ERR("%s", "Unable to open NFC device.");
-    return EXIT_FAILURE;
+    nfc_exit(context);
+    exit(EXIT_FAILURE);
   }
 
   printf("NFC device: %s opened\n", nfc_device_get_name(pnd));
@@ -107,7 +106,9 @@ main(int argc, const char *argv[])
   printf("\n");
   if ((input < '1') || (input > '3')) {
     ERR("%s", "Invalid selection.");
-    goto error;
+    nfc_close(pnd);
+    nfc_exit(context);
+    exit(EXIT_FAILURE);
   }
 
   /*
@@ -125,7 +126,9 @@ main(int argc, const char *argv[])
       // FIXME Its a private pn53x function
       if (pn532_SAMConfiguration(pnd, mode, 0) < 0) {
         nfc_perror(pnd, "pn53x_SAMConfiguration");
-        goto error;
+        nfc_close(pnd);
+        nfc_exit(context);
+        exit(EXIT_FAILURE);
       }
       printf("Now the SAM is readable for 1 minute from an external reader.\n");
       wait_one_minute();
@@ -136,13 +139,17 @@ main(int argc, const char *argv[])
       // Set opened NFC device to initiator mode
       if (nfc_initiator_init_secure_element(pnd) < 0) {
         nfc_perror(pnd, "nfc_initiator_init_secure_element");
-        goto error;
+        nfc_close(pnd);
+        nfc_exit(context);
+        exit(EXIT_FAILURE);
       }
 
       // Let the reader only try once to find a tag
       if (nfc_device_set_property_bool(pnd, NP_INFINITE_SELECT, false) < 0) {
         nfc_perror(pnd, "nfc_device_set_property_bool");
-        goto error;
+        nfc_close(pnd);
+        nfc_exit(context);
+        exit(EXIT_FAILURE);
       }
       // Read the SAM's info
       const nfc_modulation nmSAM = {
@@ -154,16 +161,22 @@ main(int argc, const char *argv[])
       int res;
       if ((res = nfc_initiator_select_passive_target(pnd, nmSAM, NULL, 0, &nt)) < 0) {
         nfc_perror(pnd, "nfc_initiator_select_passive_target");
-        goto error;
+        nfc_close(pnd);
+        nfc_exit(context);
+        exit(EXIT_FAILURE);
       } else if (res == 0) {
         ERR("No SAM found.");
-        goto error;
+        nfc_close(pnd);
+        nfc_exit(context);
+        exit(EXIT_FAILURE);
       } else if (res == 1) {
         printf("The following ISO14443A tag (SAM) was found:\n");
         print_nfc_target(nt, true);
       } else {
         ERR("%s", "More than one ISO14442 tag found as SAM.");
-        goto error;
+        nfc_close(pnd);
+        nfc_exit(context);
+        exit(EXIT_FAILURE);
       }
     }
     break;
@@ -172,7 +185,9 @@ main(int argc, const char *argv[])
       // FIXME Its a private pn53x function
       if (pn532_SAMConfiguration(pnd, mode, 0) < 0) {
         nfc_perror(pnd, "pn53x_SAMConfiguration");
-        goto error;
+        nfc_close(pnd);
+        nfc_exit(context);
+        exit(EXIT_FAILURE);
       }
       uint8_t  abtRx[MAX_FRAME_LEN];
 
@@ -195,7 +210,9 @@ main(int argc, const char *argv[])
       printf("Please note that NFC device (configured as target) stay in target mode until it receive RATS, ATR_REQ or proprietary command.\n");
       if (nfc_target_init(pnd, &nt, abtRx, sizeof(abtRx), 0) < 0) {
         nfc_perror(pnd, "nfc_target_init");
-        return EXIT_FAILURE;
+        nfc_close(pnd);
+        nfc_exit(context);
+        exit(EXIT_FAILURE);
       }
       // wait_one_minute ();
     }
@@ -204,15 +221,12 @@ main(int argc, const char *argv[])
       // This should not happend... nothing to do.
       break;
   }
-  ret = EXIT_SUCCESS;
 
-error:
   // Disconnect from the SAM
   pn532_SAMConfiguration(pnd, PSM_NORMAL, -1);
 
   // Close NFC device
   nfc_close(pnd);
   nfc_exit(context);
-
-  exit(ret);
+  exit(EXIT_SUCCESS);
 }

@@ -237,22 +237,25 @@ nfcforum_tag4_io(struct nfc_emulator *emulator, const uint8_t *data_in, const si
 static void stop_emulation(int sig)
 {
   (void) sig;
-  if (pnd)
+  if (pnd != NULL)
     nfc_abort_command(pnd);
   else
     exit(EXIT_FAILURE);
 }
 
-static size_t
+static int
 ndef_message_load(char *filename, struct nfcforum_tag4_ndef_data *tag_data)
 {
   struct stat sb;
-  if (stat(filename, &sb) < 0)
-    return 0;
+  if (stat(filename, &sb) < 0) {
+    printf("file not found or not accessible '%s'", filename);
+    return -1;
+  }
 
   /* Check file size */
   if (sb.st_size > 0xFFFF) {
-    errx(EXIT_FAILURE, "file size too large '%s'", filename);
+    printf("file size too large '%s'", filename);
+    return -1;
   }
 
   tag_data->ndef_file_len = sb.st_size + 2;
@@ -261,29 +264,37 @@ ndef_message_load(char *filename, struct nfcforum_tag4_ndef_data *tag_data)
   tag_data->ndef_file[1] = (uint8_t)(sb.st_size);
 
   FILE *F;
-  if (!(F = fopen(filename, "r")))
-    err(EXIT_FAILURE, "fopen (%s, \"r\")", filename);
+  if (!(F = fopen(filename, "r"))) {
+    printf("fopen (%s, \"r\")", filename);
+    return -1;
+  }
 
-  if (1 != fread(tag_data->ndef_file + 2, sb.st_size, 1, F))
-    err(EXIT_FAILURE, "Can't read from %s", filename);
+  if (1 != fread(tag_data->ndef_file + 2, sb.st_size, 1, F)) {
+    printf("Can't read from %s", filename);
+    fclose(F);
+    return -1;
+  }
 
   fclose(F);
   return sb.st_size;
 }
 
-static size_t
+static int
 ndef_message_save(char *filename, struct nfcforum_tag4_ndef_data *tag_data)
 {
   FILE *F;
-  if (!(F = fopen(filename, "w")))
-    err(EXIT_FAILURE, "fopen (%s, w)", filename);
+  if (!(F = fopen(filename, "w"))) {
+    printf("fopen (%s, w)", filename);
+    return -1;
+  }
 
   if (1 != fwrite(tag_data->ndef_file + 2, tag_data->ndef_file_len - 2, 1, F)) {
-    err(EXIT_FAILURE, "fwrite (%d)", (int) tag_data->ndef_file_len - 2);
+    printf("fwrite (%d)", (int) tag_data->ndef_file_len - 2);
+    fclose(F);
+    return -1;
   }
 
   fclose(F);
-
   return tag_data->ndef_file_len - 2;
 }
 
@@ -361,8 +372,9 @@ main(int argc, char *argv[])
 
   // If some file is provided load it
   if (argc >= (2 + options)) {
-    if (!ndef_message_load(argv[1 + options], &nfcforum_tag4_data)) {
-      err(EXIT_FAILURE, "Can't load NDEF file '%s'", argv[1 + options]);
+    if (ndef_message_load(argv[1 + options], &nfcforum_tag4_data) < 0) {
+      printf("Can't load NDEF file '%s'", argv[1 + options]);
+      exit(EXIT_FAILURE);
     }
   }
 
@@ -374,6 +386,7 @@ main(int argc, char *argv[])
 
   if (pnd == NULL) {
     ERR("Unable to open NFC device");
+    nfc_exit(context);
     exit(EXIT_FAILURE);
   }
 
@@ -384,16 +397,21 @@ main(int argc, char *argv[])
 
   if (0 != nfc_emulate_target(pnd, &emulator, 0)) {  // contains already nfc_target_init() call
     nfc_perror(pnd, "nfc_emulate_target");
+    nfc_close(pnd);
+    nfc_exit(context);
+    exit(EXIT_FAILURE);
   }
 
-  nfc_close(pnd);
-
   if (argc == (3 + options)) {
-    if (!(ndef_message_save(argv[2 + options], &nfcforum_tag4_data))) {
-      err(EXIT_FAILURE, "Can't save NDEF file '%s'", argv[2 + options]);
+    if (ndef_message_save(argv[2 + options], &nfcforum_tag4_data) < 0) {
+      printf("Can't save NDEF file '%s'", argv[2 + options]);
+      nfc_close(pnd);
+      nfc_exit(context);
+      exit(EXIT_FAILURE);
     }
   }
 
+  nfc_close(pnd);
   nfc_exit(context);
   exit(EXIT_SUCCESS);
 }

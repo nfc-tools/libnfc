@@ -66,9 +66,7 @@ intr_hdlr(int sig)
 {
   (void) sig;
   printf("\nQuitting...\n");
-  if (pnd != NULL) {
-    nfc_close(pnd);
-  }
+  nfc_close(pnd);
   nfc_exit(context);
   exit(EXIT_FAILURE);
 }
@@ -184,15 +182,16 @@ main(int argc, char *argv[])
 
   nfc_init(&context);
 
-  // Try to open the NFC reader
-  pnd = nfc_open(context, NULL);
-
   // Display libnfc version
   acLibnfcVersion = nfc_version();
   printf("%s uses libnfc %s\n", argv[0], acLibnfcVersion);
 
+  // Try to open the NFC reader
+  pnd = nfc_open(context, NULL);
+
   if (pnd == NULL) {
     ERR("Unable to open NFC device");
+    nfc_exit(context);
     exit(EXIT_FAILURE);
   }
 
@@ -267,6 +266,8 @@ main(int argc, char *argv[])
   printf("NFC device (configured as target) is now emulating the tag, please touch it with a second NFC device (initiator)\n");
   if (!nfc_target_emulate_tag(pnd, &nt)) {
     nfc_perror(pnd, "nfc_target_emulate_tag");
+    nfc_close(pnd);
+    nfc_exit(context);
     exit(EXIT_FAILURE);
   }
 
