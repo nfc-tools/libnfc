@@ -172,7 +172,7 @@ void
 nfc_init(nfc_context **context)
 {
   *context = nfc_context_new();
-  if (!context) {
+  if (!*context) {
     perror("malloc");
     return;
   }
