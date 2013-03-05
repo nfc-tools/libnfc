@@ -614,9 +614,9 @@ int
 pn53x_write_register(struct nfc_device *pnd, const uint16_t ui16RegisterAddress, const uint8_t ui8SymbolMask, const uint8_t ui8Value)
 {
   if ((ui16RegisterAddress < PN53X_CACHE_REGISTER_MIN_ADDRESS) || (ui16RegisterAddress > PN53X_CACHE_REGISTER_MAX_ADDRESS)) {
-    int res = 0;
     // Direct write
     if (ui8SymbolMask != 0xff) {
+      int res = 0;
       uint8_t ui8CurrentValue;
       if ((res = pn53x_read_register(pnd, ui16RegisterAddress, &ui8CurrentValue)) < 0)
         return res;
