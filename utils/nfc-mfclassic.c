@@ -175,7 +175,6 @@ authenticate(uint32_t uiBlock)
 {
   mifare_cmd mc;
   uint32_t uiTrailerBlock;
-  size_t  key_index;
 
   // Set the authentication information (uid)
   memcpy(mp.mpa.abtAuthUid, nt.nti.nai.abtUid + nt.nti.nai.szUidLen - 4, 4);
@@ -200,7 +199,7 @@ authenticate(uint32_t uiBlock)
       return true;
   } else {
     // Try to guess the right key
-    for (key_index = 0; key_index < num_keys; key_index++) {
+    for (size_t key_index = 0; key_index < num_keys; key_index++) {
       memcpy(mp.mpa.abtKey, keys + (key_index * 6), 6);
       if (nfc_initiator_mifare_cmd(pnd, mc, uiBlock, &mp)) {
         if (bUseKeyA)

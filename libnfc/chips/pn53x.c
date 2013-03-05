@@ -317,9 +317,9 @@ pn53x_set_parameters(struct nfc_device *pnd, const uint8_t ui8Parameter, const b
 int
 pn53x_set_tx_bits(struct nfc_device *pnd, const uint8_t ui8Bits)
 {
-  int res = 0;
   // Test if we need to update the transmission bits register setting
   if (CHIP_DATA(pnd)->ui8TxBits != ui8Bits) {
+    int res = 0;
     // Set the amount of transmission bits in the PN53X chip register
     if ((res = pn53x_write_register(pnd, PN53X_REG_CIU_BitFraming, SYMBOL_TX_LAST_BITS, ui8Bits)) < 0)
       return res;
@@ -613,8 +613,8 @@ pn53x_WriteRegister(struct nfc_device *pnd, const uint16_t ui16RegisterAddress, 
 int
 pn53x_write_register(struct nfc_device *pnd, const uint16_t ui16RegisterAddress, const uint8_t ui8SymbolMask, const uint8_t ui8Value)
 {
-  int res = 0;
   if ((ui16RegisterAddress < PN53X_CACHE_REGISTER_MIN_ADDRESS) || (ui16RegisterAddress > PN53X_CACHE_REGISTER_MAX_ADDRESS)) {
+    int res = 0;
     // Direct write
     if (ui8SymbolMask != 0xff) {
       uint8_t ui8CurrentValue;

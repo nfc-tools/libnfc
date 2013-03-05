@@ -489,8 +489,8 @@ error:
 int
 pn532_uart_ack(nfc_device *pnd)
 {
-  int res = 0;
   if (POWERDOWN == CHIP_DATA(pnd)->power_mode) {
+    int res = 0;
     if ((res = pn532_uart_wakeup(pnd)) < 0) {
       return res;
     }

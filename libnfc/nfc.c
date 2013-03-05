@@ -353,9 +353,8 @@ nfc_list_devices(nfc_context *context, nfc_connstring connstrings[], const size_
     const struct nfc_driver_list *pndl = nfc_drivers;
     while (pndl) {
       const struct nfc_driver *ndr = pndl->driver;
-      size_t _device_found = 0;
       if ((ndr->scan_type == NOT_INTRUSIVE) || ((context->allow_intrusive_scan) && (ndr->scan_type == INTRUSIVE))) {
-        _device_found = ndr->scan(context, connstrings + (device_found), connstrings_len - (device_found));
+        size_t _device_found = ndr->scan(context, connstrings + (device_found), connstrings_len - (device_found));
         log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%ld device(s) found using %s driver", (unsigned long) _device_found, ndr->name);
         if (_device_found > 0) {
           device_found += _device_found;
