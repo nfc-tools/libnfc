@@ -503,11 +503,15 @@ main(int argc, const char *argv[])
 // printf("Successfully opened required files\n");
 
   nfc_init(&context);
+  if (context == NULL) {
+    ERR("Unable to init libnfc (malloc)");
+    exit(EXIT_FAILURE);
+  }
 
 // Try to open the NFC reader
   pnd = nfc_open(context, NULL);
   if (pnd == NULL) {
-    printf("Error opening NFC reader\n");
+    ERR("Error opening NFC reader");
     nfc_exit(context);
     exit(EXIT_FAILURE);
   }

@@ -72,6 +72,10 @@ main(int argc, const char *argv[])
 
   nfc_context *context;
   nfc_init(&context);
+  if (context == NULL) {
+    ERR("Unable to init libnfc (malloc)");
+    exit(EXIT_FAILURE);
+  }
 #define MAX_DEVICE_COUNT 2
   nfc_connstring connstrings[MAX_DEVICE_COUNT];
   size_t szDeviceFound = nfc_list_devices(context, connstrings, MAX_DEVICE_COUNT);

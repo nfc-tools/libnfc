@@ -174,8 +174,7 @@ nfc_init(nfc_context **context)
   *context = nfc_context_new();
   if (!context) {
     perror("malloc");
-    // TODO: not a good idea to call exit() from a library, we should change API and return error
-    exit(EXIT_FAILURE);
+    return;
   }
   if (!nfc_drivers)
     nfc_drivers_init();

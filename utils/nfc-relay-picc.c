@@ -197,6 +197,10 @@ main(int argc, char *argv[])
 
   nfc_context *context;
   nfc_init(&context);
+  if (context == NULL) {
+    ERR("Unable to init libnfc (malloc)");
+    exit(EXIT_FAILURE);
+  }
 
   nfc_connstring connstrings[MAX_DEVICE_COUNT];
   // List available devices

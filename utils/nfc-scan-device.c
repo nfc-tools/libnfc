@@ -90,6 +90,10 @@ main(int argc, const char *argv[])
   }
 
   nfc_init(&context);
+  if (context == NULL) {
+    ERR("Unable to init libnfc (malloc)\n");
+    exit(EXIT_FAILURE);
+  }
 
   // Display libnfc version
   acLibnfcVersion = nfc_version();

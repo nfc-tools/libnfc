@@ -110,6 +110,10 @@ main(int argc, char *argv[])
 
   nfc_context *context;
   nfc_init(&context);
+  if (context == NULL) {
+    ERR("Unable to init libnfc (malloc)");
+    exit(EXIT_FAILURE);
+  }
   nfc_connstring connstrings[MAX_DEVICE_COUNT];
   // List available devices
   size_t szFound = nfc_list_devices(context, connstrings, MAX_DEVICE_COUNT);
@@ -123,7 +127,7 @@ main(int argc, char *argv[])
   // Try to open the NFC emulator device
   pndTag = nfc_open(context, connstrings[0]);
   if (pndTag == NULL) {
-    printf("Error opening NFC emulator device\n");
+    ERR("Error opening NFC emulator device");
     nfc_exit(context);
     exit(EXIT_FAILURE);
   }

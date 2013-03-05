@@ -380,6 +380,10 @@ main(int argc, char *argv[])
 
   nfc_context *context;
   nfc_init(&context);
+  if (context == NULL) {
+    ERR("Unable to init libnfc (malloc)\n");
+    exit(EXIT_FAILURE);
+  }
 
   // Try to open the NFC reader
   pnd = nfc_open(context, NULL);
