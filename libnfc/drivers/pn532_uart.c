@@ -184,7 +184,7 @@ pn532_connstring_decode(const nfc_connstring connstring, struct pn532_uart_descr
     return 2;
   }
   unsigned long speed;
-  if (sscanf(speed_s, "%lu", &speed) != 1) {
+  if (sscanf(speed_s, "%10lu", &speed) != 1) {
     // speed_s is not a number
     free(cs);
     return 2;

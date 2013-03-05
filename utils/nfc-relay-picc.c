@@ -173,7 +173,7 @@ main(int argc, char *argv[])
       printf("INFO: %s\n", "Swapping devices.");
       swap_devices = true;
     } else if (0 == strcmp(argv[arg], "-n")) {
-      if (++arg == argc || (sscanf(argv[arg], "%i", &waiting_time) < 1)) {
+      if (++arg == argc || (sscanf(argv[arg], "%10i", &waiting_time) < 1)) {
         ERR("Missing or wrong waiting time value: %s.", argv[arg]);
         print_usage(argv);
         exit(EXIT_FAILURE);

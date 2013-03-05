@@ -438,7 +438,7 @@ acr122s_connstring_decode(const nfc_connstring connstring, struct acr122s_descri
     return 2;
   }
   unsigned long speed;
-  if (sscanf(speed_s, "%lu", &speed) != 1) {
+  if (sscanf(speed_s, "%10lu", &speed) != 1) {
     // speed_s is not a number
     free(cs);
     return 2;

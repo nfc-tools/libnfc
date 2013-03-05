@@ -207,7 +207,7 @@ arygon_connstring_decode(const nfc_connstring connstring, struct arygon_descript
     return 2;
   }
   unsigned long speed;
-  if (sscanf(speed_s, "%lu", &speed) != 1) {
+  if (sscanf(speed_s, "%10lu", &speed) != 1) {
     // speed_s is not a number
     free(cs);
     return 2;
@@ -519,7 +519,9 @@ arygon_firmware(nfc_device *pnd, char *str)
   if (0 == memcmp(abtRx, arygon_error_none, 6)) {
     uint8_t *p = abtRx + 6;
     unsigned int szData;
-    sscanf((const char *)p, "%02x%s", &szData, p);
+    sscanf((const char *)p, "%02x%9s", &szData, p);
+    if (szData > 9)
+      szData = 9;
     memcpy(str, p, szData);
     *(str + szData) = '\0';
   }

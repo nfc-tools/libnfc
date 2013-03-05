@@ -159,7 +159,7 @@ int main(int argc, const char *argv[])
       while (isspace(cmd[offset])) {
         offset++;
       }
-      sscanf(cmd + offset, "%d", &s);
+      sscanf(cmd + offset, "%10d", &s);
       printf("Pause for %i msecs\n", s);
       if (s > 0) {
         sleep(s * SUSP_TIME);
