@@ -475,6 +475,10 @@ acr122_usb_open(const nfc_context *context, const nfc_connstring connstring)
       data.model = acr122_usb_get_device_model(dev->descriptor.idVendor, dev->descriptor.idProduct);
       // Allocate memory for the device info and specification, fill it and return the info
       pnd = nfc_device_new(context, connstring);
+      if (!pnd) {
+        perror("malloc");
+        goto error;
+      }
       acr122_usb_get_usb_device_name(dev, data.pudh, pnd->name, sizeof(pnd->name));
 
       pnd->driver_data = malloc(sizeof(struct acr122_usb_data));

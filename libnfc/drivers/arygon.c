@@ -114,6 +114,10 @@ arygon_scan(const nfc_context *context, nfc_connstring connstrings[], const size
       nfc_connstring connstring;
       snprintf(connstring, sizeof(nfc_connstring), "%s:%s:%"PRIu32, ARYGON_DRIVER_NAME, acPort, ARYGON_DEFAULT_SPEED);
       nfc_device *pnd = nfc_device_new(context, connstring);
+      if (!pnd) {
+        perror("malloc");
+        return 0;
+      }
 
       pnd->driver = &arygon_driver;
       pnd->driver_data = malloc(sizeof(struct arygon_data));
@@ -263,6 +267,10 @@ arygon_open(const nfc_context *context, const nfc_connstring connstring)
 
   // We have a connection
   pnd = nfc_device_new(context, connstring);
+  if (!pnd) {
+    perror("malloc");
+    return NULL;
+  }
   snprintf(pnd->name, sizeof(pnd->name), "%s:%s", ARYGON_DRIVER_NAME, ndd.port);
 
   pnd->driver_data = malloc(sizeof(struct arygon_data));

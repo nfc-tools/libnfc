@@ -280,6 +280,10 @@ acr122_pcsc_open(const nfc_context *context, const nfc_connstring connstring)
 
   char   *pcFirmware;
   nfc_device *pnd = nfc_device_new(context, fullconnstring);
+  if (!pnd) {
+    perror("malloc");
+    goto error;
+  }
   pnd->driver_data = malloc(sizeof(struct acr122_pcsc_data));
   if (!pnd->driver_data) {
     perror("malloc");

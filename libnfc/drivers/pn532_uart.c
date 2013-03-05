@@ -88,6 +88,10 @@ pn532_uart_scan(const nfc_context *context, nfc_connstring connstrings[], const 
       nfc_connstring connstring;
       snprintf(connstring, sizeof(nfc_connstring), "%s:%s:%"PRIu32, PN532_UART_DRIVER_NAME, acPort, PN532_UART_DEFAULT_SPEED);
       nfc_device *pnd = nfc_device_new(context, connstring);
+      if (!pnd) {
+        perror("malloc");
+        return 0;
+      }
       pnd->driver = &pn532_uart_driver;
       pnd->driver_data = malloc(sizeof(struct pn532_uart_data));
       if (!pnd->driver_data) {
@@ -240,6 +244,10 @@ pn532_uart_open(const nfc_context *context, const nfc_connstring connstring)
 
   // We have a connection
   pnd = nfc_device_new(context, connstring);
+  if (!pnd) {
+    perror("malloc");
+    return NULL;
+  }
   snprintf(pnd->name, sizeof(pnd->name), "%s:%s", PN532_UART_DRIVER_NAME, ndd.port);
 
   pnd->driver_data = malloc(sizeof(struct pn532_uart_data));

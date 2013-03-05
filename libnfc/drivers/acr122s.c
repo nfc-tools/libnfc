@@ -470,6 +470,10 @@ acr122s_scan(const nfc_context *context, nfc_connstring connstrings[], const siz
       nfc_connstring connstring;
       snprintf(connstring, sizeof(nfc_connstring), "%s:%s:%"PRIu32, ACR122S_DRIVER_NAME, acPort, ACR122S_DEFAULT_SPEED);
       nfc_device *pnd = nfc_device_new(context, connstring);
+      if (!pnd) {
+        perror("malloc");
+        return -1;
+      }
 
       pnd->driver = &acr122s_driver;
       pnd->driver_data = malloc(sizeof(struct acr122s_data));
@@ -574,6 +578,10 @@ acr122s_open(const nfc_context *context, const nfc_connstring connstring)
   uart_set_speed(sp, ndd.speed);
 
   pnd = nfc_device_new(context, connstring);
+  if (!pnd) {
+    perror("malloc");
+    return NULL;
+  }
   pnd->driver = &acr122s_driver;
   strcpy(pnd->name, ACR122S_DRIVER_NAME);
 
