@@ -53,10 +53,12 @@ static nfc_device *pnd;
 static void stop_dep_communication(int sig)
 {
   (void) sig;
-  if (pnd != NULL)
+  if (pnd != NULL) {
     nfc_abort_command(pnd);
-  else
+  } else {
+    nfc_exit(context);
     exit(EXIT_FAILURE);
+  }
 }
 
 int

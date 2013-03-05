@@ -72,10 +72,12 @@ print_usage(char *progname)
 static void stop_select(int sig)
 {
   (void) sig;
-  if (pnd != NULL)
+  if (pnd != NULL) {
     nfc_abort_command(pnd);
-  else
+  } else {
+    nfc_exit(context);
     exit(EXIT_FAILURE);
+  }
 }
 
 static void

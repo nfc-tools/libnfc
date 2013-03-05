@@ -237,10 +237,12 @@ nfcforum_tag4_io(struct nfc_emulator *emulator, const uint8_t *data_in, const si
 static void stop_emulation(int sig)
 {
   (void) sig;
-  if (pnd != NULL)
+  if (pnd != NULL) {
     nfc_abort_command(pnd);
-  else
+  } else {
+    nfc_exit(context);
     exit(EXIT_FAILURE);
+  }
 }
 
 static int

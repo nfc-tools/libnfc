@@ -82,6 +82,7 @@ stop_emulation(int sig)
   if (pnd != NULL) {
     nfc_abort_command(pnd);
   } else {
+    nfc_exit(context);
     exit(EXIT_FAILURE);
   }
 }

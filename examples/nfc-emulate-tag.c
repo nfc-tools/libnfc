@@ -66,6 +66,9 @@ intr_hdlr(int sig)
 {
   (void) sig;
   printf("\nQuitting...\n");
+  if (pnd != NULL) {
+    nfc_abort_command(pnd);
+  }
   nfc_close(pnd);
   nfc_exit(context);
   exit(EXIT_FAILURE);
