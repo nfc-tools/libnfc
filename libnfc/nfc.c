@@ -1292,6 +1292,6 @@ str_nfc_target(char **buf, const nfc_target nt, bool verbose)
   if (! *buf)
     return NFC_ESOFT;
   (*buf)[0] = '\0';
-  sprint_nfc_target(*buf, nt, verbose);
+  snprint_nfc_target(*buf, 4096, nt, verbose);
   return strlen(*buf);
 }
