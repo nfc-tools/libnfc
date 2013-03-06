@@ -36,6 +36,9 @@ Here are some directions to get you started:
       $ scan-build ./configure
       $ make clean
       $ scan-build make
+      And by using cppcheck:
+      $ cppcheck --quiet --enable=all --std=c99 --std=posix \
+        -I include -I libnfc -I libnfc/buses .
     2.3 When Debianizing
       $ lintian --info --display-info --display-experimental *deb
       or (shorter version)
