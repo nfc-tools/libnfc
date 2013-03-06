@@ -227,9 +227,6 @@ acr122_pcsc_connstring_decode(const nfc_connstring connstring, struct acr122_pcs
 
   free(cs);
   return 2;
-
-  free(cs);
-  return 3;
 }
 
 static nfc_device *
