@@ -30,7 +30,6 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/types.h>
-#include <sys/types.h>
 #include <ctype.h>
 #include <dirent.h>
 #include <errno.h>
