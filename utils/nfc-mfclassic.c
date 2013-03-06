@@ -430,8 +430,6 @@ main(int argc, const char *argv[])
 {
   action_t atAction = ACTION_USAGE;
   uint8_t *pbtUID;
-  FILE   *pfKeys = NULL;
-  FILE   *pfDump = NULL;
   int    unlock = 0;
 
   if (argc < 2) {
@@ -469,7 +467,7 @@ main(int argc, const char *argv[])
     exit(EXIT_FAILURE);
   }
   if (bUseKeyFile) {
-    pfKeys = fopen(argv[4], "rb");
+    FILE *pfKeys = fopen(argv[4], "rb");
     if (pfKeys == NULL) {
       printf("Could not open keys file: %s\n", argv[4]);
       exit(EXIT_FAILURE);
@@ -485,11 +483,12 @@ main(int argc, const char *argv[])
   if (atAction == ACTION_READ) {
     memset(&mtDump, 0x00, sizeof(mtDump));
   } else {
-    pfDump = fopen(argv[3], "rb");
+    FILE *pfDump = fopen(argv[3], "rb");
 
     if (pfDump == NULL) {
       printf("Could not open dump file: %s\n", argv[3]);
       exit(EXIT_FAILURE);
+
     }
 
     if (fread(&mtDump, 1, sizeof(mtDump), pfDump) != sizeof(mtDump)) {
@@ -578,7 +577,7 @@ main(int argc, const char *argv[])
     if (read_card(unlock)) {
       printf("Writing data to file: %s ...", argv[3]);
       fflush(stdout);
-      pfDump = fopen(argv[3], "wb");
+      FILE *pfDump = fopen(argv[3], "wb");
       if (pfDump == NULL) {
         printf("Could not open dump file: %s\n", argv[3]);
         nfc_close(pnd);

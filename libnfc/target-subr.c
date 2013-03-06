@@ -496,7 +496,6 @@ sprint_nfc_jewel_info(char *dst, const nfc_jewel_info nji, bool verbose)
 void
 sprint_nfc_iso14443b_info(char *dst, const nfc_iso14443b_info nbi, bool verbose)
 {
-  const int iMaxFrameSizes[] = { 16, 24, 32, 40, 48, 64, 96, 128, 256 };
   dst += sprintf(dst, "               PUPI: ");
   dst += sprint_hex(dst, nbi.abtPupi, 4);
   dst += sprintf(dst, "   Application Data: ");
@@ -533,6 +532,7 @@ sprint_nfc_iso14443b_info(char *dst, const nfc_iso14443b_info nbi, bool verbose)
       dst += sprintf(dst, " * ERROR unknown value\n");
     }
     if ((nbi.abtProtocolInfo[1] & 0xf0) <= 0x80) {
+      const int iMaxFrameSizes[] = { 16, 24, 32, 40, 48, 64, 96, 128, 256 };
       dst += sprintf(dst, "* Maximum frame sizes: %d bytes\n", iMaxFrameSizes[((nbi.abtProtocolInfo[1] & 0xf0) >> 4)]);
     }
     if ((nbi.abtProtocolInfo[1] & 0x0f) == PI_ISO14443_4_SUPPORTED) {
