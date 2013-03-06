@@ -257,7 +257,9 @@ pn53x_usb_connstring_decode(const nfc_connstring connstring, struct pn53x_usb_de
 
   driver_name[0] = '\0';
 
-  int res = sscanf(connstring, "%[^:]:%[^:]:%[^:]", driver_name, dirname, filename);
+  char format[32];
+  snprintf(format, sizeof(format), "%%%i[^:]:%%%i[^:]:%%%i[^:]", n - 1, n - 1, n - 1);
+  int res = sscanf(connstring, format, driver_name, dirname, filename);
 
   if (!res || ((0 != strcmp(driver_name, PN53X_USB_DRIVER_NAME)) && (0 != strcmp(driver_name, "usb")))) {
     // Driver name does not match.
