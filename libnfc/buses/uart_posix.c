@@ -39,6 +39,7 @@
 #include <stdio.h>
 #include <termios.h>
 #include <unistd.h>
+#include <stdlib.h>
 
 #include "nfc-internal.h"
 
@@ -337,26 +338,32 @@ uart_list_ports(void)
   size_t szRes = 1;
 
   res[0] = NULL;
-
-  DIR *pdDir = opendir("/dev");
-  struct dirent *pdDirEnt;
-  while ((pdDirEnt = readdir(pdDir)) != NULL) {
+  DIR *dir;
+  if ((dir = opendir("/dev")) == NULL) {
+    perror("opendir error: /dev");
+    return res;
+  }
+  struct dirent entry;
+  struct dirent *result;
+  while ((readdir_r(dir, &entry, &result) == 0) && (result != NULL)) {
 #if !defined(__APPLE__)
-    if (!isdigit(pdDirEnt->d_name[strlen(pdDirEnt->d_name) - 1]))
+    if (!isdigit(entry.d_name[strlen(entry.d_name) - 1]))
       continue;
 #endif
     const char **p = serial_ports_device_radix;
     while (*p) {
-      if (!strncmp(pdDirEnt->d_name, *p, strlen(*p))) {
+      if (!strncmp(entry.d_name, *p, strlen(*p))) {
         char **res2 = realloc(res, (szRes + 1) * sizeof(char *));
-        if (!res2)
+        if (!res2) {
+          perror("malloc");
           goto oom;
-
+        }
         res = res2;
-        if (!(res[szRes - 1] = malloc(6 + strlen(pdDirEnt->d_name))))
+        if (!(res[szRes - 1] = malloc(6 + strlen(entry.d_name)))) {
+          perror("malloc");
           goto oom;
-
-        sprintf(res[szRes - 1], "/dev/%s", pdDirEnt->d_name);
+        }
+        sprintf(res[szRes - 1], "/dev/%s", entry.d_name);
 
         szRes++;
         res[szRes - 1] = NULL;
@@ -365,7 +372,7 @@ uart_list_ports(void)
     }
   }
 oom:
-  closedir(pdDir);
+  closedir(dir);
 
   return res;
 }
