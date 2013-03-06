@@ -14,7 +14,12 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
-#include "nfc-internal.h"
+#ifndef __NFC_CONF_H__
+#define __NFC_CONF_H__
+
+#include <nfc/nfc-types.h>
 
 void conf_load(nfc_context *context);
+
+#endif // __NFC_CONF_H__
 
