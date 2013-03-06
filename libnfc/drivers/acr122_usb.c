@@ -554,13 +554,7 @@ uint32_t htole32(uint32_t u32);
 uint32_t
 htole32(uint32_t u32)
 {
-  uint8_t u8[4];
-  for (int i = 0; i < 4; i++) {
-    u8[i] = (u32 & 0xff);
-    u32 >>= 8;
-  }
-  uint32_t *pu32 = (uint32_t *)u8;
-  return *pu32;
+  return (((u32 & 0xff) << 24) + ((u32 & 0xff00) << 8) + ((u32 & 0xff0000) >> 8) + (u32 >> 24));
 }
 
 static int
