@@ -48,15 +48,16 @@
 #include <time.h>
 
 #ifndef _WIN32
-// Needed by sleep() under Unix
-#  include <unistd.h>
-#  define sleep usleep
-#  define SUSP_TIME 1000           // usecs.
+#  include <time.h>
+#  define msleep(x) do { \
+     struct timespec xsleep; \
+     xsleep.tv_sec = x / 1000; \
+     xsleep.tv_nsec = (x - xsleep.tv_sec * 1000) * 1000 * 1000; \
+     nanosleep(&xsleep, NULL); \
+   } while (0)
 #else
-// Needed by Sleep() under Windows
 #  include <winbase.h>
-#  define sleep Sleep
-#  define SUSP_TIME 1        // msecs.
+#  define msleep Sleep
 #endif
 
 
@@ -154,15 +155,15 @@ int main(int argc, const char *argv[])
       break;
     }
     if (cmd[0] == 'p') {
-      int s = 0;
+      int ms = 0;
       offset++;
       while (isspace(cmd[offset])) {
         offset++;
       }
-      sscanf(cmd + offset, "%10d", &s);
-      printf("Pause for %i msecs\n", s);
-      if (s > 0) {
-        sleep(s * SUSP_TIME);
+      sscanf(cmd + offset, "%10d", &ms);
+      printf("Pause for %i msecs\n", ms);
+      if (ms > 0) {
+        msleep(ms);
       }
       free(cmd);
       continue;
