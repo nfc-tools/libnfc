@@ -271,6 +271,7 @@ acr122_pcsc_open(const nfc_context *context, const nfc_connstring connstring)
       return NULL;
     }
     strncpy(fullconnstring, ncs[index], sizeof(nfc_connstring));
+    fullconnstring[sizeof(nfc_connstring) - 1] = '\0';
     free(ncs);
     connstring_decode_level = acr122_pcsc_connstring_decode(fullconnstring, &ndd);
     if (connstring_decode_level < 2) {

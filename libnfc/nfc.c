@@ -226,6 +226,7 @@ nfc_open(nfc_context *context, const nfc_connstring connstring)
     }
   } else {
     strncpy(ncs, connstring, sizeof(nfc_connstring));
+    ncs[sizeof(nfc_connstring) - 1] = '\0';
   }
 
   // Search through the device list for an available device

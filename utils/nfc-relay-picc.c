@@ -130,6 +130,7 @@ static int scan_hex_fd3(uint8_t *pbtData, size_t *pszBytes, const char *pchPrefi
     }
   }
   strncpy(pchScan, pchPrefix, 250);
+  pchScan[sizeof(pchScan) - 1] = '\0';
   strcat(pchScan, " %04x:");
   if (fscanf(fd3, pchScan, &uiBytes) < 1) {
     return -1;

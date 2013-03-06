@@ -410,6 +410,7 @@ acr122_usb_get_usb_device_name(struct usb_device *dev, usb_dev_handle *udev, cha
       if ((acr122_usb_supported_devices[n].vendor_id == dev->descriptor.idVendor) &&
           (acr122_usb_supported_devices[n].product_id == dev->descriptor.idProduct)) {
         strncpy(buffer, acr122_usb_supported_devices[n].name, len);
+        buffer[len - 1] = '\0';
         return true;
       }
     }
