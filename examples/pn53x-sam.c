@@ -175,7 +175,7 @@ main(int argc, const char *argv[])
         exit(EXIT_FAILURE);
       } else if (res == 1) {
         printf("The following ISO14443A tag (SAM) was found:\n");
-        print_nfc_target(nt, true);
+        print_nfc_target(&nt, true);
       } else {
         ERR("%s", "More than one ISO14442 tag found as SAM.");
         nfc_close(pnd);
