@@ -81,11 +81,6 @@ log_put(const uint8_t group, const char *category, const uint8_t priority, const
 
       va_list va;
       va_start(va, format);
-
-//      fprintf(stderr, "%s\t%s\t", log_priority_to_str(priority), category);
-//      vfprintf(stderr, format, va);
-//      fprintf(stderr, "\n");
-
       log_put_internal("%s\t%s\t", log_priority_to_str(priority), category);
       log_vput_internal(format, va);
       log_put_internal("\n");

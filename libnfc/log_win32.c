@@ -30,10 +30,10 @@ void
 log_output_debug(const char *format, va_list args)
 {
   char buffer[1024];
-  HRESULT hr = StringCbVPrintf( buffer, sizeof( buffer ), format, args );
+  HRESULT hr = StringCbVPrintf(buffer, sizeof(buffer), format, args);
   // Spew what we got, even if the buffer is not sized large enough
-  if ( (STRSAFE_E_INSUFFICIENT_BUFFER == hr) || (S_OK == hr) )
-    OutputDebugString( buffer );
+  if ((STRSAFE_E_INSUFFICIENT_BUFFER == hr) || (S_OK == hr))
+    OutputDebugString(buffer);
 }
 
 void
