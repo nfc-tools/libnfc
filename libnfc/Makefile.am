@@ -40,7 +40,7 @@ if LIBUSB_ENABLED
 endif
 
 if WITH_LOG
-  libnfc_la_SOURCES += log-printf.c
+  libnfc_la_SOURCES += log-printf.c log_posix.c
 endif
 
 EXTRA_DIST = \
@@ -48,4 +48,3 @@ EXTRA_DIST = \
 	log-printf.c \
 	log_posix.c \
 	log_win32.c
-
