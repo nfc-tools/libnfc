@@ -18,4 +18,4 @@ if LIBUSB_ENABLED
   libnfcbuses_la_CFLAGS += @libusb_CFLAGS@
   libnfcbuses_la_LIBADD  += @libusb_LIBS@
 endif
-
+EXTRA_DIST += usbbus.c usbbus.h
