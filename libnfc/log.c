@@ -73,11 +73,8 @@ log_priority_to_str(const int priority)
 
 
 #ifdef LOG
-// Internal methods so different platforms can route the logging
-// Offering both forms of the variadic function
-// These are implemented in the log_<platform> specific file
-void log_put_internal(const char *format, ...);
-void log_vput_internal(const char *format, va_list args);
+
+#include "log_internal.h"
 
 void
 log_init(const nfc_context *context)
