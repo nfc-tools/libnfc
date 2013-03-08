@@ -23,6 +23,7 @@
  * @file target-subr.c
  * @brief Target-related subroutines. (ie. determine target type, print target, etc.)
  */
+#include <inttypes.h>
 #include <nfc/nfc.h>
 
 #include "target-subr.h"
@@ -117,15 +118,14 @@ struct card_sak const_cs[] = {
 };
 
 int
-sprint_hex(char *dst, const uint8_t *pbtData, const size_t szBytes)
+snprint_hex(char *dst, size_t size, const uint8_t *pbtData, const size_t szBytes)
 {
   size_t  szPos;
-
-  int res = 0;
+  size_t res = 0;
   for (szPos = 0; szPos < szBytes; szPos++) {
-    res += sprintf(dst + res, "%02x  ", pbtData[szPos]);
+    res += snprintf(dst + res, size - res, "%02x  ", pbtData[szPos]);
   }
-  res += sprintf(dst + res, "\n");
+  res += snprintf(dst + res, size - res, "\n");
   return res;
 }
 
@@ -134,282 +134,283 @@ sprint_hex(char *dst, const uint8_t *pbtData, const size_t szBytes)
 #define SAK_ISO18092_COMPLIANT   0x40
 
 void
-sprint_nfc_iso14443a_info(char *dst, const nfc_iso14443a_info nai, bool verbose)
+snprint_nfc_iso14443a_info(char *dst, size_t size, const nfc_iso14443a_info *pnai, bool verbose)
 {
-  dst += sprintf(dst, "    ATQA (SENS_RES): ");
-  dst += sprint_hex(dst, nai.abtAtqa, 2);
+  int off = 0;
+  off += snprintf(dst + off, size - off, "    ATQA (SENS_RES): ");
+  off += snprint_hex(dst + off, size - off, pnai->abtAtqa, 2);
   if (verbose) {
-    dst += sprintf(dst, "* UID size: ");
-    switch ((nai.abtAtqa[1] & 0xc0) >> 6) {
+    off += snprintf(dst + off, size - off, "* UID size: ");
+    switch ((pnai->abtAtqa[1] & 0xc0) >> 6) {
       case 0:
-        dst += sprintf(dst, "single\n");
+        off += snprintf(dst + off, size - off, "single\n");
         break;
       case 1:
-        dst += sprintf(dst, "double\n");
+        off += snprintf(dst + off, size - off, "double\n");
         break;
       case 2:
-        dst += sprintf(dst, "triple\n");
+        off += snprintf(dst + off, size - off, "triple\n");
         break;
       case 3:
-        dst += sprintf(dst, "RFU\n");
+        off += snprintf(dst + off, size - off, "RFU\n");
         break;
     }
-    dst += sprintf(dst, "* bit frame anticollision ");
-    switch (nai.abtAtqa[1] & 0x1f) {
+    off += snprintf(dst + off, size - off, "* bit frame anticollision ");
+    switch (pnai->abtAtqa[1] & 0x1f) {
       case 0x01:
       case 0x02:
       case 0x04:
       case 0x08:
       case 0x10:
-        dst += sprintf(dst, "supported\n");
+        off += snprintf(dst + off, size - off, "supported\n");
         break;
       default:
-        dst += sprintf(dst, "not supported\n");
+        off += snprintf(dst + off, size - off, "not supported\n");
         break;
     }
   }
-  dst += sprintf(dst, "       UID (NFCID%c): ", (nai.abtUid[0] == 0x08 ? '3' : '1'));
-  dst += sprint_hex(dst, nai.abtUid, nai.szUidLen);
+  off += snprintf(dst + off, size - off, "       UID (NFCID%c): ", (pnai->abtUid[0] == 0x08 ? '3' : '1'));
+  off += snprint_hex(dst + off, size - off, pnai->abtUid, pnai->szUidLen);
   if (verbose) {
-    if (nai.abtUid[0] == 0x08) {
-      dst += sprintf(dst, "* Random UID\n");
+    if (pnai->abtUid[0] == 0x08) {
+      off += snprintf(dst + off, size - off, "* Random UID\n");
     }
   }
-  dst += sprintf(dst, "      SAK (SEL_RES): ");
-  dst += sprint_hex(dst, &nai.btSak, 1);
+  off += snprintf(dst + off, size - off, "      SAK (SEL_RES): ");
+  off += snprint_hex(dst + off, size - off, &pnai->btSak, 1);
   if (verbose) {
-    if (nai.btSak & SAK_UID_NOT_COMPLETE) {
-      dst += sprintf(dst, "* Warning! Cascade bit set: UID not complete\n");
+    if (pnai->btSak & SAK_UID_NOT_COMPLETE) {
+      off += snprintf(dst + off, size - off, "* Warning! Cascade bit set: UID not complete\n");
     }
-    if (nai.btSak & SAK_ISO14443_4_COMPLIANT) {
-      dst += sprintf(dst, "* Compliant with ISO/IEC 14443-4\n");
+    if (pnai->btSak & SAK_ISO14443_4_COMPLIANT) {
+      off += snprintf(dst + off, size - off, "* Compliant with ISO/IEC 14443-4\n");
     } else {
-      dst += sprintf(dst, "* Not compliant with ISO/IEC 14443-4\n");
+      off += snprintf(dst + off, size - off, "* Not compliant with ISO/IEC 14443-4\n");
     }
-    if (nai.btSak & SAK_ISO18092_COMPLIANT) {
-      dst += sprintf(dst, "* Compliant with ISO/IEC 18092\n");
+    if (pnai->btSak & SAK_ISO18092_COMPLIANT) {
+      off += snprintf(dst + off, size - off, "* Compliant with ISO/IEC 18092\n");
     } else {
-      dst += sprintf(dst, "* Not compliant with ISO/IEC 18092\n");
+      off += snprintf(dst + off, size - off, "* Not compliant with ISO/IEC 18092\n");
     }
   }
-  if (nai.szAtsLen) {
-    dst += sprintf(dst, "                ATS: ");
-    dst += sprint_hex(dst, nai.abtAts, nai.szAtsLen);
+  if (pnai->szAtsLen) {
+    off += snprintf(dst + off, size - off, "                ATS: ");
+    off += snprint_hex(dst + off, size - off, pnai->abtAts, pnai->szAtsLen);
   }
-  if (nai.szAtsLen && verbose) {
+  if (pnai->szAtsLen && verbose) {
     // Decode ATS according to ISO/IEC 14443-4 (5.2 Answer to select)
     const int iMaxFrameSizes[] = { 16, 24, 32, 40, 48, 64, 96, 128, 256 };
-    dst += sprintf(dst, "* Max Frame Size accepted by PICC: %d bytes\n", iMaxFrameSizes[nai.abtAts[0] & 0x0F]);
+    off += snprintf(dst + off, size - off, "* Max Frame Size accepted by PICC: %d bytes\n", iMaxFrameSizes[pnai->abtAts[0] & 0x0F]);
 
     size_t offset = 1;
-    if (nai.abtAts[0] & 0x10) { // TA(1) present
-      uint8_t TA = nai.abtAts[offset];
+    if (pnai->abtAts[0] & 0x10) { // TA(1) present
+      uint8_t TA = pnai->abtAts[offset];
       offset++;
-      dst += sprintf(dst, "* Bit Rate Capability:\n");
+      off += snprintf(dst + off, size - off, "* Bit Rate Capability:\n");
       if (TA == 0) {
-        dst += sprintf(dst, "  * PICC supports only 106 kbits/s in both directions\n");
+        off += snprintf(dst + off, size - off, "  * PICC supports only 106 kbits/s in both directions\n");
       }
       if (TA & 1 << 7) {
-        dst += sprintf(dst, "  * Same bitrate in both directions mandatory\n");
+        off += snprintf(dst + off, size - off, "  * Same bitrate in both directions mandatory\n");
       }
       if (TA & 1 << 4) {
-        dst += sprintf(dst, "  * PICC to PCD, DS=2, bitrate 212 kbits/s supported\n");
+        off += snprintf(dst + off, size - off, "  * PICC to PCD, DS=2, bitrate 212 kbits/s supported\n");
       }
       if (TA & 1 << 5) {
-        dst += sprintf(dst, "  * PICC to PCD, DS=4, bitrate 424 kbits/s supported\n");
+        off += snprintf(dst + off, size - off, "  * PICC to PCD, DS=4, bitrate 424 kbits/s supported\n");
       }
       if (TA & 1 << 6) {
-        dst += sprintf(dst, "  * PICC to PCD, DS=8, bitrate 847 kbits/s supported\n");
+        off += snprintf(dst + off, size - off, "  * PICC to PCD, DS=8, bitrate 847 kbits/s supported\n");
       }
       if (TA & 1 << 0) {
-        dst += sprintf(dst, "  * PCD to PICC, DR=2, bitrate 212 kbits/s supported\n");
+        off += snprintf(dst + off, size - off, "  * PCD to PICC, DR=2, bitrate 212 kbits/s supported\n");
       }
       if (TA & 1 << 1) {
-        dst += sprintf(dst, "  * PCD to PICC, DR=4, bitrate 424 kbits/s supported\n");
+        off += snprintf(dst + off, size - off, "  * PCD to PICC, DR=4, bitrate 424 kbits/s supported\n");
       }
       if (TA & 1 << 2) {
-        dst += sprintf(dst, "  * PCD to PICC, DR=8, bitrate 847 kbits/s supported\n");
+        off += snprintf(dst + off, size - off, "  * PCD to PICC, DR=8, bitrate 847 kbits/s supported\n");
       }
       if (TA & 1 << 3) {
-        dst += sprintf(dst, "  * ERROR unknown value\n");
+        off += snprintf(dst + off, size - off, "  * ERROR unknown value\n");
       }
     }
-    if (nai.abtAts[0] & 0x20) { // TB(1) present
-      uint8_t TB = nai.abtAts[offset];
+    if (pnai->abtAts[0] & 0x20) { // TB(1) present
+      uint8_t TB = pnai->abtAts[offset];
       offset++;
-      dst += sprintf(dst, "* Frame Waiting Time: %.4g ms\n", 256.0 * 16.0 * (1 << ((TB & 0xf0) >> 4)) / 13560.0);
+      off += snprintf(dst + off, size - off, "* Frame Waiting Time: %.4g ms\n", 256.0 * 16.0 * (1 << ((TB & 0xf0) >> 4)) / 13560.0);
       if ((TB & 0x0f) == 0) {
-        dst += sprintf(dst, "* No Start-up Frame Guard Time required\n");
+        off += snprintf(dst + off, size - off, "* No Start-up Frame Guard Time required\n");
       } else {
-        dst += sprintf(dst, "* Start-up Frame Guard Time: %.4g ms\n", 256.0 * 16.0 * (1 << (TB & 0x0f)) / 13560.0);
+        off += snprintf(dst + off, size - off, "* Start-up Frame Guard Time: %.4g ms\n", 256.0 * 16.0 * (1 << (TB & 0x0f)) / 13560.0);
       }
     }
-    if (nai.abtAts[0] & 0x40) { // TC(1) present
-      uint8_t TC = nai.abtAts[offset];
+    if (pnai->abtAts[0] & 0x40) { // TC(1) present
+      uint8_t TC = pnai->abtAts[offset];
       offset++;
       if (TC & 0x1) {
-        dst += sprintf(dst, "* Node ADdress supported\n");
+        off += snprintf(dst + off, size - off, "* Node Address supported\n");
       } else {
-        dst += sprintf(dst, "* Node ADdress not supported\n");
+        off += snprintf(dst + off, size - off, "* Node Address not supported\n");
       }
       if (TC & 0x2) {
-        dst += sprintf(dst, "* Card IDentifier supported\n");
+        off += snprintf(dst + off, size - off, "* Card IDentifier supported\n");
       } else {
-        dst += sprintf(dst, "* Card IDentifier not supported\n");
+        off += snprintf(dst + off, size - off, "* Card IDentifier not supported\n");
       }
     }
-    if (nai.szAtsLen > offset) {
-      dst += sprintf(dst, "* Historical bytes Tk: ");
-      dst += sprint_hex(dst, nai.abtAts + offset, (nai.szAtsLen - offset));
-      uint8_t CIB = nai.abtAts[offset];
+    if (pnai->szAtsLen > offset) {
+      off += snprintf(dst + off, size - off, "* Historical bytes Tk: ");
+      off += snprint_hex(dst + off, size - off, pnai->abtAts + offset, (pnai->szAtsLen - offset));
+      uint8_t CIB = pnai->abtAts[offset];
       offset++;
       if (CIB != 0x00 && CIB != 0x10 && (CIB & 0xf0) != 0x80) {
-        dst += sprintf(dst, "  * Proprietary format\n");
+        off += snprintf(dst + off, size - off, "  * Proprietary format\n");
         if (CIB == 0xc1) {
-          dst += sprintf(dst, "    * Tag byte: Mifare or virtual cards of various types\n");
-          uint8_t L = nai.abtAts[offset];
+          off += snprintf(dst + off, size - off, "    * Tag byte: Mifare or virtual cards of various types\n");
+          uint8_t L = pnai->abtAts[offset];
           offset++;
-          if (L != (nai.szAtsLen - offset)) {
-            dst += sprintf(dst, "    * Warning: Type Identification Coding length (%i)", L);
-            dst += sprintf(dst, " not matching Tk length (%zi)\n", (nai.szAtsLen - offset));
+          if (L != (pnai->szAtsLen - offset)) {
+            off += snprintf(dst + off, size - off, "    * Warning: Type Identification Coding length (%i)", L);
+            off += snprintf(dst + off, size - off, " not matching Tk length (%" PRIdPTR ")\n", (pnai->szAtsLen - offset));
           }
-          if ((nai.szAtsLen - offset - 2) > 0) { // Omit 2 CRC bytes
-            uint8_t CTC = nai.abtAts[offset];
+          if ((pnai->szAtsLen - offset - 2) > 0) { // Omit 2 CRC bytes
+            uint8_t CTC = pnai->abtAts[offset];
             offset++;
-            dst += sprintf(dst, "    * Chip Type: ");
+            off += snprintf(dst + off, size - off, "    * Chip Type: ");
             switch (CTC & 0xf0) {
               case 0x00:
-                dst += sprintf(dst, "(Multiple) Virtual Cards\n");
+                off += snprintf(dst + off, size - off, "(Multiple) Virtual Cards\n");
                 break;
               case 0x10:
-                dst += sprintf(dst, "Mifare DESFire\n");
+                off += snprintf(dst + off, size - off, "Mifare DESFire\n");
                 break;
               case 0x20:
-                dst += sprintf(dst, "Mifare Plus\n");
+                off += snprintf(dst + off, size - off, "Mifare Plus\n");
                 break;
               default:
-                dst += sprintf(dst, "RFU\n");
+                off += snprintf(dst + off, size - off, "RFU\n");
                 break;
             }
-            dst += sprintf(dst, "    * Memory size: ");
+            off += snprintf(dst + off, size - off, "    * Memory size: ");
             switch (CTC & 0x0f) {
               case 0x00:
-                dst += sprintf(dst, "<1 kbyte\n");
+                off += snprintf(dst + off, size - off, "<1 kbyte\n");
                 break;
               case 0x01:
-                dst += sprintf(dst, "1 kbyte\n");
+                off += snprintf(dst + off, size - off, "1 kbyte\n");
                 break;
               case 0x02:
-                dst += sprintf(dst, "2 kbyte\n");
+                off += snprintf(dst + off, size - off, "2 kbyte\n");
                 break;
               case 0x03:
-                dst += sprintf(dst, "4 kbyte\n");
+                off += snprintf(dst + off, size - off, "4 kbyte\n");
                 break;
               case 0x04:
-                dst += sprintf(dst, "8 kbyte\n");
+                off += snprintf(dst + off, size - off, "8 kbyte\n");
                 break;
               case 0x0f:
-                dst += sprintf(dst, "Unspecified\n");
+                off += snprintf(dst + off, size - off, "Unspecified\n");
                 break;
               default:
-                dst += sprintf(dst, "RFU\n");
+                off += snprintf(dst + off, size - off, "RFU\n");
                 break;
             }
           }
-          if ((nai.szAtsLen - offset) > 0) { // Omit 2 CRC bytes
-            uint8_t CVC = nai.abtAts[offset];
+          if ((pnai->szAtsLen - offset) > 0) { // Omit 2 CRC bytes
+            uint8_t CVC = pnai->abtAts[offset];
             offset++;
-            dst += sprintf(dst, "    * Chip Status: ");
+            off += snprintf(dst + off, size - off, "    * Chip Status: ");
             switch (CVC & 0xf0) {
               case 0x00:
-                dst += sprintf(dst, "Engineering sample\n");
+                off += snprintf(dst + off, size - off, "Engineering sample\n");
                 break;
               case 0x20:
-                dst += sprintf(dst, "Released\n");
+                off += snprintf(dst + off, size - off, "Released\n");
                 break;
               default:
-                dst += sprintf(dst, "RFU\n");
+                off += snprintf(dst + off, size - off, "RFU\n");
                 break;
             }
-            dst += sprintf(dst, "    * Chip Generation: ");
+            off += snprintf(dst + off, size - off, "    * Chip Generation: ");
             switch (CVC & 0x0f) {
               case 0x00:
-                dst += sprintf(dst, "Generation 1\n");
+                off += snprintf(dst + off, size - off, "Generation 1\n");
                 break;
               case 0x01:
-                dst += sprintf(dst, "Generation 2\n");
+                off += snprintf(dst + off, size - off, "Generation 2\n");
                 break;
               case 0x02:
-                dst += sprintf(dst, "Generation 3\n");
+                off += snprintf(dst + off, size - off, "Generation 3\n");
                 break;
               case 0x0f:
-                dst += sprintf(dst, "Unspecified\n");
+                off += snprintf(dst + off, size - off, "Unspecified\n");
                 break;
               default:
-                dst += sprintf(dst, "RFU\n");
+                off += snprintf(dst + off, size - off, "RFU\n");
                 break;
             }
           }
-          if ((nai.szAtsLen - offset) > 0) { // Omit 2 CRC bytes
-            uint8_t VCS = nai.abtAts[offset];
+          if ((pnai->szAtsLen - offset) > 0) { // Omit 2 CRC bytes
+            uint8_t VCS = pnai->abtAts[offset];
             offset++;
-            dst += sprintf(dst, "    * Specifics (Virtual Card Selection):\n");
+            off += snprintf(dst + off, size - off, "    * Specifics (Virtual Card Selection):\n");
             if ((VCS & 0x09) == 0x00) {
-              dst += sprintf(dst, "      * Only VCSL supported\n");
+              off += snprintf(dst + off, size - off, "      * Only VCSL supported\n");
             } else if ((VCS & 0x09) == 0x01) {
-              dst += sprintf(dst, "      * VCS, VCSL and SVC supported\n");
+              off += snprintf(dst + off, size - off, "      * VCS, VCSL and SVC supported\n");
             }
             if ((VCS & 0x0e) == 0x00) {
-              dst += sprintf(dst, "      * SL1, SL2(?), SL3 supported\n");
+              off += snprintf(dst + off, size - off, "      * SL1, SL2(?), SL3 supported\n");
             } else if ((VCS & 0x0e) == 0x02) {
-              dst += sprintf(dst, "      * SL3 only card\n");
+              off += snprintf(dst + off, size - off, "      * SL3 only card\n");
             } else if ((VCS & 0x0f) == 0x0e) {
-              dst += sprintf(dst, "      * No VCS command supported\n");
+              off += snprintf(dst + off, size - off, "      * No VCS command supported\n");
             } else if ((VCS & 0x0f) == 0x0f) {
-              dst += sprintf(dst, "      * Unspecified\n");
+              off += snprintf(dst + off, size - off, "      * Unspecified\n");
             } else {
-              dst += sprintf(dst, "      * RFU\n");
+              off += snprintf(dst + off, size - off, "      * RFU\n");
             }
           }
         }
       } else {
         if (CIB == 0x00) {
-          dst += sprintf(dst, "  * Tk after 0x00 consist of optional consecutive COMPACT-TLV data objects\n");
-          dst += sprintf(dst, "    followed by a mandatory status indicator (the last three bytes, not in TLV)\n");
-          dst += sprintf(dst, "    See ISO/IEC 7816-4 8.1.1.3 for more info\n");
+          off += snprintf(dst + off, size - off, "  * Tk after 0x00 consist of optional consecutive COMPACT-TLV data objects\n");
+          off += snprintf(dst + off, size - off, "    followed by a mandatory status indicator (the last three bytes, not in TLV)\n");
+          off += snprintf(dst + off, size - off, "    See ISO/IEC 7816-4 8.1.1.3 for more info\n");
         }
         if (CIB == 0x10) {
-          dst += sprintf(dst, "  * DIR data reference: %02x\n", nai.abtAts[offset]);
+          off += snprintf(dst + off, size - off, "  * DIR data reference: %02x\n", pnai->abtAts[offset]);
         }
         if (CIB == 0x80) {
-          if (nai.szAtsLen == offset) {
-            dst += sprintf(dst, "  * No COMPACT-TLV objects found, no status found\n");
+          if (pnai->szAtsLen == offset) {
+            off += snprintf(dst + off, size - off, "  * No COMPACT-TLV objects found, no status found\n");
           } else {
-            dst += sprintf(dst, "  * Tk after 0x80 consist of optional consecutive COMPACT-TLV data objects;\n");
-            dst += sprintf(dst, "    the last data object may carry a status indicator of one, two or three bytes.\n");
-            dst += sprintf(dst, "    See ISO/IEC 7816-4 8.1.1.3 for more info\n");
+            off += snprintf(dst + off, size - off, "  * Tk after 0x80 consist of optional consecutive COMPACT-TLV data objects;\n");
+            off += snprintf(dst + off, size - off, "    the last data object may carry a status indicator of one, two or three bytes.\n");
+            off += snprintf(dst + off, size - off, "    See ISO/IEC 7816-4 8.1.1.3 for more info\n");
           }
         }
       }
     }
   }
   if (verbose) {
-    dst += sprintf(dst, "\nFingerprinting based on MIFARE type Identification Procedure:\n"); // AN10833
+    off += snprintf(dst + off, size - off, "\nFingerprinting based on MIFARE type Identification Procedure:\n"); // AN10833
     uint16_t atqa = 0;
     uint8_t sak = 0;
     uint8_t i, j;
     bool found_possible_match = false;
 
-    atqa = (((uint16_t)nai.abtAtqa[0] & 0xff) << 8);
-    atqa += (((uint16_t)nai.abtAtqa[1] & 0xff));
-    sak = ((uint8_t)nai.btSak & 0xff);
+    atqa = (((uint16_t)pnai->abtAtqa[0] & 0xff) << 8);
+    atqa += (((uint16_t)pnai->abtAtqa[1] & 0xff));
+    sak = ((uint8_t)pnai->btSak & 0xff);
 
     for (i = 0; i < sizeof(const_ca) / sizeof(const_ca[0]); i++) {
       if ((atqa & const_ca[i].mask) == const_ca[i].atqa) {
         for (j = 0; (j < sizeof(const_ca[i].saklist)) && (const_ca[i].saklist[j] >= 0); j++) {
           int sakindex = const_ca[i].saklist[j];
           if ((sak & const_cs[sakindex].mask) == const_cs[sakindex].sak) {
-            dst += sprintf(dst, "* %s%s\n", const_ca[i].type, const_cs[sakindex].type);
+            off += snprintf(dst + off, size - off, "* %s%s\n", const_ca[i].type, const_cs[sakindex].type);
             found_possible_match = true;
           }
         }
@@ -418,226 +419,236 @@ sprint_nfc_iso14443a_info(char *dst, const nfc_iso14443a_info nai, bool verbose)
     // Other matches not described in
     // AN10833 MIFARE Type Identification Procedure
     // but seen in the field:
-    dst += sprintf(dst, "Other possible matches based on ATQA & SAK values:\n");
+    off += snprintf(dst + off, size - off, "Other possible matches based on ATQA & SAK values:\n");
     uint32_t atqasak = 0;
-    atqasak += (((uint32_t)nai.abtAtqa[0] & 0xff) << 16);
-    atqasak += (((uint32_t)nai.abtAtqa[1] & 0xff) << 8);
-    atqasak += ((uint32_t)nai.btSak & 0xff);
+    atqasak += (((uint32_t)pnai->abtAtqa[0] & 0xff) << 16);
+    atqasak += (((uint32_t)pnai->abtAtqa[1] & 0xff) << 8);
+    atqasak += ((uint32_t)pnai->btSak & 0xff);
     switch (atqasak) {
       case 0x000488:
-        dst += sprintf(dst, "* Mifare Classic 1K Infineon\n");
+        off += snprintf(dst + off, size - off, "* Mifare Classic 1K Infineon\n");
         found_possible_match = true;
         break;
       case 0x000298:
-        dst += sprintf(dst, "* Gemplus MPCOS\n");
+        off += snprintf(dst + off, size - off, "* Gemplus MPCOS\n");
         found_possible_match = true;
         break;
       case 0x030428:
-        dst += sprintf(dst, "* JCOP31\n");
+        off += snprintf(dst + off, size - off, "* JCOP31\n");
         found_possible_match = true;
         break;
       case 0x004820:
-        dst += sprintf(dst, "* JCOP31 v2.4.1\n");
-        dst += sprintf(dst, "* JCOP31 v2.2\n");
+        off += snprintf(dst + off, size - off, "* JCOP31 v2.4.1\n");
+        off += snprintf(dst + off, size - off, "* JCOP31 v2.2\n");
         found_possible_match = true;
         break;
       case 0x000428:
-        dst += sprintf(dst, "* JCOP31 v2.3.1\n");
+        off += snprintf(dst + off, size - off, "* JCOP31 v2.3.1\n");
         found_possible_match = true;
         break;
       case 0x000453:
-        dst += sprintf(dst, "* Fudan FM1208SH01\n");
+        off += snprintf(dst + off, size - off, "* Fudan FM1208SH01\n");
         found_possible_match = true;
         break;
       case 0x000820:
-        dst += sprintf(dst, "* Fudan FM1208\n");
+        off += snprintf(dst + off, size - off, "* Fudan FM1208\n");
         found_possible_match = true;
         break;
       case 0x000238:
-        dst += sprintf(dst, "* MFC 4K emulated by Nokia 6212 Classic\n");
+        off += snprintf(dst + off, size - off, "* MFC 4K emulated by Nokia 6212 Classic\n");
         found_possible_match = true;
         break;
       case 0x000838:
-        dst += sprintf(dst, "* MFC 4K emulated by Nokia 6131 NFC\n");
+        off += snprintf(dst + off, size - off, "* MFC 4K emulated by Nokia 6131 NFC\n");
         found_possible_match = true;
         break;
     }
     if (! found_possible_match) {
-      sprintf(dst, "* Unknown card, sorry\n");
+      snprintf(dst + off, size - off, "* Unknown card, sorry\n");
     }
   }
 }
 
 void
-sprint_nfc_felica_info(char *dst, const nfc_felica_info nfi, bool verbose)
+snprint_nfc_felica_info(char *dst, size_t size, const nfc_felica_info *pnfi, bool verbose)
 {
   (void) verbose;
-  dst += sprintf(dst, "        ID (NFCID2): ");
-  dst += sprint_hex(dst, nfi.abtId, 8);
-  dst += sprintf(dst, "    Parameter (PAD): ");
-  dst += sprint_hex(dst, nfi.abtPad, 8);
-  dst += sprintf(dst, "   System Code (SC): ");
-  sprint_hex(dst, nfi.abtSysCode, 2);
+  int off = 0;
+  off += snprintf(dst + off, size - off, "        ID (NFCID2): ");
+  off += snprint_hex(dst + off, size - off, pnfi->abtId, 8);
+  off += snprintf(dst + off, size - off, "    Parameter (PAD): ");
+  off += snprint_hex(dst + off, size - off, pnfi->abtPad, 8);
+  off += snprintf(dst + off, size - off, "   System Code (SC): ");
+  snprint_hex(dst + off, size - off, pnfi->abtSysCode, 2);
 }
 
 void
-sprint_nfc_jewel_info(char *dst, const nfc_jewel_info nji, bool verbose)
+snprint_nfc_jewel_info(char *dst, size_t size, const nfc_jewel_info *pnji, bool verbose)
 {
   (void) verbose;
-  dst += sprintf(dst, "    ATQA (SENS_RES): ");
-  dst += sprint_hex(dst, nji.btSensRes, 2);
-  dst += sprintf(dst, "      4-LSB JEWELID: ");
-  sprint_hex(dst, nji.btId, 4);
+  int off = 0;
+  off += snprintf(dst + off, size - off, "    ATQA (SENS_RES): ");
+  off += snprint_hex(dst + off, size - off, pnji->btSensRes, 2);
+  off += snprintf(dst + off, size - off, "      4-LSB JEWELID: ");
+  snprint_hex(dst + off, size - off, pnji->btId, 4);
 }
 
 #define PI_ISO14443_4_SUPPORTED 0x01
 #define PI_NAD_SUPPORTED        0x01
 #define PI_CID_SUPPORTED        0x02
 void
-sprint_nfc_iso14443b_info(char *dst, const nfc_iso14443b_info nbi, bool verbose)
+snprint_nfc_iso14443b_info(char *dst, size_t size, const nfc_iso14443b_info *pnbi, bool verbose)
 {
-  const int iMaxFrameSizes[] = { 16, 24, 32, 40, 48, 64, 96, 128, 256 };
-  dst += sprintf(dst, "               PUPI: ");
-  dst += sprint_hex(dst, nbi.abtPupi, 4);
-  dst += sprintf(dst, "   Application Data: ");
-  dst += sprint_hex(dst, nbi.abtApplicationData, 4);
-  dst += sprintf(dst, "      Protocol Info: ");
-  dst += sprint_hex(dst, nbi.abtProtocolInfo, 3);
+  int off = 0;
+  off += snprintf(dst + off, size - off, "               PUPI: ");
+  off += snprint_hex(dst + off, size - off, pnbi->abtPupi, 4);
+  off += snprintf(dst + off, size - off, "   Application Data: ");
+  off += snprint_hex(dst + off, size - off, pnbi->abtApplicationData, 4);
+  off += snprintf(dst + off, size - off, "      Protocol Info: ");
+  off += snprint_hex(dst + off, size - off, pnbi->abtProtocolInfo, 3);
   if (verbose) {
-    dst += sprintf(dst, "* Bit Rate Capability:\n");
-    if (nbi.abtProtocolInfo[0] == 0) {
-      dst += sprintf(dst, " * PICC supports only 106 kbits/s in both directions\n");
+    off += snprintf(dst + off, size - off, "* Bit Rate Capability:\n");
+    if (pnbi->abtProtocolInfo[0] == 0) {
+      off += snprintf(dst + off, size - off, " * PICC supports only 106 kbits/s in both directions\n");
     }
-    if (nbi.abtProtocolInfo[0] & 1 << 7) {
-      dst += sprintf(dst, " * Same bitrate in both directions mandatory\n");
+    if (pnbi->abtProtocolInfo[0] & 1 << 7) {
+      off += snprintf(dst + off, size - off, " * Same bitrate in both directions mandatory\n");
     }
-    if (nbi.abtProtocolInfo[0] & 1 << 4) {
-      dst += sprintf(dst, " * PICC to PCD, 1etu=64/fc, bitrate 212 kbits/s supported\n");
+    if (pnbi->abtProtocolInfo[0] & 1 << 4) {
+      off += snprintf(dst + off, size - off, " * PICC to PCD, 1etu=64/fc, bitrate 212 kbits/s supported\n");
     }
-    if (nbi.abtProtocolInfo[0] & 1 << 5) {
-      dst += sprintf(dst, " * PICC to PCD, 1etu=32/fc, bitrate 424 kbits/s supported\n");
+    if (pnbi->abtProtocolInfo[0] & 1 << 5) {
+      off += snprintf(dst + off, size - off, " * PICC to PCD, 1etu=32/fc, bitrate 424 kbits/s supported\n");
     }
-    if (nbi.abtProtocolInfo[0] & 1 << 6) {
-      dst += sprintf(dst, " * PICC to PCD, 1etu=16/fc, bitrate 847 kbits/s supported\n");
+    if (pnbi->abtProtocolInfo[0] & 1 << 6) {
+      off += snprintf(dst + off, size - off, " * PICC to PCD, 1etu=16/fc, bitrate 847 kbits/s supported\n");
     }
-    if (nbi.abtProtocolInfo[0] & 1 << 0) {
-      dst += sprintf(dst, " * PCD to PICC, 1etu=64/fc, bitrate 212 kbits/s supported\n");
+    if (pnbi->abtProtocolInfo[0] & 1 << 0) {
+      off += snprintf(dst + off, size - off, " * PCD to PICC, 1etu=64/fc, bitrate 212 kbits/s supported\n");
     }
-    if (nbi.abtProtocolInfo[0] & 1 << 1) {
-      dst += sprintf(dst, " * PCD to PICC, 1etu=32/fc, bitrate 424 kbits/s supported\n");
+    if (pnbi->abtProtocolInfo[0] & 1 << 1) {
+      off += snprintf(dst + off, size - off, " * PCD to PICC, 1etu=32/fc, bitrate 424 kbits/s supported\n");
     }
-    if (nbi.abtProtocolInfo[0] & 1 << 2) {
-      dst += sprintf(dst, " * PCD to PICC, 1etu=16/fc, bitrate 847 kbits/s supported\n");
+    if (pnbi->abtProtocolInfo[0] & 1 << 2) {
+      off += snprintf(dst + off, size - off, " * PCD to PICC, 1etu=16/fc, bitrate 847 kbits/s supported\n");
     }
-    if (nbi.abtProtocolInfo[0] & 1 << 3) {
-      dst += sprintf(dst, " * ERROR unknown value\n");
+    if (pnbi->abtProtocolInfo[0] & 1 << 3) {
+      off += snprintf(dst + off, size - off, " * ERROR unknown value\n");
     }
-    if ((nbi.abtProtocolInfo[1] & 0xf0) <= 0x80) {
-      dst += sprintf(dst, "* Maximum frame sizes: %d bytes\n", iMaxFrameSizes[((nbi.abtProtocolInfo[1] & 0xf0) >> 4)]);
+    if ((pnbi->abtProtocolInfo[1] & 0xf0) <= 0x80) {
+      const int iMaxFrameSizes[] = { 16, 24, 32, 40, 48, 64, 96, 128, 256 };
+      off += snprintf(dst + off, size - off, "* Maximum frame sizes: %d bytes\n", iMaxFrameSizes[((pnbi->abtProtocolInfo[1] & 0xf0) >> 4)]);
     }
-    if ((nbi.abtProtocolInfo[1] & 0x0f) == PI_ISO14443_4_SUPPORTED) {
-      dst += sprintf(dst, "* Protocol types supported: ISO/IEC 14443-4\n");
+    if ((pnbi->abtProtocolInfo[1] & 0x0f) == PI_ISO14443_4_SUPPORTED) {
+      off += snprintf(dst + off, size - off, "* Protocol types supported: ISO/IEC 14443-4\n");
     }
-    dst += sprintf(dst, "* Frame Waiting Time: %.4g ms\n", 256.0 * 16.0 * (1 << ((nbi.abtProtocolInfo[2] & 0xf0) >> 4)) / 13560.0);
-    if ((nbi.abtProtocolInfo[2] & (PI_NAD_SUPPORTED | PI_CID_SUPPORTED)) != 0) {
-      dst += sprintf(dst, "* Frame options supported: ");
-      if ((nbi.abtProtocolInfo[2] & PI_NAD_SUPPORTED) != 0) dst += sprintf(dst, "NAD ");
-      if ((nbi.abtProtocolInfo[2] & PI_CID_SUPPORTED) != 0) dst += sprintf(dst, "CID ");
-      sprintf(dst, "\n");
+    off += snprintf(dst + off, size - off, "* Frame Waiting Time: %.4g ms\n", 256.0 * 16.0 * (1 << ((pnbi->abtProtocolInfo[2] & 0xf0) >> 4)) / 13560.0);
+    if ((pnbi->abtProtocolInfo[2] & (PI_NAD_SUPPORTED | PI_CID_SUPPORTED)) != 0) {
+      off += snprintf(dst + off, size - off, "* Frame options supported: ");
+      if ((pnbi->abtProtocolInfo[2] & PI_NAD_SUPPORTED) != 0) off += snprintf(dst + off, size - off, "NAD ");
+      if ((pnbi->abtProtocolInfo[2] & PI_CID_SUPPORTED) != 0) off += snprintf(dst + off, size - off, "CID ");
+      snprintf(dst + off, size - off, "\n");
     }
   }
 }
 
 void
-sprint_nfc_iso14443bi_info(char *dst, const nfc_iso14443bi_info nii, bool verbose)
+snprint_nfc_iso14443bi_info(char *dst, size_t size, const nfc_iso14443bi_info *pnii, bool verbose)
 {
-  dst += sprintf(dst, "                DIV: ");
-  dst += sprint_hex(dst, nii.abtDIV, 4);
+  int off = 0;
+  off += snprintf(dst + off, size - off, "                DIV: ");
+  off += snprint_hex(dst + off, size - off, pnii->abtDIV, 4);
   if (verbose) {
-    int version = (nii.btVerLog & 0x1e) >> 1;
-    dst += sprintf(dst, "   Software Version: ");
+    int version = (pnii->btVerLog & 0x1e) >> 1;
+    off += snprintf(dst + off, size - off, "   Software Version: ");
     if (version == 15) {
-      dst += sprintf(dst, "Undefined\n");
+      off += snprintf(dst + off, size - off, "Undefined\n");
     } else {
-      dst += sprintf(dst, "%i\n", version);
+      off += snprintf(dst + off, size - off, "%i\n", version);
     }
 
-    if ((nii.btVerLog & 0x80) && (nii.btConfig & 0x80)) {
-      dst += sprintf(dst, "        Wait Enable: yes");
+    if ((pnii->btVerLog & 0x80) && (pnii->btConfig & 0x80)) {
+      off += snprintf(dst + off, size - off, "        Wait Enable: yes");
     }
   }
-  if ((nii.btVerLog & 0x80) && (nii.btConfig & 0x40)) {
-    dst += sprintf(dst, "                ATS: ");
-    sprint_hex(dst, nii.abtAtr, nii.szAtrLen);
+  if ((pnii->btVerLog & 0x80) && (pnii->btConfig & 0x40)) {
+    off += snprintf(dst + off, size - off, "                ATS: ");
+    snprint_hex(dst + off, size - off, pnii->abtAtr, pnii->szAtrLen);
   }
 }
 
 void
-sprint_nfc_iso14443b2sr_info(char *dst, const nfc_iso14443b2sr_info nsi, bool verbose)
+snprint_nfc_iso14443b2sr_info(char *dst, size_t size, const nfc_iso14443b2sr_info *pnsi, bool verbose)
 {
   (void) verbose;
-  dst += sprintf(dst, "                UID: ");
-  sprint_hex(dst, nsi.abtUID, 8);
+  int off = 0;
+  off += snprintf(dst + off, size - off, "                UID: ");
+  snprint_hex(dst + off, size - off, pnsi->abtUID, 8);
 }
 
 void
-sprint_nfc_iso14443b2ct_info(char *dst, const nfc_iso14443b2ct_info nci, bool verbose)
+snprint_nfc_iso14443b2ct_info(char *dst, size_t size, const nfc_iso14443b2ct_info *pnci, bool verbose)
 {
   (void) verbose;
+  int off = 0;
   uint32_t uid;
-  uid = (nci.abtUID[3] << 24) + (nci.abtUID[2] << 16) + (nci.abtUID[1] << 8) + nci.abtUID[0];
-  dst += sprintf(dst, "                UID: ");
-  dst += sprint_hex(dst, nci.abtUID, sizeof(nci.abtUID));
-  dst += sprintf(dst, "      UID (decimal): %010u\n", uid);
-  dst += sprintf(dst, "       Product Code: %02X\n", nci.btProdCode);
-  sprintf(dst, "           Fab Code: %02X\n", nci.btFabCode);
+  uid = (pnci->abtUID[3] << 24) + (pnci->abtUID[2] << 16) + (pnci->abtUID[1] << 8) + pnci->abtUID[0];
+  off += snprintf(dst + off, size - off, "                UID: ");
+  off += snprint_hex(dst + off, size - off, pnci->abtUID, sizeof(pnci->abtUID));
+  off += snprintf(dst + off, size - off, "      UID (decimal): %010u\n", uid);
+  off += snprintf(dst + off, size - off, "       Product Code: %02X\n", pnci->btProdCode);
+  snprintf(dst + off, size - off, "           Fab Code: %02X\n", pnci->btFabCode);
 }
 
 void
-sprint_nfc_dep_info(char *dst, const nfc_dep_info ndi, bool verbose)
+snprint_nfc_dep_info(char *dst, size_t size, const nfc_dep_info *pndi, bool verbose)
 {
   (void) verbose;
-  dst += sprintf(dst, "       NFCID3: ");
-  dst += sprint_hex(dst, ndi.abtNFCID3, 10);
-  dst += sprintf(dst, "           BS: %02x\n", ndi.btBS);
-  dst += sprintf(dst, "           BR: %02x\n", ndi.btBR);
-  dst += sprintf(dst, "           TO: %02x\n", ndi.btTO);
-  dst += sprintf(dst, "           PP: %02x\n", ndi.btPP);
-  if (ndi.szGB) {
-    dst += sprintf(dst, "General Bytes: ");
-    sprint_hex(dst, ndi.abtGB, ndi.szGB);
+  int off = 0;
+  off += snprintf(dst + off, size - off, "       NFCID3: ");
+  off += snprint_hex(dst + off, size - off, pndi->abtNFCID3, 10);
+  off += snprintf(dst + off, size - off, "           BS: %02x\n", pndi->btBS);
+  off += snprintf(dst + off, size - off, "           BR: %02x\n", pndi->btBR);
+  off += snprintf(dst + off, size - off, "           TO: %02x\n", pndi->btTO);
+  off += snprintf(dst + off, size - off, "           PP: %02x\n", pndi->btPP);
+  if (pndi->szGB) {
+    off += snprintf(dst + off, size - off, "General Bytes: ");
+    snprint_hex(dst + off, size - off, pndi->abtGB, pndi->szGB);
   }
 }
 
 void
-sprint_nfc_target(char *dst, const nfc_target nt, bool verbose)
+snprint_nfc_target(char *dst, size_t size, const nfc_target *pnt, bool verbose)
 {
-  dst += sprintf(dst, "%s (%s%s) target:\n", str_nfc_modulation_type(nt.nm.nmt), str_nfc_baud_rate(nt.nm.nbr), (nt.nm.nmt != NMT_DEP) ? "" : (nt.nti.ndi.ndm == NDM_ACTIVE) ? "active mode" : "passive mode");
-  switch (nt.nm.nmt) {
-    case NMT_ISO14443A:
-      sprint_nfc_iso14443a_info(dst, nt.nti.nai, verbose);
-      break;
-    case NMT_JEWEL:
-      sprint_nfc_jewel_info(dst, nt.nti.nji, verbose);
-      break;
-    case NMT_FELICA:
-      sprint_nfc_felica_info(dst, nt.nti.nfi, verbose);
-      break;
-    case NMT_ISO14443B:
-      sprint_nfc_iso14443b_info(dst, nt.nti.nbi, verbose);
-      break;
-    case NMT_ISO14443BI:
-      sprint_nfc_iso14443bi_info(dst, nt.nti.nii, verbose);
-      break;
-    case NMT_ISO14443B2SR:
-      sprint_nfc_iso14443b2sr_info(dst, nt.nti.nsi, verbose);
-      break;
-    case NMT_ISO14443B2CT:
-      sprint_nfc_iso14443b2ct_info(dst, nt.nti.nci, verbose);
-      break;
-    case NMT_DEP:
-      sprint_nfc_dep_info(dst, nt.nti.ndi, verbose);
-      break;
+  if (NULL != pnt) {
+    int off = 0;
+    off += snprintf(dst + off, size - off, "%s (%s%s) target:\n", str_nfc_modulation_type(pnt->nm.nmt), str_nfc_baud_rate(pnt->nm.nbr), (pnt->nm.nmt != NMT_DEP) ? "" : (pnt->nti.ndi.ndm == NDM_ACTIVE) ? "active mode" : "passive mode");
+    switch (pnt->nm.nmt) {
+      case NMT_ISO14443A:
+        snprint_nfc_iso14443a_info(dst + off, size - off, &pnt->nti.nai, verbose);
+        break;
+      case NMT_JEWEL:
+        snprint_nfc_jewel_info(dst + off, size - off, &pnt->nti.nji, verbose);
+        break;
+      case NMT_FELICA:
+        snprint_nfc_felica_info(dst + off, size - off, &pnt->nti.nfi, verbose);
+        break;
+      case NMT_ISO14443B:
+        snprint_nfc_iso14443b_info(dst + off, size - off, &pnt->nti.nbi, verbose);
+        break;
+      case NMT_ISO14443BI:
+        snprint_nfc_iso14443bi_info(dst + off, size - off, &pnt->nti.nii, verbose);
+        break;
+      case NMT_ISO14443B2SR:
+        snprint_nfc_iso14443b2sr_info(dst + off, size - off, &pnt->nti.nsi, verbose);
+        break;
+      case NMT_ISO14443B2CT:
+        snprint_nfc_iso14443b2ct_info(dst + off, size - off, &pnt->nti.nci, verbose);
+        break;
+      case NMT_DEP:
+        snprint_nfc_dep_info(dst + off, size - off, &pnt->nti.ndi, verbose);
+        break;
+    }
   }
 }
 

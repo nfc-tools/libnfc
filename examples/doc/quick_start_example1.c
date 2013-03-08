@@ -36,6 +36,10 @@ main(int argc, const char *argv[])
 
   // Initialize libnfc and set the nfc_context
   nfc_init(&context);
+  if (context == NULL) {
+    warnx("Unable to init libnfc (malloc)\n");
+    exit(EXIT_FAILURE);
+  }
 
   // Display libnfc version
   const char *acLibnfcVersion = nfc_version();
@@ -50,7 +54,7 @@ main(int argc, const char *argv[])
 
   if (pnd == NULL) {
     warnx("ERROR: %s", "Unable to open NFC device.");
-    return EXIT_FAILURE;
+    exit(EXIT_FAILURE);
   }
   // Set opened NFC device to initiator mode
   if (nfc_initiator_init(pnd) < 0) {
@@ -82,5 +86,5 @@ main(int argc, const char *argv[])
   nfc_close(pnd);
   // Release the context
   nfc_exit(context);
-  return EXIT_SUCCESS;
+  exit(EXIT_SUCCESS);
 }

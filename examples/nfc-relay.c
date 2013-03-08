@@ -37,6 +37,7 @@
 #  include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -89,13 +90,13 @@ main(int argc, char *argv[])
   for (arg = 1; arg < argc; arg++) {
     if (0 == strcmp(argv[arg], "-h")) {
       print_usage(argv);
-      return EXIT_SUCCESS;
+      exit(EXIT_SUCCESS);
     } else if (0 == strcmp(argv[arg], "-q")) {
       quiet_output = true;
     } else {
       ERR("%s is not supported option.", argv[arg]);
       print_usage(argv);
-      return EXIT_FAILURE;
+      exit(EXIT_FAILURE);
     }
   }
 
@@ -110,20 +111,26 @@ main(int argc, char *argv[])
 
   nfc_context *context;
   nfc_init(&context);
+  if (context == NULL) {
+    ERR("Unable to init libnfc (malloc)");
+    exit(EXIT_FAILURE);
+  }
   nfc_connstring connstrings[MAX_DEVICE_COUNT];
   // List available devices
   size_t szFound = nfc_list_devices(context, connstrings, MAX_DEVICE_COUNT);
 
   if (szFound < 2) {
-    ERR("%zd device found but two opened devices are needed to relay NFC.", szFound);
-    return EXIT_FAILURE;
+    ERR("%" PRIdPTR " device found but two opened devices are needed to relay NFC.", szFound);
+    nfc_exit(context);
+    exit(EXIT_FAILURE);
   }
 
   // Try to open the NFC emulator device
   pndTag = nfc_open(context, connstrings[0]);
   if (pndTag == NULL) {
-    printf("Error opening NFC emulator device\n");
-    return EXIT_FAILURE;
+    ERR("Error opening NFC emulator device");
+    nfc_exit(context);
+    exit(EXIT_FAILURE);
   }
 
   printf("Hint: tag <---> initiator (relay) <---> target (relay) <---> original reader\n\n");
@@ -153,30 +160,44 @@ main(int argc, char *argv[])
     ERR("%s", "Initialization of NFC emulator failed");
     nfc_close(pndTag);
     nfc_exit(context);
-    return EXIT_FAILURE;
+    exit(EXIT_FAILURE);
   }
   printf("%s", "Configuring emulator settings...");
   if ((nfc_device_set_property_bool(pndTag, NP_HANDLE_CRC, false) < 0) ||
       (nfc_device_set_property_bool(pndTag, NP_HANDLE_PARITY, false) < 0) || (nfc_device_set_property_bool(pndTag, NP_ACCEPT_INVALID_FRAMES, true)) < 0) {
     nfc_perror(pndTag, "nfc_device_set_property_bool");
+    nfc_close(pndTag);
+    nfc_exit(context);
     exit(EXIT_FAILURE);
   }
   printf("%s", "Done, emulated tag is initialized");
 
   // Try to open the NFC reader
   pndReader = nfc_open(context, connstrings[1]);
+  if (pndReader == NULL) {
+    printf("Error opening NFC reader device\n");
+    nfc_close(pndTag);
+    nfc_exit(context);
+    exit(EXIT_FAILURE);
+  }
 
   printf("NFC reader device: %s opened", nfc_device_get_name(pndReader));
   printf("%s", "Configuring NFC reader settings...");
 
   if (nfc_initiator_init(pndReader) < 0) {
     nfc_perror(pndReader, "nfc_initiator_init");
+    nfc_close(pndTag);
+    nfc_close(pndReader);
+    nfc_exit(context);
     exit(EXIT_FAILURE);
   }
   if ((nfc_device_set_property_bool(pndReader, NP_HANDLE_CRC, false) < 0) ||
       (nfc_device_set_property_bool(pndReader, NP_HANDLE_PARITY, false) < 0) ||
       (nfc_device_set_property_bool(pndReader, NP_ACCEPT_INVALID_FRAMES, true)) < 0) {
     nfc_perror(pndReader, "nfc_device_set_property_bool");
+    nfc_close(pndTag);
+    nfc_close(pndReader);
+    nfc_exit(context);
     exit(EXIT_FAILURE);
   }
   printf("%s", "Done, relaying frames now!");
@@ -189,12 +210,18 @@ main(int argc, char *argv[])
         // Drop down field for a very short time (original tag will reboot)
         if (nfc_device_set_property_bool(pndReader, NP_ACTIVATE_FIELD, false) < 0) {
           nfc_perror(pndReader, "nfc_device_set_property_bool");
+          nfc_close(pndTag);
+          nfc_close(pndReader);
+          nfc_exit(context);
           exit(EXIT_FAILURE);
         }
         if (!quiet_output)
           printf("\n");
         if (nfc_device_set_property_bool(pndReader, NP_ACTIVATE_FIELD, true) < 0) {
           nfc_perror(pndReader, "nfc_device_set_property_bool");
+          nfc_close(pndTag);
+          nfc_close(pndReader);
+          nfc_exit(context);
           exit(EXIT_FAILURE);
         }
       }
@@ -209,6 +236,9 @@ main(int argc, char *argv[])
         // Redirect the answer back to the reader
         if (nfc_target_send_bits(pndTag, abtTagRx, szTagRxBits, abtTagRxPar) < 0) {
           nfc_perror(pndTag, "nfc_target_send_bits");
+          nfc_close(pndTag);
+          nfc_close(pndReader);
+          nfc_exit(context);
           exit(EXIT_FAILURE);
         }
         // Print the tag frame to the screen

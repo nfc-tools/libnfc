@@ -30,7 +30,7 @@ libnfc.so.4 libnfc4 #MINVER#
  nfc_initiator_poll_target@Base 1.7.0~rc2
  nfc_initiator_select_dep_target@Base 1.7.0~rc2
  nfc_initiator_select_passive_target@Base 1.7.0~rc2
- nfc_initiator_target_is_present@Base 1.7.0~rc2
+ nfc_initiator_target_is_present@Base 1.7.0~rc6-0
  nfc_initiator_transceive_bits@Base 1.7.0~rc2
  nfc_initiator_transceive_bits_timed@Base 1.7.0~rc2
  nfc_initiator_transceive_bytes@Base 1.7.0~rc2
@@ -53,4 +53,4 @@ libnfc.so.4 libnfc4 #MINVER#
  pn53x_write_register@Base 1.7.0~rc2
  str_nfc_baud_rate@Base 1.7.0~rc2
  str_nfc_modulation_type@Base 1.7.0~rc2
- str_nfc_target@Base 1.7.0~rc2
+ str_nfc_target@Base 1.7.0~rc6-0

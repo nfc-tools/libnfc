@@ -76,7 +76,7 @@ main(int argc, const char *argv[])
   for (int arg = 1; arg < argc; arg++) {
     if (0 == strcmp(argv[arg], "-h")) {
       print_usage(argv);
-      return EXIT_SUCCESS;
+      exit(EXIT_SUCCESS);
     } else if (0 == strcmp(argv[arg], "-v")) {
       verbose = true;
     } else if (0 == strcmp(argv[arg], "-i")) {
@@ -85,11 +85,15 @@ main(int argc, const char *argv[])
     } else {
       ERR("%s is not supported option.", argv[arg]);
       print_usage(argv);
-      return EXIT_FAILURE;
+      exit(EXIT_FAILURE);
     }
   }
 
   nfc_init(&context);
+  if (context == NULL) {
+    ERR("Unable to init libnfc (malloc)\n");
+    exit(EXIT_FAILURE);
+  }
 
   // Display libnfc version
   acLibnfcVersion = nfc_version();
@@ -98,10 +102,10 @@ main(int argc, const char *argv[])
   nfc_connstring connstrings[MAX_DEVICE_COUNT];
   size_t szDeviceFound = nfc_list_devices(context, connstrings, MAX_DEVICE_COUNT);
 
-  int res = EXIT_FAILURE;
   if (szDeviceFound == 0) {
     printf("No NFC device found.\n");
-    goto bye;
+    nfc_exit(context);
+    exit(EXIT_FAILURE);
   }
 
   printf("%d NFC device(s) found:\n", (int)szDeviceFound);
@@ -121,9 +125,6 @@ main(int argc, const char *argv[])
       printf("nfc_open failed for %s\n", connstrings[i]);
     }
   }
-  res = EXIT_SUCCESS;
-
-bye:
   nfc_exit(context);
-  return res;
+  exit(EXIT_SUCCESS);
 }

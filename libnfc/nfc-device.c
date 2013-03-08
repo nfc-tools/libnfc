@@ -38,7 +38,7 @@ nfc_device_new(const nfc_context *context, const nfc_connstring connstring)
   nfc_device *res = malloc(sizeof(*res));
 
   if (!res) {
-    err(EXIT_FAILURE, "nfc_device_new: malloc");
+    return NULL;
   }
 
   // Store associated context

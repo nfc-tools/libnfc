@@ -71,6 +71,10 @@ main(int argc, const char *argv[])
 
   nfc_context *context;
   nfc_init(&context);
+  if (context == NULL) {
+    ERR("Unable to init libnfc (malloc)");
+    exit(EXIT_FAILURE);
+  }
 
   // Display libnfc version
   acLibnfcVersion = nfc_version();
@@ -122,6 +126,7 @@ main(int argc, const char *argv[])
     }
     if (nfc_initiator_init(pnd) < 0) {
       nfc_perror(pnd, "nfc_initiator_init");
+      nfc_exit(context);
       exit(EXIT_FAILURE);
     }
 
@@ -138,7 +143,7 @@ main(int argc, const char *argv[])
         printf("%d ISO14443A passive target(s) found%s\n", res, (res == 0) ? ".\n" : ":");
       }
       for (n = 0; n < res; n++) {
-        print_nfc_target(ant[n], verbose);
+        print_nfc_target(&ant[n], verbose);
         printf("\n");
       }
     }
@@ -152,7 +157,7 @@ main(int argc, const char *argv[])
         printf("%d Felica (212 kbps) passive target(s) found%s\n", res, (res == 0) ? ".\n" : ":");
       }
       for (n = 0; n < res; n++) {
-        print_nfc_target(ant[n], verbose);
+        print_nfc_target(&ant[n], verbose);
         printf("\n");
       }
     }
@@ -164,7 +169,7 @@ main(int argc, const char *argv[])
         printf("%d Felica (424 kbps) passive target(s) found%s\n", res, (res == 0) ? ".\n" : ":");
       }
       for (n = 0; n < res; n++) {
-        print_nfc_target(ant[n], verbose);
+        print_nfc_target(&ant[n], verbose);
         printf("\n");
       }
     }
@@ -178,7 +183,7 @@ main(int argc, const char *argv[])
         printf("%d ISO14443B passive target(s) found%s\n", res, (res == 0) ? ".\n" : ":");
       }
       for (n = 0; n < res; n++) {
-        print_nfc_target(ant[n], verbose);
+        print_nfc_target(&ant[n], verbose);
         printf("\n");
       }
     }
@@ -192,7 +197,7 @@ main(int argc, const char *argv[])
         printf("%d ISO14443B' passive target(s) found%s\n", res, (res == 0) ? ".\n" : ":");
       }
       for (n = 0; n < res; n++) {
-        print_nfc_target(ant[n], verbose);
+        print_nfc_target(&ant[n], verbose);
         printf("\n");
       }
     }
@@ -206,7 +211,7 @@ main(int argc, const char *argv[])
         printf("%d ISO14443B-2 ST SRx passive target(s) found%s\n", res, (res == 0) ? ".\n" : ":");
       }
       for (n = 0; n < res; n++) {
-        print_nfc_target(ant[n], verbose);
+        print_nfc_target(&ant[n], verbose);
         printf("\n");
       }
     }
@@ -220,7 +225,7 @@ main(int argc, const char *argv[])
         printf("%d ISO14443B-2 ASK CTx passive target(s) found%s\n", res, (res == 0) ? ".\n" : ":");
       }
       for (n = 0; n < res; n++) {
-        print_nfc_target(ant[n], verbose);
+        print_nfc_target(&ant[n], verbose);
         printf("\n");
       }
     }
@@ -234,7 +239,7 @@ main(int argc, const char *argv[])
         printf("%d Jewel passive target(s) found%s\n", res, (res == 0) ? ".\n" : ":");
       }
       for (n = 0; n < res; n++) {
-        print_nfc_target(ant[n], verbose);
+        print_nfc_target(&ant[n], verbose);
         printf("\n");
       }
     }
@@ -242,5 +247,5 @@ main(int argc, const char *argv[])
   }
 
   nfc_exit(context);
-  return EXIT_SUCCESS;
+  exit(EXIT_SUCCESS);
 }

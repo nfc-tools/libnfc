@@ -51,7 +51,7 @@ int
 main(int argc, const char *argv[])
 {
   size_t  i;
-  nfc_device *pnd;
+  nfc_device *pnd = NULL;
   const char *acLibnfcVersion;
   bool    result;
   int res = 0;
@@ -63,11 +63,16 @@ main(int argc, const char *argv[])
   const uint8_t pncmd_diagnose_ram_test[] = { Diagnose, 0x02 };
 
   if (argc > 1) {
-    errx(1, "usage: %s", argv[0]);
+    printf("Usage: %s", argv[0]);
+    exit(EXIT_FAILURE);
   }
 
   nfc_context *context;
   nfc_init(&context);
+  if (context == NULL) {
+    ERR("Unable to init libnfc (malloc)");
+    exit(EXIT_FAILURE);
+  }
 
   // Display libnfc version
   acLibnfcVersion = nfc_version();
@@ -85,7 +90,8 @@ main(int argc, const char *argv[])
 
     if (pnd == NULL) {
       ERR("%s", "Unable to open NFC device.");
-      return EXIT_FAILURE;
+      nfc_exit(context);
+      exit(EXIT_FAILURE);
     }
 
     printf("NFC device [%s] opened.\n", nfc_device_get_name(pnd));
@@ -119,4 +125,7 @@ main(int argc, const char *argv[])
       nfc_perror(pnd, "pn53x_transceive: cannot diagnose RAM");
     }
   }
+  nfc_close(pnd);
+  nfc_exit(context);
+  exit(EXIT_SUCCESS);
 }

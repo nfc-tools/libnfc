@@ -40,10 +40,11 @@ if LIBUSB_ENABLED
 endif
 
 if WITH_LOG
-  libnfc_la_SOURCES += log-printf.c
+  libnfc_la_SOURCES += log-printf.c log_posix.c
 endif
 
 EXTRA_DIST = \
 	CMakeLists.txt \
-	log-printf.c
-
+	log-printf.c \
+	log_posix.c \
+	log_win32.c

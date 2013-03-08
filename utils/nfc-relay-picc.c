@@ -42,6 +42,7 @@
 #  include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -94,29 +95,29 @@ print_usage(char *argv[])
   printf("\t-n N\tAdds a waiting time of N seconds (integer) in the relay to mimic long distance.\n");
 }
 
-static bool print_hex_fd4(const uint8_t *pbtData, const size_t szBytes, const char *pchPrefix)
+static int print_hex_fd4(const uint8_t *pbtData, const size_t szBytes, const char *pchPrefix)
 {
   size_t  szPos;
   if (szBytes > MAX_FRAME_LEN) {
-    return EXIT_FAILURE;
+    return -1;
   }
-  if (fprintf(fd4, "#%s %04zx: ", pchPrefix, szBytes) < 0) {
-    return EXIT_FAILURE;
+  if (fprintf(fd4, "#%s %04" PRIxPTR ": ", pchPrefix, szBytes) < 0) {
+    return -1;
   }
 
   for (szPos = 0; szPos < szBytes; szPos++) {
     if (fprintf(fd4, "%02x ", pbtData[szPos]) < 0) {
-      return EXIT_FAILURE;
+      return -1;
     }
   }
   if (fprintf(fd4, "\n") < 0) {
-    return EXIT_FAILURE;
+    return -1;
   }
   fflush(fd4);
-  return EXIT_SUCCESS;
+  return 0;
 }
 
-static bool scan_hex_fd3(uint8_t *pbtData, size_t *pszBytes, const char *pchPrefix)
+static int scan_hex_fd3(uint8_t *pbtData, size_t *pszBytes, const char *pchPrefix)
 {
   size_t  szPos;
   unsigned int uiBytes;
@@ -126,25 +127,26 @@ static bool scan_hex_fd3(uint8_t *pbtData, size_t *pszBytes, const char *pchPref
   // Look for our next sync marker
   while ((c = fgetc(fd3)) != '#') {
     if (c == EOF) {
-      return EXIT_FAILURE;
+      return -1;
     }
   }
   strncpy(pchScan, pchPrefix, 250);
+  pchScan[sizeof(pchScan) - 1] = '\0';
   strcat(pchScan, " %04x:");
   if (fscanf(fd3, pchScan, &uiBytes) < 1) {
-    return EXIT_FAILURE;
+    return -1;
   }
   *pszBytes = uiBytes;
   if (*pszBytes > MAX_FRAME_LEN) {
-    return EXIT_FAILURE;
+    return -1;
   }
   for (szPos = 0; szPos < *pszBytes; szPos++) {
     if (fscanf(fd3, "%02x", &uiData) < 1) {
-      return EXIT_FAILURE;
+      return -1;
     }
     pbtData[szPos] = uiData;
   }
-  return EXIT_SUCCESS;
+  return 0;
 }
 
 int
@@ -158,7 +160,7 @@ main(int argc, char *argv[])
   for (arg = 1; arg < argc; arg++) {
     if (0 == strcmp(argv[arg], "-h")) {
       print_usage(argv);
-      return EXIT_SUCCESS;
+      exit(EXIT_SUCCESS);
     } else if (0 == strcmp(argv[arg], "-q")) {
       quiet_output = true;
     } else if (0 == strcmp(argv[arg], "-t")) {
@@ -173,16 +175,16 @@ main(int argc, char *argv[])
       printf("INFO: %s\n", "Swapping devices.");
       swap_devices = true;
     } else if (0 == strcmp(argv[arg], "-n")) {
-      if (++arg == argc || (sscanf(argv[arg], "%i", &waiting_time) < 1)) {
+      if (++arg == argc || (sscanf(argv[arg], "%10i", &waiting_time) < 1)) {
         ERR("Missing or wrong waiting time value: %s.", argv[arg]);
         print_usage(argv);
-        return EXIT_FAILURE;
+        exit(EXIT_FAILURE);
       }
       printf("Waiting time: %i secs.\n", waiting_time);
     } else {
       ERR("%s is not supported option.", argv[arg]);
       print_usage(argv);
-      return EXIT_FAILURE;
+      exit(EXIT_FAILURE);
     }
   }
 
@@ -197,6 +199,10 @@ main(int argc, char *argv[])
 
   nfc_context *context;
   nfc_init(&context);
+  if (context == NULL) {
+    ERR("Unable to init libnfc (malloc)");
+    exit(EXIT_FAILURE);
+  }
 
   nfc_connstring connstrings[MAX_DEVICE_COUNT];
   // List available devices
@@ -205,20 +211,24 @@ main(int argc, char *argv[])
   if (initiator_only_mode || target_only_mode) {
     if (szFound < 1) {
       ERR("No device found");
-      return EXIT_FAILURE;
+      nfc_exit(context);
+      exit(EXIT_FAILURE);
     }
     if ((fd3 = fdopen(3, "r")) == NULL) {
       ERR("Could not open file descriptor 3");
-      return EXIT_FAILURE;
+      nfc_exit(context);
+      exit(EXIT_FAILURE);
     }
     if ((fd4 = fdopen(4, "r")) == NULL) {
       ERR("Could not open file descriptor 4");
-      return EXIT_FAILURE;
+      nfc_exit(context);
+      exit(EXIT_FAILURE);
     }
   } else {
     if (szFound < 2) {
-      ERR("%zd device found but two opened devices are needed to relay NFC.", szFound);
-      return EXIT_FAILURE;
+      ERR("%" PRIdPTR " device found but two opened devices are needed to relay NFC.", szFound);
+      nfc_exit(context);
+      exit(EXIT_FAILURE);
     }
   }
 
@@ -234,8 +244,9 @@ main(int argc, char *argv[])
       pndInitiator = nfc_open(context, connstrings[1]);
     }
 
-    if (!pndInitiator) {
+    if (pndInitiator == NULL) {
       printf("Error opening NFC reader\n");
+      nfc_exit(context);
       exit(EXIT_FAILURE);
     }
 
@@ -261,27 +272,27 @@ main(int argc, char *argv[])
     }
 
     printf("Found tag:\n");
-    print_nfc_target(ntRealTarget, false);
+    print_nfc_target(&ntRealTarget, false);
     if (initiator_only_mode) {
-      if (print_hex_fd4(ntRealTarget.nti.nai.abtUid, ntRealTarget.nti.nai.szUidLen, "UID") != EXIT_SUCCESS) {
+      if (print_hex_fd4(ntRealTarget.nti.nai.abtUid, ntRealTarget.nti.nai.szUidLen, "UID") < 0) {
         fprintf(stderr, "Error while printing UID to FD4\n");
         nfc_close(pndInitiator);
         nfc_exit(context);
         exit(EXIT_FAILURE);
       }
-      if (print_hex_fd4(ntRealTarget.nti.nai.abtAtqa, 2, "ATQA") != EXIT_SUCCESS) {
+      if (print_hex_fd4(ntRealTarget.nti.nai.abtAtqa, 2, "ATQA") < 0) {
         fprintf(stderr, "Error while printing ATQA to FD4\n");
         nfc_close(pndInitiator);
         nfc_exit(context);
         exit(EXIT_FAILURE);
       }
-      if (print_hex_fd4(&(ntRealTarget.nti.nai.btSak), 1, "SAK") != EXIT_SUCCESS) {
+      if (print_hex_fd4(&(ntRealTarget.nti.nai.btSak), 1, "SAK") < 0) {
         fprintf(stderr, "Error while printing SAK to FD4\n");
         nfc_close(pndInitiator);
         nfc_exit(context);
         exit(EXIT_FAILURE);
       }
-      if (print_hex_fd4(ntRealTarget.nti.nai.abtAts, ntRealTarget.nti.nai.szAtsLen, "ATS") != EXIT_SUCCESS) {
+      if (print_hex_fd4(ntRealTarget.nti.nai.abtAts, ntRealTarget.nti.nai.szAtsLen, "ATS") < 0) {
         fprintf(stderr, "Error while printing ATS to FD4\n");
         nfc_close(pndInitiator);
         nfc_exit(context);
@@ -305,24 +316,25 @@ main(int argc, char *argv[])
     };
     if (target_only_mode) {
       size_t foo;
-      if (scan_hex_fd3(ntEmulatedTarget.nti.nai.abtUid, &(ntEmulatedTarget.nti.nai.szUidLen), "UID") != EXIT_SUCCESS) {
+      if (scan_hex_fd3(ntEmulatedTarget.nti.nai.abtUid, &(ntEmulatedTarget.nti.nai.szUidLen), "UID") < 0) {
         fprintf(stderr, "Error while scanning UID from FD3\n");
         nfc_close(pndInitiator);
         nfc_exit(context);
         exit(EXIT_FAILURE);
       }
-      if (scan_hex_fd3(ntEmulatedTarget.nti.nai.abtAtqa, &foo, "ATQA") != EXIT_SUCCESS) {
+      if (scan_hex_fd3(ntEmulatedTarget.nti.nai.abtAtqa, &foo, "ATQA") < 0) {
         fprintf(stderr, "Error while scanning ATQA from FD3\n");
         nfc_close(pndInitiator);
+        nfc_exit(context);
         exit(EXIT_FAILURE);
       }
-      if (scan_hex_fd3(&(ntEmulatedTarget.nti.nai.btSak), &foo, "SAK") != EXIT_SUCCESS) {
+      if (scan_hex_fd3(&(ntEmulatedTarget.nti.nai.btSak), &foo, "SAK") < 0) {
         fprintf(stderr, "Error while scanning SAK from FD3\n");
         nfc_close(pndInitiator);
         nfc_exit(context);
         exit(EXIT_FAILURE);
       }
-      if (scan_hex_fd3(ntEmulatedTarget.nti.nai.abtAts, &(ntEmulatedTarget.nti.nai.szAtsLen), "ATS") != EXIT_SUCCESS) {
+      if (scan_hex_fd3(ntEmulatedTarget.nti.nai.abtAts, &(ntEmulatedTarget.nti.nai.szAtsLen), "ATS") < 0) {
         fprintf(stderr, "Error while scanning ATS from FD3\n");
         nfc_close(pndInitiator);
         nfc_exit(context);
@@ -361,7 +373,7 @@ main(int argc, char *argv[])
     memcpy(&(ntEmulatedTarget.nti.nai.abtAts[4]), pbtTkt, szTk);
 
     printf("We will emulate:\n");
-    print_nfc_target(ntEmulatedTarget, false);
+    print_nfc_target(&ntEmulatedTarget, false);
 
     // Try to open the NFC emulator device
     if (swap_devices) {
@@ -375,12 +387,11 @@ main(int argc, char *argv[])
         nfc_close(pndInitiator);
       }
       nfc_exit(context);
-      return EXIT_FAILURE;
+      exit(EXIT_FAILURE);
     }
 
     printf("NFC emulator device: %s opened\n", nfc_device_get_name(pndTarget));
-    int res;
-    if ((res = nfc_target_init(pndTarget, &ntEmulatedTarget, abtCapdu, sizeof(abtCapdu), 0)) < 0) {
+    if (nfc_target_init(pndTarget, &ntEmulatedTarget, abtCapdu, sizeof(abtCapdu), 0) < 0) {
       ERR("%s", "Initialization of NFC emulator failed");
       if (!target_only_mode) {
         nfc_close(pndInitiator);
@@ -408,7 +419,7 @@ main(int argc, char *argv[])
       }
       szCapduLen = (size_t) res;
       if (target_only_mode) {
-        if (print_hex_fd4(abtCapdu, szCapduLen, "C-APDU") != EXIT_SUCCESS) {
+        if (print_hex_fd4(abtCapdu, szCapduLen, "C-APDU") < 0) {
           fprintf(stderr, "Error while printing C-APDU to FD4\n");
           nfc_close(pndTarget);
           nfc_exit(context);
@@ -416,7 +427,7 @@ main(int argc, char *argv[])
         }
       }
     } else {
-      if (scan_hex_fd3(abtCapdu, &szCapduLen, "C-APDU") != EXIT_SUCCESS) {
+      if (scan_hex_fd3(abtCapdu, &szCapduLen, "C-APDU") < 0) {
         fprintf(stderr, "Error while scanning C-APDU from FD3\n");
         nfc_close(pndInitiator);
         nfc_exit(context);
@@ -438,7 +449,7 @@ main(int argc, char *argv[])
         ret = true;
       }
     } else {
-      if (scan_hex_fd3(abtRapdu, &szRapduLen, "R-APDU") != EXIT_SUCCESS) {
+      if (scan_hex_fd3(abtRapdu, &szRapduLen, "R-APDU") < 0) {
         fprintf(stderr, "Error while scanning R-APDU from FD3\n");
         nfc_close(pndTarget);
         nfc_exit(context);
@@ -474,7 +485,7 @@ main(int argc, char *argv[])
           exit(EXIT_FAILURE);
         }
       } else {
-        if (print_hex_fd4(abtRapdu, szRapduLen, "R-APDU") != EXIT_SUCCESS) {
+        if (print_hex_fd4(abtRapdu, szRapduLen, "R-APDU") < 0) {
           fprintf(stderr, "Error while printing R-APDU to FD4\n");
           nfc_close(pndInitiator);
           nfc_exit(context);

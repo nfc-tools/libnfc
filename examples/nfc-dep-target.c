@@ -48,14 +48,17 @@
 #define MAX_FRAME_LEN 264
 
 static nfc_device *pnd;
+static nfc_context *context;
 
 static void stop_dep_communication(int sig)
 {
   (void) sig;
-  if (pnd)
+  if (pnd != NULL) {
     nfc_abort_command(pnd);
-  else
+  } else {
+    nfc_exit(context);
     exit(EXIT_FAILURE);
+  }
 }
 
 int
@@ -65,8 +68,16 @@ main(int argc, const char *argv[])
   int  szRx;
   uint8_t  abtTx[] = "Hello Mars!";
 
-  nfc_context *context;
+  if (argc > 1) {
+    printf("Usage: %s\n", argv[0]);
+    exit(EXIT_FAILURE);
+  }
+
   nfc_init(&context);
+  if (context == NULL) {
+    ERR("Unable to init libnfc (malloc)");
+    exit(EXIT_FAILURE);
+  }
 #define MAX_DEVICE_COUNT 2
   nfc_connstring connstrings[MAX_DEVICE_COUNT];
   size_t szDeviceFound = nfc_list_devices(context, connstrings, MAX_DEVICE_COUNT);
@@ -80,12 +91,8 @@ main(int argc, const char *argv[])
     pnd = nfc_open(context, connstrings[1]);
   } else {
     printf("No device found.\n");
-    return EXIT_FAILURE;
-  }
-
-  if (argc > 1) {
-    printf("Usage: %s\n", argv[0]);
-    return EXIT_FAILURE;
+    nfc_exit(context);
+    exit(EXIT_FAILURE);
   }
 
   nfc_target nt = {
@@ -109,27 +116,32 @@ main(int argc, const char *argv[])
     },
   };
 
-  if (!pnd) {
+  if (pnd == NULL) {
     printf("Unable to open NFC device.\n");
-    return EXIT_FAILURE;
+    nfc_exit(context);
+    exit(EXIT_FAILURE);
   }
   printf("NFC device: %s opened\n", nfc_device_get_name(pnd));
 
   signal(SIGINT, stop_dep_communication);
 
   printf("NFC device will now act as: ");
-  print_nfc_target(nt, false);
+  print_nfc_target(&nt, false);
 
   printf("Waiting for initiator request...\n");
   if ((szRx = nfc_target_init(pnd, &nt, abtRx, sizeof(abtRx), 0)) < 0) {
     nfc_perror(pnd, "nfc_target_init");
-    goto error;
+    nfc_close(pnd);
+    nfc_exit(context);
+    exit(EXIT_FAILURE);
   }
 
   printf("Initiator request received. Waiting for data...\n");
   if ((szRx = nfc_target_receive_bytes(pnd, abtRx, sizeof(abtRx), 0)) < 0) {
     nfc_perror(pnd, "nfc_target_receive_bytes");
-    goto error;
+    nfc_close(pnd);
+    nfc_exit(context);
+    exit(EXIT_FAILURE);
   }
   abtRx[(size_t) szRx] = '\0';
   printf("Received: %s\n", abtRx);
@@ -137,12 +149,13 @@ main(int argc, const char *argv[])
   printf("Sending: %s\n", abtTx);
   if (nfc_target_send_bytes(pnd, abtTx, sizeof(abtTx), 0) < 0) {
     nfc_perror(pnd, "nfc_target_send_bytes");
-    goto error;
+    nfc_close(pnd);
+    nfc_exit(context);
+    exit(EXIT_FAILURE);
   }
   printf("Data sent.\n");
 
-error:
   nfc_close(pnd);
   nfc_exit(context);
-  return EXIT_SUCCESS;
+  exit(EXIT_SUCCESS);
 }

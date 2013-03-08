@@ -48,15 +48,16 @@
 #include <time.h>
 
 #ifndef _WIN32
-// Needed by sleep() under Unix
-#  include <unistd.h>
-#  define sleep usleep
-#  define SUSP_TIME 1000           // usecs.
+#  include <time.h>
+#  define msleep(x) do { \
+    struct timespec xsleep; \
+    xsleep.tv_sec = x / 1000; \
+    xsleep.tv_nsec = (x - xsleep.tv_sec * 1000) * 1000 * 1000; \
+    nanosleep(&xsleep, NULL); \
+  } while (0)
 #else
-// Needed by Sleep() under Windows
 #  include <winbase.h>
-#  define sleep Sleep
-#  define SUSP_TIME 1        // msecs.
+#  define msleep Sleep
 #endif
 
 
@@ -79,24 +80,37 @@ int main(int argc, const char *argv[])
   if (argc >= 2) {
     if ((input = fopen(argv[1], "r")) == NULL) {
       ERR("%s", "Cannot open file.");
-      return EXIT_FAILURE;
+      exit(EXIT_FAILURE);
     }
   }
 
   nfc_context *context;
   nfc_init(&context);
+  if (context == NULL) {
+    ERR("Unable to init libnfc (malloc)");
+    exit(EXIT_FAILURE);
+  }
 
   // Try to open the NFC reader
   pnd = nfc_open(context, NULL);
 
   if (pnd == NULL) {
     ERR("%s", "Unable to open NFC device.");
-    return EXIT_FAILURE;
+    if (input != NULL) {
+      fclose(input);
+    }
+    nfc_exit(context);
+    exit(EXIT_FAILURE);
   }
 
   printf("NFC reader: %s opened\n", nfc_device_get_name(pnd));
   if (nfc_initiator_init(pnd) < 0) {
     nfc_perror(pnd, "nfc_initiator_init");
+    if (input != NULL) {
+      fclose(input);
+    }
+    nfc_close(pnd);
+    nfc_exit(context);
     exit(EXIT_FAILURE);
   }
 
@@ -141,15 +155,15 @@ int main(int argc, const char *argv[])
       break;
     }
     if (cmd[0] == 'p') {
-      int s = 0;
+      int ms = 0;
       offset++;
       while (isspace(cmd[offset])) {
         offset++;
       }
-      sscanf(cmd + offset, "%d", &s);
-      printf("Pause for %i msecs\n", s);
-      if (s > 0) {
-        sleep(s * SUSP_TIME);
+      sscanf(cmd + offset, "%10d", &ms);
+      printf("Pause for %i msecs\n", ms);
+      if (ms > 0) {
+        msleep(ms);
       }
       free(cmd);
       continue;
@@ -199,5 +213,5 @@ int main(int argc, const char *argv[])
   }
   nfc_close(pnd);
   nfc_exit(context);
-  return EXIT_SUCCESS;
+  exit(EXIT_SUCCESS);
 }

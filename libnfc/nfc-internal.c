@@ -68,7 +68,7 @@ nfc_context_new(void)
   nfc_context *res = malloc(sizeof(*res));
 
   if (!res) {
-    err(EXIT_FAILURE, "nfc_context_new: malloc");
+    return NULL;
   }
 
   // Set default context values

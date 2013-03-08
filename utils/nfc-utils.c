@@ -115,10 +115,10 @@ print_hex_par(const uint8_t *pbtData, const size_t szBits, const uint8_t *pbtDat
 }
 
 void
-print_nfc_target(const nfc_target nt, bool verbose)
+print_nfc_target(const nfc_target *pnt, bool verbose)
 {
   char *s;
-  str_nfc_target(&s, nt, verbose);
+  str_nfc_target(&s, pnt, verbose);
   printf("%s", s);
   nfc_free(s);
 }

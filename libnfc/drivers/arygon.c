@@ -114,6 +114,10 @@ arygon_scan(const nfc_context *context, nfc_connstring connstrings[], const size
       nfc_connstring connstring;
       snprintf(connstring, sizeof(nfc_connstring), "%s:%s:%"PRIu32, ARYGON_DRIVER_NAME, acPort, ARYGON_DEFAULT_SPEED);
       nfc_device *pnd = nfc_device_new(context, connstring);
+      if (!pnd) {
+        perror("malloc");
+        return 0;
+      }
 
       pnd->driver = &arygon_driver;
       pnd->driver_data = malloc(sizeof(struct arygon_data));
@@ -203,7 +207,7 @@ arygon_connstring_decode(const nfc_connstring connstring, struct arygon_descript
     return 2;
   }
   unsigned long speed;
-  if (sscanf(speed_s, "%lu", &speed) != 1) {
+  if (sscanf(speed_s, "%10lu", &speed) != 1) {
     // speed_s is not a number
     free(cs);
     return 2;
@@ -263,6 +267,10 @@ arygon_open(const nfc_context *context, const nfc_connstring connstring)
 
   // We have a connection
   pnd = nfc_device_new(context, connstring);
+  if (!pnd) {
+    perror("malloc");
+    return NULL;
+  }
   snprintf(pnd->name, sizeof(pnd->name), "%s:%s", ARYGON_DRIVER_NAME, ndd.port);
 
   pnd->driver_data = malloc(sizeof(struct arygon_data));
@@ -322,7 +330,7 @@ arygon_tama_send(nfc_device *pnd, const uint8_t *pbtData, const size_t szData, i
   size_t szFrame = 0;
   if (szData > PN53x_NORMAL_FRAME__DATA_MAX_LEN) {
     // ARYGON Reader with PN532 equipped does not support extended frame (bug in ARYGON firmware?)
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "ARYGON device does not support more than %d bytes as payload (requested: %zd)", PN53x_NORMAL_FRAME__DATA_MAX_LEN, szData);
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "ARYGON device does not support more than %d bytes as payload (requested: %" PRIdPTR ")", PN53x_NORMAL_FRAME__DATA_MAX_LEN, szData);
     pnd->last_error = NFC_EDEVNOTSUPP;
     return pnd->last_error;
   }
@@ -430,7 +438,7 @@ arygon_tama_receive(nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, i
   }
 
   if (len > szDataLen) {
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to receive data: buffer too small. (szDataLen: %zu, len: %zu)", szDataLen, len);
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to receive data: buffer too small. (szDataLen: %" PRIuPTR ", len: %" PRIuPTR ")", szDataLen, len);
     pnd->last_error = NFC_EIO;
     return pnd->last_error;
   }
@@ -511,7 +519,9 @@ arygon_firmware(nfc_device *pnd, char *str)
   if (0 == memcmp(abtRx, arygon_error_none, 6)) {
     uint8_t *p = abtRx + 6;
     unsigned int szData;
-    sscanf((const char *)p, "%02x%s", &szData, p);
+    sscanf((const char *)p, "%02x%9s", &szData, p);
+    if (szData > 9)
+      szData = 9;
     memcpy(str, p, szData);
     *(str + szData) = '\0';
   }

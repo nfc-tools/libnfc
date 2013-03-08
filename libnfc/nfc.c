@@ -179,7 +179,10 @@ void
 nfc_init(nfc_context **context)
 {
   *context = nfc_context_new();
-
+  if (!*context) {
+    perror("malloc");
+    return;
+  }
   if (!nfc_drivers)
     nfc_drivers_init();
 }
@@ -230,6 +233,7 @@ nfc_open(nfc_context *context, const nfc_connstring connstring)
     }
   } else {
     strncpy(ncs, connstring, sizeof(nfc_connstring));
+    ncs[sizeof(nfc_connstring) - 1] = '\0';
   }
 
   // Search through the device list for an available device
@@ -357,9 +361,8 @@ nfc_list_devices(nfc_context *context, nfc_connstring connstrings[], const size_
     const struct nfc_driver_list *pndl = nfc_drivers;
     while (pndl) {
       const struct nfc_driver *ndr = pndl->driver;
-      size_t _device_found = 0;
       if ((ndr->scan_type == NOT_INTRUSIVE) || ((context->allow_intrusive_scan) && (ndr->scan_type == INTRUSIVE))) {
-        _device_found = ndr->scan(context, connstrings + (device_found), connstrings_len - (device_found));
+        size_t _device_found = ndr->scan(context, connstrings + (device_found), connstrings_len - (device_found));
         log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%ld device(s) found using %s driver", (unsigned long) _device_found, ndr->name);
         if (_device_found > 0) {
           device_found += _device_found;
@@ -825,9 +828,9 @@ nfc_initiator_transceive_bytes_timed(nfc_device *pnd,
  * @warning To run the test, one or more commands will be sent to target
 */
 int
-nfc_initiator_target_is_present(nfc_device *pnd, const nfc_target nt)
+nfc_initiator_target_is_present(nfc_device *pnd, const nfc_target *pnt)
 {
-  HAL(initiator_target_is_present, pnd, nt);
+  HAL(initiator_target_is_present, pnd, pnt);
 }
 
 /** @ingroup initiator
@@ -1291,12 +1294,12 @@ str_nfc_modulation_type(const nfc_modulation_type nmt)
  * @warning *buf must be freed using nfc_free()
 */
 int
-str_nfc_target(char **buf, const nfc_target nt, bool verbose)
+str_nfc_target(char **buf, const nfc_target *pnt, bool verbose)
 {
   *buf = malloc(4096);
   if (! *buf)
     return NFC_ESOFT;
   (*buf)[0] = '\0';
-  sprint_nfc_target(*buf, nt, verbose);
+  snprint_nfc_target(*buf, 4096, pnt, verbose);
   return strlen(*buf);
 }

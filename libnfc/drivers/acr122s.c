@@ -438,7 +438,7 @@ acr122s_connstring_decode(const nfc_connstring connstring, struct acr122s_descri
     return 2;
   }
   unsigned long speed;
-  if (sscanf(speed_s, "%lu", &speed) != 1) {
+  if (sscanf(speed_s, "%10lu", &speed) != 1) {
     // speed_s is not a number
     free(cs);
     return 2;
@@ -470,6 +470,10 @@ acr122s_scan(const nfc_context *context, nfc_connstring connstrings[], const siz
       nfc_connstring connstring;
       snprintf(connstring, sizeof(nfc_connstring), "%s:%s:%"PRIu32, ACR122S_DRIVER_NAME, acPort, ACR122S_DEFAULT_SPEED);
       nfc_device *pnd = nfc_device_new(context, connstring);
+      if (!pnd) {
+        perror("malloc");
+        return -1;
+      }
 
       pnd->driver = &acr122s_driver;
       pnd->driver_data = malloc(sizeof(struct acr122s_data));
@@ -574,6 +578,10 @@ acr122s_open(const nfc_context *context, const nfc_connstring connstring)
   uart_set_speed(sp, ndd.speed);
 
   pnd = nfc_device_new(context, connstring);
+  if (!pnd) {
+    perror("malloc");
+    return NULL;
+  }
   pnd->driver = &acr122s_driver;
   strcpy(pnd->name, ACR122S_DRIVER_NAME);
 
@@ -676,7 +684,7 @@ acr122s_receive(nfc_device *pnd, uint8_t *buf, size_t buf_len, int timeout)
 
   size_t data_len = FRAME_SIZE(tmp) - 17;
   if (data_len > buf_len) {
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Receive buffer too small. (buf_len: %zu, data_len: %zu)", buf_len, data_len);
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Receive buffer too small. (buf_len: %" PRIuPTR ", data_len: %" PRIuPTR ")", buf_len, data_len);
     pnd->last_error = NFC_EIO;
     return pnd->last_error;
   }

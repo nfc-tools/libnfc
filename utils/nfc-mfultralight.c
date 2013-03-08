@@ -178,7 +178,7 @@ main(int argc, const char *argv[])
     printf("r|w         - Perform read from or write to card\n");
     printf("<dump.mfd>  - MiFare Dump (MFD) used to write (card to MFD) or (MFD to card)\n");
     printf("\n");
-    return 1;
+    exit(EXIT_FAILURE);
   }
 
   DBG("\nChecking arguments and settings\n");
@@ -192,13 +192,13 @@ main(int argc, const char *argv[])
 
     if (pfDump == NULL) {
       ERR("Could not open dump file: %s\n", argv[2]);
-      return 1;
+      exit(EXIT_FAILURE);
     }
 
     if (fread(&mtDump, 1, sizeof(mtDump), pfDump) != sizeof(mtDump)) {
       ERR("Could not read from dump file: %s\n", argv[2]);
       fclose(pfDump);
-      return 1;
+      exit(EXIT_FAILURE);
     }
     fclose(pfDump);
   }
@@ -206,22 +206,31 @@ main(int argc, const char *argv[])
 
   nfc_context *context;
   nfc_init(&context);
+  if (context == NULL) {
+    ERR("Unable to init libnfc (malloc)");
+    exit(EXIT_FAILURE);
+  }
 
   // Try to open the NFC device
   pnd = nfc_open(context, NULL);
   if (pnd == NULL) {
-    ERR("Error opening NFC device\n");
-    return 1;
+    ERR("Error opening NFC device");
+    nfc_exit(context);
+    exit(EXIT_FAILURE);
   }
 
   if (nfc_initiator_init(pnd) < 0) {
     nfc_perror(pnd, "nfc_initiator_init");
+    nfc_close(pnd);
+    nfc_exit(context);
     exit(EXIT_FAILURE);
   }
 
   // Let the device only try once to find a tag
   if (nfc_device_set_property_bool(pnd, NP_INFINITE_SELECT, false) < 0) {
     nfc_perror(pnd, "nfc_device_set_property_bool");
+    nfc_close(pnd);
+    nfc_exit(context);
     exit(EXIT_FAILURE);
   }
 
@@ -232,7 +241,7 @@ main(int argc, const char *argv[])
     ERR("no tag was found\n");
     nfc_close(pnd);
     nfc_exit(context);
-    return EXIT_FAILURE;
+    exit(EXIT_FAILURE);
   }
   // Test if we are dealing with a MIFARE compatible tag
 
@@ -240,7 +249,7 @@ main(int argc, const char *argv[])
     ERR("tag is not a MIFARE Ultralight card\n");
     nfc_close(pnd);
     nfc_exit(context);
-    return EXIT_FAILURE;
+    exit(EXIT_FAILURE);
   }
   // Get the info from the current tag
   printf("Found MIFARE Ultralight card with UID: ");
@@ -257,11 +266,16 @@ main(int argc, const char *argv[])
       pfDump = fopen(argv[2], "wb");
       if (pfDump == NULL) {
         printf("Could not open file: %s\n", argv[2]);
-        return EXIT_FAILURE;
+        nfc_close(pnd);
+        nfc_exit(context);
+        exit(EXIT_FAILURE);
       }
       if (fwrite(&mtDump, 1, sizeof(mtDump), pfDump) != sizeof(mtDump)) {
         printf("Could not write to file: %s\n", argv[2]);
-        return EXIT_FAILURE;
+        fclose(pfDump);
+        nfc_close(pnd);
+        nfc_exit(context);
+        exit(EXIT_FAILURE);
       }
       fclose(pfDump);
       printf("Done.\n");
@@ -272,5 +286,5 @@ main(int argc, const char *argv[])
 
   nfc_close(pnd);
   nfc_exit(context);
-  return EXIT_SUCCESS;
+  exit(EXIT_SUCCESS);
 }

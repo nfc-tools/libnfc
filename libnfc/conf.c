@@ -1,3 +1,4 @@
+
 /*-
  * Copyright (C) 2012, 2013 Romuald Conty
  *
@@ -15,11 +16,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
 
-#include "conf.h"
-
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif // HAVE_CONFIG_H
+
+#include "conf.h"
 
 #ifdef CONFFILES
 #include <stdio.h>
@@ -163,7 +164,10 @@ conf_devices_load(const char *dirname, nfc_context *context)
     log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Unable to open directory: %s", dirname);
   } else {
     struct dirent *de;
-    while ((de = readdir(d))) {
+    struct dirent entry;
+    struct dirent *result;
+    while ((readdir_r(d, &entry, &result) == 0) && (result != NULL)) {
+      de = &entry;
       if (de->d_name[0] != '.') {
         const size_t filename_len = strlen(de->d_name);
         const size_t extension_len = strlen(".conf");

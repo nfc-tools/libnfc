@@ -88,6 +88,10 @@ pn532_uart_scan(const nfc_context *context, nfc_connstring connstrings[], const 
       nfc_connstring connstring;
       snprintf(connstring, sizeof(nfc_connstring), "%s:%s:%"PRIu32, PN532_UART_DRIVER_NAME, acPort, PN532_UART_DEFAULT_SPEED);
       nfc_device *pnd = nfc_device_new(context, connstring);
+      if (!pnd) {
+        perror("malloc");
+        return 0;
+      }
       pnd->driver = &pn532_uart_driver;
       pnd->driver_data = malloc(sizeof(struct pn532_uart_data));
       if (!pnd->driver_data) {
@@ -180,7 +184,7 @@ pn532_connstring_decode(const nfc_connstring connstring, struct pn532_uart_descr
     return 2;
   }
   unsigned long speed;
-  if (sscanf(speed_s, "%lu", &speed) != 1) {
+  if (sscanf(speed_s, "%10lu", &speed) != 1) {
     // speed_s is not a number
     free(cs);
     return 2;
@@ -240,6 +244,10 @@ pn532_uart_open(const nfc_context *context, const nfc_connstring connstring)
 
   // We have a connection
   pnd = nfc_device_new(context, connstring);
+  if (!pnd) {
+    perror("malloc");
+    return NULL;
+  }
   snprintf(pnd->name, sizeof(pnd->name), "%s:%s", PN532_UART_DRIVER_NAME, ndd.port);
 
   pnd->driver_data = malloc(sizeof(struct pn532_uart_data));
@@ -416,7 +424,7 @@ pn532_uart_receive(nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, in
   }
 
   if (len > szDataLen) {
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to receive data: buffer too small. (szDataLen: %zu, len: %zu)", szDataLen, len);
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to receive data: buffer too small. (szDataLen: %" PRIuPTR ", len: %" PRIuPTR ")", szDataLen, len);
     pnd->last_error = NFC_EIO;
     goto error;
   }
@@ -481,8 +489,8 @@ error:
 int
 pn532_uart_ack(nfc_device *pnd)
 {
-  int res = 0;
   if (POWERDOWN == CHIP_DATA(pnd)->power_mode) {
+    int res = 0;
     if ((res = pn532_uart_wakeup(pnd)) < 0) {
       return res;
     }

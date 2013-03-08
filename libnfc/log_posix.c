@@ -1,5 +1,7 @@
 /*-
- * Copyright (C) 2012 Romuald Conty
+ * Copyright (C) 2011 Romain Tartière
+ * Copyright (C) 2011, 2012 Romuald Conty
+ * Copyright (C) 2013 Alex Lian
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -14,12 +16,26 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
-#ifndef __NFC_CONF_H__
-#define __NFC_CONF_H__
 
-#include <nfc/nfc-types.h>
+#include "log.h"
 
-void conf_load(nfc_context *context);
+#include <stdlib.h>
+#include <stdint.h>
+#include <inttypes.h>
+#include <stdio.h>
+#include <stdarg.h>
 
-#endif // __NFC_CONF_H__
+void
+log_vput_internal(const char *format, va_list args)
+{
+  vfprintf(stderr, format, args);
+}
 
+void
+log_put_internal(const char *format, ...)
+{
+  va_list va;
+  va_start(va, format);
+  vfprintf(stderr, format, va);
+  va_end(va);
+}

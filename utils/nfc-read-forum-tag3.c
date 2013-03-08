@@ -60,6 +60,7 @@
 #endif
 
 static nfc_device *pnd;
+static nfc_context *context;
 
 static void
 print_usage(char *progname)
@@ -72,10 +73,12 @@ print_usage(char *progname)
 static void stop_select(int sig)
 {
   (void) sig;
-  if (pnd)
+  if (pnd != NULL) {
     nfc_abort_command(pnd);
-  else
+  } else {
+    nfc_exit(context);
     exit(EXIT_FAILURE);
+  }
 }
 
 static void
@@ -196,13 +199,18 @@ main(int argc, char *argv[])
     }
   }
 
-  nfc_context *context;
   nfc_init(&context);
+  if (context == NULL) {
+    ERR("Unable to init libnfc (malloc)\n");
+    exit(EXIT_FAILURE);
+  }
 
   pnd = nfc_open(context, NULL);
 
   if (pnd == NULL) {
     ERR("Unable to open NFC device");
+    fclose(ndef_stream);
+    nfc_exit(context);
     exit(EXIT_FAILURE);
   }
 
@@ -219,17 +227,21 @@ main(int argc, char *argv[])
 
   if (nfc_initiator_init(pnd) < 0) {
     nfc_perror(pnd, "nfc_initiator_init");
+    fclose(ndef_stream);
+    nfc_close(pnd);
+    nfc_exit(context);
     exit(EXIT_FAILURE);
   }
   fprintf(message_stream, "Place your NFC Forum Tag Type 3 in the field...\n");
 
-  int error = EXIT_SUCCESS;
   // Polling payload (SENSF_REQ) must be present (see NFC Digital Protol)
   const uint8_t *pbtSensfReq = (uint8_t *)"\x00\xff\xff\x01\x00";
   if (nfc_initiator_select_passive_target(pnd, nm, pbtSensfReq, 5, &nt) <= 0) {
     nfc_perror(pnd, "nfc_initiator_select_passive_target");
-    error = EXIT_FAILURE;
-    goto error;
+    fclose(ndef_stream);
+    nfc_close(pnd);
+    nfc_exit(context);
+    exit(EXIT_FAILURE);
   }
 
   // Check if System Code equals 0x12fc
@@ -239,14 +251,18 @@ main(int argc, char *argv[])
     const uint8_t *pbtSensfReqNfcForum = (uint8_t *)"\x00\x12\xfc\x01\x00";
     if (nfc_initiator_select_passive_target(pnd, nm, pbtSensfReqNfcForum, 5, &nt) <= 0) {
       nfc_perror(pnd, "nfc_initiator_select_passive_target");
-      error = EXIT_FAILURE;
-      goto error;
+      fclose(ndef_stream);
+      nfc_close(pnd);
+      nfc_exit(context);
+      exit(EXIT_FAILURE);
     }
     // Check again if System Code equals 0x12fc
     if (0 != memcmp(nt.nti.nfi.abtSysCode, abtNfcForumSysCode, 2)) {
       fprintf(stderr, "Tag is not NFC Forum Tag Type 3 compliant.\n");
-      error = EXIT_FAILURE;
-      goto error;
+      fclose(ndef_stream);
+      nfc_close(pnd);
+      nfc_exit(context);
+      exit(EXIT_FAILURE);
     }
   }
 
@@ -254,18 +270,21 @@ main(int argc, char *argv[])
 
   if ((nfc_device_set_property_bool(pnd, NP_EASY_FRAMING, false) < 0) || (nfc_device_set_property_bool(pnd, NP_INFINITE_SELECT, false) < 0)) {
     nfc_perror(pnd, "nfc_device_set_property_bool");
-    error = EXIT_FAILURE;
-    goto error;
+    fclose(ndef_stream);
+    nfc_close(pnd);
+    nfc_exit(context);
+    exit(EXIT_FAILURE);
   }
 
   uint8_t data[1024];
   size_t data_len = sizeof(data);
-  int len;
 
-  if (0 >= (len = nfc_forum_tag_type3_check(pnd, nt, 0, 1, data, &data_len))) {
+  if (nfc_forum_tag_type3_check(pnd, nt, 0, 1, data, &data_len) <= 0) {
     nfc_perror(pnd, "nfc_forum_tag_type3_check");
-    error = EXIT_FAILURE;
-    goto error;
+    fclose(ndef_stream);
+    nfc_close(pnd);
+    nfc_exit(context);
+    exit(EXIT_FAILURE);
   }
 
   const int ndef_major_version = (data[0] & 0xf0) >> 4;
@@ -285,14 +304,18 @@ main(int argc, char *argv[])
   const uint16_t ndef_checksum = (data[14] << 8) + data[15];
   if (ndef_calculated_checksum != ndef_checksum) {
     fprintf(stderr, "NDEF CRC does not match with calculated one\n");
-    error = EXIT_FAILURE;
-    goto error;
+    fclose(ndef_stream);
+    nfc_close(pnd);
+    nfc_exit(context);
+    exit(EXIT_FAILURE);
   }
 
   if (!ndef_data_len) {
     fprintf(stderr, "Empty NFC Forum Tag Type 3\n");
-    error = EXIT_FAILURE;
-    goto error;
+    fclose(ndef_stream);
+    nfc_close(pnd);
+    nfc_exit(context);
+    exit(EXIT_FAILURE);
   }
 
   const uint8_t block_max_per_check = data[1];
@@ -303,22 +326,23 @@ main(int argc, char *argv[])
     size_t size = sizeof(data) - data_len;
     if (!nfc_forum_tag_type3_check(pnd, nt, 1 + b, MIN(block_max_per_check, (block_count_to_check - (b * block_max_per_check))), data + data_len, &size)) {
       nfc_perror(pnd, "nfc_forum_tag_type3_check");
-      error = EXIT_FAILURE;
-      goto error;
+      fclose(ndef_stream);
+      nfc_close(pnd);
+      nfc_exit(context);
+      exit(EXIT_FAILURE);
     }
     data_len += size;
   }
   if (fwrite(data, 1, data_len, ndef_stream) != data_len) {
     fprintf(stderr, "Could not write to file.\n");
-    error = EXIT_FAILURE;
-    goto error;
+    fclose(ndef_stream);
+    nfc_close(pnd);
+    nfc_exit(context);
+    exit(EXIT_FAILURE);
   }
 
-error:
   fclose(ndef_stream);
-  if (pnd) {
-    nfc_close(pnd);
-  }
+  nfc_close(pnd);
   nfc_exit(context);
-  exit(error);
+  exit(EXIT_SUCCESS);
 }

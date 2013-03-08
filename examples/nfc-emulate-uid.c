@@ -59,6 +59,7 @@
 static uint8_t abtRecv[MAX_FRAME_LEN];
 static int szRecvBits;
 static nfc_device *pnd;
+static nfc_context *context;
 
 // ISO14443A Anti-Collision response
 uint8_t  abtAtqa[2] = { 0x04, 0x00 };
@@ -126,14 +127,18 @@ main(int argc, char *argv[])
   signal(SIGINT, intr_hdlr);
 #endif
 
-  nfc_context *context;
   nfc_init(&context);
+  if (context == NULL) {
+    ERR("Unable to init libnfc (malloc)");
+    exit(EXIT_FAILURE);
+  }
 
   // Try to open the NFC device
   pnd = nfc_open(context, NULL);
 
   if (pnd == NULL) {
-    printf("Unable to open NFC device\n");
+    ERR("Unable to open NFC device");
+    nfc_exit(context);
     exit(EXIT_FAILURE);
   }
 
@@ -162,13 +167,17 @@ main(int argc, char *argv[])
   if ((szRecvBits = nfc_target_init(pnd, &nt, abtRecv, sizeof(abtRecv), 0)) < 0) {
     nfc_perror(pnd, "nfc_target_init");
     ERR("Could not come out of auto-emulation, no command was received");
-    goto error;
+    nfc_close(pnd);
+    nfc_exit(context);
+    exit(EXIT_FAILURE);
   }
   printf("[+] Received initiator command: ");
   print_hex_bits(abtRecv, (size_t) szRecvBits);
   printf("[+] Configuring communication\n");
   if ((nfc_device_set_property_bool(pnd, NP_HANDLE_CRC, false) < 0) || (nfc_device_set_property_bool(pnd, NP_HANDLE_PARITY, true) < 0)) {
     nfc_perror(pnd, "nfc_device_set_property_bool");
+    nfc_close(pnd);
+    nfc_exit(context);
     exit(EXIT_FAILURE);
   }
   printf("[+] Done, the emulated tag is initialized with UID: %02X%02X%02X%02X\n\n", abtUidBcc[0], abtUidBcc[1],
@@ -211,7 +220,9 @@ main(int argc, char *argv[])
         // Send and print the command to the screen
         if (nfc_target_send_bits(pnd, pbtTx, szTxBits, NULL) < 0) {
           nfc_perror(pnd, "nfc_target_send_bits");
-          goto error;
+          nfc_close(pnd);
+          nfc_exit(context);
+          exit(EXIT_FAILURE);
         }
         if (!quiet_output) {
           printf("T: ");
@@ -223,9 +234,4 @@ main(int argc, char *argv[])
   nfc_close(pnd);
   nfc_exit(context);
   exit(EXIT_SUCCESS);
-
-error:
-  nfc_close(pnd);
-  nfc_exit(context);
-  exit(EXIT_FAILURE);
 }

@@ -227,9 +227,6 @@ acr122_pcsc_connstring_decode(const nfc_connstring connstring, struct acr122_pcs
 
   free(cs);
   return 2;
-
-  free(cs);
-  return 3;
 }
 
 static nfc_device *
@@ -258,7 +255,7 @@ acr122_pcsc_open(const nfc_context *context, const nfc_connstring connstring)
   if (strlen(ndd.pcsc_device_name) < 5) { // We can assume it's a reader ID as pcsc_name always ends with "NN NN"
     // Device was not specified, only ID, retrieve it
     size_t index;
-    if (sscanf(ndd.pcsc_device_name, "%lu", &index) != 1)
+    if (sscanf(ndd.pcsc_device_name, "%4" SCNuPTR, &index) != 1)
       return NULL;
     nfc_connstring *ncs = malloc(sizeof(nfc_connstring) * (index + 1));
     if (!ncs) {
@@ -271,6 +268,7 @@ acr122_pcsc_open(const nfc_context *context, const nfc_connstring connstring)
       return NULL;
     }
     strncpy(fullconnstring, ncs[index], sizeof(nfc_connstring));
+    fullconnstring[sizeof(nfc_connstring) - 1] = '\0';
     free(ncs);
     connstring_decode_level = acr122_pcsc_connstring_decode(fullconnstring, &ndd);
     if (connstring_decode_level < 2) {
@@ -280,6 +278,10 @@ acr122_pcsc_open(const nfc_context *context, const nfc_connstring connstring)
 
   char   *pcFirmware;
   nfc_device *pnd = nfc_device_new(context, fullconnstring);
+  if (!pnd) {
+    perror("malloc");
+    goto error;
+  }
   pnd->driver_data = malloc(sizeof(struct acr122_pcsc_data));
   if (!pnd->driver_data) {
     perror("malloc");

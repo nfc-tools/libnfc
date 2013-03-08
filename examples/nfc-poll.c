@@ -38,6 +38,7 @@
 #endif // HAVE_CONFIG_H
 
 #include <err.h>
+#include <inttypes.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stddef.h>
@@ -52,14 +53,17 @@
 #define MAX_DEVICE_COUNT 16
 
 static nfc_device *pnd = NULL;
+static nfc_context *context;
 
 static void stop_polling(int sig)
 {
   (void) sig;
-  if (pnd)
+  if (pnd != NULL)
     nfc_abort_command(pnd);
-  else
+  else {
+    nfc_exit(context);
     exit(EXIT_FAILURE);
+  }
 }
 
 static void
@@ -103,23 +107,29 @@ main(int argc, const char *argv[])
   nfc_target nt;
   int res = 0;
 
-  nfc_context *context;
   nfc_init(&context);
+  if (context == NULL) {
+    ERR("Unable to init libnfc (malloc)");
+    exit(EXIT_FAILURE);
+  }
 
   pnd = nfc_open(context, NULL);
 
   if (pnd == NULL) {
     ERR("%s", "Unable to open NFC device.");
+    nfc_exit(context);
     exit(EXIT_FAILURE);
   }
 
   if (nfc_initiator_init(pnd) < 0) {
     nfc_perror(pnd, "nfc_initiator_init");
+    nfc_close(pnd);
+    nfc_exit(context);
     exit(EXIT_FAILURE);
   }
 
   printf("NFC reader: %s opened\n", nfc_device_get_name(pnd));
-  printf("NFC device will poll during %ld ms (%u pollings of %lu ms for %zd modulations)\n", (unsigned long) uiPollNr * szModulations * uiPeriod * 150, uiPollNr, (unsigned long) uiPeriod * 150, szModulations);
+  printf("NFC device will poll during %ld ms (%u pollings of %lu ms for %" PRIdPTR " modulations)\n", (unsigned long) uiPollNr * szModulations * uiPeriod * 150, uiPollNr, (unsigned long) uiPeriod * 150, szModulations);
   if ((res = nfc_initiator_poll_target(pnd, nmModulations, szModulations, uiPollNr, uiPeriod, &nt))  < 0) {
     nfc_perror(pnd, "nfc_initiator_poll_target");
     nfc_close(pnd);
@@ -128,7 +138,7 @@ main(int argc, const char *argv[])
   }
 
   if (res > 0) {
-    print_nfc_target(nt, verbose);
+    print_nfc_target(&nt, verbose);
   } else {
     printf("No target found.\n");
   }

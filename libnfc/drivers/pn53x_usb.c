@@ -257,7 +257,9 @@ pn53x_usb_connstring_decode(const nfc_connstring connstring, struct pn53x_usb_de
 
   driver_name[0] = '\0';
 
-  int res = sscanf(connstring, "%[^:]:%[^:]:%[^:]", driver_name, dirname, filename);
+  char format[32];
+  snprintf(format, sizeof(format), "%%%i[^:]:%%%i[^:]:%%%i[^:]", n - 1, n - 1, n - 1);
+  int res = sscanf(connstring, format, driver_name, dirname, filename);
 
   if (!res || ((0 != strcmp(driver_name, PN53X_USB_DRIVER_NAME)) && (0 != strcmp(driver_name, "usb")))) {
     // Driver name does not match.
@@ -293,6 +295,7 @@ pn53x_usb_get_usb_device_name(struct usb_device *dev, usb_dev_handle *udev, char
       if ((pn53x_usb_supported_devices[n].vendor_id == dev->descriptor.idVendor) &&
           (pn53x_usb_supported_devices[n].product_id == dev->descriptor.idProduct)) {
         strncpy(buffer, pn53x_usb_supported_devices[n].name, len);
+        buffer[len - 1] = '\0';
         return true;
       }
     }
@@ -360,6 +363,10 @@ pn53x_usb_open(const nfc_context *context, const nfc_connstring connstring)
       data.model = pn53x_usb_get_device_model(dev->descriptor.idVendor, dev->descriptor.idProduct);
       // Allocate memory for the device info and specification, fill it and return the info
       pnd = nfc_device_new(context, connstring);
+      if (!pnd) {
+        perror("malloc");
+        goto error;
+      }
       pn53x_usb_get_usb_device_name(dev, data.pudh, pnd->name, sizeof(pnd->name));
 
       pnd->driver_data = malloc(sizeof(struct pn53x_usb_data));
@@ -581,7 +588,7 @@ read:
   }
 
   if (len > szDataLen) {
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to receive data: buffer too small. (szDataLen: %zu, len: %zu)", szDataLen, len);
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to receive data: buffer too small. (szDataLen: %" PRIuPTR ", len: %" PRIuPTR ")", szDataLen, len);
     pnd->last_error = NFC_EIO;
     return pnd->last_error;
   }

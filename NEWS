@@ -1,3 +1,11 @@
+New in 1.7.0-***:
+
+API Changes:
+
+  * Functions
+    - nfc_initiator_target_is_present() & str_nfc_target()
+      now take a pointer to nfc_target as argument
+
 New in 1.7.0-rc5:
 
 API Changes:

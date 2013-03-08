@@ -101,7 +101,7 @@ extern  "C" {
   NFC_EXPORT int nfc_initiator_transceive_bits(nfc_device *pnd, const uint8_t *pbtTx, const size_t szTxBits, const uint8_t *pbtTxPar, uint8_t *pbtRx, const size_t szRx, uint8_t *pbtRxPar);
   NFC_EXPORT int nfc_initiator_transceive_bytes_timed(nfc_device *pnd, const uint8_t *pbtTx, const size_t szTx, uint8_t *pbtRx, const size_t szRx, uint32_t *cycles);
   NFC_EXPORT int nfc_initiator_transceive_bits_timed(nfc_device *pnd, const uint8_t *pbtTx, const size_t szTxBits, const uint8_t *pbtTxPar, uint8_t *pbtRx, const size_t szRx, uint8_t *pbtRxPar, uint32_t *cycles);
-  NFC_EXPORT int nfc_initiator_target_is_present(nfc_device *pnd, const nfc_target nt);
+  NFC_EXPORT int nfc_initiator_target_is_present(nfc_device *pnd, const nfc_target *pnt);
 
   /* NFC target: act as tag (i.e. MIFARE Classic) or NFC target device. */
   NFC_EXPORT int nfc_target_init(nfc_device *pnd, nfc_target *pnt, uint8_t *pbtRx, const size_t szRx, int timeout);
@@ -138,7 +138,7 @@ extern  "C" {
   /* String converter functions */
   NFC_EXPORT const char *str_nfc_modulation_type(const nfc_modulation_type nmt);
   NFC_EXPORT const char *str_nfc_baud_rate(const nfc_baud_rate nbr);
-  NFC_EXPORT int str_nfc_target(char **buf, const nfc_target nt, bool verbose);
+  NFC_EXPORT int str_nfc_target(char **buf, const nfc_target *pnt, bool verbose);
 
   /* Error codes */
   /** @ingroup error

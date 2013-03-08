@@ -28,6 +28,7 @@
 #  include "config.h"
 #endif // HAVE_CONFIG_H
 
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -317,9 +318,9 @@ pn53x_set_parameters(struct nfc_device *pnd, const uint8_t ui8Parameter, const b
 int
 pn53x_set_tx_bits(struct nfc_device *pnd, const uint8_t ui8Bits)
 {
-  int res = 0;
   // Test if we need to update the transmission bits register setting
   if (CHIP_DATA(pnd)->ui8TxBits != ui8Bits) {
+    int res = 0;
     // Set the amount of transmission bits in the PN53X chip register
     if ((res = pn53x_write_register(pnd, PN53X_REG_CIU_BitFraming, SYMBOL_TX_LAST_BITS, ui8Bits)) < 0)
       return res;
@@ -613,10 +614,10 @@ pn53x_WriteRegister(struct nfc_device *pnd, const uint16_t ui16RegisterAddress, 
 int
 pn53x_write_register(struct nfc_device *pnd, const uint16_t ui16RegisterAddress, const uint8_t ui8SymbolMask, const uint8_t ui8Value)
 {
-  int res = 0;
   if ((ui16RegisterAddress < PN53X_CACHE_REGISTER_MIN_ADDRESS) || (ui16RegisterAddress > PN53X_CACHE_REGISTER_MAX_ADDRESS)) {
     // Direct write
     if (ui8SymbolMask != 0xff) {
+      int res = 0;
       uint8_t ui8CurrentValue;
       if ((res = pn53x_read_register(pnd, ui16RegisterAddress, &ui8CurrentValue)) < 0)
         return res;
@@ -1354,7 +1355,7 @@ pn53x_initiator_transceive_bytes(struct nfc_device *pnd, const uint8_t *pbtTx, c
   const size_t szRxLen = (size_t)res - 1;
   if (pbtRx != NULL) {
     if (szRxLen >  szRx) {
-      log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Buffer size is too short: %zuo available(s), %zuo needed", szRx, szRxLen);
+      log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Buffer size is too short: %" PRIuPTR " available(s), %" PRIuPTR " needed", szRx, szRxLen);
       return NFC_EOVFLOW;
     }
     // Copy the received bytes
@@ -1629,7 +1630,7 @@ pn53x_initiator_transceive_bytes_timed(struct nfc_device *pnd, const uint8_t *pb
     }
     if (pbtRx != NULL) {
       if ((szRxLen + sz) > szRx) {
-        log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Buffer size is too short: %zuo available(s), %zuo needed", szRx, szRxLen + sz);
+        log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Buffer size is too short: %" PRIuPTR " available(s), %" PRIuPTR " needed", szRx, szRxLen + sz);
         return NFC_EOVFLOW;
       }
       // Copy the received bytes
@@ -1668,10 +1669,10 @@ pn53x_initiator_deselect_target(struct nfc_device *pnd)
 }
 
 int
-pn53x_initiator_target_is_present(struct nfc_device *pnd, const nfc_target nt)
+pn53x_initiator_target_is_present(struct nfc_device *pnd, const nfc_target *pnt)
 {
   // Check if the argument target nt is equals to current saved target
-  if (!pn53x_current_target_is(pnd, &nt)) {
+  if (!pn53x_current_target_is(pnd, pnt)) {
     return NFC_ETGRELEASED;
   }
 
@@ -2711,7 +2712,7 @@ pn53x_build_frame(uint8_t *pbtFrame, size_t *pszFrame, const uint8_t *pbtData, c
 
     (*pszFrame) = szData + PN53x_EXTENDED_FRAME__OVERHEAD;
   } else {
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "We can't send more than %d bytes in a raw (requested: %zd)", PN53x_EXTENDED_FRAME__DATA_MAX_LEN, szData);
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "We can't send more than %d bytes in a raw (requested: %" PRIdPTR ")", PN53x_EXTENDED_FRAME__DATA_MAX_LEN, szData);
     return NFC_ECHIP;
   }
   return NFC_SUCCESS;
