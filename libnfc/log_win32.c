@@ -26,7 +26,7 @@
 #include <stdarg.h>
 #include <strsafe.h>
 
-void
+static void
 log_output_debug(const char *format, va_list args)
 {
   char buffer[1024];
