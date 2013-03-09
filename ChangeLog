@@ -1,3 +1,23 @@
+TBD
+---
+
+Fixes:
+ - Fix bug when compiling without libusb
+ - Fixes several memory leaks in error handling conditions
+ - Remove calls to exit() from the library
+ - Numerous minor fixes suggested by cppcheck & clang
+ - Windows: Clean up compiler/linker warnings
+
+Improvements:
+ - Developers HACKING file: introduce clang & cppcheck for better code
+ - Windows: better logging via OutputDebugString()
+
+Changes:
+ - Upon malloc error, nfc_init() doesn't force exit() anymore
+   so now you should test if context != NULL after nfc_init() call
+ - API: nfc_initiator_target_is_present() & str_nfc_target()
+   now take a pointer to nfc_target as argument instead of passing by value
+
 Mar 03, 2013 - 1.7.0-rc6 (release candidate)
 --------------------------------------------
 
