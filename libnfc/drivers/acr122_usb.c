@@ -347,50 +347,6 @@ struct acr122_usb_descriptor {
   char *filename;
 };
 
-static int
-acr122_usb_connstring_decode(const nfc_connstring connstring, struct acr122_usb_descriptor *desc)
-{
-  int n = strlen(connstring) + 1;
-  char *driver_name = malloc(n);
-  if (!driver_name) {
-    perror("malloc");
-    return 0;
-  }
-  char *dirname     = malloc(n);
-  if (!dirname) {
-    perror("malloc");
-    free(driver_name);
-    return 0;
-  }
-  char *filename    = malloc(n);
-  if (!filename) {
-    perror("malloc");
-    free(driver_name);
-    free(dirname);
-    return 0;
-  }
-
-  driver_name[0] = '\0';
-
-  char format[32];
-  snprintf(format, sizeof(format), "%%%i[^:]:%%%i[^:]:%%%i[^:]", n - 1, n - 1, n - 1);
-  int res = sscanf(connstring, format, driver_name, dirname, filename);
-
-  if (!res || ((0 != strcmp(driver_name, ACR122_USB_DRIVER_NAME)) && (0 != strcmp(driver_name, "usb")))) {
-    // Driver name does not match.
-    res = 0;
-  } else {
-    desc->dirname  = strdup(dirname);
-    desc->filename = strdup(filename);
-  }
-
-  free(driver_name);
-  free(dirname);
-  free(filename);
-
-  return res;
-}
-
 static bool
 acr122_usb_get_usb_device_name(struct usb_device *dev, usb_dev_handle *udev, char *buffer, size_t len)
 {
@@ -424,7 +380,7 @@ acr122_usb_open(const nfc_context *context, const nfc_connstring connstring)
 {
   nfc_device *pnd = NULL;
   struct acr122_usb_descriptor desc = { NULL, NULL };
-  int connstring_decode_level = acr122_usb_connstring_decode(connstring, &desc);
+  int connstring_decode_level = connstring_decode(connstring, ACR122_USB_DRIVER_NAME, "usb", &desc.dirname, &desc.filename);
   log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%d element(s) have been decoded from \"%s\"", connstring_decode_level, connstring);
   if (connstring_decode_level < 1) {
     goto free_mem;

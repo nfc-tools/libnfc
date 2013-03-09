@@ -191,49 +191,14 @@ acr122_pcsc_scan(const nfc_context *context, nfc_connstring connstrings[], const
 }
 
 struct acr122_pcsc_descriptor {
-  char pcsc_device_name[512];
+  char *pcsc_device_name;
 };
-
-static int
-acr122_pcsc_connstring_decode(const nfc_connstring connstring, struct acr122_pcsc_descriptor *desc)
-{
-  char *cs = malloc(strlen(connstring) + 1);
-  if (!cs) {
-    perror("malloc");
-    return -1;
-  }
-  strcpy(cs, connstring);
-  const char *driver_name = strtok(cs, ":");
-  if (!driver_name) {
-    // Parse error
-    free(cs);
-    return -1;
-  }
-
-  if (0 != strcmp(driver_name, ACR122_PCSC_DRIVER_NAME)) {
-    // Driver name does not match.
-    free(cs);
-    return 0;
-  }
-
-  const char *device_name = strtok(NULL, ":");
-  if (!device_name) {
-    // Only driver name was specified (or parsing error)
-    free(cs);
-    return 1;
-  }
-  strncpy(desc->pcsc_device_name, device_name, sizeof(desc->pcsc_device_name) - 1);
-  desc->pcsc_device_name[sizeof(desc->pcsc_device_name) - 1] = '\0';
-
-  free(cs);
-  return 2;
-}
 
 static nfc_device *
 acr122_pcsc_open(const nfc_context *context, const nfc_connstring connstring)
 {
   struct acr122_pcsc_descriptor ndd;
-  int connstring_decode_level = acr122_pcsc_connstring_decode(connstring, &ndd);
+  int connstring_decode_level = connstring_decode(connstring, ACR122_PCSC_DRIVER_NAME, "pcsc", &ndd.pcsc_device_name, NULL);
 
   if (connstring_decode_level < 1) {
     return NULL;
@@ -245,7 +210,7 @@ acr122_pcsc_open(const nfc_context *context, const nfc_connstring connstring)
     size_t szDeviceFound = acr122_pcsc_scan(context, &fullconnstring, 1);
     if (szDeviceFound < 1)
       return NULL;
-    connstring_decode_level = acr122_pcsc_connstring_decode(fullconnstring, &ndd);
+    connstring_decode_level = connstring_decode(fullconnstring, ACR122_PCSC_DRIVER_NAME, "pcsc", &ndd.pcsc_device_name, NULL);
     if (connstring_decode_level < 2) {
       return NULL;
     }
@@ -255,23 +220,29 @@ acr122_pcsc_open(const nfc_context *context, const nfc_connstring connstring)
   if (strlen(ndd.pcsc_device_name) < 5) { // We can assume it's a reader ID as pcsc_name always ends with "NN NN"
     // Device was not specified, only ID, retrieve it
     size_t index;
-    if (sscanf(ndd.pcsc_device_name, "%4" SCNuPTR, &index) != 1)
+    if (sscanf(ndd.pcsc_device_name, "%4" SCNuPTR, &index) != 1) {
+      free(ndd.pcsc_device_name);
       return NULL;
+    }
     nfc_connstring *ncs = malloc(sizeof(nfc_connstring) * (index + 1));
     if (!ncs) {
       perror("malloc");
+      free(ndd.pcsc_device_name);
       return NULL;
     }
     size_t szDeviceFound = acr122_pcsc_scan(context, ncs, index + 1);
     if (szDeviceFound < index + 1) {
       free(ncs);
+      free(ndd.pcsc_device_name);
       return NULL;
     }
     strncpy(fullconnstring, ncs[index], sizeof(nfc_connstring));
     fullconnstring[sizeof(nfc_connstring) - 1] = '\0';
     free(ncs);
-    connstring_decode_level = acr122_pcsc_connstring_decode(fullconnstring, &ndd);
+    connstring_decode_level = connstring_decode(fullconnstring, ACR122_PCSC_DRIVER_NAME, "pcsc", &ndd.pcsc_device_name, NULL);
+
     if (connstring_decode_level < 2) {
+      free(ndd.pcsc_device_name);
       return NULL;
     }
   }
@@ -324,12 +295,13 @@ acr122_pcsc_open(const nfc_context *context, const nfc_connstring connstring)
 
     pn53x_init(pnd);
 
+    free(ndd.pcsc_device_name);
     return pnd;
   }
 
 error:
+  free(ndd.pcsc_device_name);
   nfc_device_free(pnd);
-
   return NULL;
 }
 

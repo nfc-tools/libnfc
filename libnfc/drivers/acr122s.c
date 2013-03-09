@@ -396,58 +396,9 @@ acr122s_get_firmware_version(nfc_device *pnd, char *version, size_t length)
 }
 
 struct acr122s_descriptor {
-  char port[128];
+  char *port;
   uint32_t speed;
 };
-
-static int
-acr122s_connstring_decode(const nfc_connstring connstring, struct acr122s_descriptor *desc)
-{
-  char *cs = malloc(strlen(connstring) + 1);
-  if (!cs) {
-    perror("malloc");
-    return -1;
-  }
-  strcpy(cs, connstring);
-  const char *driver_name = strtok(cs, ":");
-  if (!driver_name) {
-    // Parse error
-    free(cs);
-    return -1;
-  }
-
-  if (0 != strcmp(driver_name, ACR122S_DRIVER_NAME)) {
-    // Driver name does not match.
-    free(cs);
-    return 0;
-  }
-
-  const char *port = strtok(NULL, ":");
-  if (!port) {
-    // Only driver name was specified (or parsing error)
-    free(cs);
-    return 1;
-  }
-  strncpy(desc->port, port, sizeof(desc->port) - 1);
-  desc->port[sizeof(desc->port) - 1] = '\0';
-
-  const char *speed_s = strtok(NULL, ":");
-  if (!speed_s) {
-    // speed not specified (or parsing error)
-    free(cs);
-    return 2;
-  }
-  unsigned long speed;
-  if (sscanf(speed_s, "%10lu", &speed) != 1) {
-    // speed_s is not a number
-    free(cs);
-    return 2;
-  }
-  desc->speed = speed;
-
-  free(cs);
-  return 3;
-}
 
 static size_t
 acr122s_scan(const nfc_context *context, nfc_connstring connstrings[], const size_t connstrings_len)
@@ -540,6 +491,7 @@ acr122s_close(nfc_device *pnd)
   close(DRIVER_DATA(pnd)->abort_fds[1]);
 #endif
 
+  free(DRIVER_DATA(pnd)->port);
   pn53x_data_free(pnd);
   nfc_device_free(pnd);
 }
@@ -550,8 +502,18 @@ acr122s_open(const nfc_context *context, const nfc_connstring connstring)
   serial_port sp;
   nfc_device *pnd;
   struct acr122s_descriptor ndd;
-  int connstring_decode_level = acr122s_connstring_decode(connstring, &ndd);
-
+  char *speed_s;
+  int connstring_decode_level = connstring_decode(connstring, ACR122S_DRIVER_NAME, NULL, &ndd.port, &speed_s);
+  if (connstring_decode_level == 3) {
+    ndd.speed = 0;
+    if (sscanf(speed_s, "%10"PRIu32, &ndd.speed) != 1) {
+      // speed_s is not a number
+      free(ndd.port);
+      free(speed_s);
+      return NULL;
+    }
+    free(speed_s);
+  }
   if (connstring_decode_level < 2) {
     return NULL;
   }
@@ -566,11 +528,13 @@ acr122s_open(const nfc_context *context, const nfc_connstring connstring)
   if (sp == INVALID_SERIAL_PORT) {
     log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR,
             "Invalid serial port: %s", ndd.port);
+    free(ndd.port);
     return NULL;
   }
   if (sp == CLAIMED_SERIAL_PORT) {
     log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR,
             "Serial port already claimed: %s", ndd.port);
+    free(ndd.port);
     return NULL;
   }
 
@@ -580,6 +544,7 @@ acr122s_open(const nfc_context *context, const nfc_connstring connstring)
   pnd = nfc_device_new(context, connstring);
   if (!pnd) {
     perror("malloc");
+    acr122s_close(pnd);
     return NULL;
   }
   pnd->driver = &acr122s_driver;
@@ -597,6 +562,7 @@ acr122s_open(const nfc_context *context, const nfc_connstring connstring)
 
 #ifndef WIN32
   if (pipe(DRIVER_DATA(pnd)->abort_fds) < 0) {
+    acr122s_close(pnd);
     return NULL;
   }
 #else

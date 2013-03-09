@@ -18,6 +18,7 @@ libnfc_la_SOURCES = \
 		    drivers.h \
 		    iso7816.h \
 		    log.h \
+		    log-internal.h \
 		    mirror-subr.h \
 		    nfc-internal.h \
 		    target-subr.h
@@ -40,11 +41,10 @@ if LIBUSB_ENABLED
 endif
 
 if WITH_LOG
-  libnfc_la_SOURCES += log-printf.c log_posix.c
+  libnfc_la_SOURCES += log_posix.c
 endif
 
 EXTRA_DIST = \
 	CMakeLists.txt \
-	log-printf.c \
 	log_posix.c \
 	log_win32.c

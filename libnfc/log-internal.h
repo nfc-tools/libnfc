@@ -1,7 +1,5 @@
 /*-
- * Copyright (C) 2011 Romain Tartière
- * Copyright (C) 2011, 2012 Romuald Conty
- * Copyright (C) 2013 Alex Lian
+ * Copyright (C) 2013 Romuald Conty
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -17,22 +15,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
 
-#include "log-internal.h"
+#ifndef __LOG_INTERNAL_H__
+#define __LOG_INTERNAL_H__
 
-#include <stdio.h>
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif // HAVE_CONFIG_H
+
 #include <stdarg.h>
 
-void
-log_vput_internal(const char *format, va_list args)
-{
-  vfprintf(stderr, format, args);
-}
+// Internal methods so different platforms can route the logging
+// Offering both forms of the variadic function
+// These are implemented in the log_<platform> specific file
+void log_put_internal(const char *format, ...);
+void log_vput_internal(const char *format, va_list args);
 
-void
-log_put_internal(const char *format, ...)
-{
-  va_list va;
-  va_start(va, format);
-  vfprintf(stderr, format, va);
-  va_end(va);
-}
+#endif // __LOG_INTERNAL_H__

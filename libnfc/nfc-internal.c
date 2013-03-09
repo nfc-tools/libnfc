@@ -185,3 +185,67 @@ prepare_initiator_data(const nfc_modulation nm, uint8_t **ppbtInitiatorData, siz
       break;
   }
 }
+
+int
+connstring_decode(const nfc_connstring connstring, const char *driver_name, const char *bus_name, char **pparam1, char **pparam2)
+{
+  if (driver_name == NULL) {
+    driver_name = "";
+  }
+  if (bus_name == NULL) {
+    bus_name = "";
+  }
+  int n = strlen(connstring) + 1;
+  char *param0 = malloc(n);
+  if (param0 == NULL) {
+    perror("malloc");
+    return 0;
+  }
+  char *param1 = malloc(n);
+  if (param1 == NULL) {
+    perror("malloc");
+    free(param0);
+    return 0;
+  }
+  char *param2    = malloc(n);
+  if (param2 == NULL) {
+    perror("malloc");
+    free(param0);
+    free(param1);
+    return 0;
+  }
+
+  char format[32];
+  snprintf(format, sizeof(format), "%%%i[^:]:%%%i[^:]:%%%i[^:]", n - 1, n - 1, n - 1);
+  int res = sscanf(connstring, format, param0, param1, param2);
+
+  if (res < 1 || ((0 != strcmp(param0, driver_name)) &&
+                  (bus_name != NULL) &&
+                  (0 != strcmp(param0, bus_name)))) {
+    // Driver name does not match.
+    res = 0;
+  }
+  if (pparam1 != NULL) {
+    if (res < 2) {
+      free(param1);
+      *pparam1 = NULL;
+    } else {
+      *pparam1 = param1;
+    }
+  } else {
+    free(param1);
+  }
+  if (pparam2 != NULL) {
+    if (res < 3) {
+      free(param2);
+      *pparam2 = NULL;
+    } else {
+      *pparam2 = param2;
+    }
+  } else {
+    free(param2);
+  }
+  free(param0);
+  return res;
+}
+

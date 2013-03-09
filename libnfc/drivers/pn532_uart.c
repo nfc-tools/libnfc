@@ -142,58 +142,9 @@ pn532_uart_scan(const nfc_context *context, nfc_connstring connstrings[], const 
 }
 
 struct pn532_uart_descriptor {
-  char port[128];
+  char *port;
   uint32_t speed;
 };
-
-static int
-pn532_connstring_decode(const nfc_connstring connstring, struct pn532_uart_descriptor *desc)
-{
-  char *cs = malloc(strlen(connstring) + 1);
-  if (!cs) {
-    perror("malloc");
-    return -1;
-  }
-  strcpy(cs, connstring);
-  const char *driver_name = strtok(cs, ":");
-  if (!driver_name) {
-    // Parse error
-    free(cs);
-    return -1;
-  }
-
-  if (0 != strcmp(driver_name, PN532_UART_DRIVER_NAME)) {
-    // Driver name does not match.
-    free(cs);
-    return 0;
-  }
-
-  const char *port = strtok(NULL, ":");
-  if (!port) {
-    // Only driver name was specified (or parsing error)
-    free(cs);
-    return 1;
-  }
-  strncpy(desc->port, port, sizeof(desc->port) - 1);
-  desc->port[sizeof(desc->port) - 1] = '\0';
-
-  const char *speed_s = strtok(NULL, ":");
-  if (!speed_s) {
-    // speed not specified (or parsing error)
-    free(cs);
-    return 2;
-  }
-  unsigned long speed;
-  if (sscanf(speed_s, "%10lu", &speed) != 1) {
-    // speed_s is not a number
-    free(cs);
-    return 2;
-  }
-  desc->speed = speed;
-
-  free(cs);
-  return 3;
-}
 
 static void
 pn532_uart_close(nfc_device *pnd)
@@ -209,6 +160,7 @@ pn532_uart_close(nfc_device *pnd)
   close(DRIVER_DATA(pnd)->iAbortFds[1]);
 #endif
 
+  free(DRIVER_DATA(pnd)->port);
   pn53x_data_free(pnd);
   nfc_device_free(pnd);
 }
@@ -217,8 +169,18 @@ static nfc_device *
 pn532_uart_open(const nfc_context *context, const nfc_connstring connstring)
 {
   struct pn532_uart_descriptor ndd;
-  int connstring_decode_level = pn532_connstring_decode(connstring, &ndd);
-
+  char *speed_s;
+  int connstring_decode_level = connstring_decode(connstring, PN532_UART_DRIVER_NAME, NULL, &ndd.port, &speed_s);
+  if (connstring_decode_level == 3) {
+    ndd.speed = 0;
+    if (sscanf(speed_s, "%10"PRIu32, &ndd.speed) != 1) {
+      // speed_s is not a number
+      free(ndd.port);
+      free(speed_s);
+      return NULL;
+    }
+    free(speed_s);
+  }
   if (connstring_decode_level < 2) {
     return NULL;
   }
@@ -235,9 +197,10 @@ pn532_uart_open(const nfc_context *context, const nfc_connstring connstring)
     log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Invalid serial port: %s", ndd.port);
   if (sp == CLAIMED_SERIAL_PORT)
     log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Serial port already claimed: %s", ndd.port);
-  if ((sp == CLAIMED_SERIAL_PORT) || (sp == INVALID_SERIAL_PORT))
+  if ((sp == CLAIMED_SERIAL_PORT) || (sp == INVALID_SERIAL_PORT)) {
+    free(ndd.port);
     return NULL;
-
+  }
   // We need to flush input to be sure first reply does not comes from older byte transceive
   uart_flush_input(sp);
   uart_set_speed(sp, ndd.speed);
@@ -246,6 +209,7 @@ pn532_uart_open(const nfc_context *context, const nfc_connstring connstring)
   pnd = nfc_device_new(context, connstring);
   if (!pnd) {
     perror("malloc");
+    free(ndd.port);
     return NULL;
   }
   snprintf(pnd->name, sizeof(pnd->name), "%s:%s", PN532_UART_DRIVER_NAME, ndd.port);
@@ -253,6 +217,7 @@ pn532_uart_open(const nfc_context *context, const nfc_connstring connstring)
   pnd->driver_data = malloc(sizeof(struct pn532_uart_data));
   if (!pnd->driver_data) {
     perror("malloc");
+    free(ndd.port);
     return NULL;
   }
   DRIVER_DATA(pnd)->port = sp;
@@ -271,6 +236,7 @@ pn532_uart_open(const nfc_context *context, const nfc_connstring connstring)
 #ifndef WIN32
   // pipe-based abort mecanism
   if (pipe(DRIVER_DATA(pnd)->iAbortFds) < 0) {
+    free(ndd.port);
     return NULL;
   }
 #else
@@ -281,6 +247,7 @@ pn532_uart_open(const nfc_context *context, const nfc_connstring connstring)
   if (pn53x_check_communication(pnd) < 0) {
     nfc_perror(pnd, "pn53x_check_communication");
     pn532_uart_close(pnd);
+    free(ndd.port);
     return NULL;
   }
 
