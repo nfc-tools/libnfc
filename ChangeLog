@@ -3,14 +3,25 @@ TBD
 
 Fixes:
  - Fix bug when compiling without libusb
- - Fixes several memory leaks in error handling conditions
+ - Fix several memory leaks in error handling conditions
  - Remove calls to exit() from the library
- - Numerous minor fixes suggested by cppcheck & clang
+ - Create safer snprint_nfc_*() instead of sprint_nfc_*() functions
+ - Fix warnings returned by cppcheck & clang/scan-build
+   - Obsolete function 'usleep' => nanosleep()
+   - Non reentrant function 'readdir' => readdir_r()
+   - Buffer may not be null-terminated after call to strncpy()
+   - scanf without field width limits can crash with huge input data
+   - Resource leaks: missing fclose()
+   - Dead code, unused vars & vars scopes warnings
+ - Windows: Fix compilation due to new usbbus file
  - Windows: Clean up compiler/linker warnings
+   - Fixed the suppression of the auto-fixup for linking against MS built libs
+   - Fixed all the formatting warnings by shifting to inttypes.h specifiers
+   - shifted to %lu for DWORD printf
 
 Improvements:
- - Developers HACKING file: introduce clang & cppcheck for better code
- - Windows: better logging via OutputDebugString()
+ - Devels HACKING file: introduce clang/scan-build & cppcheck for better code
+ - Windows: logging via OutputDebugString(), ease debugging
 
 Changes:
  - Upon malloc error, nfc_init() doesn't force exit() anymore
