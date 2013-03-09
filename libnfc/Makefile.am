@@ -18,7 +18,7 @@ libnfc_la_SOURCES = \
 		    drivers.h \
 		    iso7816.h \
 		    log.h \
-		    log_internal.h \
+		    log-internal.h \
 		    mirror-subr.h \
 		    nfc-internal.h \
 		    target-subr.h

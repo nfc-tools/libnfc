@@ -74,7 +74,7 @@ log_priority_to_str(const int priority)
 
 #ifdef LOG
 
-#include "log_internal.h"
+#include "log-internal.h"
 
 void
 log_init(const nfc_context *context)

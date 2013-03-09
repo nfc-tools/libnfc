@@ -70,9 +70,6 @@ void log_put(const uint8_t group, const char *category, const uint8_t priority, 
 __attribute__((format(printf, 4, 5)))
 #  endif
 ;
-void log_put_internal(const char *format, ...);
-void log_vput_internal(const char *format, va_list args);
-
 #else
 // No logging
 #define log_init(nfc_context) ((void) 0)
