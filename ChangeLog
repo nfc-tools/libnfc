@@ -14,6 +14,7 @@ Fixes:
    - scanf without field width limits can crash with huge input data
    - Resource leaks: missing fclose()
    - Dead code, unused vars & vars scopes warnings
+ - Unify copyright notices & update authors lists
  - Windows: Fix compilation due to new usbbus file
  - Windows: Clean up compiler/linker warnings
    - Fixed the suppression of the auto-fixup for linking against MS built libs
