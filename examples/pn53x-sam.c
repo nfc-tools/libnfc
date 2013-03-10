@@ -1,7 +1,14 @@
 /*-
- * Public platform independent Near Field Communication (NFC) library examples
+ * Free/Libre Near Field Communication (NFC) library
  *
- * Copyright (C) 2010 Emanuele Bertoldi
+ * Libnfc historical contributors:
+ * Copyright (C) 2009      Roel Verdult
+ * Copyright (C) 2009-2013 Romuald Conty
+ * Copyright (C) 2010-2012 Romain Tartière
+ * Copyright (C) 2010-2013 Philippe Teuwen
+ * Copyright (C) 2012-2013 Ludovic Rousseau
+ * Additional contributors of this file:
+ * Copyright (C) 2010      Emanuele Bertoldi
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:

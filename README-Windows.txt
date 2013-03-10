@@ -1,8 +1,15 @@
 *-
-* Public platform independent Near Field Communication (NFC) library
-* Windows-specific parts:
-* Copyright (C) 2010, Glenn Ergeerts
-* Copyright (C) 2013, Alex Lian
+* Free/Libre Near Field Communication (NFC) library
+*
+* Libnfc historical contributors:
+* Copyright (C) 2009      Roel Verdult
+* Copyright (C) 2009-2013 Romuald Conty
+* Copyright (C) 2010-2012 Romain Tartière
+* Copyright (C) 2010-2013 Philippe Teuwen
+* Copyright (C) 2012-2013 Ludovic Rousseau
+* Additional contributors of Windows-specific parts:
+* Copyright (C) 2010      Glenn Ergeerts
+* Copyright (C) 2013      Alex Lian
 -*
 
 Requirements

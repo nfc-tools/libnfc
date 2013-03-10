@@ -9,6 +9,7 @@ Fixes:
  - Fix warnings returned by cppcheck & clang/scan-build
    - Obsolete function 'usleep' => nanosleep()
    - Non reentrant function 'readdir' => readdir_r()
+   - Non reentrant function 'strtok' => new connstring_decode()
    - Buffer may not be null-terminated after call to strncpy()
    - scanf without field width limits can crash with huge input data
    - Resource leaks: missing fclose()

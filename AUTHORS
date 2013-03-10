@@ -1,3 +1,14 @@
+# Alphabetical cleaned output of "git shortlog -s -e|cut -c 8-" :
+Adam Laurie <adam@algroup.co.uk>
+Ahti Legonkov <ahti.legonkov@gmail.com>
+Alex Lian <alian@alum.mit.edu>
+Anugrah Redja Kusuma <anugrah.redja@gmail.com>
+Audrey Diacre <adiacre@il4p.fr>
+Emanuele Bertoldi <emanuele.bertoldi@gmail.com>
+Francois Kooman <fkooman@tuxed.net>
+Ludovic Rousseau <ludovic.rousseau@gmail.com>
+Nobuhiro Iwamatsu <iwamatsu@nigauri.org>
+Philippe Teuwen <yobibe@gmail.com>
 Roel Verdult <roel@libnfc.org>
-Romain Tartière <romain@libnfc.org>
+Romain Tartiere <romain.tartiere@gmail.com>
 Romuald Conty <romuald@libnfc.org>
