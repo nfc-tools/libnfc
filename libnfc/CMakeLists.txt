@@ -19,8 +19,6 @@ ELSE(LIBUSB_FOUND)
 ENDIF(LIBUSB_FOUND)
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/buses)
 
-INCLUDE(LibnfcDrivers)
-
 IF(WIN32)
   # Windows now requires regex, so we utilize PCRE
   # since Windows doesn't get the benefit of finding in CMake
