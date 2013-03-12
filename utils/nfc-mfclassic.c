@@ -261,6 +261,32 @@ unlock_card(void)
   return true;
 }
 
+static int
+get_rats(void)
+{
+  int res;
+  uint8_t  abtRats[2] = { 0xe0, 0x50};
+  // Use raw send/receive methods
+  if (nfc_device_set_property_bool(pnd, NP_EASY_FRAMING, false) < 0) {
+    nfc_perror(pnd, "nfc_configure");
+    return -1;
+  }
+  res = nfc_initiator_transceive_bytes(pnd, abtRats, sizeof(abtRats), abtRx, sizeof(abtRx), 0);
+  if (res > 0) {
+    // ISO14443-4 card, turn RF field off/on to access ISO14443-3 again
+    nfc_device_set_property_bool(pnd, NP_ACTIVATE_FIELD, false);
+    nfc_device_set_property_bool(pnd, NP_ACTIVATE_FIELD, true);
+  }
+  // Reselect tag
+  if (nfc_initiator_select_passive_target(pnd, nmMifare, NULL, 0, &nt) <= 0) {
+    printf("Error: tag disappeared\n");
+    nfc_close(pnd);
+    nfc_exit(context);
+    exit(EXIT_FAILURE);
+  }
+  return res;
+}
+
 static  bool
 read_card(int read_unlocked)
 {
@@ -558,9 +584,18 @@ main(int argc, const char *argv[])
 // 320b
     uiBlocks = 0x13;
   else
-// 1K
-// TODO: for MFP it is 0x7f (2K) but how to be sure it's a MFP? Try to get RATS?
+// 1K/2K, checked through RATS
     uiBlocks = 0x3f;
+// Testing RATS
+  int res;
+  if ((res = get_rats()) > 0) {
+    if ((res >= 10) && (abtRx[5] == 0xc1) && (abtRx[6] == 0x05)
+                    && (abtRx[7] == 0x2f) && (abtRx[8] == 0x2f)
+                    && ((nt.nti.nai.abtAtqa[1] & 0x02) == 0x00)) {
+      // MIFARE Plus 2K
+      uiBlocks = 0x7f;
+    }
+  }
   printf("Guessing size: seems to be a %i-byte card\n", (uiBlocks + 1) * 16);
 
   if (bUseKeyFile) {
