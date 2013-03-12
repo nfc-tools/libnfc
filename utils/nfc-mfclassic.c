@@ -65,6 +65,7 @@ static mifare_classic_tag mtKeys;
 static mifare_classic_tag mtDump;
 static bool bUseKeyA;
 static bool bUseKeyFile;
+static bool bForceKeyFile;
 static bool bTolerateFailures;
 static uint8_t uiBlocks;
 static uint8_t keys[] = {
@@ -445,7 +446,7 @@ static void
 print_usage(const char *pcProgramName)
 {
   printf("Usage: ");
-  printf("%s r|R|w|W a|b <dump.mfd> [<keys.mfd>]\n", pcProgramName);
+  printf("%s r|R|w|W a|b <dump.mfd> [<keys.mfd> [f]]\n", pcProgramName);
   printf("  r|R|w|W       - Perform read from (r) or unlocked read from (R) or write to (w) or unlocked write to (W) card\n");
   printf("                  *** note that unlocked write will attempt to overwrite block 0 including UID\n");
   printf("                  *** unlocked read does not require authentication and will reveal A and B keys\n");
@@ -453,6 +454,7 @@ print_usage(const char *pcProgramName)
   printf("  a|A|b|B       - Use A or B keys for action; Halt on errors (a|b) or tolerate errors (A|B)\n");
   printf("  <dump.mfd>    - MiFare Dump (MFD) used to write (card to MFD) or (MFD to card)\n");
   printf("  <keys.mfd>    - MiFare Dump (MFD) that contain the keys (optional)\n");
+  printf("  f             - Force using the keyfile even if UID does not match (optional)\n");
 }
 
 int
@@ -490,6 +492,7 @@ main(int argc, const char *argv[])
     bUseKeyA = tolower((int)((unsigned char) * (argv[2]))) == 'a';
     bTolerateFailures = tolower((int)((unsigned char) * (argv[2]))) != (int)((unsigned char) * (argv[2]));
     bUseKeyFile = (argc > 4);
+    bForceKeyFile = ((argc > 5) && (strcmp((char*)argv[5], "f") == 0));
   }
 
   if (atAction == ACTION_USAGE) {
@@ -567,10 +570,12 @@ main(int argc, const char *argv[])
              fileUid[0], fileUid[1], fileUid[2], fileUid[3]);
       printf("Got card with UID starting as:                     %02x%02x%02x%02x\n",
              pbtUID[0], pbtUID[1], pbtUID[2], pbtUID[3]);
-      printf("Aborting!\n");
-      nfc_close(pnd);
-      nfc_exit(context);
-      exit(EXIT_FAILURE);
+      if (! bForceKeyFile) {
+        printf("Aborting!\n");
+        nfc_close(pnd);
+        nfc_exit(context);
+        exit(EXIT_FAILURE);
+      }
     }
   }
   printf("Found MIFARE Classic card:\n");
