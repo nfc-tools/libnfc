@@ -29,6 +29,7 @@ Improvements:
  - Windows: logging via OutputDebugString(), ease debugging
  - nfc-mfclassic: use smaller files for cards < 4k
  - nfc-mfclassic: by defaut don't authorise wrong keyfile, use "f" to force
+ - quick_start_example1.c: remove err.h dependency, easier for Windowsians
 
 Changes:
  - Upon malloc error, nfc_init() doesn't force exit() anymore
