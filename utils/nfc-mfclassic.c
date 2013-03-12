@@ -470,40 +470,20 @@ main(int argc, const char *argv[])
     print_usage(argv[0]);
     exit(EXIT_FAILURE);
   }
+  // We don't know yet the card size so let's read only the UID from the keyfile for the moment
   if (bUseKeyFile) {
     FILE *pfKeys = fopen(argv[4], "rb");
     if (pfKeys == NULL) {
       printf("Could not open keys file: %s\n", argv[4]);
       exit(EXIT_FAILURE);
     }
-    if (fread(&mtKeys, 1, sizeof(mtKeys), pfKeys) != sizeof(mtKeys)) {
-      printf("Could not read keys file: %s\n", argv[4]);
+    if (fread(&mtKeys, 1, 4, pfKeys) != 4) {
+      printf("Could not read UID from key file: %s\n", argv[4]);
       fclose(pfKeys);
       exit(EXIT_FAILURE);
     }
     fclose(pfKeys);
   }
-
-  if (atAction == ACTION_READ) {
-    memset(&mtDump, 0x00, sizeof(mtDump));
-  } else {
-    FILE *pfDump = fopen(argv[3], "rb");
-
-    if (pfDump == NULL) {
-      printf("Could not open dump file: %s\n", argv[3]);
-      exit(EXIT_FAILURE);
-
-    }
-
-    if (fread(&mtDump, 1, sizeof(mtDump), pfDump) != sizeof(mtDump)) {
-      printf("Could not read dump file: %s\n", argv[3]);
-      fclose(pfDump);
-      exit(EXIT_FAILURE);
-    }
-    fclose(pfDump);
-  }
-// printf("Successfully opened required files\n");
-
   nfc_init(&context);
   if (context == NULL) {
     ERR("Unable to init libnfc (malloc)");
@@ -583,6 +563,40 @@ main(int argc, const char *argv[])
     uiBlocks = 0x3f;
   printf("Guessing size: seems to be a %i-byte card\n", (uiBlocks + 1) * 16);
 
+  if (bUseKeyFile) {
+    FILE *pfKeys = fopen(argv[4], "rb");
+    if (pfKeys == NULL) {
+      printf("Could not open keys file: %s\n", argv[4]);
+      exit(EXIT_FAILURE);
+    }
+    if (fread(&mtKeys, 1, (uiBlocks + 1) * sizeof(mifare_classic_block), pfKeys) != (uiBlocks + 1) * sizeof(mifare_classic_block)) {
+      printf("Could not read keys file: %s\n", argv[4]);
+      fclose(pfKeys);
+      exit(EXIT_FAILURE);
+    }
+    fclose(pfKeys);
+  }
+
+  if (atAction == ACTION_READ) {
+    memset(&mtDump, 0x00, sizeof(mtDump));
+  } else {
+    FILE *pfDump = fopen(argv[3], "rb");
+
+    if (pfDump == NULL) {
+      printf("Could not open dump file: %s\n", argv[3]);
+      exit(EXIT_FAILURE);
+
+    }
+
+    if (fread(&mtDump, 1, (uiBlocks + 1) * sizeof(mifare_classic_block), pfDump) != (uiBlocks + 1) * sizeof(mifare_classic_block)) {
+      printf("Could not read dump file: %s\n", argv[3]);
+      fclose(pfDump);
+      exit(EXIT_FAILURE);
+    }
+    fclose(pfDump);
+  }
+// printf("Successfully opened required files\n");
+
   if (atAction == ACTION_READ) {
     if (read_card(unlock)) {
       printf("Writing data to file: %s ...", argv[3]);
@@ -594,7 +608,7 @@ main(int argc, const char *argv[])
         nfc_exit(context);
         exit(EXIT_FAILURE);
       }
-      if (fwrite(&mtDump, 1, sizeof(mtDump), pfDump) != sizeof(mtDump)) {
+      if (fwrite(&mtDump, 1, (uiBlocks + 1) * sizeof(mifare_classic_block), pfDump) != ((uiBlocks + 1) * sizeof(mifare_classic_block))) {
         printf("\nCould not write to file: %s\n", argv[3]);
         fclose(pfDump);
         nfc_close(pnd);
