@@ -492,7 +492,7 @@ main(int argc, const char *argv[])
     bUseKeyA = tolower((int)((unsigned char) * (argv[2]))) == 'a';
     bTolerateFailures = tolower((int)((unsigned char) * (argv[2]))) != (int)((unsigned char) * (argv[2]));
     bUseKeyFile = (argc > 4);
-    bForceKeyFile = ((argc > 5) && (strcmp((char*)argv[5], "f") == 0));
+    bForceKeyFile = ((argc > 5) && (strcmp((char *)argv[5], "f") == 0));
   }
 
   if (atAction == ACTION_USAGE) {
@@ -595,8 +595,8 @@ main(int argc, const char *argv[])
   int res;
   if ((res = get_rats()) > 0) {
     if ((res >= 10) && (abtRx[5] == 0xc1) && (abtRx[6] == 0x05)
-                    && (abtRx[7] == 0x2f) && (abtRx[8] == 0x2f)
-                    && ((nt.nti.nai.abtAtqa[1] & 0x02) == 0x00)) {
+        && (abtRx[7] == 0x2f) && (abtRx[8] == 0x2f)
+        && ((nt.nti.nai.abtAtqa[1] & 0x02) == 0x00)) {
       // MIFARE Plus 2K
       uiBlocks = 0x7f;
     }

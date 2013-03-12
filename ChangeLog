@@ -20,10 +20,15 @@ Fixes:
    - Fixed the suppression of the auto-fixup for linking against MS built libs
    - Fixed all the formatting warnings by shifting to inttypes.h specifiers
    - shifted to %lu for DWORD printf
+ - nfc-anticol: fix ATS length
+ - nfc-mfclassic: fix reporting of processed blocks total
+ - nfc-mfclassic: detect MIFARE Plus 2K as 2K instead of 1K
 
 Improvements:
  - Devels HACKING file: introduce clang/scan-build & cppcheck for better code
  - Windows: logging via OutputDebugString(), ease debugging
+ - nfc-mfclassic: use smaller files for cards < 4k
+ - nfc-mfclassic: by defaut don't authorise wrong keyfile, use "f" to force
 
 Changes:
  - Upon malloc error, nfc_init() doesn't force exit() anymore
