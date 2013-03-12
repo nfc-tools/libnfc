@@ -559,6 +559,12 @@ main(int argc, const char *argv[])
     if (memcmp(pbtUID, fileUid, 4) != 0) {
       printf("Expected MIFARE Classic card with UID starting as: %02x%02x%02x%02x\n",
              fileUid[0], fileUid[1], fileUid[2], fileUid[3]);
+      printf("Got card with UID starting as:                     %02x%02x%02x%02x\n",
+             pbtUID[0], pbtUID[1], pbtUID[2], pbtUID[3]);
+      printf("Aborting!\n");
+      nfc_close(pnd);
+      nfc_exit(context);
+      exit(EXIT_FAILURE);
     }
   }
   printf("Found MIFARE Classic card:\n");
