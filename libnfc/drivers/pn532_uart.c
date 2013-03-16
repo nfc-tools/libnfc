@@ -160,7 +160,6 @@ pn532_uart_close(nfc_device *pnd)
   close(DRIVER_DATA(pnd)->iAbortFds[1]);
 #endif
 
-  free(DRIVER_DATA(pnd)->port);
   pn53x_data_free(pnd);
   nfc_device_free(pnd);
 }
