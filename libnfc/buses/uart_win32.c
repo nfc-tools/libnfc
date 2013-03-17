@@ -250,11 +250,19 @@ char **
 uart_list_ports(void)
 {
   char **availablePorts = malloc((1 + MAX_SERIAL_PORT_WIN) * sizeof(char *));
+  if (!availablePorts) {
+    perror("malloc");
+    return availablePorts;
+  }
   int curIndex = 0;
   int i;
   for (i = 1; i <= MAX_SERIAL_PORT_WIN; i++) {
     if (is_port_available(i)) {
       availablePorts[curIndex] = (char *)malloc(10);
+      if (!availablePorts[curIndex]) {
+        perror("malloc");
+        break;
+      }
       sprintf(availablePorts[curIndex], "COM%d", i);
       // printf("found candidate port: %s\n", availablePorts[curIndex]);
       curIndex++;

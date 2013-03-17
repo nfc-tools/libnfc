@@ -3097,6 +3097,7 @@ pn53x_current_target_new(const struct nfc_device *pnd, const nfc_target *pnt)
     free(CHIP_DATA(pnd)->current_target);
   }
   CHIP_DATA(pnd)->current_target = malloc(sizeof(nfc_target));
+  // TODO: test malloc
   memcpy(CHIP_DATA(pnd)->current_target, pnt, sizeof(nfc_target));
 }
 

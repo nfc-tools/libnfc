@@ -130,6 +130,10 @@ uart_flush_input(serial_port sp)
     return;
   }
   char *rx = malloc(available_bytes_count);
+  if (!rx) {
+    perror("malloc");
+    return;
+  }
   // There is something available, read the data
   (void)read(UART_DATA(sp)->fd, rx, available_bytes_count);
   log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%d bytes have eatten.", available_bytes_count);
@@ -338,6 +342,10 @@ char **
 uart_list_ports(void)
 {
   char **res = malloc(sizeof(char *));
+  if (!res) {
+    perror("malloc");
+    return res;
+  }
   size_t szRes = 1;
 
   res[0] = NULL;
