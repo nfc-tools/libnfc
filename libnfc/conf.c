@@ -68,6 +68,7 @@ conf_parse_file(const char *filename, void (*conf_keyvalue)(void *data, const ch
   regex_t preg;
   if (regcomp(&preg, str_regex, REG_EXTENDED | REG_NOTEOL) != 0) {
     log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Regular expression used for configuration file parsing is not valid.");
+    fclose(f);
     return false;
   }
   size_t nmatch = preg.re_nsub + 1;
@@ -75,6 +76,7 @@ conf_parse_file(const char *filename, void (*conf_keyvalue)(void *data, const ch
   if (!pmatch) {
     log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Not enough memory: malloc failed.");
     regfree(&preg);
+    fclose(f);
     return false;
   }
 
@@ -108,6 +110,7 @@ conf_parse_file(const char *filename, void (*conf_keyvalue)(void *data, const ch
 
   free(pmatch);
   regfree(&preg);
+  fclose(f);
   return false;
 }
 
