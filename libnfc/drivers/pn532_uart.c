@@ -98,6 +98,7 @@ pn532_uart_scan(const nfc_context *context, nfc_connstring connstrings[], const 
       if (!pnd->driver_data) {
         perror("malloc");
         uart_close(sp);
+        nfc_device_free(pnd);
         return 0;
       }
       DRIVER_DATA(pnd)->port = sp;
@@ -113,6 +114,7 @@ pn532_uart_scan(const nfc_context *context, nfc_connstring connstrings[], const 
       // pipe-based abort mecanism
       if (pipe(DRIVER_DATA(pnd)->iAbortFds) < 0) {
         uart_close(DRIVER_DATA(pnd)->port);
+        nfc_device_free(pnd);
         return 0;
       }
 #else
@@ -222,6 +224,7 @@ pn532_uart_open(const nfc_context *context, const nfc_connstring connstring)
   if (!pnd->driver_data) {
     perror("malloc");
     uart_close(sp);
+    nfc_device_free(pnd);
     return NULL;
   }
   DRIVER_DATA(pnd)->port = sp;
@@ -241,6 +244,7 @@ pn532_uart_open(const nfc_context *context, const nfc_connstring connstring)
   // pipe-based abort mecanism
   if (pipe(DRIVER_DATA(pnd)->iAbortFds) < 0) {
     uart_close(DRIVER_DATA(pnd)->port);
+    nfc_device_free(pnd);
     return NULL;
   }
 #else

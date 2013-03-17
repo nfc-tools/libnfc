@@ -438,6 +438,7 @@ acr122s_scan(const nfc_context *context, nfc_connstring connstrings[], const siz
       if (!pnd->driver_data) {
         perror("malloc");
         uart_close(sp);
+        nfc_device_free(pnd);
         return -1;
       }
       DRIVER_DATA(pnd)->port = sp;
@@ -446,6 +447,7 @@ acr122s_scan(const nfc_context *context, nfc_connstring connstrings[], const siz
 #ifndef WIN32
       if (pipe(DRIVER_DATA(pnd)->abort_fds) < 0) {
         uart_close(DRIVER_DATA(pnd)->port);
+        nfc_device_free(pnd);
         return 0;
       }
 #else
