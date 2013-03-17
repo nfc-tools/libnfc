@@ -549,11 +549,13 @@ acr122s_open(const nfc_context *context, const nfc_connstring connstring)
   pnd = nfc_device_new(context, connstring);
   if (!pnd) {
     perror("malloc");
+    free(ndd.port);
     acr122s_close(pnd);
     return NULL;
   }
   pnd->driver = &acr122s_driver;
   strcpy(pnd->name, ACR122S_DRIVER_NAME);
+  free(ndd.port);
 
   pnd->driver_data = malloc(sizeof(struct acr122s_data));
   if (!pnd->driver_data) {

@@ -212,11 +212,11 @@ pn532_uart_open(const nfc_context *context, const nfc_connstring connstring)
     return NULL;
   }
   snprintf(pnd->name, sizeof(pnd->name), "%s:%s", PN532_UART_DRIVER_NAME, ndd.port);
+  free(ndd.port);
 
   pnd->driver_data = malloc(sizeof(struct pn532_uart_data));
   if (!pnd->driver_data) {
     perror("malloc");
-    free(ndd.port);
     return NULL;
   }
   DRIVER_DATA(pnd)->port = sp;
@@ -235,7 +235,6 @@ pn532_uart_open(const nfc_context *context, const nfc_connstring connstring)
 #ifndef WIN32
   // pipe-based abort mecanism
   if (pipe(DRIVER_DATA(pnd)->iAbortFds) < 0) {
-    free(ndd.port);
     return NULL;
   }
 #else
@@ -246,7 +245,6 @@ pn532_uart_open(const nfc_context *context, const nfc_connstring connstring)
   if (pn53x_check_communication(pnd) < 0) {
     nfc_perror(pnd, "pn53x_check_communication");
     pn532_uart_close(pnd);
-    free(ndd.port);
     return NULL;
   }
 
