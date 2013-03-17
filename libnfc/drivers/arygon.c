@@ -120,6 +120,7 @@ arygon_scan(const nfc_context *context, nfc_connstring connstrings[], const size
       nfc_device *pnd = nfc_device_new(context, connstring);
       if (!pnd) {
         perror("malloc");
+        uart_close(sp);
         return 0;
       }
 
@@ -127,6 +128,7 @@ arygon_scan(const nfc_context *context, nfc_connstring connstrings[], const size
       pnd->driver_data = malloc(sizeof(struct arygon_data));
       if (!pnd->driver_data) {
         perror("malloc");
+        uart_close(sp);
         return 0;
       }
       DRIVER_DATA(pnd)->port = sp;
@@ -137,6 +139,7 @@ arygon_scan(const nfc_context *context, nfc_connstring connstrings[], const size
 #ifndef WIN32
       // pipe-based abort mecanism
       if (pipe(DRIVER_DATA(pnd)->iAbortFds) < 0) {
+        uart_close(DRIVER_DATA(pnd)->port);
         return 0;
       }
 #else
@@ -144,9 +147,9 @@ arygon_scan(const nfc_context *context, nfc_connstring connstrings[], const size
 #endif
 
       int res = arygon_reset_tama(pnd);
+      uart_close(DRIVER_DATA(pnd)->port);
       pn53x_data_free(pnd);
       nfc_device_free(pnd);
-      uart_close(sp);
       if (res < 0) {
         continue;
       }
@@ -237,6 +240,7 @@ arygon_open(const nfc_context *context, const nfc_connstring connstring)
   if (!pnd) {
     perror("malloc");
     free(ndd.port);
+    uart_close(sp);
     return NULL;
   }
   snprintf(pnd->name, sizeof(pnd->name), "%s:%s", ARYGON_DRIVER_NAME, ndd.port);
@@ -245,6 +249,7 @@ arygon_open(const nfc_context *context, const nfc_connstring connstring)
   pnd->driver_data = malloc(sizeof(struct arygon_data));
   if (!pnd->driver_data) {
     perror("malloc");
+    uart_close(sp);
     return NULL;
   }
   DRIVER_DATA(pnd)->port = sp;
@@ -262,6 +267,7 @@ arygon_open(const nfc_context *context, const nfc_connstring connstring)
 #ifndef WIN32
   // pipe-based abort mecanism
   if (pipe(DRIVER_DATA(pnd)->iAbortFds) < 0) {
+    uart_close(DRIVER_DATA(pnd)->port);
     return NULL;
   }
 #else
