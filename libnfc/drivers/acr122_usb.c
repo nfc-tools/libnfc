@@ -452,7 +452,10 @@ acr122_usb_open(const nfc_context *context, const nfc_connstring connstring)
       *DRIVER_DATA(pnd) = data;
 
       // Alloc and init chip's data
-      pn53x_data_new(pnd, &acr122_usb_io);
+      if (pn53x_data_new(pnd, &acr122_usb_io) == NULL) {
+        perror("malloc");
+        goto error;
+      }
 
       memcpy(&(DRIVER_DATA(pnd)->tama_frame), acr122_usb_frame_template, sizeof(acr122_usb_frame_template));
       memcpy(&(DRIVER_DATA(pnd)->apdu_frame), acr122_usb_frame_template, sizeof(acr122_usb_frame_template));

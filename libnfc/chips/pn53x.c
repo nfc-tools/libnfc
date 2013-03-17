@@ -3122,11 +3122,13 @@ pn53x_current_target_is(const struct nfc_device *pnd, const nfc_target *pnt)
   return true;
 }
 
-void
+void *
 pn53x_data_new(struct nfc_device *pnd, const struct pn53x_io *io)
 {
   pnd->chip_data = malloc(sizeof(struct pn53x_data));
-
+  if (!pnd->chip_data) {
+    return NULL;
+  }
   // Keep I/O functions
   CHIP_DATA(pnd)->io = io;
 
@@ -3165,6 +3167,8 @@ pn53x_data_new(struct nfc_device *pnd, const struct pn53x_io *io)
   CHIP_DATA(pnd)->supported_modulation_as_initiator = NULL;
 
   CHIP_DATA(pnd)->supported_modulation_as_target = NULL;
+
+  return pnd->chip_data;
 }
 
 void

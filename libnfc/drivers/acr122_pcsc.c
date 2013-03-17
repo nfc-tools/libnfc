@@ -264,7 +264,10 @@ acr122_pcsc_open(const nfc_context *context, const nfc_connstring connstring)
   }
 
   // Alloc and init chip's data
-  pn53x_data_new(pnd, &acr122_pcsc_io);
+  if (pn53x_data_new(pnd, &acr122_pcsc_io) == NULL) {
+    perror("malloc");
+    goto error;
+  }
 
   SCARDCONTEXT *pscc;
 

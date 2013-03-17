@@ -135,7 +135,12 @@ arygon_scan(const nfc_context *context, nfc_connstring connstrings[], const size
       DRIVER_DATA(pnd)->port = sp;
 
       // Alloc and init chip's data
-      pn53x_data_new(pnd, &arygon_tama_io);
+      if (pn53x_data_new(pnd, &arygon_tama_io) == NULL) {
+        perror("malloc");
+        uart_close(DRIVER_DATA(pnd)->port);
+        nfc_device_free(pnd);
+        return 0;
+      }
 
 #ifndef WIN32
       // pipe-based abort mecanism
@@ -259,7 +264,12 @@ arygon_open(const nfc_context *context, const nfc_connstring connstring)
   DRIVER_DATA(pnd)->port = sp;
 
   // Alloc and init chip's data
-  pn53x_data_new(pnd, &arygon_tama_io);
+  if (pn53x_data_new(pnd, &arygon_tama_io) == NULL) {
+    perror("malloc");
+    uart_close(DRIVER_DATA(pnd)->port);
+    nfc_device_free(pnd);
+    return NULL;
+  }
 
   // The PN53x chip opened to ARYGON MCU doesn't seems to be in LowVBat mode
   CHIP_DATA(pnd)->power_mode = NORMAL;

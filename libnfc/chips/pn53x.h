@@ -394,7 +394,7 @@ int    pn53x_get_supported_modulation(nfc_device *pnd, const nfc_mode mode, cons
 int    pn53x_get_supported_baud_rate(nfc_device *pnd, const nfc_modulation_type nmt, const nfc_baud_rate **const supported_br);
 int    pn53x_get_information_about(nfc_device *pnd, char **pbuf);
 
-void    pn53x_data_new(struct nfc_device *pnd, const struct pn53x_io *io);
+void   *pn53x_data_new(struct nfc_device *pnd, const struct pn53x_io *io);
 void    pn53x_data_free(struct nfc_device *pnd);
 
 #endif // __NFC_CHIPS_PN53X_H__

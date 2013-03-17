@@ -104,7 +104,12 @@ pn532_uart_scan(const nfc_context *context, nfc_connstring connstrings[], const 
       DRIVER_DATA(pnd)->port = sp;
 
       // Alloc and init chip's data
-      pn53x_data_new(pnd, &pn532_uart_io);
+      if (pn53x_data_new(pnd, &pn532_uart_io) == NULL) {
+        perror("malloc");
+        uart_close(DRIVER_DATA(pnd)->port);
+        nfc_device_free(pnd);
+        return 0;
+      }
       // SAMConfiguration command if needed to wakeup the chip and pn53x_SAMConfiguration check if the chip is a PN532
       CHIP_DATA(pnd)->type = PN532;
       // This device starts in LowVBat power mode
@@ -231,7 +236,12 @@ pn532_uart_open(const nfc_context *context, const nfc_connstring connstring)
   DRIVER_DATA(pnd)->port = sp;
 
   // Alloc and init chip's data
-  pn53x_data_new(pnd, &pn532_uart_io);
+  if (pn53x_data_new(pnd, &pn532_uart_io) == NULL) {
+    perror("malloc");
+    uart_close(DRIVER_DATA(pnd)->port);
+    nfc_device_free(pnd);
+    return NULL;
+  }
   // SAMConfiguration command if needed to wakeup the chip and pn53x_SAMConfiguration check if the chip is a PN532
   CHIP_DATA(pnd)->type = PN532;
   // This device starts in LowVBat mode

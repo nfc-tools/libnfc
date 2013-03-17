@@ -454,7 +454,12 @@ acr122s_scan(const nfc_context *context, nfc_connstring connstrings[], const siz
       DRIVER_DATA(pnd)->abort_flag = false;
 #endif
 
-      pn53x_data_new(pnd, &acr122s_io);
+      if (pn53x_data_new(pnd, &acr122s_io) == NULL) {
+        perror("malloc");
+        uart_close(DRIVER_DATA(pnd)->port);
+        nfc_device_free(pnd);
+        return 0;
+      }
       CHIP_DATA(pnd)->type = PN532;
       CHIP_DATA(pnd)->power_mode = NORMAL;
 
@@ -583,7 +588,12 @@ acr122s_open(const nfc_context *context, const nfc_connstring connstring)
   DRIVER_DATA(pnd)->abort_flag = false;
 #endif
 
-  pn53x_data_new(pnd, &acr122s_io);
+  if (pn53x_data_new(pnd, &acr122s_io) == NULL) {
+    perror("malloc");
+    uart_close(DRIVER_DATA(pnd)->port);
+    nfc_device_free(pnd);
+    return NULL;
+  }
   CHIP_DATA(pnd)->type = PN532;
 
 #if 1
