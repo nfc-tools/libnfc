@@ -13,7 +13,7 @@ if UART_ENABLED
   libnfcbuses_la_CFLAGS +=
   libnfcbuses_la_LIBADD +=
 endif
-EXTRA_DIST += uart.c uart.h uart_posix.c uart_win32.c
+EXTRA_DIST += uart.c uart.h
 
 if LIBUSB_ENABLED
   libnfcbuses_la_SOURCES += usbbus.c usbbus.h

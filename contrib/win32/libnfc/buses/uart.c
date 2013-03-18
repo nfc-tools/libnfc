@@ -25,9 +25,18 @@
  */
 
 /**
- * @file uart_win32.c
+ * @file uart.c
  * @brief Windows UART driver
  */
+
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif // HAVE_CONFIG_H
+
+#include "uart.h"
+
+#include <nfc/nfc.h>
+#include "nfc-internal.h"
 
 #include <inttypes.h>
 #include "log.h"
