@@ -178,6 +178,8 @@ AC_CONFIG_FILES([
 		contrib/udev/Makefile
 		contrib/win32/Makefile
 		contrib/win32/sys/Makefile
+		contrib/win32/libnfc/Makefile
+		contrib/win32/libnfc/buses/Makefile
 		examples/Makefile
 		examples/pn53x-tamashell-scripts/Makefile
 		include/Makefile
