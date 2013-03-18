@@ -7,7 +7,6 @@ lib_LTLIBRARIES = libnfc.la
 libnfc_la_SOURCES = \
 		    conf.c \
 		    iso14443-subr.c \
-		    log.c \
 		    mirror-subr.c \
 		    nfc.c \
 		    nfc-device.c \
@@ -41,10 +40,8 @@ if LIBUSB_ENABLED
 endif
 
 if WITH_LOG
-  libnfc_la_SOURCES += log_posix.c
+  libnfc_la_SOURCES += log.c log-internal.c
 endif
 
 EXTRA_DIST = \
-	CMakeLists.txt \
-	log_posix.c \
-	log_win32.c
+	CMakeLists.txt

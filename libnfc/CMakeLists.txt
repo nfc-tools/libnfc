@@ -48,15 +48,15 @@ IF(LIBUSB_FOUND)
 ENDIF(LIBUSB_FOUND)
 
 # Library
-SET(LIBRARY_SOURCES nfc nfc-device nfc-emulation nfc-internal conf iso14443-subr mirror-subr target-subr log ${DRIVERS_SOURCES} ${BUSES_SOURCES} ${CHIPS_SOURCES} ${WINDOWS_SOURCES})
+SET(LIBRARY_SOURCES nfc nfc-device nfc-emulation nfc-internal conf iso14443-subr mirror-subr target-subr ${DRIVERS_SOURCES} ${BUSES_SOURCES} ${CHIPS_SOURCES} ${WINDOWS_SOURCES})
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 
 IF(LIBNFC_LOG)
   IF(WIN32)
     SET(CMAKE_C_FLAGS "-fgnu89-inline ${CMAKE_C_FLAGS}")
-    LIST(APPEND LIBRARY_SOURCES log_win32)
+    LIST(APPEND LIBRARY_SOURCES log ../contrib/win32/libnfc/log-internal)
   ELSE(WIN32)
-    LIST(APPEND LIBRARY_SOURCES log_posix)
+    LIST(APPEND LIBRARY_SOURCES log log-internal)
   ENDIF(WIN32)
 ENDIF(LIBNFC_LOG)
 ADD_LIBRARY(nfc SHARED ${LIBRARY_SOURCES})
