@@ -363,7 +363,7 @@ pn532_spi_receive_next_chunk(nfc_device *pnd, uint8_t *pbtData, const size_t szD
 {
   // According to datasheet, the entire read operation should be done at once
   // However, it seems impossible to do since the length of the frame is stored in the frame
-  // itself and it's impossible to manualy set CS to low between two read operations
+  // itself and it's impossible to manually set CS to low between two read operations
 
   // It's possible to read the response frame in a series of read operations, provided
   // each read operation is preceded by SPI_DATAREAD byte from the host.
@@ -374,16 +374,16 @@ pn532_spi_receive_next_chunk(nfc_device *pnd, uint8_t *pbtData, const size_t szD
   // Many hardware SPI implementations are half-duplex, so it's became impossible to read this
   // first response byte
 
-  // The following hack is used here: we first try to recieve data from PN532 without SPI_DATAREAD
+  // The following hack is used here: we first try to receive data from PN532 without SPI_DATAREAD
   // and then begin full-featured read operation
 
-  // The PN532 do not shift the internal register on the recieve operation, which allows us to read the whole response
+  // The PN532 does not shift the internal register on the receive operation, which allows us to read the whole response
 
   // The example transfer log is as follows:
   // CS                  ..._/---\___________________________/---\________/------\_____________/-----\_________/---\____________/---...
   // MOSI (host=>pn532)  ...       0x03 0x00 0x00 0x00 0x00        0x00            0x03  0x00          0x00          0x03  0x00
   // MISO (pn532<=host)  ...       0x01 0x00 0xff 0x02 0xfe        0xd5            0xd5  0x15          0x16          0x16  0x00
-  // linux send/recieve             s     r    r   r    r           r               s     r              r             s    r
+  // linux send/receive             s     r    r   r    r           r               s     r              r             s    r
   //                                    |<--      data    -->|    |<-data->|           |<-data->|    |<-data->|           |<-data->|
   //                               |<--    first chunk    -->|    |<--       second chunk    -->|    |<--    third chunk        -->|
 
