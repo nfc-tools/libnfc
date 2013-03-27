@@ -8,11 +8,12 @@ libnfcbuses_la_CFLAGS = -I$(top_srcdir)/libnfc
 libnfcbuses_la_LIBADD = 
 EXTRA_DIST =
 
-# SPI_ENABLED
+if SPI_ENABLED
 libnfcbuses_la_SOURCES += spi.c spi.h
 libnfcbuses_la_CFLAGS +=
 libnfcbuses_la_LIBADD +=
-EXTRA_DIST = spi_posix.c
+endif
+EXTRA_DIST = spi.c spi.h
 
 if UART_ENABLED
   libnfcbuses_la_SOURCES += uart.c uart.h

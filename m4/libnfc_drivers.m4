@@ -76,6 +76,7 @@ AC_DEFUN([LIBNFC_ARG_WITH_DRIVERS],
                   DRIVERS_CFLAGS="$DRIVERS_CFLAGS -DDRIVER_PN532_UART_ENABLED"
                   ;;
     pn532_spi)
+                  spi_required="yes"
                   driver_pn532_spi_enabled="yes"
                   DRIVERS_CFLAGS="$DRIVERS_CFLAGS -DDRIVER_PN532_SPI_ENABLED"
                   ;;
