@@ -109,12 +109,28 @@ pn532_spi_scan(const nfc_context *context, nfc_connstring connstrings[], const s
       nfc_connstring connstring;
       snprintf(connstring, sizeof(nfc_connstring), "%s:%s:%"PRIu32, PN532_SPI_DRIVER_NAME, acPort, PN532_SPI_DEFAULT_SPEED);
       nfc_device *pnd = nfc_device_new(context, connstring);
+      if (!pnd) {
+        perror("malloc");
+        spi_close(sp);
+        return 0;
+      }
       pnd->driver = &pn532_spi_driver;
       pnd->driver_data = malloc(sizeof(struct pn532_spi_data));
+      if (!pnd->driver_data) {
+        perror("malloc");
+        spi_close(sp);
+        nfc_device_free(pnd);
+        return 0;
+      }
       DRIVER_DATA(pnd)->port = sp;
 
       // Alloc and init chip's data
-      pn53x_data_new(pnd, &pn532_spi_io);
+      if (pn53x_data_new(pnd, &pn532_spi_io) == NULL) {
+        perror("malloc");
+        spi_close(DRIVER_DATA(pnd)->port);
+        nfc_device_free(pnd);
+        return 0;
+      }
       // SAMConfiguration command if needed to wakeup the chip and pn53x_SAMConfiguration check if the chip is a PN532
       CHIP_DATA(pnd)->type = PN532;
       // This device starts in LowVBat power mode
@@ -124,9 +140,9 @@ pn532_spi_scan(const nfc_context *context, nfc_connstring connstrings[], const s
 
       // Check communication using "Diagnose" command, with "Communication test" (0x00)
       int res = pn53x_check_communication(pnd);
+      spi_close(DRIVER_DATA(pnd)->port);
       pn53x_data_free(pnd);
       nfc_device_free(pnd);
-      spi_close(sp);
       if (res < 0) {
         continue;
       }
@@ -205,14 +221,31 @@ pn532_spi_open(const nfc_context *context, const nfc_connstring connstring)
 
   // We have a connection
   pnd = nfc_device_new(context, connstring);
+  if (!pnd) {
+    perror("malloc");
+    free(ndd.port);
+    spi_close(sp);
+    return NULL;
+  }
   snprintf(pnd->name, sizeof(pnd->name), "%s:%s", PN532_SPI_DRIVER_NAME, ndd.port);
   free(ndd.port);
 
   pnd->driver_data = malloc(sizeof(struct pn532_spi_data));
+  if (!pnd->driver_data) {
+    perror("malloc");
+    spi_close(sp);
+    nfc_device_free(pnd);
+    return NULL;
+  }
   DRIVER_DATA(pnd)->port = sp;
 
   // Alloc and init chip's data
-  pn53x_data_new(pnd, &pn532_spi_io);
+  if (pn53x_data_new(pnd, &pn532_spi_io) == NULL) {
+    perror("malloc");
+    spi_close(DRIVER_DATA(pnd)->port);
+    nfc_device_free(pnd);
+    return NULL;
+  }
   // SAMConfiguration command if needed to wakeup the chip and pn53x_SAMConfiguration check if the chip is a PN532
   CHIP_DATA(pnd)->type = PN532;
   // This device starts in LowVBat mode
