@@ -160,7 +160,6 @@ pn532_spi_close(nfc_device *pnd)
   // Release SPI port
   spi_close(DRIVER_DATA(pnd)->port);
 
-  free(DRIVER_DATA(pnd)->port);
   pn53x_data_free(pnd);
   nfc_device_free(pnd);
 }
