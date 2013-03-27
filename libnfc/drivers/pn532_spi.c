@@ -307,6 +307,7 @@ pn532_spi_wakeup(nfc_device *pnd)
   log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Got %x byte from SPI line before wakeup", spi_byte);
 
   CHIP_DATA(pnd)->power_mode = NORMAL; // PN532 will be awake soon
+  msleep(1);
 
   if (spi_byte == 0xff) {
     log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "Wakeup is needed");
