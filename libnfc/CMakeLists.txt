@@ -25,6 +25,16 @@ IF(UART_REQUIRED)
   ENDIF(WIN32)
 ENDIF(UART_REQUIRED)
 
+IF(SPI_REQUIRED)
+  IF(WIN32)
+    # Windows is not supported at the moment
+    #LIST(APPEND BUSES_SOURCES ../contrib/win32/libnfc/buses/spi)
+    MESSAGE( FATAL_ERROR "SPI not (yet) supported under Windows!" )
+  ELSE(WIN32)
+    LIST(APPEND BUSES_SOURCES buses/spi)
+  ENDIF(WIN32)
+ENDIF(SPI_REQUIRED)
+
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/buses)
 
 IF(WIN32)
