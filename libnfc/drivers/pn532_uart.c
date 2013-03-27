@@ -90,18 +90,26 @@ pn532_uart_scan(const nfc_context *context, nfc_connstring connstrings[], const 
       nfc_device *pnd = nfc_device_new(context, connstring);
       if (!pnd) {
         perror("malloc");
+        uart_close(sp);
         return 0;
       }
       pnd->driver = &pn532_uart_driver;
       pnd->driver_data = malloc(sizeof(struct pn532_uart_data));
       if (!pnd->driver_data) {
         perror("malloc");
+        uart_close(sp);
+        nfc_device_free(pnd);
         return 0;
       }
       DRIVER_DATA(pnd)->port = sp;
 
       // Alloc and init chip's data
-      pn53x_data_new(pnd, &pn532_uart_io);
+      if (pn53x_data_new(pnd, &pn532_uart_io) == NULL) {
+        perror("malloc");
+        uart_close(DRIVER_DATA(pnd)->port);
+        nfc_device_free(pnd);
+        return 0;
+      }
       // SAMConfiguration command if needed to wakeup the chip and pn53x_SAMConfiguration check if the chip is a PN532
       CHIP_DATA(pnd)->type = PN532;
       // This device starts in LowVBat power mode
@@ -110,6 +118,9 @@ pn532_uart_scan(const nfc_context *context, nfc_connstring connstrings[], const 
 #ifndef WIN32
       // pipe-based abort mecanism
       if (pipe(DRIVER_DATA(pnd)->iAbortFds) < 0) {
+        uart_close(DRIVER_DATA(pnd)->port);
+        pn53x_data_free(pnd);
+        nfc_device_free(pnd);
         return 0;
       }
 #else
@@ -118,9 +129,9 @@ pn532_uart_scan(const nfc_context *context, nfc_connstring connstrings[], const 
 
       // Check communication using "Diagnose" command, with "Communication test" (0x00)
       int res = pn53x_check_communication(pnd);
+      uart_close(DRIVER_DATA(pnd)->port);
       pn53x_data_free(pnd);
       nfc_device_free(pnd);
-      uart_close(sp);
       if (res < 0) {
         continue;
       }
@@ -160,7 +171,6 @@ pn532_uart_close(nfc_device *pnd)
   close(DRIVER_DATA(pnd)->iAbortFds[1]);
 #endif
 
-  free(DRIVER_DATA(pnd)->port);
   pn53x_data_free(pnd);
   nfc_device_free(pnd);
 }
@@ -210,20 +220,28 @@ pn532_uart_open(const nfc_context *context, const nfc_connstring connstring)
   if (!pnd) {
     perror("malloc");
     free(ndd.port);
+    uart_close(sp);
     return NULL;
   }
   snprintf(pnd->name, sizeof(pnd->name), "%s:%s", PN532_UART_DRIVER_NAME, ndd.port);
+  free(ndd.port);
 
   pnd->driver_data = malloc(sizeof(struct pn532_uart_data));
   if (!pnd->driver_data) {
     perror("malloc");
-    free(ndd.port);
+    uart_close(sp);
+    nfc_device_free(pnd);
     return NULL;
   }
   DRIVER_DATA(pnd)->port = sp;
 
   // Alloc and init chip's data
-  pn53x_data_new(pnd, &pn532_uart_io);
+  if (pn53x_data_new(pnd, &pn532_uart_io) == NULL) {
+    perror("malloc");
+    uart_close(DRIVER_DATA(pnd)->port);
+    nfc_device_free(pnd);
+    return NULL;
+  }
   // SAMConfiguration command if needed to wakeup the chip and pn53x_SAMConfiguration check if the chip is a PN532
   CHIP_DATA(pnd)->type = PN532;
   // This device starts in LowVBat mode
@@ -236,7 +254,9 @@ pn532_uart_open(const nfc_context *context, const nfc_connstring connstring)
 #ifndef WIN32
   // pipe-based abort mecanism
   if (pipe(DRIVER_DATA(pnd)->iAbortFds) < 0) {
-    free(ndd.port);
+    uart_close(DRIVER_DATA(pnd)->port);
+    pn53x_data_free(pnd);
+    nfc_device_free(pnd);
     return NULL;
   }
 #else
@@ -247,7 +267,6 @@ pn532_uart_open(const nfc_context *context, const nfc_connstring connstring)
   if (pn53x_check_communication(pnd) < 0) {
     nfc_perror(pnd, "pn53x_check_communication");
     pn532_uart_close(pnd);
-    free(ndd.port);
     return NULL;
   }
 

@@ -65,6 +65,7 @@ static mifare_classic_tag mtKeys;
 static mifare_classic_tag mtDump;
 static bool bUseKeyA;
 static bool bUseKeyFile;
+static bool bForceKeyFile;
 static bool bTolerateFailures;
 static uint8_t uiBlocks;
 static uint8_t keys[] = {
@@ -138,7 +139,7 @@ print_success_or_failure(bool bFailure, uint32_t *uiBlockCounter)
 {
   printf("%c", (bFailure) ? 'x' : '.');
   if (uiBlockCounter && !bFailure)
-    *uiBlockCounter += (*uiBlockCounter < 128) ? 4 : 16;
+    *uiBlockCounter += 1;
 }
 
 static  bool
@@ -259,6 +260,32 @@ unlock_card(void)
     return false;
   }
   return true;
+}
+
+static int
+get_rats(void)
+{
+  int res;
+  uint8_t  abtRats[2] = { 0xe0, 0x50};
+  // Use raw send/receive methods
+  if (nfc_device_set_property_bool(pnd, NP_EASY_FRAMING, false) < 0) {
+    nfc_perror(pnd, "nfc_configure");
+    return -1;
+  }
+  res = nfc_initiator_transceive_bytes(pnd, abtRats, sizeof(abtRats), abtRx, sizeof(abtRx), 0);
+  if (res > 0) {
+    // ISO14443-4 card, turn RF field off/on to access ISO14443-3 again
+    nfc_device_set_property_bool(pnd, NP_ACTIVATE_FIELD, false);
+    nfc_device_set_property_bool(pnd, NP_ACTIVATE_FIELD, true);
+  }
+  // Reselect tag
+  if (nfc_initiator_select_passive_target(pnd, nmMifare, NULL, 0, &nt) <= 0) {
+    printf("Error: tag disappeared\n");
+    nfc_close(pnd);
+    nfc_exit(context);
+    exit(EXIT_FAILURE);
+  }
+  return res;
 }
 
 static  bool
@@ -419,7 +446,7 @@ static void
 print_usage(const char *pcProgramName)
 {
   printf("Usage: ");
-  printf("%s r|R|w|W a|b <dump.mfd> [<keys.mfd>]\n", pcProgramName);
+  printf("%s r|R|w|W a|b <dump.mfd> [<keys.mfd> [f]]\n", pcProgramName);
   printf("  r|R|w|W       - Perform read from (r) or unlocked read from (R) or write to (w) or unlocked write to (W) card\n");
   printf("                  *** note that unlocked write will attempt to overwrite block 0 including UID\n");
   printf("                  *** unlocked read does not require authentication and will reveal A and B keys\n");
@@ -427,6 +454,7 @@ print_usage(const char *pcProgramName)
   printf("  a|A|b|B       - Use A or B keys for action; Halt on errors (a|b) or tolerate errors (A|B)\n");
   printf("  <dump.mfd>    - MiFare Dump (MFD) used to write (card to MFD) or (MFD to card)\n");
   printf("  <keys.mfd>    - MiFare Dump (MFD) that contain the keys (optional)\n");
+  printf("  f             - Force using the keyfile even if UID does not match (optional)\n");
 }
 
 int
@@ -464,46 +492,27 @@ main(int argc, const char *argv[])
     bUseKeyA = tolower((int)((unsigned char) * (argv[2]))) == 'a';
     bTolerateFailures = tolower((int)((unsigned char) * (argv[2]))) != (int)((unsigned char) * (argv[2]));
     bUseKeyFile = (argc > 4);
+    bForceKeyFile = ((argc > 5) && (strcmp((char *)argv[5], "f") == 0));
   }
 
   if (atAction == ACTION_USAGE) {
     print_usage(argv[0]);
     exit(EXIT_FAILURE);
   }
+  // We don't know yet the card size so let's read only the UID from the keyfile for the moment
   if (bUseKeyFile) {
     FILE *pfKeys = fopen(argv[4], "rb");
     if (pfKeys == NULL) {
       printf("Could not open keys file: %s\n", argv[4]);
       exit(EXIT_FAILURE);
     }
-    if (fread(&mtKeys, 1, sizeof(mtKeys), pfKeys) != sizeof(mtKeys)) {
-      printf("Could not read keys file: %s\n", argv[4]);
+    if (fread(&mtKeys, 1, 4, pfKeys) != 4) {
+      printf("Could not read UID from key file: %s\n", argv[4]);
       fclose(pfKeys);
       exit(EXIT_FAILURE);
     }
     fclose(pfKeys);
   }
-
-  if (atAction == ACTION_READ) {
-    memset(&mtDump, 0x00, sizeof(mtDump));
-  } else {
-    FILE *pfDump = fopen(argv[3], "rb");
-
-    if (pfDump == NULL) {
-      printf("Could not open dump file: %s\n", argv[3]);
-      exit(EXIT_FAILURE);
-
-    }
-
-    if (fread(&mtDump, 1, sizeof(mtDump), pfDump) != sizeof(mtDump)) {
-      printf("Could not read dump file: %s\n", argv[3]);
-      fclose(pfDump);
-      exit(EXIT_FAILURE);
-    }
-    fclose(pfDump);
-  }
-// printf("Successfully opened required files\n");
-
   nfc_init(&context);
   if (context == NULL) {
     ERR("Unable to init libnfc (malloc)");
@@ -559,6 +568,14 @@ main(int argc, const char *argv[])
     if (memcmp(pbtUID, fileUid, 4) != 0) {
       printf("Expected MIFARE Classic card with UID starting as: %02x%02x%02x%02x\n",
              fileUid[0], fileUid[1], fileUid[2], fileUid[3]);
+      printf("Got card with UID starting as:                     %02x%02x%02x%02x\n",
+             pbtUID[0], pbtUID[1], pbtUID[2], pbtUID[3]);
+      if (! bForceKeyFile) {
+        printf("Aborting!\n");
+        nfc_close(pnd);
+        nfc_exit(context);
+        exit(EXIT_FAILURE);
+      }
     }
   }
   printf("Found MIFARE Classic card:\n");
@@ -572,10 +589,53 @@ main(int argc, const char *argv[])
 // 320b
     uiBlocks = 0x13;
   else
-// 1K
-// TODO: for MFP it is 0x7f (2K) but how to be sure it's a MFP? Try to get RATS?
+// 1K/2K, checked through RATS
     uiBlocks = 0x3f;
+// Testing RATS
+  int res;
+  if ((res = get_rats()) > 0) {
+    if ((res >= 10) && (abtRx[5] == 0xc1) && (abtRx[6] == 0x05)
+        && (abtRx[7] == 0x2f) && (abtRx[8] == 0x2f)
+        && ((nt.nti.nai.abtAtqa[1] & 0x02) == 0x00)) {
+      // MIFARE Plus 2K
+      uiBlocks = 0x7f;
+    }
+  }
   printf("Guessing size: seems to be a %i-byte card\n", (uiBlocks + 1) * 16);
+
+  if (bUseKeyFile) {
+    FILE *pfKeys = fopen(argv[4], "rb");
+    if (pfKeys == NULL) {
+      printf("Could not open keys file: %s\n", argv[4]);
+      exit(EXIT_FAILURE);
+    }
+    if (fread(&mtKeys, 1, (uiBlocks + 1) * sizeof(mifare_classic_block), pfKeys) != (uiBlocks + 1) * sizeof(mifare_classic_block)) {
+      printf("Could not read keys file: %s\n", argv[4]);
+      fclose(pfKeys);
+      exit(EXIT_FAILURE);
+    }
+    fclose(pfKeys);
+  }
+
+  if (atAction == ACTION_READ) {
+    memset(&mtDump, 0x00, sizeof(mtDump));
+  } else {
+    FILE *pfDump = fopen(argv[3], "rb");
+
+    if (pfDump == NULL) {
+      printf("Could not open dump file: %s\n", argv[3]);
+      exit(EXIT_FAILURE);
+
+    }
+
+    if (fread(&mtDump, 1, (uiBlocks + 1) * sizeof(mifare_classic_block), pfDump) != (uiBlocks + 1) * sizeof(mifare_classic_block)) {
+      printf("Could not read dump file: %s\n", argv[3]);
+      fclose(pfDump);
+      exit(EXIT_FAILURE);
+    }
+    fclose(pfDump);
+  }
+// printf("Successfully opened required files\n");
 
   if (atAction == ACTION_READ) {
     if (read_card(unlock)) {
@@ -588,7 +648,7 @@ main(int argc, const char *argv[])
         nfc_exit(context);
         exit(EXIT_FAILURE);
       }
-      if (fwrite(&mtDump, 1, sizeof(mtDump), pfDump) != sizeof(mtDump)) {
+      if (fwrite(&mtDump, 1, (uiBlocks + 1) * sizeof(mifare_classic_block), pfDump) != ((uiBlocks + 1) * sizeof(mifare_classic_block))) {
         printf("\nCould not write to file: %s\n", argv[3]);
         fclose(pfDump);
         nfc_close(pnd);

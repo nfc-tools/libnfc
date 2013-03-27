@@ -32,37 +32,6 @@
 #include <stdarg.h>
 #include <fcntl.h>
 
-/*
-int
-log_priority_to_int(const char* priority)
-{
-  if (strcmp("none", priority) == 0) {
-    return -1;
-  } else if (strcmp("fatal", priority) == 0) {
-    return NFC_LOG_PRIORITY_FATAL;
-  } else if (strcmp("alert", priority) == 0) {
-    return NFC_LOG_PRIORITY_ALERT;
-  } else if (strcmp("critical", priority) == 0) {
-    return NFC_LOG_PRIORITY_CRIT;
-  } else if (strcmp("error", priority) == 0) {
-    return NFC_LOG_PRIORITY_ERROR;
-  } else if (strcmp("warning", priority) == 0) {
-    return NFC_LOG_PRIORITY_WARN;
-  } else if (strcmp("notice", priority) == 0) {
-    return NFC_LOG_PRIORITY_NOTICE;
-  } else if (strcmp("info", priority) == 0) {
-    return NFC_LOG_PRIORITY_INFO;
-  } else if (strcmp("debug", priority) == 0) {
-    return NFC_LOG_PRIORITY_DEBUG;
-  } else if (strcmp("trace", priority) == 0) {
-    return NFC_LOG_PRIORITY_TRACE;
-  }
-
-  // if priority is string is not recognized, we set maximal verbosity
-  return NFC_LOG_PRIORITY_TRACE;
-}
-*/
-
 const char *
 log_priority_to_str(const int priority)
 {

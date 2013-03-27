@@ -56,6 +56,7 @@ AC_DEFUN([LIBNFC_ARG_WITH_DRIVERS],
                   DRIVERS_CFLAGS="$DRIVERS_CFLAGS -DDRIVER_ACR122_USB_ENABLED"
                   ;;
     acr122s)
+                  uart_required="yes"
                   driver_acr122s_enabled="yes"
                   DRIVERS_CFLAGS="$DRIVERS_CFLAGS -DDRIVER_ACR122S_ENABLED"
                   ;;
@@ -65,10 +66,12 @@ AC_DEFUN([LIBNFC_ARG_WITH_DRIVERS],
                   DRIVERS_CFLAGS="$DRIVERS_CFLAGS -DDRIVER_PN53X_USB_ENABLED"
                   ;;
     arygon)
+                  uart_required="yes"
                   driver_arygon_enabled="yes"
                   DRIVERS_CFLAGS="$DRIVERS_CFLAGS -DDRIVER_ARYGON_ENABLED"
                   ;;
     pn532_uart)
+                  uart_required="yes"
                   driver_pn532_uart_enabled="yes"
                   DRIVERS_CFLAGS="$DRIVERS_CFLAGS -DDRIVER_PN532_UART_ENABLED"
                   ;;

@@ -118,6 +118,9 @@ fi
 # Handle --with-drivers option
 LIBNFC_ARG_WITH_DRIVERS
 
+# Enable UART if 
+AM_CONDITIONAL(UART_ENABLED, [test x"$uart_required" = x"yes"])
+
 # Documentation (default: no)
 AC_ARG_ENABLE([doc],AS_HELP_STRING([--enable-doc],[Enable documentation generation.]),[enable_doc=$enableval],[enable_doc="no"])
 
@@ -175,6 +178,8 @@ AC_CONFIG_FILES([
 		contrib/udev/Makefile
 		contrib/win32/Makefile
 		contrib/win32/sys/Makefile
+		contrib/win32/libnfc/Makefile
+		contrib/win32/libnfc/buses/Makefile
 		examples/Makefile
 		examples/pn53x-tamashell-scripts/Makefile
 		include/Makefile

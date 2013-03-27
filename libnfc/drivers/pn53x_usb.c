@@ -337,7 +337,10 @@ pn53x_usb_open(const nfc_context *context, const nfc_connstring connstring)
       *DRIVER_DATA(pnd) = data;
 
       // Alloc and init chip's data
-      pn53x_data_new(pnd, &pn53x_usb_io);
+      if (pn53x_data_new(pnd, &pn53x_usb_io) == NULL) {
+        perror("malloc");
+        goto error;
+      }
 
       switch (DRIVER_DATA(pnd)->model) {
           // empirical tuning

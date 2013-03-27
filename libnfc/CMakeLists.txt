@@ -12,14 +12,20 @@ SET(CHIPS_SOURCES chips/pn53x)
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/chips)
 
 # Library's buses
-IF(LIBUSB_FOUND)
-   SET(BUSES_SOURCES buses/uart buses/usbbus)
-ELSE(LIBUSB_FOUND)
-   SET(BUSES_SOURCES buses/uart)
-ENDIF(LIBUSB_FOUND)
-INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/buses)
+IF(USB_REQUIRED)
+  LIST(APPEND BUSES_SOURCES buses/usbbus)
+ENDIF(USB_REQUIRED)
 
-INCLUDE(LibnfcDrivers)
+IF(UART_REQUIRED)
+  IF(WIN32)
+    # Windows have a special implementation for UART
+    LIST(APPEND BUSES_SOURCES ../contrib/win32/libnfc/buses/uart)
+  ELSE(WIN32)
+    LIST(APPEND BUSES_SOURCES buses/uart)
+  ENDIF(WIN32)
+ENDIF(UART_REQUIRED)
+
+INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/buses)
 
 IF(WIN32)
   # Windows now requires regex, so we utilize PCRE
@@ -42,15 +48,15 @@ IF(LIBUSB_FOUND)
 ENDIF(LIBUSB_FOUND)
 
 # Library
-SET(LIBRARY_SOURCES nfc nfc-device nfc-emulation nfc-internal conf iso14443-subr mirror-subr target-subr log ${DRIVERS_SOURCES} ${BUSES_SOURCES} ${CHIPS_SOURCES} ${WINDOWS_SOURCES})
+SET(LIBRARY_SOURCES nfc nfc-device nfc-emulation nfc-internal conf iso14443-subr mirror-subr target-subr ${DRIVERS_SOURCES} ${BUSES_SOURCES} ${CHIPS_SOURCES} ${WINDOWS_SOURCES})
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 
 IF(LIBNFC_LOG)
   IF(WIN32)
     SET(CMAKE_C_FLAGS "-fgnu89-inline ${CMAKE_C_FLAGS}")
-    LIST(APPEND LIBRARY_SOURCES log_win32)
+    LIST(APPEND LIBRARY_SOURCES log ../contrib/win32/libnfc/log-internal)
   ELSE(WIN32)
-    LIST(APPEND LIBRARY_SOURCES log_posix)
+    LIST(APPEND LIBRARY_SOURCES log log-internal)
   ENDIF(WIN32)
 ENDIF(LIBNFC_LOG)
 ADD_LIBRARY(nfc SHARED ${LIBRARY_SOURCES})

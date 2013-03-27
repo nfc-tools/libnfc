@@ -67,7 +67,7 @@ nfc_modulation pn53x_ptt_to_nm(const pn53x_target_type ptt);
 pn53x_modulation pn53x_nm_to_pm(const nfc_modulation nm);
 pn53x_target_type pn53x_nm_to_ptt(const nfc_modulation nm);
 
-void pn53x_current_target_new(const struct nfc_device *pnd, const nfc_target *pnt);
+void *pn53x_current_target_new(const struct nfc_device *pnd, const nfc_target *pnt);
 void pn53x_current_target_free(const struct nfc_device *pnd);
 bool pn53x_current_target_is(const struct nfc_device *pnd, const nfc_target *pnt);
 
@@ -1126,7 +1126,10 @@ pn53x_initiator_select_passive_target_ext(struct nfc_device *pnd,
     if ((res = pn53x_decode_target_data(abtTargetsData + 1, szTargetsData - 1, CHIP_DATA(pnd)->type, nm.nmt, &(pnt->nti))) < 0) {
       return res;
     }
-    pn53x_current_target_new(pnd, pnt);
+    if (pn53x_current_target_new(pnd, pnt) == NULL) {
+      pnd->last_error = NFC_ESOFT;
+      return pnd->last_error;
+    }
   }
   return abtTargetsData[0];
 }
@@ -1181,7 +1184,9 @@ pn53x_initiator_poll_target(struct nfc_device *pnd,
         return NFC_ECHIP;
         break;
     }
-    pn53x_current_target_new(pnd, pnt);
+    if (pn53x_current_target_new(pnd, pnt) == NULL) {
+      return NFC_ESOFT;
+    }
   } else {
     pn53x_set_property_bool(pnd, NP_INFINITE_SELECT, true);
     // FIXME It does not support DEP targets
@@ -1243,7 +1248,9 @@ pn53x_initiator_select_dep_target(struct nfc_device *pnd,
     res = pn53x_InJumpForDEP(pnd, ndm, nbr, pbtPassiveInitiatorData, NULL, NULL, 0, pnt, timeout);
   }
   if (res >= 0)
-    pn53x_current_target_new(pnd, pnt);
+    if (pn53x_current_target_new(pnd, pnt) == NULL) {
+      return NFC_ESOFT;
+    }
   return res;
 }
 
@@ -1909,7 +1916,10 @@ pn53x_target_init(struct nfc_device *pnd, nfc_target *pnt, uint8_t *pbtRx, const
       if (pnt->nm.nmt == NMT_DEP) {
         pnt->nti.ndi.ndm = ndm; // Update DEP mode
       }
-      pn53x_current_target_new(pnd, pnt);
+      if (pn53x_current_target_new(pnd, pnt) == NULL) {
+        pnd->last_error = NFC_ESOFT;
+        return pnd->last_error;
+      }
 
       if (ptm & PTM_ISO14443_4_PICC_ONLY) {
         // When PN532 is in PICC target mode, it automatically reply to RATS so
@@ -3089,7 +3099,7 @@ pn53x_get_information_about(nfc_device *pnd, char **pbuf)
   return NFC_SUCCESS;
 }
 
-void
+void *
 pn53x_current_target_new(const struct nfc_device *pnd, const nfc_target *pnt)
 {
   // Keep the current nfc_target for further commands
@@ -3097,7 +3107,11 @@ pn53x_current_target_new(const struct nfc_device *pnd, const nfc_target *pnt)
     free(CHIP_DATA(pnd)->current_target);
   }
   CHIP_DATA(pnd)->current_target = malloc(sizeof(nfc_target));
+  if (!CHIP_DATA(pnd)->current_target) {
+    return NULL;
+  }
   memcpy(CHIP_DATA(pnd)->current_target, pnt, sizeof(nfc_target));
+  return CHIP_DATA(pnd)->current_target;
 }
 
 void
@@ -3122,11 +3136,13 @@ pn53x_current_target_is(const struct nfc_device *pnd, const nfc_target *pnt)
   return true;
 }
 
-void
+void *
 pn53x_data_new(struct nfc_device *pnd, const struct pn53x_io *io)
 {
   pnd->chip_data = malloc(sizeof(struct pn53x_data));
-
+  if (!pnd->chip_data) {
+    return NULL;
+  }
   // Keep I/O functions
   CHIP_DATA(pnd)->io = io;
 
@@ -3165,6 +3181,8 @@ pn53x_data_new(struct nfc_device *pnd, const struct pn53x_io *io)
   CHIP_DATA(pnd)->supported_modulation_as_initiator = NULL;
 
   CHIP_DATA(pnd)->supported_modulation_as_target = NULL;
+
+  return pnd->chip_data;
 }
 
 void

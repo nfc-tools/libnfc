@@ -1,4 +1,4 @@
-SUBDIRS = sys .
+SUBDIRS = libnfc sys .
 
 EXTRA_DIST = \
 	err.h		\

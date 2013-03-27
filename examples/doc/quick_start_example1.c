@@ -6,12 +6,7 @@
 // To compile this simple example:
 // $ gcc -o quick_start_example1 quick_start_example1.c -lnfc
 
-#ifdef HAVE_CONFIG_H
-#  include "config.h"
-#endif // HAVE_CONFIG_H
-
 #include <stdlib.h>
-#include <err.h>
 #include <nfc/nfc.h>
 
 static void
@@ -37,7 +32,7 @@ main(int argc, const char *argv[])
   // Initialize libnfc and set the nfc_context
   nfc_init(&context);
   if (context == NULL) {
-    warnx("Unable to init libnfc (malloc)\n");
+    printf("Unable to init libnfc (malloc)\n");
     exit(EXIT_FAILURE);
   }
 
@@ -53,7 +48,7 @@ main(int argc, const char *argv[])
   pnd = nfc_open(context, NULL);
 
   if (pnd == NULL) {
-    warnx("ERROR: %s", "Unable to open NFC device.");
+    printf("ERROR: %s", "Unable to open NFC device.");
     exit(EXIT_FAILURE);
   }
   // Set opened NFC device to initiator mode

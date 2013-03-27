@@ -429,6 +429,7 @@ acr122s_scan(const nfc_context *context, nfc_connstring connstrings[], const siz
       nfc_device *pnd = nfc_device_new(context, connstring);
       if (!pnd) {
         perror("malloc");
+        uart_close(sp);
         return -1;
       }
 
@@ -436,6 +437,8 @@ acr122s_scan(const nfc_context *context, nfc_connstring connstrings[], const siz
       pnd->driver_data = malloc(sizeof(struct acr122s_data));
       if (!pnd->driver_data) {
         perror("malloc");
+        uart_close(sp);
+        nfc_device_free(pnd);
         return -1;
       }
       DRIVER_DATA(pnd)->port = sp;
@@ -443,13 +446,20 @@ acr122s_scan(const nfc_context *context, nfc_connstring connstrings[], const siz
 
 #ifndef WIN32
       if (pipe(DRIVER_DATA(pnd)->abort_fds) < 0) {
+        uart_close(DRIVER_DATA(pnd)->port);
+        nfc_device_free(pnd);
         return 0;
       }
 #else
       DRIVER_DATA(pnd)->abort_flag = false;
 #endif
 
-      pn53x_data_new(pnd, &acr122s_io);
+      if (pn53x_data_new(pnd, &acr122s_io) == NULL) {
+        perror("malloc");
+        uart_close(DRIVER_DATA(pnd)->port);
+        nfc_device_free(pnd);
+        return 0;
+      }
       CHIP_DATA(pnd)->type = PN532;
       CHIP_DATA(pnd)->power_mode = NORMAL;
 
@@ -459,9 +469,9 @@ acr122s_scan(const nfc_context *context, nfc_connstring connstrings[], const siz
         ret = -1;
       }
 
+      uart_close(DRIVER_DATA(pnd)->port);
       pn53x_data_free(pnd);
       nfc_device_free(pnd);
-      uart_close(sp);
 
       if (ret != 0)
         continue;
@@ -497,7 +507,6 @@ acr122s_close(nfc_device *pnd)
   close(DRIVER_DATA(pnd)->abort_fds[1]);
 #endif
 
-  free(DRIVER_DATA(pnd)->port);
   pn53x_data_free(pnd);
   nfc_device_free(pnd);
 }
@@ -550,16 +559,19 @@ acr122s_open(const nfc_context *context, const nfc_connstring connstring)
   pnd = nfc_device_new(context, connstring);
   if (!pnd) {
     perror("malloc");
-    acr122s_close(pnd);
+    free(ndd.port);
+    uart_close(sp);
     return NULL;
   }
   pnd->driver = &acr122s_driver;
   strcpy(pnd->name, ACR122S_DRIVER_NAME);
+  free(ndd.port);
 
   pnd->driver_data = malloc(sizeof(struct acr122s_data));
   if (!pnd->driver_data) {
     perror("malloc");
-    acr122s_close(pnd);
+    uart_close(sp);
+    nfc_device_free(pnd);
     return NULL;
   }
 
@@ -568,14 +580,20 @@ acr122s_open(const nfc_context *context, const nfc_connstring connstring)
 
 #ifndef WIN32
   if (pipe(DRIVER_DATA(pnd)->abort_fds) < 0) {
-    acr122s_close(pnd);
+    uart_close(DRIVER_DATA(pnd)->port);
+    nfc_device_free(pnd);
     return NULL;
   }
 #else
   DRIVER_DATA(pnd)->abort_flag = false;
 #endif
 
-  pn53x_data_new(pnd, &acr122s_io);
+  if (pn53x_data_new(pnd, &acr122s_io) == NULL) {
+    perror("malloc");
+    uart_close(DRIVER_DATA(pnd)->port);
+    nfc_device_free(pnd);
+    return NULL;
+  }
   CHIP_DATA(pnd)->type = PN532;
 
 #if 1
