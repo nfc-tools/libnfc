@@ -206,6 +206,7 @@ pn532_spi_open(const nfc_context *context, const nfc_connstring connstring)
   // We have a connection
   pnd = nfc_device_new(context, connstring);
   snprintf(pnd->name, sizeof(pnd->name), "%s:%s", PN532_SPI_DRIVER_NAME, ndd.port);
+  free(ndd.port);
 
   pnd->driver_data = malloc(sizeof(struct pn532_spi_data));
   DRIVER_DATA(pnd)->port = sp;
