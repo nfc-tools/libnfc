@@ -26,6 +26,8 @@ Fixes:
 
 Improvements:
  - Devels HACKING file: introduce clang/scan-build & cppcheck for better code
+ - Better internal dependencies handling (bus <> drivers)
+ - Cleaner handling of portability patches
  - Windows: logging via OutputDebugString(), ease debugging
  - nfc-mfclassic: use smaller files for cards < 4k
  - nfc-mfclassic: by defaut don't authorise wrong keyfile, use "f" to force
