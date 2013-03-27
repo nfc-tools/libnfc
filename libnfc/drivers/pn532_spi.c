@@ -100,8 +100,6 @@ pn532_spi_scan(const nfc_context *context, nfc_connstring connstrings[], const s
     log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Trying to find PN532 device on SPI port: %s at %d Hz.", acPort, PN532_SPI_DEFAULT_SPEED);
 
     if ((sp != INVALID_SPI_PORT) && (sp != CLAIMED_SPI_PORT)) {
-      // We need to flush input to be sure first reply does not comes from older byte transceive
-      //~ spi_flush_input(sp);
       // Serial port claimed but we need to check if a PN532_SPI is opened.
       spi_set_speed(sp, PN532_SPI_DEFAULT_SPEED);
       spi_set_mode(sp, PN532_SPI_MODE);
@@ -555,8 +553,6 @@ static int
 pn532_spi_send(nfc_device *pnd, const uint8_t *pbtData, const size_t szData, int timeout)
 {
   int res = 0;
-  // Before sending anything, we need to discard from any junk bytes
-  //~ spi_flush_input(DRIVER_DATA(pnd)->port);
 
   switch (CHIP_DATA(pnd)->power_mode) {
     case LOWVBAT: {
