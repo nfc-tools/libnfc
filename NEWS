@@ -1,5 +1,9 @@
 New in 1.7.0-***:
 
+Drivers:
+
+  * New PN532 over SPI driver, see contrib/libnfc/pn532_spi_on_rpi.conf.sample
+
 API Changes:
 
   * Functions
