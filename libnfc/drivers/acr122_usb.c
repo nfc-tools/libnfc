@@ -327,11 +327,12 @@ acr122_usb_scan(const nfc_context *context, nfc_connstring connstrings[], const 
           }
 
           usb_dev_handle *udev = usb_open(dev);
+          if (!udev)
+            continue;
 
           // Set configuration
           // acr122_usb_get_usb_device_name (dev, udev, pnddDevices[device_found].acDevice, sizeof (pnddDevices[device_found].acDevice));
           log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "device found: Bus %s Device %s Name %s", bus->dirname, dev->filename, acr122_usb_supported_devices[n].name);
-          usb_close(udev);
           snprintf(connstrings[device_found], sizeof(nfc_connstring), "%s:%s:%s", ACR122_USB_DRIVER_NAME, bus->dirname, dev->filename);
           device_found++;
           // Test if we reach the maximum "wanted" devices
@@ -414,6 +415,10 @@ acr122_usb_open(const nfc_context *context, const nfc_connstring connstring)
       }
       // Open the USB device
       data.pudh = usb_open(dev);
+
+      if (data.pudh == NULL)
+        continue;
+
       // Reset device
       usb_reset(data.pudh);
       // Retrieve end points
@@ -422,7 +427,8 @@ acr122_usb_open(const nfc_context *context, const nfc_connstring connstring)
       int res = usb_claim_interface(data.pudh, 0);
       if (res < 0) {
         log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to claim USB interface (%s)", _usb_strerror(res));
-        usb_close(data.pudh);
+        if (data.pudh)
+          usb_close(data.pudh);
         // we failed to use the specified device
         goto free_mem;
       }
@@ -430,7 +436,8 @@ acr122_usb_open(const nfc_context *context, const nfc_connstring connstring)
       res = usb_set_altinterface(data.pudh, 0);
       if (res < 0) {
         log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to set alternate setting on USB interface (%s)", _usb_strerror(res));
-        usb_close(data.pudh);
+        if (data.pudh)
+          usb_close(data.pudh);
         // we failed to use the specified device
         goto free_mem;
       }
@@ -474,7 +481,8 @@ acr122_usb_open(const nfc_context *context, const nfc_connstring connstring)
       pnd->driver = &acr122_usb_driver;
 
       if (acr122_usb_init(pnd) < 0) {
-        usb_close(data.pudh);
+        if (data.pudh)
+          usb_close(data.pudh);
         goto error;
       }
       DRIVER_DATA(pnd)->abort_flag = false;
