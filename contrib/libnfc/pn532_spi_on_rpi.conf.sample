@@ -1,0 +1,5 @@
+## Typical configuration file for PN532 device on R-Pi connected using SPI
+## Note: to use SPI port on R-Pi, you have to load kernel module spi-bcm2708:
+## Edit /etc/modprobe.d/raspi-blacklist.conf and comment: #blacklist spi-bcm2708
+name = "PN532 board via SPI"
+connstring = pn532_spi:/dev/spidev0.0:500000

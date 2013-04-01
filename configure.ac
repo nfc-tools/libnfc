@@ -118,8 +118,11 @@ fi
 # Handle --with-drivers option
 LIBNFC_ARG_WITH_DRIVERS
 
-# Enable UART if 
+# Enable UART if
 AM_CONDITIONAL(UART_ENABLED, [test x"$uart_required" = x"yes"])
+
+# Enable SPI if
+AM_CONDITIONAL(SPI_ENABLED, [test x"$spi_required" = x"yes"])
 
 # Documentation (default: no)
 AC_ARG_ENABLE([doc],AS_HELP_STRING([--enable-doc],[Enable documentation generation.]),[enable_doc=$enableval],[enable_doc="no"])

@@ -25,6 +25,7 @@ Fixes:
  - nfc-mfclassic: detect MIFARE Plus 2K as 2K instead of 1K
 
 Improvements:
+ - New PN532 over SPI driver, see contrib/libnfc/pn532_spi_on_rpi.conf.sample
  - Devels HACKING file: introduce clang/scan-build & cppcheck for better code
  - Better internal dependencies handling (bus <> drivers)
  - Cleaner handling of portability patches
