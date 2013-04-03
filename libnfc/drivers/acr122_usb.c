@@ -333,6 +333,7 @@ acr122_usb_scan(const nfc_context *context, nfc_connstring connstrings[], const 
           // Set configuration
           // acr122_usb_get_usb_device_name (dev, udev, pnddDevices[device_found].acDevice, sizeof (pnddDevices[device_found].acDevice));
           log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "device found: Bus %s Device %s Name %s", bus->dirname, dev->filename, acr122_usb_supported_devices[n].name);
+          usb_close(udev);
           snprintf(connstrings[device_found], sizeof(nfc_connstring), "%s:%s:%s", ACR122_USB_DRIVER_NAME, bus->dirname, dev->filename);
           device_found++;
           // Test if we reach the maximum "wanted" devices
