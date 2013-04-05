@@ -36,3 +36,15 @@ style:
 	    --keep-one-line-blocks --max-instatement-indent=60 \
 	    --brackets=linux --pad-oper --unpad-paren --pad-header \
 	    --align-pointer=name {} \;
+
+cppcheck:
+	cppcheck --quiet \
+	    -I include -I libnfc -I libnfc/buses -I libnfc/chips -I libnfc/drivers \
+	    --check-config .
+	cppcheck --quiet --enable=all --std=posix --std=c99 \
+	    -I include -I libnfc -I libnfc/buses -I libnfc/chips -I libnfc/drivers \
+	    -DLOG -D__linux__ \
+	    -DDRIVER_PN53X_USB_ENABLED -DDRIVER_ACR122_PCSC_ENABLED \
+	    -DDRIVER_ACR122_USB_ENABLED -DDRIVER_ACR122S_ENABLED \
+	    -DDRIVER_PN532_UART_ENABLED -DDRIVER_ARYGON_ENABLED \
+	    --force --inconclusive .
