@@ -67,6 +67,7 @@ static bool bUseKeyA;
 static bool bUseKeyFile;
 static bool bForceKeyFile;
 static bool bTolerateFailures;
+static bool magic2 = false;
 static uint8_t uiBlocks;
 static uint8_t keys[] = {
   0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
@@ -223,7 +224,10 @@ authenticate(uint32_t uiBlock)
 static bool
 unlock_card(void)
 {
-  printf("Unlocking card\n");
+  if (magic2) {
+    printf("Don't use R/W with this card, this is not required!\n");
+    return false;
+  }
 
   // Configure the CRC
   if (nfc_device_set_property_bool(pnd, NP_HANDLE_CRC, false) < 0) {
@@ -405,7 +409,7 @@ write_card(int write_block_zero)
       }
     } else {
       // The first block 0x00 is read only, skip this
-      if (uiBlock == 0 && ! write_block_zero)
+      if (uiBlock == 0 && ! write_block_zero && ! magic2)
         continue;
 
 
@@ -415,8 +419,9 @@ write_card(int write_block_zero)
         memcpy(mp.mpd.abtData, mtDump.amb[uiBlock].mbd.abtData, 16);
         // do not write a block 0 with incorrect BCC - card will be made invalid!
         if (uiBlock == 0) {
-          if ((mp.mpd.abtData[0] ^ mp.mpd.abtData[1] ^ mp.mpd.abtData[2] ^ mp.mpd.abtData[3] ^ mp.mpd.abtData[4]) != 0x00) {
+          if ((mp.mpd.abtData[0] ^ mp.mpd.abtData[1] ^ mp.mpd.abtData[2] ^ mp.mpd.abtData[3] ^ mp.mpd.abtData[4]) != 0x00 && !magic2) {
             printf("!\nError: incorrect BCC in MFD file!\n");
+            printf("Expecting BCC=%02X\n", mp.mpd.abtData[0] ^ mp.mpd.abtData[1] ^ mp.mpd.abtData[2] ^ mp.mpd.abtData[3]);
             return false;
           }
         }
@@ -599,6 +604,11 @@ main(int argc, const char *argv[])
         && ((nt.nti.nai.abtAtqa[1] & 0x02) == 0x00)) {
       // MIFARE Plus 2K
       uiBlocks = 0x7f;
+    }
+    // Chinese magic emulation card, ATS=0978009102:dabc1910
+    if ((res == 9)  && (abtRx[5] == 0xda) && (abtRx[6] == 0xbc)
+        && (abtRx[7] == 0x19) && (abtRx[8] == 0x10)) {
+      magic2 = true;
     }
   }
   printf("Guessing size: seems to be a %i-byte card\n", (uiBlocks + 1) * 16);
