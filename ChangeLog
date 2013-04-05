@@ -1,5 +1,5 @@
-TBD
----
+Apr 05, 2013 - 1.7.0-rc7 (release candidate)
+--------------------------------------------
 
 Fixes:
  - Fix bug when compiling without libusb
@@ -23,6 +23,7 @@ Fixes:
  - nfc-anticol: fix ATS length
  - nfc-mfclassic: fix reporting of processed blocks total
  - nfc-mfclassic: detect MIFARE Plus 2K as 2K instead of 1K
+ - pn53x_usb/acr122_usb: check usb_open() returns before using it
 
 Improvements:
  - New PN532 over SPI driver, see contrib/libnfc/pn532_spi_on_rpi.conf.sample
@@ -33,6 +34,8 @@ Improvements:
  - nfc-mfclassic: use smaller files for cards < 4k
  - nfc-mfclassic: by defaut don't authorise wrong keyfile, use "f" to force
  - quick_start_example1.c: remove err.h dependency, easier for Windowsians
+ - nfc-mfclassic: support some new magic cards with writeable sector #0
+ - nfc-anticol: add -t option to use timed functions
 
 Changes:
  - Upon malloc error, nfc_init() doesn't force exit() anymore
