@@ -204,6 +204,8 @@ pn53x_usb_scan(const nfc_context *context, nfc_connstring connstrings[], const s
           }
 
           usb_dev_handle *udev = usb_open(dev);
+          if (udev == NULL)
+            continue;
 
           // Set configuration
           int res = usb_set_configuration(udev, 1);
@@ -298,7 +300,8 @@ pn53x_usb_open(const nfc_context *context, const nfc_connstring connstring)
           continue;
       }
       // Open the USB device
-      data.pudh = usb_open(dev);
+      if ((data.pudh = usb_open(dev)) == NULL)
+        continue;
       // Retrieve end points
       pn53x_usb_get_end_points(dev, &data);
       // Set configuration

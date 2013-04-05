@@ -327,6 +327,8 @@ acr122_usb_scan(const nfc_context *context, nfc_connstring connstrings[], const 
           }
 
           usb_dev_handle *udev = usb_open(dev);
+          if (udev == NULL)
+            continue;
 
           // Set configuration
           // acr122_usb_get_usb_device_name (dev, udev, pnddDevices[device_found].acDevice, sizeof (pnddDevices[device_found].acDevice));
@@ -413,7 +415,8 @@ acr122_usb_open(const nfc_context *context, const nfc_connstring connstring)
           continue;
       }
       // Open the USB device
-      data.pudh = usb_open(dev);
+      if ((data.pudh = usb_open(dev)) == NULL)
+        continue;
       // Reset device
       usb_reset(data.pudh);
       // Retrieve end points
