@@ -1,3 +1,9 @@
+libnfc (1.7.0~rc7-0) unstable; urgency=low
+
+  * New upstream release
+
+ -- yobibe <yobibe@gmail.com>  Fri, 5 Apr 2013 12:42:42 +0100
+
 libnfc (1.7.0~rc6-0) unstable; urgency=low
 
   * New upstream release
