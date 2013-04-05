@@ -38,16 +38,7 @@ Here are some directions to get you started:
         $ make clean
         $ scan-build make
       2.2.3 Using cppcheck (v1.58 or higher):
-        $ cppcheck --quiet \
-          -I include -I libnfc -I libnfc/buses -I libnfc/chips -I libnfc/drivers \
-          --check-config .
-        $ cppcheck --quiet --enable=all --std=posix --std=c99 \
-          -I include -I libnfc -I libnfc/buses -I libnfc/chips -I libnfc/drivers \
-          -DLOG -D__linux__ \
-          -DDRIVER_PN53X_USB_ENABLED -DDRIVER_ACR122_PCSC_ENABLED \
-          -DDRIVER_ACR122_USB_ENABLED -DDRIVER_ACR122S_ENABLED \
-          -DDRIVER_PN532_UART_ENABLED -DDRIVER_ARYGON_ENABLED \
-          --force --inconclusive .
+        $ make cppcheck
     2.3 When Debianizing
       $ lintian --info --display-info --display-experimental *deb
       or (shorter version)
