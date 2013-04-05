@@ -70,6 +70,7 @@ static nfc_device *pnd;
 
 bool    quiet_output = false;
 bool    force_rats = false;
+bool    timed = false;
 bool    iso_ats_supported = false;
 
 // ISO14443A Anti-Collision Commands
@@ -83,15 +84,23 @@ uint8_t  abtHalt[4] = { 0x50, 0x00, 0x00, 0x00 };
 static  bool
 transmit_bits(const uint8_t *pbtTx, const size_t szTxBits)
 {
+  uint32_t cycles = 0;
   // Show transmitted command
   if (!quiet_output) {
     printf("Sent bits:     ");
     print_hex_bits(pbtTx, szTxBits);
   }
   // Transmit the bit frame command, we don't use the arbitrary parity feature
-  if ((szRxBits = nfc_initiator_transceive_bits(pnd, pbtTx, szTxBits, NULL, abtRx, sizeof(abtRx), NULL)) < 0)
-    return false;
-
+  if (timed) {
+    if ((szRxBits = nfc_initiator_transceive_bits_timed(pnd, pbtTx, szTxBits, NULL, abtRx, sizeof(abtRx), NULL, &cycles)) < 0)
+      return false;
+    if ((!quiet_output) && (szRxBits > 0)) {
+      printf("Response after %u cycles\n", cycles);
+    }
+  } else {
+    if ((szRxBits = nfc_initiator_transceive_bits(pnd, pbtTx, szTxBits, NULL, abtRx, sizeof(abtRx), NULL)) < 0)
+      return false;
+  }
   // Show received answer
   if (!quiet_output) {
     printf("Received bits: ");
@@ -105,6 +114,7 @@ transmit_bits(const uint8_t *pbtTx, const size_t szTxBits)
 static  bool
 transmit_bytes(const uint8_t *pbtTx, const size_t szTx)
 {
+  uint32_t cycles = 0;
   // Show transmitted command
   if (!quiet_output) {
     printf("Sent bits:     ");
@@ -112,8 +122,16 @@ transmit_bytes(const uint8_t *pbtTx, const size_t szTx)
   }
   int res;
   // Transmit the command bytes
-  if ((res = nfc_initiator_transceive_bytes(pnd, pbtTx, szTx, abtRx, sizeof(abtRx), 0)) < 0)
-    return false;
+  if (timed) {
+    if ((res = nfc_initiator_transceive_bytes_timed(pnd, pbtTx, szTx, abtRx, sizeof(abtRx), &cycles)) < 0)
+      return false;
+    if ((!quiet_output) && (res > 0)) {
+      printf("Response after %u cycles\n", cycles);
+    }
+  } else {
+    if ((res = nfc_initiator_transceive_bytes(pnd, pbtTx, szTx, abtRx, sizeof(abtRx), 0)) < 0)
+      return false;
+  }
   szRx = res;
   // Show received answer
   if (!quiet_output) {
@@ -132,6 +150,7 @@ print_usage(char *argv[])
   printf("\t-h\tHelp. Print this message.\n");
   printf("\t-q\tQuiet mode. Suppress output of READER and EMULATOR data (improves timing).\n");
   printf("\t-f\tForce RATS.\n");
+  printf("\t-t\tMeasure response time (in cycles).\n");
 }
 
 int
@@ -148,6 +167,8 @@ main(int argc, char *argv[])
       quiet_output = true;
     } else if (0 == strcmp(argv[arg], "-f")) {
       force_rats = true;
+    } else if (0 == strcmp(argv[arg], "-t")) {
+      timed = true;
     } else {
       ERR("%s is not supported option.", argv[arg]);
       print_usage(argv);
