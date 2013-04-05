@@ -60,7 +60,6 @@ main(int argc, const char *argv[])
   nfc_device *pnd = NULL;
   const char *acLibnfcVersion;
   bool    result;
-  int res = 0;
 
   uint8_t  abtRx[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
   size_t  szRx = sizeof(abtRx);
@@ -92,6 +91,7 @@ main(int argc, const char *argv[])
   }
 
   for (i = 0; i < szFound; i++) {
+    int res = 0;
     pnd = nfc_open(context, connstrings[i]);
 
     if (pnd == NULL) {

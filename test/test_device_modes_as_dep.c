@@ -177,8 +177,6 @@ initiator_thread(void *arg)
 void
 test_dep_states(void)
 {
-  int res;
-
   CutTestContext *test_context = cut_get_current_test_context();
   struct thread_data target_data = {
     .device = first_device,
@@ -191,6 +189,7 @@ test_dep_states(void)
   };
 
   for (int i = 0; i < 2; i++) {
+    int res;
     if ((res = pthread_create(&(threads[1]), NULL, target_thread, &target_data)))
       cut_fail("pthread_create() returned %d", res);
 

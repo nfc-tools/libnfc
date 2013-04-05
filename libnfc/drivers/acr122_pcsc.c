@@ -154,7 +154,6 @@ acr122_pcsc_scan(const nfc_context *context, nfc_connstring connstrings[], const
   char    acDeviceNames[256 + 64 * PCSC_MAX_DEVICES];
   size_t  szDeviceNamesLen = sizeof(acDeviceNames);
   SCARDCONTEXT *pscc;
-  bool    bSupported;
   int     i;
 
   // Clear the reader list
@@ -172,7 +171,7 @@ acr122_pcsc_scan(const nfc_context *context, nfc_connstring connstrings[], const
 
   size_t device_found = 0;
   while ((acDeviceNames[szPos] != '\0') && (device_found < connstrings_len)) {
-    bSupported = false;
+    bool bSupported = false;
     for (i = 0; supported_devices[i] && !bSupported; i++) {
       int     l = strlen(supported_devices[i]);
       bSupported = 0 == strncmp(supported_devices[i], acDeviceNames + szPos, l);

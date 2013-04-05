@@ -151,7 +151,6 @@ initiator_thread(void *arg)
 void
 test_dep_active(void)
 {
-  int res;
   nfc_baud_rate nbrs[3] = { NBR_106, NBR_212, NBR_424};
 
   CutTestContext *test_context = cut_get_current_test_context();
@@ -167,6 +166,7 @@ test_dep_active(void)
 
   for (int i = 0; i < 3; i++) {
     initiator_data.nbr = nbrs[i];
+    int res;
 
     if ((res = pthread_create(&(threads[TARGET]), NULL, target_thread, &target_data)))
       cut_fail("pthread_create() returned %d", res);

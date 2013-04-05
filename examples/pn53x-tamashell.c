@@ -120,10 +120,10 @@ int main(int argc, const char *argv[])
     exit(EXIT_FAILURE);
   }
 
-  char *cmd;
   const char *prompt = "> ";
   while (1) {
     int offset = 0;
+    char *cmd;
 #if defined(HAVE_READLINE)
     if (input == NULL) { // means we use stdin
       cmd = readline(prompt);
