@@ -486,6 +486,7 @@ main(int argc, const char *argv[])
     bUseKeyA = tolower((int)((unsigned char) * (argv[2]))) == 'a';
     bTolerateFailures = tolower((int)((unsigned char) * (argv[2]))) != (int)((unsigned char) * (argv[2]));
     bUseKeyFile = (argc > 4);
+    bForceKeyFile = ((argc > 5) && (strcmp((char *)argv[5], "f") == 0));
   } else if (strcmp(command, "w") == 0 || strcmp(command, "W") == 0) {
     if (argc < 4) {
       print_usage(argv[0]);

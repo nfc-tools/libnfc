@@ -1,3 +1,9 @@
+TBD - 1.7.0
+-----------
+
+Fixes:
+ - nfc-mfclassic: allow option f for read operation too
+
 Apr 05, 2013 - 1.7.0-rc7 (release candidate)
 --------------------------------------------
 
