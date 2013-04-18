@@ -366,7 +366,8 @@ pn532_uart_receive(nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, in
   pnd->last_error = uart_receive(DRIVER_DATA(pnd)->port, abtRxBuf, 5, abort_p, timeout);
 
   if (abort_p && (NFC_EOPABORTED == pnd->last_error)) {
-    return pn532_uart_ack(pnd);
+    pn532_uart_ack(pnd);
+    return NFC_EOPABORTED;
   }
 
   if (pnd->last_error < 0) {
