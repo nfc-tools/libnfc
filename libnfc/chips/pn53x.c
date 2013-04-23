@@ -153,6 +153,7 @@ pn53x_reset_settings(struct nfc_device *pnd)
 int
 pn53x_transceive(struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szTx, uint8_t *pbtRx, const size_t szRxLen, int timeout)
 {
+  bool mi = false;
   int res = 0;
   if (CHIP_DATA(pnd)->wb_trigged) {
     if ((res = pn53x_writeback_register(pnd)) < 0) {
@@ -202,7 +203,6 @@ pn53x_transceive(struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szTx
     CHIP_DATA(pnd)->power_mode = NORMAL; // When TgInitAsTarget reply that means an external RF have waken up the chip
   }
 
-  szRx = (size_t) res;
   switch (pbtTx[0]) {
     case PowerDown:
     case InDataExchange:
@@ -219,7 +219,8 @@ pn53x_transceive(struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szTx
     case TgSetGeneralBytes:
     case TgSetMetaData:
       if (pbtRx[0] & 0x80) { abort(); } // NAD detected
-      if (pbtRx[0] & 0x40) { abort(); } // MI detected
+//      if (pbtRx[0] & 0x40) { abort(); } // MI detected
+      mi = pbtRx[0] & 0x40;
       CHIP_DATA(pnd)->last_status_byte = pbtRx[0] & 0x3f;
       break;
     case Diagnose:
@@ -251,6 +252,29 @@ pn53x_transceive(struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szTx
     default:
       CHIP_DATA(pnd)->last_status_byte = 0;
   }
+
+  while (mi) {
+    int res2;
+    uint8_t  abtRx2[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
+    // Send empty command to card
+    if ((res2 = CHIP_DATA(pnd)->io->send(pnd, pbtTx, 2, timeout)) < 0) {
+      return res2;
+    }
+    if ((res2 = CHIP_DATA(pnd)->io->receive(pnd, abtRx2, sizeof(abtRx2), timeout)) < 0) {
+      return res2;
+    }
+    mi = abtRx2[0] & 0x40;
+    if ((size_t)(res + res2 - 1) > szRx) {
+      CHIP_DATA(pnd)->last_status_byte = ESMALLBUF;
+      break;
+    }
+    memcpy(pbtRx + res, abtRx2 + 1, res2 - 1);
+    // Copy last status byte
+    pbtRx[0] = abtRx2[0];
+    res += res2 - 1;
+  }
+
+  szRx = (size_t) res;
 
   switch (CHIP_DATA(pnd)->last_status_byte) {
     case 0:
