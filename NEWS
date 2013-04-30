@@ -33,7 +33,7 @@ Configuration:
   activation. This file (/etc/nfc/libnfc.conf under GNU/Linux systems)
   supports already some keywords:
     - "allow_autoscan" to enable/disable device auto-detection feature;
-    - "allow_intrusive_autoscan" to enable/disable intrusive auto-detection
+    - "allow_intrusive_scan" to enable/disable intrusive auto-detection
       (ie. serial port probing);
     - "log_level" to select library verbosity;
     - "device.name" and "device.connstring" to define a user device,

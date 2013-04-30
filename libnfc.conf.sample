@@ -6,7 +6,7 @@
 # Allow intrusive auto-detection (default: false)
 # Warning: intrusive auto-detection can seriously disturb other devices
 # This option is not recommended, user should prefer to add manually his device.
-#allow_intrusive_autoscan = false
+#allow_intrusive_scan = false
 
 # Set log level (default: error)
 # Valid log levels are (in order of verbosity): 0 (none), 1 (error), 2 (info), 3 (debug)
