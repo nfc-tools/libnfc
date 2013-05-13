@@ -1271,10 +1271,11 @@ pn53x_initiator_select_dep_target(struct nfc_device *pnd,
   } else {
     res = pn53x_InJumpForDEP(pnd, ndm, nbr, pbtPassiveInitiatorData, NULL, NULL, 0, pnt, timeout);
   }
-  if (res >= 0)
+  if (res > 0) {
     if (pn53x_current_target_new(pnd, pnt) == NULL) {
       return NFC_ESOFT;
     }
+  }
   return res;
 }
 
