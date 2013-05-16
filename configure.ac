@@ -30,7 +30,7 @@ case "$host" in
     AC_MSG_RESULT([Fixing libtool for -rpath problems.])
     sed -i -r 's/(hardcode_into_libs)=.*$/\1=no/' libtool
   ;;
-  *-pc-mingw32msvc)
+  *-mingw32*)
     WITH_POSIX_ONLY_EXAMPLES=0
     AC_MSG_RESULT([Disable extended examples due to target Windows system.])
     # Undefine __STRICT_ANSI__ to allow to use strdup, putenv, etc. without warnings
