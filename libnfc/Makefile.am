@@ -29,6 +29,10 @@ libnfc_la_LIBADD = \
 	$(top_builddir)/libnfc/buses/libnfcbuses.la \
 	$(top_builddir)/libnfc/drivers/libnfcdrivers.la
 
+if WIN32
+  libnfc_la_SOURCES += stdlib-win32.c
+endif
+
 if PCSC_ENABLED
   libnfc_la_CFLAGS += @libpcsclite_CFLAGS@ -DHAVE_PCSC
   libnfc_la_LIBADD += @libpcsclite_LIBS@
@@ -40,7 +44,12 @@ if LIBUSB_ENABLED
 endif
 
 if WITH_LOG
-  libnfc_la_SOURCES += log.c log-internal.c
+  libnfc_la_SOURCES += log.c
+if WIN32
+  libnfc_la_SOURCES += log-internal-win32.c
+else
+  libnfc_la_SOURCES += log-internal.c
+endif
 endif
 
 EXTRA_DIST = \

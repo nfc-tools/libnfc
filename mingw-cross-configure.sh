@@ -31,8 +31,8 @@ export PKG_CONFIG_LIBDIR=$MINGW_DIR/lib/pkgconfig
 # Stop compilation on first error
 export CFLAGS="-Wfatal-errors"
 
-# Include default MinGW include directory, and libnfc's win32 files
-export CFLAGS="$CFLAGS -I$MINGW_DIR/include -I$PWD/contrib/win32"
+# Include default MinGW include directory
+export CFLAGS="$CFLAGS -I$MINGW_DIR/include"
 
 if [ "$MINGW" = "i686-w64-mingw32" ]; then
   # mingw-64 includes winscard.a and winscard.h
@@ -40,39 +40,9 @@ if [ "$MINGW" = "i686-w64-mingw32" ]; then
   # It is not enough to set libpcsclite_LIBS to "-lwinscard", because it is
   # forgotten when libnfc is created with libtool. That's why we are setting
   # LIBS.
-  export LIBS="-lwinscard"
-
-  echo "MinGW-w64 ships all requirements libnfc."
-  echo "Unfortunately the MinGW-w64 header are currently"
-  echo "buggy. Also, Libtool doesn't support MinGW-w64"
-  echo "very well."
-  echo ""
-  echo "Warning ________________________________________"
-  echo "You will only be able to compile libnfc.dll, but"
-  echo "none of the executables (see utils and examples)."
-  echo ""
-  # You can fix winbase.h by adding the following lines:
-  # #include <basetsd.h>
-  # #include <windef.h>
-  # But the problem with Libtool remains.
-else
-  if [ -z "$libpcsclite_LIBS$libpcsclite_CFLAGS" ]; then
-  echo "Error __________________________________________"
-  echo "You need to get the PC/SC library from a Windows"
-  echo "machine and the appropriate header files. Then"
-  echo "specify libpcsclite_LIBS=.../WinScard.dll and"
-  echo "libpcsclite_CFLAGS=-I..."
+  if echo -n "$*" | grep acr122_pcsc 2>&1 > /dev/null; then
+    export LIBS="-lwinscard"
   fi
-  exit 1
-fi
-
-## Configure to cross-compile using mingw32msvc
-if [ "$WITH_USB" = "1" ]; then
-  # with direct-USB drivers (use libusb-win32)
-  DRIVERS="all"
-else
-  # with UART divers only (can be tested under wine)
-  DRIVERS="pn532_uart,arygon"
 fi
 
 if [ ! -x configure ]; then
@@ -80,12 +50,6 @@ if [ ! -x configure ]; then
 fi
 
 ./configure --target=$MINGW --host=$MINGW \
-  --with-drivers=$DRIVERS \
+  --disable-conffiles --disable-log \
   --with-libusb-win32=$PWD/$LIBUSB_WIN32_BIN_DIR \
   $*
-
-if [ "$MINGW" = "i686-w64-mingw32" ]; then
-  # due to the buggy headers from MINGW-64 we always add "contrib/windows.h",
-  # otherwise some windows types won't be available.
-  echo "#include \"contrib/windows.h\"" >> config.h
-fi
