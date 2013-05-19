@@ -11,7 +11,8 @@ EXTRA_DIST = \
 	CMakeLists.txt \
 	Doxyfile \
 	README-Windows.txt \
-	libnfc.conf.sample
+	libnfc.conf.sample \
+	mingw-cross-configure.sh
 
 CLEANFILES = Doxygen.log coverage.info libnfc.pc
 
