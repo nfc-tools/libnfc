@@ -515,6 +515,8 @@ acr122_usb_close(nfc_device *pnd)
   nfc_device_free(pnd);
 }
 
+#if !defined(htole32)
+
 uint32_t htole32(uint32_t u32);
 
 uint32_t
@@ -528,6 +530,8 @@ htole32(uint32_t u32)
   uint32_t *pu32 = (uint32_t *)u8;
   return *pu32;
 }
+
+#endif /* !defined(htole32) */
 
 static int
 acr122_build_frame_from_apdu(nfc_device *pnd, const uint8_t ins, const uint8_t p1, const uint8_t p2, const uint8_t *data, const size_t data_len, const uint8_t le)
