@@ -70,6 +70,11 @@
 #  include "config.h"
 #endif // HAVE_CONFIG_H
 
+#ifdef _WIN32
+// ECONNABORTED
+#  include "contrib/windows.h"
+#endif // _WIN32
+
 #include <errno.h>
 #include <signal.h>
 #include <stdlib.h>
