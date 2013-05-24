@@ -39,10 +39,7 @@ case "$host" in
 esac
 AM_CONDITIONAL(POSIX_ONLY_EXAMPLES_ENABLED, [test "$WITH_POSIX_ONLY_EXAMPLES" = "1"])
 
-AC_PATH_PROG(PKG_CONFIG, pkg-config)
-if test x"$PKG_CONFIG" = x""; then
-    AC_MSG_ERROR([pkg-config not found.])
-fi
+PKG_PROG_PKG_CONFIG
 
 # Checks for header files.
 AC_HEADER_STDC
