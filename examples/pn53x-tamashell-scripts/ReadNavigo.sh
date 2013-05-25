@@ -1,9 +1,9 @@
-#!/bin/bash
+#!/bin/sh
 
 ID=$(cat << EOF | \
     pn53x-tamashell |\
     grep -A1 "^Tx: 42  01  0b  3f  80" |\
-    grep -o -P "(?<=Rx: 00  ..  ..  )..  ..  ..  .."|sed 's/  //g'
+    sed -e '1d' -e "s/^Rx: 00  ..  ..  \(..  ..  ..  ..\).*/\1/" -e 's/  //g'
 # Timeouts
 3205000002
 # ListTarget ModeB
@@ -12,6 +12,11 @@ ID=$(cat << EOF | \
 42010b3f80
 EOF
 )
+
+if [ -z "$ID" ]; then
+	echo "Error: I was not abble to read Navigo ID" >&2
+	exit 1
+fi
 
 cat << EOF | \
     pn53x-tamashell |\

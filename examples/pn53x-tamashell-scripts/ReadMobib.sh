@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 cat << EOF | \
     pn53x-tamashell |\
