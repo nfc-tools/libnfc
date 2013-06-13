@@ -187,6 +187,9 @@ struct acr122_usb_data {
 
 // ISO 7816-4
 #define SW1_More_Data_Available 0x61
+#define SW1_Warning_with_NV_changed 0x63
+#define PN53x_Specific_Application_Level_Error_Code 0x7f
+
 
 // This frame template is copied at init time
 // Its designed for TAMA sending but is also used for simple ADPU frame: acr122_build_frame_from_apdu() will overwrite needed bytes
@@ -653,7 +656,11 @@ read:
         return pnd->last_error;
       }
       if (abtRxBuf[10] != SW1_More_Data_Available) {
-        log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unexpected Status Word (SW1: %02x SW2: %02x)", abtRxBuf[10], abtRxBuf[11]);
+        if ((abtRxBuf[10] == SW1_Warning_with_NV_changed) && (abtRxBuf[11] == PN53x_Specific_Application_Level_Error_Code)) {
+          log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "PN532 has detected an error at the application level");
+        } else {
+          log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unexpected Status Word (SW1: %02x SW2: %02x)", abtRxBuf[10], abtRxBuf[11]);
+        }
         pnd->last_error = NFC_EIO;
         return pnd->last_error;
       }
