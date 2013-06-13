@@ -631,6 +631,11 @@ read:
           goto read;
         }
       }
+      if (res < 12) {
+        log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Invalid RDR_to_PC_DataBlock frame");
+        pnd->last_error = NFC_EIO;
+        return pnd->last_error;
+      }
       if (abtRxBuf[offset] != attempted_response) {
         log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Frame header mismatch");
         pnd->last_error = NFC_EIO;
