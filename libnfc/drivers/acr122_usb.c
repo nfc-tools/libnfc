@@ -185,6 +185,9 @@ struct acr122_usb_data {
 #define RDR_to_PC_DataBlock	0x80
 #define RDR_to_PC_Escape	0x83
 
+// ISO 7816-4
+#define SW1_More_Data_Available 0x61
+
 // This frame template is copied at init time
 // Its designed for TAMA sending but is also used for simple ADPU frame: acr122_build_frame_from_apdu() will overwrite needed bytes
 const uint8_t acr122_usb_frame_template[] = {
@@ -646,6 +649,11 @@ read:
       len = abtRxBuf[offset++];
       if (len != 2) {
         log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Wrong reply");
+        pnd->last_error = NFC_EIO;
+        return pnd->last_error;
+      }
+      if (abtRxBuf[10] != SW1_More_Data_Available) {
+        log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unexpected Status Word (SW1: %02x SW2: %02x)", abtRxBuf[10], abtRxBuf[11]);
         pnd->last_error = NFC_EIO;
         return pnd->last_error;
       }
