@@ -2,7 +2,20 @@ TBD - 1.7.0
 -----------
 
 Fixes:
+ - pn53x: only create a current target when at least one have been found.
+ - pn532_uart: fix 'operation abort' feature with this driver
  - nfc-mfclassic: allow option f for read operation too
+ - Avoid clash with system's htole32 if it exists
+ - Include <stdlib.h>, required for getenv(3)
+
+Improvements:
+ - New PN532 over I2C driver, see contrib/libnfc/pn532_i2c_on_rpi.conf.sample
+ - ACR122/Touchatag: misc improvements
+ - ReadMobib/ReadNavigo: improve shell script portability
+ - Add ISO14443-4 chaining support for RX (MI)
+
+Special thanks to:
+ - Laurent Latil (new pn532_i2c driver for linux)
 
 Apr 05, 2013 - 1.7.0-rc7 (release candidate)
 --------------------------------------------

@@ -1,3 +1,9 @@
+New in 1.7.0:
+
+Drivers:
+
+  * New PN532 over I2C driver, see contrib/libnfc/pn532_i2c_on_rpi.conf.sample
+
 New in 1.7.0-rc7:
 
 Drivers:
