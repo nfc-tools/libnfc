@@ -4,7 +4,7 @@ AC_DEFUN([LIBNFC_ARG_WITH_DRIVERS],
 [
   AC_MSG_CHECKING(which drivers to build)
   AC_ARG_WITH(drivers,
-  AS_HELP_STRING([--with-drivers=DRIVERS], [Use a custom driver set, where DRIVERS is a comma-separated list of drivers to build support for. Available drivers are: 'acr122_pcsc', 'acr122_usb', 'acr122s', 'arygon', 'pn532_spi', 'pn532_uart' and 'pn53x_usb'. Default drivers set is 'acr122_usb,acr122s,arygon,pn532_spi,pn532_uart,pn53x_usb'. The special driver set 'all' compile all available drivers.]),
+  AS_HELP_STRING([--with-drivers=DRIVERS], [Use a custom driver set, where DRIVERS is a coma-separated list of drivers to build support for. Available drivers are: 'acr122_pcsc', 'acr122_usb', 'acr122s', 'arygon', 'pn532_spi', 'pn532_uart', 'pn532_i2c' and 'pn53x_usb'. Default drivers set is 'acr122_usb,acr122s,arygon,pn532_spi,pn532_i2c,pn532_uart,pn53x_usb'. The special driver set 'all' compile all available drivers.]),
   [       case "${withval}" in
           yes | no)
                   dnl ignore calls without any arguments
@@ -30,12 +30,20 @@ AC_DEFUN([LIBNFC_ARG_WITH_DRIVERS],
                   then
                       DRIVER_BUILD_LIST="$DRIVER_BUILD_LIST pn532_spi"
                   fi
+                  if test x"$i2c_available" = x"yes"
+                  then
+                      DRIVER_BUILD_LIST="$DRIVER_BUILD_LIST pn532_i2c"
+                  fi
                   ;;
     all)
                   DRIVER_BUILD_LIST="acr122_pcsc acr122_usb acr122s arygon pn53x_usb pn532_uart"
                   if test x"$spi_available" = x"yes"
                   then
                       DRIVER_BUILD_LIST="$DRIVER_BUILD_LIST pn532_spi"
+                  fi
+                  if test x"$i2c_available" = x"yes"
+                  then
+                      DRIVER_BUILD_LIST="$DRIVER_BUILD_LIST pn532_i2c"
                   fi
                   ;;
   esac
@@ -49,6 +57,7 @@ AC_DEFUN([LIBNFC_ARG_WITH_DRIVERS],
   driver_arygon_enabled="no"
   driver_pn532_uart_enabled="no"
   driver_pn532_spi_enabled="no"
+  driver_pn532_i2c_enabled="no"
 
   for driver in ${DRIVER_BUILD_LIST}
   do
@@ -88,6 +97,11 @@ AC_DEFUN([LIBNFC_ARG_WITH_DRIVERS],
                   driver_pn532_spi_enabled="yes"
                   DRIVERS_CFLAGS="$DRIVERS_CFLAGS -DDRIVER_PN532_SPI_ENABLED"
                   ;;
+    pn532_i2c)
+                  i2c_required="yes"
+                  driver_pn532_i2c_enabled="yes"
+                  DRIVERS_CFLAGS="$DRIVERS_CFLAGS -DDRIVER_PN532_I2C_ENABLED -DI2C_DRIVERS_ENABLED"
+                  ;;                  
     *)
                   AC_MSG_ERROR([Unknow driver: $driver])
                   ;;
@@ -101,6 +115,9 @@ AC_DEFUN([LIBNFC_ARG_WITH_DRIVERS],
   AM_CONDITIONAL(DRIVER_ARYGON_ENABLED, [test x"$driver_arygon_enabled" = xyes])
   AM_CONDITIONAL(DRIVER_PN532_UART_ENABLED, [test x"$driver_pn532_uart_enabled" = xyes])
   AM_CONDITIONAL(DRIVER_PN532_SPI_ENABLED, [test x"$driver_pn532_spi_enabled" = xyes])
+  AM_CONDITIONAL(DRIVER_PN532_I2C_ENABLED, [test x"$driver_pn532_i2c_enabled" = xyes])
+  
+  AM_CONDITIONAL(I2C_DRIVERS_ENABLED, [test x"$i2c_required" = xyes])
 ])
 
 AC_DEFUN([LIBNFC_DRIVERS_SUMMARY],[
@@ -113,4 +130,5 @@ echo "   arygon........... $driver_arygon_enabled"
 echo "   pn53x_usb........ $driver_pn53x_usb_enabled"
 echo "   pn532_uart....... $driver_pn532_uart_enabled"
 echo "   pn532_spi.......  $driver_pn532_spi_enabled"
+echo "   pn532_i2c........ $driver_pn532_i2c_enabled"
 ])

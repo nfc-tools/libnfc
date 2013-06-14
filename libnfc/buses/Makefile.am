@@ -28,3 +28,10 @@ if LIBUSB_ENABLED
   libnfcbuses_la_LIBADD  += @libusb_LIBS@
 endif
 EXTRA_DIST += usbbus.c usbbus.h
+
+if I2C_ENABLED
+  libnfcbuses_la_SOURCES += i2c.c i2c.h
+  libnfcbuses_la_CFLAGS +=
+  libnfcbuses_la_LIBADD +=
+endif
+EXTRA_DIST += i2c.c i2c.h

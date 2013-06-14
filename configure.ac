@@ -46,6 +46,7 @@ AC_HEADER_STDC
 AC_HEADER_STDBOOL
 AC_CHECK_HEADERS([fcntl.h limits.h stdio.h stdlib.h stdint.h stddef.h stdbool.h sys/ioctl.h sys/param.h sys/time.h termios.h])
 AC_CHECK_HEADERS([linux/spi/spidev.h], [spi_available="yes"])
+AC_CHECK_HEADERS([linux/i2c-dev.h], [i2c_available="yes"])
 AC_CHECK_FUNCS([memmove memset select strdup strerror strstr strtol usleep],
 	       [AC_DEFINE([_XOPEN_SOURCE], [600], [Enable POSIX extensions if present])])
 
@@ -121,6 +122,9 @@ AM_CONDITIONAL(UART_ENABLED, [test x"$uart_required" = x"yes"])
 
 # Enable SPI if
 AM_CONDITIONAL(SPI_ENABLED, [test x"$spi_required" = x"yes"])
+
+# Enable I2C if 
+AM_CONDITIONAL(I2C_ENABLED, [test x"$i2c_required" = x"yes"])
 
 # Documentation (default: no)
 AC_ARG_ENABLE([doc],AS_HELP_STRING([--enable-doc],[Enable documentation generation.]),[enable_doc=$enableval],[enable_doc="no"])
