@@ -77,12 +77,6 @@ Thanks to d18c7db and Okko for example code
 
 #define DRIVER_DATA(pnd) ((struct acr122_usb_data*)(pnd->driver_data))
 
-typedef enum {
-  UNKNOWN,
-  ACR122,
-  TOUCHATAG,
-} acr122_usb_model;
-
 /*
 USB activity trace for PN533, ACR122 and Touchatag
 
@@ -178,7 +172,6 @@ struct acr122_usb_apdu_frame {
 // Internal data struct
 struct acr122_usb_data {
   usb_dev_handle *pudh;
-  acr122_usb_model model;
   uint32_t uiEndPointIn;
   uint32_t uiEndPointOut;
   uint32_t uiMaxPacketSize;
@@ -191,10 +184,8 @@ struct acr122_usb_data {
 // CCID Bulk-Out messages type
 #define PC_to_RDR_IccPowerOn	0x62
 #define PC_to_RDR_XfrBlock	0x6f
-#define PC_to_RDR_Escape	0x6b
 
 #define RDR_to_PC_DataBlock	0x80
-#define RDR_to_PC_Escape	0x83
 
 // ISO 7816-4
 #define SW1_More_Data_Available 0x61
@@ -205,7 +196,7 @@ struct acr122_usb_data {
 // This frame template is copied at init time
 // Its designed for TAMA sending but is also used for simple ADPU frame: acr122_build_frame_from_apdu() will overwrite needed bytes
 const uint8_t acr122_usb_frame_template[] = {
-  PC_to_RDR_Escape, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // CCID header (first byte will be filled by acr122_init() depending on model)
+  PC_to_RDR_XfrBlock, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // CCID header
   0xff, 0x00, 0x00, 0x00, 0x00, // ADPU header
   0xd4, // PN532 direction
 };
@@ -264,26 +255,13 @@ acr122_usb_bulk_write(struct acr122_usb_data *data, uint8_t abtTx[], const size_
 struct acr122_usb_supported_device {
   uint16_t vendor_id;
   uint16_t product_id;
-  acr122_usb_model model;
   const char *name;
 };
 
 const struct acr122_usb_supported_device acr122_usb_supported_devices[] = {
-  { 0x072F, 0x2200, TOUCHATAG,   "ACS ACR122" },
-  { 0x072F, 0x90CC, TOUCHATAG,   "Touchatag" },
+  { 0x072F, 0x2200, "ACS ACR122" },
+  { 0x072F, 0x90CC, "Touchatag" },
 };
-
-static acr122_usb_model
-acr122_usb_get_device_model(uint16_t vendor_id, uint16_t product_id)
-{
-  for (size_t n = 0; n < sizeof(acr122_usb_supported_devices) / sizeof(struct acr122_usb_supported_device); n++) {
-    if ((vendor_id == acr122_usb_supported_devices[n].vendor_id) &&
-        (product_id == acr122_usb_supported_devices[n].product_id))
-      return acr122_usb_supported_devices[n].model;
-  }
-
-  return UNKNOWN;
-}
 
 // Find transfer endpoints for bulk transfers
 static void
@@ -455,7 +433,6 @@ acr122_usb_open(const nfc_context *context, const nfc_connstring connstring)
         goto free_mem;
       }
 
-      data.model = acr122_usb_get_device_model(dev->descriptor.idVendor, dev->descriptor.idProduct);
       // Allocate memory for the device info and specification, fill it and return the info
       pnd = nfc_device_new(context, connstring);
       if (!pnd) {
@@ -479,18 +456,7 @@ acr122_usb_open(const nfc_context *context, const nfc_connstring connstring)
 
       memcpy(&(DRIVER_DATA(pnd)->tama_frame), acr122_usb_frame_template, sizeof(acr122_usb_frame_template));
       memcpy(&(DRIVER_DATA(pnd)->apdu_frame), acr122_usb_frame_template, sizeof(acr122_usb_frame_template));
-      switch (DRIVER_DATA(pnd)->model) {
-        case ACR122:
-          CHIP_DATA(pnd)->timer_correction = 46; // empirical tuning
-          break;
-        case TOUCHATAG:
-          CHIP_DATA(pnd)->timer_correction = 50; // empirical tuning
-          DRIVER_DATA(pnd)->tama_frame.ccid_header.bMessageType = PC_to_RDR_XfrBlock;
-          DRIVER_DATA(pnd)->apdu_frame.ccid_header.bMessageType = PC_to_RDR_XfrBlock;
-          break;
-        case UNKNOWN:
-          break;
-      }
+      CHIP_DATA(pnd)->timer_correction = 46; // empirical tuning
       pnd->driver = &acr122_usb_driver;
 
       if (acr122_usb_init(pnd) < 0) {
@@ -632,61 +598,52 @@ read:
 
   res = acr122_usb_bulk_read(DRIVER_DATA(pnd), abtRxBuf, sizeof(abtRxBuf), usb_timeout);
 
-  uint8_t attempted_response = RDR_to_PC_Escape; // ACR122U attempted response
+  uint8_t attempted_response = RDR_to_PC_DataBlock;
   size_t len;
 
-  switch (DRIVER_DATA(pnd)->model) {
-    case TOUCHATAG:
-      attempted_response = RDR_to_PC_DataBlock;
-      if (res == NFC_ETIMEOUT) {
-        if (DRIVER_DATA(pnd)->abort_flag) {
-          DRIVER_DATA(pnd)->abort_flag = false;
-          acr122_usb_ack(pnd);
-          pnd->last_error = NFC_EOPABORTED;
-          return pnd->last_error;
-        } else {
-          goto read;
-        }
-      }
-      if (res < 12) {
-        log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Invalid RDR_to_PC_DataBlock frame");
-        pnd->last_error = NFC_EIO;
-        return pnd->last_error;
-      }
-      if (abtRxBuf[offset] != attempted_response) {
-        log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Frame header mismatch");
-        pnd->last_error = NFC_EIO;
-        return pnd->last_error;
-      }
-      offset++;
-
-      len = abtRxBuf[offset++];
-      if (!((len > 1) && (abtRxBuf[10] == 0xd5))) { // In case we didn't get an immediate answer:
-        if (len != 2) {
-          log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Wrong reply");
-          pnd->last_error = NFC_EIO;
-          return pnd->last_error;
-        }
-        if (abtRxBuf[10] != SW1_More_Data_Available) {
-          if ((abtRxBuf[10] == SW1_Warning_with_NV_changed) && (abtRxBuf[11] == PN53x_Specific_Application_Level_Error_Code)) {
-            log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "PN532 has detected an error at the application level");
-          } else if ((abtRxBuf[10] == SW1_Warning_with_NV_changed) && (abtRxBuf[11] == 0x00)) {
-            log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "PN532 didn't reply");
-          } else {
-            log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unexpected Status Word (SW1: %02x SW2: %02x)", abtRxBuf[10], abtRxBuf[11]);
-          }
-          pnd->last_error = NFC_EIO;
-          return pnd->last_error;
-        }
-        acr122_usb_send_apdu(pnd, APDU_GetAdditionnalData, 0x00, 0x00, NULL, 0, abtRxBuf[11], abtRxBuf, sizeof(abtRxBuf));
-      }
-      offset = 0;
-      break;
-    case ACR122:
-      break;
-    case UNKNOWN:
-      break;
+  if (res == NFC_ETIMEOUT) {
+    if (DRIVER_DATA(pnd)->abort_flag) {
+      DRIVER_DATA(pnd)->abort_flag = false;
+      acr122_usb_ack(pnd);
+      pnd->last_error = NFC_EOPABORTED;
+      return pnd->last_error;
+    } else {
+      goto read;
+    }
   }
+  if (res < 12) {
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Invalid RDR_to_PC_DataBlock frame");
+    pnd->last_error = NFC_EIO;
+    return pnd->last_error;
+  }
+  if (abtRxBuf[offset] != attempted_response) {
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Frame header mismatch");
+    pnd->last_error = NFC_EIO;
+    return pnd->last_error;
+  }
+  offset++;
+
+  len = abtRxBuf[offset++];
+  if (!((len > 1) && (abtRxBuf[10] == 0xd5))) { // In case we didn't get an immediate answer:
+    if (len != 2) {
+      log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Wrong reply");
+      pnd->last_error = NFC_EIO;
+      return pnd->last_error;
+    }
+    if (abtRxBuf[10] != SW1_More_Data_Available) {
+      if ((abtRxBuf[10] == SW1_Warning_with_NV_changed) && (abtRxBuf[11] == PN53x_Specific_Application_Level_Error_Code)) {
+        log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "PN532 has detected an error at the application level");
+      } else if ((abtRxBuf[10] == SW1_Warning_with_NV_changed) && (abtRxBuf[11] == 0x00)) {
+        log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "PN532 didn't reply");
+      } else {
+        log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unexpected Status Word (SW1: %02x SW2: %02x)", abtRxBuf[10], abtRxBuf[11]);
+      }
+      pnd->last_error = NFC_EIO;
+      return pnd->last_error;
+    }
+    acr122_usb_send_apdu(pnd, APDU_GetAdditionnalData, 0x00, 0x00, NULL, 0, abtRxBuf[11], abtRxBuf, sizeof(abtRxBuf));
+  }
+  offset = 0;
   if (res == NFC_ETIMEOUT) {
     if (DRIVER_DATA(pnd)->abort_flag) {
       DRIVER_DATA(pnd)->abort_flag = false;
@@ -841,7 +798,7 @@ acr122_usb_init(nfc_device *pnd)
     return res;
 
   res = 0;
-  for (i=0; i<3; i++) {
+  for (i = 0; i < 3; i++) {
     if (res < 0)
       log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "PN532 init failed, trying again...");
     if ((res = pn53x_init(pnd)) >= 0)
