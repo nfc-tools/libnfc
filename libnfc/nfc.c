@@ -197,11 +197,6 @@ nfc_init(nfc_context **context)
   }
   if (!nfc_drivers)
     nfc_drivers_init();
-
-//#if defined (I2C_DRIVERS_ENABLED)
-//  if (!i2c_drivers)
-//    i2c_drivers_init();
-//#endif
 }
 
 /** @ingroup lib

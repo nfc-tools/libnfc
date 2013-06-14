@@ -4,7 +4,7 @@ AC_DEFUN([LIBNFC_ARG_WITH_DRIVERS],
 [
   AC_MSG_CHECKING(which drivers to build)
   AC_ARG_WITH(drivers,
-  AS_HELP_STRING([--with-drivers=DRIVERS], [Use a custom driver set, where DRIVERS is a coma-separated list of drivers to build support for. Available drivers are: 'acr122_pcsc', 'acr122_usb', 'acr122s', 'arygon', 'pn532_spi', 'pn532_uart', 'pn532_i2c' and 'pn53x_usb'. Default drivers set is 'acr122_usb,acr122s,arygon,pn532_spi,pn532_i2c,pn532_uart,pn53x_usb'. The special driver set 'all' compile all available drivers.]),
+  AS_HELP_STRING([--with-drivers=DRIVERS], [Use a custom driver set, where DRIVERS is a coma-separated list of drivers to build support for. Available drivers are: 'acr122_pcsc', 'acr122_usb', 'acr122s', 'arygon', 'pn532_i2c', 'pn532_spi', 'pn532_uart' and 'pn53x_usb'. Default drivers set is 'acr122_usb,acr122s,arygon,pn532_i2c,pn532_spi,pn532_uart,pn53x_usb'. The special driver set 'all' compile all available drivers.]),
   [       case "${withval}" in
           yes | no)
                   dnl ignore calls without any arguments
@@ -100,8 +100,8 @@ AC_DEFUN([LIBNFC_ARG_WITH_DRIVERS],
     pn532_i2c)
                   i2c_required="yes"
                   driver_pn532_i2c_enabled="yes"
-                  DRIVERS_CFLAGS="$DRIVERS_CFLAGS -DDRIVER_PN532_I2C_ENABLED -DI2C_DRIVERS_ENABLED"
-                  ;;                  
+                  DRIVERS_CFLAGS="$DRIVERS_CFLAGS -DDRIVER_PN532_I2C_ENABLED"
+                  ;;
     *)
                   AC_MSG_ERROR([Unknow driver: $driver])
                   ;;
@@ -116,8 +116,6 @@ AC_DEFUN([LIBNFC_ARG_WITH_DRIVERS],
   AM_CONDITIONAL(DRIVER_PN532_UART_ENABLED, [test x"$driver_pn532_uart_enabled" = xyes])
   AM_CONDITIONAL(DRIVER_PN532_SPI_ENABLED, [test x"$driver_pn532_spi_enabled" = xyes])
   AM_CONDITIONAL(DRIVER_PN532_I2C_ENABLED, [test x"$driver_pn532_i2c_enabled" = xyes])
-  
-  AM_CONDITIONAL(I2C_DRIVERS_ENABLED, [test x"$i2c_required" = xyes])
 ])
 
 AC_DEFUN([LIBNFC_DRIVERS_SUMMARY],[
