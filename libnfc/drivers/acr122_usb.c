@@ -778,6 +778,7 @@ int
 acr122_usb_init(nfc_device *pnd)
 {
   int res = 0;
+  int i;
   uint8_t  abtRxBuf[255 + sizeof(struct ccid_header)];
 
   /*
@@ -824,7 +825,14 @@ acr122_usb_init(nfc_device *pnd)
   if ((res = acr122_usb_send_apdu(pnd, 0x00, 0x51, 0x00, NULL, 0, 0, abtRxBuf, sizeof(abtRxBuf))) < 0)
     return res;
 
-  if ((res = pn53x_init(pnd)) < 0)
+  res = 0;
+  for (i=0; i<3; i++) {
+    if (res < 0)
+      log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "PN532 init failed, trying again...");
+    if ((res = pn53x_init(pnd)) >= 0)
+      break;
+  }
+  if (res < 0)
     return res;
 
   return NFC_SUCCESS;
