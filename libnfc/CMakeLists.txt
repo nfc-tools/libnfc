@@ -25,6 +25,16 @@ IF(UART_REQUIRED)
   ENDIF(WIN32)
 ENDIF(UART_REQUIRED)
 
+IF(I2C_REQUIRED)
+  IF(WIN32)
+    # Windows is not supported at the moment
+    #LIST(APPEND BUSES_SOURCES ../contrib/win32/libnfc/buses/i2c)
+    MESSAGE( FATAL_ERROR "I2C not (yet) supported under Windows!" )
+  ELSE(WIN32)
+    LIST(APPEND BUSES_SOURCES buses/i2c)
+  ENDIF(WIN32)
+ENDIF(I2C_REQUIRED)
+
 IF(SPI_REQUIRED)
   IF(WIN32)
     # Windows is not supported at the moment
