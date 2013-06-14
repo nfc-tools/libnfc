@@ -60,14 +60,13 @@
 
 #  if defined (__linux__)
 const char *i2c_ports_device_radix[] =
-  { "i2c-", NULL };
+{ "i2c-", NULL };
 #  else
 #    error "Can't determine I2C devices standard names for your system"
 #  endif
 
 
-struct i2c_device
-{
+struct i2c_device {
   int fd;             // I2C device file descriptor
 };
 
@@ -114,7 +113,7 @@ i2c_close(const i2c_device id)
  */
 int
 i2c_read(i2c_device id, uint8_t *pbtRx, const size_t szRx, void *abort_p,
-    int timeout)
+         int timeout)
 {
   int iAbortFd = abort_p ? *((int *) abort_p) : 0;
 
@@ -154,7 +153,7 @@ i2c_write(i2c_device id, const uint8_t *pbtTx, const size_t szTx, int timeout)
 
   if ((const ssize_t) szTx == writeCount) {
     log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG,
-                    "wrote %d bytes successfully.", szTx);
+            "wrote %d bytes successfully.", szTx);
     return NFC_SUCCESS;
   } else {
     log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR,
@@ -175,14 +174,14 @@ i2c_list_ports(void)
 
   res[0] = NULL;
   DIR *dir;
-  if ((dir = opendir("/dev")) == NULL ) {
+  if ((dir = opendir("/dev")) == NULL) {
     perror("opendir error: /dev");
     return res;
   }
   struct dirent entry;
   struct dirent *result;
 
-  while ((readdir_r(dir, &entry, &result) == 0) && (result != NULL )) {
+  while ((readdir_r(dir, &entry, &result) == 0) && (result != NULL)) {
     const char **p = i2c_ports_device_radix;
     while (*p) {
       if (!strncmp(entry.d_name, *p, strlen(*p))) {

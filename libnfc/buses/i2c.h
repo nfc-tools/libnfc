@@ -55,6 +55,6 @@ int        i2c_read(i2c_device id, uint8_t *pbtRx, const size_t szRx, void *abor
 
 int        i2c_write(i2c_device id, const uint8_t *pbtTx, const size_t szTx, int timeout);
 
-char **    i2c_list_ports(void);
+char     **i2c_list_ports(void);
 
 #endif // __NFC_BUS_I2C_H__
