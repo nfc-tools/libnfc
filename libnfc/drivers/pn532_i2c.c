@@ -8,6 +8,7 @@
  * Copyright (C) 2010-2013 Philippe Teuwen
  * Copyright (C) 2012-2013 Ludovic Rousseau
  * Additional contributors of this file:
+ * Copyright (C) 2013      Laurent Latil
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
