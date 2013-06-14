@@ -110,7 +110,6 @@ RDR_to_PC_Escape                              SW: OK
                 Slot Error=81 ??
                   RFU=00
 
-
 --------------------------------------------------------------------
 Touchatag (Acr122U SAM) pseudo-APDU mechanism:
 6f07000000000e000000 ff00000002 d402
@@ -130,6 +129,18 @@ RDR_to_PC_DataBlock                           SW: more data: 8 bytes
 6f05000000000f000000 ffc0000008
                      pseudo-ADPU GetResponse
 8008000000000f000000            d50332010407  9000
+                                              SW: OK
+
+--------------------------------------------------------------------
+Apparently Acr122U PICC can also work without Escape (even if there is no card):
+6f070000000000000000 ff00000002 d402
+PC_to_RDR_XfrBlock   APDU
+  Len.....           ClInP1P2Lc
+          Slot=0     pseudo-APDU DirectTransmit
+            Seq=00
+              BWI=00
+                RFU=0000
+80080000000000008100            d50332010407  9000
                                               SW: OK
 */
 
@@ -258,7 +269,7 @@ struct acr122_usb_supported_device {
 };
 
 const struct acr122_usb_supported_device acr122_usb_supported_devices[] = {
-  { 0x072F, 0x2200, ACR122,   "ACS ACR122" },
+  { 0x072F, 0x2200, TOUCHATAG,   "ACS ACR122" },
   { 0x072F, 0x90CC, TOUCHATAG,   "Touchatag" },
 };
 
@@ -650,21 +661,25 @@ read:
       offset++;
 
       len = abtRxBuf[offset++];
-      if (len != 2) {
-        log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Wrong reply");
-        pnd->last_error = NFC_EIO;
-        return pnd->last_error;
-      }
-      if (abtRxBuf[10] != SW1_More_Data_Available) {
-        if ((abtRxBuf[10] == SW1_Warning_with_NV_changed) && (abtRxBuf[11] == PN53x_Specific_Application_Level_Error_Code)) {
-          log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "PN532 has detected an error at the application level");
-        } else {
-          log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unexpected Status Word (SW1: %02x SW2: %02x)", abtRxBuf[10], abtRxBuf[11]);
+      if (!((len > 1) && (abtRxBuf[10] == 0xd5))) { // In case we didn't get an immediate answer:
+        if (len != 2) {
+          log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Wrong reply");
+          pnd->last_error = NFC_EIO;
+          return pnd->last_error;
         }
-        pnd->last_error = NFC_EIO;
-        return pnd->last_error;
+        if (abtRxBuf[10] != SW1_More_Data_Available) {
+          if ((abtRxBuf[10] == SW1_Warning_with_NV_changed) && (abtRxBuf[11] == PN53x_Specific_Application_Level_Error_Code)) {
+            log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "PN532 has detected an error at the application level");
+          } else if ((abtRxBuf[10] == SW1_Warning_with_NV_changed) && (abtRxBuf[11] == 0x00)) {
+            log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "PN532 didn't reply");
+          } else {
+            log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unexpected Status Word (SW1: %02x SW2: %02x)", abtRxBuf[10], abtRxBuf[11]);
+          }
+          pnd->last_error = NFC_EIO;
+          return pnd->last_error;
+        }
+        acr122_usb_send_apdu(pnd, APDU_GetAdditionnalData, 0x00, 0x00, NULL, 0, abtRxBuf[11], abtRxBuf, sizeof(abtRxBuf));
       }
-      acr122_usb_send_apdu(pnd, APDU_GetAdditionnalData, 0x00, 0x00, NULL, 0, abtRxBuf[11], abtRxBuf, sizeof(abtRxBuf));
       offset = 0;
       break;
     case ACR122:
