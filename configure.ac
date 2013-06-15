@@ -22,6 +22,7 @@ AC_LANG([C])
 AC_PROG_CC
 AC_PROG_MAKE_SET
 
+WIN32=0
 WITH_POSIX_ONLY_EXAMPLES=1
 # Libtool
 LT_INIT
@@ -30,13 +31,15 @@ case "$host" in
     AC_MSG_RESULT([Fixing libtool for -rpath problems.])
     sed -i -r 's/(hardcode_into_libs)=.*$/\1=no/' libtool
   ;;
-  *-pc-mingw32msvc)
+  *-mingw32*)
     WITH_POSIX_ONLY_EXAMPLES=0
     AC_MSG_RESULT([Disable extended examples due to target Windows system.])
     # Undefine __STRICT_ANSI__ to allow to use strdup, putenv, etc. without warnings
     CFLAGS="$CFLAGS -U__STRICT_ANSI__"
+    WIN32=1
    ;;
 esac
+AM_CONDITIONAL(WIN32, [test "$WIN32" = "1"])
 AM_CONDITIONAL(POSIX_ONLY_EXAMPLES_ENABLED, [test "$WITH_POSIX_ONLY_EXAMPLES" = "1"])
 
 PKG_PROG_PKG_CONFIG
@@ -66,6 +69,14 @@ AC_TYPE_INT16_T
 AC_TYPE_INT32_T
 AC_TYPE_OFF_T
 
+if test "$WIN32" = "1"
+then
+  CFLAGS="$CFLAGS -I`pwd` -I`pwd`/contrib/win32"
+  # act as if we were cmake
+  CFLAGS="$CFLAGS -D_WINDLL"
+  # libtool generated source files seem not to be mingw-aware, so add _MSC_VER
+  CFLAGS="$CFLAGS -D_MSC_VER"
+fi
 LIBNFC_CFLAGS='-I$(top_srcdir)/libnfc -I$(top_builddir)/include -I$(top_srcdir)/include'
 AC_SUBST(LIBNFC_CFLAGS)
 

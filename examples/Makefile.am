@@ -28,61 +28,61 @@ AM_CPPFLAGS = $(all_includes) $(LIBNFC_CFLAGS)
 AM_CFLAGS = -I$(top_srcdir)/libnfc -I$(top_srcdir)
 
 nfc_poll_SOURCES = nfc-poll.c
-nfc_poll_LDADD = $(top_builddir)/libnfc/libnfc.la \
-		 $(top_builddir)/utils/libnfcutils.la
+nfc_poll_LDADD = $(top_builddir)/utils/libnfcutils.la \
+		 $(top_builddir)/libnfc/libnfc.la
 
 nfc_anticol_SOURCES = nfc-anticol.c
-nfc_anticol_LDADD = $(top_builddir)/libnfc/libnfc.la \
-		    $(top_builddir)/utils/libnfcutils.la
+nfc_anticol_LDADD = $(top_builddir)/utils/libnfcutils.la \
+		    $(top_builddir)/libnfc/libnfc.la
 
 nfc_relay_SOURCES = nfc-relay.c
-nfc_relay_LDADD = $(top_builddir)/libnfc/libnfc.la \
-		  $(top_builddir)/utils/libnfcutils.la
+nfc_relay_LDADD = $(top_builddir)/utils/libnfcutils.la \
+		  $(top_builddir)/libnfc/libnfc.la
 
 nfc_emulate_forum_tag2_SOURCES = nfc-emulate-forum-tag2.c
-nfc_emulate_forum_tag2_LDADD = $(top_builddir)/libnfc/libnfc.la \
-			$(top_builddir)/utils/libnfcutils.la
+nfc_emulate_forum_tag2_LDADD = $(top_builddir)/utils/libnfcutils.la \
+			$(top_builddir)/libnfc/libnfc.la
 
 nfc_emulate_tag_SOURCES = nfc-emulate-tag.c
-nfc_emulate_tag_LDADD = $(top_builddir)/libnfc/libnfc.la \
-			$(top_builddir)/utils/libnfcutils.la
+nfc_emulate_tag_LDADD = $(top_builddir)/utils/libnfcutils.la \
+			$(top_builddir)/libnfc/libnfc.la
 
 nfc_emulate_uid_SOURCES = nfc-emulate-uid.c
-nfc_emulate_uid_LDADD = $(top_builddir)/libnfc/libnfc.la \
-		        $(top_builddir)/utils/libnfcutils.la
+nfc_emulate_uid_LDADD = $(top_builddir)/utils/libnfcutils.la \
+		        $(top_builddir)/libnfc/libnfc.la
 
 nfc_dep_target_SOURCES = nfc-dep-target.c
-nfc_dep_target_LDADD = $(top_builddir)/libnfc/libnfc.la \
-		       $(top_builddir)/utils/libnfcutils.la
+nfc_dep_target_LDADD = $(top_builddir)/utils/libnfcutils.la \
+		       $(top_builddir)/libnfc/libnfc.la
 
 nfc_dep_initiator_SOURCES = nfc-dep-initiator.c
-nfc_dep_initiator_LDADD = $(top_builddir)/libnfc/libnfc.la \
-			  $(top_builddir)/utils/libnfcutils.la
+nfc_dep_initiator_LDADD = $(top_builddir)/utils/libnfcutils.la \
+			  $(top_builddir)/libnfc/libnfc.la
 
 nfc_mfsetuid_SOURCES = nfc-mfsetuid.c
-nfc_mfsetuid_LDADD = $(top_builddir)/libnfc/libnfc.la \
-			  $(top_builddir)/utils/libnfcutils.la
+nfc_mfsetuid_LDADD = $(top_builddir)/utils/libnfcutils.la \
+			  $(top_builddir)/libnfc/libnfc.la
 
 pn53x_diagnose_SOURCES = pn53x-diagnose.c
-pn53x_diagnose_LDADD = $(top_builddir)/libnfc/libnfc.la \
-		       $(top_builddir)/utils/libnfcutils.la
+pn53x_diagnose_LDADD = $(top_builddir)/utils/libnfcutils.la \
+		       $(top_builddir)/libnfc/libnfc.la
 
 pn53x_sam_SOURCES = pn53x-sam.c
-pn53x_sam_LDADD = $(top_builddir)/libnfc/libnfc.la \
-		  $(top_builddir)/utils/libnfcutils.la
+pn53x_sam_LDADD = $(top_builddir)/utils/libnfcutils.la \
+		  $(top_builddir)/libnfc/libnfc.la
 
 pn53x_tamashell_SOURCES = pn53x-tamashell.c
-pn53x_tamashell_LDADD = $(top_builddir)/libnfc/libnfc.la \
-		        $(top_builddir)/utils/libnfcutils.la
+pn53x_tamashell_LDADD = $(top_builddir)/utils/libnfcutils.la \
+		        $(top_builddir)/libnfc/libnfc.la
 pn53x_tamashell_LDFLAGS = @READLINE_LIBS@
 
 quick_start_example1_SOURCES = doc/quick_start_example1.c
-quick_start_example1_LDADD =  $(top_builddir)/libnfc/libnfc.la \
-		  $(top_builddir)/utils/libnfcutils.la
+quick_start_example1_LDADD =  $(top_builddir)/utils/libnfcutils.la \
+		  $(top_builddir)/libnfc/libnfc.la
 
 quick_start_example2_SOURCES = doc/quick_start_example2.c
-quick_start_example2_LDADD =  $(top_builddir)/libnfc/libnfc.la \
-		  $(top_builddir)/utils/libnfcutils.la
+quick_start_example2_LDADD =  $(top_builddir)/utils/libnfcutils.la \
+		  $(top_builddir)/libnfc/libnfc.la
 
 
 dist_man_MANS = \

@@ -198,11 +198,12 @@ acr122s_send_frame(nfc_device *pnd, uint8_t *frame, int timeout)
   uint8_t positive_ack[4] = { STX, 0, 0, ETX };
   serial_port port = DRIVER_DATA(pnd)->port;
   int ret;
-  void *abort_p;
 
 #ifndef WIN32
+  void *abort_p;
   abort_p = &(DRIVER_DATA(pnd)->abort_fds[1]);
 #else
+  volatile void *abort_p;
   abort_p = &(DRIVER_DATA(pnd)->abort_flag);
 #endif
 

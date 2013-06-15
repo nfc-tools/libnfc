@@ -1,0 +1,1 @@
+../contrib/win32/libnfc/log-internal.c

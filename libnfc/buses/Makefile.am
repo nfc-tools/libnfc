@@ -16,11 +16,16 @@ endif
 EXTRA_DIST += spi.c spi.h
 
 if UART_ENABLED
-  libnfcbuses_la_SOURCES += uart.c uart.h
+if WIN32
+  libnfcbuses_la_SOURCES += uart-win32.c
+else
+  libnfcbuses_la_SOURCES += uart.c
+endif
+  libnfcbuses_la_SOURCES += uart.h
   libnfcbuses_la_CFLAGS +=
   libnfcbuses_la_LIBADD +=
 endif
-EXTRA_DIST += uart.c uart.h
+EXTRA_DIST += uart.c uart.h uart-win32.c
 
 if LIBUSB_ENABLED
   libnfcbuses_la_SOURCES += usbbus.c usbbus.h
