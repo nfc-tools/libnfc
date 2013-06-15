@@ -601,8 +601,8 @@ pn532_spi_send(nfc_device *pnd, const uint8_t *pbtData, const size_t szData, int
 
 
 
-  uint8_t abtRxBuf[6];
-  res = spi_send_receive(DRIVER_DATA(pnd)->port, &pn532_spi_cmd_dataread, 1, abtRxBuf, 6, true);
+  uint8_t abtRxBuf[PN53x_ACK_FRAME__LEN];
+  res = spi_send_receive(DRIVER_DATA(pnd)->port, &pn532_spi_cmd_dataread, 1, abtRxBuf, sizeof(abtRxBuf), true);
 
   if (res != 0) {
     log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "Unable to read ACK");

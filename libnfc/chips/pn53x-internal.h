@@ -112,10 +112,10 @@
  * Start bytes, packet length, length checksum, direction, packet checksum and postamble are overhead
  */
 // The TFI is considered part of the overhead
-#  define PN53x_NORMAL_FRAME__DATA_MAX_LEN		254
-#  define PN53x_NORMAL_FRAME__OVERHEAD			8
-#  define PN53x_EXTENDED_FRAME__DATA_MAX_LEN		264
-#  define PN53x_EXTENDED_FRAME__OVERHEAD		11
+#  define PN53x_NORMAL_FRAME__DATA_MAX_LEN              254
+#  define PN53x_NORMAL_FRAME__OVERHEAD                  8
+#  define PN53x_EXTENDED_FRAME__DATA_MAX_LEN            264
+#  define PN53x_EXTENDED_FRAME__OVERHEAD                11
 #  define PN53x_ACK_FRAME__LEN                          6
 
 typedef struct {

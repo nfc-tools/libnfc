@@ -337,7 +337,7 @@ pn532_i2c_send(nfc_device *pnd, const uint8_t *pbtData, const size_t szData, int
   uint8_t abtRxBuf[PN53x_ACK_FRAME__LEN];
 
   // Wait for the ACK frame
-  res = pn532_i2c_wait_rdyframe(pnd, abtRxBuf, PN53x_ACK_FRAME__LEN, timeout);
+  res = pn532_i2c_wait_rdyframe(pnd, abtRxBuf, sizeof(abtRxBuf), timeout);
   if (res < 0) {
     if (res == NFC_EOPABORTED) {
       // Send an ACK frame from host to abort the command.

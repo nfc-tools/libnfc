@@ -337,7 +337,7 @@ arygon_tama_send(nfc_device *pnd, const uint8_t *pbtData, const size_t szData, i
     return pnd->last_error;
   }
 
-  uint8_t abtRxBuf[6];
+  uint8_t abtRxBuf[PN53x_ACK_FRAME__LEN];
   if ((res = uart_receive(DRIVER_DATA(pnd)->port, abtRxBuf, sizeof(abtRxBuf), 0, timeout)) != 0) {
     log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Unable to read ACK");
     pnd->last_error = res;
