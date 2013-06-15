@@ -34,8 +34,6 @@
 
 #include <nfc/nfc-types.h>
 
-#  define PN53X_MAX_FRAME_LENGTH  265
-
 /* Reference to the I2C driver structure */
 extern const struct nfc_driver pn532_i2c_driver;
 

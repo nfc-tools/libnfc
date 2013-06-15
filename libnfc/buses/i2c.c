@@ -54,8 +54,6 @@
 #include <nfc/nfc.h>
 #include "nfc-internal.h"
 
-#define LINUX_I2C_DRIVER_NAME "linux_i2c"
-
 #define LOG_GROUP    NFC_LOG_GROUP_COM
 #define LOG_CATEGORY "libnfc.bus.i2c"
 
@@ -67,16 +65,23 @@ const char *i2c_ports_device_radix[] =
 #  endif
 
 
-struct i2c_device {
+struct i2c_device_unix {
   int fd;             // I2C device file descriptor
 };
 
-#define I2C_DATA( X ) ((struct i2c_device *) X)
+#define I2C_DATA( X ) ((struct i2c_device_unix *) X)
 
+/**
+ * @brief Open an I2C device
+ *
+ * @param pcI2C_busName I2C bus device name
+ * @param devAddr address of the I2C device on the bus
+ * @return pointer to the I2C device structure, or INVALID_I2C_BUS, INVALID_I2C_ADDRESS error codes.
+ */
 i2c_device
 i2c_open(const char *pcI2C_busName, uint32_t devAddr)
 {
-  struct i2c_device *id = malloc(sizeof(struct i2c_device));
+  struct i2c_device_unix *id = malloc(sizeof(struct i2c_device_unix));
 
   if (id == 0)
     return INVALID_I2C_BUS ;
@@ -97,6 +102,11 @@ i2c_open(const char *pcI2C_busName, uint32_t devAddr)
   return id;
 }
 
+/**
+ * @brief Close the I2C device
+ *
+ * @param id I2C device to close.
+ */
 void
 i2c_close(const i2c_device id)
 {
@@ -109,22 +119,18 @@ i2c_close(const i2c_device id)
 /**
  * @brief Read a frame from the I2C device and copy data to \a pbtRx
  *
- * @param timeout Time out for data read  (in milliseconds). 0 for not timeout.
- * @return 0 on success, otherwise driver error code
+ * @param id I2C device.
+ * @param pbtRx pointer on buffer used to store data
+ * @param szRx length of the buffer
+ * @return length (in bytes) of read data, or driver error code  (negative value)
  */
-int
-i2c_read(i2c_device id, uint8_t *pbtRx, const size_t szRx, void *abort_p,
-         int timeout)
+ssize_t
+i2c_read(i2c_device id, uint8_t *pbtRx, const size_t szRx)
 {
-  int iAbortFd = abort_p ? *((int *) abort_p) : 0;
+  ssize_t res;
+  ssize_t recCount;
 
-  int res;
-  int done = 0;
-
-  struct timeval start_tv, cur_tv;
-  long long duration;
-
-  ssize_t recCount = read(I2C_DATA(id) ->fd, pbtRx, szRx);
+  recCount = read(I2C_DATA(id) ->fd, pbtRx, szRx);
 
   if (recCount < 0) {
     res = NFC_EIO;
@@ -141,11 +147,13 @@ i2c_read(i2c_device id, uint8_t *pbtRx, const size_t szRx, void *abort_p,
 /**
  * @brief Write a frame to I2C device containing \a pbtTx content
  *
- * @param timeout Time out for data read  (in milliseconds). 0 for not timeout.
- * @return 0 on success, otherwise a driver error is returned
+ * @param id I2C device.
+ * @param pbtTx pointer on buffer containing data
+ * @param szTx length of the buffer
+ * @return NFC_SUCCESS on success, otherwise driver error code
  */
 int
-i2c_write(i2c_device id, const uint8_t *pbtTx, const size_t szTx, int timeout)
+i2c_write(i2c_device id, const uint8_t *pbtTx, const size_t szTx)
 {
   LOG_HEX(LOG_GROUP, "TX", pbtTx, szTx);
 
@@ -154,15 +162,21 @@ i2c_write(i2c_device id, const uint8_t *pbtTx, const size_t szTx, int timeout)
 
   if ((const ssize_t) szTx == writeCount) {
     log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG,
-            "wrote %d bytes successfully.", szTx);
+            "wrote %d bytes successfully.", (int)szTx);
     return NFC_SUCCESS;
   } else {
     log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR,
-            "Error: wrote only %d bytes (%d expected).", writeCount, (int) szTx);
+            "Error: wrote only %d bytes (%d expected).", (int)writeCount, (int) szTx);
     return NFC_EIO;
   }
 }
 
+/**
+ * @brief Get the path of all I2C bus devices.
+ *
+ * @return array of strings defining the names of all I2C buses available. This array, and each string, are allocated
+ *     by this function and must be freed by caller.
+ */
 char **
 i2c_list_ports(void)
 {

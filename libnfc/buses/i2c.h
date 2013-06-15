@@ -42,8 +42,6 @@
 #  include <linux/i2c-dev.h>
 #  include <nfc/nfc-types.h>
 
-// extern const struct i2c_driver linux_i2c_driver;
-
 typedef void *i2c_device;
 #  define INVALID_I2C_BUS (void*)(~1)
 #  define INVALID_I2C_ADDRESS (void*)(~2)
@@ -52,9 +50,9 @@ i2c_device i2c_open(const char *pcI2C_busName, uint32_t devAddr);
 
 void       i2c_close(const i2c_device id);
 
-int        i2c_read(i2c_device id, uint8_t *pbtRx, const size_t szRx, void *abort_p, int timeout);
+ssize_t    i2c_read(i2c_device id, uint8_t *pbtRx, const size_t szRx);
 
-int        i2c_write(i2c_device id, const uint8_t *pbtTx, const size_t szTx, int timeout);
+int        i2c_write(i2c_device id, const uint8_t *pbtTx, const size_t szTx);
 
 char     **i2c_list_ports(void);
 

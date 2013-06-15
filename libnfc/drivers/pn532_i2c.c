@@ -95,7 +95,15 @@ static size_t pn532_i2c_scan(const nfc_context *context, nfc_connstring connstri
 
 #define DRIVER_DATA(pnd) ((struct pn532_i2c_data*)(pnd->driver_data))
 
-
+/**
+ * @brief Scan all available I2C buses to find PN532 devices.
+ *
+ * @param context NFC context.
+ * @param connstrings array of 'nfc_connstring' buffer  (allocated by caller). It is used to store the
+ *      connection info strings of all I2C PN532 devices found.
+ * @param connstrings_len length of the connstrings array.
+ * @return number of PN532 devices found on all I2C buses.
+ */
 static size_t
 pn532_i2c_scan(const nfc_context *context, nfc_connstring connstrings[], const size_t connstrings_len)
 {
@@ -110,7 +118,6 @@ pn532_i2c_scan(const nfc_context *context, nfc_connstring connstrings[], const s
     log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Trying to find PN532 device on I2C bus %s.", i2cPort);
 
     if ((id != INVALID_I2C_ADDRESS) && (id != INVALID_I2C_BUS)) {
-
       nfc_connstring connstring;
       snprintf(connstring, sizeof(nfc_connstring), "%s:%s", PN532_I2C_DRIVER_NAME, i2cPort);
       nfc_device *pnd = nfc_device_new(context, connstring);
@@ -169,6 +176,11 @@ pn532_i2c_scan(const nfc_context *context, nfc_connstring connstrings[], const s
   return device_found;
 }
 
+/**
+ * @brief Close I2C connection to the PN532 device.
+ *
+ * @param pnd pointer on the device to close.
+ */
 static void
 pn532_i2c_close(nfc_device *pnd)
 {
@@ -179,6 +191,13 @@ pn532_i2c_close(nfc_device *pnd)
   nfc_device_free(pnd);
 }
 
+/**
+ * @brief Open an I2C connection to the PN532 device.
+ *
+ * @param context NFC context.
+ * @param connstring connection info to the device  ( pn532_i2c:<i2c_devname> ).
+ * @return pointer to the device, or NULL in case of error.
+ */
 static nfc_device *
 pn532_i2c_open(const nfc_context *context, const nfc_connstring connstring)
 {
@@ -186,7 +205,6 @@ pn532_i2c_open(const nfc_context *context, const nfc_connstring connstring)
   i2c_device i2c_dev;
   nfc_device *pnd;
 
-  //  pn532_i2c:<i2c_device>
   int connstring_decode_level = connstring_decode(connstring, PN532_I2C_DRIVER_NAME, NULL, &i2c_devname, NULL);
 
   switch (connstring_decode_level) {
@@ -260,6 +278,16 @@ pn532_i2c_wakeup(nfc_device *pnd)
 }
 
 #define PN532_BUFFER_LEN (PN53x_EXTENDED_FRAME__DATA_MAX_LEN + PN53x_EXTENDED_FRAME__OVERHEAD)
+
+/**
+ * @brief Send data to the PN532 device.
+ *
+ * @param pnd pointer on the NFC device.
+ * @param pbtData buffer containing frame data.
+ * @param szData size of the buffer.
+ * @param timeout timeout before aborting the operation (in ms).
+ * @return NFC_SUCCESS if operation is successful, or error code.
+ */
 static int
 pn532_i2c_send(nfc_device *pnd, const uint8_t *pbtData, const size_t szData, int timeout)
 {
@@ -290,7 +318,7 @@ pn532_i2c_send(nfc_device *pnd, const uint8_t *pbtData, const size_t szData, int
       break;
   };
 
-  uint8_t  abtFrame[PN532_BUFFER_LEN] = { 0x00, 0x00, 0xff };       // Every packet must start with "00 00 ff"
+  uint8_t abtFrame[PN532_BUFFER_LEN] = { 0x00, 0x00, 0xff };       // Every packet must start with "00 00 ff"
   size_t szFrame = 0;
 
   if ((res = pn53x_build_frame(abtFrame, &szFrame, pbtData, szData)) < 0) {
@@ -298,7 +326,7 @@ pn532_i2c_send(nfc_device *pnd, const uint8_t *pbtData, const size_t szData, int
     return pnd->last_error;
   }
 
-  res = i2c_write(DRIVER_DATA(pnd)->dev, abtFrame, szFrame, timeout);
+  res = i2c_write(DRIVER_DATA(pnd)->dev, abtFrame, szFrame);
 
   if (res < 0) {
     log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Unable to transmit data. (TX)");
@@ -306,12 +334,15 @@ pn532_i2c_send(nfc_device *pnd, const uint8_t *pbtData, const size_t szData, int
     return pnd->last_error;
   }
 
-  uint8_t abtRxBuf[6];
+  uint8_t abtRxBuf[PN53x_ACK_FRAME__LEN];
 
   // Wait for the ACK frame
-  res = pn532_i2c_wait_rdyframe(pnd, abtRxBuf, 6, timeout);
+  res = pn532_i2c_wait_rdyframe(pnd, abtRxBuf, PN53x_ACK_FRAME__LEN, timeout);
   if (res < 0) {
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "Unable to read ACK");
+    if (res == NFC_EOPABORTED) {
+      // Send an ACK frame from host to abort the command.
+      pn532_i2c_ack(pnd);
+    }
     pnd->last_error = res;
     return pnd->last_error;
   }
@@ -324,10 +355,16 @@ pn532_i2c_send(nfc_device *pnd, const uint8_t *pbtData, const size_t szData, int
   return NFC_SUCCESS;
 }
 
-// pbtData pointer on buffer used to store data
-// szDataLen Length of buffer
-//
-// Return: length (in bytes) of the actual data
+/**
+ * @brief Read data from the PN532 device until getting a frame with RDY bit set
+ *
+ * @param pnd pointer on the NFC device.
+ * @param pbtData buffer used to store the received frame data.
+ * @param szDataLen allocated size of buffer.
+ * @param timeout timeout delay before aborting the operation (in ms). Use 0 for no timeout.
+ * @return length (in bytes) of the received frame, or NFC_ETIMEOUT if timeout delay has expired,
+ *         NFC_EOPABORTED if operation has been aborted, NFC_EIO in case of IO failure
+ */
 static int
 pn532_i2c_wait_rdyframe(nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, int timeout)
 {
@@ -337,29 +374,27 @@ pn532_i2c_wait_rdyframe(nfc_device *pnd, uint8_t *pbtData, const size_t szDataLe
   struct timeval start_tv, cur_tv;
   long long duration;
 
-  bool *abort_p = NULL;
-
-  /* Actual response frame includes a RDY byte */
-  uint8_t *i2cRx = malloc(szDataLen + 1);
-
-  if (NULL == i2cRx) {
-    perror("malloc");
-    return NFC_ESOFT;
-  }
+  // Actual I2C response frame includes an additional status byte,
+  // so we use a temporary buffer to read the I2C frame
+  uint8_t i2cRx[PN53x_EXTENDED_FRAME__DATA_MAX_LEN + 1];
 
   if (timeout > 0) {
+    // If a timeout is specified, get current timestamp
     gettimeofday(&start_tv, NULL);
   }
 
   do {
-    /* Wait a little bit before reading */
+    // Wait a little bit before reading
     nanosleep(&rdyDelay, (struct timespec *) NULL);
 
-    int recCount = i2c_read(DRIVER_DATA(pnd)->dev, i2cRx, szDataLen + 1, abort_p, timeout);
+    int recCount = i2c_read(DRIVER_DATA(pnd)->dev, i2cRx, szDataLen + 1);
 
     if (DRIVER_DATA(pnd)->abort_flag) {
-      /* Reset abort flag */
+      // Reset abort flag
       DRIVER_DATA(pnd)->abort_flag = false;
+
+      log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG,
+              "Wait for a READY frame has been aborted.");
       return NFC_EOPABORTED;
     }
 
@@ -385,10 +420,10 @@ pn532_i2c_wait_rdyframe(nfc_device *pnd, uint8_t *pbtData, const size_t szDataLe
 
           if (duration / 1000 > timeout) {
             res = NFC_ETIMEOUT;
-            done = 1;
+            done = true;
 
             log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG,
-                    "timeout reached with no RDY frame.");
+                    "timeout reached with no READY frame.");
           }
         }
       }
@@ -398,15 +433,30 @@ pn532_i2c_wait_rdyframe(nfc_device *pnd, uint8_t *pbtData, const size_t szDataLe
   return res;
 }
 
+/**
+ * @brief Read a response frame from the PN532 device.
+ *
+ * @param pnd pointer on the NFC device.
+ * @param pbtData buffer used to store the response frame data.
+ * @param szDataLen allocated size of buffer.
+ * @param timeout timeout delay before aborting the operation (in ms). Use 0 for no timeout.
+ * @return length (in bytes) of the response, or NFC_ETIMEOUT if timeout delay has expired,
+ *         NFC_EOPABORTED if operation has been aborted, NFC_EIO in case of IO failure
+ */
 static int
 pn532_i2c_receive(nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, int timeout)
 {
-  uint8_t frameBuf[PN53X_MAX_FRAME_LENGTH];
+  uint8_t frameBuf[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
   int frameLength;
   int TFI_idx;
   size_t len;
 
   frameLength = pn532_i2c_wait_rdyframe(pnd, frameBuf, sizeof(frameBuf), timeout);
+
+  if (NFC_EOPABORTED == pnd->last_error) {
+    return pn532_i2c_ack(pnd);
+  }
+
   if (frameLength < 0) {
     goto error;
   }
@@ -497,18 +547,24 @@ error:
   return pnd->last_error;
 }
 
+/**
+ * @brief Send an ACK frame to the PN532 device.
+ *
+ * @param pnd pointer on the NFC device.
+ * @return NFC_SUCCESS on success, otherwise an error code
+ */
 int
 pn532_i2c_ack(nfc_device *pnd)
 {
-  if (POWERDOWN == CHIP_DATA(pnd)->power_mode) {
-    int res = 0;
-    if ((res = pn532_i2c_wakeup(pnd)) < 0) {
-      return res;
-    }
-  }
-  return i2c_write(DRIVER_DATA(pnd)->dev, pn53x_ack_frame, sizeof(pn53x_ack_frame),  0);
+  return i2c_write(DRIVER_DATA(pnd)->dev, pn53x_ack_frame, sizeof(pn53x_ack_frame));
 }
 
+/**
+ * @brief Abort any pending operation
+ *
+ * @param pnd pointer on the NFC device.
+ * @return NFC_SUCCESS
+ */
 static int
 pn532_i2c_abort_command(nfc_device *pnd)
 {
