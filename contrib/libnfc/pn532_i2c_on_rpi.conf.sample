@@ -2,5 +2,11 @@
 ## Note: to use SPI port on R-Pi, you have to load kernel modules i2c-bcm2708 and i2c-dev:
 ## Edit /etc/modprobe.d/raspi-blacklist.conf and comment: #blacklist i2c-bcm2708
 ## Edit /etc/modules and add a new line: i2c-dev
-name = "PN532 board via SPI"
+name = "PN532 board via I2C"
 connstring = pn532_i2c:/dev/i2c-0
+
+# Note: If you have an R-Pi revision 2.0, the I2C bus #1 is now routed to connector P1
+# (instead of the I2C bus #0 routed on same connector on initial board revision), so
+# the configuration to use would probably be:
+
+#   connstring = pn532_i2c:/dev/i2c-1
