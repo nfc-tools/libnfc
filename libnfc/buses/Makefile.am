@@ -3,7 +3,7 @@ AM_CPPFLAGS = $(all_includes) $(LIBNFC_CFLAGS)
 
 noinst_LTLIBRARIES = libnfcbuses.la
 
-libnfcbuses_la_SOURCES = 
+libnfcbuses_la_SOURCES = empty.c
 libnfcbuses_la_CFLAGS = -I$(top_srcdir)/libnfc
 libnfcbuses_la_LIBADD = 
 EXTRA_DIST =
