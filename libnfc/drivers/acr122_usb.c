@@ -505,13 +505,15 @@ uint32_t htole32(uint32_t u32);
 uint32_t
 htole32(uint32_t u32)
 {
-  uint8_t u8[4];
+  union {
+    uint8_t arr[4];
+    uint32_t u32;
+  } u;
   for (int i = 0; i < 4; i++) {
-    u8[i] = (u32 & 0xff);
+    u.arr[i] = (u32 & 0xff);
     u32 >>= 8;
   }
-  uint32_t *pu32 = (uint32_t *)u8;
-  return *pu32;
+  return u.u32;
 }
 
 #endif /* !defined(htole32) */
