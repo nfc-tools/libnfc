@@ -782,15 +782,11 @@ acr122_usb_init(nfc_device *pnd)
     return res;
 
   // Power On ICC
-  struct ccid_header ccid_frame = {
-    .bMessageType = PC_to_RDR_IccPowerOn,
-    .dwLength = 0,
-    .bSlot = 0,
-    .bSeq = 0,
-    .bMessageSpecific = { 0x01, 0x00, 0x00 },
+  uint8_t ccid_frame[] = {
+    PC_to_RDR_IccPowerOn, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00
   };
 
-  if ((res = acr122_usb_bulk_write(DRIVER_DATA(pnd), (unsigned char *)&ccid_frame, sizeof(struct ccid_header), 1000)) < 0)
+  if ((res = acr122_usb_bulk_write(DRIVER_DATA(pnd), ccid_frame, sizeof(struct ccid_header), 1000)) < 0)
     return res;
   if ((res = acr122_usb_bulk_read(DRIVER_DATA(pnd), abtRxBuf, sizeof(abtRxBuf), 1000)) < 0)
     return res;
