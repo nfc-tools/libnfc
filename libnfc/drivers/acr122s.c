@@ -308,6 +308,8 @@ acr122s_build_frame(nfc_device *pnd,
     return false;
   if (data_size + should_prefix > 255)
     return false;
+  if (data == NULL)
+    return false;
 
   struct xfr_block_req *req = (struct xfr_block_req *) &frame[1];
   req->message_type = XFR_BLOCK_REQ_MSG;

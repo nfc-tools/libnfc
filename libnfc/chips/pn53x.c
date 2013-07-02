@@ -3127,6 +3127,9 @@ pn53x_get_information_about(nfc_device *pnd, char **pbuf)
 void *
 pn53x_current_target_new(const struct nfc_device *pnd, const nfc_target *pnt)
 {
+  if (pnt == NULL) {
+    return NULL;
+  }
   // Keep the current nfc_target for further commands
   if (CHIP_DATA(pnd)->current_target) {
     free(CHIP_DATA(pnd)->current_target);
