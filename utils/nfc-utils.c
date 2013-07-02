@@ -45,7 +45,7 @@ uint8_t
 oddparity(const uint8_t bt)
 {
   // cf http://graphics.stanford.edu/~seander/bithacks.html#ParityParallel
-  return (0x9669 >> ((bt ^(bt >> 4)) & 0xF)) & 1;
+  return (0x9669 >> ((bt ^ (bt >> 4)) & 0xF)) & 1;
 }
 
 void

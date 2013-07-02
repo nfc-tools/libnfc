@@ -51,9 +51,9 @@ iso14443a_crc(uint8_t *pbtData, size_t szLen, uint8_t *pbtCrc)
 
   do {
     bt = *pbtData++;
-    bt = (bt ^(uint8_t)(wCrc & 0x00FF));
-    bt = (bt ^(bt << 4));
-    wCrc = (wCrc >> 8) ^((uint32_t) bt << 8) ^((uint32_t) bt << 3) ^((uint32_t) bt >> 4);
+    bt = (bt ^ (uint8_t)(wCrc & 0x00FF));
+    bt = (bt ^ (bt << 4));
+    wCrc = (wCrc >> 8) ^ ((uint32_t) bt << 8) ^ ((uint32_t) bt << 3) ^ ((uint32_t) bt >> 4);
   } while (--szLen);
 
   *pbtCrc++ = (uint8_t)(wCrc & 0xFF);

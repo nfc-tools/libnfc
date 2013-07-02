@@ -1466,10 +1466,10 @@ static uint32_t __pn53x_get_timer(struct nfc_device *pnd, const uint8_t last_cmd
       u32cycles -= (5 * 128);
     }
     // Correction depending on last parity bit sent
-    parity = (last_cmd_byte >> 7) ^((last_cmd_byte >> 6) & 1) ^
-             ((last_cmd_byte >> 5) & 1) ^((last_cmd_byte >> 4) & 1) ^
-             ((last_cmd_byte >> 3) & 1) ^((last_cmd_byte >> 2) & 1) ^
-             ((last_cmd_byte >> 1) & 1) ^(last_cmd_byte & 1);
+    parity = (last_cmd_byte >> 7) ^ ((last_cmd_byte >> 6) & 1) ^
+             ((last_cmd_byte >> 5) & 1) ^ ((last_cmd_byte >> 4) & 1) ^
+             ((last_cmd_byte >> 3) & 1) ^ ((last_cmd_byte >> 2) & 1) ^
+             ((last_cmd_byte >> 1) & 1) ^ (last_cmd_byte & 1);
     parity = parity ? 0 : 1;
     // When sent ...YY (cmd ends with logical 1, so when last parity bit is 1):
     if (parity) {
@@ -2917,7 +2917,7 @@ pn53x_nm_to_ptt(const nfc_modulation nm)
 }
 
 int
-pn53x_get_supported_modulation(nfc_device *pnd, const nfc_mode mode, const nfc_modulation_type * *const supported_mt)
+pn53x_get_supported_modulation(nfc_device *pnd, const nfc_mode mode, const nfc_modulation_type **const supported_mt)
 {
   switch (mode) {
     case N_TARGET:
@@ -2933,7 +2933,7 @@ pn53x_get_supported_modulation(nfc_device *pnd, const nfc_mode mode, const nfc_m
 }
 
 int
-pn53x_get_supported_baud_rate(nfc_device *pnd, const nfc_modulation_type nmt, const nfc_baud_rate * *const supported_br)
+pn53x_get_supported_baud_rate(nfc_device *pnd, const nfc_modulation_type nmt, const nfc_baud_rate **const supported_br)
 {
   switch (nmt) {
     case NMT_FELICA:
