@@ -3170,7 +3170,7 @@ pn53x_current_target_is(const struct nfc_device *pnd, const nfc_target *pnt)
   if ((CHIP_DATA(pnd)->current_target == NULL) || (pnt == NULL)) {
     return false;
   }
-  // XXX It will not work if t is not binary-equal to current target
+  // XXX It will not work if it is not binary-equal to current target
   if (0 != memcmp(pnt, CHIP_DATA(pnd)->current_target, sizeof(nfc_target))) {
     return false;
   }
