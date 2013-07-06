@@ -98,22 +98,12 @@ main(int argc, const char *argv[])
   pnd = nfc_open(context, NULL);
 #endif
 
-  /* If specific device is wanted, i.e. an ARYGON device on /dev/ttyUSB0 */
+  /* Use connection string if specific device is wanted,
+   * i.e. PN532 UART device on /dev/ttyUSB1 */
 #if 0
-  nfc_device_desc_t ndd;
-  ndd.pcDriver = "ARYGON";
-  ndd.pcPort = "/dev/ttyUSB0";
-  ndd.uiSpeed = 115200;
-  pnd = nfc_open(context, &ndd);
+  pnd = nfc_open(context, "pn532_uart:/dev/ttyUSB1");
 #endif
 
-  /* If specific device is wanted, i.e. a SCL3711 on USB */
-#if 0
-  nfc_device_desc_t ndd;
-  ndd.pcDriver = "PN533_USB";
-  strcpy(ndd.acDevice, "SCM Micro / SCL3711-NFC&RW");
-  pnd = nfc_open(context, &ndd);
-#endif
   nfc_connstring connstrings[MAX_DEVICE_COUNT];
   size_t szDeviceFound = nfc_list_devices(context, connstrings, MAX_DEVICE_COUNT);
 
