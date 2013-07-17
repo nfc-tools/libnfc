@@ -7,6 +7,7 @@
  * Copyright (C) 2010-2012 Romain Tarti?re
  * Copyright (C) 2010-2013 Philippe Teuwen
  * Copyright (C) 2012-2013 Ludovic Rousseau
+ * See AUTHORS file for a more comprehensive list of contributors.
  * Additional contributors of this file:
  * Copyright (C) 2013      Laurent Latil
  *
