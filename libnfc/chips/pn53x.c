@@ -1605,6 +1605,13 @@ pn53x_initiator_transceive_bytes_timed(struct nfc_device *pnd, const uint8_t *pb
     return pnd->last_error;
   }
 
+  uint8_t txmode = 0;
+  if (pnd->bCrc) { // check if we're in TypeA or TypeB mode to compute right CRC later
+    if ((res = pn53x_read_register(pnd, PN53X_REG_CIU_TxMode, &txmode)) < 0) {
+      return res;
+    }
+  }
+
   __pn53x_init_timer(pnd, *cycles);
 
   // Once timer is started, we cannot use Tama commands anymore.
@@ -1689,7 +1696,12 @@ pn53x_initiator_transceive_bytes_timed(struct nfc_device *pnd, const uint8_t *pb
     if (!pbtTxRaw)
       return NFC_ESOFT;
     memcpy(pbtTxRaw, pbtTx, szTx);
-    iso14443a_crc_append(pbtTxRaw, szTx);
+    if ((txmode & SYMBOL_TX_FRAMING) == 0x00)
+      iso14443a_crc_append(pbtTxRaw, szTx);
+    else if ((txmode & SYMBOL_TX_FRAMING) == 0x03)
+      iso14443b_crc_append(pbtTxRaw, szTx);
+    else
+      log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unsupported framing type %02X, cannot adjust CRC cycles", txmode & SYMBOL_TX_FRAMING);
     *cycles = __pn53x_get_timer(pnd, pbtTxRaw[szTx + 1]);
     free(pbtTxRaw);
   } else {
