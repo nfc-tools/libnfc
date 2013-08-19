@@ -135,6 +135,8 @@ NFC_EXPORT int nfc_device_set_property_bool(nfc_device *pnd, const nfc_property 
 /* Misc. functions */
 NFC_EXPORT void iso14443a_crc(uint8_t *pbtData, size_t szLen, uint8_t *pbtCrc);
 NFC_EXPORT void iso14443a_crc_append(uint8_t *pbtData, size_t szLen);
+NFC_EXPORT void iso14443b_crc(uint8_t *pbtData, size_t szLen, uint8_t *pbtCrc);
+NFC_EXPORT void iso14443b_crc_append(uint8_t *pbtData, size_t szLen);
 NFC_EXPORT uint8_t *iso14443a_locate_historical_bytes(uint8_t *pbtAts, size_t szAts, size_t *pszTk);
 
 NFC_EXPORT void nfc_free(void *p);

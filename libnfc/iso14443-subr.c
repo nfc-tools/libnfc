@@ -41,7 +41,7 @@
 
 
 /**
- * @brief CRC
+ * @brief CRC_A
  *
  */
 void
@@ -62,13 +62,44 @@ iso14443a_crc(uint8_t *pbtData, size_t szLen, uint8_t *pbtCrc)
 }
 
 /**
- * @brief Append CRC
+ * @brief Append CRC_A
  *
  */
 void
 iso14443a_crc_append(uint8_t *pbtData, size_t szLen)
 {
   iso14443a_crc(pbtData, szLen, pbtData + szLen);
+}
+
+/**
+ * @brief CRC_B
+ *
+ */
+void
+iso14443b_crc(uint8_t *pbtData, size_t szLen, uint8_t *pbtCrc)
+{
+  uint8_t  bt;
+  uint32_t wCrc = 0xFFFF;
+
+  do {
+    bt = *pbtData++;
+    bt = (bt ^ (uint8_t)(wCrc & 0x00FF));
+    bt = (bt ^ (bt << 4));
+    wCrc = (wCrc >> 8) ^ ((uint32_t) bt << 8) ^ ((uint32_t) bt << 3) ^ ((uint32_t) bt >> 4);
+  } while (--szLen);
+  wCrc = ~wCrc;
+  *pbtCrc++ = (uint8_t)(wCrc & 0xFF);
+  *pbtCrc = (uint8_t)((wCrc >> 8) & 0xFF);
+}
+
+/**
+ * @brief Append CRC_B
+ *
+ */
+void
+iso14443b_crc_append(uint8_t *pbtData, size_t szLen)
+{
+  iso14443b_crc(pbtData, szLen, pbtData + szLen);
 }
 
 /**
