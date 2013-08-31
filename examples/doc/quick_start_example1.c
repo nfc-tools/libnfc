@@ -49,7 +49,7 @@ main(int argc, const char *argv[])
   pnd = nfc_open(context, NULL);
 
   if (pnd == NULL) {
-    printf("ERROR: %s", "Unable to open NFC device.");
+    printf("ERROR: %s\n", "Unable to open NFC device.");
     exit(EXIT_FAILURE);
   }
   // Set opened NFC device to initiator mode
