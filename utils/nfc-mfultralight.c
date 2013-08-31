@@ -9,6 +9,7 @@
  * Copyright (C) 2012-2013 Ludovic Rousseau
  * See AUTHORS file for a more comprehensive list of contributors.
  * Additional contributors of this file:
+ * Copyright (C) 2013      Adam Laurie
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -112,11 +113,12 @@ write_card(void)
   uint32_t uiBlock = 0;
   bool    bFailure = false;
   uint32_t uiWritenPages = 0;
-  uint32_t uiSkippedPages;
+  uint32_t uiSkippedPages = 0;
 
   char    buffer[BUFSIZ];
   bool    write_otp;
   bool    write_lock;
+  bool    write_uid;
 
   printf("Write OTP bytes ? [yN] ");
   if (!fgets(buffer, BUFSIZ, stdin)) {
@@ -128,13 +130,20 @@ write_card(void)
     ERR("Unable to read standard input.");
   }
   write_lock = ((buffer[0] == 'y') || (buffer[0] == 'Y'));
+  printf("Write UID bytes (only for special writeable UID cards) ? [yN] ");
+  if (!fgets(buffer, BUFSIZ, stdin)) {
+    ERR("Unable to read standard input.");
+  }
+  write_uid = ((buffer[0] == 'y') || (buffer[0] == 'Y'));
 
   printf("Writing %d pages |", uiBlocks + 1);
-  /* We need to skip 2 first pages. */
-  printf("ss");
-  uiSkippedPages = 2;
+  /* We may need to skip 2 first pages. */
+  if(!write_uid) {
+    printf("ss");
+    uiSkippedPages = 2;
+  }
 
-  for (int page = 0x2; page <= 0xF; page++) {
+  for (int page = uiSkippedPages; page <= 0xF; page++) {
     if ((page == 0x2) && (!write_lock)) {
       printf("s");
       uiSkippedPages++;
