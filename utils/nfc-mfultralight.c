@@ -138,7 +138,7 @@ write_card(void)
 
   printf("Writing %d pages |", uiBlocks + 1);
   /* We may need to skip 2 first pages. */
-  if(!write_uid) {
+  if (!write_uid) {
     printf("ss");
     uiSkippedPages = 2;
   }
