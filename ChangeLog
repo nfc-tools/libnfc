@@ -1,5 +1,5 @@
 Sep 03, 2013 - 1.7.0
------------
+--------------------
 
 Fixes:
  - pn53x: only create a current target when at least one have been found

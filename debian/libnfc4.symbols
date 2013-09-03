@@ -2,6 +2,8 @@ libnfc.so.4 libnfc4 #MINVER#
  iso14443a_crc@Base 1.7.0~rc2
  iso14443a_crc_append@Base 1.7.0~rc2
  iso14443a_locate_historical_bytes@Base 1.7.0~rc2
+ iso14443b_crc@Base 1.7.0
+ iso14443b_crc_append@Base 1.7.0
  nfc_abort_command@Base 1.7.0~rc2
  nfc_close@Base 1.7.0~rc2
  nfc_context_free@Base 1.7.0~rc2
