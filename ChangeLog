@@ -1,9 +1,11 @@
-TBD - 1.7.0
+Sep 03, 2013 - 1.7.0
 -----------
 
 Fixes:
  - pn53x: only create a current target when at least one have been found
  - pn532_uart: fix 'operation abort' feature with this driver
+ - pn532_uart: let more time to PN532 to wake-up, this fix some specific cases
+   where PN532 shown one of two runs (Thanks to Marcello Morena)
  - nfc-mfclassic: allow option f for read operation too
  - Avoid clash with system's htole32 if it exists
  - Include <stdlib.h>, required for getenv(3)
