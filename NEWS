@@ -4,6 +4,10 @@ Drivers:
 
   * New PN532 over I2C driver, see contrib/libnfc/pn532_i2c_on_rpi.conf.sample
 
+API Changes:
+
+  * New function iso14443b_crc_append()
+
 New in 1.7.0-rc7:
 
 Drivers:
