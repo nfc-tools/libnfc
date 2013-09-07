@@ -3,5 +3,5 @@
 # Compulsory line, this is a version 3 file
 version=3
 
-http://googlecode.debian.net/p/libnfc/libnfc-(.*)\.tar\.gz
-
+# https://wiki.debian.org/debian/watch
+http://code.google.com/p/libnfc/downloads/list .*/libnfc-(\d\S*)\.(?:zip|tgz|tbz|txz|(?:tar\.(?:gz|bz2|xz)))
