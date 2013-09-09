@@ -1,3 +1,11 @@
+TBD - 1.7.0.99~rc1
+------------------
+
+Fixes:
+
+Improvements:
+ - nfc-list: New option to choose which technologies to poll for
+
 Sep 03, 2013 - 1.7.0
 --------------------
 

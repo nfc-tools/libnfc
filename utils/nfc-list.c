@@ -61,8 +61,19 @@ static nfc_device *pnd;
 static void
 print_usage(const char *progname)
 {
-  printf("usage: %s [-v]\n", progname);
+  printf("usage: %s [-v] [-t X]\n", progname);
   printf("  -v\t verbose display\n");
+  printf("  -t X\t poll only for types according to bitfield X:\n");
+  printf("\t   1: ISO14443A\n");
+  printf("\t   2: Felica (212 kbps)\n");
+  printf("\t   4: Felica (424 kbps)\n");
+  printf("\t   8: ISO14443B\n");
+  printf("\t  16: ISO14443B'\n");
+  printf("\t  32: ISO14443B-2 ST SRx\n");
+  printf("\t  64: ISO14443B-2 ASK CTx\n");
+  printf("\t 128: Jewel\n");
+  printf("\tSo 255 (default) polls for all types.\n");
+  printf("\tNote that if 16, 32 or 64 then 8 is selected too.\n");
 }
 
 int
@@ -73,6 +84,8 @@ main(int argc, const char *argv[])
   size_t  i;
   bool verbose = false;
   int res = 0;
+  int mask = 0xff;
+  int arg;
 
   nfc_context *context;
   nfc_init(&context);
@@ -84,10 +97,27 @@ main(int argc, const char *argv[])
   // Display libnfc version
   acLibnfcVersion = nfc_version();
   printf("%s uses libnfc %s\n", argv[0], acLibnfcVersion);
-  if (argc != 1) {
-    if ((argc == 2) && (0 == strcmp("-v", argv[1]))) {
+
+  // Get commandline options
+  for (arg = 1; arg < argc; arg++) {
+    if (0 == strcmp(argv[arg], "-h")) {
+      print_usage(argv[0]);
+      exit(EXIT_SUCCESS);
+    } else if (0 == strcmp(argv[arg], "-v")) {
       verbose = true;
+    } else if ((0 == strcmp(argv[arg], "-t")) && (arg + 1 < argc)) {
+      arg++;
+      mask = atoi(argv[arg]);
+      if ((mask < 1) || (mask > 255)) {
+        ERR("%i is invalid value for type bitfield.", mask);
+        print_usage(argv[0]);
+        exit(EXIT_FAILURE);
+      }
+      // Force TypeB for all derivatives of B
+      if (mask & 0x70)
+        mask |= 0x08;
     } else {
+      ERR("%s is not supported option.", argv[arg]);
       print_usage(argv[0]);
       exit(EXIT_FAILURE);
     }
@@ -129,113 +159,130 @@ main(int argc, const char *argv[])
 
     nfc_modulation nm;
 
-    nm.nmt = NMT_ISO14443A;
-    nm.nbr = NBR_106;
-    // List ISO14443A targets
-    if ((res = nfc_initiator_list_passive_targets(pnd, nm, ant, MAX_TARGET_COUNT)) >= 0) {
-      int n;
-      if (verbose || (res > 0)) {
-        printf("%d ISO14443A passive target(s) found%s\n", res, (res == 0) ? ".\n" : ":");
-      }
-      for (n = 0; n < res; n++) {
-        print_nfc_target(&ant[n], verbose);
-        printf("\n");
-      }
-    }
-
-    nm.nmt = NMT_FELICA;
-    nm.nbr = NBR_212;
-    // List Felica tags
-    if ((res = nfc_initiator_list_passive_targets(pnd, nm, ant, MAX_TARGET_COUNT)) >= 0) {
-      int n;
-      if (verbose || (res > 0)) {
-        printf("%d Felica (212 kbps) passive target(s) found%s\n", res, (res == 0) ? ".\n" : ":");
-      }
-      for (n = 0; n < res; n++) {
-        print_nfc_target(&ant[n], verbose);
-        printf("\n");
+    if (mask & 0x1) {
+      nm.nmt = NMT_ISO14443A;
+      nm.nbr = NBR_106;
+      // List ISO14443A targets
+      if ((res = nfc_initiator_list_passive_targets(pnd, nm, ant, MAX_TARGET_COUNT)) >= 0) {
+        int n;
+        if (verbose || (res > 0)) {
+          printf("%d ISO14443A passive target(s) found%s\n", res, (res == 0) ? ".\n" : ":");
+        }
+        for (n = 0; n < res; n++) {
+          print_nfc_target(&ant[n], verbose);
+          printf("\n");
+        }
       }
     }
 
-    nm.nbr = NBR_424;
-    if ((res = nfc_initiator_list_passive_targets(pnd, nm, ant, MAX_TARGET_COUNT)) >= 0) {
-      int n;
-      if (verbose || (res > 0)) {
-        printf("%d Felica (424 kbps) passive target(s) found%s\n", res, (res == 0) ? ".\n" : ":");
-      }
-      for (n = 0; n < res; n++) {
-        print_nfc_target(&ant[n], verbose);
-        printf("\n");
-      }
-    }
-
-    nm.nmt = NMT_ISO14443B;
-    nm.nbr = NBR_106;
-    // List ISO14443B targets
-    if ((res = nfc_initiator_list_passive_targets(pnd, nm, ant, MAX_TARGET_COUNT)) >= 0) {
-      int n;
-      if (verbose || (res > 0)) {
-        printf("%d ISO14443B passive target(s) found%s\n", res, (res == 0) ? ".\n" : ":");
-      }
-      for (n = 0; n < res; n++) {
-        print_nfc_target(&ant[n], verbose);
-        printf("\n");
+    if (mask & 0x02) {
+      nm.nmt = NMT_FELICA;
+      nm.nbr = NBR_212;
+      // List Felica tags
+      if ((res = nfc_initiator_list_passive_targets(pnd, nm, ant, MAX_TARGET_COUNT)) >= 0) {
+        int n;
+        if (verbose || (res > 0)) {
+          printf("%d Felica (212 kbps) passive target(s) found%s\n", res, (res == 0) ? ".\n" : ":");
+        }
+        for (n = 0; n < res; n++) {
+          print_nfc_target(&ant[n], verbose);
+          printf("\n");
+        }
       }
     }
 
-    nm.nmt = NMT_ISO14443BI;
-    nm.nbr = NBR_106;
-    // List ISO14443B' targets
-    if ((res = nfc_initiator_list_passive_targets(pnd, nm, ant, MAX_TARGET_COUNT)) >= 0) {
-      int n;
-      if (verbose || (res > 0)) {
-        printf("%d ISO14443B' passive target(s) found%s\n", res, (res == 0) ? ".\n" : ":");
-      }
-      for (n = 0; n < res; n++) {
-        print_nfc_target(&ant[n], verbose);
-        printf("\n");
-      }
-    }
-
-    nm.nmt = NMT_ISO14443B2SR;
-    nm.nbr = NBR_106;
-    // List ISO14443B-2 ST SRx family targets
-    if ((res = nfc_initiator_list_passive_targets(pnd, nm, ant, MAX_TARGET_COUNT)) >= 0) {
-      int n;
-      if (verbose || (res > 0)) {
-        printf("%d ISO14443B-2 ST SRx passive target(s) found%s\n", res, (res == 0) ? ".\n" : ":");
-      }
-      for (n = 0; n < res; n++) {
-        print_nfc_target(&ant[n], verbose);
-        printf("\n");
+    if (mask & 0x04) {
+      nm.nmt = NMT_FELICA;
+      nm.nbr = NBR_424;
+      if ((res = nfc_initiator_list_passive_targets(pnd, nm, ant, MAX_TARGET_COUNT)) >= 0) {
+        int n;
+        if (verbose || (res > 0)) {
+          printf("%d Felica (424 kbps) passive target(s) found%s\n", res, (res == 0) ? ".\n" : ":");
+        }
+        for (n = 0; n < res; n++) {
+          print_nfc_target(&ant[n], verbose);
+          printf("\n");
+        }
       }
     }
 
-    nm.nmt = NMT_ISO14443B2CT;
-    nm.nbr = NBR_106;
-    // List ISO14443B-2 ASK CTx family targets
-    if ((res = nfc_initiator_list_passive_targets(pnd, nm, ant, MAX_TARGET_COUNT)) >= 0) {
-      int n;
-      if (verbose || (res > 0)) {
-        printf("%d ISO14443B-2 ASK CTx passive target(s) found%s\n", res, (res == 0) ? ".\n" : ":");
-      }
-      for (n = 0; n < res; n++) {
-        print_nfc_target(&ant[n], verbose);
-        printf("\n");
+    if (mask & 0x08) {
+      nm.nmt = NMT_ISO14443B;
+      nm.nbr = NBR_106;
+      // List ISO14443B targets
+      if ((res = nfc_initiator_list_passive_targets(pnd, nm, ant, MAX_TARGET_COUNT)) >= 0) {
+        int n;
+        if (verbose || (res > 0)) {
+          printf("%d ISO14443B passive target(s) found%s\n", res, (res == 0) ? ".\n" : ":");
+        }
+        for (n = 0; n < res; n++) {
+          print_nfc_target(&ant[n], verbose);
+          printf("\n");
+        }
       }
     }
 
-    nm.nmt = NMT_JEWEL;
-    nm.nbr = NBR_106;
-    // List Jewel targets
-    if ((res = nfc_initiator_list_passive_targets(pnd, nm, ant, MAX_TARGET_COUNT)) >= 0) {
-      int n;
-      if (verbose || (res > 0)) {
-        printf("%d Jewel passive target(s) found%s\n", res, (res == 0) ? ".\n" : ":");
+    if (mask & 0x10) {
+      nm.nmt = NMT_ISO14443BI;
+      nm.nbr = NBR_106;
+      // List ISO14443B' targets
+      if ((res = nfc_initiator_list_passive_targets(pnd, nm, ant, MAX_TARGET_COUNT)) >= 0) {
+        int n;
+        if (verbose || (res > 0)) {
+          printf("%d ISO14443B' passive target(s) found%s\n", res, (res == 0) ? ".\n" : ":");
+        }
+        for (n = 0; n < res; n++) {
+          print_nfc_target(&ant[n], verbose);
+          printf("\n");
+        }
       }
-      for (n = 0; n < res; n++) {
-        print_nfc_target(&ant[n], verbose);
-        printf("\n");
+    }
+
+    if (mask & 0x20) {
+      nm.nmt = NMT_ISO14443B2SR;
+      nm.nbr = NBR_106;
+      // List ISO14443B-2 ST SRx family targets
+      if ((res = nfc_initiator_list_passive_targets(pnd, nm, ant, MAX_TARGET_COUNT)) >= 0) {
+        int n;
+        if (verbose || (res > 0)) {
+          printf("%d ISO14443B-2 ST SRx passive target(s) found%s\n", res, (res == 0) ? ".\n" : ":");
+        }
+        for (n = 0; n < res; n++) {
+          print_nfc_target(&ant[n], verbose);
+          printf("\n");
+        }
+      }
+    }
+
+    if (mask & 0x40) {
+      nm.nmt = NMT_ISO14443B2CT;
+      nm.nbr = NBR_106;
+      // List ISO14443B-2 ASK CTx family targets
+      if ((res = nfc_initiator_list_passive_targets(pnd, nm, ant, MAX_TARGET_COUNT)) >= 0) {
+        int n;
+        if (verbose || (res > 0)) {
+          printf("%d ISO14443B-2 ASK CTx passive target(s) found%s\n", res, (res == 0) ? ".\n" : ":");
+        }
+        for (n = 0; n < res; n++) {
+          print_nfc_target(&ant[n], verbose);
+          printf("\n");
+        }
+      }
+    }
+
+    if (mask & 0x80) {
+      nm.nmt = NMT_JEWEL;
+      nm.nbr = NBR_106;
+      // List Jewel targets
+      if ((res = nfc_initiator_list_passive_targets(pnd, nm, ant, MAX_TARGET_COUNT)) >= 0) {
+        int n;
+        if (verbose || (res > 0)) {
+          printf("%d Jewel passive target(s) found%s\n", res, (res == 0) ? ".\n" : ":");
+        }
+        for (n = 0; n < res; n++) {
+          print_nfc_target(&ant[n], verbose);
+          printf("\n");
+        }
       }
     }
     nfc_close(pnd);

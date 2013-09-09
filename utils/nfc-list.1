@@ -24,6 +24,21 @@ Tells
 nfc-list
 to be verbose and display detailed information about the targets shown.
 This includes SAK decoding and fingerprinting is available.
+.TP
+\fB-t\fP \fIX\fP
+Polls only for types according to bitfield value of \fIX\fP:
+   1: ISO14443A
+   2: Felica (212 kbps)
+   4: Felica (424 kbps)
+   8: ISO14443B
+  16: ISO14443B'
+  32: ISO14443B-2 ST SRx
+  64: ISO14443B-2 ASK CTx
+ 128: Jewel
+
+So 255 (default) polls for all types.
+
+Note that if 16, 32 or 64 then 8 is selected too.
 
 .SH EXAMPLE
 For an ISO/IEC 14443-A tag (i.e.Mifare DESFire):
