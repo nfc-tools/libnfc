@@ -28,6 +28,7 @@ contrib/win32/Makefile
 contrib/win32/Makefile.in
 contrib/win32/sys/Makefile
 contrib/win32/sys/Makefile.in
+debian/
 depcomp
 examples/*.o
 examples/.deps/

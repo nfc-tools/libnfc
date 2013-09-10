@@ -1,7 +1,0 @@
-# See uscan(1) for format
-
-# Compulsory line, this is a version 3 file
-version=3
-
-# https://wiki.debian.org/debian/watch
-http://code.google.com/p/libnfc/downloads/list .*/libnfc-(\d\S*)\.(?:zip|tgz|tbz|txz|(?:tar\.(?:gz|bz2|xz)))

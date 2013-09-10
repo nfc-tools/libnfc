@@ -1,3 +1,0 @@
-debian/tmp/usr/bin/pn53x-*
-debian/tmp/usr/share/man/man1/pn53x-*
-examples/pn53x-tamashell-scripts/*.cmd usr/share/doc/libnfc-pn53x-examples/scripts

@@ -1,4 +1,0 @@
-debian/tmp/usr/include/nfc
-debian/tmp/usr/lib/*/libnfc.a
-debian/tmp/usr/lib/*/libnfc.so
-debian/tmp/usr/lib/*/pkgconfig/libnfc.pc
