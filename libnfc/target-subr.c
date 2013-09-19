@@ -412,7 +412,7 @@ snprint_nfc_iso14443a_info(char *dst, size_t size, const nfc_iso14443a_info *pna
 
     for (i = 0; i < sizeof(const_ca) / sizeof(const_ca[0]); i++) {
       if ((atqa & const_ca[i].mask) == const_ca[i].atqa) {
-        for (j = 0; (j < sizeof(const_ca[i].saklist)) && (const_ca[i].saklist[j] >= 0); j++) {
+        for (j = 0; (j < sizeof(const_ca[i].saklist) / sizeof(const_ca[i].saklist[0])) && (const_ca[i].saklist[j] >= 0); j++) {
           int sakindex = const_ca[i].saklist[j];
           if ((sak & const_cs[sakindex].mask) == const_cs[sakindex].sak) {
             off += snprintf(dst + off, size - off, "* %s%s\n", const_ca[i].type, const_cs[sakindex].type);
