@@ -440,7 +440,7 @@ acr122s_scan(const nfc_context *context, nfc_connstring connstrings[], const siz
           free((void *)acPort);
         }
         free(acPorts);
-        return -1;
+        return 0;
       }
 
       pnd->driver = &acr122s_driver;
@@ -454,7 +454,7 @@ acr122s_scan(const nfc_context *context, nfc_connstring connstrings[], const siz
           free((void *)acPort);
         }
         free(acPorts);
-        return -1;
+        return 0;
       }
       DRIVER_DATA(pnd)->port = sp;
       DRIVER_DATA(pnd)->seq = 0;
