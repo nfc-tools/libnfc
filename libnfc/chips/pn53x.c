@@ -1209,9 +1209,6 @@ pn53x_initiator_poll_target(struct nfc_device *pnd,
         return NFC_ECHIP;
         break;
     }
-    if (pn53x_current_target_new(pnd, pnt) == NULL) {
-      return NFC_ESOFT;
-    }
   } else {
     pn53x_set_property_bool(pnd, NP_INFINITE_SELECT, true);
     // FIXME It does not support DEP targets
