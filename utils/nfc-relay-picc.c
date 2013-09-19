@@ -486,7 +486,6 @@ main(int argc, char *argv[])
           }
           if (!initiator_only_mode) {
             nfc_close(pndTarget);
-            nfc_exit(context);
           }
           nfc_exit(context);
           exit(EXIT_FAILURE);
