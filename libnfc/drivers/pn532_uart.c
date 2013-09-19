@@ -96,6 +96,11 @@ pn532_uart_scan(const nfc_context *context, nfc_connstring connstrings[], const 
       if (!pnd) {
         perror("malloc");
         uart_close(sp);
+        iDevice = 0;
+        while ((acPort = acPorts[iDevice++])) {
+          free((void *)acPort);
+        }
+        free(acPorts);
         return 0;
       }
       pnd->driver = &pn532_uart_driver;
@@ -104,6 +109,11 @@ pn532_uart_scan(const nfc_context *context, nfc_connstring connstrings[], const 
         perror("malloc");
         uart_close(sp);
         nfc_device_free(pnd);
+        iDevice = 0;
+        while ((acPort = acPorts[iDevice++])) {
+          free((void *)acPort);
+        }
+        free(acPorts);
         return 0;
       }
       DRIVER_DATA(pnd)->port = sp;
@@ -113,6 +123,11 @@ pn532_uart_scan(const nfc_context *context, nfc_connstring connstrings[], const 
         perror("malloc");
         uart_close(DRIVER_DATA(pnd)->port);
         nfc_device_free(pnd);
+        iDevice = 0;
+        while ((acPort = acPorts[iDevice++])) {
+          free((void *)acPort);
+        }
+        free(acPorts);
         return 0;
       }
       // SAMConfiguration command if needed to wakeup the chip and pn53x_SAMConfiguration check if the chip is a PN532
@@ -126,6 +141,11 @@ pn532_uart_scan(const nfc_context *context, nfc_connstring connstrings[], const 
         uart_close(DRIVER_DATA(pnd)->port);
         pn53x_data_free(pnd);
         nfc_device_free(pnd);
+        iDevice = 0;
+        while ((acPort = acPorts[iDevice++])) {
+          free((void *)acPort);
+        }
+        free(acPorts);
         return 0;
       }
 #else

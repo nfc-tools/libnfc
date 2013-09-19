@@ -125,6 +125,11 @@ pn532_i2c_scan(const nfc_context *context, nfc_connstring connstrings[], const s
       if (!pnd) {
         perror("malloc");
         i2c_close(id);
+        iDevice = 0;
+        while ((i2cPort = i2cPorts[iDevice++])) {
+          free((void *)i2cPort);
+        }
+        free(i2cPorts);
         return 0;
       }
       pnd->driver = &pn532_i2c_driver;
@@ -133,6 +138,11 @@ pn532_i2c_scan(const nfc_context *context, nfc_connstring connstrings[], const s
         perror("malloc");
         i2c_close(id);
         nfc_device_free(pnd);
+        iDevice = 0;
+        while ((i2cPort = i2cPorts[iDevice++])) {
+          free((void *)i2cPort);
+        }
+        free(i2cPorts);
         return 0;
       }
       DRIVER_DATA(pnd)->dev = id;
@@ -142,6 +152,11 @@ pn532_i2c_scan(const nfc_context *context, nfc_connstring connstrings[], const s
         perror("malloc");
         i2c_close(DRIVER_DATA(pnd)->dev);
         nfc_device_free(pnd);
+        iDevice = 0;
+        while ((i2cPort = i2cPorts[iDevice++])) {
+          free((void *)i2cPort);
+        }
+        free(i2cPorts);
         return 0;
       }
 

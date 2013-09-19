@@ -122,6 +122,11 @@ arygon_scan(const nfc_context *context, nfc_connstring connstrings[], const size
       if (!pnd) {
         perror("malloc");
         uart_close(sp);
+        iDevice = 0;
+        while ((acPort = acPorts[iDevice++])) {
+          free((void *)acPort);
+        }
+        free(acPorts);
         return 0;
       }
 
@@ -131,6 +136,11 @@ arygon_scan(const nfc_context *context, nfc_connstring connstrings[], const size
         perror("malloc");
         uart_close(sp);
         nfc_device_free(pnd);
+        iDevice = 0;
+        while ((acPort = acPorts[iDevice++])) {
+          free((void *)acPort);
+        }
+        free(acPorts);
         return 0;
       }
       DRIVER_DATA(pnd)->port = sp;
@@ -140,6 +150,11 @@ arygon_scan(const nfc_context *context, nfc_connstring connstrings[], const size
         perror("malloc");
         uart_close(DRIVER_DATA(pnd)->port);
         nfc_device_free(pnd);
+        iDevice = 0;
+        while ((acPort = acPorts[iDevice++])) {
+          free((void *)acPort);
+        }
+        free(acPorts);
         return 0;
       }
 
@@ -149,6 +164,11 @@ arygon_scan(const nfc_context *context, nfc_connstring connstrings[], const size
         uart_close(DRIVER_DATA(pnd)->port);
         pn53x_data_free(pnd);
         nfc_device_free(pnd);
+        iDevice = 0;
+        while ((acPort = acPorts[iDevice++])) {
+          free((void *)acPort);
+        }
+        free(acPorts);
         return 0;
       }
 #else

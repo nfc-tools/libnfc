@@ -435,6 +435,11 @@ acr122s_scan(const nfc_context *context, nfc_connstring connstrings[], const siz
       if (!pnd) {
         perror("malloc");
         uart_close(sp);
+        iDevice = 0;
+        while ((acPort = acPorts[iDevice++])) {
+          free((void *)acPort);
+        }
+        free(acPorts);
         return -1;
       }
 
@@ -444,6 +449,11 @@ acr122s_scan(const nfc_context *context, nfc_connstring connstrings[], const siz
         perror("malloc");
         uart_close(sp);
         nfc_device_free(pnd);
+        iDevice = 0;
+        while ((acPort = acPorts[iDevice++])) {
+          free((void *)acPort);
+        }
+        free(acPorts);
         return -1;
       }
       DRIVER_DATA(pnd)->port = sp;
@@ -453,6 +463,11 @@ acr122s_scan(const nfc_context *context, nfc_connstring connstrings[], const siz
       if (pipe(DRIVER_DATA(pnd)->abort_fds) < 0) {
         uart_close(DRIVER_DATA(pnd)->port);
         nfc_device_free(pnd);
+        iDevice = 0;
+        while ((acPort = acPorts[iDevice++])) {
+          free((void *)acPort);
+        }
+        free(acPorts);
         return 0;
       }
 #else
@@ -463,6 +478,11 @@ acr122s_scan(const nfc_context *context, nfc_connstring connstrings[], const siz
         perror("malloc");
         uart_close(DRIVER_DATA(pnd)->port);
         nfc_device_free(pnd);
+        iDevice = 0;
+        while ((acPort = acPorts[iDevice++])) {
+          free((void *)acPort);
+        }
+        free(acPorts);
         return 0;
       }
       CHIP_DATA(pnd)->type = PN532;
