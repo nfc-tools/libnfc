@@ -100,7 +100,8 @@ nfc_context_new(void)
   char *envvar = getenv("LIBNFC_DEFAULT_DEVICE");
   if (envvar) {
     strcpy(res->user_defined_devices[0].name, "user defined default device");
-    strcpy(res->user_defined_devices[0].connstring, envvar);
+    strncpy(res->user_defined_devices[0].connstring, envvar, NFC_BUFSIZE_CONNSTRING);
+    res->user_defined_devices[0].connstring[NFC_BUFSIZE_CONNSTRING - 1] = '\0';
     res->user_defined_device_count++;
   }
 
