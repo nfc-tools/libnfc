@@ -503,7 +503,8 @@ pn53x_decode_target_data(const uint8_t *pbtRawData, size_t szRawData, pn53x_type
       if ((pnti->nai.szUidLen == 8) && (pbtUid[0] == 0x88)) {
         pnti->nai.szUidLen = 7;
         memcpy(pnti->nai.abtUid, pbtUid + 1, 7);
-      } else if ((pnti->nai.szUidLen == 12) && (pbtUid[0] == 0x88) && (pbtUid[4] == 0x88)) {
+//      } else if ((pnti->nai.szUidLen == 12) && (pbtUid[0] == 0x88) && (pbtUid[4] == 0x88)) {
+      } else if (pnti->nai.szUidLen > 10) {
         pnti->nai.szUidLen = 10;
         memcpy(pnti->nai.abtUid, pbtUid + 1, 3);
         memcpy(pnti->nai.abtUid + 3, pbtUid + 5, 3);
