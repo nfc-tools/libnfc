@@ -469,6 +469,7 @@ pn53x_decode_target_data(const uint8_t *pbtRawData, size_t szRawData, pn53x_type
                          nfc_target_info *pnti)
 {
   uint8_t szAttribRes;
+  const uint8_t *pbtUid;
 
   switch (nmt) {
     case NMT_ISO14443A:
@@ -486,7 +487,7 @@ pn53x_decode_target_data(const uint8_t *pbtRawData, size_t szRawData, pn53x_type
       pnti->nai.btSak = *(pbtRawData++);
       // Copy the NFCID1
       pnti->nai.szUidLen = *(pbtRawData++);
-      memcpy(pnti->nai.abtUid, pbtRawData, pnti->nai.szUidLen);
+      pbtUid = pbtRawData;
       pbtRawData += pnti->nai.szUidLen;
 
       // Did we received an optional ATS (Smardcard ATR)
@@ -497,15 +498,19 @@ pn53x_decode_target_data(const uint8_t *pbtRawData, size_t szRawData, pn53x_type
         pnti->nai.szAtsLen = 0;
       }
 
-      // Strip CT (Cascade Tag) to retrieve and store the _real_ UID
+      // For PN531, strip CT (Cascade Tag) to retrieve and store the _real_ UID
       // (e.g. 0x8801020304050607 is in fact 0x01020304050607)
-      if ((pnti->nai.szUidLen == 8) && (pnti->nai.abtUid[0] == 0x88)) {
+      if ((pnti->nai.szUidLen == 8) && (pbtUid[0] == 0x88)) {
         pnti->nai.szUidLen = 7;
-        memmove(pnti->nai.abtUid, pnti->nai.abtUid + 1, 7);
-      } else if ((pnti->nai.szUidLen == 12) && (pnti->nai.abtUid[0] == 0x88) && (pnti->nai.abtUid[4] == 0x88)) {
+        memcpy(pnti->nai.abtUid, pbtUid + 1, 7);
+      } else if ((pnti->nai.szUidLen == 12) && (pbtUid[0] == 0x88) && (pbtUid[4] == 0x88)) {
         pnti->nai.szUidLen = 10;
-        memmove(pnti->nai.abtUid, pnti->nai.abtUid + 1, 3);
-        memmove(pnti->nai.abtUid + 3, pnti->nai.abtUid + 5, 7);
+        memcpy(pnti->nai.abtUid, pbtUid + 1, 3);
+        memcpy(pnti->nai.abtUid + 3, pbtUid + 5, 3);
+        memcpy(pnti->nai.abtUid + 6, pbtUid + 8, 4);
+      } else {
+        // For PN532, PN533
+        memcpy(pnti->nai.abtUid, pbtUid, pnti->nai.szUidLen);
       }
       break;
 
