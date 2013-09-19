@@ -1184,6 +1184,7 @@ pn53x_initiator_poll_target(struct nfc_device *pnd,
   if (CHIP_DATA(pnd)->type == PN532) {
     size_t szTargetTypes = 0;
     pn53x_target_type apttTargetTypes[32];
+    memset(apttTargetTypes, PTT_UNDEFINED, 32);
     for (size_t n = 0; n < szModulations; n++) {
       const pn53x_target_type ptt = pn53x_nm_to_ptt(pnmModulations[n]);
       if (PTT_UNDEFINED == ptt) {
