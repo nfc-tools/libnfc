@@ -80,7 +80,7 @@
 
 #define FIRMWARE_TEXT "ACR122U" // Tested on: ACR122U101(ACS), ACR122U102(Tikitag), ACR122U203(ACS)
 
-#define ACR122_PCSC_WRAP_LEN 5
+#define ACR122_PCSC_WRAP_LEN 6
 #define ACR122_PCSC_COMMAND_LEN 266
 #define ACR122_PCSC_RESPONSE_LEN 268
 
@@ -339,7 +339,7 @@ acr122_pcsc_send(nfc_device *pnd, const uint8_t *pbtData, const size_t szData, i
   // Prepare and transmit the send buffer
   const size_t szTxBuf = szData + 6;
   uint8_t  abtTxBuf[ACR122_PCSC_WRAP_LEN + ACR122_PCSC_COMMAND_LEN] = { 0xFF, 0x00, 0x00, 0x00, szData + 1, 0xD4 };
-  memcpy(abtTxBuf + 6, pbtData, szData);
+  memcpy(abtTxBuf + ACR122_PCSC_WRAP_LEN, pbtData, szData);
   LOG_HEX(NFC_LOG_GROUP_COM, "TX", abtTxBuf, szTxBuf);
 
   DRIVER_DATA(pnd)->szRx = 0;
