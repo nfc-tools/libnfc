@@ -134,7 +134,8 @@ conf_keyvalue_context(void *data, const char *key, const char *value)
       }
       context->user_defined_device_count++;
     }
-    strcpy(context->user_defined_devices[context->user_defined_device_count - 1].name, value);
+    strncpy(context->user_defined_devices[context->user_defined_device_count - 1].name, value, DEVICE_NAME_LENGTH - 1);
+    context->user_defined_devices[context->user_defined_device_count - 1].name[DEVICE_NAME_LENGTH - 1] = '\0';
   } else if (strcmp(key, "device.connstring") == 0) {
     if ((context->user_defined_device_count == 0) || strcmp(context->user_defined_devices[context->user_defined_device_count - 1].connstring, "") != 0) {
       if (context->user_defined_device_count >= MAX_USER_DEFINED_DEVICES) {
@@ -143,7 +144,8 @@ conf_keyvalue_context(void *data, const char *key, const char *value)
       }
       context->user_defined_device_count++;
     }
-    strcpy(context->user_defined_devices[context->user_defined_device_count - 1].connstring, value);
+    strncpy(context->user_defined_devices[context->user_defined_device_count - 1].connstring, value, NFC_BUFSIZE_CONNSTRING - 1);
+    context->user_defined_devices[context->user_defined_device_count - 1].connstring[NFC_BUFSIZE_CONNSTRING - 1] = '\0';
   } else if (strcmp(key, "device.optional") == 0) {
     if ((context->user_defined_device_count == 0) || context->user_defined_devices[context->user_defined_device_count - 1].optional) {
       if (context->user_defined_device_count >= MAX_USER_DEFINED_DEVICES) {
