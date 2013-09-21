@@ -280,8 +280,14 @@ get_rats(void)
   res = nfc_initiator_transceive_bytes(pnd, abtRats, sizeof(abtRats), abtRx, sizeof(abtRx), 0);
   if (res > 0) {
     // ISO14443-4 card, turn RF field off/on to access ISO14443-3 again
-    nfc_device_set_property_bool(pnd, NP_ACTIVATE_FIELD, false);
-    nfc_device_set_property_bool(pnd, NP_ACTIVATE_FIELD, true);
+    if (nfc_device_set_property_bool(pnd, NP_ACTIVATE_FIELD, false) < 0) {
+      nfc_perror(pnd, "nfc_configure");
+      return -1;
+    }
+    if (nfc_device_set_property_bool(pnd, NP_ACTIVATE_FIELD, true) < 0) {
+      nfc_perror(pnd, "nfc_configure");
+      return -1;
+    }
   }
   // Reselect tag
   if (nfc_initiator_select_passive_target(pnd, nmMifare, NULL, 0, &nt) <= 0) {
