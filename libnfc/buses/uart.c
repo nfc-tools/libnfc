@@ -143,7 +143,11 @@ uart_flush_input(serial_port sp)
     return;
   }
   // There is something available, read the data
-  (void)read(UART_DATA(sp)->fd, rx, available_bytes_count);
+  if (read(UART_DATA(sp)->fd, rx, available_bytes_count) < 0) {
+    perror("uart read");
+    free(rx);
+    return;
+  }
   log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%d bytes have eaten.", available_bytes_count);
   free(rx);
 }
