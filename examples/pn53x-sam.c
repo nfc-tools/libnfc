@@ -114,7 +114,7 @@ main(int argc, const char *argv[])
   printf(">> ");
 
   // Take user's choice
-  char    input = getchar();
+  int input = getchar();
   printf("\n");
   if ((input < '1') || (input > '3')) {
     ERR("%s", "Invalid selection.");
