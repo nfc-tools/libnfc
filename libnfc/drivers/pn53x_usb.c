@@ -428,7 +428,10 @@ pn53x_usb_send(nfc_device *pnd, const uint8_t *pbtData, const size_t szData, con
   size_t szFrame = 0;
   int res = 0;
 
-  pn53x_build_frame(abtFrame, &szFrame, pbtData, szData);
+  if ((res = pn53x_build_frame(abtFrame, &szFrame, pbtData, szData)) < 0) {
+    pnd->last_error = res;
+    return pnd->last_error;
+  }
 
   if ((res = pn53x_usb_bulk_write(DRIVER_DATA(pnd), abtFrame, szFrame, timeout)) < 0) {
     pnd->last_error = res;
