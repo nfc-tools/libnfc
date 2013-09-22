@@ -76,7 +76,7 @@ static bool quiet_output = false;
 static bool initiator_only_mode = false;
 static bool target_only_mode = false;
 static bool swap_devices = false;
-static int waiting_time = 0;
+static unsigned int waiting_time = 0;
 FILE *fd3;
 FILE *fd4;
 
@@ -182,12 +182,12 @@ main(int argc, char *argv[])
       printf("INFO: %s\n", "Swapping devices.");
       swap_devices = true;
     } else if (0 == strcmp(argv[arg], "-n")) {
-      if (++arg == argc || (sscanf(argv[arg], "%10i", &waiting_time) < 1)) {
+      if (++arg == argc || (sscanf(argv[arg], "%10u", &waiting_time) < 1)) {
         ERR("Missing or wrong waiting time value: %s.", argv[arg]);
         print_usage(argv);
         exit(EXIT_FAILURE);
       }
-      printf("Waiting time: %i secs.\n", waiting_time);
+      printf("Waiting time: %u secs.\n", waiting_time);
     } else {
       ERR("%s is not supported option.", argv[arg]);
       print_usage(argv);
@@ -466,9 +466,9 @@ main(int argc, char *argv[])
     }
     if (ret) {
       // Redirect the answer back to the external reader
-      if (waiting_time > 0) {
+      if (waiting_time != 0) {
         if (!quiet_output) {
-          printf("Waiting %is to simulate longer relay...\n", waiting_time);
+          printf("Waiting %us to simulate longer relay...\n", waiting_time);
         }
         sleep(waiting_time);
       }
