@@ -2534,34 +2534,33 @@ pn53x_InJumpForDEP(struct nfc_device *pnd,
   switch (nbr) {
     case NBR_106:
       abtCmd[2] = 0x00; // baud rate is 106 kbps
+      if (pbtPassiveInitiatorData && (ndm == NDM_PASSIVE)) {        /* can't have passive initiator data when using active mode */
+        abtCmd[3] |= 0x01;
+        memcpy(abtCmd + offset, pbtPassiveInitiatorData, 4);
+        offset += 4;
+      }
       break;
     case NBR_212:
       abtCmd[2] = 0x01; // baud rate is 212 kbps
+      if (pbtPassiveInitiatorData && (ndm == NDM_PASSIVE)) {
+        abtCmd[3] |= 0x01;
+        memcpy(abtCmd + offset, pbtPassiveInitiatorData, 5);
+        offset += 5;
+      }
       break;
     case NBR_424:
       abtCmd[2] = 0x02; // baud rate is 424 kbps
+      if (pbtPassiveInitiatorData && (ndm == NDM_PASSIVE)) {
+        abtCmd[3] |= 0x01;
+        memcpy(abtCmd + offset, pbtPassiveInitiatorData, 5);
+        offset += 5;
+      }
       break;
     case NBR_847:
     case NBR_UNDEFINED:
       pnd->last_error = NFC_EINVARG;
       return pnd->last_error;
       break;
-  }
-
-  if (pbtPassiveInitiatorData && (ndm == NDM_PASSIVE)) {        /* can't have passive initiator data when using active mode */
-    switch (nbr) {
-      case NBR_106:
-        abtCmd[3] |= 0x01;
-        memcpy(abtCmd + offset, pbtPassiveInitiatorData, 4);
-        offset += 4;
-        break;
-      case NBR_212:
-      case NBR_424:
-        abtCmd[3] |= 0x01;
-        memcpy(abtCmd + offset, pbtPassiveInitiatorData, 5);
-        offset += 5;
-        break;
-    }
   }
 
   if (pbtNFCID3i) {
