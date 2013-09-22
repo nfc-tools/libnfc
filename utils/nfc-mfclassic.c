@@ -215,7 +215,10 @@ authenticate(uint32_t uiBlock)
           memcpy(mtKeys.amb[uiBlock].mbt.abtKeyB, &mp.mpa.abtKey, 6);
         return true;
       }
-      nfc_initiator_select_passive_target(pnd, nmMifare, nt.nti.nai.abtUid, nt.nti.nai.szUidLen, NULL);
+      if (nfc_initiator_select_passive_target(pnd, nmMifare, nt.nti.nai.abtUid, nt.nti.nai.szUidLen, NULL) <= 0) {
+        ERR("tag was removed");
+        return false;
+      }
     }
   }
 
