@@ -616,6 +616,8 @@ read:
   }
   if (res < 12) {
     log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Invalid RDR_to_PC_DataBlock frame");
+    // try to interrupt current device state
+    acr122_usb_ack(pnd);
     pnd->last_error = NFC_EIO;
     return pnd->last_error;
   }
@@ -644,27 +646,25 @@ read:
       pnd->last_error = NFC_EIO;
       return pnd->last_error;
     }
-    acr122_usb_send_apdu(pnd, APDU_GetAdditionnalData, 0x00, 0x00, NULL, 0, abtRxBuf[11], abtRxBuf, sizeof(abtRxBuf));
-  }
-  offset = 0;
-  if (res == NFC_ETIMEOUT) {
-    if (DRIVER_DATA(pnd)->abort_flag) {
-      DRIVER_DATA(pnd)->abort_flag = false;
+    res = acr122_usb_send_apdu(pnd, APDU_GetAdditionnalData, 0x00, 0x00, NULL, 0, abtRxBuf[11], abtRxBuf, sizeof(abtRxBuf));
+    if (res == NFC_ETIMEOUT) {
+      if (DRIVER_DATA(pnd)->abort_flag) {
+        DRIVER_DATA(pnd)->abort_flag = false;
+        acr122_usb_ack(pnd);
+        pnd->last_error = NFC_EOPABORTED;
+        return pnd->last_error;
+      } else {
+        goto read; // FIXME May cause some trouble on Touchatag, right ?
+      }
+    }
+    if (res < 12) {
+      // try to interrupt current device state
       acr122_usb_ack(pnd);
-      pnd->last_error = NFC_EOPABORTED;
+      pnd->last_error = NFC_EIO;
       return pnd->last_error;
-    } else {
-      goto read; // FIXME May cause some trouble on Touchatag, right ?
     }
   }
-
-  if (res < 0) {
-    // try to interrupt current device state
-    acr122_usb_ack(pnd);
-    pnd->last_error = res;
-    return pnd->last_error;
-  }
-
+  offset = 0;
   if (abtRxBuf[offset] != attempted_response) {
     log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Frame header mismatch");
     pnd->last_error = NFC_EIO;
