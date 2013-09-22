@@ -2557,11 +2557,6 @@ pn53x_InJumpForDEP(struct nfc_device *pnd,
         memcpy(abtCmd + offset, pbtPassiveInitiatorData, 5);
         offset += 5;
         break;
-      case NBR_847:
-      case NBR_UNDEFINED:
-        pnd->last_error = NFC_EINVARG;
-        return pnd->last_error;
-        break;
     }
   }
 
