@@ -125,10 +125,7 @@ conf_keyvalue_context(void *data, const char *key, const char *value)
   } else if (strcmp(key, "allow_intrusive_scan") == 0) {
     string_as_boolean(value, &(context->allow_intrusive_scan));
   } else if (strcmp(key, "log_level") == 0) {
-    int i = atoi(value);
-    if (i < 0) i = 0;
-    if (i > 3) i = 3;
-    context->log_level = i;
+    context->log_level = atoi(value);
   } else if (strcmp(key, "device.name") == 0) {
     if ((context->user_defined_device_count == 0) || strcmp(context->user_defined_devices[context->user_defined_device_count - 1].name, "") != 0) {
       if (context->user_defined_device_count >= MAX_USER_DEFINED_DEVICES) {

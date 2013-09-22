@@ -121,10 +121,7 @@ nfc_context_new(void)
   // log level
   envvar = getenv("LIBNFC_LOG_LEVEL");
   if (envvar) {
-    int i = atoi(envvar);
-    if (i < 0) i = 0;
-    if (i > 3) i = 3;
-    res->log_level = i;
+    res->log_level = atoi(envvar);
   }
 #endif // ENVVARS
 
