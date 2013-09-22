@@ -98,9 +98,9 @@ build_felica_frame(const nfc_felica_info nfi, const uint8_t command, const uint8
   memcpy(frame + 10, payload, payload_len);
 }
 
-#define CHECK 		0x06
+#define CHECK 0x06
 static int
-nfc_forum_tag_type3_check(nfc_device *dev, const nfc_target nt, const uint16_t block, const uint8_t block_count, uint8_t *data, size_t *data_len)
+nfc_forum_tag_type3_check(nfc_device *dev, const nfc_target *nt, const uint16_t block, const uint8_t block_count, uint8_t *data, size_t *data_len)
 {
   uint8_t payload[1024] = {
     1, // Services
@@ -123,7 +123,7 @@ nfc_forum_tag_type3_check(nfc_device *dev, const nfc_target nt, const uint16_t b
 
   uint8_t frame[1024];
   size_t frame_len = sizeof(frame);
-  build_felica_frame(nt.nti.nfi, CHECK, payload, payload_len, frame, &frame_len);
+  build_felica_frame(nt->nti.nfi, CHECK, payload, payload_len, frame, &frame_len);
 
   uint8_t rx[1024];
   int res;
@@ -144,7 +144,7 @@ nfc_forum_tag_type3_check(nfc_device *dev, const nfc_target nt, const uint16_t b
     // Command return does not match
     return -1;
   }
-  if (0 != memcmp(&rx[2], nt.nti.nfi.abtId, 8)) {
+  if (0 != memcmp(&rx[2], nt->nti.nfi.abtId, 8)) {
     // NFCID2 does not match
     return -1;
   }
@@ -283,7 +283,7 @@ main(int argc, char *argv[])
   uint8_t data[1024];
   size_t data_len = sizeof(data);
 
-  if (nfc_forum_tag_type3_check(pnd, nt, 0, 1, data, &data_len) <= 0) {
+  if (nfc_forum_tag_type3_check(pnd, &nt, 0, 1, data, &data_len) <= 0) {
     nfc_perror(pnd, "nfc_forum_tag_type3_check");
     fclose(ndef_stream);
     nfc_close(pnd);
@@ -328,7 +328,7 @@ main(int argc, char *argv[])
   data_len = 0;
   for (uint16_t b = 0; b < (block_count_to_check / block_max_per_check); b += block_max_per_check) {
     size_t size = sizeof(data) - data_len;
-    if (!nfc_forum_tag_type3_check(pnd, nt, 1 + b, MIN(block_max_per_check, (block_count_to_check - (b * block_max_per_check))), data + data_len, &size)) {
+    if (!nfc_forum_tag_type3_check(pnd, &nt, 1 + b, MIN(block_max_per_check, (block_count_to_check - (b * block_max_per_check))), data + data_len, &size)) {
       nfc_perror(pnd, "nfc_forum_tag_type3_check");
       fclose(ndef_stream);
       nfc_close(pnd);
