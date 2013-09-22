@@ -1150,6 +1150,9 @@ pn53x_initiator_select_passive_target_ext(struct nfc_device *pnd,
   if ((res = pn53x_InListPassiveTarget(pnd, pm, 1, pbtInitData, szInitData, abtTargetsData, &szTargetsData, timeout)) <= 0)
     return res;
 
+  if (szTargetsData <= 1) // For Coverity to know szTargetsData is always > 1 if res > 0
+    return 0;
+
   // Is a tag info struct available
   if (pnt) {
     pnt->nm = nm;
