@@ -1220,7 +1220,8 @@ pn53x_initiator_poll_target(struct nfc_device *pnd,
         break;
     }
   } else {
-    pn53x_set_property_bool(pnd, NP_INFINITE_SELECT, true);
+    if ((res = pn53x_set_property_bool(pnd, NP_INFINITE_SELECT, true)) < 0)
+      return res;
     // FIXME It does not support DEP targets
     do {
       for (size_t p = 0; p < uiPollNr; p++) {
