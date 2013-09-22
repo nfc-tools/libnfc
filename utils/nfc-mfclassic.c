@@ -555,7 +555,12 @@ main(int argc, const char *argv[])
     exit(EXIT_FAILURE);
   }
 // Disable ISO14443-4 switching in order to read devices that emulate Mifare Classic with ISO14443-4 compliance.
-  nfc_device_set_property_bool(pnd, NP_AUTO_ISO14443_4, false);
+  if (nfc_device_set_property_bool(pnd, NP_AUTO_ISO14443_4, false) < 0) {
+    nfc_perror(pnd, "nfc_device_set_property_bool");
+    nfc_close(pnd);
+    nfc_exit(context);
+    exit(EXIT_FAILURE);
+  }
 
   printf("NFC reader: %s opened\n", nfc_device_get_name(pnd));
 
