@@ -87,7 +87,10 @@ log_put(const uint8_t group, const char *category, const uint8_t priority, const
     log_level = 1;
 #endif
   } else {
-    log_level = atoi(env_log_level);
+    int i = atoi(env_log_level);
+    if (i < 0) i = 0;
+    if (i > 3) i = 3;
+    log_level = i;
   }
 
   //  printf("log_level = %"PRIu32" group = %"PRIu8" priority = %"PRIu8"\n", log_level, group, priority);
