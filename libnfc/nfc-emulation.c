@@ -71,6 +71,6 @@ nfc_emulate_target(nfc_device *pnd, struct nfc_emulator *emulator, const int tim
       szRx = res;
     }
   }
-  return (io_res < 0) ? io_res : 0;
+  return io_res;
 }
 
