@@ -178,9 +178,6 @@ main(int argc, char *argv[])
       case 'o':
         ndef_output = optarg;
         break;
-      case '?':
-        if (optopt == 'o')
-          fprintf(stderr, "Option -%c requires an argument.\n", optopt);
       default:
         print_usage(argv[0]);
         exit(EXIT_FAILURE);
