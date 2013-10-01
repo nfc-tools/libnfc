@@ -206,10 +206,8 @@ struct arygon_descriptor {
 };
 
 static void
-arygon_close(nfc_device *pnd)
+arygon_close_step2(nfc_device *pnd)
 {
-  pn53x_idle(pnd);
-
   // Release UART port
   uart_close(DRIVER_DATA(pnd)->port);
 
@@ -221,6 +219,13 @@ arygon_close(nfc_device *pnd)
 
   pn53x_data_free(pnd);
   nfc_device_free(pnd);
+}
+
+static void
+arygon_close(nfc_device *pnd)
+{
+  pn53x_idle(pnd);
+  arygon_close_step2(pnd);
 }
 
 static nfc_device *
@@ -313,7 +318,7 @@ arygon_open(const nfc_context *context, const nfc_connstring connstring)
 
   // Check communication using "Reset TAMA" command
   if (arygon_reset_tama(pnd) < 0) {
-    arygon_close(pnd);
+    arygon_close_step2(pnd);
     return NULL;
   }
 
