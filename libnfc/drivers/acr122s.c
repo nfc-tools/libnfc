@@ -426,7 +426,7 @@ acr122s_scan(const nfc_context *context, nfc_connstring connstrings[], const siz
 
     if ((sp != INVALID_SERIAL_PORT) && (sp != CLAIMED_SERIAL_PORT)) {
       // We need to flush input to be sure first reply does not comes from older byte transceive
-      uart_flush_input(sp);
+      uart_flush_input(sp, true);
       uart_set_speed(sp, ACR122S_DEFAULT_SPEED);
 
       nfc_connstring connstring;
@@ -578,7 +578,7 @@ acr122s_open(const nfc_context *context, const nfc_connstring connstring)
     return NULL;
   }
 
-  uart_flush_input(sp);
+  uart_flush_input(sp, true);
   uart_set_speed(sp, ndd.speed);
 
   pnd = nfc_device_new(context, connstring);
@@ -659,7 +659,7 @@ acr122s_open(const nfc_context *context, const nfc_connstring connstring)
 static int
 acr122s_send(nfc_device *pnd, const uint8_t *buf, const size_t buf_len, int timeout)
 {
-  uart_flush_input(DRIVER_DATA(pnd)->port);
+  uart_flush_input(DRIVER_DATA(pnd)->port, false);
 
   uint8_t cmd[MAX_FRAME_SIZE];
   if (! acr122s_build_frame(pnd, cmd, sizeof(cmd), 0, 0, buf, buf_len, 1)) {

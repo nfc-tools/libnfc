@@ -113,7 +113,7 @@ arygon_scan(const nfc_context *context, nfc_connstring connstrings[], const size
 
     if ((sp != INVALID_SERIAL_PORT) && (sp != CLAIMED_SERIAL_PORT)) {
       // We need to flush input to be sure first reply does not comes from older byte transceive
-      uart_flush_input(sp);
+      uart_flush_input(sp, true);
       uart_set_speed(sp, ARYGON_DEFAULT_SPEED);
 
       nfc_connstring connstring;
@@ -266,7 +266,7 @@ arygon_open(const nfc_context *context, const nfc_connstring connstring)
   }
 
   // We need to flush input to be sure first reply does not comes from older byte transceive
-  uart_flush_input(sp);
+  uart_flush_input(sp, true);
   uart_set_speed(sp, ndd.speed);
 
   // We have a connection
@@ -340,7 +340,7 @@ arygon_tama_send(nfc_device *pnd, const uint8_t *pbtData, const size_t szData, i
 {
   int res = 0;
   // Before sending anything, we need to discard from any junk bytes
-  uart_flush_input(DRIVER_DATA(pnd)->port);
+  uart_flush_input(DRIVER_DATA(pnd)->port, false);
 
   uint8_t abtFrame[ARYGON_TX_BUFFER_LEN] = { DEV_ARYGON_PROTOCOL_TAMA, 0x00, 0x00, 0xff };     // Every packet must start with "0x32 0x00 0x00 0xff"
 

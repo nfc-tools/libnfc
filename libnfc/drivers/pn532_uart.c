@@ -86,7 +86,7 @@ pn532_uart_scan(const nfc_context *context, nfc_connstring connstrings[], const 
 
     if ((sp != INVALID_SERIAL_PORT) && (sp != CLAIMED_SERIAL_PORT)) {
       // We need to flush input to be sure first reply does not comes from older byte transceive
-      uart_flush_input(sp);
+      uart_flush_input(sp, true);
       // Serial port claimed but we need to check if a PN532_UART is opened.
       uart_set_speed(sp, PN532_UART_DEFAULT_SPEED);
 
@@ -237,7 +237,7 @@ pn532_uart_open(const nfc_context *context, const nfc_connstring connstring)
     return NULL;
   }
   // We need to flush input to be sure first reply does not comes from older byte transceive
-  uart_flush_input(sp);
+  uart_flush_input(sp, true);
   uart_set_speed(sp, ndd.speed);
 
   // We have a connection
@@ -315,7 +315,7 @@ pn532_uart_send(nfc_device *pnd, const uint8_t *pbtData, const size_t szData, in
 {
   int res = 0;
   // Before sending anything, we need to discard from any junk bytes
-  uart_flush_input(DRIVER_DATA(pnd)->port);
+  uart_flush_input(DRIVER_DATA(pnd)->port, false);
 
   switch (CHIP_DATA(pnd)->power_mode) {
     case LOWVBAT: {
@@ -494,7 +494,7 @@ pn532_uart_receive(nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, in
   // The PN53x command is done and we successfully received the reply
   return len;
 error:
-  uart_flush_input(DRIVER_DATA(pnd)->port);
+  uart_flush_input(DRIVER_DATA(pnd)->port, true);
   return pnd->last_error;
 }
 
