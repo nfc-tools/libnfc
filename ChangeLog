@@ -2,9 +2,18 @@ TBD - 1.7.0.99~rc1
 ------------------
 
 Fixes:
+ - Fix several issues reported by Coverity Scan
+   (mem leaks, buff overflows, reuse after free, etc)
+ - More robust when several conflicting uart drivers are in the config
+ - Fix racing condition with uart_flush_input()
+ - Silent pn53x_check_communication error messages when scanning
 
 Improvements:
  - nfc-list: New option to choose which technologies to poll for
+ - UART: drivers now supported under kFreeBSD
+ - New LIBNFC_DEVICE env var to use one reader and exclude all other readers
+   while LIBNFC_DEFAULT_DEVICE only prepends it to the configured devices list
+ - New LIBNFC_AUTO_SCAN env var to enable(default)/disable auto scan
 
 Sep 03, 2013 - 1.7.0
 --------------------
