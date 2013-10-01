@@ -114,6 +114,20 @@ nfc_context_new(void)
 
 #ifdef ENVVARS
   // Environment variables
+
+  // Load user defined device from environment variable as the only reader
+  envvar = getenv("LIBNFC_DEVICE");
+  if (envvar) {
+    strcpy(res->user_defined_devices[0].name, "user defined device");
+    strncpy(res->user_defined_devices[0].connstring, envvar, NFC_BUFSIZE_CONNSTRING);
+    res->user_defined_devices[0].connstring[NFC_BUFSIZE_CONNSTRING - 1] = '\0';
+    res->user_defined_device_count = 1;
+  }
+
+  // Load "auto scan" option
+  envvar = getenv("LIBNFC_AUTO_SCAN");
+  string_as_boolean(envvar, &(res->allow_autoscan));
+
   // Load "intrusive scan" option
   envvar = getenv("LIBNFC_INTRUSIVE_SCAN");
   string_as_boolean(envvar, &(res->allow_intrusive_scan));
