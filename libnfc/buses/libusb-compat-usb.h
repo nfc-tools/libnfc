@@ -203,30 +203,11 @@ extern "C" {
 
 /* Function prototypes */
 
-/* usb.c */
-usb_dev_handle *usb_open(struct usb_device *dev);
-int usb_close(usb_dev_handle *dev);
-int usb_get_string_simple(usb_dev_handle *dev, int index, char *buf,
-                          size_t buflen);
-
-/* <arch>.c */
-int usb_bulk_write(usb_dev_handle *dev, int ep, const char *bytes, int size,
-                   int timeout);
-int usb_bulk_read(usb_dev_handle *dev, int ep, char *bytes, int size,
-                  int timeout);
-int usb_set_configuration(usb_dev_handle *dev, int configuration);
-int usb_claim_interface(usb_dev_handle *dev, int interface);
-int usb_release_interface(usb_dev_handle *dev, int interface);
-int usb_set_altinterface(usb_dev_handle *dev, int alternate);
-int usb_reset(usb_dev_handle *dev);
-
 char *usb_strerror(void);
 
 void usb_init(void);
 int usb_find_busses(void);
 int usb_find_devices(void);
-struct usb_device *usb_device(usb_dev_handle *dev);
-struct usb_bus *usb_get_busses(void);
 
 #ifdef __cplusplus
 }

@@ -56,5 +56,16 @@ struct usb_dev_handle {
   int last_claimed_interface;
 };
 
+struct usbbus_dev_handle {
+  libusb_device_handle *handle;
+  struct usbbus_device *device;
+
+  /* libusb-0.1 is buggy w.r.t. interface claiming. it allows you to claim
+   * multiple interfaces but only tracks the most recently claimed one,
+   * which is used for usb_set_altinterface(). we clone the buggy behaviour
+   * here. */
+  int last_claimed_interface;
+};
+
 #endif
 

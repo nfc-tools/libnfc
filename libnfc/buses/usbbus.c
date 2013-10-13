@@ -35,12 +35,51 @@
 #endif // HAVE_CONFIG_H
 
 #include <stdlib.h>
-
+#include <errno.h>
+#include <libusb.h>
 #include "libusb-compat-usb.h"
+#include "libusb-compat-usbi.h"
 #include "usbbus.h"
 #include "log.h"
 #define LOG_CATEGORY "libnfc.buses.usbbus"
 #define LOG_GROUP    NFC_LOG_GROUP_DRIVER
+
+#define compat_err(e) -(errno=libusb_to_errno(e))
+
+static int libusb_to_errno(int result)
+{
+  switch (result) {
+    case LIBUSB_SUCCESS:
+      return 0;
+    case LIBUSB_ERROR_IO:
+      return EIO;
+    case LIBUSB_ERROR_INVALID_PARAM:
+      return EINVAL;
+    case LIBUSB_ERROR_ACCESS:
+      return EACCES;
+    case LIBUSB_ERROR_NO_DEVICE:
+      return ENXIO;
+    case LIBUSB_ERROR_NOT_FOUND:
+      return ENOENT;
+    case LIBUSB_ERROR_BUSY:
+      return EBUSY;
+    case LIBUSB_ERROR_TIMEOUT:
+      return ETIMEDOUT;
+    case LIBUSB_ERROR_OVERFLOW:
+      return EOVERFLOW;
+    case LIBUSB_ERROR_PIPE:
+      return EPIPE;
+    case LIBUSB_ERROR_INTERRUPTED:
+      return EINTR;
+    case LIBUSB_ERROR_NO_MEM:
+      return ENOMEM;
+    case LIBUSB_ERROR_NOT_SUPPORTED:
+      return ENOSYS;
+    default:
+      return ERANGE;
+  }
+}
+
 
 int usbbus_prepare(void)
 {
@@ -80,56 +119,105 @@ int usbbus_prepare(void)
 
 usbbus_dev_handle *usbbus_open(struct usbbus_device *dev)
 {
-  return (usbbus_dev_handle *) usb_open((struct usb_device *) dev);
+  int r;
+  usbbus_dev_handle *udev = malloc(sizeof(*udev));
+  if (!udev)
+    return NULL;
+
+  r = libusb_open((libusb_device *) dev->dev, &udev->handle);
+  if (r < 0) {
+    free(udev);
+    errno = libusb_to_errno(r);
+    return NULL;
+  }
+
+  udev->last_claimed_interface = -1;
+  udev->device = dev;
+  return udev;
 }
 
 int usbbus_close(usbbus_dev_handle *dev)
 {
-  return usb_close((usb_dev_handle *) dev);
+  libusb_close(dev->handle);
+  free(dev);
+  return 0;
 }
 
 int usbbus_set_configuration(usbbus_dev_handle *dev, int configuration)
 {
-  return usb_set_configuration((usb_dev_handle *)dev, configuration);
+  return compat_err(libusb_set_configuration(dev->handle, configuration));
 }
 
 int usbbus_get_string_simple(usbbus_dev_handle *dev, int index, char *buf, size_t buflen)
 {
-  return usb_get_string_simple((usb_dev_handle *)dev, index, buf, buflen);
+  int r;
+  r = libusb_get_string_descriptor_ascii(dev->handle, index & 0xff,
+                                         (unsigned char *) buf, (int) buflen);
+  if (r >= 0)
+    return r;
+  return compat_err(r);
+}
+
+static int usbbus_bulk_io(usbbus_dev_handle *dev, int ep, unsigned char *bytes,
+                       int size, int timeout)
+{
+  int actual_length;
+  int r;
+  r = libusb_bulk_transfer(dev->handle, ep & 0xff, bytes, size,
+                           &actual_length, timeout);
+
+  /* if we timed out but did transfer some data, report as successful short
+   * read. FIXME: is this how libusb-0.1 works? */
+  if (r == 0 || (r == LIBUSB_ERROR_TIMEOUT && actual_length > 0))
+    return actual_length;
+
+  return compat_err(r);
 }
 
 int usbbus_bulk_read(usbbus_dev_handle *dev, int ep, char *bytes, int size, int timeout)
 {
-  return usb_bulk_read((usb_dev_handle *)dev, ep, bytes, size, timeout);
+  return usbbus_bulk_io(dev, ep, (unsigned char *) bytes, size, timeout);
 }
 
 int usbbus_bulk_write(usbbus_dev_handle *dev, int ep, const char *bytes, int size, int timeout)
 {
-  return usb_bulk_write((usb_dev_handle *)dev, ep, bytes, size, timeout);
+  return usbbus_bulk_io(dev, ep, (unsigned char *)bytes, size, timeout);
 }
 
 int usbbus_claim_interface(usbbus_dev_handle *dev, int interface)
 {
-  return usb_claim_interface((usb_dev_handle *)dev, interface);
+  int r;
+  r = libusb_claim_interface(dev->handle, interface);
+  if (r == 0) {
+    dev->last_claimed_interface = interface;
+    return 0;
+  }
+  return compat_err(r);
 }
 
 int usbbus_release_interface(usbbus_dev_handle *dev, int interface)
 {
-  return usb_release_interface((usb_dev_handle *)dev, interface);
+  int r;
+  r = libusb_release_interface(dev->handle, interface);
+  if (r == 0)
+    dev->last_claimed_interface = -1;
+  return compat_err(r);
 }
 
 int usbbus_set_altinterface(usbbus_dev_handle *dev, int alternate)
 {
-  return usb_set_altinterface((usb_dev_handle *)dev, alternate);
+  if (dev->last_claimed_interface < 0)
+    return -(errno=EINVAL);
+  return compat_err(libusb_set_interface_alt_setting(dev->handle, dev->last_claimed_interface, alternate));
 }
 
 int usbbus_reset(usbbus_dev_handle *dev)
 {
-  return usb_reset((usb_dev_handle *)dev);
+  return compat_err(libusb_reset_device(dev->handle));
 }
 
 struct usbbus_bus *usbbus_get_busses(void)
 {
-  return (struct usbbus_bus *) usb_get_busses();
+  return (struct usbbus_bus *)usb_busses;
 }
 
