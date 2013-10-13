@@ -38,7 +38,6 @@
 #include <errno.h>
 #include <libusb.h>
 #include "libusb-compat-usb.h"
-#include "libusb-compat-usbi.h"
 #include "usbbus.h"
 #include "log.h"
 #define LOG_CATEGORY "libnfc.buses.usbbus"

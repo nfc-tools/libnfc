@@ -28,7 +28,6 @@
 #include <libusb.h>
 
 #include "libusb-compat-usb.h"
-#include "libusb-compat-usbi.h"
 
 static libusb_context *ctx = NULL;
 static int usb_debug = 0;

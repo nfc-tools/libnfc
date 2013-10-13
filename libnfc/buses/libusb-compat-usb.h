@@ -32,6 +32,42 @@
 
 #include <dirent.h>
 
+/* Some quick and generic macros for the simple kind of lists we use */
+#define LIST_ADD(begin, ent) \
+  do { \
+    if (begin) { \
+      ent->next = begin; \
+      ent->next->prev = ent; \
+    } else \
+      ent->next = NULL; \
+    ent->prev = NULL; \
+    begin = ent; \
+  } while(0)
+
+#define LIST_DEL(begin, ent) \
+  do { \
+    if (ent->prev) \
+      ent->prev->next = ent->next; \
+    else \
+      begin = ent->next; \
+    if (ent->next) \
+      ent->next->prev = ent->prev; \
+    ent->prev = NULL; \
+    ent->next = NULL; \
+  } while (0)
+
+struct usbbus_dev_handle {
+  libusb_device_handle *handle;
+  struct usbbus_device *device;
+
+  /* libusb-0.1 is buggy w.r.t. interface claiming. it allows you to claim
+   * multiple interfaces but only tracks the most recently claimed one,
+   * which is used for usb_set_altinterface(). we clone the buggy behaviour
+   * here. */
+  int last_claimed_interface;
+};
+
+
 /*
  * USB spec information
  *
@@ -190,9 +226,6 @@ struct usb_bus {
 
   struct usb_device *root_dev;
 };
-
-struct usb_dev_handle;
-typedef struct usb_dev_handle usb_dev_handle;
 
 /* Variables */
 extern struct usb_bus *usb_busses;
