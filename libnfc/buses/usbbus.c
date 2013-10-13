@@ -36,18 +36,7 @@
 
 #include <stdlib.h>
 
-#ifndef _WIN32
-// #ifdef LIBUSB10_ENABLED
 #include "libusb-compat-usb.h"
-// #else
-// Under POSIX system, we use libusb (>= 0.1.12)
-// #include <usb.h>
-// #endif
-#else
-// Under Windows we use libusb-win32 (>= 1.2.5)
-#include <lusb0_usb.h>
-#endif
-
 #include "usbbus.h"
 #include "log.h"
 #define LOG_CATEGORY "libnfc.buses.usbbus"
