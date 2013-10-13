@@ -38,9 +38,9 @@
 
 #ifndef _WIN32
 // #ifdef LIBUSB10_ENABLED
- #include "libusb-compat-usb.h"
+#include "libusb-compat-usb.h"
 // #else
- // Under POSIX system, we use libusb (>= 0.1.12)
+// Under POSIX system, we use libusb (>= 0.1.12)
 // #include <usb.h>
 // #endif
 #else

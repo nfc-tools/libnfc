@@ -46,6 +46,9 @@
 #define usbbus_strerror( X ) usb_strerror()
 #endif
 
+int usbbus_prepare(void);
+
+// Libusb-0.1 API:
 #define USBBUS_ENDPOINT_DIR_MASK           0x80
 #define USBBUS_ENDPOINT_TYPE_BULK          2
 #define USBBUS_ENDPOINT_IN                 0x80
@@ -164,7 +167,6 @@ struct usbbus_bus {
 };
 
 
-int usbbus_prepare(void);
 usbbus_dev_handle *usbbus_open(struct usbbus_device *dev);
 int usbbus_close(usbbus_dev_handle *dev);
 int usbbus_set_configuration(usbbus_dev_handle *dev, int configuration);

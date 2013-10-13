@@ -33,13 +33,6 @@
 static libusb_context *ctx = NULL;
 static int usb_debug = 0;
 
-enum usbi_log_level {
-  LOG_LEVEL_DEBUG,
-  LOG_LEVEL_INFO,
-  LOG_LEVEL_WARNING,
-  LOG_LEVEL_ERROR,
-};
-
 #ifdef ENABLE_LOGGING
 #define _usbi_log(level, fmt...) usbi_log(level, __FUNCTION__, fmt)
 #else
@@ -92,49 +85,6 @@ static int libusb_to_errno(int result)
     default:
       return ERANGE;
   }
-}
-
-static void usbi_log(enum usbi_log_level level, const char *function,
-                     const char *format, ...)
-{
-  va_list args;
-  FILE *stream = stdout;
-  const char *prefix;
-
-#ifndef ENABLE_DEBUG_LOGGING
-  if (!usb_debug)
-    return;
-#endif
-
-  switch (level) {
-    case LOG_LEVEL_INFO:
-      prefix = "info";
-      break;
-    case LOG_LEVEL_WARNING:
-      stream = stderr;
-      prefix = "warning";
-      break;
-    case LOG_LEVEL_ERROR:
-      stream = stderr;
-      prefix = "error";
-      break;
-    case LOG_LEVEL_DEBUG:
-      stream = stderr;
-      prefix = "debug";
-      break;
-    default:
-      stream = stderr;
-      prefix = "unknown";
-      break;
-  }
-
-  fprintf(stream, "libusb-compat %s: %s: ", prefix, function);
-
-  va_start(args, format);
-  vfprintf(stream, format, args);
-  va_end(args);
-
-  fprintf(stream, "\n");
 }
 
 static void _usb_finalize(void)
@@ -740,17 +690,6 @@ int usb_set_altinterface(usb_dev_handle *dev, int alternate)
                                                      dev->last_claimed_interface, alternate));
 }
 
-int usb_resetep(usb_dev_handle *dev, unsigned int ep)
-{
-  return compat_err(usb_clear_halt(dev, ep));
-}
-
-int usb_clear_halt(usb_dev_handle *dev, unsigned int ep)
-{
-  usbi_dbg("endpoint %x", ep);
-  return compat_err(libusb_clear_halt(dev->handle, ep & 0xff));
-}
-
 int usb_reset(usb_dev_handle *dev)
 {
   usbi_dbg("");
@@ -775,7 +714,7 @@ static int usb_bulk_io(usb_dev_handle *dev, int ep, char *bytes,
 }
 
 int usb_bulk_read(usb_dev_handle *dev, int ep, char *bytes,
-                               int size, int timeout)
+                  int size, int timeout)
 {
   if (!(ep & USB_ENDPOINT_IN)) {
     /* libusb-0.1 will strangely fix up a read request from endpoint
@@ -789,7 +728,7 @@ int usb_bulk_read(usb_dev_handle *dev, int ep, char *bytes,
 }
 
 int usb_bulk_write(usb_dev_handle *dev, int ep, const char *bytes,
-                                int size, int timeout)
+                   int size, int timeout)
 {
   if (ep & USB_ENDPOINT_IN) {
     /* libusb-0.1 on BSD strangely fix up a write request to endpoint
@@ -802,80 +741,8 @@ int usb_bulk_write(usb_dev_handle *dev, int ep, const char *bytes,
   return usb_bulk_io(dev, ep, (char *)bytes, size, timeout);
 }
 
-static int usb_interrupt_io(usb_dev_handle *dev, int ep, char *bytes,
-                            int size, int timeout)
-{
-  int actual_length;
-  int r;
-  usbi_dbg("endpoint %x size %d timeout %d", ep, size, timeout);
-  r = libusb_interrupt_transfer(dev->handle, ep & 0xff, bytes, size,
-                                &actual_length, timeout);
-
-  /* if we timed out but did transfer some data, report as successful short
-   * read. FIXME: is this how libusb-0.1 works? */
-  if (r == 0 || (r == LIBUSB_ERROR_TIMEOUT && actual_length > 0))
-    return actual_length;
-
-  return compat_err(r);
-}
-
-int usb_interrupt_read(usb_dev_handle *dev, int ep, char *bytes,
-                                    int size, int timeout)
-{
-  if (!(ep & USB_ENDPOINT_IN)) {
-    /* libusb-0.1 will strangely fix up a read request from endpoint
-     * 0x01 to be from endpoint 0x81. do the same thing here, but
-     * warn about this silly behaviour. */
-    usbi_warn("endpoint %x is missing IN direction bit, fixing");
-    ep |= USB_ENDPOINT_IN;
-  }
-  return usb_interrupt_io(dev, ep, bytes, size, timeout);
-}
-
-int usb_interrupt_write(usb_dev_handle *dev, int ep, const char *bytes,
-                                     int size, int timeout)
-{
-  if (ep & USB_ENDPOINT_IN) {
-    /* libusb-0.1 on BSD strangely fix up a write request to endpoint
-     * 0x81 to be to endpoint 0x01. do the same thing here, but
-     * warn about this silly behaviour. */
-    usbi_warn("endpoint %x has excessive IN direction bit, fixing");
-    ep &= ~USB_ENDPOINT_IN;
-  }
-
-  return usb_interrupt_io(dev, ep, (char *)bytes, size, timeout);
-}
-
-int usb_control_msg(usb_dev_handle *dev, int bmRequestType,
-                                 int bRequest, int wValue, int wIndex, char *bytes, int size, int timeout)
-{
-  int r;
-  usbi_dbg("RQT=%x RQ=%x V=%x I=%x len=%d timeout=%d", bmRequestType,
-           bRequest, wValue, wIndex, size, timeout);
-
-  r = libusb_control_transfer(dev->handle, bmRequestType & 0xff,
-                              bRequest & 0xff, wValue & 0xffff, wIndex & 0xffff, bytes, size & 0xffff,
-                              timeout);
-
-  if (r >= 0)
-    return r;
-
-  return compat_err(r);
-}
-
-int usb_get_string(usb_dev_handle *dev, int desc_index, int langid,
-                                char *buf, size_t buflen)
-{
-  int r;
-  r = libusb_get_string_descriptor(dev->handle, desc_index & 0xff,
-                                   langid & 0xffff, buf, (int) buflen);
-  if (r >= 0)
-    return r;
-  return compat_err(r);
-}
-
 int usb_get_string_simple(usb_dev_handle *dev, int desc_index,
-                                       char *buf, size_t buflen)
+                          char *buf, size_t buflen)
 {
   int r;
   r = libusb_get_string_descriptor_ascii(dev->handle, desc_index & 0xff,
@@ -884,65 +751,3 @@ int usb_get_string_simple(usb_dev_handle *dev, int desc_index,
     return r;
   return compat_err(r);
 }
-
-int usb_get_descriptor(usb_dev_handle *dev, unsigned char type,
-                                    unsigned char desc_index, void *buf, int size)
-{
-  int r;
-  r = libusb_get_descriptor(dev->handle, type, desc_index, buf, size);
-  if (r >= 0)
-    return r;
-  return compat_err(r);
-}
-
-int usb_get_descriptor_by_endpoint(usb_dev_handle *dev, int ep,
-                                                unsigned char type, unsigned char desc_index, void *buf, int size)
-{
-  /* this function doesn't make much sense - the specs don't talk about
-   * getting a descriptor "by endpoint". libusb-1.0 does not provide this
-   * functionality so we just send a control message directly */
-  int r;
-  r = libusb_control_transfer(dev->handle,
-                              LIBUSB_ENDPOINT_IN | (ep & 0xff), LIBUSB_REQUEST_GET_DESCRIPTOR,
-                              (type << 8) | desc_index, 0, buf, size, 1000);
-  if (r >= 0)
-    return r;
-  return compat_err(r);
-}
-
-int usb_get_driver_np(usb_dev_handle *dev, int interface,
-                                   char *name, unsigned int namelen)
-{
-  int r = libusb_kernel_driver_active(dev->handle, interface);
-  if (r == 1) {
-    /* libusb-1.0 doesn't expose driver name, so fill in a dummy value */
-    snprintf(name, namelen, "dummy");
-    return 0;
-  } else if (r == 0) {
-    return -(errno = ENODATA);
-  } else {
-    return compat_err(r);
-  }
-}
-
-int usb_detach_kernel_driver_np(usb_dev_handle *dev, int interface)
-{
-  int r = compat_err(libusb_detach_kernel_driver(dev->handle, interface));
-  switch (r) {
-    case LIBUSB_SUCCESS:
-      return 0;
-    case LIBUSB_ERROR_NOT_FOUND:
-      return -ENODATA;
-    case LIBUSB_ERROR_INVALID_PARAM:
-      return -EINVAL;
-    case LIBUSB_ERROR_NO_DEVICE:
-      return -ENODEV;
-    case LIBUSB_ERROR_OTHER:
-      return -errno;
-      /* default can be reached only in non-Linux implementations,
-       * mostly with LIBUSB_ERROR_NOT_SUPPORTED. */
-    default:
-      return -ENOSYS;
-  }
-}
-

@@ -39,43 +39,9 @@
  * not subject to change
  */
 
-/*
- * Device and/or Interface Class codes
- */
-#define USB_CLASS_PER_INTERFACE		0	/* for DeviceClass */
-#define USB_CLASS_AUDIO			1
-#define USB_CLASS_COMM			2
-#define USB_CLASS_HID			3
-#define USB_CLASS_PRINTER		7
-#define USB_CLASS_PTP			6
-#define USB_CLASS_MASS_STORAGE		8
-#define USB_CLASS_HUB			9
-#define USB_CLASS_DATA			10
-#define USB_CLASS_VENDOR_SPEC		0xff
-
-/*
- * Descriptor types
- */
-#define USB_DT_DEVICE			0x01
-#define USB_DT_CONFIG			0x02
-#define USB_DT_STRING			0x03
-#define USB_DT_INTERFACE		0x04
-#define USB_DT_ENDPOINT			0x05
-
-#define USB_DT_HID			0x21
-#define USB_DT_REPORT			0x22
-#define USB_DT_PHYSICAL			0x23
-#define USB_DT_HUB			0x29
-
-/*
- * Descriptor sizes per descriptor type
- */
-#define USB_DT_DEVICE_SIZE		18
-#define USB_DT_CONFIG_SIZE		9
-#define USB_DT_INTERFACE_SIZE		9
-#define USB_DT_ENDPOINT_SIZE		7
-#define USB_DT_ENDPOINT_AUDIO_SIZE	9	/* Audio extension */
-#define USB_DT_HUB_NONVAR_SIZE		7
+#define USB_DT_CONFIG_SIZE 9
+#define USB_DT_INTERFACE_SIZE 9
+#define USB_DT_ENDPOINT_AUDIO_SIZE 9
 
 /* All standard descriptors have these 2 fields in common */
 struct usb_descriptor_header {
@@ -88,18 +54,6 @@ struct usb_string_descriptor {
   u_int8_t  bLength;
   u_int8_t  bDescriptorType;
   u_int16_t wData[1];
-};
-
-/* HID descriptor */
-struct usb_hid_descriptor {
-  u_int8_t  bLength;
-  u_int8_t  bDescriptorType;
-  u_int16_t bcdHID;
-  u_int8_t  bCountryCode;
-  u_int8_t  bNumDescriptors;
-  /* u_int8_t  bReportDescriptorType; */
-  /* u_int16_t wDescriptorLength; */
-  /* ... */
 };
 
 /* Endpoint descriptor */
@@ -189,41 +143,6 @@ struct usb_device_descriptor {
   u_int8_t  bNumConfigurations;
 };
 
-struct usb_ctrl_setup {
-  u_int8_t  bRequestType;
-  u_int8_t  bRequest;
-  u_int16_t wValue;
-  u_int16_t wIndex;
-  u_int16_t wLength;
-};
-
-/*
- * Standard requests
- */
-#define USB_REQ_GET_STATUS		0x00
-#define USB_REQ_CLEAR_FEATURE		0x01
-/* 0x02 is reserved */
-#define USB_REQ_SET_FEATURE		0x03
-/* 0x04 is reserved */
-#define USB_REQ_SET_ADDRESS		0x05
-#define USB_REQ_GET_DESCRIPTOR		0x06
-#define USB_REQ_SET_DESCRIPTOR		0x07
-#define USB_REQ_GET_CONFIGURATION	0x08
-#define USB_REQ_SET_CONFIGURATION	0x09
-#define USB_REQ_GET_INTERFACE		0x0A
-#define USB_REQ_SET_INTERFACE		0x0B
-#define USB_REQ_SYNCH_FRAME		0x0C
-
-#define USB_TYPE_STANDARD		(0x00 << 5)
-#define USB_TYPE_CLASS			(0x01 << 5)
-#define USB_TYPE_VENDOR			(0x02 << 5)
-#define USB_TYPE_RESERVED		(0x03 << 5)
-
-#define USB_RECIP_DEVICE		0x00
-#define USB_RECIP_INTERFACE		0x01
-#define USB_RECIP_ENDPOINT		0x02
-#define USB_RECIP_OTHER			0x03
-
 /*
  * Various libusb API related stuff
  */
@@ -287,46 +206,23 @@ extern "C" {
 /* usb.c */
 usb_dev_handle *usb_open(struct usb_device *dev);
 int usb_close(usb_dev_handle *dev);
-int usb_get_string(usb_dev_handle *dev, int index, int langid, char *buf,
-                   size_t buflen);
 int usb_get_string_simple(usb_dev_handle *dev, int index, char *buf,
                           size_t buflen);
-
-/* descriptors.c */
-int usb_get_descriptor_by_endpoint(usb_dev_handle *udev, int ep,
-                                   unsigned char type, unsigned char index, void *buf, int size);
-int usb_get_descriptor(usb_dev_handle *udev, unsigned char type,
-                       unsigned char index, void *buf, int size);
 
 /* <arch>.c */
 int usb_bulk_write(usb_dev_handle *dev, int ep, const char *bytes, int size,
                    int timeout);
 int usb_bulk_read(usb_dev_handle *dev, int ep, char *bytes, int size,
                   int timeout);
-int usb_interrupt_write(usb_dev_handle *dev, int ep, const char *bytes,
-                        int size, int timeout);
-int usb_interrupt_read(usb_dev_handle *dev, int ep, char *bytes, int size,
-                       int timeout);
-int usb_control_msg(usb_dev_handle *dev, int requesttype, int request,
-                    int value, int index, char *bytes, int size, int timeout);
 int usb_set_configuration(usb_dev_handle *dev, int configuration);
 int usb_claim_interface(usb_dev_handle *dev, int interface);
 int usb_release_interface(usb_dev_handle *dev, int interface);
 int usb_set_altinterface(usb_dev_handle *dev, int alternate);
-int usb_resetep(usb_dev_handle *dev, unsigned int ep);
-int usb_clear_halt(usb_dev_handle *dev, unsigned int ep);
 int usb_reset(usb_dev_handle *dev);
-
-#define LIBUSB_HAS_GET_DRIVER_NP 1
-int usb_get_driver_np(usb_dev_handle *dev, int interface, char *name,
-                      unsigned int namelen);
-#define LIBUSB_HAS_DETACH_KERNEL_DRIVER_NP 1
-int usb_detach_kernel_driver_np(usb_dev_handle *dev, int interface);
 
 char *usb_strerror(void);
 
 void usb_init(void);
-void usb_set_debug(int level);
 int usb_find_busses(void);
 int usb_find_devices(void);
 struct usb_device *usb_device(usb_dev_handle *dev);
