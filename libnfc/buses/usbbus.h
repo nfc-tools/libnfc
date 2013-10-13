@@ -33,21 +33,149 @@
 #ifndef __NFC_BUS_USB_H__
 #  define __NFC_BUS_USB_H__
 
-#ifndef _WIN32
-// Under POSIX system, we use libusb (>= 0.1.12)
-#include <usb.h>
-#define USB_TIMEDOUT ETIMEDOUT
-#define _usb_strerror( X ) strerror(-X)
-#else
-// Under Windows we use libusb-win32 (>= 1.2.5)
-#include <lusb0_usb.h>
-#define USB_TIMEDOUT 116
-#define _usb_strerror( X ) usb_strerror()
-#endif
-
 #include <stdbool.h>
 #include <string.h>
 
-int usb_prepare(void);
+#ifndef _WIN32
+// Under POSIX system, we use libusb (>= 0.1.12)
+#define USBBUS_TIMEDOUT ETIMEDOUT
+#define usbbus_strerror( X ) strerror(-X)
+#else
+// Under Windows we use libusb-win32 (>= 1.2.5)
+#define USBBUS_TIMEDOUT 116
+#define usbbus_strerror( X ) usb_strerror()
+#endif
+
+#define USBBUS_ENDPOINT_DIR_MASK           0x80
+#define USBBUS_ENDPOINT_TYPE_BULK          2
+#define USBBUS_ENDPOINT_IN                 0x80
+#define USBBUS_ENDPOINT_OUT                0x00
+
+#ifdef PATH_MAX
+#define USBBUS_PATH_MAX PATH_MAX
+#else
+#define USBBUS_PATH_MAX 4096
+#endif
+
+struct usbbus_dev_handle;
+typedef struct usbbus_dev_handle usbbus_dev_handle;
+
+struct usbbus_endpoint_descriptor {
+  uint8_t  bLength;
+  uint8_t  bDescriptorType;
+  uint8_t  bEndpointAddress;
+  uint8_t  bmAttributes;
+  uint16_t wMaxPacketSize;
+  uint8_t  bInterval;
+  uint8_t  bRefresh;
+  uint8_t  bSynchAddress;
+
+  unsigned char *extra;
+  int extralen;
+};
+
+struct usbbus_interface_descriptor {
+  uint8_t  bLength;
+  uint8_t  bDescriptorType;
+  uint8_t  bInterfaceNumber;
+  uint8_t  bAlternateSetting;
+  uint8_t  bNumEndpoints;
+  uint8_t  bInterfaceClass;
+  uint8_t  bInterfaceSubClass;
+  uint8_t  bInterfaceProtocol;
+  uint8_t  iInterface;
+
+  struct usbbus_endpoint_descriptor *endpoint;
+
+  unsigned char *extra;
+  int extralen;
+};
+
+struct usbbus_interface {
+  struct usbbus_interface_descriptor *altsetting;
+  int num_altsetting;
+};
+
+struct usbbus_config_descriptor {
+  uint8_t  bLength;
+  uint8_t  bDescriptorType;
+  uint16_t wTotalLength;
+  uint8_t  bNumInterfaces;
+  uint8_t  bConfigurationValue;
+  uint8_t  iConfiguration;
+  uint8_t  bmAttributes;
+  uint8_t  MaxPower;
+
+  struct usbbus_interface *interface;
+
+  unsigned char *extra;
+  int extralen;
+};
+
+/* Device descriptor */
+struct usbbus_device_descriptor {
+  uint8_t  bLength;
+  uint8_t  bDescriptorType;
+  uint16_t bcdUSB;
+  uint8_t  bDeviceClass;
+  uint8_t  bDeviceSubClass;
+  uint8_t  bDeviceProtocol;
+  uint8_t  bMaxPacketSize0;
+  uint16_t idVendor;
+  uint16_t idProduct;
+  uint16_t bcdDevice;
+  uint8_t  iManufacturer;
+  uint8_t  iProduct;
+  uint8_t  iSerialNumber;
+  uint8_t  bNumConfigurations;
+} __attribute__((packed));
+
+
+struct usbbus_device;
+struct usbbus_bus;
+
+struct usbbus_device {
+  struct usbbus_device *next, *prev;
+
+  char filename[USBBUS_PATH_MAX + 1];
+
+  struct usbbus_bus *bus;
+
+  struct usbbus_device_descriptor descriptor;
+  struct usbbus_config_descriptor *config;
+
+  void *dev;
+
+  uint8_t devnum;
+
+  unsigned char num_children;
+  struct usbbus_device **children;
+};
+
+struct usbbus_bus {
+  struct usbbus_bus *next, *prev;
+
+  char dirname[USBBUS_PATH_MAX + 1];
+
+  struct usbbus_device *devices;
+  uint32_t location;
+
+  struct usbbus_device *root_dev;
+};
+
+
+int usbbus_prepare(void);
+usbbus_dev_handle *usbbus_open(struct usbbus_device *dev);
+int usbbus_close(usbbus_dev_handle *dev);
+int usbbus_set_configuration(usbbus_dev_handle *dev, int configuration);
+int usbbus_get_string_simple(usbbus_dev_handle *dev, int index, char *buf, size_t buflen);
+int usbbus_bulk_read(usbbus_dev_handle *dev, int ep, char *bytes, int size, int timeout);
+int usbbus_bulk_write(usbbus_dev_handle *dev, int ep, const char *bytes, int size, int timeout);
+int usbbus_claim_interface(usbbus_dev_handle *dev, int interface);
+int usbbus_release_interface(usbbus_dev_handle *dev, int interface);
+int usbbus_set_altinterface(usbbus_dev_handle *dev, int alternate);
+int usbbus_reset(usbbus_dev_handle *dev);
+struct usbbus_device *usbbus_device(usbbus_dev_handle *dev);
+struct usbbus_bus *usbbus_get_busses(void);
 
 #endif // __NFC_BUS_USB_H__

@@ -74,7 +74,7 @@ Thanks to d18c7db and Okko for example code
 #define LOG_GROUP     NFC_LOG_GROUP_DRIVER
 #define LOG_CATEGORY "libnfc.driver.acr122_usb"
 
-#define USB_INFINITE_TIMEOUT   0
+#define USBBUS_INFINITE_TIMEOUT   0
 
 #define DRIVER_DATA(pnd) ((struct acr122_usb_data*)(pnd->driver_data))
 
@@ -172,7 +172,7 @@ struct acr122_usb_apdu_frame {
 
 // Internal data struct
 struct acr122_usb_data {
-  usb_dev_handle *pudh;
+  usbbus_dev_handle *pudh;
   uint32_t uiEndPointIn;
   uint32_t uiEndPointOut;
   uint32_t uiMaxPacketSize;
@@ -218,13 +218,13 @@ static int acr122_usb_send_apdu(nfc_device *pnd,
 static int
 acr122_usb_bulk_read(struct acr122_usb_data *data, uint8_t abtRx[], const size_t szRx, const int timeout)
 {
-  int res = usb_bulk_read(data->pudh, data->uiEndPointIn, (char *) abtRx, szRx, timeout);
+  int res = usbbus_bulk_read(data->pudh, data->uiEndPointIn, (char *) abtRx, szRx, timeout);
   if (res > 0) {
     LOG_HEX(NFC_LOG_GROUP_COM, "RX", abtRx, res);
   } else if (res < 0) {
-    if (res != -USB_TIMEDOUT) {
+    if (res != -USBBUS_TIMEDOUT) {
       res = NFC_EIO;
-      log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to read from USB (%s)", _usb_strerror(res));
+      log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to read from USB (%s)", usbbus_strerror(res));
     } else {
       res = NFC_ETIMEOUT;
     }
@@ -236,15 +236,15 @@ static int
 acr122_usb_bulk_write(struct acr122_usb_data *data, uint8_t abtTx[], const size_t szTx, const int timeout)
 {
   LOG_HEX(NFC_LOG_GROUP_COM, "TX", abtTx, szTx);
-  int res = usb_bulk_write(data->pudh, data->uiEndPointOut, (char *) abtTx, szTx, timeout);
+  int res = usbbus_bulk_write(data->pudh, data->uiEndPointOut, (char *) abtTx, szTx, timeout);
   if (res > 0) {
     // HACK This little hack is a well know problem of USB, see http://www.libusb.org/ticket/6 for more details
     if ((res % data->uiMaxPacketSize) == 0) {
-      usb_bulk_write(data->pudh, data->uiEndPointOut, "\0", 0, timeout);
+      usbbus_bulk_write(data->pudh, data->uiEndPointOut, "\0", 0, timeout);
     }
   } else if (res < 0) {
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to write to USB (%s)", _usb_strerror(res));
-    if (res == -USB_TIMEDOUT) {
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to write to USB (%s)", usbbus_strerror(res));
+    if (res == -USBBUS_TIMEDOUT) {
       res = NFC_ETIMEOUT;
     } else {
       res = NFC_EIO;
@@ -266,28 +266,28 @@ const struct acr122_usb_supported_device acr122_usb_supported_devices[] = {
 
 // Find transfer endpoints for bulk transfers
 static void
-acr122_usb_get_end_points(struct usb_device *dev, struct acr122_usb_data *data)
+acr122_usb_get_end_points(struct usbbus_device *dev, struct acr122_usb_data *data)
 {
   uint32_t uiIndex;
   uint32_t uiEndPoint;
-  struct usb_interface_descriptor *puid = dev->config->interface->altsetting;
+  struct usbbus_interface_descriptor *puid = dev->config->interface->altsetting;
 
   // 3 Endpoints maximum: Interrupt In, Bulk In, Bulk Out
   for (uiIndex = 0; uiIndex < puid->bNumEndpoints; uiIndex++) {
     // Only accept bulk transfer endpoints (ignore interrupt endpoints)
-    if (puid->endpoint[uiIndex].bmAttributes != USB_ENDPOINT_TYPE_BULK)
+    if (puid->endpoint[uiIndex].bmAttributes != USBBUS_ENDPOINT_TYPE_BULK)
       continue;
 
     // Copy the endpoint to a local var, makes it more readable code
     uiEndPoint = puid->endpoint[uiIndex].bEndpointAddress;
 
     // Test if we dealing with a bulk IN endpoint
-    if ((uiEndPoint & USB_ENDPOINT_DIR_MASK) == USB_ENDPOINT_IN) {
+    if ((uiEndPoint & USBBUS_ENDPOINT_DIR_MASK) == USBBUS_ENDPOINT_IN) {
       data->uiEndPointIn = uiEndPoint;
       data->uiMaxPacketSize = puid->endpoint[uiIndex].wMaxPacketSize;
     }
     // Test if we dealing with a bulk OUT endpoint
-    if ((uiEndPoint & USB_ENDPOINT_DIR_MASK) == USB_ENDPOINT_OUT) {
+    if ((uiEndPoint & USBBUS_ENDPOINT_DIR_MASK) == USBBUS_ENDPOINT_OUT) {
       data->uiEndPointOut = uiEndPoint;
       data->uiMaxPacketSize = puid->endpoint[uiIndex].wMaxPacketSize;
     }
@@ -299,13 +299,13 @@ acr122_usb_scan(const nfc_context *context, nfc_connstring connstrings[], const 
 {
   (void)context;
 
-  usb_prepare();
+  usbbus_prepare();
 
   size_t device_found = 0;
   uint32_t uiBusIndex = 0;
-  struct usb_bus *bus;
-  for (bus = usb_get_busses(); bus; bus = bus->next) {
-    struct usb_device *dev;
+  struct usbbus_bus *bus;
+  for (bus = usbbus_get_busses(); bus; bus = bus->next) {
+    struct usbbus_device *dev;
 
     for (dev = bus->devices; dev; dev = dev->next, uiBusIndex++) {
       for (size_t n = 0; n < sizeof(acr122_usb_supported_devices) / sizeof(struct acr122_usb_supported_device); n++) {
@@ -322,14 +322,14 @@ acr122_usb_scan(const nfc_context *context, nfc_connstring connstrings[], const 
             continue;
           }
 
-          usb_dev_handle *udev = usb_open(dev);
+          usbbus_dev_handle *udev = usbbus_open(dev);
           if (udev == NULL)
             continue;
 
           // Set configuration
           // acr122_usb_get_usb_device_name (dev, udev, pnddDevices[device_found].acDevice, sizeof (pnddDevices[device_found].acDevice));
           log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "device found: Bus %s Device %s Name %s", bus->dirname, dev->filename, acr122_usb_supported_devices[n].name);
-          usb_close(udev);
+          usbbus_close(udev);
           snprintf(connstrings[device_found], sizeof(nfc_connstring), "%s:%s:%s", ACR122_USB_DRIVER_NAME, bus->dirname, dev->filename);
           device_found++;
           // Test if we reach the maximum "wanted" devices
@@ -350,16 +350,16 @@ struct acr122_usb_descriptor {
 };
 
 static bool
-acr122_usb_get_usb_device_name(struct usb_device *dev, usb_dev_handle *udev, char *buffer, size_t len)
+acr122_usb_get_usb_device_name(struct usbbus_device *dev, usbbus_dev_handle *udev, char *buffer, size_t len)
 {
   *buffer = '\0';
 
   if (dev->descriptor.iManufacturer || dev->descriptor.iProduct) {
     if (udev) {
-      usb_get_string_simple(udev, dev->descriptor.iManufacturer, buffer, len);
+      usbbus_get_string_simple(udev, dev->descriptor.iManufacturer, buffer, len);
       if (strlen(buffer) > 0)
         strcpy(buffer + strlen(buffer), " / ");
-      usb_get_string_simple(udev, dev->descriptor.iProduct, buffer + strlen(buffer), len - strlen(buffer));
+      usbbus_get_string_simple(udev, dev->descriptor.iProduct, buffer + strlen(buffer), len - strlen(buffer));
     }
   }
 
@@ -393,12 +393,12 @@ acr122_usb_open(const nfc_context *context, const nfc_connstring connstring)
     .uiEndPointIn = 0,
     .uiEndPointOut = 0,
   };
-  struct usb_bus *bus;
-  struct usb_device *dev;
+  struct usbbus_bus *bus;
+  struct usbbus_device *dev;
 
-  usb_prepare();
+  usbbus_prepare();
 
-  for (bus = usb_get_busses(); bus; bus = bus->next) {
+  for (bus = usbbus_get_busses(); bus; bus = bus->next) {
     if (connstring_decode_level > 1)  {
       // A specific bus have been specified
       if (0 != strcmp(bus->dirname, desc.dirname))
@@ -411,25 +411,25 @@ acr122_usb_open(const nfc_context *context, const nfc_connstring connstring)
           continue;
       }
       // Open the USB device
-      if ((data.pudh = usb_open(dev)) == NULL)
+      if ((data.pudh = usbbus_open(dev)) == NULL)
         continue;
       // Reset device
-      usb_reset(data.pudh);
+      usbbus_reset(data.pudh);
       // Retrieve end points
       acr122_usb_get_end_points(dev, &data);
       // Claim interface
-      int res = usb_claim_interface(data.pudh, 0);
+      int res = usbbus_claim_interface(data.pudh, 0);
       if (res < 0) {
-        log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to claim USB interface (%s)", _usb_strerror(res));
-        usb_close(data.pudh);
+        log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to claim USB interface (%s)", usbbus_strerror(res));
+        usbbus_close(data.pudh);
         // we failed to use the specified device
         goto free_mem;
       }
 
-      res = usb_set_altinterface(data.pudh, 0);
+      res = usbbus_set_altinterface(data.pudh, 0);
       if (res < 0) {
-        log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to set alternate setting on USB interface (%s)", _usb_strerror(res));
-        usb_close(data.pudh);
+        log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to set alternate setting on USB interface (%s)", usbbus_strerror(res));
+        usbbus_close(data.pudh);
         // we failed to use the specified device
         goto free_mem;
       }
@@ -461,7 +461,7 @@ acr122_usb_open(const nfc_context *context, const nfc_connstring connstring)
       pnd->driver = &acr122_usb_driver;
 
       if (acr122_usb_init(pnd) < 0) {
-        usb_close(data.pudh);
+        usbbus_close(data.pudh);
         goto error;
       }
       DRIVER_DATA(pnd)->abort_flag = false;
@@ -488,12 +488,12 @@ acr122_usb_close(nfc_device *pnd)
   pn53x_idle(pnd);
 
   int res;
-  if ((res = usb_release_interface(DRIVER_DATA(pnd)->pudh, 0)) < 0) {
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to release USB interface (%s)", _usb_strerror(res));
+  if ((res = usbbus_release_interface(DRIVER_DATA(pnd)->pudh, 0)) < 0) {
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to release USB interface (%s)", usbbus_strerror(res));
   }
 
-  if ((res = usb_close(DRIVER_DATA(pnd)->pudh)) < 0) {
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to close USB connection (%s)", _usb_strerror(res));
+  if ((res = usbbus_close(DRIVER_DATA(pnd)->pudh)) < 0) {
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to close USB connection (%s)", usbbus_strerror(res));
   }
   pn53x_data_free(pnd);
   nfc_device_free(pnd);
@@ -570,7 +570,7 @@ acr122_usb_send(nfc_device *pnd, const uint8_t *pbtData, const size_t szData, co
   return NFC_SUCCESS;
 }
 
-#define USB_TIMEOUT_PER_PASS 200
+#define USBBUS_TIMEOUT_PER_PASS 200
 static int
 acr122_usb_receive(nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, const int timeout)
 {
@@ -580,26 +580,26 @@ acr122_usb_receive(nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, co
   int res;
 
   /*
-   * If no timeout is specified but the command is blocking, force a 200ms (USB_TIMEOUT_PER_PASS)
+   * If no timeout is specified but the command is blocking, force a 200ms (USBBUS_TIMEOUT_PER_PASS)
    * timeout to allow breaking the loop if the user wants to stop it.
    */
-  int usb_timeout;
+  int usbbus_timeout;
   int remaining_time = timeout;
 read:
-  if (timeout == USB_INFINITE_TIMEOUT) {
-    usb_timeout = USB_TIMEOUT_PER_PASS;
+  if (timeout == USBBUS_INFINITE_TIMEOUT) {
+    usbbus_timeout = USBBUS_TIMEOUT_PER_PASS;
   } else {
     // A user-provided timeout is set, we have to cut it in multiple chunk to be able to keep an nfc_abort_command() mecanism
-    remaining_time -= USB_TIMEOUT_PER_PASS;
+    remaining_time -= USBBUS_TIMEOUT_PER_PASS;
     if (remaining_time <= 0) {
       pnd->last_error = NFC_ETIMEOUT;
       return pnd->last_error;
     } else {
-      usb_timeout = MIN(remaining_time, USB_TIMEOUT_PER_PASS);
+      usbbus_timeout = MIN(remaining_time, USBBUS_TIMEOUT_PER_PASS);
     }
   }
 
-  res = acr122_usb_bulk_read(DRIVER_DATA(pnd), abtRxBuf, sizeof(abtRxBuf), usb_timeout);
+  res = acr122_usb_bulk_read(DRIVER_DATA(pnd), abtRxBuf, sizeof(abtRxBuf), usbbus_timeout);
 
   uint8_t attempted_response = RDR_to_PC_DataBlock;
   size_t len;
