@@ -32,22 +32,6 @@
 static libusb_context *ctx = NULL;
 static int usb_debug = 0;
 
-#ifdef ENABLE_LOGGING
-#define _usbi_log(level, ...) usbi_log(level, __FUNCTION__, __VA_ARGS__)
-#else
-#define _usbi_log(level, ...)
-#endif
-
-#ifdef ENABLE_DEBUG_LOGGING
-#define usbi_dbg(...) _usbi_log(LOG_LEVEL_DEBUG, __VA_ARGS__)
-#else
-#define usbi_dbg(...)
-#endif
-
-#define usbi_info(...) _usbi_log(LOG_LEVEL_INFO, __VA_ARGS__)
-#define usbi_warn(...) _usbi_log(LOG_LEVEL_WARNING, __VA_ARGS__)
-#define usbi_err(...) _usbi_log(LOG_LEVEL_ERROR, __VA_ARGS__)
-
 struct usb_bus *usb_busses = NULL;
 
 #define compat_err(e) -(errno=libusb_to_errno(e))
@@ -96,13 +80,10 @@ static void _usb_finalize(void)
 
 void usb_init(void)
 {
-  usbi_dbg("");
-
   if (!ctx) {
     int r;
     r = libusb_init(&ctx);
     if (r < 0) {
-      usbi_err("initialization failed!");
       return;
     }
 
@@ -130,7 +111,6 @@ static int find_busses(struct usb_bus **ret)
 
   r = libusb_get_device_list(ctx, &dev_list);
   if (r < 0) {
-    usbi_err("get_device_list failed with error %d", r);
     return compat_err(r);
   }
 
@@ -200,10 +180,8 @@ int usb_find_busses(void)
   if (!ctx)
     return 0;
 
-  usbi_dbg("");
   r = find_busses(&new_busses);
   if (r < 0) {
-    usbi_err("find_busses failed with error %d", r);
     return r;
   }
 
@@ -216,7 +194,6 @@ int usb_find_busses(void)
     struct usb_bus *tbus = bus->next;
     struct usb_bus *nbus = new_busses;
     int found = 0;
-    usbi_dbg("in loop");
 
     while (nbus) {
       struct usb_bus *tnbus = nbus->next;
@@ -232,7 +209,6 @@ int usb_find_busses(void)
 
     if (!found) {
       /* bus removed */
-      usbi_dbg("bus %d removed", bus->location);
       changes++;
       LIST_DEL(usb_busses, bus);
       free(bus);
@@ -245,7 +221,6 @@ int usb_find_busses(void)
   bus = new_busses;
   while (bus) {
     struct usb_bus *tbus = bus->next;
-    usbi_dbg("bus %d added", bus->location);
     LIST_DEL(new_busses, bus);
     LIST_ADD(usb_busses, bus);
     changes++;
@@ -465,7 +440,6 @@ static int initialize_device(struct usb_device *dev)
   r = libusb_get_device_descriptor(newlib_dev,
                                    (struct libusb_device_descriptor *) &dev->descriptor);
   if (r < 0) {
-    usbi_err("error %d getting device descriptor", r);
     return compat_err(r);
   }
 
@@ -525,7 +499,6 @@ int usb_find_devices(void)
   if (!ctx)
     return 0;
 
-  usbi_dbg("");
   dev_list_len = libusb_get_device_list(ctx, &dev_list);
   if (dev_list_len < 0)
     return compat_err(dev_list_len);
@@ -561,8 +534,6 @@ int usb_find_devices(void)
       }
 
       if (!found) {
-        usbi_dbg("device %d.%d removed",
-                 dev->bus->location, dev->devnum);
         LIST_DEL(bus->devices, dev);
         free_device(dev);
         changes++;
@@ -577,12 +548,9 @@ int usb_find_devices(void)
       struct usb_device *tdev = dev->next;
       r = initialize_device(dev);
       if (r < 0) {
-        usbi_err("couldn't initialize device %d.%d (error %d)",
-                 dev->bus->location, dev->devnum, r);
         dev = tdev;
         continue;
       }
-      usbi_dbg("device %d.%d added", dev->bus->location, dev->devnum);
       LIST_DEL(new_devices, dev);
       LIST_ADD(bus->devices, dev);
       changes++;
