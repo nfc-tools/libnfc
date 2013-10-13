@@ -27,12 +27,12 @@
 
 #include <libusb.h>
 
+#include "usbbus.h"
 #include "libusb-compat-usb.h"
 
 static libusb_context *ctx = NULL;
-static int usb_debug = 0;
 
-struct usb_bus *usb_busses = NULL;
+struct usbbus_bus *usb_busses = NULL;
 
 #define compat_err(e) -(errno=libusb_to_errno(e))
 
@@ -87,10 +87,6 @@ void usb_init(void)
       return;
     }
 
-    /* usb_set_debug can be called before usb_init */
-    if (usb_debug)
-      libusb_set_debug(ctx, 3);
-
     atexit(_usb_finalize);
   }
 }
@@ -100,11 +96,11 @@ char *usb_strerror(void)
   return strerror(errno);
 }
 
-static int find_busses(struct usb_bus **ret)
+static int find_busses(struct usbbus_bus **ret)
 {
   libusb_device **dev_list = NULL;
-  struct usb_bus *busses = NULL;
-  struct usb_bus *bus;
+  struct usbbus_bus *busses = NULL;
+  struct usbbus_bus *bus;
   int dev_list_len = 0;
   int i;
   int r;
@@ -121,7 +117,7 @@ static int find_busses(struct usb_bus **ret)
   }
 
   /* iterate over the device list, identifying the individual busses.
-   * we use the location field of the usb_bus structure to store the
+   * we use the location field of the usbbus_bus structure to store the
    * bus number. */
 
   dev_list_len = r;
@@ -161,7 +157,7 @@ static int find_busses(struct usb_bus **ret)
 err:
   bus = busses;
   while (bus) {
-    struct usb_bus *tbus = bus->next;
+    struct usbbus_bus *tbus = bus->next;
     free(bus);
     bus = tbus;
   }
@@ -170,8 +166,8 @@ err:
 
 int usb_find_busses(void)
 {
-  struct usb_bus *new_busses = NULL;
-  struct usb_bus *bus;
+  struct usbbus_bus *new_busses = NULL;
+  struct usbbus_bus *bus;
   int changes = 0;
   int r;
 
@@ -191,12 +187,12 @@ int usb_find_busses(void)
 
   bus = usb_busses;
   while (bus) {
-    struct usb_bus *tbus = bus->next;
-    struct usb_bus *nbus = new_busses;
+    struct usbbus_bus *tbus = bus->next;
+    struct usbbus_bus *nbus = new_busses;
     int found = 0;
 
     while (nbus) {
-      struct usb_bus *tnbus = nbus->next;
+      struct usbbus_bus *tnbus = nbus->next;
 
       if (bus->location == nbus->location) {
         LIST_DEL(new_busses, nbus);
@@ -220,7 +216,7 @@ int usb_find_busses(void)
   /* anything remaining in new_busses is a new bus */
   bus = new_busses;
   while (bus) {
-    struct usb_bus *tbus = bus->next;
+    struct usbbus_bus *tbus = bus->next;
     LIST_DEL(new_busses, bus);
     LIST_ADD(usb_busses, bus);
     changes++;
@@ -231,10 +227,10 @@ int usb_find_busses(void)
 }
 
 static int find_devices(libusb_device **dev_list, int dev_list_len,
-                        struct usb_bus *bus, struct usb_device **ret)
+                        struct usbbus_bus *bus, struct usbbus_device **ret)
 {
-  struct usb_device *devices = NULL;
-  struct usb_device *dev;
+  struct usbbus_device *devices = NULL;
+  struct usbbus_device *dev;
   int i;
 
   for (i = 0; i < dev_list_len; i++) {
@@ -264,20 +260,20 @@ static int find_devices(libusb_device **dev_list, int dev_list_len,
 err:
   dev = devices;
   while (dev) {
-    struct usb_device *tdev = dev->next;
+    struct usbbus_device *tdev = dev->next;
     free(dev);
     dev = tdev;
   }
   return -ENOMEM;
 }
 
-static void clear_endpoint_descriptor(struct usb_endpoint_descriptor *ep)
+static void clear_endpoint_descriptor(struct usbbus_endpoint_descriptor *ep)
 {
   if (ep->extra)
     free(ep->extra);
 }
 
-static void clear_interface_descriptor(struct usb_interface_descriptor *iface)
+static void clear_interface_descriptor(struct usbbus_interface_descriptor *iface)
 {
   if (iface->extra)
     free(iface->extra);
@@ -289,7 +285,7 @@ static void clear_interface_descriptor(struct usb_interface_descriptor *iface)
   }
 }
 
-static void clear_interface(struct usb_interface *iface)
+static void clear_interface(struct usbbus_interface *iface)
 {
   if (iface->altsetting) {
     int i;
@@ -299,7 +295,7 @@ static void clear_interface(struct usb_interface *iface)
   }
 }
 
-static void clear_config_descriptor(struct usb_config_descriptor *config)
+static void clear_config_descriptor(struct usbbus_config_descriptor *config)
 {
   if (config->extra)
     free(config->extra);
@@ -311,17 +307,17 @@ static void clear_config_descriptor(struct usb_config_descriptor *config)
   }
 }
 
-static void clear_device(struct usb_device *dev)
+static void clear_device(struct usbbus_device *dev)
 {
   int i;
   for (i = 0; i < dev->descriptor.bNumConfigurations; i++)
     clear_config_descriptor(dev->config + i);
 }
 
-static int copy_endpoint_descriptor(struct usb_endpoint_descriptor *dest,
+static int copy_endpoint_descriptor(struct usbbus_endpoint_descriptor *dest,
                                     const struct libusb_endpoint_descriptor *src)
 {
-  memcpy(dest, src, USB_DT_ENDPOINT_AUDIO_SIZE);
+  memcpy(dest, src, USBBUS_DT_ENDPOINT_AUDIO_SIZE);
 
   dest->extralen = src->extra_length;
   if (src->extra_length) {
@@ -334,14 +330,14 @@ static int copy_endpoint_descriptor(struct usb_endpoint_descriptor *dest,
   return 0;
 }
 
-static int copy_interface_descriptor(struct usb_interface_descriptor *dest,
+static int copy_interface_descriptor(struct usbbus_interface_descriptor *dest,
                                      const struct libusb_interface_descriptor *src)
 {
   int i;
   int num_endpoints = src->bNumEndpoints;
-  size_t alloc_size = sizeof(struct usb_endpoint_descriptor) * num_endpoints;
+  size_t alloc_size = sizeof(struct usbbus_endpoint_descriptor) * num_endpoints;
 
-  memcpy(dest, src, USB_DT_INTERFACE_SIZE);
+  memcpy(dest, src, USBBUS_DT_INTERFACE_SIZE);
   dest->endpoint = malloc(alloc_size);
   if (!dest->endpoint)
     return -ENOMEM;
@@ -368,12 +364,12 @@ static int copy_interface_descriptor(struct usb_interface_descriptor *dest,
   return 0;
 }
 
-static int copy_interface(struct usb_interface *dest,
+static int copy_interface(struct usbbus_interface *dest,
                           const struct libusb_interface *src)
 {
   int i;
   int num_altsetting = src->num_altsetting;
-  size_t alloc_size = sizeof(struct usb_interface_descriptor)
+  size_t alloc_size = sizeof(struct usbbus_interface_descriptor)
                       * num_altsetting;
 
   dest->num_altsetting = num_altsetting;
@@ -394,14 +390,14 @@ static int copy_interface(struct usb_interface *dest,
   return 0;
 }
 
-static int copy_config_descriptor(struct usb_config_descriptor *dest,
+static int copy_config_descriptor(struct usbbus_config_descriptor *dest,
                                   const struct libusb_config_descriptor *src)
 {
   int i;
   int num_interfaces = src->bNumInterfaces;
-  size_t alloc_size = sizeof(struct usb_interface) * num_interfaces;
+  size_t alloc_size = sizeof(struct usbbus_interface) * num_interfaces;
 
-  memcpy(dest, src, USB_DT_CONFIG_SIZE);
+  memcpy(dest, src, USBBUS_DT_CONFIG_SIZE);
   dest->interface = malloc(alloc_size);
   if (!dest->interface)
     return -ENOMEM;
@@ -428,7 +424,7 @@ static int copy_config_descriptor(struct usb_config_descriptor *dest,
   return 0;
 }
 
-static int initialize_device(struct usb_device *dev)
+static int initialize_device(struct usbbus_device *dev)
 {
   libusb_device *newlib_dev = dev->dev;
   int num_configurations;
@@ -444,7 +440,7 @@ static int initialize_device(struct usb_device *dev)
   }
 
   num_configurations = dev->descriptor.bNumConfigurations;
-  alloc_size = sizeof(struct usb_config_descriptor) * num_configurations;
+  alloc_size = sizeof(struct usbbus_config_descriptor) * num_configurations;
   dev->config = malloc(alloc_size);
   if (!dev->config)
     return -ENOMEM;
@@ -480,7 +476,7 @@ static int initialize_device(struct usb_device *dev)
   return 0;
 }
 
-static void free_device(struct usb_device *dev)
+static void free_device(struct usbbus_device *dev)
 {
   clear_device(dev);
   libusb_unref_device(dev->dev);
@@ -489,7 +485,7 @@ static void free_device(struct usb_device *dev)
 
 int usb_find_devices(void)
 {
-  struct usb_bus *bus;
+  struct usbbus_bus *bus;
   libusb_device **dev_list;
   int dev_list_len;
   int changes = 0;
@@ -505,8 +501,8 @@ int usb_find_devices(void)
 
   for (bus = usb_busses; bus; bus = bus->next) {
     int r;
-    struct usb_device *new_devices = NULL;
-    struct usb_device *dev;
+    struct usbbus_device *new_devices = NULL;
+    struct usbbus_device *dev;
 
     r = find_devices(dev_list, dev_list_len, bus, &new_devices);
     if (r < 0) {
@@ -520,8 +516,8 @@ int usb_find_devices(void)
     dev = bus->devices;
     while (dev) {
       int found = 0;
-      struct usb_device *tdev = dev->next;
-      struct usb_device *ndev = new_devices;
+      struct usbbus_device *tdev = dev->next;
+      struct usbbus_device *ndev = new_devices;
 
       while (ndev) {
         if (ndev->devnum == dev->devnum) {
@@ -545,7 +541,7 @@ int usb_find_devices(void)
     /* anything left in new_devices is a new device */
     dev = new_devices;
     while (dev) {
-      struct usb_device *tdev = dev->next;
+      struct usbbus_device *tdev = dev->next;
       r = initialize_device(dev);
       if (r < 0) {
         dev = tdev;
