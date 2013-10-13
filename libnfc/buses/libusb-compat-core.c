@@ -34,20 +34,20 @@ static libusb_context *ctx = NULL;
 static int usb_debug = 0;
 
 #ifdef ENABLE_LOGGING
-#define _usbi_log(level, fmt...) usbi_log(level, __FUNCTION__, fmt)
+#define _usbi_log(level, ...) usbi_log(level, __FUNCTION__, __VA_ARGS__)
 #else
-#define _usbi_log(level, fmt...)
+#define _usbi_log(level, ...)
 #endif
 
 #ifdef ENABLE_DEBUG_LOGGING
-#define usbi_dbg(fmt...) _usbi_log(LOG_LEVEL_DEBUG, fmt)
+#define usbi_dbg(...) _usbi_log(LOG_LEVEL_DEBUG, __VA_ARGS__)
 #else
-#define usbi_dbg(fmt...)
+#define usbi_dbg(...)
 #endif
 
-#define usbi_info(fmt...) _usbi_log(LOG_LEVEL_INFO, fmt)
-#define usbi_warn(fmt...) _usbi_log(LOG_LEVEL_WARNING, fmt)
-#define usbi_err(fmt...) _usbi_log(LOG_LEVEL_ERROR, fmt)
+#define usbi_info(...) _usbi_log(LOG_LEVEL_INFO, __VA_ARGS__)
+#define usbi_warn(...) _usbi_log(LOG_LEVEL_WARNING, __VA_ARGS__)
+#define usbi_err(...) _usbi_log(LOG_LEVEL_ERROR, __VA_ARGS__)
 
 struct usb_bus *usb_busses = NULL;
 
@@ -696,7 +696,7 @@ int usb_reset(usb_dev_handle *dev)
   return compat_err(libusb_reset_device(dev->handle));
 }
 
-static int usb_bulk_io(usb_dev_handle *dev, int ep, char *bytes,
+static int usb_bulk_io(usb_dev_handle *dev, int ep, unsigned char *bytes,
                        int size, int timeout)
 {
   int actual_length;
@@ -724,7 +724,7 @@ int usb_bulk_read(usb_dev_handle *dev, int ep, char *bytes,
     ep |= USB_ENDPOINT_IN;
   }
 
-  return usb_bulk_io(dev, ep, bytes, size, timeout);
+  return usb_bulk_io(dev, ep, (unsigned char *) bytes, size, timeout);
 }
 
 int usb_bulk_write(usb_dev_handle *dev, int ep, const char *bytes,
@@ -738,7 +738,7 @@ int usb_bulk_write(usb_dev_handle *dev, int ep, const char *bytes,
     ep &= ~USB_ENDPOINT_IN;
   }
 
-  return usb_bulk_io(dev, ep, (char *)bytes, size, timeout);
+  return usb_bulk_io(dev, ep, (unsigned char *)bytes, size, timeout);
 }
 
 int usb_get_string_simple(usb_dev_handle *dev, int desc_index,
@@ -746,7 +746,7 @@ int usb_get_string_simple(usb_dev_handle *dev, int desc_index,
 {
   int r;
   r = libusb_get_string_descriptor_ascii(dev->handle, desc_index & 0xff,
-                                         buf, (int) buflen);
+                                         (unsigned char *) buf, (int) buflen);
   if (r >= 0)
     return r;
   return compat_err(r);
