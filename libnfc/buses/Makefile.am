@@ -26,6 +26,10 @@ if LIBUSB_ENABLED
   libnfcbuses_la_SOURCES += usbbus.c usbbus.h
   libnfcbuses_la_CFLAGS += @libusb_CFLAGS@
   libnfcbuses_la_LIBADD  += @libusb_LIBS@
+
+#if LIBUSB10_ENABLED
+  libnfcbuses_la_SOURCES += libusb-compat-core.c libusb-compat-usb.h libusb-compat-usbi.h
+#endif
 endif
 EXTRA_DIST += usbbus.c usbbus.h
 
