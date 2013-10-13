@@ -139,11 +139,6 @@ int usbbus_reset(usbbus_dev_handle *dev)
   return usb_reset((usb_dev_handle *)dev);
 }
 
-struct usbbus_device *usbbus_device(usbbus_dev_handle *dev)
-{
-  return (struct usbbus_device *) usb_device((usb_dev_handle *)dev);
-}
-
 struct usbbus_bus *usbbus_get_busses(void)
 {
   return (struct usbbus_bus *) usb_get_busses();

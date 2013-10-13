@@ -97,10 +97,10 @@ static void _usb_finalize(void)
 
 void usb_init(void)
 {
-  int r;
   usbi_dbg("");
 
   if (!ctx) {
+    int r;
     r = libusb_init(&ctx);
     if (r < 0) {
       usbi_err("initialization failed!");
@@ -113,15 +113,6 @@ void usb_init(void)
 
     atexit(_usb_finalize);
   }
-}
-
-void usb_set_debug(int level)
-{
-  usb_debug = level;
-
-  /* usb_set_debug can be called before usb_init */
-  if (ctx)
-    libusb_set_debug(ctx, 3);
 }
 
 char *usb_strerror(void)
@@ -528,7 +519,6 @@ int usb_find_devices(void)
   struct usb_bus *bus;
   libusb_device **dev_list;
   int dev_list_len;
-  int r;
   int changes = 0;
 
   /* libusb-1.0 initialization might have failed, but we can't indicate
@@ -542,6 +532,7 @@ int usb_find_devices(void)
     return compat_err(dev_list_len);
 
   for (bus = usb_busses; bus; bus = bus->next) {
+    int r;
     struct usb_device *new_devices = NULL;
     struct usb_device *dev;
 
@@ -641,11 +632,6 @@ int usb_close(usb_dev_handle *dev)
   libusb_close(dev->handle);
   free(dev);
   return 0;
-}
-
-struct usb_device *usb_device(usb_dev_handle *dev)
-{
-  return dev->device;
 }
 
 int usb_set_configuration(usb_dev_handle *dev, int configuration)

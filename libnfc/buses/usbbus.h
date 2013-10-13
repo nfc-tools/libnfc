@@ -134,7 +134,6 @@ struct usbbus_device_descriptor {
 } __attribute__((packed));
 
 
-struct usbbus_device;
 struct usbbus_bus;
 
 struct usbbus_device {
@@ -177,7 +176,6 @@ int usbbus_claim_interface(usbbus_dev_handle *dev, int interface);
 int usbbus_release_interface(usbbus_dev_handle *dev, int interface);
 int usbbus_set_altinterface(usbbus_dev_handle *dev, int alternate);
 int usbbus_reset(usbbus_dev_handle *dev);
-struct usbbus_device *usbbus_device(usbbus_dev_handle *dev);
 struct usbbus_bus *usbbus_get_busses(void);
 
 #endif // __NFC_BUS_USB_H__
