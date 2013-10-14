@@ -35,7 +35,7 @@ IF(NOT LIBUSB_FOUND)
     # If not under Windows we use PkgConfig
     FIND_PACKAGE (PkgConfig)
     IF(PKG_CONFIG_FOUND)
-      PKG_CHECK_MODULES(LIBUSB REQUIRED libusb)
+      PKG_CHECK_MODULES(LIBUSB REQUIRED libusb-1.0)
     ELSE(PKG_CONFIG_FOUND)
       MESSAGE(FATAL_ERROR "Could not find PkgConfig")
     ENDIF(PKG_CONFIG_FOUND)
