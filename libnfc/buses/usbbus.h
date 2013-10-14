@@ -60,8 +60,8 @@ int usbbus_prepare(void);
 #define USBBUS_PATH_MAX 4096
 #endif
 
-struct usbbus_dev_handle;
-typedef struct usbbus_dev_handle usbbus_dev_handle;
+struct usbbus_device_handle;
+typedef struct usbbus_device_handle usbbus_device_handle;
 
 struct usbbus_endpoint_descriptor {
   uint8_t  bLength;
@@ -166,16 +166,16 @@ struct usbbus_bus {
 };
 
 
-usbbus_dev_handle *usbbus_open(struct usbbus_device *dev);
-int usbbus_close(usbbus_dev_handle *dev);
-int usbbus_set_configuration(usbbus_dev_handle *dev, int configuration);
-int usbbus_get_string_simple(usbbus_dev_handle *dev, int index, char *buf, size_t buflen);
-int usbbus_bulk_read(usbbus_dev_handle *dev, int ep, char *bytes, int size, int timeout);
-int usbbus_bulk_write(usbbus_dev_handle *dev, int ep, const char *bytes, int size, int timeout);
-int usbbus_claim_interface(usbbus_dev_handle *dev, int interface);
-int usbbus_release_interface(usbbus_dev_handle *dev, int interface);
-int usbbus_set_altinterface(usbbus_dev_handle *dev, int alternate);
-int usbbus_reset(usbbus_dev_handle *dev);
+usbbus_device_handle *usbbus_open(struct usbbus_device *dev);
+void usbbus_close(usbbus_device_handle *dev);
+int usbbus_set_configuration(usbbus_device_handle *dev, int configuration);
+int usbbus_get_string_simple(usbbus_device_handle *dev, int index, char *buf, size_t buflen);
+int usbbus_bulk_read(usbbus_device_handle *dev, int ep, char *bytes, int size, int timeout);
+int usbbus_bulk_write(usbbus_device_handle *dev, int ep, const char *bytes, int size, int timeout);
+int usbbus_claim_interface(usbbus_device_handle *dev, int interface);
+int usbbus_release_interface(usbbus_device_handle *dev, int interface);
+int usbbus_set_interface_alt_setting(usbbus_device_handle *dev, int interface, int alternate);
+int usbbus_reset(usbbus_device_handle *dev);
 struct usbbus_bus *usbbus_get_busses(void);
 
 #endif // __NFC_BUS_USB_H__

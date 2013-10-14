@@ -72,7 +72,7 @@ typedef enum {
 
 // Internal data struct
 struct pn53x_usb_data {
-  usbbus_dev_handle *pudh;
+  usbbus_device_handle *pudh;
   pn53x_usb_model model;
   uint32_t uiEndPointIn;
   uint32_t uiEndPointOut;
@@ -84,7 +84,7 @@ struct pn53x_usb_data {
 const struct pn53x_io pn53x_usb_io;
 
 // Prototypes
-bool pn53x_usb_get_usb_device_name(struct usbbus_device *dev, usbbus_dev_handle *udev, char *buffer, size_t len);
+bool pn53x_usb_get_usb_device_name(struct usbbus_device *dev, usbbus_device_handle *udev, char *buffer, size_t len);
 int pn53x_usb_init(nfc_device *pnd);
 
 static int
@@ -204,7 +204,7 @@ pn53x_usb_scan(const nfc_context *context, nfc_connstring connstrings[], const s
             continue;
           }
 
-          usbbus_dev_handle *udev = usbbus_open(dev);
+          usbbus_device_handle *udev = usbbus_open(dev);
           if (udev == NULL)
             continue;
 
@@ -240,7 +240,7 @@ struct pn53x_usb_descriptor {
 };
 
 bool
-pn53x_usb_get_usb_device_name(struct usbbus_device *dev, usbbus_dev_handle *udev, char *buffer, size_t len)
+pn53x_usb_get_usb_device_name(struct usbbus_device *dev, usbbus_device_handle *udev, char *buffer, size_t len)
 {
   *buffer = '\0';
 
@@ -412,9 +412,7 @@ pn53x_usb_close(nfc_device *pnd)
     log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to release USB interface (%s)", usbbus_strerror(res));
   }
 
-  if ((res = usbbus_close(DRIVER_DATA(pnd)->pudh)) < 0) {
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to close USB connection (%s)", usbbus_strerror(res));
-  }
+  usbbus_close(DRIVER_DATA(pnd)->pudh);
   pn53x_data_free(pnd);
   nfc_device_free(pnd);
 }
