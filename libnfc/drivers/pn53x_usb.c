@@ -41,7 +41,6 @@ Thanks to d18c7db and Okko for example code
 #include <stdlib.h>
 #include <inttypes.h>
 #include <sys/select.h>
-#include <errno.h>
 #include <string.h>
 
 #include <nfc/nfc.h>
@@ -94,7 +93,7 @@ pn53x_usb_bulk_read(struct pn53x_usb_data *data, uint8_t abtRx[], const size_t s
   if (res > 0) {
     LOG_HEX(NFC_LOG_GROUP_COM, "RX", abtRx, res);
   } else if (res < 0) {
-    if (res != -USBBUS_TIMEDOUT)
+    if (res != USBBUS_ERROR_TIMEOUT)
       log_put(NFC_LOG_GROUP_COM, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to read from USB (%s)", usbbus_strerror(res));
   }
   return res;
@@ -309,7 +308,7 @@ pn53x_usb_open(const nfc_context *context, const nfc_connstring connstring)
       int res = usbbus_set_configuration(data.pudh, 1);
       if (res < 0) {
         log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to set USB configuration (%s)", usbbus_strerror(res));
-        if (EPERM == -res) {
+        if (res == USBBUS_ERROR_ACCESS) {
           log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_INFO, "Warning: Please double check USB permissions for device %04x:%04x", dev->descriptor.idVendor, dev->descriptor.idProduct);
         }
         usbbus_close(data.pudh);
@@ -497,7 +496,7 @@ read:
 
   res = pn53x_usb_bulk_read(DRIVER_DATA(pnd), abtRxBuf, sizeof(abtRxBuf), usbbus_timeout);
 
-  if (res == -USBBUS_TIMEDOUT) {
+  if (res == USBBUS_ERROR_TIMEOUT) {
     if (DRIVER_DATA(pnd)->abort_flag) {
       DRIVER_DATA(pnd)->abort_flag = false;
       pn53x_usb_ack(pnd);

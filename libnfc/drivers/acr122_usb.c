@@ -58,7 +58,6 @@ Thanks to d18c7db and Okko for example code
 #include <stdlib.h>
 #include <inttypes.h>
 #include <sys/select.h>
-#include <errno.h>
 #include <string.h>
 
 #include <nfc/nfc.h>
@@ -222,7 +221,7 @@ acr122_usb_bulk_read(struct acr122_usb_data *data, uint8_t abtRx[], const size_t
   if (res > 0) {
     LOG_HEX(NFC_LOG_GROUP_COM, "RX", abtRx, res);
   } else if (res < 0) {
-    if (res != -USBBUS_TIMEDOUT) {
+    if (res != USBBUS_ERROR_TIMEOUT) {
       res = NFC_EIO;
       log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to read from USB (%s)", usbbus_strerror(res));
     } else {
@@ -244,7 +243,7 @@ acr122_usb_bulk_write(struct acr122_usb_data *data, uint8_t abtTx[], const size_
     }
   } else if (res < 0) {
     log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to write to USB (%s)", usbbus_strerror(res));
-    if (res == -USBBUS_TIMEDOUT) {
+    if (res == USBBUS_ERROR_TIMEOUT) {
       res = NFC_ETIMEOUT;
     } else {
       res = NFC_EIO;

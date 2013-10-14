@@ -36,15 +36,8 @@
 #include <stdbool.h>
 #include <string.h>
 
-#ifndef _WIN32
-// Under POSIX system, we use libusb (>= 0.1.12)
-#define USBBUS_TIMEDOUT ETIMEDOUT
-#define usbbus_strerror( X ) strerror(-X)
-#else
-// Under Windows we use libusb-win32 (>= 1.2.5)
-#define USBBUS_TIMEDOUT 116
-#define usbbus_strerror( X ) usb_strerror()
-#endif
+#define USBBUS_ERROR_ACCESS  -3
+#define USBBUS_ERROR_TIMEOUT -7
 
 int usbbus_prepare(void);
 
@@ -176,6 +169,7 @@ int usbbus_claim_interface(usbbus_device_handle *dev, int interface);
 int usbbus_release_interface(usbbus_device_handle *dev, int interface);
 int usbbus_set_interface_alt_setting(usbbus_device_handle *dev, int interface, int alternate);
 int usbbus_reset(usbbus_device_handle *dev);
+const char * usbbus_strerror(int errcode);
 struct usbbus_bus *usbbus_get_busses(void);
 
 #endif // __NFC_BUS_USB_H__

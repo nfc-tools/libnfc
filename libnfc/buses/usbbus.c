@@ -35,15 +35,12 @@
 #endif // HAVE_CONFIG_H
 
 #include <stdlib.h>
-#include <errno.h>
 #include <libusb.h>
 #include <stdint.h>
 #include "usbbus.h"
 #include "log.h"
 #define LOG_CATEGORY "libnfc.buses.usbbus"
 #define LOG_GROUP    NFC_LOG_GROUP_DRIVER
-
-#define compat_err(e) -(errno=libusb_to_errno(e))
 
 /*
  * This file embeds partially libusb-compat-0.1 by:
@@ -84,40 +81,6 @@ static libusb_context *ctx = NULL;
 
 struct usbbus_bus *usb_busses = NULL;
 
-static int libusb_to_errno(int result)
-{
-  switch (result) {
-    case LIBUSB_SUCCESS:
-      return 0;
-    case LIBUSB_ERROR_IO:
-      return EIO;
-    case LIBUSB_ERROR_INVALID_PARAM:
-      return EINVAL;
-    case LIBUSB_ERROR_ACCESS:
-      return EACCES;
-    case LIBUSB_ERROR_NO_DEVICE:
-      return ENXIO;
-    case LIBUSB_ERROR_NOT_FOUND:
-      return ENOENT;
-    case LIBUSB_ERROR_BUSY:
-      return EBUSY;
-    case LIBUSB_ERROR_TIMEOUT:
-      return ETIMEDOUT;
-    case LIBUSB_ERROR_OVERFLOW:
-      return EOVERFLOW;
-    case LIBUSB_ERROR_PIPE:
-      return EPIPE;
-    case LIBUSB_ERROR_INTERRUPTED:
-      return EINTR;
-    case LIBUSB_ERROR_NO_MEM:
-      return ENOMEM;
-    case LIBUSB_ERROR_NOT_SUPPORTED:
-      return ENOSYS;
-    default:
-      return ERANGE;
-  }
-}
-
 static void _usb_finalize(void)
 {
   if (ctx) {
@@ -150,7 +113,7 @@ static int find_busses(struct usbbus_bus **ret)
 
   r = libusb_get_device_list(ctx, &dev_list);
   if (r < 0) {
-    return compat_err(r);
+    return r;
   }
 
   if (r == 0) {
@@ -204,7 +167,7 @@ err:
     free(bus);
     bus = tbus;
   }
-  return -ENOMEM;
+  return LIBUSB_ERROR_NO_MEM;
 }
 
 static int usb_find_busses(void)
@@ -307,7 +270,7 @@ err:
     free(dev);
     dev = tdev;
   }
-  return -ENOMEM;
+  return LIBUSB_ERROR_NO_MEM;
 }
 
 static void clear_endpoint_descriptor(struct usbbus_endpoint_descriptor *ep)
@@ -366,7 +329,7 @@ static int copy_endpoint_descriptor(struct usbbus_endpoint_descriptor *dest,
   if (src->extra_length) {
     dest->extra = malloc(src->extra_length);
     if (!dest->extra)
-      return -ENOMEM;
+      return LIBUSB_ERROR_NO_MEM;
     memcpy(dest->extra, src->extra, src->extra_length);
   }
 
@@ -383,7 +346,7 @@ static int copy_interface_descriptor(struct usbbus_interface_descriptor *dest,
   memcpy(dest, src, USBBUS_DT_INTERFACE_SIZE);
   dest->endpoint = malloc(alloc_size);
   if (!dest->endpoint)
-    return -ENOMEM;
+    return LIBUSB_ERROR_NO_MEM;
   memset(dest->endpoint, 0, alloc_size);
 
   for (i = 0; i < num_endpoints; i++) {
@@ -399,7 +362,7 @@ static int copy_interface_descriptor(struct usbbus_interface_descriptor *dest,
     dest->extra = malloc(src->extra_length);
     if (!dest->extra) {
       clear_interface_descriptor(dest);
-      return -ENOMEM;
+      return LIBUSB_ERROR_NO_MEM;
     }
     memcpy(dest->extra, src->extra, src->extra_length);
   }
@@ -418,7 +381,7 @@ static int copy_interface(struct usbbus_interface *dest,
   dest->num_altsetting = num_altsetting;
   dest->altsetting = malloc(alloc_size);
   if (!dest->altsetting)
-    return -ENOMEM;
+    return LIBUSB_ERROR_NO_MEM;
   memset(dest->altsetting, 0, alloc_size);
 
   for (i = 0; i < num_altsetting; i++) {
@@ -443,7 +406,7 @@ static int copy_config_descriptor(struct usbbus_config_descriptor *dest,
   memcpy(dest, src, USBBUS_DT_CONFIG_SIZE);
   dest->interface = malloc(alloc_size);
   if (!dest->interface)
-    return -ENOMEM;
+    return LIBUSB_ERROR_NO_MEM;
   memset(dest->interface, 0, alloc_size);
 
   for (i = 0; i < num_interfaces; i++) {
@@ -459,7 +422,7 @@ static int copy_config_descriptor(struct usbbus_config_descriptor *dest,
     dest->extra = malloc(src->extra_length);
     if (!dest->extra) {
       clear_config_descriptor(dest);
-      return -ENOMEM;
+      return LIBUSB_ERROR_NO_MEM;
     }
     memcpy(dest->extra, src->extra, src->extra_length);
   }
@@ -479,14 +442,14 @@ static int initialize_device(struct usbbus_device *dev)
   r = libusb_get_device_descriptor(newlib_dev,
                                    (struct libusb_device_descriptor *) &dev->descriptor);
   if (r < 0) {
-    return compat_err(r);
+    return r;
   }
 
   num_configurations = dev->descriptor.bNumConfigurations;
   alloc_size = sizeof(struct usbbus_config_descriptor) * num_configurations;
   dev->config = malloc(alloc_size);
   if (!dev->config)
-    return -ENOMEM;
+    return LIBUSB_ERROR_NO_MEM;
   memset(dev->config, 0, alloc_size);
 
   for (i = 0; i < num_configurations; i++) {
@@ -495,7 +458,7 @@ static int initialize_device(struct usbbus_device *dev)
     if (r < 0) {
       clear_device(dev);
       free(dev->config);
-      return compat_err(r);
+      return r;
     }
     r = copy_config_descriptor(dev->config + i, newlib_config);
     libusb_free_config_descriptor(newlib_config);
@@ -533,7 +496,7 @@ static int usb_find_devices(void)
 
   dev_list_len = libusb_get_device_list(ctx, &dev_list);
   if (dev_list_len < 0)
-    return compat_err(dev_list_len);
+    return dev_list_len;
 
   for (bus = usb_busses; bus; bus = bus->next) {
     int r;
@@ -636,7 +599,6 @@ usbbus_device_handle *usbbus_open(struct usbbus_device *dev)
   usbbus_device_handle *udev;
   r = libusb_open((libusb_device *) dev->dev, (libusb_device_handle **)&udev);
   if (r < 0) {
-    errno = libusb_to_errno(r);
     return NULL;
   }
   return (usbbus_device_handle *)udev;
@@ -649,7 +611,7 @@ void usbbus_close(usbbus_device_handle *dev)
 
 int usbbus_set_configuration(usbbus_device_handle *dev, int configuration)
 {
-  return compat_err(libusb_set_configuration((libusb_device_handle *)dev, configuration));
+  return libusb_set_configuration((libusb_device_handle *)dev, configuration);
 }
 
 int usbbus_get_string_simple(usbbus_device_handle *dev, int index, char *buf, size_t buflen)
@@ -671,7 +633,7 @@ static int usbbus_bulk_io(usbbus_device_handle *dev, int ep, unsigned char *byte
   if (r == 0 || (r == LIBUSB_ERROR_TIMEOUT && actual_length > 0))
     return actual_length;
 
-  return compat_err(r);
+  return r;
 }
 
 int usbbus_bulk_read(usbbus_device_handle *dev, int ep, char *bytes, int size, int timeout)
@@ -686,17 +648,12 @@ int usbbus_bulk_write(usbbus_device_handle *dev, int ep, const char *bytes, int 
 
 int usbbus_claim_interface(usbbus_device_handle *dev, int interface)
 {
-  int r;
-  r = libusb_claim_interface((libusb_device_handle *)dev, interface);
-  if (r == 0) {
-    return 0;
-  }
-  return compat_err(r);
+  return libusb_claim_interface((libusb_device_handle *)dev, interface);
 }
 
 int usbbus_release_interface(usbbus_device_handle *dev, int interface)
 {
-  return compat_err(libusb_release_interface((libusb_device_handle *)dev, interface));
+  return libusb_release_interface((libusb_device_handle *)dev, interface);
 }
 
 int usbbus_set_interface_alt_setting(usbbus_device_handle *dev, int interface, int alternate)
@@ -706,7 +663,12 @@ int usbbus_set_interface_alt_setting(usbbus_device_handle *dev, int interface, i
 
 int usbbus_reset(usbbus_device_handle *dev)
 {
-  return compat_err(libusb_reset_device((libusb_device_handle *)dev));
+  return libusb_reset_device((libusb_device_handle *)dev);
+}
+
+const char * usbbus_strerror(int errcode)
+{
+  return libusb_strerror((enum libusb_error)errcode);
 }
 
 struct usbbus_bus *usbbus_get_busses(void)
