@@ -682,7 +682,7 @@ int usbbus_get_string_simple(usbbus_dev_handle *dev, int index, char *buf, size_
 }
 
 static int usbbus_bulk_io(usbbus_dev_handle *dev, int ep, unsigned char *bytes,
-                       int size, int timeout)
+                          int size, int timeout)
 {
   int actual_length;
   int r;
@@ -730,7 +730,7 @@ int usbbus_release_interface(usbbus_dev_handle *dev, int interface)
 int usbbus_set_altinterface(usbbus_dev_handle *dev, int alternate)
 {
   if (dev->last_claimed_interface < 0)
-    return -(errno=EINVAL);
+    return -(errno = EINVAL);
   return compat_err(libusb_set_interface_alt_setting(dev->handle, dev->last_claimed_interface, alternate));
 }
 

@@ -131,7 +131,7 @@ struct usbbus_device_descriptor {
   uint8_t  iProduct;
   uint8_t  iSerialNumber;
   uint8_t  bNumConfigurations;
-} __attribute__((packed));
+};
 
 
 struct usbbus_bus;
