@@ -89,10 +89,12 @@ int pn53x_usb_init(nfc_device *pnd);
 static int
 pn53x_usb_bulk_read(struct pn53x_usb_data *data, uint8_t abtRx[], const size_t szRx, const int timeout)
 {
-  int res = usbbus_bulk_read(data->pudh, data->uiEndPointIn, (char *) abtRx, szRx, timeout);
-  if (res > 0) {
-    LOG_HEX(NFC_LOG_GROUP_COM, "RX", abtRx, res);
-  } else if (res < 0) {
+  int actual_length;
+  int res = usbbus_bulk_transfer(data->pudh, data->uiEndPointIn, (char *) abtRx, szRx, &actual_length, timeout);
+  if (res == 0) {
+    LOG_HEX(NFC_LOG_GROUP_COM, "RX", abtRx, actual_length);
+    res = actual_length;
+  } else {
     if (res != USBBUS_ERROR_TIMEOUT)
       log_put(NFC_LOG_GROUP_COM, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to read from USB (%s)", usbbus_strerror(res));
   }
@@ -103,11 +105,12 @@ static int
 pn53x_usb_bulk_write(struct pn53x_usb_data *data, uint8_t abtTx[], const size_t szTx, const int timeout)
 {
   LOG_HEX(NFC_LOG_GROUP_COM, "TX", abtTx, szTx);
-  int res = usbbus_bulk_write(data->pudh, data->uiEndPointOut, (char *) abtTx, szTx, timeout);
-  if (res > 0) {
+  int actual_length;
+  int res = usbbus_bulk_transfer(data->pudh, data->uiEndPointOut, (char *) abtTx, szTx, &actual_length, timeout);
+  if (res == 0) {
     // HACK This little hack is a well know problem of USB, see http://www.libusb.org/ticket/6 for more details
-    if ((res % data->uiMaxPacketSize) == 0) {
-      usbbus_bulk_write(data->pudh, data->uiEndPointOut, "\0", 0, timeout);
+    if ((actual_length > 0) && ((actual_length % data->uiMaxPacketSize) == 0)) {
+      usbbus_bulk_transfer(data->pudh, data->uiEndPointOut, "\0", 0, &actual_length, timeout);
     }
   } else {
     log_put(NFC_LOG_GROUP_COM, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to write to USB (%s)", usbbus_strerror(res));

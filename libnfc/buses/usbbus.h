@@ -163,13 +163,12 @@ usbbus_device_handle *usbbus_open(struct usbbus_device *dev);
 void usbbus_close(usbbus_device_handle *dev);
 int usbbus_set_configuration(usbbus_device_handle *dev, int configuration);
 int usbbus_get_string_simple(usbbus_device_handle *dev, int index, char *buf, size_t buflen);
-int usbbus_bulk_read(usbbus_device_handle *dev, int ep, char *bytes, int size, int timeout);
-int usbbus_bulk_write(usbbus_device_handle *dev, int ep, const char *bytes, int size, int timeout);
+int usbbus_bulk_transfer(usbbus_device_handle *dev, int ep, char *bytes, int size, int *actual_length, int timeout);
 int usbbus_claim_interface(usbbus_device_handle *dev, int interface);
 int usbbus_release_interface(usbbus_device_handle *dev, int interface);
 int usbbus_set_interface_alt_setting(usbbus_device_handle *dev, int interface, int alternate);
 int usbbus_reset(usbbus_device_handle *dev);
-const char * usbbus_strerror(int errcode);
+const char *usbbus_strerror(int errcode);
 struct usbbus_bus *usbbus_get_busses(void);
 
 #endif // __NFC_BUS_USB_H__

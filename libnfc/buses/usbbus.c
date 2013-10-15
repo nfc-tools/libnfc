@@ -617,33 +617,12 @@ int usbbus_set_configuration(usbbus_device_handle *dev, int configuration)
 int usbbus_get_string_simple(usbbus_device_handle *dev, int index, char *buf, size_t buflen)
 {
   return libusb_get_string_descriptor_ascii((libusb_device_handle *)dev, index & 0xff,
-                                         (unsigned char *) buf, (int) buflen);
+                                            (unsigned char *) buf, (int) buflen);
 }
 
-static int usbbus_bulk_io(usbbus_device_handle *dev, int ep, unsigned char *bytes,
-                          int size, int timeout)
+int usbbus_bulk_transfer(usbbus_device_handle *dev, int ep, char *bytes, int size, int *actual_length, int timeout)
 {
-  int actual_length;
-  int r;
-  r = libusb_bulk_transfer((libusb_device_handle *)dev, ep & 0xff, bytes, size,
-                           &actual_length, timeout);
-
-  /* if we timed out but did transfer some data, report as successful short
-   * read. FIXME: is this how libusb-0.1 works? */
-  if (r == 0 || (r == LIBUSB_ERROR_TIMEOUT && actual_length > 0))
-    return actual_length;
-
-  return r;
-}
-
-int usbbus_bulk_read(usbbus_device_handle *dev, int ep, char *bytes, int size, int timeout)
-{
-  return usbbus_bulk_io(dev, ep, (unsigned char *) bytes, size, timeout);
-}
-
-int usbbus_bulk_write(usbbus_device_handle *dev, int ep, const char *bytes, int size, int timeout)
-{
-  return usbbus_bulk_io(dev, ep, (unsigned char *)bytes, size, timeout);
+  return libusb_bulk_transfer((libusb_device_handle *)dev, ep & 0xff, (unsigned char *)bytes, size, actual_length, timeout);
 }
 
 int usbbus_claim_interface(usbbus_device_handle *dev, int interface)
@@ -666,7 +645,7 @@ int usbbus_reset(usbbus_device_handle *dev)
   return libusb_reset_device((libusb_device_handle *)dev);
 }
 
-const char * usbbus_strerror(int errcode)
+const char *usbbus_strerror(int errcode)
 {
   return libusb_strerror((enum libusb_error)errcode);
 }
