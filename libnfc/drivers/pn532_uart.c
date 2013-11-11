@@ -290,7 +290,7 @@ pn532_uart_open(const nfc_context *context, const nfc_connstring connstring)
 
   // Check communication using "Diagnose" command, with "Communication test" (0x00)
   if (pn53x_check_communication(pnd) < 0) {
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "pn53x_check_communication error on %s", ndd.port);
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "pn53x_check_communication error");
     pn532_uart_close(pnd);
     return NULL;
   }
