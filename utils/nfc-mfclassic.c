@@ -9,7 +9,7 @@
  * Copyright (C) 2012-2013 Ludovic Rousseau
  * See AUTHORS file for a more comprehensive list of contributors.
  * Additional contributors of this file:
- * Copyright (C) 2011      Adam Laurie
+ * Copyright (C) 2011-2013 Adam Laurie
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -68,6 +68,7 @@ static bool bUseKeyA;
 static bool bUseKeyFile;
 static bool bForceKeyFile;
 static bool bTolerateFailures;
+static bool bFormatCard;
 static bool magic2 = false;
 static uint8_t uiBlocks;
 static uint8_t keys[] = {
@@ -81,6 +82,8 @@ static uint8_t keys[] = {
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0xab, 0xcd, 0xef, 0x12, 0x34, 0x56
 };
+static uint8_t default_key[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+static uint8_t default_acl[] = {0xff, 0x07, 0x80, 0x69};
 
 static const nfc_modulation nmMifare = {
   .nmt = NMT_ISO14443A,
@@ -204,8 +207,10 @@ authenticate(uint32_t uiBlock)
     // Try to authenticate for the current sector
     if (nfc_initiator_mifare_cmd(pnd, mc, uiBlock, &mp))
       return true;
-  } else {
-    // Try to guess the right key
+  }
+
+  // If formatting or not using key file, try to guess the right key
+  if (bFormatCard || !bUseKeyFile) {
     for (size_t key_index = 0; key_index < num_keys; key_index++) {
       memcpy(mp.mpa.abtKey, keys + (key_index * 6), 6);
       if (nfc_initiator_mifare_cmd(pnd, mc, uiBlock, &mp)) {
@@ -407,10 +412,17 @@ write_card(int write_block_zero)
     }
 
     if (is_trailer_block(uiBlock)) {
-      // Copy the keys over from our key dump and store the retrieved access bits
-      memcpy(mp.mpd.abtData, mtDump.amb[uiBlock].mbt.abtKeyA, 6);
-      memcpy(mp.mpd.abtData + 6, mtDump.amb[uiBlock].mbt.abtAccessBits, 4);
-      memcpy(mp.mpd.abtData + 10, mtDump.amb[uiBlock].mbt.abtKeyB, 6);
+      if (bFormatCard) {
+        // Copy the default key and reset the access bits
+        memcpy(mp.mpd.abtData, default_key, 6);
+        memcpy(mp.mpd.abtData + 6, default_acl, 4);
+        memcpy(mp.mpd.abtData + 10, default_key, 6);
+      } else {
+        // Copy the keys over from our key dump and store the retrieved access bits
+        memcpy(mp.mpd.abtData, mtDump.amb[uiBlock].mbt.abtKeyA, 6);
+        memcpy(mp.mpd.abtData + 6, mtDump.amb[uiBlock].mbt.abtAccessBits, 4);
+        memcpy(mp.mpd.abtData + 10, mtDump.amb[uiBlock].mbt.abtKeyB, 6);
+      }
 
       // Try to write the trailer
       if (nfc_initiator_mifare_cmd(pnd, MC_WRITE, uiBlock, &mp) == false) {
@@ -426,7 +438,10 @@ write_card(int write_block_zero)
       // Make sure a earlier write did not fail
       if (!bFailure) {
         // Try to write the data block
-        memcpy(mp.mpd.abtData, mtDump.amb[uiBlock].mbd.abtData, 16);
+        if(bFormatCard && uiBlock)
+          memset(mp.mpd.abtData, 0x00, 16);
+        else
+          memcpy(mp.mpd.abtData, mtDump.amb[uiBlock].mbd.abtData, 16);
         // do not write a block 0 with incorrect BCC - card will be made invalid!
         if (uiBlock == 0) {
           if ((mp.mpd.abtData[0] ^ mp.mpd.abtData[1] ^ mp.mpd.abtData[2] ^ mp.mpd.abtData[3] ^ mp.mpd.abtData[4]) != 0x00 && !magic2) {
@@ -462,14 +477,25 @@ print_usage(const char *pcProgramName)
 {
   printf("Usage: ");
   printf("%s r|R|w|W a|b <dump.mfd> [<keys.mfd> [f]]\n", pcProgramName);
-  printf("  r|R|w|W       - Perform read from (r) or unlocked read from (R) or write to (w) or unlocked write to (W) card\n");
-  printf("                  *** note that unlocked write will attempt to overwrite block 0 including UID\n");
+  printf("  f|r|R|w|W     - Perform format (f) or read from (r) or unlocked read from (R) or write to (w) or unlocked write to (W) card\n");
+  printf("                  *** format will reset all keys to FFFFFFFFFFFF and all data to 00 and all ACLs to default\n");
   printf("                  *** unlocked read does not require authentication and will reveal A and B keys\n");
+  printf("                  *** note that unlocked write will attempt to overwrite block 0 including UID\n");
   printf("                  *** unlocking only works with special Mifare 1K cards (Chinese clones)\n");
   printf("  a|A|b|B       - Use A or B keys for action; Halt on errors (a|b) or tolerate errors (A|B)\n");
   printf("  <dump.mfd>    - MiFare Dump (MFD) used to write (card to MFD) or (MFD to card)\n");
   printf("  <keys.mfd>    - MiFare Dump (MFD) that contain the keys (optional)\n");
   printf("  f             - Force using the keyfile even if UID does not match (optional)\n");
+  printf("Examples: \n\n");
+  printf("  Read card to file, using key A:\n\n");
+  printf("    %s r a mycard.mfd\n\n", pcProgramName);
+  printf("  Write file to blank card, using key A:\n\n");
+  printf("    %s w a mycard.mfd\n\n", pcProgramName);
+  printf("  Write new data and/or keys to previously written card, using key A:\n\n");
+  printf("    %s w a newdata.mfd mycard.mfd\n\n", pcProgramName);
+  printf("  Format/wipe card (note two passes required to ensure writes for all ACL cases):\n\n");
+  printf("    %s f A dummy.mfd keyfile.mfd f\n", pcProgramName);
+  printf("    %s f B dummy.mfd keyfile.mfd f\n\n", pcProgramName);
 }
 
 int
@@ -497,7 +523,7 @@ main(int argc, const char *argv[])
     bTolerateFailures = tolower((int)((unsigned char) * (argv[2]))) != (int)((unsigned char) * (argv[2]));
     bUseKeyFile = (argc > 4);
     bForceKeyFile = ((argc > 5) && (strcmp((char *)argv[5], "f") == 0));
-  } else if (strcmp(command, "w") == 0 || strcmp(command, "W") == 0) {
+  } else if (strcmp(command, "w") == 0 || strcmp(command, "W") == 0 || strcmp(command, "f") == 0) {
     if (argc < 4) {
       print_usage(argv[0]);
       exit(EXIT_FAILURE);
@@ -505,6 +531,8 @@ main(int argc, const char *argv[])
     atAction = ACTION_WRITE;
     if (strcmp(command, "W") == 0)
       unlock = 1;
+    if (strcmp(command, "f") == 0)
+      bFormatCard = 1;
     bUseKeyA = tolower((int)((unsigned char) * (argv[2]))) == 'a';
     bTolerateFailures = tolower((int)((unsigned char) * (argv[2]))) != (int)((unsigned char) * (argv[2]));
     bUseKeyFile = (argc > 4);
