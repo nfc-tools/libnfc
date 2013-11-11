@@ -531,8 +531,7 @@ main(int argc, const char *argv[])
     atAction = ACTION_WRITE;
     if (strcmp(command, "W") == 0)
       unlock = 1;
-    if (strcmp(command, "f") == 0)
-      bFormatCard = 1;
+    bFormatCard = (strcmp(command, "f") == 0);
     bUseKeyA = tolower((int)((unsigned char) * (argv[2]))) == 'a';
     bTolerateFailures = tolower((int)((unsigned char) * (argv[2]))) != (int)((unsigned char) * (argv[2]));
     bUseKeyFile = (argc > 4);
