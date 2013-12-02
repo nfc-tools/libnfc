@@ -438,7 +438,7 @@ write_card(int write_block_zero)
       // Make sure a earlier write did not fail
       if (!bFailure) {
         // Try to write the data block
-        if(bFormatCard && uiBlock)
+        if (bFormatCard && uiBlock)
           memset(mp.mpd.abtData, 0x00, 16);
         else
           memcpy(mp.mpd.abtData, mtDump.amb[uiBlock].mbd.abtData, 16);
