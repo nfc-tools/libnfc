@@ -139,6 +139,7 @@ IF(WIN32)
   # Date for filling in rc file information
   MACRO (GET_CURRENT_YEAR RESULT)
     EXECUTE_PROCESS(COMMAND "cmd" " /C date /T" OUTPUT_VARIABLE ${RESULT})
+    STRING(REGEX REPLACE "\n" "" ${RESULT} ${${RESULT}})
     STRING(REGEX REPLACE ".*(..)/(..)/(....).*" "\\3" ${RESULT} ${${RESULT}})
   ENDMACRO (GET_CURRENT_YEAR)
   GET_CURRENT_YEAR(CURRENT_YEAR)
