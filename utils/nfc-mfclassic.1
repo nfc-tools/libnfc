@@ -3,10 +3,13 @@
 nfc-mfclassic \- MIFARE Classic command line tool
 .SH SYNOPSIS
 .B nfc-mfclassic
-.RI \fR\fBr\fR|\fR\fBR\fR|\fBw\fR\fR|\fBW\fR
+.RI \fR\fBf\fR|\fR\fBr\fR|\fR\fBR\fR|\fBw\fR\fR|\fBW\fR
 .RI \fR\fBa\fR|\fR\fBA\fR|\fBb\fR\fR|\fBB\fR
 .IR DUMP
-.IR [KEYS]
+.RI [
+.IR KEYS
+.RI [\fR\fBf\fR]
+.RI ]
 
 .SH DESCRIPTION
 .B nfc-mfclassic
@@ -26,6 +29,10 @@ to store the keys and data for all sectors.
 
 Be cautious that some parts of a MIFARE Classic memory are used for r/w access
 of the rest of the memory, so please read the tag documentation before experimenting too much!
+
+The
+.B f
+option to format the card will reset all keys to FFFFFFFFFFFF, all data to 00 and all ACLs to default.
 
 The
 .B W
@@ -57,8 +64,10 @@ options only work on special versions of MIFARE 1K cards (Chinese clones).
 
 .SH OPTIONS
 .TP
-.BR r " | " R " | " w " | " W
-Perform read from (
+.BR f " | " r " | " R " | " w " | " W
+Perform format (
+.B f
+) or read from (
 .B r
 ) or unlocked read from (
 .B R
@@ -86,6 +95,11 @@ MiFare Dump (MFD) used to write (card to MFD) or (MFD to card)
 .TP
 .IR KEYS
 MiFare Dump (MFD) that contains the keys (optional). Data part of the dump is ignored.
+.TP
+.B f
+Force using the keyfile
+.IR KEYS
+even if UID does not match (optional).
 
 .SH BUGS
 Please report any bugs on the

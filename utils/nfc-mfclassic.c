@@ -476,7 +476,7 @@ static void
 print_usage(const char *pcProgramName)
 {
   printf("Usage: ");
-  printf("%s r|R|w|W a|b <dump.mfd> [<keys.mfd> [f]]\n", pcProgramName);
+  printf("%s f|r|R|w|W a|b <dump.mfd> [<keys.mfd> [f]]\n", pcProgramName);
   printf("  f|r|R|w|W     - Perform format (f) or read from (r) or unlocked read from (R) or write to (w) or unlocked write to (W) card\n");
   printf("                  *** format will reset all keys to FFFFFFFFFFFF and all data to 00 and all ACLs to default\n");
   printf("                  *** unlocked read does not require authentication and will reveal A and B keys\n");
