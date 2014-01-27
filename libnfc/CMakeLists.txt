@@ -79,7 +79,7 @@ IF(LIBNFC_LOG)
     LIST(APPEND LIBRARY_SOURCES log log-internal)
   ENDIF(WIN32)
 ENDIF(LIBNFC_LOG)
-ADD_LIBRARY(nfc SHARED ${LIBRARY_SOURCES})
+ADD_LIBRARY(nfc ${LIBRARY_SOURCES})
 
 IF(PCSC_FOUND)
   TARGET_LINK_LIBRARIES(nfc ${PCSC_LIBRARIES})
@@ -98,20 +98,24 @@ IF(WIN32)
     TARGET_LINK_LIBRARIES(nfc ${PCRE_LIBRARIES})
   ENDIF(PCRE_FOUND)
 
-  ADD_CUSTOM_COMMAND(
-    OUTPUT libnfc.lib
-    COMMAND dlltool -d ${CMAKE_CURRENT_SOURCE_DIR}/../contrib/win32/nfc.def -l ${CMAKE_CURRENT_BINARY_DIR}/libnfc.lib ${CMAKE_CURRENT_BINARY_DIR}/libnfc.dll
-    DEPENDS nfc ${CMAKE_CURRENT_SOURCE_DIR}/../contrib/win32/nfc.def
-  )
-  ADD_CUSTOM_TARGET(win32lib ALL DEPENDS libnfc.lib)
+  IF(NOT MINGW)
+    ADD_CUSTOM_COMMAND(
+      OUTPUT libnfc.lib
+      COMMAND dlltool -d ${CMAKE_CURRENT_SOURCE_DIR}/../contrib/win32/nfc.def -l ${CMAKE_CURRENT_BINARY_DIR}/libnfc.lib ${CMAKE_CURRENT_BINARY_DIR}/libnfc.dll
+      DEPENDS nfc ${CMAKE_CURRENT_SOURCE_DIR}/../contrib/win32/nfc.def
+    )
+    ADD_CUSTOM_TARGET(win32lib ALL DEPENDS libnfc.lib)
+      
+    # At compile time we need the .LIB file, we place it in the lib directory
+    INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/libnfc.lib DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries)
+  ENDIF()
 
-  # On Windows the shared (runtime) library should be either in the same 
-  # directory as the excutables or in the path, we add it to same directory
-  INSTALL(TARGETS nfc RUNTIME DESTINATION bin COMPONENT libraries)
-
-  # At compile time we need the .LIB file, we place it in the lib directory
-  INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/libnfc.lib DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries)
-ELSE(WIN32)
-  INSTALL(TARGETS nfc LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries)
 ENDIF(WIN32)
 
+# On Windows the shared (runtime) library should be either in the same 
+# directory as the excutables or in the path, we add it to same directory
+INSTALL(TARGETS nfc
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        RUNTIME DESTINATION bin
+        COMPONENT libraries)

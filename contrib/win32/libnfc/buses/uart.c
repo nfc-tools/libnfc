@@ -113,7 +113,7 @@ uart_close(const serial_port sp)
 }
 
 void
-uart_flush_input(const serial_port sp)
+uart_flush_input(const serial_port sp, bool wait)
 {
   PurgeComm(((struct serial_port_windows *) sp)->hPort, PURGE_RXABORT | PURGE_RXCLEAR);
 }

@@ -131,14 +131,17 @@ ENDIF(LIBUSB_INCLUDE_DIRS)
 
 # version.rc for Windows
 IF(WIN32)
-  # Date for filling in rc file information
-  MACRO (GET_CURRENT_YEAR RESULT)
-    EXECUTE_PROCESS(COMMAND "cmd" " /C date /T" OUTPUT_VARIABLE ${RESULT})
-    STRING(REGEX REPLACE ".*(..)/(..)/(....).*" "\\3" ${RESULT} ${${RESULT}})
-  ENDMACRO (GET_CURRENT_YEAR)
-  GET_CURRENT_YEAR(CURRENT_YEAR)
-  MESSAGE("Year for copyright is " ${CURRENT_YEAR})
 
+  IF(NOT MINGW)
+    # Date for filling in rc file information
+    MACRO (GET_CURRENT_YEAR RESULT)
+      EXECUTE_PROCESS(COMMAND "cmd" " /C date /T" OUTPUT_VARIABLE ${RESULT})
+      STRING(REGEX REPLACE ".*(..)/(..)/(....).*" "\\3" ${RESULT} ${${RESULT}})
+    ENDMACRO (GET_CURRENT_YEAR)
+    GET_CURRENT_YEAR(CURRENT_YEAR)
+    MESSAGE("Year for copyright is " ${CURRENT_YEAR})
+  ENDIF()
+    
   SET(RC_COMMENT "${PACKAGE_NAME} library")
   SET(RC_INTERNAL_NAME "${PACKAGE_NAME} ${WIN32_MODE}")
   SET(RC_ORIGINAL_NAME ${PACKAGE_NAME}.dll)

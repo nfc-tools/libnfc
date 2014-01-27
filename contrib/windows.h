@@ -34,6 +34,7 @@
 #define __WINDOWS_H__
 
 #  include <windows.h>
+#  undef interface 
 #  include <winerror.h>
 #  include "win32/err.h"
 #  if defined (__MINGW32__)
