@@ -836,7 +836,9 @@ nfc_initiator_transceive_bytes_timed(nfc_device *pnd,
  * @brief Check target presence
  * @return Returns 0 on success, otherwise returns libnfc's error code.
  *
- * This function tests if \a nfc_target is currently present on NFC device.
+ * @param pnd \a nfc_device struct pointer that represent currently used device
+ * @param pnt a \a nfc_target struct pointer where desired target information was stored (optionnal, can be \e NULL).
+ * This function tests if \a nfc_target (or last selected tag if \e NULL) is currently present on NFC device.
  * @warning The target have to be selected before check its presence
  * @warning To run the test, one or more commands will be sent to target
 */
