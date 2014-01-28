@@ -1209,10 +1209,16 @@ pn53x_initiator_poll_target(struct nfc_device *pnd,
     switch (res) {
       case 1:
         *pnt = ntTargets[0];
+        if (pn53x_current_target_new(pnd, pnt) == NULL) {
+          return pnd->last_error = NFC_ESOFT;
+        }
         return res;
         break;
       case 2:
         *pnt = ntTargets[1]; // We keep the selected one
+        if (pn53x_current_target_new(pnd, pnt) == NULL) {
+          return pnd->last_error = NFC_ESOFT;
+        }
         return res;
         break;
       default:
