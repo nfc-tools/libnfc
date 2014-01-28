@@ -1736,12 +1736,12 @@ pn53x_initiator_target_is_present(struct nfc_device *pnd, const nfc_target *pnt)
 {
   // Check if there is a saved target
   if (CHIP_DATA(pnd)->current_target == NULL) {
-     return pnd->last_error = NFC_ETGRELEASED;
+    return pnd->last_error = NFC_ETGRELEASED;
   }
 
   // Check if the argument target nt is equals to current saved target
   if ((pnt != NULL) && (!pn53x_current_target_is(pnd, pnt))) {
-     return pnd->last_error = NFC_ETGRELEASED;
+    return pnd->last_error = NFC_ETGRELEASED;
   }
 
   // Send Card Presence command
@@ -1755,12 +1755,12 @@ pn53x_initiator_target_is_present(struct nfc_device *pnd, const nfc_target *pnt)
   if ((res = pn53x_transceive(pnd, abtCmd, sizeof(abtCmd), abtRx, sizeof(abtRx), 700)) < 0)
     return res;
   if (res == 1) {
-     return pnd->last_error = NFC_SUCCESS;
+    return pnd->last_error = NFC_SUCCESS;
   }
 
   // Target is not reachable anymore
   pn53x_current_target_free(pnd);
-   return pnd->last_error = NFC_ETGRELEASED;
+  return pnd->last_error = NFC_ETGRELEASED;
 }
 
 #define SAK_ISO14443_4_COMPLIANT 0x20
