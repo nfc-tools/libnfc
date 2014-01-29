@@ -1848,6 +1848,7 @@ pn53x_initiator_target_is_present(struct nfc_device *pnd, const nfc_target *pnt)
       } else {
         ret = NFC_EDEVNOTSUPP;
       }
+      break;
     case NMT_JEWEL:
     case NMT_ISO14443BI:
     case NMT_ISO14443B2SR:
