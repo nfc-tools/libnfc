@@ -1800,7 +1800,11 @@ pn53x_initiator_target_is_present(struct nfc_device *pnd, const nfc_target *pnt)
 //TODO MFC Mini (atqa0004/sak09) fails on PN533
           ret = pn53x_Diagnose06(pnd);
         } else {
-          ret = NFC_EDEVNOTSUPP;
+          if((ret = pn53x_initiator_select_passive_target_ext(pnd, CHIP_DATA(pnd)->current_target->nm, CHIP_DATA(pnd)->current_target->nti.nai.abtUid, CHIP_DATA(pnd)->current_target->nti.nai.szUidLen, NULL, 50)) == 1) {
+            ret = NFC_SUCCESS;
+          } else if ((ret == 0) || (ret == NFC_ETIMEOUT)) {
+            ret = NFC_ETGRELEASED;
+          }
         }
       } else {
         // unknown
