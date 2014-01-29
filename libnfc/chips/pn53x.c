@@ -1788,10 +1788,16 @@ pn53x_initiator_target_is_present(struct nfc_device *pnd, const nfc_target *pnt)
                  (CHIP_DATA(pnd)->current_target->nti.nai.btSak == 0x00)) {
         log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "target_is_present(): Ping MFUL");
         // MFUL
+        // Limitation: test on MFULC non-authenticated with read of first sector forbidden will fail
         if (CHIP_DATA(pnd)->type == PN533) {
           ret = pn53x_Diagnose06(pnd);
         } else {
-          ret = NFC_EDEVNOTSUPP;
+          uint8_t abtCmd[2] = {0x30, 0x00};
+          if (nfc_initiator_transceive_bytes(pnd, abtCmd, sizeof(abtCmd), NULL, 0, -1) > 0) {
+            ret = NFC_SUCCESS;
+          } else {
+            ret = NFC_ETGRELEASED;
+          }
         }
       } else if (CHIP_DATA(pnd)->current_target->nti.nai.btSak & 0x08) {
         log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "target_is_present(): Ping MFC");
@@ -1800,7 +1806,7 @@ pn53x_initiator_target_is_present(struct nfc_device *pnd, const nfc_target *pnt)
 //TODO MFC Mini (atqa0004/sak09) fails on PN533
           ret = pn53x_Diagnose06(pnd);
         } else {
-          if((ret = pn53x_initiator_select_passive_target_ext(pnd, CHIP_DATA(pnd)->current_target->nm, CHIP_DATA(pnd)->current_target->nti.nai.abtUid, CHIP_DATA(pnd)->current_target->nti.nai.szUidLen, NULL, 50)) == 1) {
+          if ((ret = pn53x_initiator_select_passive_target_ext(pnd, CHIP_DATA(pnd)->current_target->nm, CHIP_DATA(pnd)->current_target->nti.nai.abtUid, CHIP_DATA(pnd)->current_target->nti.nai.szUidLen, NULL, 50)) == 1) {
             ret = NFC_SUCCESS;
           } else if ((ret == 0) || (ret == NFC_ETIMEOUT)) {
             ret = NFC_ETGRELEASED;
