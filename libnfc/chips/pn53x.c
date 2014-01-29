@@ -1731,19 +1731,8 @@ pn53x_initiator_deselect_target(struct nfc_device *pnd)
   return pn53x_InDeselect(pnd, 0);    // 0 mean deselect all selected targets
 }
 
-int
-pn53x_initiator_target_is_present(struct nfc_device *pnd, const nfc_target *pnt)
+static int pn53x_Diagnose06(struct nfc_device *pnd)
 {
-  // Check if there is a saved target
-  if (CHIP_DATA(pnd)->current_target == NULL) {
-    return pnd->last_error = NFC_ETGRELEASED;
-  }
-
-  // Check if the argument target nt is equals to current saved target
-  if ((pnt != NULL) && (!pn53x_current_target_is(pnd, pnt))) {
-    return pnd->last_error = NFC_ETGRELEASED;
-  }
-
   // Send Card Presence command
   const uint8_t abtCmd[] = { Diagnose, 0x06 };
   uint8_t abtRx[1];
@@ -1755,12 +1744,105 @@ pn53x_initiator_target_is_present(struct nfc_device *pnd, const nfc_target *pnt)
   if ((res = pn53x_transceive(pnd, abtCmd, sizeof(abtCmd), abtRx, sizeof(abtRx), 700)) < 0)
     return res;
   if (res == 1) {
-    return pnd->last_error = NFC_SUCCESS;
+    return NFC_SUCCESS;
   }
 
   // Target is not reachable anymore
   pn53x_current_target_free(pnd);
-  return pnd->last_error = NFC_ETGRELEASED;
+  return NFC_ETGRELEASED;
+}
+
+int
+pn53x_initiator_target_is_present(struct nfc_device *pnd, const nfc_target *pnt)
+{
+  // Check if there is a saved target
+  if (CHIP_DATA(pnd)->current_target == NULL) {
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "target_is_present(): no saved target");
+// TODO pnt is optional for select_passive_target() and internal nt struct is saved
+// only if pnt is provided but it's not intuitive that
+// nfc_initiator_select_passive_target(pnt=NULL) + target_is_present(pnt=NULL) fails
+// Maybe we should have an internal copy of nt, no matter if a pnt was provided
+    return pnd->last_error = NFC_ETGRELEASED;
+  }
+
+  // Check if the argument target nt is equals to current saved target
+  if ((pnt != NULL) && (!pn53x_current_target_is(pnd, pnt))) {
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "target_is_present(): another target");
+    return pnd->last_error = NFC_ETGRELEASED;
+  }
+
+  // Ping target
+  int ret;
+  switch (CHIP_DATA(pnd)->current_target->nm.nmt) {
+    case NMT_ISO14443A:
+      if (CHIP_DATA(pnd)->current_target->nti.nai.btSak & 0x20) {
+        // -4A
+        log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "target_is_present(): Ping -4A");
+        if ((CHIP_DATA(pnd)->type == PN532) || (CHIP_DATA(pnd)->type == PN533)) {
+          ret = pn53x_Diagnose06(pnd);
+        } else {
+          ret = NFC_EDEVNOTSUPP;
+        }
+      } else if ((CHIP_DATA(pnd)->current_target->nti.nai.abtAtqa[0] == 0x00) &&
+                 (CHIP_DATA(pnd)->current_target->nti.nai.abtAtqa[1] == 0x44) &&
+                 (CHIP_DATA(pnd)->current_target->nti.nai.btSak == 0x00)) {
+        log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "target_is_present(): Ping MFUL");
+        // MFUL
+        if (CHIP_DATA(pnd)->type == PN533) {
+          ret = pn53x_Diagnose06(pnd);
+        } else {
+          ret = NFC_EDEVNOTSUPP;
+        }
+      } else if (CHIP_DATA(pnd)->current_target->nti.nai.btSak & 0x08) {
+        log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "target_is_present(): Ping MFC");
+        // MFC
+        if (CHIP_DATA(pnd)->type == PN533) {
+//TODO MFC Mini (atqa0004/sak09) fails on PN533
+          ret = pn53x_Diagnose06(pnd);
+        } else {
+          ret = NFC_EDEVNOTSUPP;
+        }
+      } else {
+        // unknown
+        log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "target_is_present(): card type A not supported");
+        ret = NFC_EDEVNOTSUPP;
+      }
+// TODO what about dual mode cards: MFP, JCOP etc? (MFC + -4)
+// we've to detect them and it depends in which state they are
+      break;
+    case NMT_DEP:
+      log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "target_is_present(): Ping DEP");
+      if ((CHIP_DATA(pnd)->type == PN531) || (CHIP_DATA(pnd)->type == PN532) || (CHIP_DATA(pnd)->type == PN533))
+        ret = pn53x_Diagnose06(pnd);
+      else
+        ret = NFC_EDEVNOTSUPP;
+      break;
+    case NMT_FELICA:
+      log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "target_is_present(): Ping Felica");
+      if (CHIP_DATA(pnd)->type == PN533) {
+        ret = pn53x_Diagnose06(pnd);
+      } else {
+        ret = NFC_EDEVNOTSUPP;
+      }
+      break;
+    case NMT_ISO14443B:
+      // -4B
+      log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "target_is_present(): Ping -4B");
+      if ((CHIP_DATA(pnd)->type == PN532) || (CHIP_DATA(pnd)->type == PN533)) {
+        ret = pn53x_Diagnose06(pnd);
+      } else {
+        ret = NFC_EDEVNOTSUPP;
+      }
+    case NMT_JEWEL:
+    case NMT_ISO14443BI:
+    case NMT_ISO14443B2SR:
+    case NMT_ISO14443B2CT:
+    default:
+      log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "target_is_present(): card type not supported");
+      ret = NFC_EDEVNOTSUPP;
+      break;
+  }
+  return pnd->last_error = ret;
 }
 
 #define SAK_ISO14443_4_COMPLIANT 0x20
