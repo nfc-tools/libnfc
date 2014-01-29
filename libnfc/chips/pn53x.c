@@ -1809,25 +1809,8 @@ pn53x_initiator_target_is_present(struct nfc_device *pnd, const nfc_target *pnt)
           // Limitation: re-select will lose authentication of already authenticated sector
           // TODO: buggy when card is removed on Tikitag
           uint8_t pbtInitiatorData[12];
-          uint8_t szInitiatorData = 0;
-          switch (CHIP_DATA(pnd)->current_target->nti.nai.szUidLen) {
-            case 4:
-              memcpy(pbtInitiatorData, CHIP_DATA(pnd)->current_target->nti.nai.abtUid, 4);
-              szInitiatorData = 4;
-              break;
-            case 7:
-              pbtInitiatorData[0] = 0x88;
-              memcpy(&pbtInitiatorData[1], CHIP_DATA(pnd)->current_target->nti.nai.abtUid, 7);
-              szInitiatorData = 8;
-              break;
-            case 10:
-              pbtInitiatorData[0] = 0x88;
-              memcpy(&pbtInitiatorData[1], CHIP_DATA(pnd)->current_target->nti.nai.abtUid, 3);
-              pbtInitiatorData[4] = 0x88;
-              memcpy(&pbtInitiatorData[5], &CHIP_DATA(pnd)->current_target->nti.nai.abtUid[3], 7);
-              szInitiatorData = 12;
-              break;
-          }
+          size_t szInitiatorData = 0;
+          iso14443_cascade_uid(CHIP_DATA(pnd)->current_target->nti.nai.abtUid, CHIP_DATA(pnd)->current_target->nti.nai.szUidLen, pbtInitiatorData, &szInitiatorData);
           if ((ret = pn53x_initiator_select_passive_target_ext(pnd, CHIP_DATA(pnd)->current_target->nm, pbtInitiatorData, szInitiatorData, NULL, 300)) == 1) {
             ret = NFC_SUCCESS;
           } else if ((ret == 0) || (ret == NFC_ETIMEOUT)) {
