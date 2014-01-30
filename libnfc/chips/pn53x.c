@@ -1836,10 +1836,21 @@ pn53x_initiator_target_is_present(struct nfc_device *pnd, const nfc_target *pnt)
       break;
     case NMT_FELICA:
       log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "target_is_present(): Ping Felica");
-      if (CHIP_DATA(pnd)->type == PN533) {
-        ret = pn53x_Diagnose06(pnd);
-      } else {
-        ret = NFC_EDEVNOTSUPP;
+      // if (CHIP_DATA(pnd)->type == PN533) { ret = pn53x_Diagnose06(pnd); } else...
+      // Because ping fails now & then, better not to use Diagnose at all
+      // Limitation: does not work on Felica Lite cards (neither Diagnose nor our method)
+      uint8_t abtCmd[10] = {0x0A, 0x04};
+      memcpy(abtCmd + 2, CHIP_DATA(pnd)->current_target->nti.nfi.abtId, 8);
+      int failures = 0;
+      ret = NFC_ETGRELEASED;
+      // Sometimes ping fails so we want to give the card some more chances...
+      while (failures < 3) {
+        if (nfc_initiator_transceive_bytes(pnd, abtCmd, sizeof(abtCmd), NULL, 0, 300) == 11) {
+          ret = NFC_SUCCESS;
+          break;
+        } else {
+          failures++;
+        }
       }
       break;
     case NMT_ISO14443B:
