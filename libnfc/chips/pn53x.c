@@ -1752,6 +1752,112 @@ static int pn53x_Diagnose06(struct nfc_device *pnd)
   return ret;
 }
 
+static int pn53x_ISO14443A_4_is_present(struct nfc_device *pnd)
+{
+  int ret;
+  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "target_is_present(): Ping -4A");
+  if ((CHIP_DATA(pnd)->type == PN532) || (CHIP_DATA(pnd)->type == PN533)) {
+    ret = pn53x_Diagnose06(pnd);
+  } else {
+    ret = NFC_EDEVNOTSUPP;
+  }
+  return ret;
+}
+
+static int pn53x_ISO14443A_MFUL_is_present(struct nfc_device *pnd)
+{
+  int ret;
+  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "target_is_present(): Ping MFUL");
+  // Limitation: test on MFULC non-authenticated with read of first sector forbidden will fail
+  if (CHIP_DATA(pnd)->type == PN533) {
+    ret = pn53x_Diagnose06(pnd);
+  } else {
+    uint8_t abtCmd[2] = {0x30, 0x00};
+    if (nfc_initiator_transceive_bytes(pnd, abtCmd, sizeof(abtCmd), NULL, 0, -1) > 0) {
+      ret = NFC_SUCCESS;
+    } else {
+      ret = NFC_ETGRELEASED;
+    }
+  }
+  return ret;
+}
+
+static int pn53x_ISO14443A_MFC_is_present(struct nfc_device *pnd)
+{
+  int ret;
+  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "target_is_present(): Ping MFC");
+  if ((CHIP_DATA(pnd)->type == PN533) && (CHIP_DATA(pnd)->current_target->nti.nai.btSak != 0x09)) {
+    // MFC Mini (atqa0004/sak09) fails on PN533, so we exclude it
+    ret = pn53x_Diagnose06(pnd);
+  } else {
+    // Limitation: re-select will lose authentication of already authenticated sector
+    // TODO: buggy when card is removed on Tikitag
+    uint8_t pbtInitiatorData[12];
+    size_t szInitiatorData = 0;
+    iso14443_cascade_uid(CHIP_DATA(pnd)->current_target->nti.nai.abtUid, CHIP_DATA(pnd)->current_target->nti.nai.szUidLen, pbtInitiatorData, &szInitiatorData);
+    if ((ret = pn53x_initiator_select_passive_target_ext(pnd, CHIP_DATA(pnd)->current_target->nm, pbtInitiatorData, szInitiatorData, NULL, 300)) == 1) {
+      ret = NFC_SUCCESS;
+    } else if ((ret == 0) || (ret == NFC_ETIMEOUT)) {
+      ret = NFC_ETGRELEASED;
+    }
+  }
+  return ret;
+}
+
+static int pn53x_DEP_is_present(struct nfc_device *pnd)
+{
+  int ret;
+  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "target_is_present(): Ping DEP");
+  if ((CHIP_DATA(pnd)->type == PN531) || (CHIP_DATA(pnd)->type == PN532) || (CHIP_DATA(pnd)->type == PN533))
+    ret = pn53x_Diagnose06(pnd);
+  else
+    ret = NFC_EDEVNOTSUPP;
+  return ret;
+}
+
+static int pn53x_Felica_is_present(struct nfc_device *pnd)
+{
+  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "target_is_present(): Ping Felica");
+  // if (CHIP_DATA(pnd)->type == PN533) { ret = pn53x_Diagnose06(pnd); } else...
+  // Because ping fails now & then, better not to use Diagnose at all
+  // Limitation: does not work on Felica Lite cards (neither Diagnose nor our method)
+  uint8_t abtCmd[10] = {0x0A, 0x04};
+  memcpy(abtCmd + 2, CHIP_DATA(pnd)->current_target->nti.nfi.abtId, 8);
+  int failures = 0;
+  // Sometimes ping fails so we want to give the card some more chances...
+  while (failures < 3) {
+    if (nfc_initiator_transceive_bytes(pnd, abtCmd, sizeof(abtCmd), NULL, 0, 300) == 11) {
+      return NFC_SUCCESS;
+    } else {
+      failures++;
+    }
+  }
+  return NFC_ETGRELEASED;
+}
+
+static int pn53x_ISO14443B_4_is_present(struct nfc_device *pnd)
+{
+  int ret;
+  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "target_is_present(): Ping -4B");
+  if (CHIP_DATA(pnd)->type == PN533) { // Not supported on PN532 even if the doc is same as for PN533
+    ret = pn53x_Diagnose06(pnd);
+  } else {
+    // Sending R(NACK) in raw:
+    if ((ret = pn53x_set_property_bool(pnd, NP_EASY_FRAMING, false)) < 0)
+      return ret;
+    // uint8_t abtCmd[1] = {0xb2}; // if on PN533, CID=0
+    uint8_t abtCmd[2] = {0xba, 0x01}; // if on PN532, CID=1
+    if (nfc_initiator_transceive_bytes(pnd, abtCmd, sizeof(abtCmd), NULL, 0, 300) > 0)
+      ret = NFC_SUCCESS;
+    else
+      ret = NFC_ETGRELEASED;
+    int ret2;
+    if ((ret2 = pn53x_set_property_bool(pnd, NP_EASY_FRAMING, true)) < 0)
+      ret = ret2;
+  }
+  return ret;
+}
+
 int
 pn53x_initiator_target_is_present(struct nfc_device *pnd, const nfc_target *pnt)
 {
@@ -1776,100 +1882,26 @@ pn53x_initiator_target_is_present(struct nfc_device *pnd, const nfc_target *pnt)
   switch (CHIP_DATA(pnd)->current_target->nm.nmt) {
     case NMT_ISO14443A:
       if (CHIP_DATA(pnd)->current_target->nti.nai.btSak & 0x20) {
-        // -4A
-        log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "target_is_present(): Ping -4A");
-        if ((CHIP_DATA(pnd)->type == PN532) || (CHIP_DATA(pnd)->type == PN533)) {
-          ret = pn53x_Diagnose06(pnd);
-        } else {
-          ret = NFC_EDEVNOTSUPP;
-        }
+        ret = pn53x_ISO14443A_4_is_present(pnd);
       } else if ((CHIP_DATA(pnd)->current_target->nti.nai.abtAtqa[0] == 0x00) &&
                  (CHIP_DATA(pnd)->current_target->nti.nai.abtAtqa[1] == 0x44) &&
                  (CHIP_DATA(pnd)->current_target->nti.nai.btSak == 0x00)) {
-        log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "target_is_present(): Ping MFUL");
-        // MFUL
-        // Limitation: test on MFULC non-authenticated with read of first sector forbidden will fail
-        if (CHIP_DATA(pnd)->type == PN533) {
-          ret = pn53x_Diagnose06(pnd);
-        } else {
-          uint8_t abtCmd[2] = {0x30, 0x00};
-          if (nfc_initiator_transceive_bytes(pnd, abtCmd, sizeof(abtCmd), NULL, 0, -1) > 0) {
-            ret = NFC_SUCCESS;
-          } else {
-            ret = NFC_ETGRELEASED;
-          }
-        }
+        ret = pn53x_ISO14443A_MFUL_is_present(pnd);
       } else if (CHIP_DATA(pnd)->current_target->nti.nai.btSak & 0x08) {
-        log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "target_is_present(): Ping MFC");
-        // MFC
-        if ((CHIP_DATA(pnd)->type == PN533) && (CHIP_DATA(pnd)->current_target->nti.nai.btSak != 0x09)) {
-          // MFC Mini (atqa0004/sak09) fails on PN533, so we exclude it
-          ret = pn53x_Diagnose06(pnd);
-        } else {
-          // Limitation: re-select will lose authentication of already authenticated sector
-          // TODO: buggy when card is removed on Tikitag
-          uint8_t pbtInitiatorData[12];
-          size_t szInitiatorData = 0;
-          iso14443_cascade_uid(CHIP_DATA(pnd)->current_target->nti.nai.abtUid, CHIP_DATA(pnd)->current_target->nti.nai.szUidLen, pbtInitiatorData, &szInitiatorData);
-          if ((ret = pn53x_initiator_select_passive_target_ext(pnd, CHIP_DATA(pnd)->current_target->nm, pbtInitiatorData, szInitiatorData, NULL, 300)) == 1) {
-            ret = NFC_SUCCESS;
-          } else if ((ret == 0) || (ret == NFC_ETIMEOUT)) {
-            ret = NFC_ETGRELEASED;
-          }
-        }
+        ret = pn53x_ISO14443A_MFC_is_present(pnd);
       } else {
-        // unknown
         log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "target_is_present(): card type A not supported");
         ret = NFC_EDEVNOTSUPP;
       }
-// TODO what about dual mode cards: MFP, JCOP etc? (MFC + -4)
-// we've to detect them and it depends in which state they are
       break;
     case NMT_DEP:
-      log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "target_is_present(): Ping DEP");
-      if ((CHIP_DATA(pnd)->type == PN531) || (CHIP_DATA(pnd)->type == PN532) || (CHIP_DATA(pnd)->type == PN533))
-        ret = pn53x_Diagnose06(pnd);
-      else
-        ret = NFC_EDEVNOTSUPP;
+      ret = pn53x_DEP_is_present(pnd);
       break;
     case NMT_FELICA:
-      log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "target_is_present(): Ping Felica");
-      // if (CHIP_DATA(pnd)->type == PN533) { ret = pn53x_Diagnose06(pnd); } else...
-      // Because ping fails now & then, better not to use Diagnose at all
-      // Limitation: does not work on Felica Lite cards (neither Diagnose nor our method)
-      uint8_t abtCmd[10] = {0x0A, 0x04};
-      memcpy(abtCmd + 2, CHIP_DATA(pnd)->current_target->nti.nfi.abtId, 8);
-      int failures = 0;
-      ret = NFC_ETGRELEASED;
-      // Sometimes ping fails so we want to give the card some more chances...
-      while (failures < 3) {
-        if (nfc_initiator_transceive_bytes(pnd, abtCmd, sizeof(abtCmd), NULL, 0, 300) == 11) {
-          ret = NFC_SUCCESS;
-          break;
-        } else {
-          failures++;
-        }
-      }
+      ret = pn53x_Felica_is_present(pnd);
       break;
     case NMT_ISO14443B:
-      // -4B
-      log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "target_is_present(): Ping -4B");
-      if (CHIP_DATA(pnd)->type == PN533) { // Not supported on PN532 even if the doc is same as for PN533
-        ret = pn53x_Diagnose06(pnd);
-      } else {
-        // Sending R(NACK) in raw:
-        if ((ret = pn53x_set_property_bool(pnd, NP_EASY_FRAMING, false)) < 0)
-          break;
-        // uint8_t abtCmd[1] = {0xb2}; // if on PN533, CID=0
-        uint8_t abtCmd[2] = {0xba, 0x01}; // if on PN532, CID=1
-        if (nfc_initiator_transceive_bytes(pnd, abtCmd, sizeof(abtCmd), NULL, 0, 300) > 0)
-          ret = NFC_SUCCESS;
-        else
-          ret = NFC_ETGRELEASED;
-        int ret2;
-        if ((ret2 = pn53x_set_property_bool(pnd, NP_EASY_FRAMING, true)) < 0)
-          ret = ret2;
-      }
+      ret = pn53x_ISO14443B_4_is_present(pnd);
       break;
     case NMT_JEWEL:
     case NMT_ISO14443BI:
