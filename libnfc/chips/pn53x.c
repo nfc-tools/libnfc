@@ -1780,6 +1780,8 @@ pn53x_initiator_target_is_present(struct nfc_device *pnd, const nfc_target *pnt)
         log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "target_is_present(): Ping -4A");
         if ((CHIP_DATA(pnd)->type == PN532) || (CHIP_DATA(pnd)->type == PN533)) {
           ret = pn53x_Diagnose06(pnd);
+          // When pn53x_Diagnose06() fails with a timeout (0x01) chip error, it means the target is not reacheable anymore
+          if ((ret == NFC_ERFTRANS) && (CHIP_DATA(pnd)->last_status_byte == 0x01)) ret = NFC_ETGRELEASED;
         } else {
           ret = NFC_EDEVNOTSUPP;
         }
