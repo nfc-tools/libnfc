@@ -1737,17 +1737,23 @@ static int pn53x_Diagnose06(struct nfc_device *pnd)
   const uint8_t abtCmd[] = { Diagnose, 0x06 };
   uint8_t abtRx[1];
   int ret = 0;
+  int failures = 0;
 
   // Card Presence command can take more time than default one: when a card is
   // removed from the field, the PN53x took few hundred ms more to reply
   // correctly. (ie. 700 ms should be enough to detect all tested cases)
-  if ((ret = pn53x_transceive(pnd, abtCmd, sizeof(abtCmd), abtRx, sizeof(abtRx), 700)) != 1) {
-    // When it fails with a timeout (0x01) chip error, it means the target is not reacheable anymore
-    if ((ret == NFC_ERFTRANS) && (CHIP_DATA(pnd)->last_status_byte == 0x01)) {
-      ret = NFC_ETGRELEASED;
+
+  while (failures < 2) {
+    if ((ret = pn53x_transceive(pnd, abtCmd, sizeof(abtCmd), abtRx, sizeof(abtRx), 700)) != 1) {
+      // When it fails with a timeout (0x01) chip error, it means the target is not reacheable anymore
+      if ((ret == NFC_ERFTRANS) && (CHIP_DATA(pnd)->last_status_byte == 0x01)) {
+        return NFC_ETGRELEASED;
+      } else { // Other errors can appear when card is tired-off, let's try again
+        failures++;
+      }
+    } else {
+      return NFC_SUCCESS;
     }
-  } else {
-    ret = NFC_SUCCESS;
   }
   return ret;
 }
@@ -1773,10 +1779,17 @@ static int pn53x_ISO14443A_MFUL_is_present(struct nfc_device *pnd)
     ret = pn53x_Diagnose06(pnd);
   } else {
     uint8_t abtCmd[2] = {0x30, 0x00};
-    if (nfc_initiator_transceive_bytes(pnd, abtCmd, sizeof(abtCmd), NULL, 0, -1) > 0) {
-      ret = NFC_SUCCESS;
-    } else {
-      ret = NFC_ETGRELEASED;
+    int failures = 0;
+    while (failures < 2) {
+      if ((ret = nfc_initiator_transceive_bytes(pnd, abtCmd, sizeof(abtCmd), NULL, 0, -1)) < 1) {
+        if ((ret == NFC_ERFTRANS) && (CHIP_DATA(pnd)->last_status_byte == 0x01)) { // Timeout
+          return NFC_ETGRELEASED;
+        } else { // Other errors can appear when card is tired-off, let's try again
+          failures++;
+        }
+      } else {
+        return NFC_SUCCESS;
+      }
     }
   }
   return ret;
@@ -1847,10 +1860,20 @@ static int pn53x_ISO14443B_4_is_present(struct nfc_device *pnd)
       return ret;
     // uint8_t abtCmd[1] = {0xb2}; // if on PN533, CID=0
     uint8_t abtCmd[2] = {0xba, 0x01}; // if on PN532, CID=1
-    if (nfc_initiator_transceive_bytes(pnd, abtCmd, sizeof(abtCmd), NULL, 0, 300) > 0)
-      ret = NFC_SUCCESS;
-    else
-      ret = NFC_ETGRELEASED;
+    int failures = 0;
+    while (failures < 2) {
+      if ((ret = nfc_initiator_transceive_bytes(pnd, abtCmd, sizeof(abtCmd), NULL, 0, 300)) < 1) {
+        if ((ret == NFC_ERFTRANS) && (CHIP_DATA(pnd)->last_status_byte == 0x01)) { // Timeout
+          ret = NFC_ETGRELEASED;
+          break;
+        } else { // Other errors can appear when card is tired-off, let's try again
+          failures++;
+        }
+      } else {
+        ret = NFC_SUCCESS;
+        break;
+      }
+    }
     int ret2;
     if ((ret2 = pn53x_set_property_bool(pnd, NP_EASY_FRAMING, true)) < 0)
       ret = ret2;
