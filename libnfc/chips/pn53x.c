@@ -1854,10 +1854,21 @@ pn53x_initiator_target_is_present(struct nfc_device *pnd, const nfc_target *pnt)
     case NMT_ISO14443B:
       // -4B
       log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "target_is_present(): Ping -4B");
-      if ((CHIP_DATA(pnd)->type == PN532) || (CHIP_DATA(pnd)->type == PN533)) {
+      if (CHIP_DATA(pnd)->type == PN533) { // Not supported on PN532 even if the doc is same as for PN533
         ret = pn53x_Diagnose06(pnd);
       } else {
-        ret = NFC_EDEVNOTSUPP;
+        // Sending R(NACK) in raw:
+        if ((ret = pn53x_set_property_bool(pnd, NP_EASY_FRAMING, false)) < 0)
+          break;
+        // uint8_t abtCmd[1] = {0xb2}; // if on PN533, CID=0
+        uint8_t abtCmd[2] = {0xba, 0x01}; // if on PN532, CID=1
+        if (nfc_initiator_transceive_bytes(pnd, abtCmd, sizeof(abtCmd), NULL, 0, 300) > 0)
+          ret = NFC_SUCCESS;
+        else
+          ret = NFC_ETGRELEASED;
+        int ret2;
+        if ((ret2 = pn53x_set_property_bool(pnd, NP_EASY_FRAMING, true)) < 0)
+          ret = ret2;
       }
       break;
     case NMT_JEWEL:
