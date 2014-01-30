@@ -35,6 +35,7 @@ examples/.deps/
 examples/.libs/
 examples/Makefile
 examples/Makefile.in
+examples/doc/.deps/
 examples/nfc-anticol
 examples/nfc-dep-initiator
 examples/nfc-dep-target
