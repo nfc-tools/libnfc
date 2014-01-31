@@ -1893,7 +1893,7 @@ pn53x_initiator_target_is_present(struct nfc_device *pnd, const nfc_target *pnt)
 // only if pnt is provided but it's not intuitive that
 // nfc_initiator_select_passive_target(pnt=NULL) + target_is_present(pnt=NULL) fails
 // Maybe we should have an internal copy of nt, no matter if a pnt was provided
-    return pnd->last_error = NFC_ETGRELEASED;
+    return pnd->last_error = NFC_EINVARG;
   }
 
   // Check if the argument target nt is equals to current saved target
