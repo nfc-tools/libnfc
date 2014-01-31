@@ -1804,10 +1804,12 @@ static int pn53x_ISO14443A_MFC_is_present(struct nfc_device *pnd)
     ret = pn53x_Diagnose06(pnd);
   } else {
     // Limitation: re-select will lose authentication of already authenticated sector
-    // TODO: buggy when card is removed on Tikitag
+    // Limitation: NP_INFINITE_SELECT will be left as FALSE (we cannot restore as we don't know what was the original state)
     uint8_t pbtInitiatorData[12];
     size_t szInitiatorData = 0;
     iso14443_cascade_uid(CHIP_DATA(pnd)->current_target->nti.nai.abtUid, CHIP_DATA(pnd)->current_target->nti.nai.szUidLen, pbtInitiatorData, &szInitiatorData);
+    if ((ret = pn53x_set_property_bool(pnd, NP_INFINITE_SELECT, false)) < 0)
+      return ret;
     if ((ret = pn53x_initiator_select_passive_target_ext(pnd, CHIP_DATA(pnd)->current_target->nm, pbtInitiatorData, szInitiatorData, NULL, 300)) == 1) {
       ret = NFC_SUCCESS;
     } else if ((ret == 0) || (ret == NFC_ETIMEOUT)) {
