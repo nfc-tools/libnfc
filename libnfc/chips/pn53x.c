@@ -1066,6 +1066,7 @@ pn53x_initiator_select_passive_target_ext(struct nfc_device *pnd,
   uint8_t  abtTargetsData[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
   size_t  szTargetsData = sizeof(abtTargetsData);
   int res = 0;
+  nfc_target nttmp;
 
   if (nm.nmt == NMT_ISO14443BI || nm.nmt == NMT_ISO14443B2SR || nm.nmt == NMT_ISO14443B2CT) {
     if (CHIP_DATA(pnd)->type == RCS360) {
@@ -1121,16 +1122,9 @@ pn53x_initiator_select_passive_target_ext(struct nfc_device *pnd,
       }
       szTargetsData = 6; // u16 UID_LSB, u8 prod code, u8 fab code, u16 UID_MSB
     }
-    if (pnt) {
-      pnt->nm = nm;
-      // Fill the tag info struct with the values corresponding to this init modulation
-      if ((res = pn53x_decode_target_data(abtTargetsData, szTargetsData, CHIP_DATA(pnd)->type, nm.nmt, &(pnt->nti))) < 0) {
-        return res;
-      }
-      if (pn53x_current_target_new(pnd, pnt) == NULL) {
-        pnd->last_error = NFC_ESOFT;
-        return pnd->last_error;
-      }
+    nttmp.nm = nm;
+    if ((res = pn53x_decode_target_data(abtTargetsData, szTargetsData, CHIP_DATA(pnd)->type, nm.nmt, &(nttmp.nti))) < 0) {
+      return res;
     }
     if (nm.nmt == NMT_ISO14443BI) {
       // Select tag
@@ -1142,32 +1136,32 @@ pn53x_initiator_select_passive_target_ext(struct nfc_device *pnd,
       }
       szTargetsData = (size_t)res;
     }
-    return abtTargetsData[0];
-  } // else:
+  } else {
 
-  const pn53x_modulation pm = pn53x_nm_to_pm(nm);
-  if (PM_UNDEFINED == pm) {
-    pnd->last_error = NFC_EINVARG;
-    return pnd->last_error;
-  }
-
-  if ((res = pn53x_InListPassiveTarget(pnd, pm, 1, pbtInitData, szInitData, abtTargetsData, &szTargetsData, timeout)) <= 0)
-    return res;
-
-  if (szTargetsData <= 1) // For Coverity to know szTargetsData is always > 1 if res > 0
-    return 0;
-
-  // Is a tag info struct available
-  if (pnt) {
-    pnt->nm = nm;
-    // Fill the tag info struct with the values corresponding to this init modulation
-    if ((res = pn53x_decode_target_data(abtTargetsData + 1, szTargetsData - 1, CHIP_DATA(pnd)->type, nm.nmt, &(pnt->nti))) < 0) {
-      return res;
-    }
-    if (pn53x_current_target_new(pnd, pnt) == NULL) {
-      pnd->last_error = NFC_ESOFT;
+    const pn53x_modulation pm = pn53x_nm_to_pm(nm);
+    if (PM_UNDEFINED == pm) {
+      pnd->last_error = NFC_EINVARG;
       return pnd->last_error;
     }
+
+    if ((res = pn53x_InListPassiveTarget(pnd, pm, 1, pbtInitData, szInitData, abtTargetsData, &szTargetsData, timeout)) <= 0)
+      return res;
+
+    if (szTargetsData <= 1) // For Coverity to know szTargetsData is always > 1 if res > 0
+      return 0;
+
+    nttmp.nm = nm;
+    if ((res = pn53x_decode_target_data(abtTargetsData + 1, szTargetsData - 1, CHIP_DATA(pnd)->type, nm.nmt, &(nttmp.nti))) < 0) {
+      return res;
+    }
+  }
+  if (pn53x_current_target_new(pnd, &nttmp) == NULL) {
+    pnd->last_error = NFC_ESOFT;
+    return pnd->last_error;
+  }
+  // Is a tag info struct available
+  if (pnt) {
+    memcpy(pnt, &nttmp, sizeof(nfc_target));
   }
   return abtTargetsData[0];
 }
@@ -1893,10 +1887,6 @@ pn53x_initiator_target_is_present(struct nfc_device *pnd, const nfc_target *pnt)
   // Check if there is a saved target
   if (CHIP_DATA(pnd)->current_target == NULL) {
     log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "target_is_present(): no saved target");
-// TODO pnt is optional for select_passive_target() and internal nt struct is saved
-// only if pnt is provided but it's not intuitive that
-// nfc_initiator_select_passive_target(pnt=NULL) + target_is_present(pnt=NULL) fails
-// Maybe we should have an internal copy of nt, no matter if a pnt was provided
     return pnd->last_error = NFC_EINVARG;
   }
 
