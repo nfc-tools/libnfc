@@ -1127,6 +1127,10 @@ pn53x_initiator_select_passive_target_ext(struct nfc_device *pnd,
       if ((res = pn53x_decode_target_data(abtTargetsData, szTargetsData, CHIP_DATA(pnd)->type, nm.nmt, &(pnt->nti))) < 0) {
         return res;
       }
+      if (pn53x_current_target_new(pnd, pnt) == NULL) {
+        pnd->last_error = NFC_ESOFT;
+        return pnd->last_error;
+      }
     }
     if (nm.nmt == NMT_ISO14443BI) {
       // Select tag
