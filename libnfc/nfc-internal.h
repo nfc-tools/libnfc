@@ -203,6 +203,8 @@ struct nfc_device {
   bool    bPar;
   /** Should the chip handle frames encapsulation and chaining */
   bool    bEasyFraming;
+  /** Should the chip try forever on select? */
+  bool    bInfiniteSelect;
   /** Should the chip switch automatically activate ISO14443-4 when
       selecting tags supporting it? */
   bool    bAutoIso14443_4;
