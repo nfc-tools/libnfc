@@ -573,6 +573,7 @@ nfc_initiator_list_passive_targets(nfc_device *pnd,
   pnd->last_error = 0;
 
   // Let the reader only try once to find a tag
+  bool bInfiniteSelect = pnd->bInfiniteSelect;
   if ((res = nfc_device_set_property_bool(pnd, NP_INFINITE_SELECT, false)) < 0) {
     return res;
   }
@@ -601,6 +602,11 @@ nfc_initiator_list_passive_targets(nfc_device *pnd,
     // ISO/IEC 14443 B' cards are polled at 100% probability so it's not possible to detect correctly two cards at the same time
     if ((nm.nmt == NMT_FELICA) || (nm.nmt == NMT_JEWEL) || (nm.nmt == NMT_ISO14443BI) || (nm.nmt == NMT_ISO14443B2SR) || (nm.nmt == NMT_ISO14443B2CT)) {
       break;
+    }
+  }
+  if (bInfiniteSelect) {
+    if ((res = nfc_device_set_property_bool(pnd, NP_INFINITE_SELECT, true)) < 0) {
+      return res;
     }
   }
   return szTargetFound;
@@ -684,18 +690,30 @@ nfc_initiator_poll_dep_target(struct nfc_device *pnd,
   const int period = 300;
   int remaining_time = timeout;
   int res;
+  int result = 0;
+  bool bInfiniteSelect = pnd->bInfiniteSelect;
   if ((res = nfc_device_set_property_bool(pnd, NP_INFINITE_SELECT, true)) < 0)
     return res;
   while (remaining_time > 0) {
     if ((res = nfc_initiator_select_dep_target(pnd, ndm, nbr, pndiInitiator, pnt, period)) < 0) {
-      if (res != NFC_ETIMEOUT)
-        return res;
+      if (res != NFC_ETIMEOUT) {
+        result = res;
+        goto end;
+      }
     }
-    if (res == 1)
-      return res;
+    if (res == 1) {
+      result = res;
+      goto end;
+    }
     remaining_time -= period;
   }
-  return 0;
+end:
+  if (! bInfiniteSelect) {
+    if ((res = nfc_device_set_property_bool(pnd, NP_INFINITE_SELECT, false)) < 0) {
+      return res;
+    }
+  }
+  return result;
 }
 
 /** @ingroup initiator

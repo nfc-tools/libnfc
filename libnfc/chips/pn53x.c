@@ -1244,6 +1244,8 @@ pn53x_initiator_poll_target(struct nfc_device *pnd,
         break;
     }
   } else {
+    bool bInfiniteSelect = pnd->bInfiniteSelect;
+    int result = 0;
     if ((res = pn53x_set_property_bool(pnd, NP_INFINITE_SELECT, true)) < 0)
       return res;
     // FIXME It does not support DEP targets
@@ -1257,16 +1259,23 @@ pn53x_initiator_poll_target(struct nfc_device *pnd,
 
           if ((res = pn53x_initiator_select_passive_target_ext(pnd, pnmModulations[n], pbtInitiatorData, szInitiatorData, pnt, timeout_ms)) < 0) {
             if (pnd->last_error != NFC_ETIMEOUT) {
-              return pnd->last_error;
+              result = pnd->last_error;
+              goto end;
             }
           } else {
-            return res;
+            result = res;
+            goto end;
           }
         }
       }
     } while (uiPollNr == 0xff); // uiPollNr==0xff means infinite polling
     // We reach this point when each listing give no result, we simply have to return 0
-    return 0;
+end:
+    if (! bInfiniteSelect) {
+      if ((res = pn53x_set_property_bool(pnd, NP_INFINITE_SELECT, false)) < 0)
+        return res;
+    }
+    return result;
   }
   return NFC_ECHIP;
 }
@@ -1822,7 +1831,7 @@ static int pn53x_ISO14443A_MFC_is_present(struct nfc_device *pnd)
     ret = pn53x_Diagnose06(pnd);
   } else {
     // Limitation: re-select will lose authentication of already authenticated sector
-    // Limitation: NP_INFINITE_SELECT will be left as FALSE (we cannot restore as we don't know what was the original state)
+    bool bInfiniteSelect = pnd->bInfiniteSelect;
     uint8_t pbtInitiatorData[12];
     size_t szInitiatorData = 0;
     iso14443_cascade_uid(CHIP_DATA(pnd)->current_target->nti.nai.abtUid, CHIP_DATA(pnd)->current_target->nti.nai.szUidLen, pbtInitiatorData, &szInitiatorData);
@@ -1832,6 +1841,11 @@ static int pn53x_ISO14443A_MFC_is_present(struct nfc_device *pnd)
       ret = NFC_SUCCESS;
     } else if ((ret == 0) || (ret == NFC_ETIMEOUT)) {
       ret = NFC_ETGRELEASED;
+    }
+    if (bInfiniteSelect) {
+      int ret2;
+      if ((ret2 = pn53x_set_property_bool(pnd, NP_INFINITE_SELECT, true)) < 0)
+        return ret2;
     }
   }
   return ret;
