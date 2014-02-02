@@ -1,5 +1,6 @@
 SET(UTILS-SOURCES 
   nfc-emulate-forum-tag4
+  nfc-jewel
   nfc-list
   nfc-mfclassic
   nfc-mfultralight
@@ -25,6 +26,10 @@ FOREACH(source ${UTILS-SOURCES})
     CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/../contrib/win32/version.rc.in ${CMAKE_CURRENT_BINARY_DIR}/../windows/${source}.rc @ONLY)
     LIST(APPEND TARGETS ${CMAKE_CURRENT_BINARY_DIR}/../windows/${source}.rc)
   ENDIF(WIN32)
+
+  IF(${source} MATCHES "nfc-jewel")
+    LIST(APPEND TARGETS jewel)
+  ENDIF(${source} MATCHES "nfc-jewel")
 
   IF((${source} MATCHES "nfc-mfultralight") OR (${source} MATCHES "nfc-mfclassic"))
     LIST(APPEND TARGETS mifare)

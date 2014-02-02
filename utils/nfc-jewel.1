@@ -1,0 +1,54 @@
+.TH nfc-jewel 1 "Feb 02, 2014" "libnfc" "NFC Utilities"
+.SH NAME
+nfc-jewel \- Jewel command line tool
+.SH SYNOPSIS
+.B nfc-jewel
+.RI \fR\fBr\fR|\fBw\fR
+.IR DUMP
+
+.SH DESCRIPTION
+.B nfc-jewel
+is a Jewel tool that allows one to read or write
+a tag data to/from a
+.IR DUMP
+file.
+
+Jewel tag by Broadcom, previously Innovision, uses a binary Dump file to store data for all sectors.
+
+Be cautious that some parts of a Jewel memory can be written only once
+and some parts are used as lock bits, so please read the tag documentation
+before experimenting too much!
+
+.SH OPTIONS
+.BR r " | " w
+Perform read from (
+.B r
+) or write to (
+.B w
+) card.
+.TP
+.IR DUMP
+JeWel Dump (JWD) used to write (card to JWD) or (JWD to card)
+
+.SH BUGS
+Please report any bugs on the
+.B libnfc
+issue tracker at:
+.br
+.BR http://code.google.com/p/libnfc/issues
+.SH LICENCE
+.B libnfc
+is licensed under the GNU Lesser General Public License (LGPL), version 3.
+.br
+.B libnfc-utils
+and
+.B libnfc-examples
+are covered by the the BSD 2-Clause license.
+
+.SH AUTHORS
+Roel Verdult <roel@libnfc.org>, 
+.br
+Romuald Conty <romuald@libnfc.org>.
+.PP
+This manual page was written by Romuald Conty <romuald@libnfc.org>.
+It is licensed under the terms of the GNU GPL (version 2 or later).
