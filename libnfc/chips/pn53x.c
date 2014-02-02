@@ -1797,6 +1797,26 @@ static int pn53x_ISO14443A_4_is_present(struct nfc_device *pnd)
   return ret;
 }
 
+static int pn53x_ISO14443A_Jewel_is_present(struct nfc_device *pnd)
+{
+  int ret;
+  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "target_is_present(): Ping Jewel");
+  uint8_t abtCmd[1] = {0x78};
+  int failures = 0;
+  while (failures < 2) {
+    if ((ret = nfc_initiator_transceive_bytes(pnd, abtCmd, sizeof(abtCmd), NULL, 0, -1)) < 1) {
+      if ((ret == NFC_ERFTRANS) && (CHIP_DATA(pnd)->last_status_byte == 0x01)) { // Timeout
+        return NFC_ETGRELEASED;
+      } else { // Other errors can appear when card is tired-off, let's try again
+        failures++;
+      }
+    } else {
+      return NFC_SUCCESS;
+    }
+  }
+  return ret;
+}
+
 static int pn53x_ISO14443A_MFUL_is_present(struct nfc_device *pnd)
 {
   int ret;
@@ -1957,6 +1977,8 @@ pn53x_initiator_target_is_present(struct nfc_device *pnd, const nfc_target *pnt)
       ret = pn53x_ISO14443B_4_is_present(pnd);
       break;
     case NMT_JEWEL:
+      ret = pn53x_ISO14443A_Jewel_is_present(pnd);
+      break;
     case NMT_ISO14443BI:
     case NMT_ISO14443B2SR:
     case NMT_ISO14443B2CT:
