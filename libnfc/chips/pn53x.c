@@ -1935,6 +1935,35 @@ static int pn53x_ISO14443B_4_is_present(struct nfc_device *pnd)
   return ret;
 }
 
+static int pn53x_ISO14443B_I_is_present(struct nfc_device *pnd)
+{
+  int ret;
+  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "target_is_present(): Ping B'");
+    // Sending R(NACK) in raw:
+    if ((ret = pn53x_set_property_bool(pnd, NP_EASY_FRAMING, false)) < 0)
+      return ret;
+    uint8_t abtCmd[6] = {0x01, 0x0f}; // ATTRIB
+    memcpy(abtCmd+2, CHIP_DATA(pnd)->current_target->nti.nii.abtDIV, 4);
+    int failures = 0;
+    while (failures < 2) {
+      if ((ret = nfc_initiator_transceive_bytes(pnd, abtCmd, sizeof(abtCmd), NULL, 0, 300)) < 1) {
+        if ((ret == NFC_ERFTRANS) && (CHIP_DATA(pnd)->last_status_byte == 0x01)) { // Timeout
+          ret = NFC_ETGRELEASED;
+          break;
+        } else { // Other errors can appear when card is tired-off, let's try again
+          failures++;
+        }
+      } else {
+        ret = NFC_SUCCESS;
+        break;
+      }
+    }
+    int ret2;
+    if ((ret2 = pn53x_set_property_bool(pnd, NP_EASY_FRAMING, true)) < 0)
+      ret = ret2;
+  return ret;
+}
+
 int
 pn53x_initiator_target_is_present(struct nfc_device *pnd, const nfc_target *pnt)
 {
@@ -1973,13 +2002,15 @@ pn53x_initiator_target_is_present(struct nfc_device *pnd, const nfc_target *pnt)
     case NMT_FELICA:
       ret = pn53x_Felica_is_present(pnd);
       break;
-    case NMT_ISO14443B:
-      ret = pn53x_ISO14443B_4_is_present(pnd);
-      break;
     case NMT_JEWEL:
       ret = pn53x_ISO14443A_Jewel_is_present(pnd);
       break;
+    case NMT_ISO14443B:
+      ret = pn53x_ISO14443B_4_is_present(pnd);
+      break;
     case NMT_ISO14443BI:
+      ret = pn53x_ISO14443B_I_is_present(pnd);
+      break;
     case NMT_ISO14443B2SR:
     case NMT_ISO14443B2CT:
     default:
