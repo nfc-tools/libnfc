@@ -200,7 +200,7 @@ typedef struct {
 } jewel_tag_blocks;
 
 typedef struct {
-  uint8_t abtData[112];
+  uint8_t abtData[120];
 } jewel_tag_data;
 
 typedef union {
