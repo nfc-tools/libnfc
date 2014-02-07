@@ -9,9 +9,7 @@ Fixes:
  - Silent pn53x_check_communication error messages when scanning
  - Fix nfc_target_init(), was returning success in case of timeout
  - Windows: fix several compilation issues
- - Fix nfc_initiator_target_is_present() usage after nfc_initiator_poll_target()
- - Fix nfc_initiator_target_is_present() set correctly last_error
- - Fix nfc_initiator_target_is_present() if no saved target
+ - On tag selection, save current target info also for ISO14443B*
 
 Improvements:
  - nfc-list: New option to choose which technologies to poll for
@@ -19,9 +17,25 @@ Improvements:
  - New LIBNFC_DEVICE env var to use one reader and exclude all other readers
    while LIBNFC_DEFAULT_DEVICE only prepends it to the configured devices list
  - New LIBNFC_AUTO_SCAN env var to enable(default)/disable auto scan
- - nfc-mfclassic: add format/wipe command
- - nfc_initiator_target_is_present() allows NULL pointer to tag
+ - On tag selection, save current target info even if pnt=NULL
+ - On tag selection, grant NP_INFINITE_SELECT also for ISO14443B*
+ - Save & restore NP_INFINITE_SELECT status when changing it internally
+ - nfc-mfclassic: add format/wipe command (thanks to Adam Laurie)
+ - nfc-jewel: new utility to read/write Topaz/Jewel tags (thanks to Pim 't Hart)
 
+Fixes & improvements specific to nfc_initiator_target_is_present():
+ - Supports fully PN532 & PN533, not tested on other chips
+ - Fix usage after nfc_initiator_poll_target()
+ - Set correctly last_error
+ - Fix issue when there was no saved target
+ - Allow NULL pointer to tag
+ - Fix issues in case of tear off conditions
+ - Now works with:
+    * MFUL, MFC, MFC Mini, MFC 7-byte (re-selection: you'll need to auth again)
+    * ISO14443-4A, ISO14443-4B
+    * ISO14443-4B', ASK CTx, ST SRx
+    * Jewel
+    * FeliCa
 
 Sep 03, 2013 - 1.7.0
 --------------------
