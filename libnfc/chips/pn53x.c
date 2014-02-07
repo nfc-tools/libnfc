@@ -1964,10 +1964,33 @@ static int pn53x_ISO14443B_I_is_present(struct nfc_device *pnd)
   return ret;
 }
 
+static int pn53x_ISO14443B_SR_is_present(struct nfc_device *pnd)
+{
+  int ret;
+  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "target_is_present(): Ping B2 ST SRx");
+  // Sending Get_UID in raw: (EASY_FRAMING is already supposed to be false)
+  uint8_t abtCmd[1] = {0x0b};
+  int failures = 0;
+  while (failures < 2) {
+    if ((ret = nfc_initiator_transceive_bytes(pnd, abtCmd, sizeof(abtCmd), NULL, 0, 300)) < 1) {
+      if ((ret == NFC_ERFTRANS) && (CHIP_DATA(pnd)->last_status_byte == 0x01)) { // Timeout
+        ret = NFC_ETGRELEASED;
+        break;
+      } else { // Other errors can appear when card is tired-off, let's try again
+        failures++;
+      }
+    } else {
+      ret = NFC_SUCCESS;
+      break;
+    }
+  }
+  return ret;
+}
+
 static int pn53x_ISO14443B_CT_is_present(struct nfc_device *pnd)
 {
   int ret;
-  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "target_is_present(): Ping B2 ASK CT");
+  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "target_is_present(): Ping B2 ASK CTx");
   // Sending SELECT in raw: (EASY_FRAMING is already supposed to be false)
   uint8_t abtCmd[3] = {0x9f};
   memcpy(abtCmd + 1, CHIP_DATA(pnd)->current_target->nti.nci.abtUID, 2);
@@ -2035,10 +2058,12 @@ pn53x_initiator_target_is_present(struct nfc_device *pnd, const nfc_target *pnt)
     case NMT_ISO14443BI:
       ret = pn53x_ISO14443B_I_is_present(pnd);
       break;
+    case NMT_ISO14443B2SR:
+      ret = pn53x_ISO14443B_SR_is_present(pnd);
+      break;
     case NMT_ISO14443B2CT:
       ret = pn53x_ISO14443B_CT_is_present(pnd);
       break;
-    case NMT_ISO14443B2SR:
     default:
       log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "target_is_present(): card type not supported");
       ret = NFC_EDEVNOTSUPP;
