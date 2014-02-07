@@ -1768,10 +1768,10 @@ static int pn53x_Diagnose06(struct nfc_device *pnd)
 
   // Card Presence command can take more time than default one: when a card is
   // removed from the field, the PN53x took few hundred ms more to reply
-  // correctly. (ie. 700 ms should be enough to detect all tested cases)
-
+  // correctly. Longest delay observed was with a JCOP31 on a PN532.
+  // 1000 ms should be enough to detect all tested cases
   while (failures < 2) {
-    if ((ret = pn53x_transceive(pnd, abtCmd, sizeof(abtCmd), abtRx, sizeof(abtRx), 700)) != 1) {
+    if ((ret = pn53x_transceive(pnd, abtCmd, sizeof(abtCmd), abtRx, sizeof(abtRx), 1000)) != 1) {
       // When it fails with a timeout (0x01) chip error, it means the target is not reacheable anymore
       if ((ret == NFC_ERFTRANS) && (CHIP_DATA(pnd)->last_status_byte == 0x01)) {
         return NFC_ETGRELEASED;
@@ -1789,8 +1789,37 @@ static int pn53x_ISO14443A_4_is_present(struct nfc_device *pnd)
 {
   int ret;
   log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "target_is_present(): Ping -4A");
-  if ((CHIP_DATA(pnd)->type == PN532) || (CHIP_DATA(pnd)->type == PN533)) {
+  if (CHIP_DATA(pnd)->type == PN533) {
     ret = pn53x_Diagnose06(pnd);
+    if ((ret == NFC_ETIMEOUT) && (CHIP_DATA(pnd)->type == PN533)) {
+      // This happens e.g. when a JCOP31 is removed from PN533
+      // InRelease takes an abnormal time to reply so let's take care of it now with large timeout:
+      const uint8_t abtCmd[] = { InRelease, 0x00 };
+      pn53x_transceive(pnd, abtCmd, sizeof(abtCmd), NULL, 0, 2000);
+      ret = NFC_ETGRELEASED;
+    }
+  } else if (CHIP_DATA(pnd)->type == PN532) {
+    // Diagnose06 failed completely with a JCOP31 on a PN532 so let's do it manually
+    if ((ret = pn53x_set_property_bool(pnd, NP_EASY_FRAMING, false)) < 0)
+      return ret;
+    uint8_t abtCmd[1] = {0xb2}; // CID=0
+    int failures = 0;
+    while (failures < 2) {
+      if ((ret = nfc_initiator_transceive_bytes(pnd, abtCmd, sizeof(abtCmd), NULL, 0, 300)) < 1) {
+        if ((ret == NFC_ERFTRANS) && (CHIP_DATA(pnd)->last_status_byte == 0x01)) { // Timeout
+          ret = NFC_ETGRELEASED;
+          break;
+        } else { // Other errors can appear when card is tired-off, let's try again
+          failures++;
+        }
+      } else {
+        ret = NFC_SUCCESS;
+        break;
+      }
+    }
+    int ret2;
+    if ((ret2 = pn53x_set_property_bool(pnd, NP_EASY_FRAMING, true)) < 0)
+      ret = ret2;
   } else {
     ret = NFC_EDEVNOTSUPP;
   }
