@@ -150,7 +150,7 @@ main(int argc, const char *argv[])
   }
 
   printf("Waiting for card removing...");
-  while (0 == (res = nfc_initiator_target_is_present(pnd, NULL))) {}
+  while (0 == nfc_initiator_target_is_present(pnd, NULL)) {}
   nfc_perror(pnd, "nfc_initiator_target_is_present");
   printf("done.\n");
 
