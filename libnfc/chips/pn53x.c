@@ -1791,7 +1791,7 @@ static int pn53x_ISO14443A_4_is_present(struct nfc_device *pnd)
   log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "target_is_present(): Ping -4A");
   if (CHIP_DATA(pnd)->type == PN533) {
     ret = pn53x_Diagnose06(pnd);
-    if ((ret == NFC_ETIMEOUT) && (CHIP_DATA(pnd)->type == PN533)) {
+    if ((ret == NFC_ETIMEOUT) || (ret == NFC_ETGRELEASED)) {
       // This happens e.g. when a JCOP31 is removed from PN533
       // InRelease takes an abnormal time to reply so let's take care of it now with large timeout:
       const uint8_t abtCmd[] = { InRelease, 0x00 };
