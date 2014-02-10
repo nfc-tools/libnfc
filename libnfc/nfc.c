@@ -500,12 +500,15 @@ nfc_initiator_init_secure_element(nfc_device *pnd)
  *
  * @param pnd \a nfc_device struct pointer that represent currently used device
  * @param nm desired modulation
- * @param pbtInitData optional initiator data used for Felica, ISO14443B, Topaz polling or to select a specific UID in ISO14443A.
+ * @param pbtInitData optional initiator data, NULL for using the default values.
  * @param szInitData length of initiator data \a pbtInitData.
  * @note pbtInitData is used with different kind of data depending on modulation type:
  * - for an ISO/IEC 14443 type A modulation, pbbInitData contains the UID you want to select;
- * - for an ISO/IEC 14443 type B modulation, pbbInitData contains Application Family Identifier (AFI) (see ISO/IEC 14443-3);
- * - for a FeliCa modulation, pbbInitData contains polling payload (see ISO/IEC 18092 11.2.2.5).
+ * - for an ISO/IEC 14443 type B modulation, pbbInitData contains Application Family Identifier (AFI) (see ISO/IEC 14443-3)
+        and optionally a second byte = 0x01 if you want to use probabilistic approach instead of timeslot approach;
+ * - for a FeliCa modulation, pbbInitData contains a 5-byte polling payload (see ISO/IEC 18092 11.2.2.5).
+ * - for ISO14443B', ASK CTx and ST SRx, see corresponding standards
+ * - if NULL, default values adequate for the chosen modulation will be used.
  *
  * @param[out] pnt \a nfc_target struct pointer which will filled if available
  *
@@ -520,24 +523,19 @@ nfc_initiator_select_passive_target(nfc_device *pnd,
                                     const uint8_t *pbtInitData, const size_t szInitData,
                                     nfc_target *pnt)
 {
-  uint8_t  abtInit[MAX(12, szInitData)];
-  size_t  szInit;
-
-  switch (nm.nmt) {
-    case NMT_ISO14443A:
-      iso14443_cascade_uid(pbtInitData, szInitData, abtInit, &szInit);
-      break;
-
-    case NMT_JEWEL:
-    case NMT_ISO14443B:
-    case NMT_ISO14443BI:
-    case NMT_ISO14443B2SR:
-    case NMT_ISO14443B2CT:
-    case NMT_FELICA:
-    case NMT_DEP:
-      memcpy(abtInit, pbtInitData, szInitData);
-      szInit = szInitData;
-      break;
+  uint8_t *abtInit = NULL;
+  uint8_t abtTmpInit[MAX(12, szInitData)];
+  size_t  szInit = 0;
+  if (szInitData == 0) {
+    // Provide default values, if any
+    prepare_initiator_data(nm, &abtInit, &szInit);
+  } else if (nm.nmt == NMT_ISO14443A) {
+    abtInit = abtTmpInit;
+    iso14443_cascade_uid(pbtInitData, szInitData, abtInit, &szInit);
+  } else {
+    abtInit = abtTmpInit;
+    memcpy(abtInit, pbtInitData, szInitData);
+    szInit = szInitData;
   }
 
   HAL(initiator_select_passive_target, pnd, nm, abtInit, szInit, pnt);

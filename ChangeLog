@@ -22,6 +22,7 @@ Improvements:
  - Save & restore NP_INFINITE_SELECT status when changing it internally
  - nfc-mfclassic: add format/wipe command (thanks to Adam Laurie)
  - nfc-jewel: new utility to read/write Topaz/Jewel tags (thanks to Pim 't Hart)
+ - nfc_initiator_select_passive_target() provides defaults if pbtInitData=NULL
 
 Fixes & improvements specific to nfc_initiator_target_is_present():
  - Supports fully PN532 & PN533, not tested on other chips
