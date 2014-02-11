@@ -146,7 +146,7 @@ write_card(void)
 
   for (block = uiSkippedBlocks; block <= uiBlocks; block++) {
     // Skip block 0x0D - it is reserved for internal use and can't be written
-    if ((block == 0x0D)) {
+    if (block == 0x0D) {
       printf("s");
       uiSkippedBlocks++;
       continue;
