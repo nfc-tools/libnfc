@@ -130,6 +130,7 @@ nfc_forum_tag_type3_check(nfc_device *dev, const nfc_target *nt, const uint16_t 
   if ((res = nfc_initiator_transceive_bytes(dev, frame, frame_len, rx, sizeof(rx), 0)) < 0) {
     return res;
   }
+
   const int res_overhead = 1 + 1 + 8 + 2;  // 1+1+8+2: LEN + CMD + NFCID2 + STATUS
   if (res < res_overhead) {
     // Not enough data
@@ -326,7 +327,7 @@ main(int argc, char *argv[])
   const uint16_t block_count_to_check = (ndef_data_len / 16) + 1;
 
   data_len = 0;
-  for (uint16_t b = 0; b < (block_count_to_check / block_max_per_check); b += block_max_per_check) {
+  for (uint16_t b = 0; b < ((block_count_to_check - 1) / block_max_per_check + 1); b += block_max_per_check) {
     size_t size = sizeof(data) - data_len;
     if (!nfc_forum_tag_type3_check(pnd, &nt, 1 + b, MIN(block_max_per_check, (block_count_to_check - (b * block_max_per_check))), data + data_len, &size)) {
       nfc_perror(pnd, "nfc_forum_tag_type3_check");
@@ -337,7 +338,8 @@ main(int argc, char *argv[])
     }
     data_len += size;
   }
-  if (fwrite(data, 1, data_len, ndef_stream) != data_len) {
+
+  if (fwrite(data, 1, ndef_data_len, ndef_stream) != ndef_data_len) {
     fprintf(stderr, "Could not write to file.\n");
     fclose(ndef_stream);
     nfc_close(pnd);
