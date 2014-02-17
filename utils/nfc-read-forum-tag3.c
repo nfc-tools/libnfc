@@ -72,9 +72,11 @@ static nfc_context *context;
 static void
 print_usage(char *progname)
 {
-  fprintf(stderr, "usage: %s -o FILE\n", progname);
+  fprintf(stderr, "usage: %s [-q] -o FILE\n", progname);
   fprintf(stderr, "\nOptions:\n");
-  fprintf(stderr, "  -o     Extract NDEF message if available in FILE\n");
+  fprintf(stderr, "  -o FILE    Extract NDEF message if available in FILE\n");
+  fprintf(stderr, "  -o -       Extract NDEF message if available to stdout\n");
+  fprintf(stderr, "  -q         Be quiet, don't display Attribute Block parsing info\n");
 }
 
 static void stop_select(int sig)
@@ -169,12 +171,16 @@ main(int argc, char *argv[])
   (void)argv;
 
   int ch;
+  bool quiet = false;
   char *ndef_output = NULL;
-  while ((ch = getopt(argc, argv, "ho:")) != -1) {
+  while ((ch = getopt(argc, argv, "hqo:")) != -1) {
     switch (ch) {
       case 'h':
         print_usage(argv[0]);
         exit(EXIT_SUCCESS);
+        break;
+      case 'q':
+        quiet = true;
         break;
       case 'o':
         ndef_output = optarg;
@@ -219,7 +225,9 @@ main(int argc, char *argv[])
     exit(EXIT_FAILURE);
   }
 
-  fprintf(message_stream, "NFC device: %s opened\n", nfc_device_get_name(pnd));
+  if (!quiet) {
+    fprintf(message_stream, "NFC device: %s opened\n", nfc_device_get_name(pnd));
+  }
 
   nfc_modulation nm = {
     .nmt = NMT_FELICA,
@@ -237,7 +245,10 @@ main(int argc, char *argv[])
     nfc_exit(context);
     exit(EXIT_FAILURE);
   }
-  fprintf(message_stream, "Place your NFC Forum Tag Type 3 in the field...\n");
+
+  if (!quiet) {
+    fprintf(message_stream, "Place your NFC Forum Tag Type 3 in the field...\n");
+  }
 
   // Polling payload (SENSF_REQ) must be present (see NFC Digital Protol)
   const uint8_t *pbtSensfReq = (uint8_t *)"\x00\xff\xff\x01\x00";
@@ -292,60 +303,63 @@ main(int argc, char *argv[])
     exit(EXIT_FAILURE);
   }
 
-  fprintf(message_stream, "NDEF Attribute Block:\n");
   const int ndef_major_version = (data[0] & 0xf0) >> 4;
   const int ndef_minor_version = (data[0] & 0x0f);
-  fprintf(message_stream, "* Mapping version: %d.%d\n", ndef_major_version, ndef_minor_version);
-
   const int ndef_nbr = data[1];
-  fprintf(message_stream, "* Maximum nr of blocks to read  by Check  Command: %3d block%s\n", ndef_nbr, ndef_nbr > 1 ? "s" : "");
-
   const int ndef_nbw = data[2];
-  fprintf(message_stream, "* Maximum nr of blocks to write by Update Command: %3d block%s\n", ndef_nbw, ndef_nbw > 1 ? "s" : "");
-
   const int ndef_nmaxb = (data[3] << 8) + data[4];
-  fprintf(message_stream, "* Maximum nr of blocks available for NDEF data:    %3d block%s (%d bytes)\n", ndef_nmaxb, ndef_nmaxb > 1 ? "s" : "", ndef_nmaxb * 16);
-
   const int ndef_writeflag = data[9];
-  fprintf(message_stream, "* NDEF writing state: ");
-  switch (ndef_writeflag) {
-    case 0x00:
-      fprintf(message_stream, "finished (0x00)\n");
-      break;
-    case 0x0f:
-      fprintf(message_stream, "in progress (0x0F)\n");
-      break;
-    default:
-      fprintf(message_stream, "invalid (0x%02X)\n", ndef_writeflag);
-      break;
-  }
-
   const int ndef_rwflag = data[10];
-  fprintf(message_stream, "* NDEF Access Attribute: ");
-  switch (ndef_rwflag) {
-    case 0x00:
-      fprintf(message_stream, "Read only (0x00)\n");
-      break;
-    case 0x01:
-      fprintf(message_stream, "Read/Write (0x01)\n");
-      break;
-    default:
-      fprintf(message_stream, "invalid (0x%02X)\n", ndef_rwflag);
-      break;
-  }
-
   uint32_t ndef_data_len = (data[11] << 16) + (data[12] << 8) + data[13];
-  fprintf(message_stream, "* NDEF message length: %d bytes\n", ndef_data_len);
-
   uint16_t ndef_calculated_checksum = 0;
   for (size_t n = 0; n < 14; n++)
     ndef_calculated_checksum += data[n];
-
   const uint16_t ndef_checksum = (data[14] << 8) + data[15];
+
+  if (!quiet) {
+    fprintf(message_stream, "NDEF Attribute Block:\n");
+    fprintf(message_stream, "* Mapping version: %d.%d\n", ndef_major_version, ndef_minor_version);
+    fprintf(message_stream, "* Maximum nr of blocks to read  by Check  Command: %3d block%s\n", ndef_nbr, ndef_nbr > 1 ? "s" : "");
+    fprintf(message_stream, "* Maximum nr of blocks to write by Update Command: %3d block%s\n", ndef_nbw, ndef_nbw > 1 ? "s" : "");
+    fprintf(message_stream, "* Maximum nr of blocks available for NDEF data:    %3d block%s (%d bytes)\n", ndef_nmaxb, ndef_nmaxb > 1 ? "s" : "", ndef_nmaxb * 16);
+    fprintf(message_stream, "* NDEF writing state: ");
+    switch (ndef_writeflag) {
+      case 0x00:
+        fprintf(message_stream, "finished (0x00)\n");
+        break;
+      case 0x0f:
+        fprintf(message_stream, "in progress (0x0F)\n");
+        break;
+      default:
+        fprintf(message_stream, "invalid (0x%02X)\n", ndef_writeflag);
+        break;
+    }
+    fprintf(message_stream, "* NDEF Access Attribute: ");
+    switch (ndef_rwflag) {
+      case 0x00:
+        fprintf(message_stream, "Read only (0x00)\n");
+        break;
+      case 0x01:
+        fprintf(message_stream, "Read/Write (0x01)\n");
+        break;
+      default:
+        fprintf(message_stream, "invalid (0x%02X)\n", ndef_rwflag);
+        break;
+    }
+    fprintf(message_stream, "* NDEF message length: %d bytes\n", ndef_data_len);
+    if (ndef_calculated_checksum != ndef_checksum) {
+      fprintf(message_stream, "* Checksum: fail (0x%04X != 0x%04X)\n", ndef_calculated_checksum, ndef_checksum);
+    } else {
+      fprintf(message_stream, "* Checksum: ok (0x%04X)\n", ndef_checksum);
+    }
+  }
+
   if (ndef_calculated_checksum != ndef_checksum) {
-    fprintf(message_stream, "* Checksum: fail (0x%04X != 0x%04X)\n", ndef_calculated_checksum, ndef_checksum);
-  } else {
-    fprintf(message_stream, "* Checksum: ok (0x%04X)\n", ndef_checksum);
+    fprintf(stderr, "Error: Checksum failed! Exiting now.\n");
+    fclose(ndef_stream);
+    nfc_close(pnd);
+    nfc_exit(context);
+    exit(EXIT_FAILURE);
   }
 
   if (!ndef_data_len) {
@@ -373,13 +387,15 @@ main(int argc, char *argv[])
   }
 
   if (fwrite(data, 1, ndef_data_len, ndef_stream) != ndef_data_len) {
-    fprintf(stderr, "Could not write to file.\n");
+    fprintf(stderr, "Error: could not write to file.\n");
     fclose(ndef_stream);
     nfc_close(pnd);
     nfc_exit(context);
     exit(EXIT_FAILURE);
   } else {
-    fprintf(stderr, "%i bytes written to %s\n", ndef_data_len, ndef_output);
+    if (!quiet) {
+      fprintf(stderr, "%i bytes written to %s\n", ndef_data_len, ndef_output);
+    }
   }
 
   fclose(ndef_stream);
