@@ -10,6 +10,7 @@ Fixes:
  - Fix nfc_target_init(), was returning success in case of timeout
  - Windows: fix several compilation issues
  - On tag selection, save current target info also for ISO14443B*
+ - nfc-read-forum-tag3: fix incomplete NDEF retrieval and size of output file
 
 Improvements:
  - nfc-list: New option to choose which technologies to poll for
@@ -23,6 +24,7 @@ Improvements:
  - nfc-mfclassic: add format/wipe command (thanks to Adam Laurie)
  - nfc-jewel: new utility to read/write Topaz/Jewel tags (thanks to Pim 't Hart)
  - nfc_initiator_select_passive_target() provides defaults if pbtInitData=NULL
+ - nfc-read-forum-tag3: add -q option, add full parsing of NDEF Attribute Block
 
 Fixes & improvements specific to nfc_initiator_target_is_present():
  - Supports fully PN532 & PN533, not tested on other chips
