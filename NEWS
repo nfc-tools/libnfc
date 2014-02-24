@@ -1,3 +1,10 @@
+New in 1.7.1:
+
+API Changes:
+
+  * nfc_initiator_select_passive_target() provides defaults if pbtInitData=NULL
+  * nfc_initiator_target_is_present() allow NULL pointer to tag
+
 New in 1.7.0:
 
 Drivers:
