@@ -2036,7 +2036,7 @@ pn53x_initiator_target_is_present(struct nfc_device *pnd, const nfc_target *pnt)
   }
 
   // Ping target
-  int ret;
+  int ret = NFC_EDEVNOTSUPP;
   switch (CHIP_DATA(pnd)->current_target->nm.nmt) {
     case NMT_ISO14443A:
       if (CHIP_DATA(pnd)->current_target->nti.nai.btSak & 0x20) {
@@ -2072,10 +2072,6 @@ pn53x_initiator_target_is_present(struct nfc_device *pnd, const nfc_target *pnt)
       break;
     case NMT_ISO14443B2CT:
       ret = pn53x_ISO14443B_CT_is_present(pnd);
-      break;
-    default:
-      log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "target_is_present(): card type not supported");
-      ret = NFC_EDEVNOTSUPP;
       break;
   }
   if (ret == NFC_ETGRELEASED)
