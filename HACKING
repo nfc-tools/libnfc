@@ -34,6 +34,7 @@ Here are some directions to get you started:
         $ make clean
         $ make
       2.2.2 Using clang:
+        You can use same CFLAGS but also "-Wunreachable-code"
         $ scan-build ./configure
         $ make clean
         $ scan-build make
