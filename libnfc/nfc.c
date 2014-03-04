@@ -1260,22 +1260,15 @@ str_nfc_baud_rate(const nfc_baud_rate nbr)
   switch (nbr) {
     case NBR_UNDEFINED:
       return "undefined baud rate";
-      break;
     case NBR_106:
       return "106 kbps";
-      break;
     case NBR_212:
       return "212 kbps";
-      break;
     case NBR_424:
       return "424 kbps";
-      break;
     case NBR_847:
       return "847 kbps";
-      break;
   }
-  // Should never go there..
-  return "";
 }
 
 /** @ingroup string-converter
@@ -1289,31 +1282,21 @@ str_nfc_modulation_type(const nfc_modulation_type nmt)
   switch (nmt) {
     case NMT_ISO14443A:
       return "ISO/IEC 14443A";
-      break;
     case NMT_ISO14443B:
       return "ISO/IEC 14443-4B";
-      break;
     case NMT_ISO14443BI:
       return "ISO/IEC 14443-4B'";
-      break;
     case NMT_ISO14443B2CT:
       return "ISO/IEC 14443-2B ASK CTx";
-      break;
     case NMT_ISO14443B2SR:
       return "ISO/IEC 14443-2B ST SRx";
-      break;
     case NMT_FELICA:
       return "FeliCa";
-      break;
     case NMT_JEWEL:
       return "Innovision Jewel";
-      break;
     case NMT_DEP:
       return "D.E.P.";
-      break;
   }
-  // Should never go there..
-  return "";
 }
 
 /** @ingroup string-converter

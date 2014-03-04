@@ -97,7 +97,6 @@ nfc_initiator_jewel_cmd(nfc_device *pnd, const jewel_req req, jewel_res *pres)
       break;
     default:
       return false;
-      break;
   }
 
   if (nfc_initiator_transceive_bytes(pnd, (uint8_t *)&req, nLenReq, (uint8_t *)pres, nLenRes, -1) < 0) {

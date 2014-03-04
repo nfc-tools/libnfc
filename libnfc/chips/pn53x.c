@@ -607,7 +607,6 @@ pn53x_decode_target_data(const uint8_t *pbtRawData, size_t szRawData, pn53x_type
       // Should not happend...
     case NMT_DEP:
       return NFC_ECHIP;
-      break;
   }
   return NFC_SUCCESS;
 }
@@ -820,11 +819,9 @@ pn53x_set_property_int(struct nfc_device *pnd, const nfc_property property, cons
     case NP_TIMEOUT_ATR:
       CHIP_DATA(pnd)->timeout_atr = value;
       return pn53x_RFConfiguration__Various_timings(pnd, pn53x_int_to_timeout(CHIP_DATA(pnd)->timeout_atr), pn53x_int_to_timeout(CHIP_DATA(pnd)->timeout_communication));
-      break;
     case NP_TIMEOUT_COM:
       CHIP_DATA(pnd)->timeout_communication = value;
       return pn53x_RFConfiguration__Various_timings(pnd, pn53x_int_to_timeout(CHIP_DATA(pnd)->timeout_atr), pn53x_int_to_timeout(CHIP_DATA(pnd)->timeout_communication));
-      break;
       // Following properties are invalid (not integer)
     case NP_HANDLE_CRC:
     case NP_HANDLE_PARITY:
@@ -863,7 +860,6 @@ pn53x_set_property_bool(struct nfc_device *pnd, const nfc_property property, con
         return res;
       pnd->bCrc = bEnable;
       return NFC_SUCCESS;
-      break;
 
     case NP_HANDLE_PARITY:
       // Handle parity bit by PN53X chip or parse it as data bit
@@ -875,21 +871,17 @@ pn53x_set_property_bool(struct nfc_device *pnd, const nfc_property property, con
         return res;
       pnd->bPar = bEnable;
       return NFC_SUCCESS;
-      break;
 
     case NP_EASY_FRAMING:
       pnd->bEasyFraming = bEnable;
       return NFC_SUCCESS;
-      break;
 
     case NP_ACTIVATE_FIELD:
       return pn53x_RFConfiguration__RF_field(pnd, bEnable);
-      break;
 
     case NP_ACTIVATE_CRYPTO1:
       btValue = (bEnable) ? SYMBOL_MF_CRYPTO1_ON : 0x00;
       return pn53x_write_register(pnd, PN53X_REG_CIU_Status2, SYMBOL_MF_CRYPTO1_ON, btValue);
-      break;
 
     case NP_INFINITE_SELECT:
       // TODO Made some research around this point:
@@ -901,17 +893,14 @@ pn53x_set_property_bool(struct nfc_device *pnd, const nfc_property property, con
                                                (bEnable) ? 0xff : 0x01,        // MxRtyPSL, default: 0x01
                                                (bEnable) ? 0xff : 0x02         // MxRtyPassiveActivation, default: 0xff (0x00 leads to problems with PN531)
                                               );
-      break;
 
     case NP_ACCEPT_INVALID_FRAMES:
       btValue = (bEnable) ? SYMBOL_RX_NO_ERROR : 0x00;
       return pn53x_write_register(pnd, PN53X_REG_CIU_RxMode, SYMBOL_RX_NO_ERROR, btValue);
-      break;
 
     case NP_ACCEPT_MULTIPLE_FRAMES:
       btValue = (bEnable) ? SYMBOL_RX_MULTIPLE : 0x00;
       return pn53x_write_register(pnd, PN53X_REG_CIU_RxMode, SYMBOL_RX_MULTIPLE, btValue);
-      break;
 
     case NP_AUTO_ISO14443_4:
       if (bEnable == pnd->bAutoIso14443_4)
@@ -919,7 +908,6 @@ pn53x_set_property_bool(struct nfc_device *pnd, const nfc_property property, con
         return NFC_SUCCESS;
       pnd->bAutoIso14443_4 = bEnable;
       return pn53x_set_parameters(pnd, PARAM_AUTO_RATS, bEnable);
-      break;
 
     case NP_FORCE_ISO14443_A:
       if (!bEnable) {
@@ -935,7 +923,6 @@ pn53x_set_property_bool(struct nfc_device *pnd, const nfc_property property, con
       }
       // Set the PN53X to force 100% ASK Modified miller decoding (default for 14443A cards)
       return pn53x_write_register(pnd, PN53X_REG_CIU_TxAuto, SYMBOL_FORCE_100_ASK, 0x40);
-      break;
 
     case NP_FORCE_ISO14443_B:
       if (!bEnable) {
@@ -947,7 +934,6 @@ pn53x_set_property_bool(struct nfc_device *pnd, const nfc_property property, con
         return res;
       }
       return pn53x_write_register(pnd, PN53X_REG_CIU_RxMode, SYMBOL_RX_FRAMING, 0x03);
-      break;
 
     case NP_FORCE_SPEED_106:
       if (!bEnable) {
@@ -959,13 +945,11 @@ pn53x_set_property_bool(struct nfc_device *pnd, const nfc_property property, con
         return res;
       }
       return pn53x_write_register(pnd, PN53X_REG_CIU_RxMode, SYMBOL_RX_SPEED, 0x00);
-      break;
       // Following properties are invalid (not boolean)
     case NP_TIMEOUT_COMMAND:
     case NP_TIMEOUT_ATR:
     case NP_TIMEOUT_COM:
       return NFC_EINVARG;
-      break;
   }
 
   return NFC_EINVARG;
@@ -1231,17 +1215,14 @@ pn53x_initiator_poll_target(struct nfc_device *pnd,
           return pnd->last_error = NFC_ESOFT;
         }
         return res;
-        break;
       case 2:
         *pnt = ntTargets[1]; // We keep the selected one
         if (pn53x_current_target_new(pnd, pnt) == NULL) {
           return pnd->last_error = NFC_ESOFT;
         }
         return res;
-        break;
       default:
         return NFC_ECHIP;
-        break;
     }
   } else {
     bool bInfiniteSelect = pnd->bInfiniteSelect;
@@ -1303,7 +1284,6 @@ pn53x_initiator_select_dep_target(struct nfc_device *pnd,
     case NBR_847:
     case NBR_UNDEFINED:
       return NFC_EINVARG;
-      break;
   }
 
   pn53x_current_target_free(pnd);
@@ -2150,7 +2130,6 @@ pn53x_target_init(struct nfc_device *pnd, nfc_target *pnt, uint8_t *pbtRx, const
     case NMT_JEWEL:
       pnd->last_error = NFC_EDEVNOTSUPP;
       return pnd->last_error;
-      break;
   }
 
   // Let the PN53X be activated by the RF level detector from power down mode
@@ -2252,7 +2231,6 @@ pn53x_target_init(struct nfc_device *pnd, nfc_target *pnt, uint8_t *pbtRx, const
     case NMT_JEWEL:
       pnd->last_error = NFC_EDEVNOTSUPP;
       return pnd->last_error;
-      break;
   }
 
   bool targetActivated = false;
@@ -2911,7 +2889,6 @@ pn53x_InJumpForDEP(struct nfc_device *pnd,
     case NBR_UNDEFINED:
       pnd->last_error = NFC_EINVARG;
       return pnd->last_error;
-      break;
   }
 
   if (pbtNFCID3i) {
@@ -3128,22 +3105,17 @@ pn53x_nm_to_pm(const nfc_modulation nm)
   switch (nm.nmt) {
     case NMT_ISO14443A:
       return PM_ISO14443A_106;
-      break;
 
     case NMT_ISO14443B:
       switch (nm.nbr) {
         case NBR_106:
           return PM_ISO14443B_106;
-          break;
         case NBR_212:
           return PM_ISO14443B_212;
-          break;
         case NBR_424:
           return PM_ISO14443B_424;
-          break;
         case NBR_847:
           return PM_ISO14443B_847;
-          break;
         case NBR_UNDEFINED:
           // Nothing to do...
           break;
@@ -3152,16 +3124,13 @@ pn53x_nm_to_pm(const nfc_modulation nm)
 
     case NMT_JEWEL:
       return PM_JEWEL_106;
-      break;
 
     case NMT_FELICA:
       switch (nm.nbr) {
         case NBR_212:
           return PM_FELICA_212;
-          break;
         case NBR_424:
           return PM_FELICA_424;
-          break;
         case NBR_106:
         case NBR_847:
         case NBR_UNDEFINED:
@@ -3194,36 +3163,31 @@ pn53x_ptt_to_nm(const pn53x_target_type ptt)
     case PTT_MIFARE:
     case PTT_ISO14443_4A_106:
       return (const nfc_modulation) { .nmt = NMT_ISO14443A, .nbr = NBR_106 };
-      break;
 
     case PTT_ISO14443_4B_106:
     case PTT_ISO14443_4B_TCL_106:
       return (const nfc_modulation) { .nmt = NMT_ISO14443B, .nbr = NBR_106 };
-      break;
 
     case PTT_JEWEL_106:
       return (const nfc_modulation) { .nmt = NMT_JEWEL, .nbr = NBR_106 };
-      break;
 
     case PTT_FELICA_212:
       return (const nfc_modulation) { .nmt = NMT_FELICA, .nbr = NBR_212 };
-      break;
+
     case PTT_FELICA_424:
       return (const nfc_modulation) { .nmt = NMT_FELICA, .nbr = NBR_424 };
-      break;
 
     case PTT_DEP_PASSIVE_106:
     case PTT_DEP_ACTIVE_106:
       return (const nfc_modulation) { .nmt = NMT_DEP, .nbr = NBR_106 };
-      break;
+
     case PTT_DEP_PASSIVE_212:
     case PTT_DEP_ACTIVE_212:
       return (const nfc_modulation) { .nmt = NMT_DEP, .nbr = NBR_212 };
-      break;
+
     case PTT_DEP_PASSIVE_424:
     case PTT_DEP_ACTIVE_424:
       return (const nfc_modulation) { .nmt = NMT_DEP, .nbr = NBR_424 };
-      break;
   }
   // We should never be here, this line silent compilation warning
   return (const nfc_modulation) { .nmt = NMT_ISO14443A, .nbr = NBR_106 };
@@ -3236,13 +3200,12 @@ pn53x_nm_to_ptt(const nfc_modulation nm)
     case NMT_ISO14443A:
       return PTT_MIFARE;
       // return PTT_ISO14443_4A_106;
-      break;
 
     case NMT_ISO14443B:
       switch (nm.nbr) {
         case NBR_106:
           return PTT_ISO14443_4B_106;
-          break;
+
         case NBR_UNDEFINED:
         case NBR_212:
         case NBR_424:
@@ -3254,16 +3217,15 @@ pn53x_nm_to_ptt(const nfc_modulation nm)
 
     case NMT_JEWEL:
       return PTT_JEWEL_106;
-      break;
 
     case NMT_FELICA:
       switch (nm.nbr) {
         case NBR_212:
           return PTT_FELICA_212;
-          break;
+
         case NBR_424:
           return PTT_FELICA_424;
-          break;
+
         case NBR_UNDEFINED:
         case NBR_106:
         case NBR_847:

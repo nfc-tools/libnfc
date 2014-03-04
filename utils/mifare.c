@@ -95,7 +95,6 @@ nfc_initiator_mifare_cmd(nfc_device *pnd, const mifare_cmd mc, const uint8_t ui8
       // Please fix your code, you never should reach this statement
     default:
       return false;
-      break;
   }
 
   // When available, copy the parameter bytes
