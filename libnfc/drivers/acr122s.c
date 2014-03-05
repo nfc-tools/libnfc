@@ -422,7 +422,7 @@ acr122s_scan(const nfc_context *context, nfc_connstring connstrings[], const siz
 
   while ((acPort = acPorts[iDevice++])) {
     sp = uart_open(acPort);
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Trying to find ACR122S device on serial port: %s at %d bauds.", acPort, ACR122S_DEFAULT_SPEED);
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Trying to find ACR122S device on serial port: %s at %d baud.", acPort, ACR122S_DEFAULT_SPEED);
 
     if ((sp != INVALID_SERIAL_PORT) && (sp != CLAIMED_SERIAL_PORT)) {
       // We need to flush input to be sure first reply does not comes from older byte transceive
@@ -562,7 +562,7 @@ acr122s_open(const nfc_context *context, const nfc_connstring connstring)
   }
 
   log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG,
-          "Attempt to connect to: %s at %d bauds.", ndd.port, ndd.speed);
+          "Attempt to connect to: %s at %d baud.", ndd.port, ndd.speed);
 
   sp = uart_open(ndd.port);
   if (sp == INVALID_SERIAL_PORT) {

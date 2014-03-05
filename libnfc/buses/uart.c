@@ -179,7 +179,7 @@ uart_flush_input(serial_port sp, bool wait)
 void
 uart_set_speed(serial_port sp, const uint32_t uiPortSpeed)
 {
-  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Serial port speed requested to be set to %d bauds.", uiPortSpeed);
+  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Serial port speed requested to be set to %d baud.", uiPortSpeed);
 
   // Portability note: on some systems, B9600 != 9600 so we have to do
   // uint32_t <=> speed_t associations by hand.
@@ -215,7 +215,7 @@ uart_set_speed(serial_port sp, const uint32_t uiPortSpeed)
       break;
 #  endif
     default:
-      log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to set serial port speed to %d bauds. Speed value must be one of those defined in termios(3).",
+      log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to set serial port speed to %d baud. Speed value must be one of those defined in termios(3).",
               uiPortSpeed);
       return;
   };
