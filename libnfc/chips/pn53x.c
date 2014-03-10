@@ -1143,7 +1143,7 @@ pn53x_initiator_select_passive_target_ext(struct nfc_device *pnd,
   } else {
 
     const pn53x_modulation pm = pn53x_nm_to_pm(nm);
-    if ((PM_UNDEFINED == pm)||(NBR_UNDEFINED == nm.nbr)) {
+    if ((PM_UNDEFINED == pm) || (NBR_UNDEFINED == nm.nbr)) {
       pnd->last_error = NFC_EINVARG;
       return pnd->last_error;
     }
