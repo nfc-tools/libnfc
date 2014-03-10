@@ -1143,7 +1143,7 @@ pn53x_initiator_select_passive_target_ext(struct nfc_device *pnd,
   } else {
 
     const pn53x_modulation pm = pn53x_nm_to_pm(nm);
-    if (PM_UNDEFINED == pm) {
+    if ((PM_UNDEFINED == pm)||(NBR_UNDEFINED == nm.nbr)) {
       pnd->last_error = NFC_EINVARG;
       return pnd->last_error;
     }
@@ -1157,6 +1157,14 @@ pn53x_initiator_select_passive_target_ext(struct nfc_device *pnd,
     nttmp.nm = nm;
     if ((res = pn53x_decode_target_data(abtTargetsData + 1, szTargetsData - 1, CHIP_DATA(pnd)->type, nm.nmt, &(nttmp.nti))) < 0) {
       return res;
+    }
+    if (nm.nbr != NBR_106) {
+      uint8_t pncmd_inpsl[4] = { InPSL, 0x01 };
+      pncmd_inpsl[2] = nm.nbr - 1;
+      pncmd_inpsl[3] = nm.nbr - 1;
+      if ((res = pn53x_transceive(pnd, pncmd_inpsl, sizeof(pncmd_inpsl), NULL, 0, 0)) < 0) {
+        return res;
+      }
     }
   }
   if (pn53x_current_target_new(pnd, &nttmp) == NULL) {
