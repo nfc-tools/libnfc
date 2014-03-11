@@ -158,6 +158,8 @@ nfc_drivers_init(void)
 #endif /* DRIVER_ARYGON_ENABLED */
 }
 
+static int
+nfc_device_validate_modulation(nfc_device *pnd, const nfc_mode mode, const nfc_modulation *nm);
 
 /** @ingroup lib
  * @brief Register an NFC device driver with libnfc.
@@ -526,6 +528,9 @@ nfc_initiator_select_passive_target(nfc_device *pnd,
   uint8_t *abtInit = NULL;
   uint8_t abtTmpInit[MAX(12, szInitData)];
   size_t  szInit = 0;
+  int res;
+  if ((res = nfc_device_validate_modulation(pnd, N_INITIATOR, &nm)) != NFC_SUCCESS)
+    return res;
   if (szInitData == 0) {
     // Provide default values, if any
     prepare_initiator_data(nm, &abtInit, &szInit);
@@ -1205,6 +1210,38 @@ int
 nfc_device_get_supported_baud_rate(nfc_device *pnd, const nfc_mode mode, const nfc_modulation_type nmt, const nfc_baud_rate **const supported_br)
 {
   HAL(get_supported_baud_rate, pnd, mode, nmt, supported_br);
+}
+
+/** @ingroup data
+ * @brief Validate combination of modulation and baud rate on the currently used device.
+ * @return Returns 0 on success, otherwise returns libnfc's error code (negative value)
+ * @param pnd \a nfc_device struct pointer that represent currently used device
+ * @param mode \a nfc_mode.
+ * @param nm \a nfc_modulation.
+ *
+ */
+static int
+nfc_device_validate_modulation(nfc_device *pnd, const nfc_mode mode, const nfc_modulation *nm)
+{
+  int res;
+  const nfc_modulation_type *nmt;
+  if ((res = nfc_device_get_supported_modulation(pnd, mode, &nmt)) < 0) {
+    return res;
+  }
+  for (int i = 0; nmt[i]; i++) {
+    if (nmt[i] == nm->nmt) {
+      const nfc_baud_rate *nbr;
+      if ((res = nfc_device_get_supported_baud_rate(pnd, mode, nmt[i], &nbr)) < 0) {
+        return res;
+      }
+      for (int j = 0; nbr[j]; j++) {
+        if (nbr[j] == nm->nbr)
+          return NFC_SUCCESS;
+      }
+      return NFC_EINVARG;
+    }
+  }
+  return NFC_EINVARG;
 }
 
 /* Misc. functions */
