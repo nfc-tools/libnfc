@@ -1,5 +1,20 @@
+TBD - 1.7.x
+-----------
+Fixes:
+ - Remove unreachable code
+ - nfc_emulate_uid: cleaner exit on interrupt
+ - Fix reporting of modulations and baud rates by nfc-scan-device -v
+
+Improvements:
+ - Allow ISO14443A to be used at higher baud rates
+ - nfc_initiator_select_passive_target() now checks against
+   reported modulations and baud rates for current device
+
+Changes:
+ - nfc_get_supported_baud_rate() takes now a "mode" parameter
+
 Feb 24, 2014 - 1.7.1
-------------------
+--------------------
 
 Fixes:
  - Fix several issues reported by Coverity Scan
