@@ -1196,14 +1196,15 @@ nfc_device_get_supported_modulation(nfc_device *pnd, const nfc_mode mode, const 
  * @brief Get supported baud rates.
  * @return Returns 0 on success, otherwise returns libnfc's error code (negative value)
  * @param pnd \a nfc_device struct pointer that represent currently used device
+ * @param mode \a nfc_mode.
  * @param nmt \a nfc_modulation_type.
  * @param supported_br pointer of \a nfc_baud_rate array.
  *
  */
 int
-nfc_device_get_supported_baud_rate(nfc_device *pnd, const nfc_modulation_type nmt, const nfc_baud_rate **const supported_br)
+nfc_device_get_supported_baud_rate(nfc_device *pnd, const nfc_mode mode, const nfc_modulation_type nmt, const nfc_baud_rate **const supported_br)
 {
-  HAL(get_supported_baud_rate, pnd, nmt, supported_br);
+  HAL(get_supported_baud_rate, pnd, mode, nmt, supported_br);
 }
 
 /* Misc. functions */

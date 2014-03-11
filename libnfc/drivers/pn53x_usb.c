@@ -60,6 +60,8 @@ Thanks to d18c7db and Okko for example code
 
 #define DRIVER_DATA(pnd) ((struct pn53x_usb_data*)(pnd->driver_data))
 
+const nfc_modulation_type no_target_support[] = {0};
+
 typedef enum {
   UNKNOWN,
   NXP_PN531,
@@ -709,6 +711,16 @@ pn53x_usb_abort_command(nfc_device *pnd)
   return NFC_SUCCESS;
 }
 
+static int
+pn53x_usb_get_supported_modulation(nfc_device *pnd, const nfc_mode mode, const nfc_modulation_type **const supported_mt)
+{
+  if ((DRIVER_DATA(pnd)->model != ASK_LOGO) || (mode != N_TARGET))
+    return pn53x_get_supported_modulation(pnd, mode, supported_mt);
+  else // ASK_LOGO has no N_TARGET support
+    *supported_mt = no_target_support;
+  return NFC_SUCCESS;
+}
+
 const struct pn53x_io pn53x_usb_io = {
   .send       = pn53x_usb_send,
   .receive    = pn53x_usb_receive,
@@ -742,7 +754,7 @@ const struct nfc_driver pn53x_usb_driver = {
 
   .device_set_property_bool     = pn53x_usb_set_property_bool,
   .device_set_property_int      = pn53x_set_property_int,
-  .get_supported_modulation     = pn53x_get_supported_modulation,
+  .get_supported_modulation     = pn53x_usb_get_supported_modulation,
   .get_supported_baud_rate      = pn53x_get_supported_baud_rate,
   .device_get_information_about = pn53x_get_information_about,
 

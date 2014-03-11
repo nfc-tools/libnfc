@@ -52,7 +52,8 @@
 const uint8_t pn53x_ack_frame[] = { 0x00, 0x00, 0xff, 0x00, 0xff, 0x00 };
 const uint8_t pn53x_nack_frame[] = { 0x00, 0x00, 0xff, 0xff, 0x00, 0x00 };
 static const uint8_t pn53x_error_frame[] = { 0x00, 0x00, 0xff, 0x01, 0xff, 0x7f, 0x81, 0x00 };
-const nfc_baud_rate pn53x_iso14443a_supported_baud_rates[] = { NBR_106, 0 };
+const nfc_baud_rate pn532_iso14443a_supported_baud_rates[] = { NBR_424, NBR_212, NBR_106, 0 };
+const nfc_baud_rate pn533_iso14443a_supported_baud_rates[] = { NBR_847, NBR_424, NBR_212, NBR_106, 0 };
 const nfc_baud_rate pn53x_felica_supported_baud_rates[] = { NBR_424, NBR_212, 0 };
 const nfc_baud_rate pn53x_dep_supported_baud_rates[] = { NBR_424, NBR_212, NBR_106, 0 };
 const nfc_baud_rate pn53x_jewel_supported_baud_rates[] = { NBR_106, 0 };
@@ -95,6 +96,12 @@ pn53x_init(struct nfc_device *pnd)
     }
     if (pnd->btSupportByte & SUPPORT_ISO14443B) {
       CHIP_DATA(pnd)->supported_modulation_as_initiator[nbSupportedModulation] = NMT_ISO14443B;
+      nbSupportedModulation++;
+      CHIP_DATA(pnd)->supported_modulation_as_initiator[nbSupportedModulation] = NMT_ISO14443BI;
+      nbSupportedModulation++;
+      CHIP_DATA(pnd)->supported_modulation_as_initiator[nbSupportedModulation] = NMT_ISO14443B2SR;
+      nbSupportedModulation++;
+      CHIP_DATA(pnd)->supported_modulation_as_initiator[nbSupportedModulation] = NMT_ISO14443B2CT;
       nbSupportedModulation++;
     }
     if (CHIP_DATA(pnd)->type != PN531) {
@@ -1158,7 +1165,7 @@ pn53x_initiator_select_passive_target_ext(struct nfc_device *pnd,
     if ((res = pn53x_decode_target_data(abtTargetsData + 1, szTargetsData - 1, CHIP_DATA(pnd)->type, nm.nmt, &(nttmp.nti))) < 0) {
       return res;
     }
-    if (nm.nbr != NBR_106) {
+    if ((nm.nmt == NMT_ISO14443A) && (nm.nbr != NBR_106)) {
       uint8_t pncmd_inpsl[4] = { InPSL, 0x01 };
       pncmd_inpsl[2] = nm.nbr - 1;
       pncmd_inpsl[3] = nm.nbr - 1;
@@ -3265,19 +3272,21 @@ pn53x_get_supported_modulation(nfc_device *pnd, const nfc_mode mode, const nfc_m
 }
 
 int
-pn53x_get_supported_baud_rate(nfc_device *pnd, const nfc_modulation_type nmt, const nfc_baud_rate **const supported_br)
+pn53x_get_supported_baud_rate(nfc_device *pnd, const nfc_mode mode, const nfc_modulation_type nmt, const nfc_baud_rate **const supported_br)
 {
   switch (nmt) {
     case NMT_FELICA:
       *supported_br = (nfc_baud_rate *)pn53x_felica_supported_baud_rates;
       break;
-    case NMT_ISO14443A:
-      *supported_br = (nfc_baud_rate *)pn53x_iso14443a_supported_baud_rates;
-      break;
-    case NMT_ISO14443B:
-    case NMT_ISO14443BI:
-    case NMT_ISO14443B2SR:
-    case NMT_ISO14443B2CT: {
+    case NMT_ISO14443A: {
+      if ((CHIP_DATA(pnd)->type != PN533) || (mode == N_TARGET)) {
+        *supported_br = (nfc_baud_rate *)pn532_iso14443a_supported_baud_rates;
+      } else {
+        *supported_br = (nfc_baud_rate *)pn533_iso14443a_supported_baud_rates;
+      }
+    }
+    break;
+    case NMT_ISO14443B: {
       if ((CHIP_DATA(pnd)->type != PN533)) {
         *supported_br = (nfc_baud_rate *)pn532_iso14443b_supported_baud_rates;
       } else {
@@ -3285,6 +3294,11 @@ pn53x_get_supported_baud_rate(nfc_device *pnd, const nfc_modulation_type nmt, co
       }
     }
     break;
+    case NMT_ISO14443BI:
+    case NMT_ISO14443B2SR:
+    case NMT_ISO14443B2CT:
+      *supported_br = (nfc_baud_rate *)pn532_iso14443b_supported_baud_rates;
+      break;
     case NMT_JEWEL:
       *supported_br = (nfc_baud_rate *)pn53x_jewel_supported_baud_rates;
       break;
@@ -3347,7 +3361,7 @@ pn53x_get_information_about(nfc_device *pnd, char **pbuf)
     }
     buflen -= res;
     const nfc_baud_rate *nbr;
-    if ((res = nfc_device_get_supported_baud_rate(pnd, nmt[i], &nbr)) < 0) {
+    if ((res = nfc_device_get_supported_baud_rate(pnd, N_INITIATOR, nmt[i], &nbr)) < 0) {
       free(*pbuf);
       return res;
     }
@@ -3400,7 +3414,6 @@ pn53x_get_information_about(nfc_device *pnd, char **pbuf)
     free(*pbuf);
     return res;
   }
-
   for (int i = 0; nmt[i]; i++) {
     if ((res = snprintf(buf, buflen, "%s%s (", (i == 0) ? "" : ", ", str_nfc_modulation_type(nmt[i]))) < 0) {
       free(*pbuf);
@@ -3413,7 +3426,7 @@ pn53x_get_information_about(nfc_device *pnd, char **pbuf)
     }
     buflen -= res;
     const nfc_baud_rate *nbr;
-    if ((res = nfc_device_get_supported_baud_rate(pnd, nmt[i], &nbr)) < 0) {
+    if ((res = nfc_device_get_supported_baud_rate(pnd, N_TARGET, nmt[i], &nbr)) < 0) {
       free(*pbuf);
       return res;
     }
