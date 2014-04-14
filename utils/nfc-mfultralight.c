@@ -168,7 +168,8 @@ write_card(void)
     // page (4 bytes). The Ultralight-specific Write command only
     // writes one page at a time.
     uiBlock = page / 4;
-    memcpy(mp.mpd.abtData, mtDump.amb[uiBlock].mbd.abtData + ((page % 4) * 4), 16);
+    memcpy(mp.mpd.abtData, mtDump.amb[uiBlock].mbd.abtData + ((page % 4) * 4), 4);
+    memset(mp.mpd.abtData + 4, 0, 12);
     if (!nfc_initiator_mifare_cmd(pnd, MC_WRITE, page, &mp))
       bFailure = true;
 

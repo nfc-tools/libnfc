@@ -4,6 +4,7 @@ Fixes:
  - Remove unreachable code
  - nfc_emulate_uid: cleaner exit on interrupt
  - Fix reporting of modulations and baud rates by nfc-scan-device -v
+ - Fix out-of-bounds access in nfc-mfultralight
 
 Improvements:
  - Allow ISO14443A to be used at higher baud rates
