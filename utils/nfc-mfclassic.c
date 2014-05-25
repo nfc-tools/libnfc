@@ -405,7 +405,7 @@ write_card(int write_block_zero)
       fflush(stdout);
 
       // Try to authenticate for the current sector
-      if (!write_block_zero && !authenticate(uiBlock)) {
+      if (!write_block_zero && !authenticate(uiBlock) && !bTolerateFailures) {
         printf("!\nError: authentication failed for block %02x\n", uiBlock);
         return false;
       }
