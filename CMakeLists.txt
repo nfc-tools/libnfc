@@ -157,6 +157,61 @@ ADD_SUBDIRECTORY(include)
 ADD_SUBDIRECTORY(utils)
 ADD_SUBDIRECTORY(examples)
 
+if (NOT MSVC)
+  # config script install path
+  if ( NOT DEFINED LIBNFC_CMAKE_CONFIG_DIR )
+    set ( LIBNFC_CMAKE_CONFIG_DIR lib${LIB_SUFFIX}/cmake/libnfc )
+  endif ()
+
+  set ( LIBNFC_INCLUDE_DIR ${includedir} )
+  set ( LIBNFC_INCLUDE_DIRS ${LIBNFC_INCLUDE_DIR} )
+  list ( APPEND LIBNFC_INCLUDE_DIRS ${LIBUSB_INCLUDE_DIRS} )
+  set ( LIBNFC_LIBRARY nfc )
+  set ( LIBNFC_LIBRARIES ${LIBNFC_LIBRARY} )
+  list ( APPEND LIBNFC_LIBRARIES ${LIBUSB_LIBRARIES} )
+  set ( LIBNFC_LIBRARY_DIRS ${libdir} )
+  set ( LIBNFC_ROOT_DIR ${prefix} )
+  set ( LIBNFC_VERSION_STRING ${VERSION} )
+  set ( LIBNFC_VERSION_MAJOR ${VERSION_MAJOR} )
+  set ( LIBNFC_VERSION_MINOR ${VERSION_MINOR} )
+  set ( LIBNFC_VERSION_PATCH ${VERSION_PATCH} )
+
+  set ( LIBNFC_USE_FILE ${CMAKE_INSTALL_PREFIX}/${LIBNFC_CMAKE_CONFIG_DIR}/UseLibNFC.cmake )
+
+
+          
+  if(CMAKE_VERSION VERSION_LESS 2.8.8)
+    configure_file ( cmake/LibNFCConfig.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/LibNFCConfig.cmake @ONLY )
+    configure_file ( cmake/LibNFCConfigVersion.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/LibNFCConfigVersion.cmake @ONLY )
+  else ()
+    include(CMakePackageConfigHelpers)
+    configure_package_config_file (
+      cmake/LibNFCConfig.cmake.in
+      ${CMAKE_CURRENT_BINARY_DIR}/LibNFCConfig.cmake
+      INSTALL_DESTINATION ${LIBNFC_CMAKE_CONFIG_DIR}
+      PATH_VARS
+        LIBNFC_USE_FILE
+        LIBNFC_ROOT_DIR
+        LIBNFC_INCLUDE_DIR
+        LIBNFC_INCLUDE_DIRS
+        LIBNFC_LIBRARY_DIRS
+        NO_CHECK_REQUIRED_COMPONENTS_MACRO
+    )
+    write_basic_package_version_file (
+      LibNFCConfigVersion.cmake 
+      VERSION ${LIBNFC_VERSION_STRING} 
+      COMPATIBILITY AnyNewerVersion
+    )
+  endif ()
+   
+  install ( FILES ${CMAKE_CURRENT_BINARY_DIR}/LibNFCConfig.cmake
+                  ${CMAKE_CURRENT_BINARY_DIR}/LibNFCConfigVersion.cmake
+                  cmake/UseLibNFC.cmake
+            DESTINATION ${LIBNFC_CMAKE_CONFIG_DIR}
+          )
+   
+endif ()
+
 # Binary Package
 IF(WIN32)
   SET(CPACK_GENERATOR "ZIP")
