@@ -1307,6 +1307,8 @@ str_nfc_baud_rate(const nfc_baud_rate nbr)
     case NBR_847:
       return "847 kbps";
   }
+
+  return "???";
 }
 
 /** @ingroup string-converter
@@ -1335,6 +1337,8 @@ str_nfc_modulation_type(const nfc_modulation_type nmt)
     case NMT_DEP:
       return "D.E.P.";
   }
+
+  return "???";
 }
 
 /** @ingroup string-converter
