@@ -83,9 +83,11 @@ const char *serial_ports_device_radix[] = { "ttyUSB", "ttyS", "ttyACM", "ttyAMA"
 #    error "Can't determine serial string for your system"
 #  endif
 
+// As of 2015/Feb/22, Cygwin does not handle FIONREAD on physical serial devices.
+// We'll use TIOCINQ instead which is pretty much the same.
 #ifdef __CYGWIN__
-// Under Cygwin, FIONREAD is defined in this file
-#  include <asm/socket.h>
+#  include <sys/termios.h>
+#  define FIONREAD TIOCINQ
 #endif
 
 // Work-around to claim uart interface using the c_iflag (software input processing) from the termios struct
