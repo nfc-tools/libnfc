@@ -14,6 +14,7 @@ AM_CPPFLAGS = $(all_includes) $(LIBNFC_CFLAGS)
 noinst_LTLIBRARIES = libnfcutils.la
 
 libnfcutils_la_SOURCES = nfc-utils.c
+libnfcutils_la_LIBADD = -lnfc
 
 nfc_emulate_forum_tag4_SOURCES = nfc-emulate-forum-tag4.c nfc-utils.h
 nfc_emulate_forum_tag4_LDADD = $(top_builddir)/libnfc/libnfc.la \
