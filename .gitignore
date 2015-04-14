@@ -1,4 +1,5 @@
 *~
+*.exe
 Doxyfile
 INSTALL
 Makefile
@@ -11,6 +12,7 @@ cmake/Makefile
 cmake/Makefile.in
 cmake/modules/Makefile
 cmake/modules/Makefile.in
+compile
 config.guess
 config.h
 config.h.in
@@ -102,6 +104,7 @@ test/.deps/
 test/.libs/
 test/Makefile
 test/Makefile.in
+test-driver
 utils/*.la
 utils/*.lo
 utils/*.o

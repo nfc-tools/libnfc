@@ -77,11 +77,18 @@
 const char *serial_ports_device_radix[] = { "tty.SLAB_USBtoUART", "tty.usbserial", "tty.usbmodem", NULL };
 #  elif defined (__FreeBSD__) || defined (__OpenBSD__) || defined(__FreeBSD_kernel__)
 const char *serial_ports_device_radix[] = { "cuaU", "cuau", NULL };
-#  elif defined (__linux__)
+#  elif defined (__linux__) || defined (__CYGWIN__)
 const char *serial_ports_device_radix[] = { "ttyUSB", "ttyS", "ttyACM", "ttyAMA", "ttyO", NULL };
 #  else
 #    error "Can't determine serial string for your system"
 #  endif
+
+// As of 2015/Feb/22, Cygwin does not handle FIONREAD on physical serial devices.
+// We'll use TIOCINQ instead which is pretty much the same.
+#ifdef __CYGWIN__
+#  include <sys/termios.h>
+#  define FIONREAD TIOCINQ
+#endif
 
 // Work-around to claim uart interface using the c_iflag (software input processing) from the termios struct
 #  define CCLAIMED 0x80000000
