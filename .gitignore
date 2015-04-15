@@ -113,6 +113,7 @@ utils/.libs/
 utils/Makefile
 utils/Makefile.in
 utils/nfc-emulate-forum-tag4
+utils/nfc-jewel
 utils/nfc-list
 utils/nfc-mfclassic
 utils/nfc-mfultralight
