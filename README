@@ -3,7 +3,7 @@
 * 
 * Libnfc historical contributors:
 * Copyright (C) 2009      Roel Verdult
-* Copyright (C) 2009-2013 Romuald Conty
+* Copyright (C) 2009-2015 Romuald Conty
 * Copyright (C) 2010-2012 Romain Tartière
 * Copyright (C) 2010-2013 Philippe Teuwen
 * Copyright (C) 2012-2013 Ludovic Rousseau
@@ -54,6 +54,26 @@ Under GNU/Linux systems, if you use udev, you could use the provided udev rules.
     sudo cp contrib/udev/42-pn53x.rules /lib/udev/rules.d/
 
 Under FreeBSD, if you use devd, there is also a rules file: contrib/devd/pn53x.conf.
+
+Configuration
+=============
+
+In order to change the default behavior of the library, the libnfc uses a
+configuration file located in sysconfdir (as provided to ./configure).
+
+A sample commented file is available in sources: libnfc.conf.sample
+
+If you have compiled using:
+  ./configure --prefix=/usr --sysconfdir=/etc
+you can make configuration directory and copy the sample file:
+  sudo mkdir /etc/nfc
+  sudo cp libnfc.conf.sample /etc/nfc/libnfc.conf
+
+To configure multiple devices, you can either modify libnfc.conf or create a
+file per device in a nfc/devices.d directory:
+  sudo mkdir -p /etc/nfc/devices.d
+  printf 'name = "My first device"\nconnstring = "pn532_uart:/dev/ttyACM0"\n' | sudo tee /etc/nfc/devices.d/first.conf
+  printf 'name = "My second device"\nconnstring = "pn532_uart:/dev/ttyACM1"\n' | sudo tee /etc/nfc/devices.d/second.conf
 
 How to report bugs
 ==================

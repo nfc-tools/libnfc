@@ -185,6 +185,7 @@ conf_devices_load(const char *dirname, nfc_context *context)
     while ((readdir_r(d, &entry, &result) == 0) && (result != NULL)) {
       de = &entry;
 #endif
+      // FIXME add a way to sort devices
       if (de->d_name[0] != '.') {
         const size_t filename_len = strlen(de->d_name);
         const size_t extension_len = strlen(".conf");
