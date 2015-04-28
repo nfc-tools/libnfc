@@ -482,13 +482,13 @@ nfc_initiator_init(nfc_device *pnd)
 }
 
 /** @ingroup initiator
- * @brief Initialize NFC device as initiator with its secure element initiator (reader)
+ * @brief Initialize NFC device as initiator with its secure element as target (reader)
  * @return Returns 0 on success, otherwise returns libnfc's error code (negative value)
  * @param pnd \a nfc_device struct pointer that represent currently used device
  *
  * The NFC device is configured to function as secure element reader.
  * After initialization it can be used to communicate with the secure element.
- * @note RF field is desactvated in order to some power
+ * @note RF field is deactivated in order to save some power
  */
 int
 nfc_initiator_init_secure_element(nfc_device *pnd)
@@ -1290,7 +1290,7 @@ nfc_device_get_information_about(nfc_device *pnd, char **buf)
 /** @ingroup string-converter
  * @brief Convert \a nfc_baud_rate value to string
  * @return Returns nfc baud rate
- * @param \a nfc_baud_rate to convert
+ * @param nbr \a nfc_baud_rate to convert
 */
 const char *
 str_nfc_baud_rate(const nfc_baud_rate nbr)
@@ -1314,7 +1314,7 @@ str_nfc_baud_rate(const nfc_baud_rate nbr)
 /** @ingroup string-converter
  * @brief Convert \a nfc_modulation_type value to string
  * @return Returns nfc modulation type
- * @param \a nfc_modulation_type to convert
+ * @param nmt \a nfc_modulation_type to convert
 */
 const char *
 str_nfc_modulation_type(const nfc_modulation_type nmt)
