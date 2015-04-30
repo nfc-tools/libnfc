@@ -226,7 +226,7 @@ main(int argc, char *argv[])
       nfc_exit(context);
       exit(EXIT_FAILURE);
     }
-    if ((fd4 = fdopen(4, "r")) == NULL) {
+    if ((fd4 = fdopen(4, "w")) == NULL) {
       ERR("Could not open file descriptor 4");
       nfc_exit(context);
       exit(EXIT_FAILURE);
