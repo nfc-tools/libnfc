@@ -10,6 +10,7 @@
  * See AUTHORS file for a more comprehensive list of contributors.
  * Additional contributors of this file:
  * Copyright (C) 2011      Adam Laurie
+ * Copyright (C) 2014      Dario Carluccio
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -140,12 +141,13 @@ transmit_bytes(const uint8_t *pbtTx, const size_t szTx)
 static void
 print_usage(char *argv[])
 {
-  printf("Usage: %s [OPTIONS] [UID]\n", argv[0]);
+  printf("Usage: %s [OPTIONS] [UID|BLOCK0]\n", argv[0]);
   printf("Options:\n");
   printf("\t-h\tHelp. Print this message.\n");
   printf("\t-f\tFormat. Delete all data (set to 0xFF) and reset ACLs to default.\n");
   printf("\t-q\tQuiet mode. Suppress output of READER and CARD data (improves timing).\n");
   printf("\n\tSpecify UID (4 HEX bytes) to set UID, or leave blank for default '01234567'.\n");
+  printf("\n\tSpecify BLOCK0 (16 HEX bytes) to set content of Block0. CRC (Byte 4) is recalculated an overwritten'.\n");
   printf("\tThis utility can be used to recover cards that have been damaged by writing bad\n");
   printf("\tdata (e.g. wrong BCC), thus making them non-selectable by most tools/readers.\n");
   printf("\n\t*** Note: this utility only works with special Mifare 1K cards (Chinese clones).\n\n");
@@ -171,6 +173,14 @@ main(int argc, char *argv[])
       quiet_output = true;
     } else if (strlen(argv[arg]) == 8) {
       for (i = 0 ; i < 4 ; ++i) {
+        memcpy(tmp, argv[arg] + i * 2, 2);
+        sscanf(tmp, "%02x", &c);
+        abtData[i] = (char) c;
+      }
+      abtData[4] = abtData[0] ^ abtData[1] ^ abtData[2] ^ abtData[3];
+      iso14443a_crc_append(abtData, 16);
+    } else if (strlen(argv[arg]) == 32) {
+      for (i = 0 ; i < 16 ; ++i) {
         memcpy(tmp, argv[arg] + i * 2, 2);
         sscanf(tmp, "%02x", &c);
         abtData[i] = (char) c;
