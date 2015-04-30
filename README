@@ -23,7 +23,7 @@ The official forum site is:
   http://www.libnfc.org/community/
 
 The official development site is:
-  http://libnfc.googlecode.com/
+  https://github.com/nfc-tools/libnfc
 
 Important note: this file covers POSIX systems, for Windows please read README-Windows.txt
 
@@ -78,7 +78,7 @@ file per device in a nfc/devices.d directory:
 How to report bugs
 ==================
 
-To report a bug, visit http://code.google.com/p/libnfc/issues/list and fill
+To report a bug, visit https://github.com/nfc-tools/libnfc/issues and fill
 out a bug report form.
 
 If you have questions, remarks, we encourage you to post this in the developers
@@ -118,9 +118,7 @@ Please make sure to include:
 Patches
 =======
 
-Patches can be posted to http://code.google.com/p/libnfc/issues/list or
-can be sent directly to libnfc's developers:
-http://nfc-tools.org/index.php?title=Contact
+Patches can be posted to https://github.com/nfc-tools/libnfc/issues
 
 If the patch fixes a bug, it is usually a good idea to include
 all the information described in "How to Report Bugs".
