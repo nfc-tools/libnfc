@@ -1342,10 +1342,11 @@ str_nfc_modulation_type(const nfc_modulation_type nmt)
 }
 
 /** @ingroup string-converter
- * @brief Convert \a nfc_modulation_type value to string
+ * @brief Convert \a nfc_target content to string
  * @return Upon successful return, this function returns the number of characters printed (excluding the null byte used to end output to strings), otherwise returns libnfc's error code (negative value)
- * @param nt \a nfc_target struct to print
+ * @param pnt \a nfc_target struct pointer to print
  * @param buf pointer where string will be allocated, then nfc target information printed
+ * @param verbose false for essential, true for detailed, human-readable, information
  *
  * @warning *buf must be freed using nfc_free()
 */
