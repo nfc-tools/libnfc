@@ -1226,6 +1226,9 @@ pn53x_initiator_poll_target(struct nfc_device *pnd,
     if ((res = pn53x_InAutoPoll(pnd, apttTargetTypes, szTargetTypes, uiPollNr, uiPeriod, ntTargets, 0)) < 0)
       return res;
     switch (res) {
+      case 0:
+        return pnd->last_error = NFC_SUCCESS;
+        break;
       case 1:
         *pnt = ntTargets[0];
         if (pn53x_current_target_new(pnd, pnt) == NULL) {
