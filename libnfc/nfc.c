@@ -1198,18 +1198,31 @@ nfc_device_get_supported_modulation(nfc_device *pnd, const nfc_mode mode, const 
 }
 
 /** @ingroup data
- * @brief Get supported baud rates.
+ * @brief Get supported baud rates (initiator mode).
  * @return Returns 0 on success, otherwise returns libnfc's error code (negative value)
  * @param pnd \a nfc_device struct pointer that represent currently used device
- * @param mode \a nfc_mode.
  * @param nmt \a nfc_modulation_type.
  * @param supported_br pointer of \a nfc_baud_rate array.
  *
  */
 int
-nfc_device_get_supported_baud_rate(nfc_device *pnd, const nfc_mode mode, const nfc_modulation_type nmt, const nfc_baud_rate **const supported_br)
+nfc_device_get_supported_baud_rate(nfc_device *pnd, const nfc_modulation_type nmt, const nfc_baud_rate **const supported_br)
 {
-  HAL(get_supported_baud_rate, pnd, mode, nmt, supported_br);
+  HAL(get_supported_baud_rate, pnd, N_INITIATOR, nmt, supported_br);
+}
+
+/** @ingroup data
+ * @brief Get supported baud rates for target mode.
+ * @return Returns 0 on success, otherwise returns libnfc's error code (negative value)
+ * @param pnd \a nfc_device struct pointer that represent currently used device
+ * @param nmt \a nfc_modulation_type.
+ * @param supported_br pointer of \a nfc_baud_rate array.
+ *
+ */
+int
+nfc_device_get_supported_baud_rate_target_mode(nfc_device *pnd, const nfc_modulation_type nmt, const nfc_baud_rate **const supported_br)
+{
+  HAL(get_supported_baud_rate, pnd, N_TARGET, nmt, supported_br);
 }
 
 /** @ingroup data
@@ -1231,8 +1244,14 @@ nfc_device_validate_modulation(nfc_device *pnd, const nfc_mode mode, const nfc_m
   for (int i = 0; nmt[i]; i++) {
     if (nmt[i] == nm->nmt) {
       const nfc_baud_rate *nbr;
-      if ((res = nfc_device_get_supported_baud_rate(pnd, mode, nmt[i], &nbr)) < 0) {
-        return res;
+      if (mode == N_INITIATOR) {
+        if ((res = nfc_device_get_supported_baud_rate(pnd, nmt[i], &nbr)) < 0) {
+          return res;
+        }
+      } else {
+        if ((res = nfc_device_get_supported_baud_rate_target_mode(pnd, nmt[i], &nbr)) < 0) {
+          return res;
+        }
       }
       for (int j = 0; nbr[j]; j++) {
         if (nbr[j] == nm->nbr)

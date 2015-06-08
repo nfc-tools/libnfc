@@ -126,7 +126,8 @@ NFC_EXPORT int nfc_device_get_last_error(const nfc_device *pnd);
 NFC_EXPORT const char *nfc_device_get_name(nfc_device *pnd);
 NFC_EXPORT const char *nfc_device_get_connstring(nfc_device *pnd);
 NFC_EXPORT int nfc_device_get_supported_modulation(nfc_device *pnd, const nfc_mode mode,  const nfc_modulation_type **const supported_mt);
-NFC_EXPORT int nfc_device_get_supported_baud_rate(nfc_device *pnd, const nfc_mode mode, const nfc_modulation_type nmt, const nfc_baud_rate **const supported_br);
+NFC_EXPORT int nfc_device_get_supported_baud_rate(nfc_device *pnd, const nfc_modulation_type nmt, const nfc_baud_rate **const supported_br);
+NFC_EXPORT int nfc_device_get_supported_baud_rate_target_mode(nfc_device *pnd, const nfc_modulation_type nmt, const nfc_baud_rate **const supported_br);
 
 /* Properties accessors */
 NFC_EXPORT int nfc_device_set_property_int(nfc_device *pnd, const nfc_property property, const int value);

@@ -3366,7 +3366,7 @@ pn53x_get_information_about(nfc_device *pnd, char **pbuf)
     }
     buflen -= res;
     const nfc_baud_rate *nbr;
-    if ((res = nfc_device_get_supported_baud_rate(pnd, N_INITIATOR, nmt[i], &nbr)) < 0) {
+    if ((res = nfc_device_get_supported_baud_rate(pnd, nmt[i], &nbr)) < 0) {
       free(*pbuf);
       return res;
     }
@@ -3431,7 +3431,7 @@ pn53x_get_information_about(nfc_device *pnd, char **pbuf)
     }
     buflen -= res;
     const nfc_baud_rate *nbr;
-    if ((res = nfc_device_get_supported_baud_rate(pnd, N_TARGET, nmt[i], &nbr)) < 0) {
+    if ((res = nfc_device_get_supported_baud_rate_target_mode(pnd, nmt[i], &nbr)) < 0) {
       free(*pbuf);
       return res;
     }
