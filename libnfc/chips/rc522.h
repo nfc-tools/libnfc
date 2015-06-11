@@ -1,0 +1,35 @@
+/*-
+ * Free/Libre Near Field Communication (NFC) library
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as published by the
+ * Free Software Foundation, either version 3 of the License, or (at your
+ * option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>
+ *
+ */
+
+#ifndef __NFC_CHIPS_RC522_H__
+#define __NFC_CHIPS_RC522_H__
+
+#include <stdint.h>
+#include <nfc/nfc-types.h>
+
+struct rc522_io {
+	int (*read)(struct nfc_device * pnd, uint8_t reg, uint8_t * data, size_t size, unsigned int timeout);
+	int (*write)(struct nfc_device * pnd, uint8_t reg, const uint8_t * data, size_t size, unsigned int timeout);
+};
+
+int rc522_data_new(struct nfc_device * pnd, const struct rc522_io * io);
+int rc522_get_supported_modulation(nfc_device * pnd, const nfc_mode mode, const nfc_modulation_type ** const supported_mt);
+int rc522_get_supported_baud_rate(nfc_device * pnd, const nfc_mode mode, const nfc_modulation_type nmt, const nfc_baud_rate ** const supported_br);
+int rc522_set_property_bool(struct nfc_device * pnd, const nfc_property property, const bool enable);
+
+#endif

@@ -39,6 +39,10 @@ if DRIVER_PN532_I2C_ENABLED
 libnfcdrivers_la_SOURCES += pn532_i2c.c pn532_i2c.h
 endif
 
+if DRIVER_RC522_UART_ENABLED
+libnfcdrivers_la_SOURCES += rc522_uart.c rc522_uart.h
+endif
+
 if PCSC_ENABLED
   libnfcdrivers_la_CFLAGS += @libpcsclite_CFLAGS@
   libnfcdrivers_la_LIBADD += @libpcsclite_LIBS@
