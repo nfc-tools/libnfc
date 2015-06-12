@@ -249,7 +249,7 @@ int rc522_uart_read(struct nfc_device * pnd, uint8_t reg, uint8_t * data, size_t
 	uint8_t cmd = rc522_uart_pack(reg, READ);
 
 	while (size > 0) {
-		pnd->last_error = uart_send(pnd->driver_data, &cmd, sizeof(cmd), timeout);
+		pnd->last_error = uart_send(pnd->driver_data, &cmd, 1, timeout);
 		if (pnd->last_error < 0) {
 			goto error;
 		}
@@ -263,7 +263,7 @@ int rc522_uart_read(struct nfc_device * pnd, uint8_t reg, uint8_t * data, size_t
 		data++;
 	}
 
-	return 0;
+	return NFC_SUCCESS;
 
 error:
 	uart_flush_input(DRIVER_DATA(pnd)->port, true);
@@ -271,21 +271,43 @@ error:
 }
 
 int rc522_uart_write(struct nfc_device * pnd, uint8_t reg, uint8_t * data, size_t size, unsigned int timeout) {
-	uint8_t cmd[2];
-	cmd[0] = rc522_uart_pack(reg, WRITE);
+	uint8_t cmd = rc522_uart_pack(reg, WRITE);
 
 	while (size > 0) {
-		cmd[1] = *data;
-		pnd->last_error = uart_send(pnd->driver_data, &cmd, sizeof(cmd), timeout);
+		// First: send write request
+		pnd->last_error = uart_send(pnd->driver_data, &cmd, 1, timeout);
+		if (pnd->last_error < 0) {
+			goto error;
+		}
+
+		// Second: wait for a reply
+		uint8_t reply;
+		pnd->last_error = uart_receive(pnd->driver_data, &reply, 1, timeout);
 		if (pnd->last_error < 0) {
 			return pnd->last_error;
+		}
+
+		// Third: compare sent and received. They must match.
+		if (cmd != reply) {
+			pnd->last_error = NFC_EIO;
+			goto error;
+		}
+
+		// Fourth: send register data
+		pnd->last_error = uart_send(pnd->driver_data, data, 1, timeout);
+		if (pnd->last_error < 0) {
+			goto error;
 		}
 
 		size--;
 		data++;
 	}
 
-	return 0;
+	return NFC_SUCCESS;
+
+error:
+	uart_flush_input(DRIVER_DATA(pnd)->port, true);
+	return pnd->last_error;
 }
 
 const struct rc522_io rc522_uart_io = {
