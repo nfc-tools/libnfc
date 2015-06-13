@@ -23,8 +23,8 @@
 #include <nfc/nfc-types.h>
 
 struct rc522_io {
-	int (*read)(struct nfc_device * pnd, uint8_t reg, uint8_t * data, size_t size, unsigned int timeout);
-	int (*write)(struct nfc_device * pnd, uint8_t reg, const uint8_t * data, size_t size, unsigned int timeout);
+	int (*read)(struct nfc_device * pnd, uint8_t reg, uint8_t * data, size_t size);
+	int (*write)(struct nfc_device * pnd, uint8_t reg, const uint8_t * data, size_t size);
 };
 
 int rc522_data_new(struct nfc_device * pnd, const struct rc522_io * io);

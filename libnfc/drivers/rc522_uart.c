@@ -38,6 +38,7 @@
 
 #define RC522_UART_DEFAULT_SPEED 9600
 #define RC522_UART_DRIVER_NAME "rc522_uart"
+#define RC522_UART_IO_TIMEOUT 50
 
 #define LOG_CATEGORY "libnfc.driver.rc522_uart"
 #define LOG_GROUP    NFC_LOG_GROUP_DRIVER
@@ -245,16 +246,16 @@ uint8_t rc522_uart_pack(int reg, int op) {
 	return op << 7 | reg;
 }
 
-int rc522_uart_read(struct nfc_device * pnd, uint8_t reg, uint8_t * data, size_t size, unsigned int timeout) {
+int rc522_uart_read(struct nfc_device * pnd, uint8_t reg, uint8_t * data, size_t size) {
 	uint8_t cmd = rc522_uart_pack(reg, READ);
 
 	while (size > 0) {
-		pnd->last_error = uart_send(pnd->driver_data, &cmd, 1, timeout);
+		pnd->last_error = uart_send(pnd->driver_data, &cmd, 1, RC522_UART_IO_TIMEOUT);
 		if (pnd->last_error < 0) {
 			goto error;
 		}
 
-		pnd->last_error = uart_receive(pnd->driver_data, data, 1, timeout);
+		pnd->last_error = uart_receive(pnd->driver_data, data, 1, RC522_UART_IO_TIMEOUT);
 		if (pnd->last_error < 0) {
 			goto error;
 		}
@@ -270,19 +271,19 @@ error:
 	return pnd->last_error;
 }
 
-int rc522_uart_write(struct nfc_device * pnd, uint8_t reg, uint8_t * data, size_t size, unsigned int timeout) {
+int rc522_uart_write(struct nfc_device * pnd, uint8_t reg, uint8_t * data, size_t size) {
 	uint8_t cmd = rc522_uart_pack(reg, WRITE);
 
 	while (size > 0) {
 		// First: send write request
-		pnd->last_error = uart_send(pnd->driver_data, &cmd, 1, timeout);
+		pnd->last_error = uart_send(pnd->driver_data, &cmd, 1, RC522_UART_IO_TIMEOUT);
 		if (pnd->last_error < 0) {
 			goto error;
 		}
 
 		// Second: wait for a reply
 		uint8_t reply;
-		pnd->last_error = uart_receive(pnd->driver_data, &reply, 1, timeout);
+		pnd->last_error = uart_receive(pnd->driver_data, &reply, 1, RC522_UART_IO_TIMEOUT);
 		if (pnd->last_error < 0) {
 			return pnd->last_error;
 		}
@@ -294,7 +295,7 @@ int rc522_uart_write(struct nfc_device * pnd, uint8_t reg, uint8_t * data, size_
 		}
 
 		// Fourth: send register data
-		pnd->last_error = uart_send(pnd->driver_data, data, 1, timeout);
+		pnd->last_error = uart_send(pnd->driver_data, data, 1, RC522_UART_IO_TIMEOUT);
 		if (pnd->last_error < 0) {
 			goto error;
 		}
@@ -349,7 +350,7 @@ const struct nfc_driver rc522_uart_driver = {
 	.get_supported_baud_rate			= rc522_get_supported_baud_rate,
 	.device_get_information_about		= rc522_get_information_about,
 
-	.abort_command						= rc522_uart_abort_command,
+	.abort_command						= rc522_idle,
 	.idle								= rc522_idle,
 	.powerdown							= rc522_softdown,
 };

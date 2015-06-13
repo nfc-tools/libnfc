@@ -3,7 +3,11 @@
 #ifndef __NFC_CHIPS_RC522_INTERNAL_H__
 #define __NFC_CHIPS_RC522_INTERNAL_H__
 
+#define RC522_FIFO_SIZE 64
+
 #define RC522_REG_CommandReg	0x01
+#define RC522_REG_CommandReg_RcvOff	(1 << 5)
+#define RC522_REG_CommandReg_PowerDown	(1 << 4)
 
 #define RC522_REG_ComlEnReg	0x02
 
@@ -91,5 +95,16 @@
 #define RC522_REG_TestDAC1Reg	0x39
 #define RC522_REG_TestDAC2Reg	0x3A
 #define RC522_REG_TestADCReg	0x3B
+
+#define RC522_CMD_Idle	0x0
+#define RC522_CMD_Mem	0x1
+#define RC522_CMD_GenerateRandomId	0x2
+#define RC522_CMD_CalcCRC	0x3
+#define RC522_CMD_Transmit	0x4
+#define RC522_CMD_NoCmdChange	0x7
+#define RC522_CMD_Receive	0x8
+#define RC522_CMD_Transceive	0xC
+#define RC522_CMD_MFAuthent	0xE
+#define RC522_CMD_SoftReset	0xF
 
 #endif

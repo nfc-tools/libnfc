@@ -54,7 +54,7 @@ int rc522_data_new(struct nfc_device * pnd, const struct rc522_io * io) {
 int rc522_read_reg(struct nfc_device * pnd, uint8_t reg) {
 	uint8_t val;
 
-	int ret = CHIP_DATA(pnd)->io->read(pnd, reg, &val, 1, RC522_TIMEOUT);
+	int ret = CHIP_DATA(pnd)->io->read(pnd, reg, &val, 1);
 	if (ret < 0) {
 		return ret;
 	}
@@ -72,11 +72,12 @@ int rc522_write_reg(struct nfc_device * pnd, uint8_t reg, uint8_t val, uint8_t m
 		val = (val & mask) | (oldval & ~mask);
 	}
 
-	return CHIP_DATA(pnd)->io->write(pnd, reg, &val, 1, RC522_TIMEOUT);
+	return CHIP_DATA(pnd)->io->write(pnd, reg, &val, 1);
 }
 
-int rc522_set_speed(struct nfc_device * pnd, nfc_baud_rate speed) {
+int rc522_set_baud_rate(struct nfc_device * pnd, nfc_baud_rate speed) {
 	uint8_t txVal, rxVal;
+	int ret;
 
 	switch (speed) {
 		case NBR_106:
@@ -106,6 +107,23 @@ int rc522_set_speed(struct nfc_device * pnd, nfc_baud_rate speed) {
 	return
 			rc522_write_reg(pnd, RC522_REG_TxModeReg, txVal, RC522_REG_TxModeReg_TxSpeed_MASK) ||
 			rc522_write_reg(pnd, RC522_REG_RxModeReg, rxVal, RC522_REG_RxModeReg_RxSpeed_MASK);
+}
+
+int rc522_initiator_select_passive_target_ext(struct nfc_device * pnd, const nfc_modulation nm, const uint8_t * pbtInitData, const size_t szInitData, nfc_target * pnt, int timeout)
+{
+	int ret;
+
+	if (nm.nmt != NMT_ISO14443A) {
+		return NFC_EINVARG;
+	}
+
+	ret = rc522_set_baud_rate(pnd, nm.nbr);
+	if (ret < 0) {
+		return ret;
+	}
+
+	// TODO
+	return NFC_ENOTIMPL;
 }
 
 int rc522_get_supported_modulation(struct nfc_device * pnd, const nfc_mode mode, const nfc_modulation_type ** const supported_mt) {
@@ -196,7 +214,7 @@ int rc522_set_property_bool(struct nfc_device * pnd, const nfc_property property
 				return NFC_SUCCESS;
 			}
 
-			return rc522_set_speed(pnd, NBR_106);
+			return rc522_set_baud_rate(pnd, NBR_106);
 			
 		case NP_AUTO_ISO14443_4:
 		case NP_ACCEPT_INVALID_FRAMES:
@@ -210,3 +228,14 @@ int rc522_set_property_bool(struct nfc_device * pnd, const nfc_property property
 
 	return NFC_EINVARG;
 }
+
+int rc522_set_property_int(struct nfc_device * pnd, const nfc_property property, const int value) {
+	// TODO
+	return NFC_ENOTIMPL;
+}
+
+int rc522_idle(struct nfc_device * pnd) {
+	// Set idle and disable RX demodulator to save energy
+	return rc522_write_reg(pnd, RC522_REG_CommandReg, RC522_CMD_Idle | RC522_REG_CommandReg_PowerDown, 0xFF);
+}
+
