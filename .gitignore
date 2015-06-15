@@ -6,6 +6,7 @@
 *.la
 *.lo
 *.o
+*.stackdump
 *~
 Doxyfile
 INSTALL

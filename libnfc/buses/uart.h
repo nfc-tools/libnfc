@@ -58,5 +58,6 @@ int     uart_receive(serial_port sp, uint8_t *pbtRx, const size_t szRx, void *ab
 int     uart_send(serial_port sp, const uint8_t *pbtTx, const size_t szTx, int timeout);
 
 char  **uart_list_ports(void);
+void    uart_list_free(char **acPorts);
 
 #endif // __NFC_BUS_UART_H__

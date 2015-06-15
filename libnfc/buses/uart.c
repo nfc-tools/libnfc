@@ -430,3 +430,16 @@ oom:
 
   return res;
 }
+
+void
+uart_list_free(char ** acPorts)
+{
+  char *acPort;
+  size_t iDevice = 0;
+
+  while ((acPort = acPorts[iDevice++])) {
+    free((void *)acPort);
+  }
+
+  free(acPorts);
+}

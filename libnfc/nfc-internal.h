@@ -44,13 +44,19 @@
  * @macro HAL
  * @brief Execute corresponding driver function if exists.
  */
-#define HAL( FUNCTION, ... ) pnd->last_error = 0; \
-  if (pnd->driver->FUNCTION) { \
-    return pnd->driver->FUNCTION( __VA_ARGS__ ); \
-  } else { \
+#define HAL( FUNCTION, ... ) do { \
+  if (!pnd->driver->FUNCTION) { \
     pnd->last_error = NFC_EDEVNOTSUPP; \
-    return false; \
-  }
+    return pnd->last_error; \
+  } \
+  int __ret = pnd->driver->FUNCTION( __VA_ARGS__ ); \
+  if (__ret < 0) { \
+    pnd->last_error = __ret; \
+  } else { \
+    pnd->last_error = NFC_SUCCESS; \
+  } \
+  return __ret; \
+} while (0);
 
 #ifndef MIN
 #define MIN(a,b) (((a) < (b)) ? (a) : (b))
