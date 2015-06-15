@@ -28,6 +28,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <inttypes.h>
+#include <assert.h>
 
 #include <nfc/nfc.h>
 
@@ -51,98 +53,90 @@ struct rc522_uart_data {
 
 #define DRIVER_DATA(pnd) ((struct rc522_uart_data*)(pnd->driver_data))
 
-static size_t
-rc522_uart_scan(const nfc_context *context, nfc_connstring connstrings[], const size_t connstrings_len)
-{
-  size_t device_found = 0;
-  serial_port sp;
-  char **acPorts = uart_list_ports();
-  const char *acPort;
-  int     iDevice = 0;
-
-  while ((acPort = acPorts[iDevice++])) {
-    sp = uart_open(acPort);
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Trying to find RC522 device on serial port: %s at %d baud.", acPort, RC522_UART_DEFAULT_SPEED);
-
-    if ((sp != INVALID_SERIAL_PORT) && (sp != CLAIMED_SERIAL_PORT)) {
-      // We need to flush input to be sure first reply does not comes from older byte transceive
-      uart_flush_input(sp, true);
-      // Serial port claimed but we need to check if a RC522_UART is opened.
-      uart_set_speed(sp, RC522_UART_DEFAULT_SPEED);
-
-      nfc_connstring connstring;
-      snprintf(connstring, sizeof(nfc_connstring), "%s:%s:%"PRIu32, RC522_UART_DRIVER_NAME, acPort, RC522_UART_DEFAULT_SPEED);
-      nfc_device *pnd = nfc_device_new(context, connstring);
-      if (!pnd) {
-        perror("malloc");
-        uart_close(sp);
-        iDevice = 0;
-        while ((acPort = acPorts[iDevice++])) {
-          free((void *)acPort);
-        }
-        free(acPorts);
-        return 0;
-      }
-      pnd->driver = &rc522_uart_driver;
-      pnd->driver_data = sp;
-
-      // Alloc and init chip's data
-      if (rc522_data_new(pnd, &rc522_uart_io) == NULL) {
-        perror("rc522_data_new");
-        uart_close(DRIVER_DATA(pnd)->port);
-        nfc_device_free(pnd);
-        iDevice = 0;
-        while ((acPort = acPorts[iDevice++])) {
-          free((void *)acPort);
-        }
-        free(acPorts);
-        return 0;
-      }
-      // SAMConfiguration command if needed to wakeup the chip and rc522_SAMConfiguration check if the chip is a RC522
-      CHIP_DATA(pnd)->type = RC522;
-      // This device starts in LowVBat power mode
-      CHIP_DATA(pnd)->power_mode = LOWVBAT;
-
-      // Check communication using "Diagnose" command, with "Communication test" (0x00)
-      int res = rc522_check_communication(pnd);
-      uart_close(DRIVER_DATA(pnd)->port);
-      rc522_data_free(pnd);
-      nfc_device_free(pnd);
-      if (res < 0) {
-        continue;
-      }
-
-      memcpy(connstrings[device_found], connstring, sizeof(nfc_connstring));
-      device_found++;
-
-      // Test if we reach the maximum "wanted" devices
-      if (device_found >= connstrings_len)
-        break;
-    }
-  }
-  iDevice = 0;
-  while ((acPort = acPorts[iDevice++])) {
-    free((void *)acPort);
-  }
-  free(acPorts);
-  return device_found;
-}
-
 void rc522_uart_close(nfc_device * pnd) {
-	rc522_idle(pnd);
+//	rc522_idle(pnd);
 
 	// Release UART port
 	uart_close(DRIVER_DATA(pnd)->port);
-	free(DRIVER_DATA(pnd));
-
 	rc522_data_free(pnd);
 	nfc_device_free(pnd);
+}
+
+size_t rc522_uart_scan(const nfc_context * context, nfc_connstring connstrings[], const size_t connstrings_len) {
+	size_t device_found = 0;
+	serial_port sp;
+	char ** acPorts = uart_list_ports();
+	const char * acPort;
+	size_t iDevice = 0;
+
+	while ((acPort = acPorts[iDevice++])) {
+		sp = uart_open(acPort);
+		log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Trying to find RC522 device on serial port: %s at %d baud.", acPort, RC522_UART_DEFAULT_SPEED);
+
+		if (sp == INVALID_SERIAL_PORT || sp == CLAIMED_SERIAL_PORT) {
+			continue;
+		}
+
+		// We need to flush input to be sure first reply does not comes from older byte transceive
+		uart_flush_input(sp, true);
+		// Serial port claimed but we need to check if a RC522_UART is opened.
+		uart_set_speed(sp, RC522_UART_DEFAULT_SPEED);
+
+		nfc_connstring connstring;
+		snprintf(connstring, sizeof(nfc_connstring), "%s:%s:%"PRIu32, RC522_UART_DRIVER_NAME, acPort, RC522_UART_DEFAULT_SPEED);
+		nfc_device * pnd = nfc_device_new(context, connstring);
+		if (!pnd) {
+			perror("nfc_device_new");
+			uart_close(sp);
+			nfc_device_free(pnd);
+			uart_list_free(acPorts);
+			return 0;
+		}
+		pnd->driver = &rc522_uart_driver;
+
+		pnd->driver_data = malloc(sizeof(struct rc522_uart_data));
+		if (!pnd->driver_data) {
+			perror("malloc");
+			uart_close(sp);
+			nfc_device_free(pnd);
+			uart_list_free(acPorts);
+			return 0;
+		}
+		DRIVER_DATA(pnd)->port = sp;
+
+		// Alloc and init chip's data
+		if (rc522_data_new(pnd, &rc522_uart_io)) {
+			perror("rc522_data_new");
+			uart_close(sp);
+			nfc_device_free(pnd);
+			uart_list_free(acPorts);
+			return 0;
+		}
+
+		// Check communication using self test
+		int res = rc522_self_test(pnd);
+		rc522_uart_close(pnd);
+		if (res < 0) {
+			continue;
+		}
+
+		memcpy(connstrings[device_found], connstring, sizeof(nfc_connstring));
+		device_found++;
+
+		// Test if we reach the maximum "wanted" devices
+		if (device_found >= connstrings_len)
+			break;
+    }
+
+	uart_list_free(acPorts);
+	return device_found;
 }
 
 struct nfc_device * rc522_uart_open(const nfc_context * context, const nfc_connstring connstring) {
 	char * port_str;
 	char * baud_str;
 	uint32_t baudrate;
+	char * endptr;
 
 	int decodelvl = connstring_decode(connstring, RC522_UART_DRIVER_NAME, NULL, &port_str, &baud_str);
 	switch (decodelvl) {
@@ -151,20 +145,20 @@ struct nfc_device * rc522_uart_open(const nfc_context * context, const nfc_conns
 			break;
 
 		case 3: // Got port and baud rate
-			char * endptr;
-			baudrate = (uint32_t) strtol(speed_s, &endptr, 10);
+			// TODO: set baud rate AFTER initialization
+			baudrate = (uint32_t) strtol(baud_str, &endptr, 10);
 			if (*endptr != '\0') {
 				free(port_str);
-				free(bps_str);
+				free(baud_str);
 				return NULL;
 			}
 
-			free(bps_str);
+			free(baud_str);
 			break;
 
 		default: // Got unparseable gibberish
 			free(port_str);
-			free(bps_str);
+			free(baud_str);
 			return NULL;
     }
 
@@ -172,7 +166,7 @@ struct nfc_device * rc522_uart_open(const nfc_context * context, const nfc_conns
 	struct nfc_device * pnd = NULL;
 
 	log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Attempt to open: %s at %d baud.", port_str, baudrate);
-	sp = uart_open(ndd.port);
+	sp = uart_open(port_str);
 
 	if (sp == INVALID_SERIAL_PORT) {
 		log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Invalid serial port: %s", port_str);
@@ -212,51 +206,53 @@ struct nfc_device * rc522_uart_open(const nfc_context * context, const nfc_conns
 	DRIVER_DATA(pnd)->port = sp;
 
 	// Alloc and init chip's data
-	if (rc522_data_new(pnd, &rc522_uart_io) == NULL) {
+	if (!rc522_data_new(pnd, &rc522_uart_io)) {
 		perror("rc522_data_new");
 		uart_close(sp);
 		nfc_device_free(pnd);
 		return NULL;
 	}
 
-	if (rc522_check_communication(pnd) < 0) {
-		log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "rc522_check_communication error");
+	if (rc522_self_test(pnd)) {
+		log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "rc522_self_test error");
 		rc522_uart_close(pnd);
 		return NULL;
 	}
 
-	rc522_init(pnd);
 	return pnd;
 }
 
-int rc522_uart_wakeup(struct nfc_device *pnd) {
+int rc522_uart_wakeup(struct nfc_device * pnd) {
+	int ret;
+
 	/* High Speed Unit (HSU) wake up consist to send 0x55 and wait a "long" delay for RC522 being wakeup. */
 	const uint8_t rc522_wakeup_preamble[] = { 0x55, 0x55, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-	int res = uart_send(DRIVER_DATA(pnd)->port, rc522_wakeup_preamble, sizeof(rc522_wakeup_preamble), 0);
-	CHIP_DATA(pnd)->power_mode = NORMAL; // RC522 should now be awake
-	return res;
+	if ((ret = uart_send(DRIVER_DATA(pnd)->port, rc522_wakeup_preamble, sizeof(rc522_wakeup_preamble), 0)) < 0) {
+		return ret;
+	}
+
+	return rc522_wait_wakeup(pnd);
 }
 
 #define READ 1
 #define WRITE 0
 uint8_t rc522_uart_pack(int reg, int op) {
 	assert(reg < 64);
-	assert(op == READ | op == WRITE);
+	assert(op == READ || op == WRITE);
 
 	return op << 7 | reg;
 }
 
 int rc522_uart_read(struct nfc_device * pnd, uint8_t reg, uint8_t * data, size_t size) {
 	uint8_t cmd = rc522_uart_pack(reg, READ);
+	int ret;
 
 	while (size > 0) {
-		pnd->last_error = uart_send(pnd->driver_data, &cmd, 1, RC522_UART_IO_TIMEOUT);
-		if (pnd->last_error < 0) {
+		if ((ret = uart_send(pnd->driver_data, &cmd, 1, RC522_UART_IO_TIMEOUT)) < 0) {
 			goto error;
 		}
 
-		pnd->last_error = uart_receive(pnd->driver_data, data, 1, RC522_UART_IO_TIMEOUT);
-		if (pnd->last_error < 0) {
+		if ((ret = uart_receive(pnd->driver_data, data, 1, NULL, RC522_UART_IO_TIMEOUT)) < 0) {
 			goto error;
 		}
 
@@ -271,7 +267,7 @@ error:
 	return pnd->last_error;
 }
 
-int rc522_uart_write(struct nfc_device * pnd, uint8_t reg, uint8_t * data, size_t size) {
+int rc522_uart_write(struct nfc_device * pnd, uint8_t reg, const uint8_t * data, size_t size) {
 	uint8_t cmd = rc522_uart_pack(reg, WRITE);
 
 	while (size > 0) {
@@ -283,7 +279,7 @@ int rc522_uart_write(struct nfc_device * pnd, uint8_t reg, uint8_t * data, size_
 
 		// Second: wait for a reply
 		uint8_t reply;
-		pnd->last_error = uart_receive(pnd->driver_data, &reply, 1, RC522_UART_IO_TIMEOUT);
+		pnd->last_error = uart_receive(pnd->driver_data, &reply, 1, NULL, RC522_UART_IO_TIMEOUT);
 		if (pnd->last_error < 0) {
 			return pnd->last_error;
 		}
@@ -322,20 +318,20 @@ const struct nfc_driver rc522_uart_driver = {
 	.scan								= rc522_uart_scan,
 	.open								= rc522_uart_open,
 	.close								= rc522_uart_close,
-	.strerror							= rc522_strerror,
+//	.strerror							= rc522_strerror,
 
-	.initiator_init						= rc522_initiator_init,
+//	.initiator_init						= rc522_initiator_init,
 	// MFRC522 has no secure element
 	.initiator_init_secure_element		= NULL,
-	.initiator_select_passive_target	= rc522_initiator_select_passive_target,
-	.initiator_poll_target				= rc522_initiator_poll_target,
+//	.initiator_select_passive_target	= rc522_initiator_select_passive_target,
+//	.initiator_poll_target				= rc522_initiator_poll_target,
 	.initiator_select_dep_target		= NULL,
-	.initiator_deselect_target			= rc522_initiator_deselect_target,
-	.initiator_transceive_bytes			= rc522_initiator_transceive_bytes,
-	.initiator_transceive_bits			= rc522_initiator_transceive_bits,
-	.initiator_transceive_bytes_timed	= rc522_initiator_transceive_bytes_timed,
-	.initiator_transceive_bits_timed	= rc522_initiator_transceive_bits_timed,
-	.initiator_target_is_present		= rc522_initiator_target_is_present,
+//	.initiator_deselect_target			= rc522_initiator_deselect_target,
+//	.initiator_transceive_bytes			= rc522_initiator_transceive_bytes,
+//	.initiator_transceive_bits			= rc522_initiator_transceive_bits,
+//	.initiator_transceive_bytes_timed	= rc522_initiator_transceive_bytes_timed,
+//	.initiator_transceive_bits_timed	= rc522_initiator_transceive_bits_timed,
+//	.initiator_target_is_present		= rc522_initiator_target_is_present,
 
 	// MFRC522 is unable to work as target
 	.target_init					 	= NULL,
@@ -348,10 +344,10 @@ const struct nfc_driver rc522_uart_driver = {
 	.device_set_property_int			= rc522_set_property_int,
 	.get_supported_modulation			= rc522_get_supported_modulation,
 	.get_supported_baud_rate			= rc522_get_supported_baud_rate,
-	.device_get_information_about		= rc522_get_information_about,
+//	.device_get_information_about		= rc522_get_information_about,
 
-	.abort_command						= rc522_idle,
-	.idle								= rc522_idle,
-	.powerdown							= rc522_softdown,
+	.abort_command						= rc522_abort,
+//	.idle								= rc522_idle,
+	.powerdown							= rc522_powerdown,
 };
 

@@ -28,10 +28,15 @@ struct rc522_io {
 };
 
 int rc522_data_new(struct nfc_device * pnd, const struct rc522_io * io);
+void rc522_data_free(struct nfc_device * pnd);
+int rc522_self_test(struct nfc_device * pnd);
+int rc522_wait_wakeup(struct nfc_device * pnd);
+
 int rc522_get_supported_modulation(nfc_device * pnd, const nfc_mode mode, const nfc_modulation_type ** const supported_mt);
 int rc522_get_supported_baud_rate(nfc_device * pnd, const nfc_mode mode, const nfc_modulation_type nmt, const nfc_baud_rate ** const supported_br);
 int rc522_set_property_bool(struct nfc_device * pnd, const nfc_property property, const bool enable);
 int rc522_set_property_int(struct nfc_device * pnd, const nfc_property property, const int value);
-int rc522_idle(struct nfc_device * pnd);
+int rc522_abort(struct nfc_device * pnd);
+int rc522_powerdown(struct nfc_device * pnd);
 
 #endif
