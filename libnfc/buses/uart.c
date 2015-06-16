@@ -97,6 +97,8 @@ struct serial_port_unix {
   int 			fd; 			// Serial port file descriptor
   struct termios 	termios_backup; 	// Terminal info before using the port
   struct termios 	termios_new; 		// Terminal info during the transaction
+  int 			pins_backup;
+  int 			pins_new;
 };
 
 #define UART_DATA( X ) ((struct serial_port_unix *) X)
@@ -141,10 +143,15 @@ uart_open(const char *pcPortName)
     uart_close_ext(sp, true);
     return INVALID_SERIAL_PORT;
   }
+
+  ioctl(sp->fd, TIOCMGET, &sp->pins_backup);
+  sp->pins_new = sp->pins_backup;
+  uart_set_pins(sp, 0);
+
   return sp;
 }
 
-void
+int
 uart_flush_input(serial_port sp, bool wait)
 {
   // flush commands may seem to be without effect
@@ -156,34 +163,37 @@ uart_flush_input(serial_port sp, bool wait)
   }
 
   // This line seems to produce absolutely no effect on my system (GNU/Linux 2.6.35)
-  tcflush(UART_DATA(sp)->fd, TCIFLUSH);
+  if (tcflush(UART_DATA(sp)->fd, TCIFLUSH)) {
+    return NFC_EIO;
+  }
   // So, I wrote this byte-eater
   // Retrieve the count of the incoming bytes
   int available_bytes_count = 0;
   int res;
   res = ioctl(UART_DATA(sp)->fd, FIONREAD, &available_bytes_count);
   if (res != 0) {
-    return;
+    return NFC_EIO;
   }
   if (available_bytes_count == 0) {
-    return;
+    return NFC_SUCCESS;
   }
   char *rx = malloc(available_bytes_count);
   if (!rx) {
     perror("malloc");
-    return;
+    return NFC_ESOFT;
   }
   // There is something available, read the data
   if (read(UART_DATA(sp)->fd, rx, available_bytes_count) < 0) {
     perror("uart read");
     free(rx);
-    return;
+    return NFC_EIO;
   }
   log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%d bytes have eaten.", available_bytes_count);
   free(rx);
+  return NFC_SUCCESS;
 }
 
-void
+int
 uart_set_speed(serial_port sp, const uint32_t uiPortSpeed)
 {
   log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Serial port speed requested to be set to %d baud.", uiPortSpeed);
@@ -224,15 +234,17 @@ uart_set_speed(serial_port sp, const uint32_t uiPortSpeed)
     default:
       log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to set serial port speed to %d baud. Speed value must be one of those defined in termios(3).",
               uiPortSpeed);
-      return;
+      return NFC_ESOFT;
   };
 
   // Set port speed (Input and Output)
   cfsetispeed(&(UART_DATA(sp)->termios_new), stPortSpeed);
   cfsetospeed(&(UART_DATA(sp)->termios_new), stPortSpeed);
   if (tcsetattr(UART_DATA(sp)->fd, TCSADRAIN, &(UART_DATA(sp)->termios_new)) == -1) {
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Unable to apply new speed settings.");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to apply new speed settings.");
+	return NFC_EIO;
   }
+  return NFC_SUCCESS;
 }
 
 uint32_t
@@ -275,11 +287,13 @@ uart_get_speed(serial_port sp)
 }
 
 void
-uart_close_ext(const serial_port sp, const bool restore_termios)
+uart_close_ext(const serial_port sp, const bool restore_status)
 {
   if (UART_DATA(sp)->fd >= 0) {
-    if (restore_termios)
+    if (restore_status) {
       tcsetattr(UART_DATA(sp)->fd, TCSANOW, &UART_DATA(sp)->termios_backup);
+      ioctl(UART_DATA(sp)->fd, TIOCMSET, &UART_DATA(sp)->pins_backup);
+    }
     close(UART_DATA(sp)->fd);
   }
   free(sp);
@@ -379,6 +393,36 @@ uart_send(serial_port sp, const uint8_t *pbtTx, const size_t szTx, int timeout)
     return NFC_SUCCESS;
   else
     return NFC_EIO;
+}
+
+/**
+ * @brief Asserts/deasserts asynchronous control signals of RS232 ports
+ *
+ * @return 0 on success, otherwise a driver error is returned
+ */
+int
+uart_set_pins(serial_port sp, int status)
+{
+  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "DTR: %d RTS: %d", (status & UART_DTR) ? 1 : 0, (status & UART_RTS) ? 1 : 0);
+
+  int posix = 0;
+  if (status & UART_DTR)
+    posix |= TIOCM_DTR;
+  if (status & UART_RTS)
+    posix |= TIOCM_RTS;
+
+  /* TODO - Uncomment after fixing Cygwin tcgetattr, which modifies pin status on its own
+  if (UART_DATA(sp)->pins_new == posix)
+    return NFC_SUCCESS;
+  */
+
+  if (ioctl(UART_DATA(sp)->fd, TIOCMSET, &posix) == -1) {
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to set asynchronous control pins.");
+    return NFC_EIO;
+  }
+
+  UART_DATA(sp)->pins_new = posix;
+  return NFC_SUCCESS;
 }
 
 char **
