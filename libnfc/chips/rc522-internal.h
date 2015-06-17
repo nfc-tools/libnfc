@@ -28,6 +28,7 @@ typedef enum {
 #define REG_CommandReg	0x01
 #define REG_CommandReg_RcvOff	(1 << 5)
 #define REG_CommandReg_PowerDown	(1 << 4)
+#define REG_CommandReg_Command_MASK	0x0F
 
 #define REG_ComlEnReg	0x02
 
@@ -49,6 +50,7 @@ typedef enum {
 #define REG_FIFODataReg	0x09
 
 #define REG_FIFOLevelReg	0x0A
+#define REG_FIFOLevelReg_FlushBuffer	(1 << 7)
 
 #define REG_WaterLevelReg	0x0B
 

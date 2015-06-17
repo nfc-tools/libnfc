@@ -35,7 +35,7 @@ const nfc_baud_rate rc522_iso14443a_supported_baud_rates[] = { NBR_847, NBR_424,
 
 struct rc522_chip_data {
 	const struct rc522_io * io;
-	rc522_type version;
+	uint8_t version;
 };
 
 #define CHIP_DATA(x) ((struct rc522_chip_data *) (x)->chip_data)
@@ -59,7 +59,7 @@ void rc522_data_free(struct nfc_device * pnd) {
 int rc522_read_bulk(struct nfc_device * pnd, uint8_t reg, uint8_t * val, size_t len) {
 	int ret = CHIP_DATA(pnd)->io->read(pnd, reg, val, len);
 	if (ret) {
-		log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to read register %02X!", reg);
+		log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to read register %02X (err: %d)", reg, ret);
 		return ret;
 	}
 
@@ -113,7 +113,7 @@ int rc522_write_reg(struct nfc_device * pnd, uint8_t reg, uint8_t val, uint8_t m
 }
 
 int rc522_start_command(struct nfc_device * pnd, rc522_cmd cmd) {
-	bool needsRX = false;
+	bool needsRX;
 
 	// Disabling RX saves energy, so based on the command we'll also update the RxOff flag
 	switch (cmd) {
@@ -123,6 +123,7 @@ int rc522_start_command(struct nfc_device * pnd, rc522_cmd cmd) {
 		case CMD_CALCCRC:
 		case CMD_TRANSMIT:
 		case CMD_SOFTRESET:
+			needsRX = false;
 			break;
 
 		case CMD_RECEIVE:
@@ -136,8 +137,7 @@ int rc522_start_command(struct nfc_device * pnd, rc522_cmd cmd) {
 
 		default:
 			log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Attempted to execute non-existant command: %02X", cmd);
-			pnd->last_error = NFC_ESOFT;
-			return pnd->last_error;
+			return NFC_ESOFT;
 	}
 
 	uint8_t regval = cmd;
@@ -153,9 +153,6 @@ int rc522_wait_wakeup(struct nfc_device * pnd) {
 	timeout_t to;
 	timeout_init(&to, 50);
 
-	// rc522_read_reg updates last_error. Backup it to ignore timeouts
-	int last_error = pnd->last_error;
-
 	while (timeout_check(&to)) {
 		int ret = rc522_read_reg(pnd, REG_CommandReg);
 		if (ret < 0 && ret != NFC_ETIMEOUT) {
@@ -164,19 +161,68 @@ int rc522_wait_wakeup(struct nfc_device * pnd) {
 
 		// If the powerdown bit is zero the RC522 is ready to kick asses!
 		if ((ret & REG_CommandReg_PowerDown) == 0) {
-			pnd->last_error = last_error;
 			return NFC_SUCCESS;
 		}
 	}
 
-	log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "rc522_wait_wakeup timeout!");
-	pnd->last_error = NFC_ETIMEOUT;
-	return pnd->last_error;
+	log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "rc522_wait_wakeup timeout!");
+	return NFC_ETIMEOUT;
+}
+
+int rc522_send_baudrate(struct nfc_device * pnd, uint32_t baudrate) {
+	uint8_t regval;
+
+	// MFRC522 datasheet 8.1.3.2
+	switch (baudrate) {
+		case 7200:
+			regval = 0xFA;
+			break;
+		case 9600:
+			regval = 0xEB;
+			break;
+		case 14400:
+			regval = 0xDA;
+			break;
+		case 19200:
+			regval = 0xCB;
+			break;
+		case 38400:
+			regval = 0xAB;
+			break;
+		case 57600:
+			regval = 0x9A;
+			break;
+		case 115200:
+			regval = 0x7A;
+			break;
+		case 128000:
+			regval = 0x74;
+			break;
+		case 230400:
+			regval = 0x5A;
+			break;
+		case 460800:
+			regval = 0x3A;
+			break;
+		case 921600:
+			regval = 0x1C;
+			break;
+		case 1288000:
+			regval = 0x15;
+			break;
+		default:
+			log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "rc522_write_baudrate unsupported baud rate: %d bps.", baudrate);
+			return NFC_EDEVNOTSUPP;
+	}
+
+	return rc522_write_reg(pnd, REG_SerialSpeedReg, regval, 0xFF);
 }
 
 int rc522_soft_reset(struct nfc_device * pnd) {
 	return
+			// 1. Send soft reset
 			rc522_start_command(pnd, CMD_SOFTRESET) ||
+			CHIP_DATA(pnd)->io->reset_baud_rate(pnd) ||
 			rc522_wait_wakeup(pnd);
 }
 
@@ -319,11 +365,7 @@ int rc522_set_property_bool(struct nfc_device * pnd, const nfc_property property
 				return NFC_SUCCESS;
 			}
 
-			int ret = rc522_set_baud_rate(pnd, NBR_106);
-			if (ret) {
-				pnd->last_error = ret;
-			}
-			return ret;
+			return rc522_set_baud_rate(pnd, NBR_106);
 
 		case NP_ACCEPT_MULTIPLE_FRAMES:
 		case NP_AUTO_ISO14443_4:
@@ -333,11 +375,9 @@ int rc522_set_property_bool(struct nfc_device * pnd, const nfc_property property
 		case NP_TIMEOUT_COMMAND:
 		case NP_TIMEOUT_ATR:
 		case NP_TIMEOUT_COM:
-			pnd->last_error = NFC_EINVARG;
 			return NFC_EINVARG;
 	}
 
-	pnd->last_error = NFC_EINVARG;
 	return NFC_EINVARG;
 }
 
@@ -347,11 +387,13 @@ int rc522_set_property_int(struct nfc_device * pnd, const nfc_property property,
 }
 
 int rc522_abort(struct nfc_device * pnd) {
-	return rc522_start_command(pnd, CMD_IDLE);
+	return
+			rc522_start_command(pnd, CMD_IDLE) ||
+			rc522_write_reg(pnd, REG_FIFOLevelReg, REG_FIFOLevelReg_FlushBuffer, 0xFF);
 }
 
 int rc522_powerdown(struct nfc_device * pnd) {
-	return rc522_write_reg(pnd, REG_CommandReg, REG_CommandReg_RcvOff | REG_CommandReg_PowerDown | CMD_IDLE, 0xFF);
+	return rc522_write_reg(pnd, REG_CommandReg, REG_CommandReg_RcvOff | REG_CommandReg_PowerDown | CMD_NOCMDCHANGE, 0xFF);
 }
 
 // NXP MFRC522 datasheet section 16.1.1
@@ -368,22 +410,9 @@ const uint8_t MFRC522_V2_SELFTEST[FIFO_SIZE] = {
 	0x86, 0x96, 0x83, 0x38, 0xCF, 0x9D, 0x5B, 0x6D, 0xDC, 0x15, 0xBA, 0x3E, 0x7D, 0x95, 0x3B, 0x2F
 };
 
-// Extracted from a FM17522 with version 0x88. Fudan Semiconductor datasheet does not include it, though.
-const uint8_t FM17522_SELFTEST[FIFO_SIZE] = {
-	0x00, 0xD6, 0x78, 0x8C, 0xE2, 0xAA, 0x0C, 0x18, 0x2A, 0xB8, 0x7A, 0x7F, 0xD3, 0x6A, 0xCF, 0x0B,
-	0xB1, 0x37, 0x63, 0x4B, 0x69, 0xAE, 0x91, 0xC7, 0xC3, 0x97, 0xAE, 0x77, 0xF4, 0x37, 0xD7, 0x9B,
-	0x7C, 0xF5, 0x3C, 0x11, 0x8F, 0x15, 0xC3, 0xD7, 0xC1, 0x5B, 0x00, 0x2A, 0xD0, 0x75, 0xDE, 0x9E,
-	0x51, 0x64, 0xAB, 0x3E, 0xE9, 0x15, 0xB5, 0xAB, 0x56, 0x9A, 0x98, 0x82, 0x26, 0xEA, 0x2A, 0x62
-};
-
 int rc522_self_test(struct nfc_device * pnd) {
-	int version = rc522_read_reg(pnd, REG_VersionReg);
-	if (version < 0) {
-		return version;
-	}
-
 	const uint8_t * correct;
-	switch (version) {
+	switch (CHIP_DATA(pnd)->version) {
 		case MFRC522_V1:
 			correct = MFRC522_V1_SELFTEST;
 			break;
@@ -392,20 +421,17 @@ int rc522_self_test(struct nfc_device * pnd) {
 			correct = MFRC522_V2_SELFTEST;
 			break;
 
-		case FM17522:
-			correct = FM17522_SELFTEST;
-			break;
-
 		default:
-			log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unknown chip version: 0x%02X", version);
-			return NFC_ECHIP;
+			return NFC_EDEVNOTSUPP;
 	}
 
-	int ret;
+	log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Executing self test");
+
 	uint8_t zeroes[25];
 	memset(zeroes, 0x00, sizeof(zeroes));
+
 	// MFRC522 datasheet section 16.1.1
-	ret =
+	int ret =
 			// 1. Perform a soft reset
 			rc522_soft_reset(pnd) ||
 			// 2. Clear the internal buffer by writing 25 bytes of 0x00 and execute the Mem command
@@ -422,9 +448,9 @@ int rc522_self_test(struct nfc_device * pnd) {
 	}
 
 	// 6. Wait for the RC522 to calculate the selftest values
-	// The official datasheet does not mentions how much time does it take, let's use 5ms
+	// The official datasheet does not mentions how much time does it take, let's use 50ms
 	timeout_t to;
-	timeout_init(&to, 5);
+	timeout_init(&to, 50);
 
 	while (1) {
 		if (!timeout_check(&to)) {
@@ -455,7 +481,5 @@ int rc522_self_test(struct nfc_device * pnd) {
 		return NFC_ECHIP;
 	}
 
-	CHIP_DATA(pnd)->version = version;
 	return NFC_SUCCESS;
 }
-
