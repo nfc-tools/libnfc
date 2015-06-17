@@ -180,10 +180,12 @@ int rc522_uart_create(const nfc_context * context, const nfc_connstring connstri
 	}
 
 	// Change now the baud rate
+	/* TODO - Check why this doesn't work on my FM17522 and try it with a real MFRC522
 	if ((ret = rc522_uart_change_baudrate(pnd, userBaudRate)) < 0) {
 		rc522_uart_close(pnd);
 		return ret;
 	}
+	*/
 
 	// Now the device is awake and listening at a known baudrate, execute a selftest
 	// Note that some devices (FM17522 for instance) aren't able to run it
