@@ -219,11 +219,33 @@ int rc522_send_baudrate(struct nfc_device * pnd, uint32_t baudrate) {
 }
 
 int rc522_soft_reset(struct nfc_device * pnd) {
-	return
-			// 1. Send soft reset
-			rc522_start_command(pnd, CMD_SOFTRESET) ||
-			CHIP_DATA(pnd)->io->reset_baud_rate(pnd) ||
-			rc522_wait_wakeup(pnd);
+	int ret;
+
+	// 1. Execute reset command
+	if ((ret = rc522_start_command(pnd, CMD_SOFTRESET)) < 0) {
+		return ret;
+	}
+
+	// 2. If using an UART, reset baud rate to RC522 default speed
+	if (CHIP_DATA(pnd)->io->reset_baud_rate) {
+		if ((ret = CHIP_DATA(pnd)->io->reset_baud_rate(pnd)) < 0) {
+			return ret;
+		}
+	}
+
+	// 3. Wait for the RC522 to come back to life, as we shouldn't modify any register till that happens
+	if ((ret = rc522_wait_wakeup(pnd)) < 0) {
+		return ret;
+	}
+
+	// 4. If using an UART, restore baud rate to user's choice
+	if (CHIP_DATA(pnd)->io->upgrade_baud_rate) {
+		if ((ret = CHIP_DATA(pnd)->io->upgrade_baud_rate(pnd)) < 0) {
+			return ret;
+		}
+	}
+
+	return NFC_SUCCESS;
 }
 
 int rc522_set_baud_rate(struct nfc_device * pnd, nfc_baud_rate speed) {
@@ -259,8 +281,7 @@ int rc522_set_baud_rate(struct nfc_device * pnd, nfc_baud_rate speed) {
 			rc522_write_reg(pnd, REG_RxModeReg, rxVal, REG_RxModeReg_RxSpeed_MASK);
 }
 
-int rc522_initiator_select_passive_target_ext(struct nfc_device * pnd, const nfc_modulation nm, const uint8_t * pbtInitData, const size_t szInitData, nfc_target * pnt, int timeout)
-{
+int rc522_initiator_select_passive_target_ext(struct nfc_device * pnd, const nfc_modulation nm, const uint8_t * pbtInitData, const size_t szInitData, nfc_target * pnt, int timeout) {
 	int ret;
 
 	if (nm.nmt != NMT_ISO14443A) {
@@ -274,6 +295,25 @@ int rc522_initiator_select_passive_target_ext(struct nfc_device * pnd, const nfc
 
 	// TODO
 	return NFC_ENOTIMPL;
+}
+
+int rc522_initiator_transceive_bits(struct nfc_device * pnd, const uint8_t * txData, const size_t txBits, const uint8_t *pbtTxPar, uint8_t *pbtRx, uint8_t *pbtRxPar) {
+	return NFC_ENOTIMPL;
+}
+
+int rc522_initiator_transceive_bytes(struct nfc_device * pnd, const uint8_t * txData, const size_t txSize, uint8_t * rxData, const size_t rxMaxSize, int timeout) {
+	int ret;
+
+	if (txSize > FIFO_SIZE) {
+		log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Attempted to send %d bytes, but FIFO has only %d bytes.", txSize, FIFO_SIZE);
+		return NFC_EOVFLOW;
+	}
+
+	if ((ret = rc522_write_bulk(pnd, REG_FIFODataReg, txData, txSize)) < 0) {
+		return ret;
+	}
+
+	
 }
 
 int rc522_get_supported_modulation(struct nfc_device * pnd, const nfc_mode mode, const nfc_modulation_type ** const supported_mt) {
@@ -388,7 +428,9 @@ int rc522_set_property_int(struct nfc_device * pnd, const nfc_property property,
 
 int rc522_abort(struct nfc_device * pnd) {
 	return
+			// Halt any running commands
 			rc522_start_command(pnd, CMD_IDLE) ||
+			// Clear FIFO
 			rc522_write_reg(pnd, REG_FIFOLevelReg, REG_FIFOLevelReg_FlushBuffer, 0xFF);
 }
 
@@ -422,6 +464,7 @@ int rc522_self_test(struct nfc_device * pnd) {
 			break;
 
 		default:
+			log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Aborting self test for unknown version %02X.", CHIP_DATA(pnd)->version);
 			return NFC_EDEVNOTSUPP;
 	}
 
@@ -454,6 +497,7 @@ int rc522_self_test(struct nfc_device * pnd) {
 
 	while (1) {
 		if (!timeout_check(&to)) {
+			log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Self test timeout");
 			return NFC_ETIMEOUT;
 		}
 
@@ -478,8 +522,26 @@ int rc522_self_test(struct nfc_device * pnd) {
 	}
 
 	if (memcmp(correct, response, FIFO_SIZE) != 0) {
+		log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Self test values didn't match");
 		return NFC_ECHIP;
 	}
 
+	log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Self test executed successfully!");
 	return NFC_SUCCESS;
+}
+
+int rc522_init(struct nfc_device * pnd) {
+	int version = rc522_read_reg(pnd, REG_VersionReg);
+	if (version < 0) {
+		return version;
+	}
+	CHIP_DATA(pnd)->version = version;
+
+	int ret = rc522_self_test(pnd);
+	if (ret == NFC_EDEVNOTSUPP) {
+		// TODO: Implement another test, maybe?
+		ret = rc522_soft_reset(pnd);
+	}
+
+	return ret;
 }

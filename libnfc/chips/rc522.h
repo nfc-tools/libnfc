@@ -26,13 +26,13 @@ struct rc522_io {
 	int (*read)(struct nfc_device * pnd, uint8_t reg, uint8_t * data, size_t size);
 	int (*write)(struct nfc_device * pnd, uint8_t reg, const uint8_t * data, size_t size);
 	int (*reset_baud_rate)(struct nfc_device * pnd);
+	int (*upgrade_baud_rate)(struct nfc_device * pnd);
 };
 
 int rc522_data_new(struct nfc_device * pnd, const struct rc522_io * io);
 void rc522_data_free(struct nfc_device * pnd);
-int rc522_self_test(struct nfc_device * pnd);
-int rc522_wait_wakeup(struct nfc_device * pnd);
 int rc522_send_baudrate(struct nfc_device * pnd, uint32_t baudrate);
+int rc522_init(struct nfc_device * pnd);
 
 int rc522_get_supported_modulation(nfc_device * pnd, const nfc_mode mode, const nfc_modulation_type ** const supported_mt);
 int rc522_get_supported_baud_rate(nfc_device * pnd, const nfc_mode mode, const nfc_modulation_type nmt, const nfc_baud_rate ** const supported_br);
