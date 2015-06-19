@@ -336,15 +336,15 @@ const struct nfc_driver rc522_uart_driver = {
 	.close								= rc522_uart_close,
 //	.strerror							= rc522_strerror,
 
-//	.initiator_init						= rc522_initiator_init,
+	.initiator_init						= rc522_initiator_init,
 	// MFRC522 has no secure element
 	.initiator_init_secure_element		= NULL,
 //	.initiator_select_passive_target	= rc522_initiator_select_passive_target,
 //	.initiator_poll_target				= rc522_initiator_poll_target,
 	.initiator_select_dep_target		= NULL,
 //	.initiator_deselect_target			= rc522_initiator_deselect_target,
-//	.initiator_transceive_bytes			= rc522_initiator_transceive_bytes,
-//	.initiator_transceive_bits			= rc522_initiator_transceive_bits,
+	.initiator_transceive_bytes			= rc522_initiator_transceive_bytes,
+	.initiator_transceive_bits			= rc522_initiator_transceive_bits,
 //	.initiator_transceive_bytes_timed	= rc522_initiator_transceive_bytes_timed,
 //	.initiator_transceive_bits_timed	= rc522_initiator_transceive_bits_timed,
 //	.initiator_target_is_present		= rc522_initiator_target_is_present,

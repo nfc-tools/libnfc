@@ -4,6 +4,8 @@
 #define __NFC_CHIPS_RC522_INTERNAL_H__
 
 #define FIFO_SIZE 64
+// This is the default value for water level IRQs
+#define DEFAULT_WATER_LEVEL 8
 
 typedef enum {
 	RC522_UNKNOWN = 0x00,
@@ -35,6 +37,14 @@ typedef enum {
 #define REG_DivlEnReg	0x03
 
 #define REG_ComIrqReg	0x04
+#define REG_ComIrqReg_Set1	(1 << 7)
+#define REG_ComIrqReg_TxIRq	(1 << 6)
+#define REG_ComIrqReg_RxIRq	(1 << 5)
+#define REG_ComIrqReg_IdleIRq	(1 << 4)
+#define REG_ComIrqReg_HiAlertIRq	(1 << 3)
+#define REG_ComIrqReg_LoAlertIRq	(1 << 2)
+#define REG_ComIrqReg_ErrIRq	(1 << 1)
+#define REG_ComIrqReg_TimerIRq	(1 << 0)
 
 #define REG_DivIrqReg	0x05
 #define REG_DivIrqReg_MfinActIRq	(1 << 4)
@@ -57,6 +67,11 @@ typedef enum {
 #define REG_ControlReg	0x0C
 
 #define REG_BitFramingReg	0x0D
+#define REG_BitFramingReg_StartSend (1 << 7)
+#define REG_BitFramingReg_RxAlign_PACK(x) ((x & 7) << 4)
+#define REG_BitFramingReg_RxAlign_UNPACK(x) ((x >> 4) & 7)
+#define REG_BitFramingReg_TxLastBits_PACK(x) ((x & 7) << 0)
+#define REG_BitFramingReg_TxLastBits_UNPACK(x) ((x >> 0) & 7)
 
 #define REG_CollReg	0x0E
 

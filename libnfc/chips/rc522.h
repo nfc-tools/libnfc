@@ -34,6 +34,9 @@ void rc522_data_free(struct nfc_device * pnd);
 int rc522_send_baudrate(struct nfc_device * pnd, uint32_t baudrate);
 int rc522_init(struct nfc_device * pnd);
 
+int rc522_initiator_init(nfc_device * pnd);
+int rc522_initiator_transceive_bits(struct nfc_device * pnd, const uint8_t * txData, const size_t txBits, const uint8_t * pbtTxPar, uint8_t * rxData, uint8_t * pbtRxPar);
+int rc522_initiator_transceive_bytes(struct nfc_device * pnd, const uint8_t * txData, const size_t txSize, uint8_t * rxData, const size_t rxMaxBytes, int timeout);
 int rc522_get_supported_modulation(nfc_device * pnd, const nfc_mode mode, const nfc_modulation_type ** const supported_mt);
 int rc522_get_supported_baud_rate(nfc_device * pnd, const nfc_mode mode, const nfc_modulation_type nmt, const nfc_baud_rate ** const supported_br);
 int rc522_set_property_bool(struct nfc_device * pnd, const nfc_property property, const bool enable);

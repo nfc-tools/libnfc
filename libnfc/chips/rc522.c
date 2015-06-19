@@ -24,7 +24,10 @@
 #include "nfc/nfc.h"
 #include "nfc-internal.h"
 #include "timing.h"
- 
+
+// This divides by 8 with rounding towards infinity
+#define BITS2BYTES(x) ((x >> 3) + ((x & 7) ? 1 : 0))
+
 #define LOG_CATEGORY "libnfc.chip.rc522"
 #define LOG_GROUP NFC_LOG_GROUP_CHIP
 
@@ -36,6 +39,7 @@ const nfc_baud_rate rc522_iso14443a_supported_baud_rates[] = { NBR_847, NBR_424,
 struct rc522_chip_data {
 	const struct rc522_io * io;
 	uint8_t version;
+	int default_timeout;
 };
 
 #define CHIP_DATA(x) ((struct rc522_chip_data *) (x)->chip_data)
@@ -49,6 +53,7 @@ int rc522_data_new(struct nfc_device * pnd, const struct rc522_io * io) {
 
 	CHIP_DATA(pnd)->io = io;
 	CHIP_DATA(pnd)->version = RC522_UNKNOWN;
+	CHIP_DATA(pnd)->default_timeout = 500;
 	return NFC_SUCCESS;
 }
 
@@ -99,7 +104,11 @@ int rc522_read_reg(struct nfc_device * pnd, uint8_t reg) {
 	return val;
 }
 
-int rc522_write_reg(struct nfc_device * pnd, uint8_t reg, uint8_t val, uint8_t mask) {
+int rc522_write_reg(struct nfc_device * pnd, uint8_t reg, uint8_t val) {
+	return rc522_write_bulk(pnd, reg, &val, 1);
+}
+
+int rc522_write_reg_mask(struct nfc_device * pnd, uint8_t reg, uint8_t val, uint8_t mask) {
 	if (mask != 0xFF) {
 		int oldval = rc522_read_reg(pnd, reg);
 		if (oldval < 0) {
@@ -109,7 +118,7 @@ int rc522_write_reg(struct nfc_device * pnd, uint8_t reg, uint8_t val, uint8_t m
 		val = (val & mask) | (oldval & ~mask);
 	}
 
-	return rc522_write_bulk(pnd, reg, &val, 1);
+	return rc522_write_reg(pnd, reg, val);
 }
 
 int rc522_start_command(struct nfc_device * pnd, rc522_cmd cmd) {
@@ -145,7 +154,7 @@ int rc522_start_command(struct nfc_device * pnd, rc522_cmd cmd) {
 		regval |= REG_CommandReg_RcvOff;
 	}
 
-	return rc522_write_reg(pnd, REG_CommandReg, regval, 0xFF);
+	return rc522_write_reg(pnd, REG_CommandReg, regval);
 }
 
 int rc522_wait_wakeup(struct nfc_device * pnd) {
@@ -215,7 +224,7 @@ int rc522_send_baudrate(struct nfc_device * pnd, uint32_t baudrate) {
 			return NFC_EDEVNOTSUPP;
 	}
 
-	return rc522_write_reg(pnd, REG_SerialSpeedReg, regval, 0xFF);
+	return rc522_write_reg(pnd, REG_SerialSpeedReg, regval);
 }
 
 int rc522_soft_reset(struct nfc_device * pnd) {
@@ -248,37 +257,42 @@ int rc522_soft_reset(struct nfc_device * pnd) {
 	return NFC_SUCCESS;
 }
 
-int rc522_set_baud_rate(struct nfc_device * pnd, nfc_baud_rate speed) {
+int rc522_set_rf_baud_rate(struct nfc_device * pnd, nfc_baud_rate speed) {
 	uint8_t txVal, rxVal;
 
 	switch (speed) {
 		case NBR_106:
+			log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Updating RF baud rate to 106kbps.");
 			txVal = REG_TxModeReg_TxSpeed_106k;
 			rxVal = REG_RxModeReg_RxSpeed_106k;
 			break;
 
 		case NBR_212:
+			log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Updating RF baud rate to 212kbps.");
 			txVal = REG_TxModeReg_TxSpeed_212k;
 			rxVal = REG_RxModeReg_RxSpeed_212k;
 			break;
 
 		case NBR_424:
+			log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Updating RF baud rate to 424kbps.");
 			txVal = REG_TxModeReg_TxSpeed_424k;
 			rxVal = REG_RxModeReg_RxSpeed_424k;
 			break;
 
 		case NBR_847:
+			log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Updating RF baud rate to 847kbps.");
 			txVal = REG_TxModeReg_TxSpeed_847k;
 			rxVal = REG_RxModeReg_RxSpeed_847k;
 			break;
 
 		default:
+			log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Attempted to switch RF baud rate to 0x%08X.", speed);
 			return NFC_EINVARG;
 	}
 
 	return
-			rc522_write_reg(pnd, REG_TxModeReg, txVal, REG_TxModeReg_TxSpeed_MASK) ||
-			rc522_write_reg(pnd, REG_RxModeReg, rxVal, REG_RxModeReg_RxSpeed_MASK);
+			rc522_write_reg_mask(pnd, REG_TxModeReg, txVal, REG_TxModeReg_TxSpeed_MASK) ||
+			rc522_write_reg_mask(pnd, REG_RxModeReg, rxVal, REG_RxModeReg_RxSpeed_MASK);
 }
 
 int rc522_initiator_select_passive_target_ext(struct nfc_device * pnd, const nfc_modulation nm, const uint8_t * pbtInitData, const size_t szInitData, nfc_target * pnt, int timeout) {
@@ -288,7 +302,7 @@ int rc522_initiator_select_passive_target_ext(struct nfc_device * pnd, const nfc
 		return NFC_EINVARG;
 	}
 
-	ret = rc522_set_baud_rate(pnd, nm.nbr);
+	ret = rc522_set_rf_baud_rate(pnd, nm.nbr);
 	if (ret < 0) {
 		return ret;
 	}
@@ -297,26 +311,110 @@ int rc522_initiator_select_passive_target_ext(struct nfc_device * pnd, const nfc
 	return NFC_ENOTIMPL;
 }
 
-int rc522_initiator_transceive_bits(struct nfc_device * pnd, const uint8_t * txData, const size_t txBits, const uint8_t *pbtTxPar, uint8_t *pbtRx, uint8_t *pbtRxPar) {
-	return NFC_ENOTIMPL;
-}
-
-int rc522_initiator_transceive_bytes(struct nfc_device * pnd, const uint8_t * txData, const size_t txSize, uint8_t * rxData, const size_t rxMaxSize, int timeout) {
+int rc522_transceive(struct nfc_device * pnd, const uint8_t * txData, const size_t txBits, uint8_t * rxData, const size_t rxMaxBytes, int timeout) {
+	size_t txBytes = BITS2BYTES(txBits);
+	size_t transmitted = MIN(txBytes, FIFO_SIZE);
 	int ret;
 
-	if (txSize > FIFO_SIZE) {
-		log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Attempted to send %d bytes, but FIFO has only %d bytes.", txSize, FIFO_SIZE);
-		return NFC_EOVFLOW;
+	log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "rc522_transceive: sending %d bits (%d bytes).", txBits, txBytes);
+
+	ret =
+			// Halt the device (just in case)
+			rc522_abort(pnd) ||
+			// Clear interesting IRQs
+			rc522_write_reg(pnd, REG_ComIrqReg, REG_ComIrqReg_TxIRq || REG_ComIrqReg_RxIRq || REG_ComIrqReg_LoAlertIRq || REG_ComIrqReg_ErrIRq) ||
+			// Write as much data as possible
+			rc522_write_bulk(pnd, REG_FIFODataReg, txData, transmitted) ||
+			// Start command
+			rc522_start_command(pnd, CMD_TRANSCEIVE) ||
+			// Start transmission and adjust bit framing
+			rc522_write_reg(pnd, REG_BitFramingReg, REG_BitFramingReg_StartSend | REG_BitFramingReg_RxAlign_PACK(0) | REG_BitFramingReg_TxLastBits_PACK(txBits));
+	if (ret < 0) {
+		goto abort;
 	}
 
-	if ((ret = rc522_write_bulk(pnd, REG_FIFODataReg, txData, txSize)) < 0) {
+	timeout_t to;
+	// If "timeout" is zero there's no timeout
+	if (timeout != 0) {
+		// If "timeout" is -1 then we'll use the default timeout
+		if (timeout == -1) {
+			timeout = CHIP_DATA(pnd)->default_timeout;
+		}
+		timeout_init(&to, timeout);
+	}
+	while (1) {
+		if (timeout != 0 && !timeout_check(&to)) {
+			log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "rc522_transceive: transmission timeout.");
+			ret = NFC_ETIMEOUT;
+			goto abort;
+		}
+
+		int irqs = rc522_read_reg(pnd, REG_ComIrqReg);
+		if (irqs < 0) {
+			// If a read error happens attempt to abort transmission and return the error code
+			ret = irqs;
+			goto abort;
+		}
+
+		if (irqs & REG_ComIrqReg_ErrIRq) {
+			log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "rc522_transceive: RC522 set ErrIRq flag.");
+			// If the RC522 detects an error abort the transmission and notify the caller
+			ret = NFC_ECHIP;
+			goto abort;
+		}
+
+		if (irqs & REG_ComIrqReg_TxIRq) {
+			// Check if the FIFO has underflowed (ie the transmission has ended before we've feeded all the bytes to the FIFO)
+			if (transmitted < txBytes) {
+				log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "rc522_transceive couldn't feed bytes fast enough. Only %d out of %d bytes have been sent. Aborting transmission.", transmitted, txBytes);
+				ret = NFC_ESOFT;
+				goto abort;
+			}
+			// Otherwise we're done
+			break;
+		}
+
+		if ((irqs & REG_ComIrqReg_LoAlertIRq) && transmitted < txBytes) {
+			// Okay, now attempt to write as many bytes as possible. This IRQ is generated based on the water level, so we know for sure we can feed at least FIFO_SIZE - DEFAULT_WATER_LEVEL bytes.
+			size_t chunkSize = MIN(txBytes - transmitted, FIFO_SIZE - DEFAULT_WATER_LEVEL);
+			if ((ret = rc522_write_bulk(pnd, REG_FIFODataReg, txData + transmitted, chunkSize)) < 0) {
+				goto abort;
+			}
+			transmitted += chunkSize;
+
+			// TODO: Should we clear the flag before or after feeding the data?
+			if ((ret = rc522_write_reg(pnd, REG_ComIrqReg, REG_ComIrqReg_LoAlertIRq)) < 0) {
+				goto abort;
+			}
+
+			log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "rc522_transceive: fed another %d bytes to FIFO.", chunkSize);
+		}
+	}
+
+	log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "rc522_transceive: transmission finished.");
+	return 0;
+
+abort:
+	rc522_abort(pnd);
+	return ret;
+}
+
+int rc522_initiator_transceive_bits(struct nfc_device * pnd, const uint8_t * txData, const size_t txBits, const uint8_t * pbtTxPar, uint8_t * rxData, uint8_t * pbtRxPar) {
+	// TODO: Do something with pbtTxPar and pbtRxPar
+	return rc522_transceive(pnd, txData, txBits, rxData, ~0, -1);
+}
+
+int rc522_initiator_transceive_bytes(struct nfc_device * pnd, const uint8_t * txData, const size_t txSize, uint8_t * rxData, const size_t rxMaxBytes, int timeout) {
+	int ret = rc522_transceive(pnd, txData, txSize * 8, rxData, rxMaxBytes, timeout);
+	if (ret < 0) {
 		return ret;
 	}
-
-	
+	return ret / 8;
 }
 
 int rc522_get_supported_modulation(struct nfc_device * pnd, const nfc_mode mode, const nfc_modulation_type ** const supported_mt) {
+	(void) pnd;
+
 	switch (mode) {
 		case N_INITIATOR:
 			*supported_mt = rc522_initiator_modulation;
@@ -334,6 +432,8 @@ int rc522_get_supported_modulation(struct nfc_device * pnd, const nfc_mode mode,
 }
 
 int rc522_get_supported_baud_rate(struct nfc_device * pnd, const nfc_mode mode, const nfc_modulation_type nmt, const nfc_baud_rate ** const supported_br) {
+	(void) pnd;
+
 	switch (mode) {
 		case N_INITIATOR:
 			switch (nmt) {
@@ -364,8 +464,8 @@ int rc522_set_property_bool(struct nfc_device * pnd, const nfc_property property
 			}
 
 			ret =
-					rc522_write_reg(pnd, REG_TxModeReg, enable ? ~0 : 0, REG_TxModeReg_TxCRCEn) ||
-					rc522_write_reg(pnd, REG_RxModeReg, enable ? ~0 : 0, REG_RxModeReg_RxCRCEn);
+					rc522_write_reg_mask(pnd, REG_TxModeReg, enable ? ~0 : 0, REG_TxModeReg_TxCRCEn) ||
+					rc522_write_reg_mask(pnd, REG_RxModeReg, enable ? ~0 : 0, REG_RxModeReg_RxCRCEn);
 			if (ret) {
 				return ret;
 			}
@@ -378,7 +478,8 @@ int rc522_set_property_bool(struct nfc_device * pnd, const nfc_property property
 				return NFC_SUCCESS;
 			}
 
-			ret = rc522_write_reg(pnd, REG_MfRxReg, enable ? 0 : ~0, REG_MfRxReg_ParityDisable);
+			// Note it's parity DISABLE (ie active low)
+			ret = rc522_write_reg_mask(pnd, REG_MfRxReg, enable ? 0 : ~0, REG_MfRxReg_ParityDisable);
 			if (ret) {
 				return ret;
 			}
@@ -391,10 +492,10 @@ int rc522_set_property_bool(struct nfc_device * pnd, const nfc_property property
 			return NFC_SUCCESS;
 
 		case NP_ACTIVATE_FIELD:
-			return rc522_write_reg(pnd, REG_TxControlReg, enable ? ~0 : 0, REG_TxControlReg_Tx2RFEn | REG_TxControlReg_Tx1RFEn);
+			return rc522_write_reg_mask(pnd, REG_TxControlReg, enable ? ~0 : 0, REG_TxControlReg_Tx2RFEn | REG_TxControlReg_Tx1RFEn);
 		
 		case NP_ACTIVATE_CRYPTO1:
-			return rc522_write_reg(pnd, REG_Status2Reg, enable ? ~0 : 0, REG_Status2Reg_MFCrypto1On);
+			return rc522_write_reg_mask(pnd, REG_Status2Reg, enable ? ~0 : 0, REG_Status2Reg_MFCrypto1On);
 
 		case NP_FORCE_ISO14443_A:
 			// ISO14443-A is the only mode supported by MFRC522
@@ -405,25 +506,82 @@ int rc522_set_property_bool(struct nfc_device * pnd, const nfc_property property
 				return NFC_SUCCESS;
 			}
 
-			return rc522_set_baud_rate(pnd, NBR_106);
+			return rc522_set_rf_baud_rate(pnd, NBR_106);
 
 		case NP_ACCEPT_MULTIPLE_FRAMES:
+			// TODO: Figure out what this does and implement it
+			// HACK: Return NFC_SUCCESS so nfc-anticol runs
+			return NFC_SUCCESS;
+
 		case NP_AUTO_ISO14443_4:
+			// TODO: Figure out what this does and implement it
+			// HACK: Return NFC_SUCCESS so nfc-anticol runs
+			return NFC_SUCCESS;
+
 		case NP_ACCEPT_INVALID_FRAMES:
+			// TODO: Figure out what this does and implement it
+			// HACK: Return NFC_SUCCESS so nfc-anticol runs
+			return NFC_SUCCESS;
+
 		case NP_INFINITE_SELECT:
+			// TODO: The RC522 can't do scans on its own, what now?
+			// HACK: Return NFC_SUCCESS so nfc-anticol runs
+			return NFC_SUCCESS;
+
 		case NP_FORCE_ISO14443_B:
+			log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Attempted to enable ISO14443B");
+			if (enable) {
+				return NFC_EDEVNOTSUPP;
+			}
+			return NFC_SUCCESS;
+
 		case NP_TIMEOUT_COMMAND:
 		case NP_TIMEOUT_ATR:
 		case NP_TIMEOUT_COM:
-			return NFC_EINVARG;
+			break;
 	}
 
 	return NFC_EINVARG;
 }
 
 int rc522_set_property_int(struct nfc_device * pnd, const nfc_property property, const int value) {
-	// TODO
-	return NFC_ENOTIMPL;
+	switch (property) {
+		case NP_TIMEOUT_COMMAND:
+			if (value >= 0) {
+				CHIP_DATA(pnd)->default_timeout = value;
+				return NFC_SUCCESS;
+			}
+			break;
+
+		case NP_TIMEOUT_ATR:
+			// TODO: Figure out what this does and implement it
+			return NFC_ENOTIMPL;
+
+		case NP_TIMEOUT_COM:
+			// TODO: Figure out what this does and implement it
+			return NFC_ENOTIMPL;
+
+		case NP_HANDLE_CRC:
+		case NP_HANDLE_PARITY:
+		case NP_EASY_FRAMING:
+		case NP_ACTIVATE_FIELD:
+		case NP_ACTIVATE_CRYPTO1:
+		case NP_FORCE_ISO14443_A:
+		case NP_FORCE_SPEED_106:
+		case NP_ACCEPT_MULTIPLE_FRAMES:
+		case NP_AUTO_ISO14443_4:
+		case NP_ACCEPT_INVALID_FRAMES:
+		case NP_INFINITE_SELECT:
+		case NP_FORCE_ISO14443_B:
+			break;
+	}
+
+	return NFC_EINVARG;
+}
+
+int rc522_initiator_init(struct nfc_device * pnd) {
+	// TODO: Should we be doing something here?
+	return NFC_SUCCESS;
 }
 
 int rc522_abort(struct nfc_device * pnd) {
@@ -431,11 +589,11 @@ int rc522_abort(struct nfc_device * pnd) {
 			// Halt any running commands
 			rc522_start_command(pnd, CMD_IDLE) ||
 			// Clear FIFO
-			rc522_write_reg(pnd, REG_FIFOLevelReg, REG_FIFOLevelReg_FlushBuffer, 0xFF);
+			rc522_write_reg(pnd, REG_FIFOLevelReg, REG_FIFOLevelReg_FlushBuffer);
 }
 
 int rc522_powerdown(struct nfc_device * pnd) {
-	return rc522_write_reg(pnd, REG_CommandReg, REG_CommandReg_RcvOff | REG_CommandReg_PowerDown | CMD_NOCMDCHANGE, 0xFF);
+	return rc522_write_reg(pnd, REG_CommandReg, REG_CommandReg_RcvOff | REG_CommandReg_PowerDown | CMD_NOCMDCHANGE);
 }
 
 // NXP MFRC522 datasheet section 16.1.1
@@ -481,9 +639,9 @@ int rc522_self_test(struct nfc_device * pnd) {
 			rc522_write_bulk(pnd, REG_FIFODataReg, zeroes, sizeof(zeroes)) ||
 			rc522_start_command(pnd, CMD_MEM) ||
 			// 3. Enable the self test by writing 0x09 to the AutoTestReg register
-			rc522_write_reg(pnd, REG_AutoTestReg, REG_AutoTestReg_SelfTest_Enabled, REG_AutoTestReg_SelfTest_MASK) ||
+			rc522_write_reg_mask(pnd, REG_AutoTestReg, REG_AutoTestReg_SelfTest_Enabled, REG_AutoTestReg_SelfTest_MASK) ||
 			// 4. Write 0x00h to the FIFO buffer
-			rc522_write_reg(pnd, REG_FIFODataReg, 0x00, 0xFF) ||
+			rc522_write_reg(pnd, REG_FIFODataReg, 0x00) ||
 			// 5. Start the self test with the CalcCRC command
 			rc522_start_command(pnd, CMD_CALCCRC);
 	if (ret) {
@@ -516,7 +674,7 @@ int rc522_self_test(struct nfc_device * pnd) {
 			// 7. Read selftest result
 			rc522_read_bulk(pnd, REG_FIFODataReg, response, FIFO_SIZE) ||
 			// 8. Disable selftest operation mode
-			rc522_write_reg(pnd, REG_AutoTestReg, REG_AutoTestReg_SelfTest_Disabled, REG_AutoTestReg_SelfTest_MASK);
+			rc522_write_reg_mask(pnd, REG_AutoTestReg, REG_AutoTestReg_SelfTest_Disabled, REG_AutoTestReg_SelfTest_MASK);
 	if (ret) {
 		return ret;
 	}
