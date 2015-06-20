@@ -61,6 +61,8 @@ typedef enum {
 
 #define REG_FIFOLevelReg	0x0A
 #define REG_FIFOLevelReg_FlushBuffer	(1 << 7)
+#define REG_FIFOLevelReg_Level_PACK(x)	((x & 0x7F) << 0)
+#define REG_FIFOLevelReg_Level_UNPACK(x)	((x >> 0) & 0x7F)
 
 #define REG_WaterLevelReg	0x0B
 

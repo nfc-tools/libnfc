@@ -38,13 +38,16 @@
 #include "chips/rc522.h"
 #include "uart.h"
 
-#define RC522_UART_BOOT_SPEED 9600
-#define RC522_UART_DEFAULT_SPEED 115200
-#define RC522_UART_DRIVER_NAME "rc522_uart"
-#define RC522_UART_IO_TIMEOUT 50
-
 #define LOG_CATEGORY "libnfc.driver.rc522_uart"
 #define LOG_GROUP    NFC_LOG_GROUP_DRIVER
+
+#define BOOT_BAUD_RATE 9600
+#define DEFAULT_BAUD_RATE 115200
+#define DRIVER_NAME "rc522_uart"
+#define IO_TIMEOUT 50
+
+#define DRIVER_DATA(pnd) ((struct rc522_uart_data*)(pnd->driver_data))
+#define CHK(x) ret = (x); if (ret < 0) { return ret; }
 
 // Internal data structs
 const struct rc522_io rc522_uart_io;
@@ -53,14 +56,13 @@ struct rc522_uart_data {
 	uint32_t baudrate;
 };
 
-#define DRIVER_DATA(pnd) ((struct rc522_uart_data*)(pnd->driver_data))
 /*
 int rc522_uart_wakeup(struct nfc_device * pnd) {
 	int ret;
 
 	// High Speed Unit (HSU) wake up consist to send 0x55 and wait a "long" delay for RC522 being wakeup.
 	const uint8_t rc522_wakeup_preamble[] = { 0x55, 0x55, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-	ret = uart_send(DRIVER_DATA(pnd)->port, rc522_wakeup_preamble, sizeof(rc522_wakeup_preamble), RC522_UART_IO_TIMEOUT);
+	ret = uart_send(DRIVER_DATA(pnd)->port, rc522_wakeup_preamble, sizeof(rc522_wakeup_preamble), IO_TIMEOUT);
 	if (ret < 0) {
 		return ret;
 	}
@@ -151,10 +153,10 @@ int rc522_uart_create(const nfc_context * context, const nfc_connstring connstri
 
 	// Let's try first with boot baud rate
 	if (
-			!rc522_uart_test_baudrate(pnd, RC522_UART_BOOT_SPEED) &&
+			!rc522_uart_test_baudrate(pnd, BOOT_BAUD_RATE) &&
 			!rc522_uart_test_baudrate(pnd, userBaudRate)
 	) {
-		log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Could not connect with RC522 at %d or %d bps.", RC522_UART_BOOT_SPEED, userBaudRate);
+		log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Could not connect with RC522 at %d or %d bps.", BOOT_BAUD_RATE, userBaudRate);
 		rc522_uart_close(pnd);
 		return NFC_EIO;
 	}
@@ -171,10 +173,10 @@ size_t rc522_uart_scan(const nfc_context * context, nfc_connstring connstrings[]
 
 	while ((acPort = acPorts[iDevice++])) {
 		nfc_connstring connstring;
-		snprintf(connstring, sizeof(nfc_connstring), "%s:%s:%"PRIu32, RC522_UART_DRIVER_NAME, acPort, RC522_UART_DEFAULT_SPEED);
+		snprintf(connstring, sizeof(nfc_connstring), "%s:%s:%"PRIu32, DRIVER_NAME, acPort, DEFAULT_BAUD_RATE);
 
 		nfc_device * pnd;
-		int ret = rc522_uart_create(context, connstring, acPort, RC522_UART_DEFAULT_SPEED, &pnd);
+		int ret = rc522_uart_create(context, connstring, acPort, DEFAULT_BAUD_RATE, &pnd);
 		if (ret == NFC_ESOFT) {
 			uart_list_free(acPorts);
 			return 0;
@@ -203,10 +205,10 @@ struct nfc_device * rc522_uart_open(const nfc_context * context, const nfc_conns
 	char * endptr;
 	struct nfc_device * pnd = NULL;
 
-	int decodelvl = connstring_decode(connstring, RC522_UART_DRIVER_NAME, NULL, &port_str, &baud_str);
+	int decodelvl = connstring_decode(connstring, DRIVER_NAME, NULL, &port_str, &baud_str);
 	switch (decodelvl) {
 		case 2: // Got port but no speed
-			baudrate = RC522_UART_DEFAULT_SPEED;
+			baudrate = DEFAULT_BAUD_RATE;
 			break;
 
 		case 3: // Got port and baud rate
@@ -246,11 +248,11 @@ int rc522_uart_read(struct nfc_device * pnd, uint8_t reg, uint8_t * data, size_t
 	int ret;
 
 	while (size > 0) {
-		if ((ret = uart_send(DRIVER_DATA(pnd)->port, &cmd, 1, RC522_UART_IO_TIMEOUT)) < 0) {
+		if ((ret = uart_send(DRIVER_DATA(pnd)->port, &cmd, 1, IO_TIMEOUT)) < 0) {
 			goto error;
 		}
 
-		if ((ret = uart_receive(DRIVER_DATA(pnd)->port, data, 1, NULL, RC522_UART_IO_TIMEOUT)) < 0) {
+		if ((ret = uart_receive(DRIVER_DATA(pnd)->port, data, 1, NULL, IO_TIMEOUT)) < 0) {
 			goto error;
 		}
 
@@ -271,13 +273,13 @@ int rc522_uart_write(struct nfc_device * pnd, uint8_t reg, const uint8_t * data,
 
 	while (size > 0) {
 		// First: send write request
-		if ((ret = uart_send(DRIVER_DATA(pnd)->port, &cmd, 1, RC522_UART_IO_TIMEOUT)) < 0) {
+		if ((ret = uart_send(DRIVER_DATA(pnd)->port, &cmd, 1, IO_TIMEOUT)) < 0) {
 			goto error;
 		}
 
 		// Second: wait for a reply
 		uint8_t reply;
-		if ((ret = uart_receive(DRIVER_DATA(pnd)->port, &reply, 1, NULL, RC522_UART_IO_TIMEOUT)) < 0) {
+		if ((ret = uart_receive(DRIVER_DATA(pnd)->port, &reply, 1, NULL, IO_TIMEOUT)) < 0) {
 			return ret;
 		}
 
@@ -289,7 +291,7 @@ int rc522_uart_write(struct nfc_device * pnd, uint8_t reg, const uint8_t * data,
 		}
 
 		// Fourth: send register data
-		if ((ret = uart_send(DRIVER_DATA(pnd)->port, data, 1, RC522_UART_IO_TIMEOUT)) < 0) {
+		if ((ret = uart_send(DRIVER_DATA(pnd)->port, data, 1, IO_TIMEOUT)) < 0) {
 			goto error;
 		}
 
@@ -305,20 +307,22 @@ error:
 }
 
 int rc522_uart_reset_baud_rate(struct nfc_device * pnd) {
-	log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Restoring baud rate to default of %d bps.", RC522_UART_BOOT_SPEED);
-	return uart_set_speed(DRIVER_DATA(pnd)->port, RC522_UART_BOOT_SPEED);
+	log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Restoring baud rate to default of %d bps.", BOOT_BAUD_RATE);
+	return uart_set_speed(DRIVER_DATA(pnd)->port, BOOT_BAUD_RATE);
 }
 
 int rc522_uart_upgrade_baud_rate(struct nfc_device * pnd) {
+	int ret;
 	uint32_t userBaudRate = DRIVER_DATA(pnd)->baudrate;
-	if (userBaudRate == RC522_UART_BOOT_SPEED) {
+	if (userBaudRate == BOOT_BAUD_RATE) {
 		return NFC_SUCCESS;
 	}
 
 	log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Upgrading baud rate to user-specified %d bps.", userBaudRate);
-	return
-			uart_set_speed(DRIVER_DATA(pnd)->port, userBaudRate) ||
-			rc522_send_baudrate(pnd, userBaudRate);
+	CHK(uart_set_speed(DRIVER_DATA(pnd)->port, userBaudRate));
+	CHK(rc522_send_baudrate(pnd, userBaudRate));
+
+	return NFC_SUCCESS;
 }
 
 const struct rc522_io rc522_uart_io = {
@@ -329,7 +333,7 @@ const struct rc522_io rc522_uart_io = {
 };
 
 const struct nfc_driver rc522_uart_driver = {
-	.name								= RC522_UART_DRIVER_NAME,
+	.name								= DRIVER_NAME,
 	.scan_type							= INTRUSIVE,
 	.scan								= rc522_uart_scan,
 	.open								= rc522_uart_open,
