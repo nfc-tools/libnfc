@@ -130,7 +130,7 @@ transmit_bytes(const uint8_t *pbtTx, const size_t szTx)
       printf("Response after %u cycles\n", cycles);
     }
   } else {
-    if ((res = nfc_initiator_transceive_bytes(pnd, pbtTx, szTx, abtRx, sizeof(abtRx), 0)) < 0)
+    if ((res = nfc_initiator_transceive_bytes(pnd, pbtTx, szTx, abtRx, sizeof(abtRx), -1)) < 0)
       return false;
   }
   szRx = res;
