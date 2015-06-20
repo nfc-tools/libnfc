@@ -39,6 +39,12 @@ typedef ms_t timeout_t;
 void timeout_init(timeout_t * to, unsigned int millis);
 
 /**
+ * @brief Initializes a timeout which never expires
+ * @param to Timeout handle
+ */
+void timeout_never(timeout_t * to);
+
+/**
  * @brief Checks if the timeout has NOT expired
  * @param to Timeout handle
  * @return True if the timeout has NOT expired

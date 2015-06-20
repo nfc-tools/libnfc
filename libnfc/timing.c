@@ -22,6 +22,9 @@
 #define MICROS_PER_SEC 1000000
 #define NANOS_PER_SEC 1000000000
 
+#define MAGIC_EXPIRED	((uint64_t) -1)
+#define MAGIC_NEVER	((uint64_t) -2)
+
 // Use Windows' API directly if Win32 for highest possible resolution
 #if defined(CYGWIN) || defined(_WIN32)
 #	include <windows.h>
@@ -61,14 +64,22 @@ void timeout_init(timeout_t * to, unsigned int millis) {
 	*to = time_millis() + millis;
 }
 
+void timeout_never(timeout_t * to) {
+	*to = MAGIC_NEVER;
+}
+
 bool timeout_check(timeout_t * to) {
-	if (*to == 0) {
-		return false;
+	switch (*to) {
+		case MAGIC_EXPIRED:
+			return false;
+		case MAGIC_NEVER:
+			return true;
 	}
 
 	ms_t now = time_millis();
 	if (now >= *to) {
-		*to = 0;
+		// Mark as expired and fail in next check
+		*to = MAGIC_EXPIRED;
 	}
 
 	return true;
