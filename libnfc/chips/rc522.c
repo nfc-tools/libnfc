@@ -447,20 +447,29 @@ int rc522_rf_rx(struct nfc_device * pnd, uint8_t * rxData, const size_t rxMaxByt
 
 int rc522_transceive(struct nfc_device * pnd, const uint8_t * txData, const size_t txBits, uint8_t * rxData, const size_t rxMaxBytes, int timeout) {
 	int ret;
-	timeout_t to;
-	rc522_timeout_init(pnd, &to, timeout);
+
+	bool doTX = txData != NULL && txBits > 0;
+	bool doRX = rxData != NULL && rxMaxBytes > 0;
+	bool isTransceive = doTX && doRX;
 
 	CHK(rc522_abort(pnd));
 
-	ret = rc522_rf_tx(pnd, txData, txBits, &to, true);
-	if (ret < 0) {
-		rc522_abort(pnd);
-		return ret;
+	timeout_t to;
+	rc522_timeout_init(pnd, &to, timeout);
+
+	if (doTX) {
+		ret = rc522_rf_tx(pnd, txData, txBits, &to, isTransceive);
+		if (ret < 0) {
+			rc522_abort(pnd);
+			return ret;
+		}
 	}
 
-	ret = rc522_rf_rx(pnd, rxData, rxMaxBytes, &to, true);
-	if (ret < 0) {
-		rc522_abort(pnd);
+	if (doRX) {
+		ret = rc522_rf_rx(pnd, rxData, rxMaxBytes, &to, isTransceive);
+		if (ret < 0) {
+			rc522_abort(pnd);
+		}
 	}
 
 	return ret;
