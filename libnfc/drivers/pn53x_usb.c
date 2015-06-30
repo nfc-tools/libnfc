@@ -69,7 +69,8 @@ typedef enum {
   NXP_PN533,
   ASK_LOGO,
   SCM_SCL3711,
-  SONY_RCS360
+  SONY_RCS360,
+  SONY_RCS380
 } pn53x_usb_model;
 
 // Internal data struct
@@ -131,7 +132,8 @@ const struct pn53x_usb_supported_device pn53x_usb_supported_devices[] = {
   { 0x04E6, 0x5591, SCM_SCL3711, "SCM Micro / SCL3711-NFC&RW" },
   { 0x054c, 0x0193, SONY_PN531,  "Sony / PN531" },
   { 0x1FD3, 0x0608, ASK_LOGO,    "ASK / LoGO" },
-  { 0x054C, 0x02E1, SONY_RCS360, "Sony / FeliCa S360 [PaSoRi]" }
+  { 0x054C, 0x02E1, SONY_RCS360, "Sony / FeliCa S360 [PaSoRi]" },
+  { 0x054C, 0x06C3, SONY_RCS380, "Sony / FeliCa S380 [PaSoRi]" }
 };
 
 static pn53x_usb_model
@@ -364,6 +366,7 @@ pn53x_usb_open(const nfc_context *context, const nfc_connstring connstring)
           CHIP_DATA(pnd)->timer_correction = 54;
           break;
         case SONY_RCS360:
+        case SONY_RCS380:
         case UNKNOWN:
           CHIP_DATA(pnd)->timer_correction = 0;   // TODO: allow user to know if timed functions are available
           break;
@@ -622,8 +625,8 @@ pn53x_usb_init(nfc_device *pnd)
   pn53x_transceive(pnd, abtCmd, sizeof(abtCmd), NULL, 0, -1);
   // ...and we don't care about error
   pnd->last_error = 0;
-  if (SONY_RCS360 == DRIVER_DATA(pnd)->model) {
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "SONY RC-S360 initialization.");
+  if (SONY_RCS360 == DRIVER_DATA(pnd)->model || SONY_RCS380 == DRIVER_DATA(pnd)->model) {
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "SONY RC-S360/S380 initialization.");
     const uint8_t abtCmd2[] = { 0x18, 0x01 };
     pn53x_transceive(pnd, abtCmd2, sizeof(abtCmd2), NULL, 0, -1);
     pn53x_usb_ack(pnd);
@@ -697,6 +700,7 @@ pn53x_usb_set_property_bool(nfc_device *pnd, const nfc_property property, const 
     case NXP_PN533:
     case SONY_PN531:
     case SONY_RCS360:
+    case SONY_RCS380:
     case UNKNOWN:
       // Nothing to do.
       break;
