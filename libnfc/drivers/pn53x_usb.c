@@ -369,9 +369,7 @@ pn53x_usb_open(const nfc_context *context, const nfc_connstring connstring)
         case SONY_PN531:
           CHIP_DATA(pnd)->timer_correction = 54;
           break;
-        case SONY_RCS360:
-        case SONY_RCS380:
-        case UNKNOWN:
+        default:
           CHIP_DATA(pnd)->timer_correction = 0;   // TODO: allow user to know if timed functions are available
           break;
       }
@@ -699,14 +697,6 @@ pn53x_usb_set_property_bool(nfc_device *pnd, const nfc_property property, const 
         if ((res = pn53x_write_register(pnd, PN53X_SFR_P3, _BV(P32), bEnable ? 0 : _BV(P32))) < 0)
           return res;
       }
-      break;
-    case NXP_PN531:
-    case NXP_PN533:
-    case SONY_PN531:
-    case SONY_RCS360:
-    case SONY_RCS380:
-    case UNKNOWN:
-      // Nothing to do.
       break;
   }
   return NFC_SUCCESS;
