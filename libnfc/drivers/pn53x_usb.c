@@ -64,6 +64,8 @@ const nfc_modulation_type no_target_support[] = {0};
 
 typedef enum {
   UNKNOWN,
+  CONTACTLESS, // No name, RFID Contactless Mifare IC Card Writer Reader USB 13.56MHZ 14443A
+  IO_DATA_NFC2,
   NXP_PN531,
   SONY_PN531,
   NXP_PN533,
@@ -132,6 +134,8 @@ const struct pn53x_usb_supported_device pn53x_usb_supported_devices[] = {
   { 0x04E6, 0x5591, SCM_SCL3711, "SCM Micro / SCL3711-NFC&RW" },
   { 0x054c, 0x0193, SONY_PN531,  "Sony / PN531" },
   { 0x1FD3, 0x0608, ASK_LOGO,    "ASK / LoGO" },
+  { 0x7523, 0x1A86, CONTACTLESS, "No name, RFID Contactless Mifare IC Card Writer Reader USB 13.56MHZ 14443A" },
+  { 0x23EB, 0x0002, IO_DATA_NFC2, "IO-DATA USB2-NFC2" },
   { 0x054C, 0x02E1, SONY_RCS360, "Sony / FeliCa S360 [PaSoRi]" },
   { 0x054C, 0x06C3, SONY_RCS380, "Sony / FeliCa S380 [PaSoRi]" }
 };
