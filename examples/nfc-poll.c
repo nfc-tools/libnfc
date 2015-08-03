@@ -145,14 +145,13 @@ main(int argc, const char *argv[])
 
   if (res > 0) {
     print_nfc_target(&nt, verbose);
+    printf("Waiting for card removing...");
+    while (0 == nfc_initiator_target_is_present(pnd, NULL)) {}
+    nfc_perror(pnd, "nfc_initiator_target_is_present");
+    printf("done.\n");
   } else {
     printf("No target found.\n");
   }
-
-  printf("Waiting for card removing...");
-  while (0 == nfc_initiator_target_is_present(pnd, NULL)) {}
-  nfc_perror(pnd, "nfc_initiator_target_is_present");
-  printf("done.\n");
 
   nfc_close(pnd);
   nfc_exit(context);
