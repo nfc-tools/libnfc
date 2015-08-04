@@ -64,12 +64,15 @@ const nfc_modulation_type no_target_support[] = {0};
 
 typedef enum {
   UNKNOWN,
+  CONTACTLESS, // No name, RFID Contactless Mifare IC Card Writer Reader USB 13.56MHZ 14443A
+  IO_DATA_NFC2,
   NXP_PN531,
   SONY_PN531,
   NXP_PN533,
   ASK_LOGO,
   SCM_SCL3711,
-  SONY_RCS360
+  SONY_RCS360,
+  SONY_RCS380
 } pn53x_usb_model;
 
 // Internal data struct
@@ -131,7 +134,10 @@ const struct pn53x_usb_supported_device pn53x_usb_supported_devices[] = {
   { 0x04E6, 0x5591, SCM_SCL3711, "SCM Micro / SCL3711-NFC&RW" },
   { 0x054c, 0x0193, SONY_PN531,  "Sony / PN531" },
   { 0x1FD3, 0x0608, ASK_LOGO,    "ASK / LoGO" },
-  { 0x054C, 0x02E1, SONY_RCS360, "Sony / FeliCa S360 [PaSoRi]" }
+  { 0x7523, 0x1A86, CONTACTLESS, "No name, RFID Contactless Mifare IC Card Writer Reader USB 13.56MHZ 14443A" },
+  { 0x23EB, 0x0002, IO_DATA_NFC2, "IO-DATA USB2-NFC2" },
+  { 0x054C, 0x02E1, SONY_RCS360, "Sony / FeliCa S360 [PaSoRi]" },
+  { 0x054C, 0x06C3, SONY_RCS380, "Sony / FeliCa S380 [PaSoRi]" }
 };
 
 static pn53x_usb_model
@@ -363,8 +369,7 @@ pn53x_usb_open(const nfc_context *context, const nfc_connstring connstring)
         case SONY_PN531:
           CHIP_DATA(pnd)->timer_correction = 54;
           break;
-        case SONY_RCS360:
-        case UNKNOWN:
+        default:
           CHIP_DATA(pnd)->timer_correction = 0;   // TODO: allow user to know if timed functions are available
           break;
       }
@@ -622,8 +627,8 @@ pn53x_usb_init(nfc_device *pnd)
   pn53x_transceive(pnd, abtCmd, sizeof(abtCmd), NULL, 0, -1);
   // ...and we don't care about error
   pnd->last_error = 0;
-  if (SONY_RCS360 == DRIVER_DATA(pnd)->model) {
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "SONY RC-S360 initialization.");
+  if (SONY_RCS360 == DRIVER_DATA(pnd)->model || SONY_RCS380 == DRIVER_DATA(pnd)->model) {
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "SONY RC-S360/S380 initialization.");
     const uint8_t abtCmd2[] = { 0x18, 0x01 };
     pn53x_transceive(pnd, abtCmd2, sizeof(abtCmd2), NULL, 0, -1);
     pn53x_usb_ack(pnd);
@@ -692,13 +697,6 @@ pn53x_usb_set_property_bool(nfc_device *pnd, const nfc_property property, const 
         if ((res = pn53x_write_register(pnd, PN53X_SFR_P3, _BV(P32), bEnable ? 0 : _BV(P32))) < 0)
           return res;
       }
-      break;
-    case NXP_PN531:
-    case NXP_PN533:
-    case SONY_PN531:
-    case SONY_RCS360:
-    case UNKNOWN:
-      // Nothing to do.
       break;
   }
   return NFC_SUCCESS;
