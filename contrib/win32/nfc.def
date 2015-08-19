@@ -6,7 +6,7 @@ EXPORTS
   nfc_exit
   nfc_open
   nfc_close
-  nfc_abbort_command
+  nfc_abort_command
   nfc_list_devices
   nfc_idle
   nfc_initiator_init
