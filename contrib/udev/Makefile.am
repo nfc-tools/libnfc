@@ -1,2 +1,2 @@
 EXTRA_DIST = \
-	42-pn53x.rules
+	93-pn53x.rules
