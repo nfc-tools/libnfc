@@ -60,6 +60,10 @@ IF(LIBNFC_CONFFILES_MODE)
   ADD_DEFINITIONS(-DCONFFILES)
 ENDIF(LIBNFC_CONFFILES_MODE)
 
+option (BUILD_EXAMPLES "build examples ON/OFF" ON)
+option (BUILD_UTILS "build utils ON/OFF" ON)
+
+
 # Doxygen
 SET(builddir "${CMAKE_BINARY_DIR}")
 SET(top_srcdir "${CMAKE_SOURCE_DIR}")
@@ -151,8 +155,14 @@ ENDIF(WIN32)
 
 ADD_SUBDIRECTORY(libnfc)
 ADD_SUBDIRECTORY(include)
-ADD_SUBDIRECTORY(utils)
-ADD_SUBDIRECTORY(examples)
+
+if (BUILD_UTILS)
+  add_subdirectory (utils)
+endif ()
+
+if (BUILD_EXAMPLES)
+  add_subdirectory (examples)
+endif ()
 
 if (NOT MSVC)
   # config script install path
