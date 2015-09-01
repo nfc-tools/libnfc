@@ -1,5 +1,11 @@
-PROJECT(libnfc C)
-CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
+cmake_minimum_required (VERSION 2.6)
+
+if (NOT DEFINED CMAKE_BUILD_TYPE)
+  set (CMAKE_BUILD_TYPE Release CACHE STRING "Build type")
+endif ()
+
+project (libnfc C)
+
 SET(VERSION_MAJOR "1")
 SET(VERSION_MINOR "7")
 SET(VERSION_PATCH "1")
