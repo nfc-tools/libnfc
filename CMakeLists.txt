@@ -35,12 +35,12 @@ INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/incl
 SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/modules/")
 
 # Options
-SET(LIBNFC_LOG ON CACHE BOOL "Enable log facility (errors, warning, info and debug messages)")
+option (LIBNFC_LOG "Enable log facility (errors, warning, info and debug messages)" ON)
 IF(LIBNFC_LOG)
   ADD_DEFINITIONS(-DLOG)
 ENDIF(LIBNFC_LOG)
 
-SET(LIBNFC_ENVVARS ON CACHE BOOL "Enable envvars facility")
+option (LIBNFC_ENVVARS "Enable envvars facility" ON)
 IF(LIBNFC_ENVVARS)
   ADD_DEFINITIONS(-DENVVARS)
 ENDIF(LIBNFC_ENVVARS)
@@ -55,7 +55,7 @@ ELSE(LIBNFC_DEBUG_MODE)
   SET(WIN32_MODE "release")
 ENDIF(LIBNFC_DEBUG_MODE)
 
-SET(LIBNFC_CONFFILES_MODE ON CACHE BOOL "Enable configuration files")
+option (LIBNFC_CONFFILES_MODE "Enable configuration files" ON)
 IF(LIBNFC_CONFFILES_MODE)
   ADD_DEFINITIONS(-DCONFFILES)
 ENDIF(LIBNFC_CONFFILES_MODE)
