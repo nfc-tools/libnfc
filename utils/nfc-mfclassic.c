@@ -309,7 +309,7 @@ read_card(int read_unlocked)
   bool    bFailure = false;
   uint32_t uiReadBlocks = 0;
 
-  if (read_unlocke) {
+  if (read_unlocked) {
     //If the user is attempting an unlocked read, but has a direct-write type magic card, they don't 
     //need to use the R mode. We'll trigger a warning and let them proceed.
     if (magic2) {
