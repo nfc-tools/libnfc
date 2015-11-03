@@ -314,6 +314,7 @@ read_card(int read_unlocked)
     //need to use the R mode. We'll trigger a warning and let them proceed.
     if (magic2) {
       printf("Note: This card does not require an unlocked write (R) \n");
+      read_unlocked = 0;
     } else {
       //If User has requested an unlocked read, but we're unable to unlock the card, we'll error out.
       if (!unlock_card()) {
@@ -393,6 +394,7 @@ write_card(int write_block_zero)
     //need to use the W mode. We'll trigger a warning and let them proceed.
     if (magic2) {
       printf("Note: This card does not require an unlocked write (W) \n");
+      write_block_zero = 0
     } else {
       //If User has requested an unlocked write, but we're unable to unlock the card, we'll error out.
       if (!unlock_card()) {
