@@ -318,9 +318,10 @@ read_card(int read_unlocked)
       //If User has requested an unlocked read, but we're unable to unlock the card, we'll error out.
       if (!unlock_card()) {
         return false; 
+      }
     }
   }
-
+  
   printf("Reading out %d blocks |", uiBlocks + 1);
   // Read the card from end to begin
   for (iBlock = uiBlocks; iBlock >= 0; iBlock--) {
@@ -396,9 +397,10 @@ write_card(int write_block_zero)
       //If User has requested an unlocked write, but we're unable to unlock the card, we'll error out.
       if (!unlock_card()) {
         return false; 
+      }
     }
   }
-
+  
   printf("Writing %d blocks |", uiBlocks + 1);
   // Write the card from begin to end;
   for (uiBlock = 0; uiBlock <= uiBlocks; uiBlock++) {
