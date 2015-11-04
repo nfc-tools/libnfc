@@ -69,6 +69,7 @@ typedef enum {
   NXP_PN533,
   ASK_LOGO,
   SCM_SCL3711,
+  SCM_SCL3712,
   SONY_RCS360
 } pn53x_usb_model;
 
@@ -129,6 +130,7 @@ const struct pn53x_usb_supported_device pn53x_usb_supported_devices[] = {
   { 0x04CC, 0x0531, NXP_PN531,   "Philips / PN531" },
   { 0x04CC, 0x2533, NXP_PN533,   "NXP / PN533" },
   { 0x04E6, 0x5591, SCM_SCL3711, "SCM Micro / SCL3711-NFC&RW" },
+  { 0x04E6, 0x5594, SCM_SCL3712, "SCM Micro / SCL3712-NFC&RW" },
   { 0x054c, 0x0193, SONY_PN531,  "Sony / PN531" },
   { 0x1FD3, 0x0608, ASK_LOGO,    "ASK / LoGO" },
   { 0x054C, 0x02E1, SONY_RCS360, "Sony / FeliCa S360 [PaSoRi]" }
@@ -354,6 +356,7 @@ pn53x_usb_open(const nfc_context *context, const nfc_connstring connstring)
           CHIP_DATA(pnd)->timer_correction = 50;
           break;
         case SCM_SCL3711:
+        case SCM_SCL3712:
         case NXP_PN533:
           CHIP_DATA(pnd)->timer_correction = 46;
           break;
@@ -693,6 +696,13 @@ pn53x_usb_set_property_bool(nfc_device *pnd, const nfc_property property, const 
           return res;
       }
       break;
+    case SCM_SCL3712:
+        if (NP_ACTIVATE_FIELD == property) {
+          // Switch on/off LED according to ACTIVATE_FIELD option
+          if ((res = pn53x_write_register(pnd, PN53X_SFR_P3, _BV(P32), bEnable ? 0 : _BV(P32))) < 0)
+            return res;
+        }
+        break;
     case NXP_PN531:
     case NXP_PN533:
     case SONY_PN531:

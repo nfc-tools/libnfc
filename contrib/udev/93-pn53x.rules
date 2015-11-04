@@ -11,6 +11,7 @@ ATTRS{idVendor}=="054c", ATTRS{idProduct}=="0193", MODE="0664", GROUP="plugdev"
 # PN533
 ATTRS{idVendor}=="04cc", ATTRS{idProduct}=="2533", MODE="0664", GROUP="plugdev"
 ATTRS{idVendor}=="04e6", ATTRS{idProduct}=="5591", MODE="0664", GROUP="plugdev"
+ATTRS{idVendor}=="04e6", ATTRS{idProduct}=="5594", MODE="0664", GROUP="plugdev"
 ATTRS{idVendor}=="1fd3", ATTRS{idProduct}=="0608", MODE="0664", GROUP="plugdev"
 ATTRS{idVendor}=="054c", ATTRS{idProduct}=="02e1", MODE="0664", GROUP="plugdev"
 
