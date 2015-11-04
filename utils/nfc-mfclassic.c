@@ -233,11 +233,6 @@ authenticate(uint32_t uiBlock)
 static bool
 unlock_card(void)
 {
-  if (magic2) {
-    printf("Don't use R/W with this card, this is not required!\n");
-    return false;
-  }
-
   // Configure the CRC
   if (nfc_device_set_property_bool(pnd, NP_HANDLE_CRC, false) < 0) {
     nfc_perror(pnd, "nfc_configure");
@@ -314,10 +309,20 @@ read_card(int read_unlocked)
   bool    bFailure = false;
   uint32_t uiReadBlocks = 0;
 
-  if (read_unlocked)
-    if (!unlock_card())
-      return false;
-
+  if (read_unlocked) {
+    //If the user is attempting an unlocked read, but has a direct-write type magic card, they don't 
+    //need to use the R mode. We'll trigger a warning and let them proceed.
+    if (magic2) {
+      printf("Note: This card does not require an unlocked write (R) \n");
+      read_unlocked = 0;
+    } else {
+      //If User has requested an unlocked read, but we're unable to unlock the card, we'll error out.
+      if (!unlock_card()) {
+        return false; 
+      }
+    }
+  }
+  
   printf("Reading out %d blocks |", uiBlocks + 1);
   // Read the card from end to begin
   for (iBlock = uiBlocks; iBlock >= 0; iBlock--) {
@@ -384,10 +389,20 @@ write_card(int write_block_zero)
   bool    bFailure = false;
   uint32_t uiWriteBlocks = 0;
 
-  if (write_block_zero)
-    if (!unlock_card())
-      return false;
-
+  if (write_block_zero) {
+    //If the user is attempting an unlocked write, but has a direct-write type magic card, they don't 
+    //need to use the W mode. We'll trigger a warning and let them proceed.
+    if (magic2) {
+      printf("Note: This card does not require an unlocked write (W) \n");
+      write_block_zero = 0;
+    } else {
+      //If User has requested an unlocked write, but we're unable to unlock the card, we'll error out.
+      if (!unlock_card()) {
+        return false; 
+      }
+    }
+  }
+  
   printf("Writing %d blocks |", uiBlocks + 1);
   // Write the card from begin to end;
   for (uiBlock = 0; uiBlock <= uiBlocks; uiBlock++) {
