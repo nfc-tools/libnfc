@@ -385,6 +385,8 @@ main(int argc, const char *argv[])
   } else if (iAction == 3) {
     if (!check_magic()) {
         printf("Card is not magic\n");
+        nfc_close(pnd);
+        nfc_exit(context);
         exit(EXIT_FAILURE);
     } else {
         printf("Card is magic\n");
