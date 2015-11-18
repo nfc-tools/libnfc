@@ -101,14 +101,14 @@ read_card(void)
     print_success_or_failure(bFailure, &uiReadedPages);
   }
   printf("|\n");
-  printf("Done, %d of %d pages readed.\n", uiReadedPages, uiBlocks + 1);
+  printf("Done, %d of %d pages read.\n", uiReadedPages, uiBlocks + 1);
   fflush(stdout);
 
   return (!bFailure);
 }
 
 static  bool
-write_card(void)
+write_card(bool write_otp, bool write_lock, bool write_uid)
 {
   uint32_t uiBlock = 0;
   bool    bFailure = false;
@@ -116,25 +116,30 @@ write_card(void)
   uint32_t uiSkippedPages = 0;
 
   char    buffer[BUFSIZ];
-  bool    write_otp;
-  bool    write_lock;
-  bool    write_uid;
 
-  printf("Write OTP bytes ? [yN] ");
-  if (!fgets(buffer, BUFSIZ, stdin)) {
-    ERR("Unable to read standard input.");
+  if (!write_otp) { 
+    printf("Write OTP bytes ? [yN] ");
+    if (!fgets(buffer, BUFSIZ, stdin)) {
+      ERR("Unable to read standard input.");
+    }
+    write_otp = ((buffer[0] == 'y') || (buffer[0] == 'Y'));
   }
-  write_otp = ((buffer[0] == 'y') || (buffer[0] == 'Y'));
-  printf("Write Lock bytes ? [yN] ");
-  if (!fgets(buffer, BUFSIZ, stdin)) {
-    ERR("Unable to read standard input.");
+
+  if (!write_lock) { 
+    printf("Write Lock bytes ? [yN] ");
+    if (!fgets(buffer, BUFSIZ, stdin)) {
+      ERR("Unable to read standard input.");
+    }
+    write_lock = ((buffer[0] == 'y') || (buffer[0] == 'Y'));
   }
-  write_lock = ((buffer[0] == 'y') || (buffer[0] == 'Y'));
-  printf("Write UID bytes (only for special writeable UID cards) ? [yN] ");
-  if (!fgets(buffer, BUFSIZ, stdin)) {
-    ERR("Unable to read standard input.");
+
+  if (!write_uid) { 
+    printf("Write UID bytes (only for special writeable UID cards) ? [yN] ");
+    if (!fgets(buffer, BUFSIZ, stdin)) {
+      ERR("Unable to read standard input.");
+    }
+    write_uid = ((buffer[0] == 'y') || (buffer[0] == 'Y'));
   }
-  write_uid = ((buffer[0] == 'y') || (buffer[0] == 'Y'));
 
   printf("Writing %d pages |", uiBlocks + 1);
   /* We may need to skip 2 first pages. */
@@ -181,25 +186,61 @@ write_card(void)
   return true;
 }
 
+static void
+print_usage(const char *argv[])
+{
+  printf("Usage: %s r|w <dump.mfd> [OPTIONS]\n", argv[0]);
+  printf("Options:\n");
+  printf("\tr|w\t\t - Perform read or write\n");
+  printf("\t<dump.mfd>\t - MiFare Dump (MFD) used to write (card to MFD) or (MFD to card)\n");
+  printf("\t--otp\t\t - Don't prompt for OTP writing (Assume yes)\n");
+  printf("\t--lock\t\t - Don't prompt for Lockbit writing (Assume yes)\n");
+  printf("\t--uid\t\t - Don't prompt for UID writing (Assume yes)\n");
+  printf("\t--full\t\t - Assume full card write (UID + OTP + Lockbit)\n");
+}
+
 int
 main(int argc, const char *argv[])
 {
   bool    bReadAction;
+  bool    bOTP;
+  bool    bLock;
+  bool    bUID;
   FILE   *pfDump;
 
   if (argc < 3) {
-    printf("\n");
-    printf("%s r|w <dump.mfd>\n", argv[0]);
-    printf("\n");
-    printf("r|w         - Perform read from or write to card\n");
-    printf("<dump.mfd>  - MiFare Dump (MFD) used to write (card to MFD) or (MFD to card)\n");
-    printf("\n");
-    exit(EXIT_FAILURE);
+      print_usage(argv);
+      exit(EXIT_FAILURE);
   }
 
   DBG("\nChecking arguments and settings\n");
 
-  bReadAction = tolower((int)((unsigned char) * (argv[1])) == 'r');
+  // Get commandline options
+  for (int arg = 1; arg < argc; arg++) {
+    if (0 == strcmp(argv[arg], "r")) {
+      bReadAction = true;
+    } else if (0 == strcmp(argv[arg], "w")) {
+      bReadAction = false;
+    } else if (0 == strcmp(argv[arg], "--full")) {
+      bOTP = true;
+      bLock = true;
+      bUID = true;
+    } else if (0 == strcmp(argv[arg], "--otp")) {
+      bOTP = true;
+    } else if (0 == strcmp(argv[arg], "--lock")) {
+      bLock = true;
+    } else if (0 == strcmp(argv[arg], "--uid")) {
+      bUID = true;
+    } else {
+      //Skip validation of the filename
+      if (arg != 2) { 
+        ERR("%s is not supported option.", argv[arg]);
+        print_usage(argv);
+        exit(EXIT_FAILURE);
+      }
+    }
+  }
+
 
   if (bReadAction) {
     memset(&mtDump, 0x00, sizeof(mtDump));
@@ -297,7 +338,7 @@ main(int argc, const char *argv[])
       printf("Done.\n");
     }
   } else {
-    write_card();
+    write_card(bOTP, bLock, bUID);
   }
 
   nfc_close(pnd);
