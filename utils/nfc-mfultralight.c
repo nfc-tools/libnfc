@@ -101,14 +101,51 @@ read_card(void)
     print_success_or_failure(bFailure, &uiReadedPages);
   }
   printf("|\n");
-  printf("Done, %d of %d pages readed.\n", uiReadedPages, uiBlocks + 1);
+  printf("Done, %d of %d pages read.\n", uiReadedPages, uiBlocks + 1);
   fflush(stdout);
 
   return (!bFailure);
 }
 
+static bool check_magic() {
+    bool     bFailure = false;
+    int      uid_data;   
+    
+    for (uint32_t page = 0; page <= 1; page++) {
+    // Show if the readout went well
+    if (bFailure) {
+      // When a failure occured we need to redo the anti-collision
+      if (nfc_initiator_select_passive_target(pnd, nmMifare, NULL, 0, &nt) <= 0) {
+        ERR("tag was removed");
+        return false;
+      }
+      bFailure = false;
+    }
+
+    uid_data = 0x00000000;
+    
+    memcpy(mp.mpd.abtData, &uid_data, sizeof uid_data);
+    memset(mp.mpd.abtData + 4, 0, 12);
+    
+    //Force the write without checking for errors - otherwise the writes to the sector 0 seem to complain
+    nfc_initiator_mifare_cmd(pnd, MC_WRITE, page, &mp);
+  }
+  
+    //Check that the ID is now set to 0x000000000000
+    if (nfc_initiator_mifare_cmd(pnd, MC_READ, 0, &mp)) {
+        //printf("%u", mp.mpd.abtData);
+          for(int i = 0; i <= 7; i++) {
+           if (mp.mpd.abtData[i] != 0x00) return false;
+          }  
+    } else {
+        return false;
+    }
+  
+  return true;
+}
+
 static  bool
-write_card(void)
+write_card(bool write_otp, bool write_lock, bool write_uid)
 {
   uint32_t uiBlock = 0;
   bool    bFailure = false;
@@ -116,25 +153,30 @@ write_card(void)
   uint32_t uiSkippedPages = 0;
 
   char    buffer[BUFSIZ];
-  bool    write_otp;
-  bool    write_lock;
-  bool    write_uid;
 
-  printf("Write OTP bytes ? [yN] ");
-  if (!fgets(buffer, BUFSIZ, stdin)) {
-    ERR("Unable to read standard input.");
+  if (!write_otp) { 
+    printf("Write OTP bytes ? [yN] ");
+    if (!fgets(buffer, BUFSIZ, stdin)) {
+      ERR("Unable to read standard input.");
+    }
+    write_otp = ((buffer[0] == 'y') || (buffer[0] == 'Y'));
   }
-  write_otp = ((buffer[0] == 'y') || (buffer[0] == 'Y'));
-  printf("Write Lock bytes ? [yN] ");
-  if (!fgets(buffer, BUFSIZ, stdin)) {
-    ERR("Unable to read standard input.");
+
+  if (!write_lock) { 
+    printf("Write Lock bytes ? [yN] ");
+    if (!fgets(buffer, BUFSIZ, stdin)) {
+      ERR("Unable to read standard input.");
+    }
+    write_lock = ((buffer[0] == 'y') || (buffer[0] == 'Y'));
   }
-  write_lock = ((buffer[0] == 'y') || (buffer[0] == 'Y'));
-  printf("Write UID bytes (only for special writeable UID cards) ? [yN] ");
-  if (!fgets(buffer, BUFSIZ, stdin)) {
-    ERR("Unable to read standard input.");
+
+  if (!write_uid) { 
+    printf("Write UID bytes (only for special writeable UID cards) ? [yN] ");
+    if (!fgets(buffer, BUFSIZ, stdin)) {
+      ERR("Unable to read standard input.");
+    }
+    write_uid = ((buffer[0] == 'y') || (buffer[0] == 'Y'));
   }
-  write_uid = ((buffer[0] == 'y') || (buffer[0] == 'Y'));
 
   printf("Writing %d pages |", uiBlocks + 1);
   /* We may need to skip 2 first pages. */
@@ -181,29 +223,66 @@ write_card(void)
   return true;
 }
 
+static void
+print_usage(const char *argv[])
+{
+  printf("Usage: %s r|w <dump.mfd> [OPTIONS]\n", argv[0]);
+  printf("Options:\n");
+  printf("\tr|w\t\t - Perform read or write\n");
+  printf("\t<dump.mfd>\t - MiFare Dump (MFD) used to write (card to MFD) or (MFD to card)\n");
+  printf("\t--otp\t\t - Don't prompt for OTP writing (Assume yes)\n");
+  printf("\t--lock\t\t - Don't prompt for Lockbit writing (Assume yes)\n");
+  printf("\t--uid\t\t - Don't prompt for UID writing (Assume yes)\n");
+  printf("\t--full\t\t - Assume full card write (UID + OTP + Lockbit)\n");
+}
+
 int
 main(int argc, const char *argv[])
 {
-  bool    bReadAction;
+  int     iAction = 0;
+  bool    bOTP = false;
+  bool    bLock = false;
+  bool    bUID = false;
   FILE   *pfDump;
 
-  if (argc < 3) {
-    printf("\n");
-    printf("%s r|w <dump.mfd>\n", argv[0]);
-    printf("\n");
-    printf("r|w         - Perform read from or write to card\n");
-    printf("<dump.mfd>  - MiFare Dump (MFD) used to write (card to MFD) or (MFD to card)\n");
-    printf("\n");
-    exit(EXIT_FAILURE);
+  if (argc == 0) {
+      print_usage(argv);
+      exit(EXIT_FAILURE);
   }
 
   DBG("\nChecking arguments and settings\n");
 
-  bReadAction = tolower((int)((unsigned char) * (argv[1])) == 'r');
+  // Get commandline options
+  for (int arg = 1; arg < argc; arg++) {
+    if (0 == strcmp(argv[arg], "r")) {
+      iAction = 1;
+    } else if (0 == strcmp(argv[arg], "w")) {
+      iAction = 2;
+    } else if (0 == strcmp(argv[arg], "--full")) {
+      bOTP = true;
+      bLock = true;
+      bUID = true;
+    } else if (0 == strcmp(argv[arg], "--otp")) {
+      bOTP = true;
+    } else if (0 == strcmp(argv[arg], "--lock")) {
+      bLock = true;
+    } else if (0 == strcmp(argv[arg], "--uid")) {
+      bUID = true;
+    } else if (0 == strcmp(argv[arg], "--check-magic")) {
+      iAction = 3;
+    } else {
+      //Skip validation of the filename
+      if (arg != 2) { 
+        ERR("%s is not supported option.", argv[arg]);
+        print_usage(argv);
+        exit(EXIT_FAILURE);
+      }
+    }
+  }
 
-  if (bReadAction) {
+  if (iAction == 1) {
     memset(&mtDump, 0x00, sizeof(mtDump));
-  } else {
+  } else if (iAction == 2) {
     pfDump = fopen(argv[2], "rb");
 
     if (pfDump == NULL) {
@@ -217,9 +296,14 @@ main(int argc, const char *argv[])
       exit(EXIT_FAILURE);
     }
     fclose(pfDump);
+    DBG("Successfully opened the dump file\n");
+  } else if (iAction == 3) {
+    DBG("Switching to Check Magic Mode\n");
+  } else {
+    ERR("Unable to determine operating mode");
+    exit(EXIT_FAILURE);
   }
-  DBG("Successfully opened the dump file\n");
-
+  
   nfc_context *context;
   nfc_init(&context);
   if (context == NULL) {
@@ -275,7 +359,7 @@ main(int argc, const char *argv[])
   }
   printf("\n");
 
-  if (bReadAction) {
+  if (iAction == 1) {
     if (read_card()) {
       printf("Writing data to file: %s ... ", argv[2]);
       fflush(stdout);
@@ -296,8 +380,17 @@ main(int argc, const char *argv[])
       fclose(pfDump);
       printf("Done.\n");
     }
-  } else {
-    write_card();
+  } else if (iAction == 2) {
+    write_card(bOTP, bLock, bUID);
+  } else if (iAction == 3) {
+    if (!check_magic()) {
+        printf("Card is not magic\n");
+        nfc_close(pnd);
+        nfc_exit(context);
+        exit(EXIT_FAILURE);
+    } else {
+        printf("Card is magic\n");
+    }
   }
 
   nfc_close(pnd);
