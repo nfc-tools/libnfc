@@ -526,11 +526,11 @@ main(int argc, const char *argv[])
   }
   const char *command = argv[1];
 
+  if (argc < 4) {
+    print_usage(argv[0]);
+    exit(EXIT_FAILURE);
+  }
   if (strcmp(command, "r") == 0 || strcmp(command, "R") == 0) {
-    if (argc < 4) {
-      print_usage(argv[0]);
-      exit(EXIT_FAILURE);
-    }
     atAction = ACTION_READ;
     if (strcmp(command, "R") == 0)
       unlock = 1;
@@ -539,10 +539,6 @@ main(int argc, const char *argv[])
     bUseKeyFile = (argc > 4);
     bForceKeyFile = ((argc > 5) && (strcmp((char *)argv[5], "f") == 0));
   } else if (strcmp(command, "w") == 0 || strcmp(command, "W") == 0 || strcmp(command, "f") == 0) {
-    if (argc < 4) {
-      print_usage(argv[0]);
-      exit(EXIT_FAILURE);
-    }
     atAction = ACTION_WRITE;
     if (strcmp(command, "W") == 0)
       unlock = 1;
