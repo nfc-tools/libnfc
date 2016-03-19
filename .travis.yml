@@ -1,0 +1,17 @@
+language: cpp
+
+addons:
+  apt:
+    packages:
+    - libusb-dev
+    - doxygen
+    - cmake
+    - libcutter-dev
+
+script:
+  - autoreconf -vfi
+  - ./configure --prefix=$HOME/.local/
+  - make -j2
+  - make install
+  - cmake -DCMAKE_INSTALL_PREFIX=~/.local .
+  - make install -j2
