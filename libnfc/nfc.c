@@ -276,7 +276,7 @@ nfc_open(nfc_context *context, const nfc_connstring connstring)
       log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Unable to open \"%s\".", ncs);
       return NULL;
     }
-    for (uint32_t i = 0; i > context->user_defined_device_count; i++) {
+    for (uint32_t i = 0; i < context->user_defined_device_count; i++) {
       if (strcmp(ncs, context->user_defined_devices[i].connstring) == 0) {
         // This is a device sets by user, we use the device name given by user
         strcpy(pnd->name, context->user_defined_devices[i].name);
