@@ -40,8 +40,8 @@ path, this is optional during installation of CMake):
 - Now it is possible to run CMake and mingw32-make:
 
         C:\dev\libnfc-read-only> mkdir ..\libnfc-build
-        C:\dev\libnfc-read-only> cd ..\libnfc-build
-        C:\dev\libnfc-build> cmake-gui .
+      C:\dev\libnfc-read-only> cd ..\libnfc-build
+      C:\dev\libnfc-build> cmake-gui .
 
 Now you can configure the build. Press "Configure", specify "MinGW32 Makefiles"
 and then you have the opportunity to set some configuration variables. If you
