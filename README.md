@@ -1,6 +1,7 @@
+```
 *-
 * Free/Libre Near Field Communication (NFC) library
-* 
+*
 * Libnfc historical contributors:
 * Copyright (C) 2009      Roel Verdult
 * Copyright (C) 2009-2015 Romuald Conty
@@ -10,6 +11,7 @@
 * Additional contributors:
 * See AUTHORS file
 -*
+```
 
 General Information
 ===================
@@ -46,11 +48,12 @@ http://cutter.sf.net
 Installation
 ============
 
-See the file 'INSTALL' for configure, build and install details.
+See the file `INSTALL` for configure, build and install details.
 
 Additionnally, you may need to grant permissions to your user to drive your device.
 Under GNU/Linux systems, if you use udev, you could use the provided udev rules.
   e.g. under Debian, Ubuntu, etc.
+
     sudo cp contrib/udev/42-pn53x.rules /lib/udev/rules.d/
 
 Under FreeBSD, if you use devd, there is also a rules file: contrib/devd/pn53x.conf.
@@ -64,16 +67,20 @@ configuration file located in sysconfdir (as provided to ./configure).
 A sample commented file is available in sources: libnfc.conf.sample
 
 If you have compiled using:
-  ./configure --prefix=/usr --sysconfdir=/etc
+
+    ./configure --prefix=/usr --sysconfdir=/etc
+
 you can make configuration directory and copy the sample file:
-  sudo mkdir /etc/nfc
-  sudo cp libnfc.conf.sample /etc/nfc/libnfc.conf
+
+    sudo mkdir /etc/nfc
+    sudo cp libnfc.conf.sample /etc/nfc/libnfc.conf
 
 To configure multiple devices, you can either modify libnfc.conf or create a
 file per device in a nfc/devices.d directory:
-  sudo mkdir -p /etc/nfc/devices.d
-  printf 'name = "My first device"\nconnstring = "pn532_uart:/dev/ttyACM0"\n' | sudo tee /etc/nfc/devices.d/first.conf
-  printf 'name = "My second device"\nconnstring = "pn532_uart:/dev/ttyACM1"\n' | sudo tee /etc/nfc/devices.d/second.conf
+
+    sudo mkdir -p /etc/nfc/devices.d
+    printf 'name = "My first device"\nconnstring = "pn532_uart:/dev/ttyACM0"\n' | sudo tee /etc/nfc/devices.d/first.conf
+    printf 'name = "My second device"\nconnstring = "pn532_uart:/dev/ttyACM1"\n' | sudo tee /etc/nfc/devices.d/second.conf
 
 How to report bugs
 ==================
@@ -82,7 +89,7 @@ To report a bug, visit https://github.com/nfc-tools/libnfc/issues and fill
 out a bug report form.
 
 If you have questions, remarks, we encourage you to post this in the developers
-community: 
+community:
 http://www.libnfc.org/community
 
 Please make sure to include:
@@ -99,14 +106,17 @@ Please make sure to include:
 * A trace with debug activated.
 
   Reproduce the bug with debug, e.g. if it was:
-  $ nfc-list -v
+
+        $ nfc-list -v
+
   run it as:
-  $ LIBNFC_LOG_LEVEL=3 nfc-list -v
+
+        $ LIBNFC_LOG_LEVEL=3 nfc-list -v
 
 * How to reproduce the bug.
 
-  Please include a short test program that exhibits the behavior. 
-  As a last resort, you can also provide a pointer to a larger piece 
+  Please include a short test program that exhibits the behavior.
+  As a last resort, you can also provide a pointer to a larger piece
   of software that can be downloaded.
 
 * If the bug was a crash, the exact text that was printed out
@@ -128,8 +138,8 @@ Building
 
 It should be as simple as running these two commands:
 
-./configure
-make
+    ./configure
+    make
 
 Troubleshooting
 ===============
@@ -137,27 +147,27 @@ Troubleshooting
 Touchatag/ACR122:
 -----------------
 If your Touchatag or ACR122 device fails being detected by libnfc, make sure
-that PCSC-lite daemon (pcscd) is installed and is running.
+that PCSC-lite daemon (`pcscd`) is installed and is running.
 
 If your Touchatag or ACR122 device fails being detected by PCSC-lite daemon
-(pcsc_scan doesn't see anything) then try removing the bogus firmware detection
+(`pcsc_scan` doesn't see anything) then try removing the bogus firmware detection
 of libccid: edit libccid_Info.plist configuration file (usually
-/etc/libccid_Info.plist) and locate "<key>ifdDriverOptions</key>", turn
-"<string>0x0000</string>" value into 0x0004 to allow bogus devices and restart
+`/etc/libccid_Info.plist`) and locate `<key>ifdDriverOptions</key>`, turn
+`<string>0x0000</string>` value into `0x0004` to allow bogus devices and restart
 pcscd daemon.
 
 ACR122:
 -------
 Using an ACR122 device with libnfc and without tag (e.g. to use NFCIP modes or
 card emulation) needs yet another PCSC-lite tweak: You need to allow usage of
-CCID Exchange command.  To do this, edit libccid_Info.plist configuration file
-(usually /etc/libccid_Info.plist) and locate "<key>ifdDriverOptions</key>",
-turn "<string>0x0000</string>" value into 0x0001 to allow CCID exchange or
-0x0005 to allow CCID exchange and bogus devices (cf previous remark) and
+CCID Exchange command.  To do this, edit `libccid_Info.plist` configuration file
+(usually `/etc/libccid_Info.plist`) and locate `<key>ifdDriverOptions</key>`,
+turn `<string>0x0000</string>` value into `0x0001` to allow CCID exchange or
+`0x0005` to allow CCID exchange and bogus devices (cf previous remark) and
 restart pcscd daemon.
 
 Warning: if you use ACS CCID drivers (acsccid), configuration file is located
-in something like: /usr/lib/pcsc/drivers/ifd-acsccid.bundle/Contents/Info.plist
+in something like: `/usr/lib/pcsc/drivers/ifd-acsccid.bundle/Contents/Info.plist`
 
 SCL3711:
 --------
@@ -172,7 +182,8 @@ Since Linux kernel version 3.1, two kernel-modules must not be loaded in order
 to use libnfc : "nfc" and "pn533".
 To prevent kernel from loading automatically these modules, you can blacklist
 them in a modprobe conf file. This file is provided within libnfc archive:
-  sudo cp contrib/linux/blacklist-libnfc.conf /etc/modprobe.d/blacklist-libnfc.conf
+
+    sudo cp contrib/linux/blacklist-libnfc.conf /etc/modprobe.d/blacklist-libnfc.conf
 
 Proprietary Notes
 =================
@@ -181,4 +192,3 @@ FeliCa is a registered trademark of the Sony Corporation.
 MIFARE is a trademark of NXP Semiconductors.
 Jewel Topaz is a trademark of Innovision Research & Technology.
 All other trademarks are the property of their respective owners.
-
