@@ -158,11 +158,9 @@ unlock_card(void)
   transmit_bytes(abtHalt, 4);
   // now send unlock
   if (!transmit_bits(abtUnlock1, 7)) {
-    printf("unlock failure!\n");
     return false;
   }
   if (!transmit_bytes(abtUnlock2, 1)) {
-    printf("unlock failure!\n");
     return false;
   }
 
@@ -183,12 +181,6 @@ unlock_card(void)
 static bool check_magic() {
     bool     bFailure = false;
     int      uid_data;   
-
-    //Initially check if we can unlock via the MF method
-    if (unlock_card()) {
-      printf("Ultralight Magic Gen 2 Detected\n");
-      return true;
-    } 
 
     for (uint32_t page = 0; page <= 1; page++) {
     // Show if the readout went well
@@ -213,15 +205,24 @@ static bool check_magic() {
     //Check that the ID is now set to 0x000000000000
     if (nfc_initiator_mifare_cmd(pnd, MC_READ, 0, &mp)) {
         //printf("%u", mp.mpd.abtData);
+          bool result = true;
           for(int i = 0; i <= 7; i++) {
-           if (mp.mpd.abtData[i] != 0x00) return false;
+           if (mp.mpd.abtData[i] != 0x00) result = false;
           }  
+
+      if (result) { 
+        return true;
+      }
+
+    } 
+
+    //Initially check if we can unlock via the MF method
+    if (unlock_card()) {
+      return true;
     } else {
-        return false;
+      return false;
     }
 
-  printf("Ultralight Magic Gen 1 Detected\n");
-  return true;
 }
 
 static  bool
@@ -264,7 +265,11 @@ write_card(bool write_otp, bool write_lock, bool write_uid)
     printf("ss");
     uiSkippedPages = 2;
   } else {
-    unlock_card();
+    if (!check_magic()) {
+      printf("\nUnable to unlock card - are you sure the card is magic?\n");
+      return false;
+      bFailure = false;
+    }
   }
 
   for (int page = uiSkippedPages; page <= 0xF; page++) {
