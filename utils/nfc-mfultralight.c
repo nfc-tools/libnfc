@@ -64,6 +64,18 @@ static mifare_param mp;
 static mifareul_tag mtDump;
 static uint32_t uiBlocks = 0xF;
 
+// special unlock command
+uint8_t  abtUnlock1[1] = { 0x40 };
+uint8_t  abtUnlock2[1] = { 0x43 };
+
+//Halt command
+uint8_t  abtHalt[4] = { 0x50, 0x00, 0x00, 0x00 };
+
+#define MAX_FRAME_LEN 264
+
+static uint8_t abtRx[MAX_FRAME_LEN];
+static int szRxBits;
+
 static const nfc_modulation nmMifare = {
   .nmt = NMT_ISO14443A,
   .nbr = NBR_106,
@@ -107,10 +119,69 @@ read_card(void)
   return (!bFailure);
 }
 
+static  bool
+transmit_bits(const uint8_t *pbtTx, const size_t szTxBits)
+{
+  // Transmit the bit frame command, we don't use the arbitrary parity feature
+  if ((szRxBits = nfc_initiator_transceive_bits(pnd, pbtTx, szTxBits, NULL, abtRx, sizeof(abtRx), NULL)) < 0)
+    return false;
+
+  return true;
+}
+
+
+static  bool
+transmit_bytes(const uint8_t *pbtTx, const size_t szTx)
+{
+  int res;
+  if ((res = nfc_initiator_transceive_bytes(pnd, pbtTx, szTx, abtRx, sizeof(abtRx), 0)) < 0)
+    return false;
+
+  return true;
+}
+
+static bool
+unlock_card(void)
+{
+  // Configure the CRC
+  if (nfc_device_set_property_bool(pnd, NP_HANDLE_CRC, false) < 0) {
+    nfc_perror(pnd, "nfc_configure");
+    return false;
+  }
+  // Use raw send/receive methods
+  if (nfc_device_set_property_bool(pnd, NP_EASY_FRAMING, false) < 0) {
+    nfc_perror(pnd, "nfc_configure");
+    return false;
+  }
+
+  iso14443a_crc_append(abtHalt, 2);
+  transmit_bytes(abtHalt, 4);
+  // now send unlock
+  if (!transmit_bits(abtUnlock1, 7)) {
+    return false;
+  }
+  if (!transmit_bytes(abtUnlock2, 1)) {
+    return false;
+  }
+
+  // reset reader
+  // Configure the CRC
+  if (nfc_device_set_property_bool(pnd, NP_HANDLE_CRC, true) < 0) {
+    nfc_perror(pnd, "nfc_device_set_property_bool");
+    return false;
+  }
+  // Switch off raw send/receive methods
+  if (nfc_device_set_property_bool(pnd, NP_EASY_FRAMING, true) < 0) {
+    nfc_perror(pnd, "nfc_device_set_property_bool");
+    return false;
+  }
+  return true;
+}
+
 static bool check_magic() {
     bool     bFailure = false;
     int      uid_data;   
-    
+
     for (uint32_t page = 0; page <= 1; page++) {
     // Show if the readout went well
     if (bFailure) {
@@ -134,14 +205,24 @@ static bool check_magic() {
     //Check that the ID is now set to 0x000000000000
     if (nfc_initiator_mifare_cmd(pnd, MC_READ, 0, &mp)) {
         //printf("%u", mp.mpd.abtData);
+          bool result = true;
           for(int i = 0; i <= 7; i++) {
-           if (mp.mpd.abtData[i] != 0x00) return false;
+           if (mp.mpd.abtData[i] != 0x00) result = false;
           }  
+
+      if (result) { 
+        return true;
+      }
+
+    } 
+
+    //Initially check if we can unlock via the MF method
+    if (unlock_card()) {
+      return true;
     } else {
-        return false;
+      return false;
     }
-  
-  return true;
+
 }
 
 static  bool
@@ -183,6 +264,12 @@ write_card(bool write_otp, bool write_lock, bool write_uid)
   if (!write_uid) {
     printf("ss");
     uiSkippedPages = 2;
+  } else {
+    if (!check_magic()) {
+      printf("\nUnable to unlock card - are you sure the card is magic?\n");
+      return false;
+      bFailure = false;
+    }
   }
 
   for (int page = uiSkippedPages; page <= 0xF; page++) {
