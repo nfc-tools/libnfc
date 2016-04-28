@@ -669,7 +669,7 @@ main(int argc, const char *argv[])
       magic2 = true;
     }
   }
-  printf("Guessing size: seems to be a %i-byte card\n", (uiBlocks + 1) * 16);
+  printf("Guessing size: seems to be a %i-byte card\n", (uiBlocks + 1) * sizeof(mifare_classic_block));
 
   if (bUseKeyFile) {
     FILE *pfKeys = fopen(argv[4], "rb");
@@ -686,7 +686,7 @@ main(int argc, const char *argv[])
   }
 
   if (atAction == ACTION_READ) {
-    memset(&mtDump, 0x00, sizeof(mtDump));
+    memset(&mtDump, 0x00, (uiBlocks + 1) * sizeof(mifare_classic_block));
   } else {
     FILE *pfDump = fopen(argv[3], "rb");
 
