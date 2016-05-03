@@ -13,7 +13,7 @@ if test x"$GIT_REVISION" != x""; then
     AC_DEFINE_UNQUOTED([GIT_REVISION], ["$GIT_REVISION"], [GIT revision])
 fi
 
-AM_INIT_AUTOMAKE(subdir-objects dist-bzip2 no-dist-gzip)
+AM_INIT_AUTOMAKE(subdir-objects dist-bzip2 no-dist-gzip foreign)
 m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
 
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
