@@ -332,7 +332,7 @@ main(int argc, const char *argv[])
   bool    bUID = false;
   FILE   *pfDump;
 
-  if (argc == 0) {
+  if (argc < 2) {
       print_usage(argv);
       exit(EXIT_FAILURE);
   }
