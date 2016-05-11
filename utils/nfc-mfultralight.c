@@ -58,6 +58,9 @@
 #include "nfc-utils.h"
 #include "mifare.h"
 
+#define MAX_TARGET_COUNT 16
+#define MAX_UID_LEN 10
+
 static nfc_device *pnd;
 static nfc_target nt;
 static mifare_param mp;
@@ -310,6 +313,57 @@ write_card(bool write_otp, bool write_lock, bool write_uid)
   return true;
 }
 
+static int list_passive_targets(nfc_device *_pnd)
+{
+  int res = 0;
+
+  nfc_target ant[MAX_TARGET_COUNT];
+
+  if (nfc_initiator_init(_pnd) < 0) {
+    return -EXIT_FAILURE;
+  }
+
+  if ((res = nfc_initiator_list_passive_targets(_pnd, nmMifare, ant, MAX_TARGET_COUNT)) >= 0) {
+    int i;
+
+    if (res > 0)
+      printf("%d ISO14443A passive target(s) found:\n", res);
+
+    for (i = 0; i < res; i++) {
+      size_t  szPos;
+
+      printf("\t");
+      for (szPos = 0; szPos < ant[i].nti.nai.szUidLen; szPos++) {
+        printf("%02x", ant[i].nti.nai.abtUid[szPos]);
+      }
+      printf("\n");
+    }
+
+  }
+
+  return 0;
+}
+
+static size_t str_to_uid(const char *str, uint8_t *uid)
+{
+  uint8_t i;
+
+  memset(uid, 0x0, MAX_UID_LEN);
+  i = 0;
+  while ((*str != '\0') && ((i >> 1) < MAX_UID_LEN) ) {
+    char nibble[2] = { 0x00, '\n' }; /* for strtol */
+
+    nibble[0] = *str++;
+    if (isxdigit(nibble[0])) {
+      if (isupper(nibble[0]))
+        nibble[0] = tolower(nibble[0]);
+      uid[i >> 1] |= strtol(nibble, NULL, 16) << ((i % 2) ? 0 : 4) & ((i % 2) ? 0x0f : 0xf0);
+      i++;
+    }
+  }
+  return i >> 1;
+}
+
 static void
 print_usage(const char *argv[])
 {
@@ -321,12 +375,15 @@ print_usage(const char *argv[])
   printf("\t--lock\t\t - Don't prompt for Lockbit writing (Assume yes)\n");
   printf("\t--uid\t\t - Don't prompt for UID writing (Assume yes)\n");
   printf("\t--full\t\t - Assume full card write (UID + OTP + Lockbit)\n");
+  printf("\t--with-uid <UID>\t\t - Specify UID to read/write from\n");
 }
 
 int
 main(int argc, const char *argv[])
 {
   int     iAction = 0;
+  uint8_t iUID[MAX_UID_LEN] = { 0x0 };
+  size_t  szUID = 0;
   bool    bOTP = false;
   bool    bLock = false;
   bool    bUID = false;
@@ -345,6 +402,12 @@ main(int argc, const char *argv[])
       iAction = 1;
     } else if (0 == strcmp(argv[arg], "w")) {
       iAction = 2;
+    } else if (0 == strcmp(argv[arg], "--with-uid")) {
+      if (argc < 5) {
+        ERR("Please supply a UID of 4, 7 or 10 bytes long. Ex: a1:b2:c3:d4");
+        exit(EXIT_FAILURE);
+      }
+      szUID = str_to_uid(argv[4], iUID);
     } else if (0 == strcmp(argv[arg], "--full")) {
       bOTP = true;
       bLock = true;
@@ -359,7 +422,7 @@ main(int argc, const char *argv[])
       iAction = 3;
     } else {
       //Skip validation of the filename
-      if (arg != 2) { 
+      if ((arg != 2) && (arg != 4)) {
         ERR("%s is not supported option.", argv[arg]);
         print_usage(argv);
         exit(EXIT_FAILURE);
@@ -405,6 +468,14 @@ main(int argc, const char *argv[])
     nfc_exit(context);
     exit(EXIT_FAILURE);
   }
+  printf("NFC device: %s opened\n", nfc_device_get_name(pnd));
+
+  if (list_passive_targets(pnd)) {
+    nfc_perror(pnd, "nfc_device_set_property_bool");
+    nfc_close(pnd);
+    nfc_exit(context);
+    exit(EXIT_FAILURE);
+  }
 
   if (nfc_initiator_init(pnd) < 0) {
     nfc_perror(pnd, "nfc_initiator_init");
@@ -421,10 +492,8 @@ main(int argc, const char *argv[])
     exit(EXIT_FAILURE);
   }
 
-  printf("NFC device: %s opened\n", nfc_device_get_name(pnd));
-
   // Try to find a MIFARE Ultralight tag
-  if (nfc_initiator_select_passive_target(pnd, nmMifare, NULL, 0, &nt) <= 0) {
+  if (nfc_initiator_select_passive_target(pnd, nmMifare, (szUID) ? iUID : NULL, szUID, &nt) <= 0) {
     ERR("no tag was found\n");
     nfc_close(pnd);
     nfc_exit(context);
@@ -439,7 +508,7 @@ main(int argc, const char *argv[])
     exit(EXIT_FAILURE);
   }
   // Get the info from the current tag
-  printf("Found MIFARE Ultralight card with UID: ");
+  printf("Using MIFARE Ultralight card with UID: ");
   size_t  szPos;
   for (szPos = 0; szPos < nt.nti.nai.szUidLen; szPos++) {
     printf("%02x", nt.nti.nai.abtUid[szPos]);
