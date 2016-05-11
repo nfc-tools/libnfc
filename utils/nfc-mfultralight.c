@@ -60,12 +60,13 @@
 
 #define MAX_TARGET_COUNT 16
 #define MAX_UID_LEN 10
+#define BLOCK_COUNT 0xf
 
 static nfc_device *pnd;
 static nfc_target nt;
 static mifare_param mp;
 static mifareul_tag mtDump;
-static uint32_t uiBlocks = 0xF;
+static const uint32_t uiBlocks = BLOCK_COUNT;
 
 // special unlock command
 uint8_t  abtUnlock1[1] = { 0x40 };
@@ -275,7 +276,7 @@ write_card(bool write_otp, bool write_lock, bool write_uid)
     }
   }
 
-  for (int page = uiSkippedPages; page <= 0xF; page++) {
+  for (uint32_t page = uiSkippedPages; page <= ((uiBlocks / 4) * 4); page++) {
     if ((page == 0x2) && (!write_lock)) {
       printf("s");
       uiSkippedPages++;
