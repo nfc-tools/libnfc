@@ -183,7 +183,7 @@ unlock_card(void)
 
 static bool check_magic() {
     bool     bFailure = false;
-    int      uid_data;   
+    int      uid_data;
 
     for (uint32_t page = 0; page <= 1; page++) {
     // Show if the readout went well
@@ -197,27 +197,27 @@ static bool check_magic() {
     }
 
     uid_data = 0x00000000;
-    
+
     memcpy(mp.mpd.abtData, &uid_data, sizeof uid_data);
     memset(mp.mpd.abtData + 4, 0, 12);
-    
+
     //Force the write without checking for errors - otherwise the writes to the sector 0 seem to complain
     nfc_initiator_mifare_cmd(pnd, MC_WRITE, page, &mp);
   }
-  
+
     //Check that the ID is now set to 0x000000000000
     if (nfc_initiator_mifare_cmd(pnd, MC_READ, 0, &mp)) {
         //printf("%u", mp.mpd.abtData);
           bool result = true;
           for(int i = 0; i <= 7; i++) {
            if (mp.mpd.abtData[i] != 0x00) result = false;
-          }  
+          }
 
-      if (result) { 
+      if (result) {
         return true;
       }
 
-    } 
+    }
 
     //Initially check if we can unlock via the MF method
     if (unlock_card()) {
@@ -238,7 +238,7 @@ write_card(bool write_otp, bool write_lock, bool write_uid)
 
   char    buffer[BUFSIZ];
 
-  if (!write_otp) { 
+  if (!write_otp) {
     printf("Write OTP bytes ? [yN] ");
     if (!fgets(buffer, BUFSIZ, stdin)) {
       ERR("Unable to read standard input.");
@@ -246,7 +246,7 @@ write_card(bool write_otp, bool write_lock, bool write_uid)
     write_otp = ((buffer[0] == 'y') || (buffer[0] == 'Y'));
   }
 
-  if (!write_lock) { 
+  if (!write_lock) {
     printf("Write Lock bytes ? [yN] ");
     if (!fgets(buffer, BUFSIZ, stdin)) {
       ERR("Unable to read standard input.");
@@ -254,7 +254,7 @@ write_card(bool write_otp, bool write_lock, bool write_uid)
     write_lock = ((buffer[0] == 'y') || (buffer[0] == 'Y'));
   }
 
-  if (!write_uid) { 
+  if (!write_uid) {
     printf("Write UID bytes (only for special writeable UID cards) ? [yN] ");
     if (!fgets(buffer, BUFSIZ, stdin)) {
       ERR("Unable to read standard input.");
@@ -453,7 +453,7 @@ main(int argc, const char *argv[])
     ERR("Unable to determine operating mode");
     exit(EXIT_FAILURE);
   }
-  
+
   nfc_context *context;
   nfc_init(&context);
   if (context == NULL) {
