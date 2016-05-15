@@ -5,6 +5,7 @@ nfc-mfclassic \- MIFARE Classic command line tool
 .B nfc-mfclassic
 .RI \fR\fBf\fR|\fR\fBr\fR|\fR\fBR\fR|\fBw\fR\fR|\fBW\fR
 .RI \fR\fBa\fR|\fR\fBA\fR|\fBb\fR\fR|\fBB\fR
+.RI \fR\fBu\fR\fR|\fBU\fR<\fBuid\fR>\fR
 .IR DUMP
 .RI [
 .IR KEYS
@@ -56,6 +57,15 @@ or
 .B B
 ).
 
+When using multiple tags infront of a reader, the
+.B U
+option can be used to supply the UID of tag to be read or written. Append the
+hexadecimal UID to the U option. For example U01ab23cd for the 4 byte UID
+0x01 0xab 0x23 0xcd. Using the
+.B u
+parameter instead will use whatever libnfc decides which generally is the lowest
+UID.
+
 *** Note that
 .B W
 and
@@ -88,6 +98,13 @@ Halt on errors (
 |
 .B
 B
+).
+.TP
+.BR u " | " U
+Use the default UID (
+.B u
+) or supply a valid 4 byte UID (
+.B U<uid>
 ).
 .TP
 .IR DUMP
