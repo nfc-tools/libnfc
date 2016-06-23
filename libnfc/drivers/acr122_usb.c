@@ -262,6 +262,7 @@ struct acr122_usb_supported_device {
 const struct acr122_usb_supported_device acr122_usb_supported_devices[] = {
   { 0x072F, 0x2200, "ACS ACR122" },
   { 0x072F, 0x90CC, "Touchatag" },
+  { 0x072F, 0x2214, "ACS ACR1222" },
 };
 
 // Find transfer endpoints for bulk transfers
