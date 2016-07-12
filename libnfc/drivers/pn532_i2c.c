@@ -68,7 +68,7 @@ struct pn532_i2c_data {
 };
 
 /* Delay for the loop waiting for READY frame (in ms) */
-#define PN532_RDY_LOOP_DELAY 90
+#define PN532_RDY_LOOP_DELAY 1
 
 const struct timespec rdyDelay = {
   .tv_sec = 0,
@@ -389,7 +389,6 @@ pn532_i2c_wait_rdyframe(nfc_device *pnd, uint8_t *pbtData, const size_t szDataLe
 
   struct timeval start_tv, cur_tv;
   long long duration;
-
   // Actual I2C response frame includes an additional status byte,
   // so we use a temporary buffer to read the I2C frame
   uint8_t i2cRx[PN53x_EXTENDED_FRAME__DATA_MAX_LEN + 1];
@@ -402,7 +401,6 @@ pn532_i2c_wait_rdyframe(nfc_device *pnd, uint8_t *pbtData, const size_t szDataLe
   do {
     // Wait a little bit before reading
     nanosleep(&rdyDelay, (struct timespec *) NULL);
-
     int recCount = i2c_read(DRIVER_DATA(pnd)->dev, i2cRx, szDataLen + 1);
 
     if (DRIVER_DATA(pnd)->abort_flag) {
@@ -445,7 +443,6 @@ pn532_i2c_wait_rdyframe(nfc_device *pnd, uint8_t *pbtData, const size_t szDataLe
       }
     }
   } while (!done);
-
   return res;
 }
 
