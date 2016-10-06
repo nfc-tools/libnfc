@@ -118,6 +118,10 @@
 #  include "drivers/pn532_i2c.h"
 #endif /* DRIVER_PN532_I2C_ENABLED */
 
+#if defined (DRIVER_PN71XX_ENABLED)
+#  include "drivers/pn71xx.h"
+#endif /* DRIVER_PN71XX_ENABLED */
+
 
 #define LOG_CATEGORY "libnfc.general"
 #define LOG_GROUP    NFC_LOG_GROUP_GENERAL
@@ -156,6 +160,9 @@ nfc_drivers_init(void)
 #if defined (DRIVER_ARYGON_ENABLED)
   nfc_register_driver(&arygon_driver);
 #endif /* DRIVER_ARYGON_ENABLED */
+#if defined (DRIVER_PN71XX_ENABLED)
+  nfc_register_driver(&pn71xx_driver);
+#endif /* DRIVER_PN71XX_ENABLED */
 }
 
 static int
@@ -319,8 +326,10 @@ size_t
 nfc_list_devices(nfc_context *context, nfc_connstring connstrings[], const size_t connstrings_len)
 {
   size_t device_found = 0;
+  printf("nfc_list_devices()\n");
 
 #ifdef CONFFILES
+  printf("nfc_list_devices()- context->user_defined_device_count=%d\n", context->user_defined_device_count);
   // Load manually configured devices (from config file and env variables)
   // TODO From env var...
   for (uint32_t i = 0; i < context->user_defined_device_count; i++) {
@@ -342,6 +351,7 @@ nfc_list_devices(nfc_context *context, nfc_connstring connstrings[], const size_
       setenv("LIBNFC_LOG_LEVEL", "0", 1);
 #endif // ENVVARS
 
+  printf("nfc_list_devices()- open\n");
       pnd = nfc_open(context, context->user_defined_devices[i].connstring);
 
 #ifdef ENVVARS

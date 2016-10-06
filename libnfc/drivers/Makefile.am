@@ -39,6 +39,11 @@ if DRIVER_PN532_I2C_ENABLED
 libnfcdrivers_la_SOURCES += pn532_i2c.c pn532_i2c.h
 endif
 
+if DRIVER_PN71XX_ENABLED
+libnfcdrivers_la_LIBADD += -lnfc_nci_linux
+libnfcdrivers_la_SOURCES += pn71xx.c pn71xx.h
+endif
+
 if PCSC_ENABLED
   libnfcdrivers_la_CFLAGS += @libpcsclite_CFLAGS@
   libnfcdrivers_la_LIBADD += @libpcsclite_LIBS@
