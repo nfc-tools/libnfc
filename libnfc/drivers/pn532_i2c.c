@@ -75,6 +75,10 @@ const struct timespec rdyDelay = {
   .tv_nsec = PN532_RDY_LOOP_DELAY * 1000 * 1000
 };
 
+/* preamble and start bytes, see pn532-internal.h for details */
+const uint8_t pn53x_preamble_and_start[] = { 0x00, 0x00, 0xff };
+#define PN53X_PREAMBLE_AND_START_LEN	(sizeof(pn53x_preamble_and_start) / sizeof(pn53x_preamble_and_start[0]))
+
 /* Private Functions Prototypes */
 
 static nfc_device *pn532_i2c_open(const nfc_context *context, const nfc_connstring connstring);
@@ -334,9 +338,10 @@ pn532_i2c_send(nfc_device *pnd, const uint8_t *pbtData, const size_t szData, int
       break;
   };
 
-  uint8_t abtFrame[PN532_BUFFER_LEN] = { 0x00, 0x00, 0xff };       // Every packet must start with "00 00 ff"
+  uint8_t abtFrame[PN532_BUFFER_LEN];
   size_t szFrame = 0;
 
+  memcpy(abtFrame, pn53x_preamble_and_start, PN53X_PREAMBLE_AND_START_LEN);	// Every packet must start with the preamble and start bytes.
   if ((res = pn53x_build_frame(abtFrame, &szFrame, pbtData, szData)) < 0) {
     pnd->last_error = res;
     return pnd->last_error;
@@ -474,9 +479,7 @@ pn532_i2c_receive(nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, int
     goto error;
   }
 
-  const uint8_t pn53x_preamble[3] = { 0x00, 0x00, 0xff };
-
-  if (0 != (memcmp(frameBuf, pn53x_preamble, 3))) {
+  if (0 != (memcmp(frameBuf, pn53x_preamble_and_start, PN53X_PREAMBLE_AND_START_LEN))) {
     log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Frame preamble+start code mismatch");
     pnd->last_error = NFC_EIO;
     goto error;
