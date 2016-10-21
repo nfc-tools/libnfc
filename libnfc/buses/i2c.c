@@ -135,6 +135,8 @@ i2c_read(i2c_device id, uint8_t *pbtRx, const size_t szRx)
 
   if (recCount < 0) {
     res = NFC_EIO;
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR,
+            "Error: read only %d bytes (%d expected) (%s).", (int)recCount, (int) szRx, strerror(errno));
   } else {
     if (recCount < (ssize_t)szRx) {
       res = NFC_EINVARG;
@@ -167,7 +169,7 @@ i2c_write(i2c_device id, const uint8_t *pbtTx, const size_t szTx)
     return NFC_SUCCESS;
   } else {
     log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR,
-            "Error: wrote only %d bytes (%d expected).", (int)writeCount, (int) szTx);
+            "Error: wrote only %d bytes (%d expected) (%s).", (int)writeCount, (int) szTx, strerror(errno));
     return NFC_EIO;
   }
 }
