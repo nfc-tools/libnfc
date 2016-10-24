@@ -59,6 +59,13 @@
 // I2C address of the PN532 chip.
 #define PN532_I2C_ADDR 0x24
 
+/*
+ * When sending lots of data, the pn532 occasionally fails to respond in time.
+ * Since it happens so rarely, lets try to fix it by re-sending the data. This
+ * define allows for fine tuning the number of retries.
+ */
+#define PN532_SEND_RETRIES 3
+
 // Internal data structs
 const struct pn53x_io pn532_i2c_io;
 
@@ -368,6 +375,7 @@ static int
 pn532_i2c_send(nfc_device *pnd, const uint8_t *pbtData, const size_t szData, int timeout)
 {
   int res = 0;
+  uint8_t retries;
 
   // Discard any existing data ?
 
@@ -403,7 +411,13 @@ pn532_i2c_send(nfc_device *pnd, const uint8_t *pbtData, const size_t szData, int
     return pnd->last_error;
   }
 
-  res = pn532_i2c_write(DRIVER_DATA(pnd)->dev, abtFrame, szFrame);
+  for (retries = PN532_SEND_RETRIES; retries > 0; retries--) {
+    res = pn532_i2c_write(DRIVER_DATA(pnd)->dev, abtFrame, szFrame);
+    if (res >= 0)
+      break;
+
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Failed to transmit data. Retries left: %d.", retries - 1);
+  }
 
   if (res < 0) {
     log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Unable to transmit data. (TX)");
