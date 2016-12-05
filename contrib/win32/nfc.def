@@ -4,6 +4,7 @@ VERSION 1.7
 EXPORTS
   nfc_init
   nfc_exit
+  nfc_register_driver
   nfc_open
   nfc_close
   nfc_abort_command
@@ -17,7 +18,6 @@ EXPORTS
   nfc_initiator_select_dep_target
   nfc_initiator_poll_dep_target
   nfc_initiator_deselect_target
-  nfc_initiator_poll_targets
   nfc_initiator_transceive_bytes
   nfc_initiator_transceive_bits
   nfc_initiator_transceive_bytes_timed
@@ -36,11 +36,15 @@ EXPORTS
   nfc_device_get_connstring
   nfc_device_get_supported_modulation
   nfc_device_get_supported_baud_rate
+  nfc_device_get_supported_baud_rate_target_mode
   nfc_device_set_property_int
   nfc_device_set_property_bool
   iso14443a_crc
   iso14443a_crc_append
+  iso14443b_crc
+  iso14443b_crc_append
   iso14443a_locate_historical_bytes
+  nfc_free
   nfc_version
   nfc_device_get_information_about
   str_nfc_modulation_type
