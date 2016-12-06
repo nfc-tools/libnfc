@@ -104,7 +104,7 @@ static size_t pn532_i2c_scan(const nfc_context *context, nfc_connstring connstri
  * tBuf in the PN532 data sheet, section 12.25: Timing for the I2C interface,
  * table 320. I2C timing specification, page 211, rev. 3.2 - 2007-12-07.
  */
-#define PN532_BUS_FREE_TIME 1.3
+#define PN532_BUS_FREE_TIME 5
 static struct timespec __transaction_stop;
 
 /**
