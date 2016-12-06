@@ -27,7 +27,7 @@ The official forum site is:
 The official development site is:
   https://github.com/nfc-tools/libnfc
 
-Important note: this file covers POSIX systems, for Windows please read README-Windows.txt
+Important note: this file covers POSIX systems, for Windows please read README-Windows.md
 
 Requirements
 ============
