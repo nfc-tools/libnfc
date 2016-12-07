@@ -972,7 +972,7 @@ nfc_target_init(nfc_device *pnd, nfc_target *pnt, uint8_t *pbtRx, const size_t s
  * @param pnd \a nfc_device struct pointer that represent currently used device
  *
  * This function switch the device in idle mode.
- * In initiator mode, the RF field is turned off and the device is set to low power mode (if avaible);
+ * In initiator mode, the RF field is turned off and the device is set to low power mode (if available);
  * In target mode, the emulation is stoped (no target available from external initiator) and the device is set to low power mode (if avaible).
  */
 int
