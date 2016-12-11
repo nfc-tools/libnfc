@@ -28,7 +28,7 @@
  * @file nfc.h
  * @brief libnfc interface
  *
- * Provide all usefull functions (API) to handle NFC devices.
+ * Provide all useful functions (API) to handle NFC devices.
  */
 
 #ifndef _LIBNFC_H_
