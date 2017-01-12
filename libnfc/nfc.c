@@ -326,10 +326,8 @@ size_t
 nfc_list_devices(nfc_context *context, nfc_connstring connstrings[], const size_t connstrings_len)
 {
   size_t device_found = 0;
-  printf("nfc_list_devices()\n");
 
 #ifdef CONFFILES
-  printf("nfc_list_devices()- context->user_defined_device_count=%d\n", context->user_defined_device_count);
   // Load manually configured devices (from config file and env variables)
   // TODO From env var...
   for (uint32_t i = 0; i < context->user_defined_device_count; i++) {
@@ -351,7 +349,6 @@ nfc_list_devices(nfc_context *context, nfc_connstring connstrings[], const size_
       setenv("LIBNFC_LOG_LEVEL", "0", 1);
 #endif // ENVVARS
 
-  printf("nfc_list_devices()- open\n");
       pnd = nfc_open(context, context->user_defined_devices[i].connstring);
 
 #ifdef ENVVARS
