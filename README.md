@@ -54,7 +54,7 @@ Additionnally, you may need to grant permissions to your user to drive your devi
 Under GNU/Linux systems, if you use udev, you could use the provided udev rules.
   e.g. under Debian, Ubuntu, etc.
 
-    sudo cp contrib/udev/42-pn53x.rules /lib/udev/rules.d/
+    sudo cp contrib/udev/93-pn53x.rules /lib/udev/rules.d/
 
 Under FreeBSD, if you use devd, there is also a rules file: contrib/devd/pn53x.conf.
 
