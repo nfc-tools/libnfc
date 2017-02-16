@@ -671,7 +671,7 @@ main(int argc, const char *argv[])
   if ((nt.nti.nai.abtAtqa[1] & 0x02) == 0x02)
 // 4K
     uiBlocks = 0xff;
-  else if ((nt.nti.nai.btSak & 0x01) == 0x01)
+  else if (nt.nti.nai.btSak == 0x09)
 // 320b
     uiBlocks = 0x13;
   else
