@@ -98,7 +98,7 @@ read_card(void)
 {
   uint32_t page;
   bool    bFailure = false;
-  uint32_t uiReadedPages = 0;
+  uint32_t uiReadPages = 0;
 
   printf("Reading %d pages |", uiBlocks + 1);
 
@@ -111,13 +111,13 @@ read_card(void)
       break;
     }
 
-    print_success_or_failure(bFailure, &uiReadedPages);
-    print_success_or_failure(bFailure, &uiReadedPages);
-    print_success_or_failure(bFailure, &uiReadedPages);
-    print_success_or_failure(bFailure, &uiReadedPages);
+    print_success_or_failure(bFailure, &uiReadPages);
+    print_success_or_failure(bFailure, &uiReadPages);
+    print_success_or_failure(bFailure, &uiReadPages);
+    print_success_or_failure(bFailure, &uiReadPages);
   }
   printf("|\n");
-  printf("Done, %d of %d pages read.\n", uiReadedPages, uiBlocks + 1);
+  printf("Done, %d of %d pages read.\n", uiReadPages, uiBlocks + 1);
   fflush(stdout);
 
   return (!bFailure);
@@ -234,7 +234,7 @@ write_card(bool write_otp, bool write_lock, bool write_uid)
 {
   uint32_t uiBlock = 0;
   bool    bFailure = false;
-  uint32_t uiWritenPages = 0;
+  uint32_t uiWrittenPages = 0;
   uint32_t uiSkippedPages = 0;
 
   char    buffer[BUFSIZ];
@@ -306,10 +306,10 @@ write_card(bool write_otp, bool write_lock, bool write_uid)
     if (!nfc_initiator_mifare_cmd(pnd, MC_WRITE, page, &mp))
       bFailure = true;
 
-    print_success_or_failure(bFailure, &uiWritenPages);
+    print_success_or_failure(bFailure, &uiWrittenPages);
   }
   printf("|\n");
-  printf("Done, %d of %d pages written (%d pages skipped).\n", uiWritenPages, uiBlocks + 1, uiSkippedPages);
+  printf("Done, %d of %d pages written (%d pages skipped).\n", uiWrittenPages, uiBlocks + 1, uiSkippedPages);
 
   return true;
 }
