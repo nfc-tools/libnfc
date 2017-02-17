@@ -87,7 +87,7 @@ IF(WIN32)
 
   ADD_CUSTOM_COMMAND(
     OUTPUT libnfc.lib
-    COMMAND dlltool -d ${CMAKE_CURRENT_SOURCE_DIR}/../contrib/win32/nfc.def -l ${CMAKE_CURRENT_BINARY_DIR}/libnfc.lib ${CMAKE_CURRENT_BINARY_DIR}/libnfc.dll
+    COMMAND ${DLLTOOL} -d ${CMAKE_CURRENT_SOURCE_DIR}/../contrib/win32/nfc.def -l ${CMAKE_CURRENT_BINARY_DIR}/libnfc.lib ${CMAKE_CURRENT_BINARY_DIR}/libnfc.dll
     DEPENDS nfc ${CMAKE_CURRENT_SOURCE_DIR}/../contrib/win32/nfc.def
   )
   ADD_CUSTOM_TARGET(win32lib ALL DEPENDS libnfc.lib)
