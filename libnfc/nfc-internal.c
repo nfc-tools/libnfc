@@ -242,7 +242,6 @@ connstring_decode(const nfc_connstring connstring, const char *driver_name, cons
   int res = sscanf(connstring, format, param0, param1, param2);
 
   if (res < 1 || ((0 != strcmp(param0, driver_name)) &&
-                  (bus_name != NULL) &&
                   (0 != strcmp(param0, bus_name)))) {
     // Driver name does not match.
     res = 0;

@@ -645,7 +645,7 @@ nfc_initiator_poll_target(nfc_device *pnd,
  * @param pnd \a nfc_device struct pointer that represent currently used device
  * @param ndm desired D.E.P. mode (\a NDM_ACTIVE or \a NDM_PASSIVE for active, respectively passive mode)
  * @param nbr desired baud rate
- * @param ndiInitiator pointer \a nfc_dep_info struct that contains \e NFCID3 and \e General \e Bytes to set to the initiator device (optionnal, can be \e NULL)
+ * @param pndiInitiator pointer \a nfc_dep_info struct that contains \e NFCID3 and \e General \e Bytes to set to the initiator device (optionnal, can be \e NULL)
  * @param[out] pnt is a \a nfc_target struct pointer where target information will be put.
  * @param timeout in milliseconds
  *
@@ -673,7 +673,7 @@ nfc_initiator_select_dep_target(nfc_device *pnd,
  * @param pnd \a nfc_device struct pointer that represent currently used device
  * @param ndm desired D.E.P. mode (\a NDM_ACTIVE or \a NDM_PASSIVE for active, respectively passive mode)
  * @param nbr desired baud rate
- * @param ndiInitiator pointer \a nfc_dep_info struct that contains \e NFCID3 and \e General \e Bytes to set to the initiator device (optionnal, can be \e NULL)
+ * @param pndiInitiator pointer \a nfc_dep_info struct that contains \e NFCID3 and \e General \e Bytes to set to the initiator device (optionnal, can be \e NULL)
  * @param[out] pnt is a \a nfc_target struct pointer where target information will be put.
  * @param timeout in milliseconds
  *
@@ -972,7 +972,7 @@ nfc_target_init(nfc_device *pnd, nfc_target *pnt, uint8_t *pbtRx, const size_t s
  * @param pnd \a nfc_device struct pointer that represent currently used device
  *
  * This function switch the device in idle mode.
- * In initiator mode, the RF field is turned off and the device is set to low power mode (if avaible);
+ * In initiator mode, the RF field is turned off and the device is set to low power mode (if available);
  * In target mode, the emulation is stoped (no target available from external initiator) and the device is set to low power mode (if avaible).
  */
 int
