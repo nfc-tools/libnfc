@@ -276,7 +276,7 @@ write_card(bool write_otp, bool write_lock, bool write_uid)
     }
   }
 
-  for (uint32_t page = uiSkippedPages; page <= ((uiBlocks / 4) * 4); page++) {
+  for (uint32_t page = uiSkippedPages; page <= uiBlocks; page++) {
     if ((page == 0x2) && (!write_lock)) {
       printf("s");
       uiSkippedPages++;
