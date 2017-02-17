@@ -233,7 +233,7 @@ ENDIF(WIN32)
 
 SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Near Field Communication (NFC) library")
 SET(CPACK_PACKAGE_VENDOR "Roel Verdult")
-SET(CPACK_PACKAGE_CONTACT "Roel Verdul <roel@libnfc.org>")
+SET(CPACK_PACKAGE_CONTACT "Roel Verdult <roel@libnfc.org>")
 
 #Readme file
 IF(WIN32)
