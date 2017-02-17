@@ -72,10 +72,17 @@ struct mifare_param_value {
   uint8_t  abtValue[4];
 };
 
+struct mifare_param_trailer {
+  uint8_t  abtKeyA[6];
+  uint8_t  abtAccessBits[4];
+  uint8_t  abtKeyB[6];
+};
+
 typedef union {
   struct mifare_param_auth mpa;
   struct mifare_param_data mpd;
   struct mifare_param_value mpv;
+  struct mifare_param_trailer mpt;
 } mifare_param;
 
 // Reset struct alignment to default

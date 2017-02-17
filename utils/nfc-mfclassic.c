@@ -200,9 +200,9 @@ authenticate(uint32_t uiBlock)
 
     // Extract the right key from dump file
     if (bUseKeyA)
-      memcpy(mp.mpa.abtKey, mtKeys.amb[uiTrailerBlock].mbt.abtKeyA, 6);
+      memcpy(mp.mpa.abtKey, mtKeys.amb[uiTrailerBlock].mbt.abtKeyA, sizeof(mp.mpa.abtKey));
     else
-      memcpy(mp.mpa.abtKey, mtKeys.amb[uiTrailerBlock].mbt.abtKeyB, 6);
+      memcpy(mp.mpa.abtKey, mtKeys.amb[uiTrailerBlock].mbt.abtKeyB, sizeof(mp.mpa.abtKey));
 
     // Try to authenticate for the current sector
     if (nfc_initiator_mifare_cmd(pnd, mc, uiBlock, &mp))
@@ -215,9 +215,9 @@ authenticate(uint32_t uiBlock)
       memcpy(mp.mpa.abtKey, keys + (key_index * 6), 6);
       if (nfc_initiator_mifare_cmd(pnd, mc, uiBlock, &mp)) {
         if (bUseKeyA)
-          memcpy(mtKeys.amb[uiBlock].mbt.abtKeyA, &mp.mpa.abtKey, 6);
+          memcpy(mtKeys.amb[uiBlock].mbt.abtKeyA, &mp.mpa.abtKey, sizeof(mtKeys.amb[uiBlock].mbt.abtKeyA));
         else
-          memcpy(mtKeys.amb[uiBlock].mbt.abtKeyB, &mp.mpa.abtKey, 6);
+          memcpy(mtKeys.amb[uiBlock].mbt.abtKeyB, &mp.mpa.abtKey, sizeof(mtKeys.amb[uiBlock].mbt.abtKeyB));
         return true;
       }
       if (nfc_initiator_select_passive_target(pnd, nmMifare, nt.nti.nai.abtUid, nt.nti.nai.szUidLen, NULL) <= 0) {
@@ -347,12 +347,12 @@ read_card(int read_unlocked)
       // Try to read out the trailer
       if (nfc_initiator_mifare_cmd(pnd, MC_READ, iBlock, &mp)) {
         if (read_unlocked) {
-          memcpy(mtDump.amb[iBlock].mbd.abtData, mp.mpd.abtData, 16);
+          memcpy(mtDump.amb[iBlock].mbd.abtData, mp.mpd.abtData, sizeof(mtDump.amb[iBlock].mbd.abtData));
         } else {
           // Copy the keys over from our key dump and store the retrieved access bits
-          memcpy(mtDump.amb[iBlock].mbt.abtKeyA, mtKeys.amb[iBlock].mbt.abtKeyA, 6);
-          memcpy(mtDump.amb[iBlock].mbt.abtAccessBits, mp.mpd.abtData + 6, 4);
-          memcpy(mtDump.amb[iBlock].mbt.abtKeyB, mtKeys.amb[iBlock].mbt.abtKeyB, 6);
+          memcpy(mtDump.amb[iBlock].mbt.abtKeyA, mtKeys.amb[iBlock].mbt.abtKeyA, sizeof(mtDump.amb[iBlock].mbt.abtKeyA));
+          memcpy(mtDump.amb[iBlock].mbt.abtAccessBits, mp.mpt.abtAccessBits, sizeof(mtDump.amb[iBlock].mbt.abtAccessBits));
+          memcpy(mtDump.amb[iBlock].mbt.abtKeyB, mtKeys.amb[iBlock].mbt.abtKeyB, sizeof(mtDump.amb[iBlock].mbt.abtKeyB));
         }
       } else {
         printf("!\nfailed to read trailer block 0x%02x\n", iBlock);
@@ -363,7 +363,7 @@ read_card(int read_unlocked)
       if (!bFailure) {
         // Try to read out the data block
         if (nfc_initiator_mifare_cmd(pnd, MC_READ, iBlock, &mp)) {
-          memcpy(mtDump.amb[iBlock].mbd.abtData, mp.mpd.abtData, 16);
+          memcpy(mtDump.amb[iBlock].mbd.abtData, mp.mpd.abtData, sizeof(mtDump.amb[iBlock].mbd.abtData));
         } else {
           printf("!\nError: unable to read block 0x%02x\n", iBlock);
           bFailure = true;
@@ -429,14 +429,14 @@ write_card(int write_block_zero)
     if (is_trailer_block(uiBlock)) {
       if (bFormatCard) {
         // Copy the default key and reset the access bits
-        memcpy(mp.mpd.abtData, default_key, 6);
-        memcpy(mp.mpd.abtData + 6, default_acl, 4);
-        memcpy(mp.mpd.abtData + 10, default_key, 6);
+        memcpy(mp.mpt.abtKeyA, default_key, sizeof(mp.mpt.abtKeyA));
+        memcpy(mp.mpt.abtAccessBits, default_acl, sizeof(mp.mpt.abtAccessBits));
+        memcpy(mp.mpt.abtKeyB, default_key, sizeof(mp.mpt.abtKeyB));
       } else {
         // Copy the keys over from our key dump and store the retrieved access bits
-        memcpy(mp.mpd.abtData, mtDump.amb[uiBlock].mbt.abtKeyA, 6);
-        memcpy(mp.mpd.abtData + 6, mtDump.amb[uiBlock].mbt.abtAccessBits, 4);
-        memcpy(mp.mpd.abtData + 10, mtDump.amb[uiBlock].mbt.abtKeyB, 6);
+        memcpy(mp.mpt.abtKeyA, mtDump.amb[uiBlock].mbt.abtKeyA, sizeof(mp.mpt.abtKeyA));
+        memcpy(mp.mpt.abtAccessBits, mtDump.amb[uiBlock].mbt.abtAccessBits, sizeof(mp.mpt.abtAccessBits));
+        memcpy(mp.mpt.abtKeyB, mtDump.amb[uiBlock].mbt.abtKeyB, sizeof(mp.mpt.abtKeyB));
       }
 
       // Try to write the trailer
@@ -454,9 +454,9 @@ write_card(int write_block_zero)
       if (!bFailure) {
         // Try to write the data block
         if (bFormatCard && uiBlock)
-          memset(mp.mpd.abtData, 0x00, 16);
+          memset(mp.mpd.abtData, 0x00, sizeof(mp.mpd.abtData));
         else
-          memcpy(mp.mpd.abtData, mtDump.amb[uiBlock].mbd.abtData, 16);
+          memcpy(mp.mpd.abtData, mtDump.amb[uiBlock].mbd.abtData, sizeof(mp.mpd.abtData));
         // do not write a block 0 with incorrect BCC - card will be made invalid!
         if (uiBlock == 0) {
           if ((mp.mpd.abtData[0] ^ mp.mpd.abtData[1] ^ mp.mpd.abtData[2] ^ mp.mpd.abtData[3] ^ mp.mpd.abtData[4]) != 0x00 && !magic2) {
@@ -692,7 +692,7 @@ main(int argc, const char *argv[])
       magic2 = true;
     }
   }
-  printf("Guessing size: seems to be a %i-byte card\n", (uiBlocks + 1) * 16);
+  printf("Guessing size: seems to be a %lu-byte card\n", (uiBlocks + 1) * sizeof(mifare_classic_block));
 
   if (bUseKeyFile) {
     FILE *pfKeys = fopen(argv[5], "rb");
