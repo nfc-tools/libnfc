@@ -283,10 +283,7 @@ spi_list_ports(void)
 
   DIR *pdDir = opendir("/dev");
   struct dirent *pdDirEnt;
-  struct dirent entry;
-  struct dirent *result;
-  while ((readdir_r(pdDir, &entry, &result) == 0) && (result != NULL)) {
-    pdDirEnt = &entry;
+  while ((pdDirEnt = readdir(pdDir)) != NULL) {
 #if !defined(__APPLE__)
     if (!isdigit(pdDirEnt->d_name[strlen(pdDirEnt->d_name) - 1]))
       continue;
