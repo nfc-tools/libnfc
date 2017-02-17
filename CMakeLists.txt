@@ -63,6 +63,8 @@ ENDIF(LIBNFC_CONFFILES_MODE)
 option (BUILD_EXAMPLES "build examples ON/OFF" ON)
 option (BUILD_UTILS "build utils ON/OFF" ON)
 
+option (BUILD_DEBPKG "build debian package ON/OFF" OFF)
+
 
 # Doxygen
 SET(builddir "${CMAKE_BINARY_DIR}")
@@ -224,10 +226,14 @@ IF(WIN32)
   SET(CPACK_GENERATOR "ZIP")
 ELSE(WIN32)
   SET(CPACK_GENERATOR "TBZ2")
+  IF(BUILD_DEBPKG)
+    SET(CPACK_GENERATOR "DEB")
+  ENDIF(BUILD_DEBPKG)
 ENDIF(WIN32)
 
 SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Near Field Communication (NFC) library")
 SET(CPACK_PACKAGE_VENDOR "Roel Verdult")
+SET(CPACK_PACKAGE_CONTACT "Roel Verdul <roel@libnfc.org>")
 
 #Readme file
 IF(WIN32)
