@@ -56,7 +56,7 @@ Here are some directions to get you started:
         or (shorter version)
          $ lintian -iIE *deb
 
-  3. Preserve cross-platform compatility
+  3. Preserve cross-platform compatibility
 
      The source code should remain compilable across various platforms,
      including some you probably cannot test alone so keep it in mind.
