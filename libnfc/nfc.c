@@ -79,6 +79,7 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <string.h>
+#include <assert.h>
 
 #include <nfc/nfc.h>
 
@@ -1237,13 +1238,14 @@ static int
 nfc_device_validate_modulation(nfc_device *pnd, const nfc_mode mode, const nfc_modulation *nm)
 {
   int res;
-  const nfc_modulation_type *nmt;
+  const nfc_modulation_type *nmt = NULL;
   if ((res = nfc_device_get_supported_modulation(pnd, mode, &nmt)) < 0) {
     return res;
   }
+  assert(nmt != NULL);
   for (int i = 0; nmt[i]; i++) {
     if (nmt[i] == nm->nmt) {
-      const nfc_baud_rate *nbr;
+      const nfc_baud_rate *nbr = NULL;
       if (mode == N_INITIATOR) {
         if ((res = nfc_device_get_supported_baud_rate(pnd, nmt[i], &nbr)) < 0) {
           return res;
@@ -1253,6 +1255,7 @@ nfc_device_validate_modulation(nfc_device *pnd, const nfc_mode mode, const nfc_m
           return res;
         }
       }
+      assert(nbr != NULL);
       for (int j = 0; nbr[j]; j++) {
         if (nbr[j] == nm->nbr)
           return NFC_SUCCESS;
