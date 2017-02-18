@@ -122,7 +122,7 @@ static struct timespec __transaction_stop;
 static ssize_t pn532_i2c_read(const i2c_device id,
                               uint8_t *buf, const size_t len)
 {
-  struct timespec transaction_start, bus_free_time = { 0 };
+  struct timespec transaction_start, bus_free_time = { 0, 0 };
   ssize_t ret;
 
   clock_gettime(CLOCK_MONOTONIC, &transaction_start);
@@ -150,7 +150,7 @@ static ssize_t pn532_i2c_read(const i2c_device id,
 static ssize_t pn532_i2c_write(const i2c_device id,
                                const uint8_t *buf, const size_t len)
 {
-  struct timespec transaction_start, bus_free_time = { 0 };
+  struct timespec transaction_start, bus_free_time = { 0, 0 };
   ssize_t ret;
 
   clock_gettime(CLOCK_MONOTONIC, &transaction_start);
