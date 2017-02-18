@@ -91,7 +91,6 @@ struct arygon_data {
 
 // ARYGON frames
 static const uint8_t arygon_error_none[] = "FF000000\x0d\x0a";
-static const uint8_t arygon_error_incomplete_command[] = "FF0C0000\x0d\x0a";
 static const uint8_t arygon_error_unknown_mode[] = "FF060000\x0d\x0a";
 
 // Prototypes
