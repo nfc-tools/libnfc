@@ -1733,7 +1733,7 @@ pn53x_initiator_transceive_bytes_timed(struct nfc_device *pnd, const uint8_t *pb
   if (pnd->bCrc) {
     // We've to compute CRC ourselves to know last byte actually sent
     uint8_t *pbtTxRaw;
-    pbtTxRaw = (uint8_t *) malloc(szTx + 2);
+    pbtTxRaw = (uint8_t *) calloc(szTx + 2, 1);
     if (!pbtTxRaw)
       return NFC_ESOFT;
     memcpy(pbtTxRaw, pbtTx, szTx);
