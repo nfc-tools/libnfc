@@ -371,7 +371,6 @@ int
 pn53x_wrap_frame(const uint8_t *pbtTx, const size_t szTxBits, const uint8_t *pbtTxPar,
                  uint8_t *pbtFrame)
 {
-  uint8_t  btFrame;
   uint8_t  btData;
   uint32_t uiBitPos;
   uint32_t uiDataPos = 0;
@@ -398,7 +397,7 @@ pn53x_wrap_frame(const uint8_t *pbtTx, const size_t szTxBits, const uint8_t *pbt
   // air-bytes = mirror(buffer-byte) + mirror(buffer-byte) + mirror(buffer-byte) + ..
   while (true) {
     // Reset the temporary frame byte;
-    btFrame = 0;
+    uint8_t  btFrame = 0;
 
     for (uiBitPos = 0; uiBitPos < 8; uiBitPos++) {
       // Copy as much data that fits in the frame byte
@@ -1466,9 +1465,8 @@ static void __pn53x_init_timer(struct nfc_device *pnd, const uint32_t max_cycles
 
 static uint32_t __pn53x_get_timer(struct nfc_device *pnd, const uint8_t last_cmd_byte)
 {
-  uint8_t parity;
   uint8_t counter_hi, counter_lo;
-  uint16_t counter, u16cycles;
+  uint16_t counter;
   uint32_t u32cycles;
   size_t off = 0;
   if (CHIP_DATA(pnd)->type == PN533) {
@@ -1496,6 +1494,8 @@ static uint32_t __pn53x_get_timer(struct nfc_device *pnd, const uint8_t last_cmd
     // counter saturated
     u32cycles = 0xFFFFFFFF;
   } else {
+    uint8_t parity;
+    uint16_t u16cycles;
     u16cycles = 0xFFFF - counter;
     u32cycles = u16cycles;
     u32cycles *= (CHIP_DATA(pnd)->timer_prescaler * 2 + 1);

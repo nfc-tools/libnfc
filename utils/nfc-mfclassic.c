@@ -184,7 +184,6 @@ static  bool
 authenticate(uint32_t uiBlock)
 {
   mifare_cmd mc;
-  uint32_t uiTrailerBlock;
 
   // Set the authentication information (uid)
   memcpy(mp.mpa.abtAuthUid, nt.nti.nai.abtUid + nt.nti.nai.szUidLen - 4, 4);
@@ -196,6 +195,7 @@ authenticate(uint32_t uiBlock)
   if (bUseKeyFile) {
 
     // Locate the trailer (with the keys) used for this sector
+    uint32_t uiTrailerBlock;
     uiTrailerBlock = get_trailer_block(uiBlock);
 
     // Extract the right key from dump file

@@ -400,15 +400,14 @@ acr122_pcsc_receive(nfc_device *pnd, uint8_t *pbtData, const size_t szData, int 
 {
   // FIXME: timeout is not handled
   (void) timeout;
-
   int len;
-  uint8_t  abtRxCmd[5] = { 0xFF, 0xC0, 0x00, 0x00 };
 
   if (DRIVER_DATA(pnd)->ioCard.dwProtocol == SCARD_PROTOCOL_T0) {
     /*
      * Retrieve the PN532 response.
      */
     DWORD dwRxLen = sizeof(DRIVER_DATA(pnd)->abtRx);
+    uint8_t  abtRxCmd[5] = { 0xFF, 0xC0, 0x00, 0x00 };
     abtRxCmd[4] = DRIVER_DATA(pnd)->abtRx[1];
     if (SCardTransmit(DRIVER_DATA(pnd)->hCard, &(DRIVER_DATA(pnd)->ioCard), abtRxCmd, sizeof(abtRxCmd), NULL, DRIVER_DATA(pnd)->abtRx, &dwRxLen) != SCARD_S_SUCCESS) {
       pnd->last_error = NFC_EIO;
