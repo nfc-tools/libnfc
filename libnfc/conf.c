@@ -168,7 +168,7 @@ parse_line(const char line[BUFSIZ], char **key, char **value)
   return -1;
 }
 
-static bool
+static void
 conf_parse_file(const char *filename,
                 void (*conf_keyvalue)(void *data, const char *key, const char *value),
                 void *data)
@@ -176,7 +176,7 @@ conf_parse_file(const char *filename,
   FILE *f = fopen(filename, "r");
   if (!f) {
     log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_INFO, "Unable to open file: %s", filename);
-    return false;
+    return;
   }
   char line[BUFSIZ];
 
@@ -200,7 +200,8 @@ conf_parse_file(const char *filename,
       }
     }
   }
-  return false;
+  fclose(f);
+  return;
 }
 
 static void
