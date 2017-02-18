@@ -178,8 +178,8 @@ Two possible solutions:
 
 PN533 USB device on Linux >= 3.1:
 ---------------------------------
-Since Linux kernel version 3.1, two kernel-modules must not be loaded in order
-to use libnfc : "nfc" and "pn533".
+Since Linux kernel version 3.1, a few kernel-modules must not be loaded in order
+to use libnfc : "nfc", "pn533" and "pn533_usb".
 To prevent kernel from loading automatically these modules, you can blacklist
 them in a modprobe conf file. This file is provided within libnfc archive:
 
