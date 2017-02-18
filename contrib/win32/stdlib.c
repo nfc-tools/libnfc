@@ -37,12 +37,12 @@
 //There is no setenv()and unsetenv() in windows,but we can use putenv() instead.
 int setenv(const char *name, const char *value, int overwrite)
 {
-  char* env = getenv(name);
+  char *env = getenv(name);
   if ((env && overwrite) || (!env)) {
-    char* str[32];
-    strcpy(str,name);
-    strcat(str,"=");
-    strcat(str,value);
+    char *str[32];
+    strcpy(str, name);
+    strcat(str, "=");
+    strcat(str, value);
     return putenv(str);
   }
   return -1;
@@ -50,8 +50,8 @@ int setenv(const char *name, const char *value, int overwrite)
 
 void unsetenv(const char *name)
 {
-  char* str[32];
-  strcpy(str,name);
-  strcat(str,"=");
+  char *str[32];
+  strcpy(str, name);
+  strcat(str, "=");
   putenv(str);
 }

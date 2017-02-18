@@ -60,7 +60,7 @@ static int
 escaped_value(const char line[BUFSIZ], int i, char **value)
 {
   if (line[i] != '"')
-      goto FAIL;
+    goto FAIL;
   i++;
   if (line[i] == 0 || line[i] == '\n')
     goto FAIL;

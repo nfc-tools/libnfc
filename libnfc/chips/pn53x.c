@@ -611,7 +611,7 @@ pn53x_decode_target_data(const uint8_t *pbtRawData, size_t szRawData, pn53x_type
       pbtRawData += 2;
       memcpy(pnti->nji.btId, pbtRawData, 4);
       break;
-      // Should not happend...
+    // Should not happend...
     case NMT_DEP:
       return NFC_ECHIP;
   }
@@ -829,7 +829,7 @@ pn53x_set_property_int(struct nfc_device *pnd, const nfc_property property, cons
     case NP_TIMEOUT_COM:
       CHIP_DATA(pnd)->timeout_communication = value;
       return pn53x_RFConfiguration__Various_timings(pnd, pn53x_int_to_timeout(CHIP_DATA(pnd)->timeout_atr), pn53x_int_to_timeout(CHIP_DATA(pnd)->timeout_communication));
-      // Following properties are invalid (not integer)
+    // Following properties are invalid (not integer)
     case NP_HANDLE_CRC:
     case NP_HANDLE_PARITY:
     case NP_ACTIVATE_FIELD:
@@ -952,7 +952,7 @@ pn53x_set_property_bool(struct nfc_device *pnd, const nfc_property property, con
         return res;
       }
       return pn53x_write_register(pnd, PN53X_REG_CIU_RxMode, SYMBOL_RX_SPEED, 0x00);
-      // Following properties are invalid (not boolean)
+    // Following properties are invalid (not boolean)
     case NP_TIMEOUT_COMMAND:
     case NP_TIMEOUT_ATR:
     case NP_TIMEOUT_COM:
@@ -2391,7 +2391,7 @@ pn53x_target_receive_bytes(struct nfc_device *pnd, uint8_t *pbtRx, const size_t 
             return pnd->last_error;
           }
         }
-        // NO BREAK
+      // NO BREAK
       case NMT_JEWEL:
       case NMT_ISO14443B:
       case NMT_ISO14443BI:
@@ -2496,7 +2496,7 @@ pn53x_target_send_bytes(struct nfc_device *pnd, const uint8_t *pbtTx, const size
             return pnd->last_error;
           }
         }
-        // NO BREAK
+      // NO BREAK
       case NMT_JEWEL:
       case NMT_ISO14443B:
       case NMT_ISO14443BI:
@@ -3215,7 +3215,7 @@ pn53x_nm_to_ptt(const nfc_modulation nm)
   switch (nm.nmt) {
     case NMT_ISO14443A:
       return PTT_MIFARE;
-      // return PTT_ISO14443_4A_106;
+    // return PTT_ISO14443_4A_106;
 
     case NMT_ISO14443B:
       switch (nm.nbr) {

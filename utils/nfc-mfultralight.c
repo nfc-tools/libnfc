@@ -182,11 +182,12 @@ unlock_card(void)
   return true;
 }
 
-static bool check_magic() {
-    bool     bFailure = false;
-    int      uid_data;
+static bool check_magic()
+{
+  bool     bFailure = false;
+  int      uid_data;
 
-    for (uint32_t page = 0; page <= 1; page++) {
+  for (uint32_t page = 0; page <= 1; page++) {
     // Show if the readout went well
     if (bFailure) {
       // When a failure occured we need to redo the anti-collision
@@ -206,26 +207,26 @@ static bool check_magic() {
     nfc_initiator_mifare_cmd(pnd, MC_WRITE, page, &mp);
   }
 
-    //Check that the ID is now set to 0x000000000000
-    if (nfc_initiator_mifare_cmd(pnd, MC_READ, 0, &mp)) {
-        //printf("%u", mp.mpd.abtData);
-          bool result = true;
-          for(int i = 0; i <= 7; i++) {
-           if (mp.mpd.abtData[i] != 0x00) result = false;
-          }
-
-      if (result) {
-        return true;
-      }
-
+  //Check that the ID is now set to 0x000000000000
+  if (nfc_initiator_mifare_cmd(pnd, MC_READ, 0, &mp)) {
+    //printf("%u", mp.mpd.abtData);
+    bool result = true;
+    for (int i = 0; i <= 7; i++) {
+      if (mp.mpd.abtData[i] != 0x00) result = false;
     }
 
-    //Initially check if we can unlock via the MF method
-    if (unlock_card()) {
+    if (result) {
       return true;
-    } else {
-      return false;
     }
+
+  }
+
+  //Initially check if we can unlock via the MF method
+  if (unlock_card()) {
+    return true;
+  } else {
+    return false;
+  }
 
 }
 
@@ -351,7 +352,7 @@ static size_t str_to_uid(const char *str, uint8_t *uid)
 
   memset(uid, 0x0, MAX_UID_LEN);
   i = 0;
-  while ((*str != '\0') && ((i >> 1) < MAX_UID_LEN) ) {
+  while ((*str != '\0') && ((i >> 1) < MAX_UID_LEN)) {
     char nibble[2] = { 0x00, '\n' }; /* for strtol */
 
     nibble[0] = *str++;
@@ -391,8 +392,8 @@ main(int argc, const char *argv[])
   FILE   *pfDump;
 
   if (argc < 2) {
-      print_usage(argv);
-      exit(EXIT_FAILURE);
+    print_usage(argv);
+    exit(EXIT_FAILURE);
   }
 
   DBG("\nChecking arguments and settings\n");
@@ -541,12 +542,12 @@ main(int argc, const char *argv[])
     write_card(bOTP, bLock, bUID);
   } else if (iAction == 3) {
     if (!check_magic()) {
-        printf("Card is not magic\n");
-        nfc_close(pnd);
-        nfc_exit(context);
-        exit(EXIT_FAILURE);
+      printf("Card is not magic\n");
+      nfc_close(pnd);
+      nfc_exit(context);
+      exit(EXIT_FAILURE);
     } else {
-        printf("Card is magic\n");
+      printf("Card is magic\n");
     }
   }
 

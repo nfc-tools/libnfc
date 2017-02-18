@@ -388,7 +388,7 @@ nfc_list_devices(nfc_context *context, nfc_connstring connstrings[], const size_
       pndl = pndl->next;
     }
   } else if (context->user_defined_device_count == 0) {
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_INFO, "Warning: %s" , "user must specify device(s) manually when autoscan is disabled");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_INFO, "Warning: %s", "user must specify device(s) manually when autoscan is disabled");
   }
 
   return device_found;

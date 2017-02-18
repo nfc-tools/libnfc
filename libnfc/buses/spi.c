@@ -196,7 +196,7 @@ spi_send_receive(spi_port sp, const uint8_t *pbtTx, const size_t szTx, uint8_t *
     struct spi_ioc_transfer tr_send = {
       .tx_buf = (unsigned long) pbtTx,
       .rx_buf = 0,
-      .len = szTx ,
+      .len = szTx,
       .delay_usecs = 0,
       .speed_hz = 0,
       .bits_per_word = 0,

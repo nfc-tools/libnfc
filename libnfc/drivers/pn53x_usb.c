@@ -351,7 +351,7 @@ pn53x_usb_open(const nfc_context *context, const nfc_connstring connstring)
       }
 
       switch (DRIVER_DATA(pnd)->model) {
-          // empirical tuning
+        // empirical tuning
         case ASK_LOGO:
           CHIP_DATA(pnd)->timer_correction = 50;
           break;
@@ -697,12 +697,12 @@ pn53x_usb_set_property_bool(nfc_device *pnd, const nfc_property property, const 
       }
       break;
     case SCM_SCL3712:
-        if (NP_ACTIVATE_FIELD == property) {
-          // Switch on/off LED according to ACTIVATE_FIELD option
-          if ((res = pn53x_write_register(pnd, PN53X_SFR_P3, _BV(P32), bEnable ? 0 : _BV(P32))) < 0)
-            return res;
-        }
-        break;
+      if (NP_ACTIVATE_FIELD == property) {
+        // Switch on/off LED according to ACTIVATE_FIELD option
+        if ((res = pn53x_write_register(pnd, PN53X_SFR_P3, _BV(P32), bEnable ? 0 : _BV(P32))) < 0)
+          return res;
+      }
+      break;
     case NXP_PN531:
     case NXP_PN533:
     case SONY_PN531:

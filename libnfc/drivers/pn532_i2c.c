@@ -120,19 +120,19 @@ static struct timespec __transaction_stop;
  * @return length (in bytes) of read data, or driver error code (negative value)
  */
 static ssize_t pn532_i2c_read(const i2c_device id,
-			      uint8_t *buf, const size_t len)
+                              uint8_t *buf, const size_t len)
 {
-	struct timespec transaction_start, bus_free_time = { 0 };
-	ssize_t ret;
+  struct timespec transaction_start, bus_free_time = { 0 };
+  ssize_t ret;
 
-	clock_gettime(CLOCK_MONOTONIC, &transaction_start);
-	bus_free_time.tv_nsec = (PN532_BUS_FREE_TIME * 1000 * 1000) -
-				(transaction_start.tv_nsec - __transaction_stop.tv_nsec);
-	nanosleep(&bus_free_time, NULL);
+  clock_gettime(CLOCK_MONOTONIC, &transaction_start);
+  bus_free_time.tv_nsec = (PN532_BUS_FREE_TIME * 1000 * 1000) -
+                          (transaction_start.tv_nsec - __transaction_stop.tv_nsec);
+  nanosleep(&bus_free_time, NULL);
 
-	ret = i2c_read(id, buf, len);
-	clock_gettime(CLOCK_MONOTONIC, &__transaction_stop);
-	return ret;
+  ret = i2c_read(id, buf, len);
+  clock_gettime(CLOCK_MONOTONIC, &__transaction_stop);
+  return ret;
 }
 
 /**
@@ -148,19 +148,19 @@ static ssize_t pn532_i2c_read(const i2c_device id,
  * @return NFC_SUCCESS on success, otherwise driver error code
  */
 static ssize_t pn532_i2c_write(const i2c_device id,
-			       const uint8_t *buf, const size_t len)
+                               const uint8_t *buf, const size_t len)
 {
-	struct timespec transaction_start, bus_free_time = { 0 };
-	ssize_t ret;
+  struct timespec transaction_start, bus_free_time = { 0 };
+  ssize_t ret;
 
-	clock_gettime(CLOCK_MONOTONIC, &transaction_start);
-	bus_free_time.tv_nsec = (PN532_BUS_FREE_TIME * 1000 * 1000) -
-				(transaction_start.tv_nsec - __transaction_stop.tv_nsec);
-	nanosleep(&bus_free_time, NULL);
+  clock_gettime(CLOCK_MONOTONIC, &transaction_start);
+  bus_free_time.tv_nsec = (PN532_BUS_FREE_TIME * 1000 * 1000) -
+                          (transaction_start.tv_nsec - __transaction_stop.tv_nsec);
+  nanosleep(&bus_free_time, NULL);
 
-	ret = i2c_write(id, buf, len);
-	clock_gettime(CLOCK_MONOTONIC, &__transaction_stop);
-	return ret;
+  ret = i2c_write(id, buf, len);
+  clock_gettime(CLOCK_MONOTONIC, &__transaction_stop);
+  return ret;
 }
 
 /**
