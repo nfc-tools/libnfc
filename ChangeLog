@@ -5,14 +5,54 @@ Fixes:
  - nfc_emulate_uid: cleaner exit on interrupt
  - Fix reporting of modulations and baud rates by nfc-scan-device -v
  - Fix out-of-bounds access in nfc-mfultralight
+ - Several Cygwin compilation fixes
+ - Fix comparison when nfc_initiator_target_is_present() with a specified target
+ - Fix nfc_initiator_poll_target without tag on PN532
+ - Export iso14443b* symbols
+ - Fix udev rule which was executed too early
+ - Fix improper device name initialization
+ - Fix setenv()/unsetenv() for Windows
+ - Fix win32/nfc.def according to nfc.h
+ - nfc-mfclassic: fix option to tolerate write errors
+ - nfc-poll: fix card removing check
+ - nfc-relay-picc: fix wrong open mode for file descriptor
 
 Improvements:
  - Allow ISO14443A to be used at higher baud rates
  - nfc_initiator_select_passive_target() now checks against
    reported modulations and baud rates for current device
+ - More serial devices on MAC OS X
+ - Add section to README to help to configure libnfc
+ - Various cmake improvements
+ - Drop PCRE dependency on Windows
+ - Remove deprecated readdir_r
+ - Markdown conversion of the text files
+ - Add support for SCL3712
+ - Add support for ACR1222U-C1
+ - Add support for NetBSD
+ - Add support for PN532 on RPi3 UART
+ - Add support for cross-compilation of 32b & 64b versions  of the library for Windows
+ - Add pn533_usb to the kernel modules blacklist
+ - driver i2c: respect proper timing specifications
+ - driver i2c: add retry on error mechanism
+ - nfc-mfclassic: improvements fo magic cards
+ - nfc-mfclassic: add option to specify UID
+ - nfc-mfsetuid: allow to write complete Block0, instead of only UID
+ - nfc-mfultralight: add automatic modes and --check-magic
+ - nfc-mfultralight: add support for magic gen2 cards
+ - nfc-mfultralight: add option to specify UID
 
 Changes:
  - nfc_get_supported_baud_rate() takes now a "mode" parameter
+ - New nfc_get_supported_baud_rate_target_mode()
+
+Special thanks to:
+ - Jim Anastassiou, Frédéric Bourgeois, Dario Carluccio, Emmanuel Dreyfus,
+   Julien Ehrhart, S. Fabri, John Galt, Christoph Gritschenberger,
+   Alexander Inyukhin, Arnaud Kapp, David Kreitschmann, Adam Laurie, Ray Lee,
+   Maxim Martyanov, Paul Menzel, Boris Moiseev, Yerzhan Mukhamejan,
+   Olliver Shinagl, Jairo Andres Suarez, Mati Vait, Marcos Vives Del Sol,
+   Hidde Wieringa, Simon Yorkston, timzi, usk-johnny-s, xantares
 
 Feb 24, 2014 - 1.7.1
 --------------------
