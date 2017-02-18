@@ -272,7 +272,6 @@ write_card(bool write_otp, bool write_lock, bool write_uid)
   } else {
     if (!check_magic()) {
       printf("\nUnable to unlock card - are you sure the card is magic?\n");
-      bFailure = false;
       return false;
     }
   }
