@@ -5,11 +5,11 @@
  * Copyright (C) 2009      Roel Verdult
  * Copyright (C) 2009-2013 Romuald Conty
  * Copyright (C) 2010-2012 Romain Tartière
- * Copyright (C) 2010-2013 Philippe Teuwen
+ * Copyright (C) 2010-2017 Philippe Teuwen
  * Copyright (C) 2012-2013 Ludovic Rousseau
  * See AUTHORS file for a more comprehensive list of contributors.
  * Additional contributors of this file:
- * Copyright (C) 2013      Adam Laurie
+ * Copyright (C) 2013-2017 Adam Laurie
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -86,11 +86,13 @@ static const nfc_modulation nmMifare = {
 };
 
 static void
-print_success_or_failure(bool bFailure, uint32_t *uiCounter)
+print_success_or_failure(bool bFailure, uint32_t *uiOkCounter, uint32_t *uiFailedCounter)
 {
-  printf("%c", (bFailure) ? 'x' : '.');
-  if (uiCounter)
-    *uiCounter += (bFailure) ? 0 : 1;
+  printf("%c", (bFailure) ? 'f' : '.');
+  if (uiOkCounter)
+    *uiOkCounter += (bFailure) ? 0 : 1;
+  if (uiFailedCounter)
+    *uiFailedCounter += (bFailure) ? 1 : 0;
 }
 
 static  bool
@@ -99,6 +101,7 @@ read_card(void)
   uint32_t page;
   bool    bFailure = false;
   uint32_t uiReadPages = 0;
+  uint32_t uiFailedPages = 0;
 
   printf("Reading %d pages |", uiBlocks + 1);
 
@@ -108,16 +111,15 @@ read_card(void)
       memcpy(mtDump.amb[page / 4].mbd.abtData, mp.mpd.abtData, 16);
     } else {
       bFailure = true;
-      break;
     }
 
-    print_success_or_failure(bFailure, &uiReadPages);
-    print_success_or_failure(bFailure, &uiReadPages);
-    print_success_or_failure(bFailure, &uiReadPages);
-    print_success_or_failure(bFailure, &uiReadPages);
+    print_success_or_failure(bFailure, &uiReadPages, &uiFailedPages);
+    print_success_or_failure(bFailure, &uiReadPages, &uiFailedPages);
+    print_success_or_failure(bFailure, &uiReadPages, &uiFailedPages);
+    print_success_or_failure(bFailure, &uiReadPages, &uiFailedPages);
   }
   printf("|\n");
-  printf("Done, %d of %d pages read.\n", uiReadPages, uiBlocks + 1);
+  printf("Done, %d of %d pages read (%d pages failed).\n", uiReadPages, uiBlocks + 1, uiFailedPages);
   fflush(stdout);
 
   return (!bFailure);
@@ -237,6 +239,7 @@ write_card(bool write_otp, bool write_lock, bool write_uid)
   bool    bFailure = false;
   uint32_t uiWrittenPages = 0;
   uint32_t uiSkippedPages = 0;
+  uint32_t uiFailedPages = 0;
 
   char    buffer[BUFSIZ];
 
@@ -287,7 +290,7 @@ write_card(bool write_otp, bool write_lock, bool write_uid)
       uiSkippedPages++;
       continue;
     }
-    // Show if the readout went well
+    // Check if the previous readout went well
     if (bFailure) {
       // When a failure occured we need to redo the anti-collision
       if (nfc_initiator_select_passive_target(pnd, nmMifare, NULL, 0, &nt) <= 0) {
@@ -305,11 +308,10 @@ write_card(bool write_otp, bool write_lock, bool write_uid)
     memset(mp.mpd.abtData + 4, 0, 12);
     if (!nfc_initiator_mifare_cmd(pnd, MC_WRITE, page, &mp))
       bFailure = true;
-
-    print_success_or_failure(bFailure, &uiWrittenPages);
+    print_success_or_failure(bFailure, &uiWrittenPages, &uiFailedPages);
   }
   printf("|\n");
-  printf("Done, %d of %d pages written (%d pages skipped).\n", uiWrittenPages, uiBlocks + 1, uiSkippedPages);
+  printf("Done, %d of %d pages written (%d pages skipped, %d pages failed).\n", uiWrittenPages, uiBlocks + 1, uiSkippedPages, uiFailedPages);
 
   return true;
 }
