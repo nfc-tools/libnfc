@@ -70,6 +70,7 @@ static bool bForceKeyFile;
 static bool bTolerateFailures;
 static bool bFormatCard;
 static bool magic2 = false;
+static bool unlocked = false;
 static uint8_t uiBlocks;
 static uint8_t keys[] = {
   0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
@@ -248,12 +249,14 @@ unlock_card(void)
   transmit_bytes(abtHalt, 4);
   // now send unlock
   if (!transmit_bits(abtUnlock1, 7)) {
-    printf("unlock failure!\n");
-    return false;
-  }
-  if (!transmit_bytes(abtUnlock2, 1)) {
-    printf("unlock failure!\n");
-    return false;
+    printf("Warning: Unlock command [1/2]: failed / not acknowledged.\n");
+  } else {
+	if (transmit_bytes(abtUnlock2, 1)) {
+		printf("Card unlocked\n");
+		unlocked = true;
+	} else {
+		printf("Warning: Unlock command [2/2]: failed / not acknowledged.\n");	
+	}
   }
 
   // reset reader
@@ -355,8 +358,12 @@ read_card(int read_unlocked)
           memcpy(mtDump.amb[iBlock].mbt.abtKeyB, mtKeys.amb[iBlock].mbt.abtKeyB, sizeof(mtDump.amb[iBlock].mbt.abtKeyB));
         }
       } else {
-        printf("!\nfailed to read trailer block 0x%02x\n", iBlock);
-        bFailure = true;
+	    //If the card was never unlocked and we get an error here, it's very likely that it's not a magic card.
+		printf("!\nfailed to read trailer block 0x%02x\n", iBlock);
+		bFailure = true;
+		if (unlocked == false) {
+			printf("Supplied card unable to perform unlocked read / writes.");
+		}
       }
     } else {
       // Make sure a earlier readout did not fail
@@ -532,7 +539,7 @@ main(int argc, const char *argv[])
   }
   const char *command = argv[1];
 
-  if (argc < 5) {
+  if (argc < 4) {
     print_usage(argv[0]);
     exit(EXIT_FAILURE);
   }
@@ -551,6 +558,10 @@ main(int argc, const char *argv[])
     bFormatCard = (strcmp(command, "f") == 0);
     bUseKeyA = tolower((int)((unsigned char) * (argv[2]))) == 'a';
     bTolerateFailures = tolower((int)((unsigned char) * (argv[2]))) != (int)((unsigned char) * (argv[2]));
+	if (argv[3][0] != 'U' && argv[3][0] != 'u') {
+		argv[5] = argv[4];
+		argv[4] = argv[3];
+	}
     bUseKeyFile = (argc > 5);
     bForceKeyFile = ((argc > 6) && (strcmp((char *)argv[6], "f") == 0));
   }
@@ -571,6 +582,7 @@ main(int argc, const char *argv[])
            tag_uid[0], tag_uid[1], tag_uid[2], tag_uid[3]);
   } else {
     tag_uid = NULL;
+	argv[5] = argv[4];
   }
 
   if (atAction == ACTION_USAGE) {
@@ -668,7 +680,7 @@ main(int argc, const char *argv[])
   print_nfc_target(&nt, false);
 
 // Guessing size
-  if ((nt.nti.nai.abtAtqa[1] & 0x02) == 0x02)
+  if ((nt.nti.nai.abtAtqa[1] & 0x02) == 0x02 || nt.nti.nai.btSak == 0x18)
 // 4K
     uiBlocks = 0xff;
   else if (nt.nti.nai.btSak == 0x09)
