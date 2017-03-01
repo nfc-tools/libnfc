@@ -365,13 +365,23 @@ main(int argc, char *argv[])
   // now reset UID
   iso14443a_crc_append(abtHalt, 2);
   transmit_bytes(abtHalt, 4);
-  transmit_bits(abtUnlock1, 7);
-  if (format) {
-    transmit_bytes(abtWipe, 1);
-    transmit_bytes(abtHalt, 4);
-    transmit_bits(abtUnlock1, 7);
+
+  if (!transmit_bits(abtUnlock1, 7)) {
+    printf("Warning: Unlock command [1/2]: failed / not acknowledged.\n");
+  } else {
+    if (format) {
+	  transmit_bytes(abtWipe, 1);
+	  transmit_bytes(abtHalt, 4);
+  	  transmit_bits(abtUnlock1, 7);
+    }
+  
+	if (transmit_bytes(abtUnlock2, 1)) {
+		printf("Card unlocked\n");
+	} else {
+		printf("Warning: Unlock command [2/2]: failed / not acknowledged.\n");	
+	}
   }
-  transmit_bytes(abtUnlock2, 1);
+
   transmit_bytes(abtWrite, 4);
   transmit_bytes(abtData, 18);
   if (format) {

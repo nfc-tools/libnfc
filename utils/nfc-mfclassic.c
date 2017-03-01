@@ -70,6 +70,7 @@ static bool bForceKeyFile;
 static bool bTolerateFailures;
 static bool bFormatCard;
 static bool magic2 = false;
+static bool unlocked = false;
 static uint8_t uiBlocks;
 static uint8_t keys[] = {
   0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
@@ -248,12 +249,14 @@ unlock_card(void)
   transmit_bytes(abtHalt, 4);
   // now send unlock
   if (!transmit_bits(abtUnlock1, 7)) {
-    printf("unlock failure!\n");
-    return false;
-  }
-  if (!transmit_bytes(abtUnlock2, 1)) {
-    printf("unlock failure!\n");
-    return false;
+    printf("Warning: Unlock command [1/2]: failed / not acknowledged.\n");
+  } else {
+	if (transmit_bytes(abtUnlock2, 1)) {
+		printf("Card unlocked\n");
+		unlocked = true;
+	} else {
+		printf("Warning: Unlock command [2/2]: failed / not acknowledged.\n");	
+	}
   }
 
   // reset reader
@@ -668,7 +671,7 @@ main(int argc, const char *argv[])
   print_nfc_target(&nt, false);
 
 // Guessing size
-  if ((nt.nti.nai.abtAtqa[1] & 0x02) == 0x02)
+  if ((nt.nti.nai.abtAtqa[1] & 0x02) == 0x02 || nt.nti.nai.btSak == 0x18)
 // 4K
     uiBlocks = 0xff;
   else if (nt.nti.nai.btSak == 0x09)
