@@ -37,6 +37,7 @@ Improvements:
  - driver i2c: add retry on error mechanism
  - nfc-mfclassic: improvements fo magic cards
  - nfc-mfclassic: add option to specify UID
+ - nfc-mfclassic/nfc-mfsetuid: add support for new gen (1b) of magic 4K cards
  - nfc-mfsetuid: allow to write complete Block0, instead of only UID
  - nfc-mfultralight: add automatic modes and --check-magic
  - nfc-mfultralight: add support for magic gen2 cards
