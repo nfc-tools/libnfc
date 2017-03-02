@@ -148,6 +148,22 @@ ENDIF(NOT WIN32)
 
 INCLUDE(LibnfcDrivers)
 
+IF(UNIX AND NOT APPLE)
+    IF(I2C_REQUIRED)
+        # Inspired from http://cmake.3232098.n2.nabble.com/RFC-cmake-analog-to-AC-SEARCH-LIBS-td7585423.html
+        INCLUDE (CheckFunctionExists)
+        INCLUDE (CheckLibraryExists)
+        CHECK_FUNCTION_EXISTS (clock_gettime HAVE_CLOCK_GETTIME)
+        IF (NOT HAVE_CLOCK_GETTIME)
+            CHECK_LIBRARY_EXISTS (rt clock_gettime "" HAVE_CLOCK_GETTIME_IN_RT)
+            IF (HAVE_CLOCK_GETTIME_IN_RT)
+                SET(LIBRT_FOUND TRUE)
+                SET(LIBRT_LIBRARIES "rt")
+            ENDIF (HAVE_CLOCK_GETTIME_IN_RT)
+        ENDIF (NOT HAVE_CLOCK_GETTIME)
+    ENDIF(I2C_REQUIRED)
+ENDIF(UNIX AND NOT APPLE)
+
 IF(PCSC_INCLUDE_DIRS)
   INCLUDE_DIRECTORIES(${PCSC_INCLUDE_DIRS})
   LINK_DIRECTORIES(${PCSC_LIBRARY_DIRS})
