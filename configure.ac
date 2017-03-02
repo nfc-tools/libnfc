@@ -125,6 +125,10 @@ AM_CONDITIONAL(SPI_ENABLED, [test x"$spi_required" = x"yes"])
 
 # Enable I2C if 
 AM_CONDITIONAL(I2C_ENABLED, [test x"$i2c_required" = x"yes"])
+if test x"$i2c_required" = x"yes"
+then
+  AC_SEARCH_LIBS([clock_gettime], [rt])
+fi
 
 # Documentation (default: no)
 AC_ARG_ENABLE([doc],AS_HELP_STRING([--enable-doc],[Enable documentation generation.]),[enable_doc=$enableval],[enable_doc="no"])
