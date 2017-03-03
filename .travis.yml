@@ -1,4 +1,12 @@
-language: cpp
+language: c
+
+compiler:
+  - clang
+  - gcc
+
+env:
+  - BLD=cmake
+  - BLD=autoconf
 
 addons:
   apt:
@@ -9,9 +17,5 @@ addons:
     - libcutter-dev
 
 script:
-  - autoreconf -vfi
-  - ./configure --prefix=$HOME/.local/
-  - make -j2
-  - make install
-  - cmake -DCMAKE_INSTALL_PREFIX=~/.local .
-  - make install -j2
+  - if [ $BLD == autoconf ]; then autoreconf -vfi && ./configure --prefix=$HOME/.local/ && make -j2 && make install; fi
+  - if [ $BLD == cmake ];    then cmake -DCMAKE_INSTALL_PREFIX=~/.local . && make -j2 && make install; fi
