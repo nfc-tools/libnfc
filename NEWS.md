@@ -3,6 +3,7 @@ New in 1.7.x:
 API Changes:
 
   * nfc_device_get_supported_baud_rate() now takes also "mode" as argument
+  * New nfc_get_supported_baud_rate_target_mode()
 
 New in 1.7.1:
 
