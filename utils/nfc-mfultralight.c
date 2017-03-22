@@ -72,6 +72,10 @@ static const uint32_t uiBlocks = BLOCK_COUNT;
 uint8_t  abtUnlock1[1] = { 0x40 };
 uint8_t  abtUnlock2[1] = { 0x43 };
 
+// EV1 commands
+uint8_t  abtEV1[3] = { 0x60, 0x00, 0x00 };
+uint8_t  abtPWAuth[7] = { 0x1B, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+
 //Halt command
 uint8_t  abtHalt[4] = { 0x50, 0x00, 0x00, 0x00 };
 
@@ -79,6 +83,7 @@ uint8_t  abtHalt[4] = { 0x50, 0x00, 0x00, 0x00 };
 
 static uint8_t abtRx[MAX_FRAME_LEN];
 static int szRxBits;
+static int szRx;
 
 static const nfc_modulation nmMifare = {
   .nmt = NMT_ISO14443A,
@@ -139,15 +144,14 @@ transmit_bits(const uint8_t *pbtTx, const size_t szTxBits)
 static  bool
 transmit_bytes(const uint8_t *pbtTx, const size_t szTx)
 {
-  int res;
-  if ((res = nfc_initiator_transceive_bytes(pnd, pbtTx, szTx, abtRx, sizeof(abtRx), 0)) < 0)
+  if ((szRx = nfc_initiator_transceive_bytes(pnd, pbtTx, szTx, abtRx, sizeof(abtRx), 0)) < 0)
     return false;
 
   return true;
 }
 
 static bool
-unlock_card(void)
+raw_mode_start(void)
 {
   // Configure the CRC
   if (nfc_device_set_property_bool(pnd, NP_HANDLE_CRC, false) < 0) {
@@ -159,17 +163,12 @@ unlock_card(void)
     nfc_perror(pnd, "nfc_configure");
     return false;
   }
+  return true;
+}
 
-  iso14443a_crc_append(abtHalt, 2);
-  transmit_bytes(abtHalt, 4);
-  // now send unlock
-  if (!transmit_bits(abtUnlock1, 7)) {
-    return false;
-  }
-  if (!transmit_bytes(abtUnlock2, 1)) {
-    return false;
-  }
-
+static bool
+raw_mode_end(void)
+{
   // reset reader
   // Configure the CRC
   if (nfc_device_set_property_bool(pnd, NP_HANDLE_CRC, true) < 0) {
@@ -181,6 +180,65 @@ unlock_card(void)
     nfc_perror(pnd, "nfc_device_set_property_bool");
     return false;
   }
+  return true;
+}
+
+static bool
+get_ev1_version(void)
+{
+  if (!raw_mode_start())
+    return false;
+  iso14443a_crc_append(abtEV1, 1);
+  if(!transmit_bytes(abtEV1, 3)){
+    raw_mode_end();
+    return false;
+  }
+  if (!raw_mode_end())
+    return false;
+  if(!szRx)
+      return false;
+  return true;
+}
+
+static bool
+ev1_load_pwd(uint8_t target[4], const char *pwd)
+{
+  if(sscanf(pwd, "%2x%2x%2x%2x", (unsigned int *) &target[0], (unsigned int *) &target[1], (unsigned int *) &target[2], (unsigned int *) &target[3]) != 4)
+    return false;
+  return true;
+}
+
+static bool
+ev1_pwd_auth(uint8_t *pwd)
+{
+  if (!raw_mode_start())
+    return false;
+  memcpy(&abtPWAuth[1], pwd, 4);
+  iso14443a_crc_append(abtPWAuth, 5);
+  if(!transmit_bytes(abtPWAuth, 7))
+    return false;
+  if (!raw_mode_end())
+    return false;
+  return true;
+}
+
+static bool
+unlock_card(void)
+{
+  if (!raw_mode_start())
+    return false;
+  iso14443a_crc_append(abtHalt, 2);
+  transmit_bytes(abtHalt, 4);
+  // now send unlock
+  if (!transmit_bits(abtUnlock1, 7)) {
+    return false;
+  }
+  if (!transmit_bytes(abtUnlock2, 1)) {
+    return false;
+  }
+
+  if (!raw_mode_end())
+    return false;
   return true;
 }
 
@@ -379,6 +437,7 @@ print_usage(const char *argv[])
   printf("\t--uid\t\t - Don't prompt for UID writing (Assume yes)\n");
   printf("\t--full\t\t - Assume full card write (UID + OTP + Lockbit)\n");
   printf("\t--with-uid <UID>\t\t - Specify UID to read/write from\n");
+  printf("\t--pw <PWD>\t\t - Specify 8 HEX digit PASSWORD for EV1\n");
 }
 
 int
@@ -386,10 +445,12 @@ main(int argc, const char *argv[])
 {
   int     iAction = 0;
   uint8_t iUID[MAX_UID_LEN] = { 0x0 };
+  uint8_t iPWD[4] = { 0x0 };
   size_t  szUID = 0;
   bool    bOTP = false;
   bool    bLock = false;
   bool    bUID = false;
+  bool    bPWD = false;
   FILE   *pfDump;
 
   if (argc < 2) {
@@ -410,7 +471,7 @@ main(int argc, const char *argv[])
         ERR("Please supply a UID of 4, 7 or 10 bytes long. Ex: a1:b2:c3:d4");
         exit(EXIT_FAILURE);
       }
-      szUID = str_to_uid(argv[4], iUID);
+      szUID = str_to_uid(argv[++arg], iUID);
     } else if (0 == strcmp(argv[arg], "--full")) {
       bOTP = true;
       bLock = true;
@@ -423,6 +484,12 @@ main(int argc, const char *argv[])
       bUID = true;
     } else if (0 == strcmp(argv[arg], "--check-magic")) {
       iAction = 3;
+    } else if (0 == strcmp(argv[arg], "--pw")) {
+      bPWD= true;
+      if(strlen(argv[++arg]) != 8 || ! ev1_load_pwd(iPWD, argv[arg])) {
+        ERR("Please supply a PASSWORD of 8 HEX digits");
+        exit(EXIT_FAILURE);
+      }
     } else {
       //Skip validation of the filename
       if ((arg != 2) && (arg != 4)) {
@@ -517,6 +584,20 @@ main(int argc, const char *argv[])
     printf("%02x", nt.nti.nai.abtUid[szPos]);
   }
   printf("\n");
+
+  // test if tag is EV1
+  if(!bPWD)
+    if(get_ev1_version())
+      printf("Tag is EV1 - PASSWORD may be required\n");
+
+  // EV1 login required
+  if(bPWD){
+    printf("Authing with PWD: %02x%02x%02x%02x\n", iPWD[0], iPWD[1], iPWD[2], iPWD[3]);
+    if(!ev1_pwd_auth(iPWD)){
+      ERR("AUTH failed!\n");
+      exit(EXIT_FAILURE);
+    }
+  }
 
   if (iAction == 1) {
     if (read_card()) {
