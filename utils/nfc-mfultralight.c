@@ -600,11 +600,14 @@ main(int argc, const char *argv[])
 
   // EV1 login required
   if(bPWD){
-    printf("Authing with PWD: %02x%02x%02x%02x\n", iPWD[0], iPWD[1], iPWD[2], iPWD[3]);
+    printf("Authing with PWD: %02x%02x%02x%02x ", iPWD[0], iPWD[1], iPWD[2], iPWD[3]);
     if(!ev1_pwd_auth(iPWD)){
+      printf("\n");
       ERR("AUTH failed!\n");
       exit(EXIT_FAILURE);
     }
+    else
+      printf("Success - PACK: %02x%02x\n", abtRx[0], abtRx[1]);
   }
 
   if (iAction == 1) {
