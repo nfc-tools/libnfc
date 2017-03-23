@@ -451,15 +451,17 @@ static void
 print_usage(const char *argv[])
 {
   printf("Usage: %s r|w <dump.mfd> [OPTIONS]\n", argv[0]);
+  printf("Arguments:\n");
+  printf("\tr|w                 - Perform read or write\n");
+  printf("\t<dump.mfd>          - MiFare Dump (MFD) used to write (card to MFD) or (MFD to card)\n");
   printf("Options:\n");
-  printf("\tr|w\t\t - Perform read or write\n");
-  printf("\t<dump.mfd>\t - MiFare Dump (MFD) used to write (card to MFD) or (MFD to card)\n");
-  printf("\t--otp\t\t - Don't prompt for OTP writing (Assume yes)\n");
-  printf("\t--lock\t\t - Don't prompt for Lockbit writing (Assume yes)\n");
-  printf("\t--uid\t\t - Don't prompt for UID writing (Assume yes)\n");
-  printf("\t--full\t\t - Assume full card write (UID + OTP + Lockbit)\n");
-  printf("\t--with-uid <UID>\t\t - Specify UID to read/write from\n");
-  printf("\t--pw <PWD>\t\t - Specify 8 HEX digit PASSWORD for EV1\n");
+  printf("\t--otp               - Don't prompt for OTP writing (Assume yes)\n");
+  printf("\t--lock              - Don't prompt for Lockbit writing (Assume yes)\n");
+  printf("\t--uid               - Don't prompt for UID writing (Assume yes)\n");
+  printf("\t--full              - Assume full card write (UID + OTP + Lockbit)\n");
+  printf("\t--with-uid <UID>    - Specify UID to read/write from\n");
+  printf("\t--pw <PWD>          - Specify 8 HEX digit PASSWORD for EV1\n");
+  printf("\t--partial           - Allow source data size to be other than tag capacity\n");
 }
 
 int
@@ -473,6 +475,7 @@ main(int argc, const char *argv[])
   bool    bLock = false;
   bool    bUID = false;
   bool    bPWD = false;
+  bool    bPart = false;
   FILE   *pfDump;
 
   if (argc < 2) {
@@ -506,6 +509,8 @@ main(int argc, const char *argv[])
       bUID = true;
     } else if (0 == strcmp(argv[arg], "--check-magic")) {
       iAction = 3;
+    } else if (0 == strcmp(argv[arg], "--partial")) {
+      bPart= true;
     } else if (0 == strcmp(argv[arg], "--pw")) {
       bPWD= true;
       if(strlen(argv[++arg]) != 8 || ! ev1_load_pwd(iPWD, argv[arg])) {
@@ -637,11 +642,14 @@ main(int argc, const char *argv[])
       exit(EXIT_FAILURE);
     }
 
-    if (fread(&mtDump, 1, sizeof(mtDump), pfDump) != iDumpSize) {
+    size_t  szDump;
+    if (((szDump= fread(&mtDump, 1, sizeof(mtDump), pfDump)) != iDumpSize && !bPart) || szDump <= 0) {
       ERR("Could not read from dump file or size mismatch: %s\n", argv[2]);
       fclose(pfDump);
       exit(EXIT_FAILURE);
     }
+    if(szDump != iDumpSize)
+      printf("Performing partial write\n");
     fclose(pfDump);
     DBG("Successfully opened the dump file\n");
   } else if (iAction == 3) {
