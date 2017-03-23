@@ -9,6 +9,7 @@
  * Copyright (C) 2012-2013 Ludovic Rousseau
  * See AUTHORS file for a more comprehensive list of contributors.
  * Additional contributors of this file:
+ * Copyright (C) 2017 Adam Laurie
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -133,6 +134,19 @@ typedef struct {
   uint8_t  otp[4];
 } mifareul_block_manufacturer;
 
+// MIFARE Ultralight EV1 Config Pages
+typedef struct {
+  uint8_t  mod;
+  uint8_t  rfui[2];
+  uint8_t  auth0;
+  uint8_t  access;
+  uint8_t  vctid;
+  uint8_t  rfui1[2];
+  uint8_t  pwd[4];
+  uint8_t  pack[2];
+  uint8_t  rfui2[2];
+} mifareul_block_config;
+
 typedef struct {
   uint8_t  abtData[16];
 } mifareul_block_data;
@@ -140,11 +154,23 @@ typedef struct {
 typedef union {
   mifareul_block_manufacturer mbm;
   mifareul_block_data mbd;
+  mifareul_block_config mbc;
 } mifareul_block;
 
+// standard UL tag - 1 manuf block + 3 user blocks
 typedef struct {
   mifareul_block amb[4];
 } mifareul_tag;
+
+// UL EV1 MF0UL11 tag - 1 manuf block + 3 user blocks + 1 config block
+typedef struct {
+  mifareul_block amb[5];
+} mifareul_ev1_mf0ul11_tag;
+
+// UL EV1 MF0UL21 tag - 1 manuf block + 8 user blocks + 1 config block
+typedef struct {
+  mifareul_block amb[10];
+} mifareul_ev1_mf0ul21_tag;
 
 // Reset struct alignment to default
 #  pragma pack()

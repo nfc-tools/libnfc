@@ -62,11 +62,19 @@
 #define MAX_UID_LEN 10
 #define BLOCK_COUNT 0xf
 
+#define EV1_NONE 0
+#define EV1_UL11 1
+#define EV1_UL21 2
+
 static nfc_device *pnd;
 static nfc_target nt;
 static mifare_param mp;
-static mifareul_tag mtDump;
-static const uint32_t uiBlocks = BLOCK_COUNT;
+static mifareul_ev1_mf0ul21_tag mtDump; // use the largest tag type for internal storage
+static uint32_t uiBlocks = BLOCK_COUNT;
+static uint32_t uiReadPages = 0;
+static uint8_t iPWD[4] = { 0x0 };
+static uint8_t iPACK[2] = { 0x0 };
+static uint8_t iEV1Type= EV1_NONE;
 
 // special unlock command
 uint8_t  abtUnlock1[1] = { 0x40 };
@@ -105,7 +113,6 @@ read_card(void)
 {
   uint32_t page;
   bool    bFailure = false;
-  uint32_t uiReadPages = 0;
   uint32_t uiFailedPages = 0;
 
   printf("Reading %d pages |", uiBlocks + 1);
@@ -126,6 +133,21 @@ read_card(void)
   printf("|\n");
   printf("Done, %d of %d pages read (%d pages failed).\n", uiReadPages, uiBlocks + 1, uiFailedPages);
   fflush(stdout);
+
+  // copy EV1 secrets to dump data
+  switch(iEV1Type) {
+    case EV1_UL11:
+      memcpy(mtDump.amb[4].mbc.pwd, iPWD, 4);
+      memcpy(mtDump.amb[4].mbc.pack, iPACK, 2);
+      break;
+    case EV1_UL21:
+      memcpy(mtDump.amb[9].mbc.pwd, iPWD, 4);
+      memcpy(mtDump.amb[9].mbc.pack, iPACK, 2);
+      break;
+    case EV1_NONE:
+    default:
+      break;
+  }
 
   return (!bFailure);
 }
@@ -445,7 +467,6 @@ main(int argc, const char *argv[])
 {
   int     iAction = 0;
   uint8_t iUID[MAX_UID_LEN] = { 0x0 };
-  uint8_t iPWD[4] = { 0x0 };
   size_t  szUID = 0;
   bool    bOTP = false;
   bool    bLock = false;
@@ -569,8 +590,8 @@ main(int argc, const char *argv[])
     nfc_exit(context);
     exit(EXIT_FAILURE);
   }
-  // Test if we are dealing with a MIFARE compatible tag
 
+  // Test if we are dealing with a MIFARE compatible tag
   if (nt.nti.nai.abtAtqa[1] != 0x44) {
     ERR("tag is not a MIFARE Ultralight card\n");
     nfc_close(pnd);
@@ -590,12 +611,27 @@ main(int argc, const char *argv[])
     if(!bPWD)
       printf("Tag is EV1 - PASSWORD may be required\n");
     printf("EV1 storage size: ");
-    if(abtRx[6] == 0x0b)
+    if(abtRx[6] == 0x0b) {
       printf("48 bytes\n");
-    else if(abtRx[6] == 0x0e)
+      uiBlocks= 0x13;
+      iEV1Type= EV1_UL11;
+    }
+    else if(abtRx[6] == 0x0e) {
       printf("128 bytes\n");
+      uiBlocks= 0x28;
+      iEV1Type= EV1_UL21;
+    }
     else
       printf("unknown!\n");
+  }
+  else {
+  // re-init non EV1 tag
+    if (nfc_initiator_select_passive_target(pnd, nmMifare, (szUID) ? iUID : NULL, szUID, &nt) <= 0) {
+      ERR("no tag was found\n");
+      nfc_close(pnd);
+      nfc_exit(context);
+      exit(EXIT_FAILURE);
+    }
   }
 
   // EV1 login required
@@ -606,31 +642,34 @@ main(int argc, const char *argv[])
       ERR("AUTH failed!\n");
       exit(EXIT_FAILURE);
     }
-    else
+    else {
       printf("Success - PACK: %02x%02x\n", abtRx[0], abtRx[1]);
+      memcpy(iPACK, abtRx, 2);
+    }
   }
 
   if (iAction == 1) {
-    if (read_card()) {
-      printf("Writing data to file: %s ... ", argv[2]);
-      fflush(stdout);
-      pfDump = fopen(argv[2], "wb");
-      if (pfDump == NULL) {
-        printf("Could not open file: %s\n", argv[2]);
-        nfc_close(pnd);
-        nfc_exit(context);
-        exit(EXIT_FAILURE);
-      }
-      if (fwrite(&mtDump, 1, sizeof(mtDump), pfDump) != sizeof(mtDump)) {
-        printf("Could not write to file: %s\n", argv[2]);
-        fclose(pfDump);
-        nfc_close(pnd);
-        nfc_exit(context);
-        exit(EXIT_FAILURE);
-      }
-      fclose(pfDump);
-      printf("Done.\n");
+    bool bRF= read_card();
+    printf("Writing data to file: %s ... ", argv[2]);
+    fflush(stdout);
+    pfDump = fopen(argv[2], "wb");
+    if (pfDump == NULL) {
+      printf("Could not open file: %s\n", argv[2]);
+      nfc_close(pnd);
+      nfc_exit(context);
+      exit(EXIT_FAILURE);
     }
+    if (fwrite(&mtDump, 1, uiReadPages * 4, pfDump) != uiReadPages * 4) {
+      printf("Could not write to file: %s\n", argv[2]);
+      fclose(pfDump);
+      nfc_close(pnd);
+      nfc_exit(context);
+      exit(EXIT_FAILURE);
+    }
+    fclose(pfDump);
+    printf("Done.\n");
+    if(!bRF)
+      printf("Warning! Read failed - partial data written to file!\n");
   } else if (iAction == 2) {
     write_card(bOTP, bLock, bUID);
   } else if (iAction == 3) {
