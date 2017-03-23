@@ -466,6 +466,7 @@ int
 main(int argc, const char *argv[])
 {
   int     iAction = 0;
+  uint8_t iDumpSize= sizeof(mifareul_tag);
   uint8_t iUID[MAX_UID_LEN] = { 0x0 };
   size_t  szUID = 0;
   bool    bOTP = false;
@@ -519,30 +520,6 @@ main(int argc, const char *argv[])
         exit(EXIT_FAILURE);
       }
     }
-  }
-
-  if (iAction == 1) {
-    memset(&mtDump, 0x00, sizeof(mtDump));
-  } else if (iAction == 2) {
-    pfDump = fopen(argv[2], "rb");
-
-    if (pfDump == NULL) {
-      ERR("Could not open dump file: %s\n", argv[2]);
-      exit(EXIT_FAILURE);
-    }
-
-    if (fread(&mtDump, 1, sizeof(mtDump), pfDump) != sizeof(mtDump)) {
-      ERR("Could not read from dump file: %s\n", argv[2]);
-      fclose(pfDump);
-      exit(EXIT_FAILURE);
-    }
-    fclose(pfDump);
-    DBG("Successfully opened the dump file\n");
-  } else if (iAction == 3) {
-    DBG("Switching to Check Magic Mode\n");
-  } else {
-    ERR("Unable to determine operating mode");
-    exit(EXIT_FAILURE);
   }
 
   nfc_context *context;
@@ -615,11 +592,13 @@ main(int argc, const char *argv[])
       printf("48 bytes\n");
       uiBlocks= 0x13;
       iEV1Type= EV1_UL11;
+      iDumpSize= sizeof(mifareul_ev1_mf0ul11_tag);
     }
     else if(abtRx[6] == 0x0e) {
       printf("128 bytes\n");
       uiBlocks= 0x28;
       iEV1Type= EV1_UL21;
+      iDumpSize= sizeof(mifareul_ev1_mf0ul21_tag);
     }
     else
       printf("unknown!\n");
@@ -646,6 +625,30 @@ main(int argc, const char *argv[])
       printf("Success - PACK: %02x%02x\n", abtRx[0], abtRx[1]);
       memcpy(iPACK, abtRx, 2);
     }
+  }
+
+  if (iAction == 1) {
+    memset(&mtDump, 0x00, sizeof(mtDump));
+  } else if (iAction == 2) {
+    pfDump = fopen(argv[2], "rb");
+
+    if (pfDump == NULL) {
+      ERR("Could not open dump file: %s\n", argv[2]);
+      exit(EXIT_FAILURE);
+    }
+
+    if (fread(&mtDump, 1, sizeof(mtDump), pfDump) != iDumpSize) {
+      ERR("Could not read from dump file or size mismatch: %s\n", argv[2]);
+      fclose(pfDump);
+      exit(EXIT_FAILURE);
+    }
+    fclose(pfDump);
+    DBG("Successfully opened the dump file\n");
+  } else if (iAction == 3) {
+    DBG("Switching to Check Magic Mode\n");
+  } else {
+    ERR("Unable to determine operating mode");
+    exit(EXIT_FAILURE);
   }
 
   if (iAction == 1) {
