@@ -586,9 +586,17 @@ main(int argc, const char *argv[])
   printf("\n");
 
   // test if tag is EV1
-  if(!bPWD)
-    if(get_ev1_version())
+  if(get_ev1_version()) {
+    if(!bPWD)
       printf("Tag is EV1 - PASSWORD may be required\n");
+    printf("EV1 storage size: ");
+    if(abtRx[6] == 0x0b)
+      printf("48 bytes\n");
+    else if(abtRx[6] == 0x0e)
+      printf("128 bytes\n");
+    else
+      printf("unknown!\n");
+  }
 
   // EV1 login required
   if(bPWD){
