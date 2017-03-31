@@ -134,18 +134,38 @@ typedef struct {
   uint8_t  otp[4];
 } mifareul_block_manufacturer;
 
-// MIFARE Ultralight EV1 Config Pages
+// MIFARE Ultralight EV1 MF0UL11 Config Pages
 typedef struct {
   uint8_t  mod;
-  uint8_t  rfui[2];
+  uint8_t  rfui1[2];
   uint8_t  auth0;
   uint8_t  access;
   uint8_t  vctid;
-  uint8_t  rfui1[2];
+  uint8_t  rfui2[2];
   uint8_t  pwd[4];
   uint8_t  pack[2];
+  uint8_t  rfui3[2];
+} mifareul_block_config11;
+
+// MIFARE Ultralight EV1 MF0UL21 ConfigA Pages
+typedef struct {
+  uint8_t  lock[3];
+  uint8_t  rfui0;
+  uint8_t  mod;
+  uint8_t  rfui1[2];
+  uint8_t  auth0;
+  uint8_t  access;
+  uint8_t  vctid;
   uint8_t  rfui2[2];
-} mifareul_block_config;
+  uint8_t  pwd[4];
+} mifareul_block_config21A;
+
+// MIFARE Ultralight EV1 MF0UL21 ConfigB Pages
+typedef struct {
+  uint8_t  pack[2];
+  uint8_t  rfui3[2];
+  uint8_t  dummy[12];
+} mifareul_block_config21B;
 
 typedef struct {
   uint8_t  abtData[16];
@@ -154,7 +174,9 @@ typedef struct {
 typedef union {
   mifareul_block_manufacturer mbm;
   mifareul_block_data mbd;
-  mifareul_block_config mbc;
+  mifareul_block_config11 mbc11;
+  mifareul_block_config21A mbc21a;
+  mifareul_block_config21B mbc21b;
 } mifareul_block;
 
 // standard UL tag - 1 manuf block + 3 user blocks
@@ -167,9 +189,9 @@ typedef struct {
   mifareul_block amb[5];
 } mifareul_ev1_mf0ul11_tag;
 
-// UL EV1 MF0UL21 tag - 1 manuf block + 8 user blocks + 1 config block
+// UL EV1 MF0UL21 tag - 1 manuf block + 8 user blocks + 1/4 lock block + 1 config block
 typedef struct {
-  mifareul_block amb[10];
+  mifareul_block amb[11];
 } mifareul_ev1_mf0ul21_tag;
 
 // Reset struct alignment to default

@@ -60,7 +60,6 @@
 
 #define MAX_TARGET_COUNT 16
 #define MAX_UID_LEN 10
-#define BLOCK_COUNT 0xf
 
 #define EV1_NONE 0
 #define EV1_UL11 1
@@ -70,7 +69,7 @@ static nfc_device *pnd;
 static nfc_target nt;
 static mifare_param mp;
 static mifareul_ev1_mf0ul21_tag mtDump; // use the largest tag type for internal storage
-static uint32_t uiBlocks = BLOCK_COUNT;
+static uint32_t uiBlocks = 0x10;
 static uint32_t uiReadPages = 0;
 static uint8_t iPWD[4] = { 0x0 };
 static uint8_t iPACK[2] = { 0x0 };
@@ -115,34 +114,32 @@ read_card(void)
   bool    bFailure = false;
   uint32_t uiFailedPages = 0;
 
-  printf("Reading %d pages |", uiBlocks + 1);
+  printf("Reading %d pages |", uiBlocks);
 
-  for (page = 0; page <= uiBlocks; page += 4) {
+  for (page = 0; page < uiBlocks; page += 4) {
     // Try to read out the data block
     if (nfc_initiator_mifare_cmd(pnd, MC_READ, page, &mp)) {
-      memcpy(mtDump.amb[page / 4].mbd.abtData, mp.mpd.abtData, 16);
+      memcpy(mtDump.amb[page / 4].mbd.abtData, mp.mpd.abtData, uiBlocks - page < 4 ? (uiBlocks - page) * 4 : 16);
     } else {
       bFailure = true;
     }
-
-    print_success_or_failure(bFailure, &uiReadPages, &uiFailedPages);
-    print_success_or_failure(bFailure, &uiReadPages, &uiFailedPages);
-    print_success_or_failure(bFailure, &uiReadPages, &uiFailedPages);
-    print_success_or_failure(bFailure, &uiReadPages, &uiFailedPages);
+    for (uint8_t i=0; i < (uiBlocks - page < 4 ? uiBlocks - page : 4); i++) {
+      print_success_or_failure(bFailure, &uiReadPages, &uiFailedPages);
+    }
   }
   printf("|\n");
-  printf("Done, %d of %d pages read (%d pages failed).\n", uiReadPages, uiBlocks + 1, uiFailedPages);
+  printf("Done, %d of %d pages read (%d pages failed).\n", uiReadPages, uiBlocks, uiFailedPages);
   fflush(stdout);
 
   // copy EV1 secrets to dump data
   switch(iEV1Type) {
     case EV1_UL11:
-      memcpy(mtDump.amb[4].mbc.pwd, iPWD, 4);
-      memcpy(mtDump.amb[4].mbc.pack, iPACK, 2);
+      memcpy(mtDump.amb[4].mbc11.pwd, iPWD, 4);
+      memcpy(mtDump.amb[4].mbc11.pack, iPACK, 2);
       break;
     case EV1_UL21:
-      memcpy(mtDump.amb[9].mbc.pwd, iPWD, 4);
-      memcpy(mtDump.amb[9].mbc.pack, iPACK, 2);
+      memcpy(mtDump.amb[9].mbc21a.pwd, iPWD, 4);
+      memcpy(mtDump.amb[9].mbc21b.pack, iPACK, 2);
       break;
     case EV1_NONE:
     default:
@@ -347,7 +344,7 @@ write_card(bool write_otp, bool write_lock, bool write_uid)
     write_uid = ((buffer[0] == 'y') || (buffer[0] == 'Y'));
   }
 
-  printf("Writing %d pages |", uiBlocks + 1);
+  printf("Writing %d pages |", uiBlocks);
   /* We may need to skip 2 first pages. */
   if (!write_uid) {
     printf("ss");
@@ -359,7 +356,7 @@ write_card(bool write_otp, bool write_lock, bool write_uid)
     }
   }
 
-  for (uint32_t page = uiSkippedPages; page <= uiBlocks; page++) {
+  for (uint32_t page = uiSkippedPages; page < uiBlocks; page++) {
     if ((page == 0x2) && (!write_lock)) {
       printf("s");
       uiSkippedPages++;
@@ -391,7 +388,7 @@ write_card(bool write_otp, bool write_lock, bool write_uid)
     print_success_or_failure(bFailure, &uiWrittenPages, &uiFailedPages);
   }
   printf("|\n");
-  printf("Done, %d of %d pages written (%d pages skipped, %d pages failed).\n", uiWrittenPages, uiBlocks + 1, uiSkippedPages, uiFailedPages);
+  printf("Done, %d of %d pages written (%d pages skipped, %d pages failed).\n", uiWrittenPages, uiBlocks, uiSkippedPages, uiFailedPages);
 
   return true;
 }
@@ -602,13 +599,13 @@ main(int argc, const char *argv[])
     printf("EV1 storage size: ");
     if(abtRx[6] == 0x0b) {
       printf("48 bytes\n");
-      uiBlocks= 0x13;
+      uiBlocks= 0x14;
       iEV1Type= EV1_UL11;
       iDumpSize= sizeof(mifareul_ev1_mf0ul11_tag);
     }
     else if(abtRx[6] == 0x0e) {
       printf("128 bytes\n");
-      uiBlocks= 0x28;
+      uiBlocks= 0x29;
       iEV1Type= EV1_UL21;
       iDumpSize= sizeof(mifareul_ev1_mf0ul21_tag);
     }
