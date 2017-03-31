@@ -62,15 +62,27 @@
 #define MAX_UID_LEN 10
 #define BLOCK_COUNT 0xf
 
+#define EV1_NONE 0
+#define EV1_UL11 1
+#define EV1_UL21 2
+
 static nfc_device *pnd;
 static nfc_target nt;
 static mifare_param mp;
-static mifareul_tag mtDump;
-static const uint32_t uiBlocks = BLOCK_COUNT;
+static mifareul_ev1_mf0ul21_tag mtDump; // use the largest tag type for internal storage
+static uint32_t uiBlocks = BLOCK_COUNT;
+static uint32_t uiReadPages = 0;
+static uint8_t iPWD[4] = { 0x0 };
+static uint8_t iPACK[2] = { 0x0 };
+static uint8_t iEV1Type= EV1_NONE;
 
 // special unlock command
 uint8_t  abtUnlock1[1] = { 0x40 };
 uint8_t  abtUnlock2[1] = { 0x43 };
+
+// EV1 commands
+uint8_t  abtEV1[3] = { 0x60, 0x00, 0x00 };
+uint8_t  abtPWAuth[7] = { 0x1B, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 
 //Halt command
 uint8_t  abtHalt[4] = { 0x50, 0x00, 0x00, 0x00 };
@@ -79,6 +91,7 @@ uint8_t  abtHalt[4] = { 0x50, 0x00, 0x00, 0x00 };
 
 static uint8_t abtRx[MAX_FRAME_LEN];
 static int szRxBits;
+static int szRx;
 
 static const nfc_modulation nmMifare = {
   .nmt = NMT_ISO14443A,
@@ -100,7 +113,6 @@ read_card(void)
 {
   uint32_t page;
   bool    bFailure = false;
-  uint32_t uiReadPages = 0;
   uint32_t uiFailedPages = 0;
 
   printf("Reading %d pages |", uiBlocks + 1);
@@ -122,6 +134,21 @@ read_card(void)
   printf("Done, %d of %d pages read (%d pages failed).\n", uiReadPages, uiBlocks + 1, uiFailedPages);
   fflush(stdout);
 
+  // copy EV1 secrets to dump data
+  switch(iEV1Type) {
+    case EV1_UL11:
+      memcpy(mtDump.amb[4].mbc.pwd, iPWD, 4);
+      memcpy(mtDump.amb[4].mbc.pack, iPACK, 2);
+      break;
+    case EV1_UL21:
+      memcpy(mtDump.amb[9].mbc.pwd, iPWD, 4);
+      memcpy(mtDump.amb[9].mbc.pack, iPACK, 2);
+      break;
+    case EV1_NONE:
+    default:
+      break;
+  }
+
   return (!bFailure);
 }
 
@@ -139,15 +166,14 @@ transmit_bits(const uint8_t *pbtTx, const size_t szTxBits)
 static  bool
 transmit_bytes(const uint8_t *pbtTx, const size_t szTx)
 {
-  int res;
-  if ((res = nfc_initiator_transceive_bytes(pnd, pbtTx, szTx, abtRx, sizeof(abtRx), 0)) < 0)
+  if ((szRx = nfc_initiator_transceive_bytes(pnd, pbtTx, szTx, abtRx, sizeof(abtRx), 0)) < 0)
     return false;
 
   return true;
 }
 
 static bool
-unlock_card(void)
+raw_mode_start(void)
 {
   // Configure the CRC
   if (nfc_device_set_property_bool(pnd, NP_HANDLE_CRC, false) < 0) {
@@ -159,17 +185,12 @@ unlock_card(void)
     nfc_perror(pnd, "nfc_configure");
     return false;
   }
+  return true;
+}
 
-  iso14443a_crc_append(abtHalt, 2);
-  transmit_bytes(abtHalt, 4);
-  // now send unlock
-  if (!transmit_bits(abtUnlock1, 7)) {
-    return false;
-  }
-  if (!transmit_bytes(abtUnlock2, 1)) {
-    return false;
-  }
-
+static bool
+raw_mode_end(void)
+{
   // reset reader
   // Configure the CRC
   if (nfc_device_set_property_bool(pnd, NP_HANDLE_CRC, true) < 0) {
@@ -181,6 +202,65 @@ unlock_card(void)
     nfc_perror(pnd, "nfc_device_set_property_bool");
     return false;
   }
+  return true;
+}
+
+static bool
+get_ev1_version(void)
+{
+  if (!raw_mode_start())
+    return false;
+  iso14443a_crc_append(abtEV1, 1);
+  if(!transmit_bytes(abtEV1, 3)){
+    raw_mode_end();
+    return false;
+  }
+  if (!raw_mode_end())
+    return false;
+  if(!szRx)
+      return false;
+  return true;
+}
+
+static bool
+ev1_load_pwd(uint8_t target[4], const char *pwd)
+{
+  if(sscanf(pwd, "%2x%2x%2x%2x", (unsigned int *) &target[0], (unsigned int *) &target[1], (unsigned int *) &target[2], (unsigned int *) &target[3]) != 4)
+    return false;
+  return true;
+}
+
+static bool
+ev1_pwd_auth(uint8_t *pwd)
+{
+  if (!raw_mode_start())
+    return false;
+  memcpy(&abtPWAuth[1], pwd, 4);
+  iso14443a_crc_append(abtPWAuth, 5);
+  if(!transmit_bytes(abtPWAuth, 7))
+    return false;
+  if (!raw_mode_end())
+    return false;
+  return true;
+}
+
+static bool
+unlock_card(void)
+{
+  if (!raw_mode_start())
+    return false;
+  iso14443a_crc_append(abtHalt, 2);
+  transmit_bytes(abtHalt, 4);
+  // now send unlock
+  if (!transmit_bits(abtUnlock1, 7)) {
+    return false;
+  }
+  if (!transmit_bytes(abtUnlock2, 1)) {
+    return false;
+  }
+
+  if (!raw_mode_end())
+    return false;
   return true;
 }
 
@@ -371,25 +451,31 @@ static void
 print_usage(const char *argv[])
 {
   printf("Usage: %s r|w <dump.mfd> [OPTIONS]\n", argv[0]);
+  printf("Arguments:\n");
+  printf("\tr|w                 - Perform read or write\n");
+  printf("\t<dump.mfd>          - MiFare Dump (MFD) used to write (card to MFD) or (MFD to card)\n");
   printf("Options:\n");
-  printf("\tr|w\t\t - Perform read or write\n");
-  printf("\t<dump.mfd>\t - MiFare Dump (MFD) used to write (card to MFD) or (MFD to card)\n");
-  printf("\t--otp\t\t - Don't prompt for OTP writing (Assume yes)\n");
-  printf("\t--lock\t\t - Don't prompt for Lockbit writing (Assume yes)\n");
-  printf("\t--uid\t\t - Don't prompt for UID writing (Assume yes)\n");
-  printf("\t--full\t\t - Assume full card write (UID + OTP + Lockbit)\n");
-  printf("\t--with-uid <UID>\t\t - Specify UID to read/write from\n");
+  printf("\t--otp               - Don't prompt for OTP writing (Assume yes)\n");
+  printf("\t--lock              - Don't prompt for Lockbit writing (Assume yes)\n");
+  printf("\t--uid               - Don't prompt for UID writing (Assume yes)\n");
+  printf("\t--full              - Assume full card write (UID + OTP + Lockbit)\n");
+  printf("\t--with-uid <UID>    - Specify UID to read/write from\n");
+  printf("\t--pw <PWD>          - Specify 8 HEX digit PASSWORD for EV1\n");
+  printf("\t--partial           - Allow source data size to be other than tag capacity\n");
 }
 
 int
 main(int argc, const char *argv[])
 {
   int     iAction = 0;
+  uint8_t iDumpSize= sizeof(mifareul_tag);
   uint8_t iUID[MAX_UID_LEN] = { 0x0 };
   size_t  szUID = 0;
   bool    bOTP = false;
   bool    bLock = false;
   bool    bUID = false;
+  bool    bPWD = false;
+  bool    bPart = false;
   FILE   *pfDump;
 
   if (argc < 2) {
@@ -410,7 +496,7 @@ main(int argc, const char *argv[])
         ERR("Please supply a UID of 4, 7 or 10 bytes long. Ex: a1:b2:c3:d4");
         exit(EXIT_FAILURE);
       }
-      szUID = str_to_uid(argv[4], iUID);
+      szUID = str_to_uid(argv[++arg], iUID);
     } else if (0 == strcmp(argv[arg], "--full")) {
       bOTP = true;
       bLock = true;
@@ -423,6 +509,14 @@ main(int argc, const char *argv[])
       bUID = true;
     } else if (0 == strcmp(argv[arg], "--check-magic")) {
       iAction = 3;
+    } else if (0 == strcmp(argv[arg], "--partial")) {
+      bPart= true;
+    } else if (0 == strcmp(argv[arg], "--pw")) {
+      bPWD= true;
+      if(strlen(argv[++arg]) != 8 || ! ev1_load_pwd(iPWD, argv[arg])) {
+        ERR("Please supply a PASSWORD of 8 HEX digits");
+        exit(EXIT_FAILURE);
+      }
     } else {
       //Skip validation of the filename
       if ((arg != 2) && (arg != 4)) {
@@ -431,30 +525,6 @@ main(int argc, const char *argv[])
         exit(EXIT_FAILURE);
       }
     }
-  }
-
-  if (iAction == 1) {
-    memset(&mtDump, 0x00, sizeof(mtDump));
-  } else if (iAction == 2) {
-    pfDump = fopen(argv[2], "rb");
-
-    if (pfDump == NULL) {
-      ERR("Could not open dump file: %s\n", argv[2]);
-      exit(EXIT_FAILURE);
-    }
-
-    if (fread(&mtDump, 1, sizeof(mtDump), pfDump) != sizeof(mtDump)) {
-      ERR("Could not read from dump file: %s\n", argv[2]);
-      fclose(pfDump);
-      exit(EXIT_FAILURE);
-    }
-    fclose(pfDump);
-    DBG("Successfully opened the dump file\n");
-  } else if (iAction == 3) {
-    DBG("Switching to Check Magic Mode\n");
-  } else {
-    ERR("Unable to determine operating mode");
-    exit(EXIT_FAILURE);
   }
 
   nfc_context *context;
@@ -502,8 +572,8 @@ main(int argc, const char *argv[])
     nfc_exit(context);
     exit(EXIT_FAILURE);
   }
-  // Test if we are dealing with a MIFARE compatible tag
 
+  // Test if we are dealing with a MIFARE compatible tag
   if (nt.nti.nai.abtAtqa[1] != 0x44) {
     ERR("tag is not a MIFARE Ultralight card\n");
     nfc_close(pnd);
@@ -518,27 +588,99 @@ main(int argc, const char *argv[])
   }
   printf("\n");
 
-  if (iAction == 1) {
-    if (read_card()) {
-      printf("Writing data to file: %s ... ", argv[2]);
-      fflush(stdout);
-      pfDump = fopen(argv[2], "wb");
-      if (pfDump == NULL) {
-        printf("Could not open file: %s\n", argv[2]);
-        nfc_close(pnd);
-        nfc_exit(context);
-        exit(EXIT_FAILURE);
-      }
-      if (fwrite(&mtDump, 1, sizeof(mtDump), pfDump) != sizeof(mtDump)) {
-        printf("Could not write to file: %s\n", argv[2]);
-        fclose(pfDump);
-        nfc_close(pnd);
-        nfc_exit(context);
-        exit(EXIT_FAILURE);
-      }
-      fclose(pfDump);
-      printf("Done.\n");
+  // test if tag is EV1
+  if(get_ev1_version()) {
+    if(!bPWD)
+      printf("Tag is EV1 - PASSWORD may be required\n");
+    printf("EV1 storage size: ");
+    if(abtRx[6] == 0x0b) {
+      printf("48 bytes\n");
+      uiBlocks= 0x13;
+      iEV1Type= EV1_UL11;
+      iDumpSize= sizeof(mifareul_ev1_mf0ul11_tag);
     }
+    else if(abtRx[6] == 0x0e) {
+      printf("128 bytes\n");
+      uiBlocks= 0x28;
+      iEV1Type= EV1_UL21;
+      iDumpSize= sizeof(mifareul_ev1_mf0ul21_tag);
+    }
+    else
+      printf("unknown!\n");
+  }
+  else {
+  // re-init non EV1 tag
+    if (nfc_initiator_select_passive_target(pnd, nmMifare, (szUID) ? iUID : NULL, szUID, &nt) <= 0) {
+      ERR("no tag was found\n");
+      nfc_close(pnd);
+      nfc_exit(context);
+      exit(EXIT_FAILURE);
+    }
+  }
+
+  // EV1 login required
+  if(bPWD){
+    printf("Authing with PWD: %02x%02x%02x%02x ", iPWD[0], iPWD[1], iPWD[2], iPWD[3]);
+    if(!ev1_pwd_auth(iPWD)){
+      printf("\n");
+      ERR("AUTH failed!\n");
+      exit(EXIT_FAILURE);
+    }
+    else {
+      printf("Success - PACK: %02x%02x\n", abtRx[0], abtRx[1]);
+      memcpy(iPACK, abtRx, 2);
+    }
+  }
+
+  if (iAction == 1) {
+    memset(&mtDump, 0x00, sizeof(mtDump));
+  } else if (iAction == 2) {
+    pfDump = fopen(argv[2], "rb");
+
+    if (pfDump == NULL) {
+      ERR("Could not open dump file: %s\n", argv[2]);
+      exit(EXIT_FAILURE);
+    }
+
+    size_t  szDump;
+    if (((szDump= fread(&mtDump, 1, sizeof(mtDump), pfDump)) != iDumpSize && !bPart) || szDump <= 0) {
+      ERR("Could not read from dump file or size mismatch: %s\n", argv[2]);
+      fclose(pfDump);
+      exit(EXIT_FAILURE);
+    }
+    if(szDump != iDumpSize)
+      printf("Performing partial write\n");
+    fclose(pfDump);
+    DBG("Successfully opened the dump file\n");
+  } else if (iAction == 3) {
+    DBG("Switching to Check Magic Mode\n");
+  } else {
+    ERR("Unable to determine operating mode");
+    exit(EXIT_FAILURE);
+  }
+
+  if (iAction == 1) {
+    bool bRF= read_card();
+    printf("Writing data to file: %s ... ", argv[2]);
+    fflush(stdout);
+    pfDump = fopen(argv[2], "wb");
+    if (pfDump == NULL) {
+      printf("Could not open file: %s\n", argv[2]);
+      nfc_close(pnd);
+      nfc_exit(context);
+      exit(EXIT_FAILURE);
+    }
+    if (fwrite(&mtDump, 1, uiReadPages * 4, pfDump) != uiReadPages * 4) {
+      printf("Could not write to file: %s\n", argv[2]);
+      fclose(pfDump);
+      nfc_close(pnd);
+      nfc_exit(context);
+      exit(EXIT_FAILURE);
+    }
+    fclose(pfDump);
+    printf("Done.\n");
+    if(!bRF)
+      printf("Warning! Read failed - partial data written to file!\n");
   } else if (iAction == 2) {
     write_card(bOTP, bLock, bUID);
   } else if (iAction == 3) {
