@@ -222,8 +222,13 @@ get_ev1_version(void)
 static bool
 ev1_load_pwd(uint8_t target[4], const char *pwd)
 {
-  if (sscanf(pwd, "%2x%2x%2x%2x", (unsigned int *) &target[0], (unsigned int *) &target[1], (unsigned int *) &target[2], (unsigned int *) &target[3]) != 4)
+  unsigned int tmp[4];
+  if (sscanf(pwd, "%2x%2x%2x%2x", &tmp[0], &tmp[1], &tmp[2], &tmp[3]) != 4)
     return false;
+  target[0] = tmp[0];
+  target[1] = tmp[1];
+  target[2] = tmp[2];
+  target[3] = tmp[3];
   return true;
 }
 
