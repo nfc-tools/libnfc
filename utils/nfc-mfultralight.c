@@ -476,9 +476,10 @@ main(int argc, const char *argv[])
   bool    bUID = false;
   bool    bPWD = false;
   bool    bPart = false;
+  bool    bFilename = false;
   FILE   *pfDump;
 
-  if (argc < 2) {
+  if (argc < 3) {
     print_usage(argv);
     exit(EXIT_FAILURE);
   }
@@ -492,7 +493,7 @@ main(int argc, const char *argv[])
     } else if (0 == strcmp(argv[arg], "w")) {
       iAction = 2;
     } else if (0 == strcmp(argv[arg], "--with-uid")) {
-      if (argc < 5) {
+      if (arg+1 == argc) {
         ERR("Please supply a UID of 4, 7 or 10 bytes long. Ex: a1:b2:c3:d4");
         exit(EXIT_FAILURE);
       }
@@ -513,18 +514,24 @@ main(int argc, const char *argv[])
       bPart= true;
     } else if (0 == strcmp(argv[arg], "--pw")) {
       bPWD= true;
-      if(strlen(argv[++arg]) != 8 || ! ev1_load_pwd(iPWD, argv[arg])) {
+      if(arg+1 == argc || strlen(argv[++arg]) != 8 || ! ev1_load_pwd(iPWD, argv[arg])) {
         ERR("Please supply a PASSWORD of 8 HEX digits");
         exit(EXIT_FAILURE);
       }
     } else {
       //Skip validation of the filename
-      if ((arg != 2) && (arg != 4)) {
-        ERR("%s is not supported option.", argv[arg]);
+      if (arg != 2) {
+        ERR("%s is not a supported option.", argv[arg]);
         print_usage(argv);
         exit(EXIT_FAILURE);
+      } else {
+        bFilename = true;
       }
     }
+  }
+  if (! bFilename) {
+    ERR("Please supply a Mifare Dump filename");
+    exit(EXIT_FAILURE);
   }
 
   nfc_context *context;
