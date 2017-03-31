@@ -251,12 +251,12 @@ unlock_card(void)
   if (!transmit_bits(abtUnlock1, 7)) {
     printf("Warning: Unlock command [1/2]: failed / not acknowledged.\n");
   } else {
-	if (transmit_bytes(abtUnlock2, 1)) {
-		printf("Card unlocked\n");
-		unlocked = true;
-	} else {
-		printf("Warning: Unlock command [2/2]: failed / not acknowledged.\n");	
-	}
+    if (transmit_bytes(abtUnlock2, 1)) {
+      printf("Card unlocked\n");
+      unlocked = true;
+    } else {
+      printf("Warning: Unlock command [2/2]: failed / not acknowledged.\n");
+    }
   }
 
   // reset reader

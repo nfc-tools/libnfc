@@ -370,16 +370,16 @@ main(int argc, char *argv[])
     printf("Warning: Unlock command [1/2]: failed / not acknowledged.\n");
   } else {
     if (format) {
-	  transmit_bytes(abtWipe, 1);
-	  transmit_bytes(abtHalt, 4);
-  	  transmit_bits(abtUnlock1, 7);
+      transmit_bytes(abtWipe, 1);
+      transmit_bytes(abtHalt, 4);
+      transmit_bits(abtUnlock1, 7);
     }
-  
-	if (transmit_bytes(abtUnlock2, 1)) {
-		printf("Card unlocked\n");
-	} else {
-		printf("Warning: Unlock command [2/2]: failed / not acknowledged.\n");	
-	}
+
+    if (transmit_bytes(abtUnlock2, 1)) {
+      printf("Card unlocked\n");
+    } else {
+      printf("Warning: Unlock command [2/2]: failed / not acknowledged.\n");
+    }
   }
 
   transmit_bytes(abtWrite, 4);

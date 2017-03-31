@@ -73,7 +73,7 @@ static uint32_t uiBlocks = 0x10;
 static uint32_t uiReadPages = 0;
 static uint8_t iPWD[4] = { 0x0 };
 static uint8_t iPACK[2] = { 0x0 };
-static uint8_t iEV1Type= EV1_NONE;
+static uint8_t iEV1Type = EV1_NONE;
 
 // special unlock command
 uint8_t  abtUnlock1[1] = { 0x40 };
@@ -123,7 +123,7 @@ read_card(void)
     } else {
       bFailure = true;
     }
-    for (uint8_t i=0; i < (uiBlocks - page < 4 ? uiBlocks - page : 4); i++) {
+    for (uint8_t i = 0; i < (uiBlocks - page < 4 ? uiBlocks - page : 4); i++) {
       print_success_or_failure(bFailure, &uiReadPages, &uiFailedPages);
     }
   }
@@ -132,7 +132,7 @@ read_card(void)
   fflush(stdout);
 
   // copy EV1 secrets to dump data
-  switch(iEV1Type) {
+  switch (iEV1Type) {
     case EV1_UL11:
       memcpy(mtDump.amb[4].mbc11.pwd, iPWD, 4);
       memcpy(mtDump.amb[4].mbc11.pack, iPACK, 2);
@@ -208,21 +208,21 @@ get_ev1_version(void)
   if (!raw_mode_start())
     return false;
   iso14443a_crc_append(abtEV1, 1);
-  if(!transmit_bytes(abtEV1, 3)){
+  if (!transmit_bytes(abtEV1, 3)) {
     raw_mode_end();
     return false;
   }
   if (!raw_mode_end())
     return false;
-  if(!szRx)
-      return false;
+  if (!szRx)
+    return false;
   return true;
 }
 
 static bool
 ev1_load_pwd(uint8_t target[4], const char *pwd)
 {
-  if(sscanf(pwd, "%2x%2x%2x%2x", (unsigned int *) &target[0], (unsigned int *) &target[1], (unsigned int *) &target[2], (unsigned int *) &target[3]) != 4)
+  if (sscanf(pwd, "%2x%2x%2x%2x", (unsigned int *) &target[0], (unsigned int *) &target[1], (unsigned int *) &target[2], (unsigned int *) &target[3]) != 4)
     return false;
   return true;
 }
@@ -234,7 +234,7 @@ ev1_pwd_auth(uint8_t *pwd)
     return false;
   memcpy(&abtPWAuth[1], pwd, 4);
   iso14443a_crc_append(abtPWAuth, 5);
-  if(!transmit_bytes(abtPWAuth, 7))
+  if (!transmit_bytes(abtPWAuth, 7))
     return false;
   if (!raw_mode_end())
     return false;
@@ -465,7 +465,7 @@ int
 main(int argc, const char *argv[])
 {
   int     iAction = 0;
-  uint8_t iDumpSize= sizeof(mifareul_tag);
+  uint8_t iDumpSize = sizeof(mifareul_tag);
   uint8_t iUID[MAX_UID_LEN] = { 0x0 };
   size_t  szUID = 0;
   bool    bOTP = false;
@@ -490,7 +490,7 @@ main(int argc, const char *argv[])
     } else if (0 == strcmp(argv[arg], "w")) {
       iAction = 2;
     } else if (0 == strcmp(argv[arg], "--with-uid")) {
-      if (arg+1 == argc) {
+      if (arg + 1 == argc) {
         ERR("Please supply a UID of 4, 7 or 10 bytes long. Ex: a1:b2:c3:d4");
         exit(EXIT_FAILURE);
       }
@@ -508,10 +508,10 @@ main(int argc, const char *argv[])
     } else if (0 == strcmp(argv[arg], "--check-magic")) {
       iAction = 3;
     } else if (0 == strcmp(argv[arg], "--partial")) {
-      bPart= true;
+      bPart = true;
     } else if (0 == strcmp(argv[arg], "--pw")) {
-      bPWD= true;
-      if(arg+1 == argc || strlen(argv[++arg]) != 8 || ! ev1_load_pwd(iPWD, argv[arg])) {
+      bPWD = true;
+      if (arg + 1 == argc || strlen(argv[++arg]) != 8 || ! ev1_load_pwd(iPWD, argv[arg])) {
         ERR("Please supply a PASSWORD of 8 HEX digits");
         exit(EXIT_FAILURE);
       }
@@ -593,27 +593,24 @@ main(int argc, const char *argv[])
   printf("\n");
 
   // test if tag is EV1
-  if(get_ev1_version()) {
-    if(!bPWD)
+  if (get_ev1_version()) {
+    if (!bPWD)
       printf("Tag is EV1 - PASSWORD may be required\n");
     printf("EV1 storage size: ");
-    if(abtRx[6] == 0x0b) {
+    if (abtRx[6] == 0x0b) {
       printf("48 bytes\n");
-      uiBlocks= 0x14;
-      iEV1Type= EV1_UL11;
-      iDumpSize= sizeof(mifareul_ev1_mf0ul11_tag);
-    }
-    else if(abtRx[6] == 0x0e) {
+      uiBlocks = 0x14;
+      iEV1Type = EV1_UL11;
+      iDumpSize = sizeof(mifareul_ev1_mf0ul11_tag);
+    } else if (abtRx[6] == 0x0e) {
       printf("128 bytes\n");
-      uiBlocks= 0x29;
-      iEV1Type= EV1_UL21;
-      iDumpSize= sizeof(mifareul_ev1_mf0ul21_tag);
-    }
-    else
+      uiBlocks = 0x29;
+      iEV1Type = EV1_UL21;
+      iDumpSize = sizeof(mifareul_ev1_mf0ul21_tag);
+    } else
       printf("unknown!\n");
-  }
-  else {
-  // re-init non EV1 tag
+  } else {
+    // re-init non EV1 tag
     if (nfc_initiator_select_passive_target(pnd, nmMifare, (szUID) ? iUID : NULL, szUID, &nt) <= 0) {
       ERR("no tag was found\n");
       nfc_close(pnd);
@@ -623,14 +620,13 @@ main(int argc, const char *argv[])
   }
 
   // EV1 login required
-  if(bPWD){
+  if (bPWD) {
     printf("Authing with PWD: %02x%02x%02x%02x ", iPWD[0], iPWD[1], iPWD[2], iPWD[3]);
-    if(!ev1_pwd_auth(iPWD)){
+    if (!ev1_pwd_auth(iPWD)) {
       printf("\n");
       ERR("AUTH failed!\n");
       exit(EXIT_FAILURE);
-    }
-    else {
+    } else {
       printf("Success - PACK: %02x%02x\n", abtRx[0], abtRx[1]);
       memcpy(iPACK, abtRx, 2);
     }
@@ -647,12 +643,12 @@ main(int argc, const char *argv[])
     }
 
     size_t  szDump;
-    if (((szDump= fread(&mtDump, 1, sizeof(mtDump), pfDump)) != iDumpSize && !bPart) || szDump <= 0) {
+    if (((szDump = fread(&mtDump, 1, sizeof(mtDump), pfDump)) != iDumpSize && !bPart) || szDump <= 0) {
       ERR("Could not read from dump file or size mismatch: %s\n", argv[2]);
       fclose(pfDump);
       exit(EXIT_FAILURE);
     }
-    if(szDump != iDumpSize)
+    if (szDump != iDumpSize)
       printf("Performing partial write\n");
     fclose(pfDump);
     DBG("Successfully opened the dump file\n");
@@ -664,7 +660,7 @@ main(int argc, const char *argv[])
   }
 
   if (iAction == 1) {
-    bool bRF= read_card();
+    bool bRF = read_card();
     printf("Writing data to file: %s ... ", argv[2]);
     fflush(stdout);
     pfDump = fopen(argv[2], "wb");
@@ -683,7 +679,7 @@ main(int argc, const char *argv[])
     }
     fclose(pfDump);
     printf("Done.\n");
-    if(!bRF)
+    if (!bRF)
       printf("Warning! Read failed - partial data written to file!\n");
   } else if (iAction == 2) {
     write_card(bOTP, bLock, bUID);
