@@ -10,6 +10,9 @@ pkgconfig_DATA = libnfc.pc
 EXTRA_DIST = \
 	CMakeLists.txt \
 	Doxyfile \
+	HACKING.md \
+	NEWS.md \
+	README.md \
 	README-Windows.md \
 	libnfc.conf.sample
 
