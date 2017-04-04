@@ -44,4 +44,5 @@ if WITH_LOG
 endif
 
 EXTRA_DIST = \
-	CMakeLists.txt
+	CMakeLists.txt \
+	additional-pages.dox

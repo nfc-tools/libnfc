@@ -14,7 +14,8 @@ EXTRA_DIST = \
 	NEWS.md \
 	README.md \
 	README-Windows.md \
-	libnfc.conf.sample
+	libnfc.conf.sample \
+	mingw-cross-compile.sh
 
 CLEANFILES = Doxygen.log coverage.info libnfc.pc
 
