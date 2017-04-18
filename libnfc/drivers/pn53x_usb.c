@@ -124,16 +124,20 @@ struct pn53x_usb_supported_device {
   uint16_t product_id;
   pn53x_usb_model model;
   const char *name;
+  /* hardcoded known values for buggy hardware whose configuration vanishes */
+  uint32_t uiEndPointIn;
+  uint32_t uiEndPointOut;
+  uint32_t uiMaxPacketSize;
 };
 
 const struct pn53x_usb_supported_device pn53x_usb_supported_devices[] = {
-  { 0x04CC, 0x0531, NXP_PN531,   "Philips / PN531" },
-  { 0x04CC, 0x2533, NXP_PN533,   "NXP / PN533" },
-  { 0x04E6, 0x5591, SCM_SCL3711, "SCM Micro / SCL3711-NFC&RW" },
-  { 0x04E6, 0x5594, SCM_SCL3712, "SCM Micro / SCL3712-NFC&RW" },
-  { 0x054c, 0x0193, SONY_PN531,  "Sony / PN531" },
-  { 0x1FD3, 0x0608, ASK_LOGO,    "ASK / LoGO" },
-  { 0x054C, 0x02E1, SONY_RCS360, "Sony / FeliCa S360 [PaSoRi]" }
+  { 0x04CC, 0x0531, NXP_PN531,   "Philips / PN531", 0, 0, 0 },
+  { 0x04CC, 0x2533, NXP_PN533,   "NXP / PN533", 0, 0, 0 },
+  { 0x04E6, 0x5591, SCM_SCL3711, "SCM Micro / SCL3711-NFC&RW", 0x04, 0x84, 40 },
+  { 0x04E6, 0x5594, SCM_SCL3712, "SCM Micro / SCL3712-NFC&RW", 0, 0, 0 },
+  { 0x054c, 0x0193, SONY_PN531,  "Sony / PN531", 0, 0, 0 },
+  { 0x1FD3, 0x0608, ASK_LOGO,    "ASK / LoGO", 0, 0, 0 },
+  { 0x054C, 0x02E1, SONY_RCS360, "Sony / FeliCa S360 [PaSoRi]", 0, 0, 0 }
 };
 
 static pn53x_usb_model
@@ -146,6 +150,25 @@ pn53x_usb_get_device_model(uint16_t vendor_id, uint16_t product_id)
   }
 
   return UNKNOWN;
+}
+
+static void
+pn53x_usb_get_end_points_default(struct usb_device *dev, struct pn53x_usb_data *data)
+{
+  for (size_t n = 0; n < sizeof(pn53x_usb_supported_devices) / sizeof(struct pn53x_usb_supported_device); n++) {
+    if ((dev->descriptor.idVendor == pn53x_usb_supported_devices[n].vendor_id) &&
+        (dev->descriptor.idProduct == pn53x_usb_supported_devices[n].product_id)) {
+      if (pn53x_usb_supported_devices[n].uiMaxPacketSize != 0) {
+        data->uiEndPointIn = pn53x_usb_supported_devices[n].uiEndPointIn;
+        data->uiEndPointOut = pn53x_usb_supported_devices[n].uiEndPointOut;
+        data->uiMaxPacketSize = pn53x_usb_supported_devices[n].uiMaxPacketSize;
+      }
+
+      return;
+    }
+  }
+
+  return;
 }
 
 int  pn53x_usb_ack(nfc_device *pnd);
@@ -199,13 +222,20 @@ pn53x_usb_scan(const nfc_context *context, nfc_connstring connstrings[], const s
             (pn53x_usb_supported_devices[n].product_id == dev->descriptor.idProduct)) {
           // Make sure there are 2 endpoints available
           // with libusb-win32 we got some null pointers so be robust before looking at endpoints:
-          if (dev->config == NULL || dev->config->interface == NULL || dev->config->interface->altsetting == NULL) {
-            // Nope, we maybe want the next one, let's try to find another
-            continue;
-          }
-          if (dev->config->interface->altsetting->bNumEndpoints < 2) {
-            // Nope, we maybe want the next one, let's try to find another
-            continue;
+          if (dev->config == NULL) {
+            // We tolerate null config if we have defaults
+            if (pn53x_usb_supported_devices[n].uiMaxPacketSize == 0)
+              // Nope, we maybe want the next one, let's try to find another
+              continue;
+          } else {
+            if (dev->config->interface == NULL || dev->config->interface->altsetting == NULL) {
+              // Nope, we maybe want the next one, let's try to find another
+              continue;
+            }
+            if (dev->config->interface->altsetting->bNumEndpoints < 2) {
+              // Nope, we maybe want the next one, let's try to find another
+              continue;
+            }
           }
 
           usb_dev_handle *udev = usb_open(dev);
@@ -307,8 +337,11 @@ pn53x_usb_open(const nfc_context *context, const nfc_connstring connstring)
       // Open the USB device
       if ((data.pudh = usb_open(dev)) == NULL)
         continue;
-      // Retrieve end points
-      pn53x_usb_get_end_points(dev, &data);
+      // Retrieve end points, using default if dev->config is broken
+      if (dev->config == NULL)
+        pn53x_usb_get_end_points_default(dev, &data);
+      else
+        pn53x_usb_get_end_points(dev, &data);
       // Set configuration
       int res = usb_set_configuration(data.pudh, 1);
       if (res < 0) {
