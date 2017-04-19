@@ -132,7 +132,7 @@ struct pn53x_usb_supported_device {
 
 const struct pn53x_usb_supported_device pn53x_usb_supported_devices[] = {
   { 0x04CC, 0x0531, NXP_PN531,   "Philips / PN531", 0, 0, 0 },
-  { 0x04CC, 0x2533, NXP_PN533,   "NXP / PN533", 0, 0, 0 },
+  { 0x04CC, 0x2533, NXP_PN533,   "NXP / PN533", 0x04, 0x84, 40 },
   { 0x04E6, 0x5591, SCM_SCL3711, "SCM Micro / SCL3711-NFC&RW", 0x04, 0x84, 40 },
   { 0x04E6, 0x5594, SCM_SCL3712, "SCM Micro / SCL3712-NFC&RW", 0, 0, 0 },
   { 0x054c, 0x0193, SONY_PN531,  "Sony / PN531", 0, 0, 0 },
