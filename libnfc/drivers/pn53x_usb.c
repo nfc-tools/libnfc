@@ -188,28 +188,28 @@ static void pn533_fix_usbdesc(nfc_device *pnd)
 #define MAXSZXRAMUSBDESC 61
   if ((szXramUsbDesc == 0) || (MAXSZXRAMUSBDESC > 61))
     return;
-  /*
-    // Debug routine to check if corruption occurred:
-    // Don't read more regs at once or it will trigger the bug and corrupt what we're busy reading!
-    uint8_t abtCmdRR[] = { ReadRegister, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-    uint8_t nRRreg = ((sizeof(abtCmdRR) - 1) / 2);
-    uint8_t abtRxRR[1 + nRRreg];
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_INFO, "%s", "Checking USB descriptors corruption in XRAM");
-    for (uint8_t i = 0x19, j = 0; i < 0x19 + szXramUsbDesc;) {
-      for (uint8_t k = 0; k < nRRreg; k++) {
-        abtCmdRR[(2 * k) + 2] = i++;
-      }
-      if (pn53x_transceive(pnd, abtCmdRR, sizeof(abtCmdRR), abtRxRR, sizeof(abtRxRR), -1) < 0) {
-        return;  // void
-      }
-      for (int k = 0; (k < nRRreg) && (j < szXramUsbDesc); k++) {
-        //printf("0x%02x, ", abtRxRR[1 + k]);
-        if (btXramUsbDesc[j] != abtRxRR[1 + k])
-          log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_INFO, "XRAM corruption @ addr 0x00%02X: got %02x, expected %02x", 0x0019 + (j - 1), abtRxRR[1 + k], btXramUsbDesc[j]);
-        j++;
-      }
+#if 0
+  // Debug routine to check if corruption occurred:
+  // Don't read more regs at once or it will trigger the bug and corrupt what we're busy reading!
+  uint8_t abtCmdRR[] = { ReadRegister, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+  uint8_t nRRreg = ((sizeof(abtCmdRR) - 1) / 2);
+  uint8_t abtRxRR[1 + nRRreg];
+  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_INFO, "%s", "Checking USB descriptors corruption in XRAM");
+  for (uint8_t i = 0x19, j = 0; i < 0x19 + szXramUsbDesc;) {
+    for (uint8_t k = 0; k < nRRreg; k++) {
+      abtCmdRR[(2 * k) + 2] = i++;
     }
-  */
+    if (pn53x_transceive(pnd, abtCmdRR, sizeof(abtCmdRR), abtRxRR, sizeof(abtRxRR), -1) < 0) {
+      return;  // void
+    }
+    for (int k = 0; (k < nRRreg) && (j < szXramUsbDesc); k++) {
+      //printf("0x%02x, ", abtRxRR[1 + k]);
+      if (btXramUsbDesc[j] != abtRxRR[1 + k])
+        log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_INFO, "XRAM corruption @ addr 0x00%02X: got %02x, expected %02x", 0x0019 + (j - 1), abtRxRR[1 + k], btXramUsbDesc[j]);
+      j++;
+    }
+  }
+#endif
   // Abuse the overflow bug to restore USB descriptors in one go
   log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_INFO, "%s", "Fixing USB descriptors corruption");
   uint8_t abtCmdWR[19 + MAXSZXRAMUSBDESC] = { GetFirmwareVersion };
