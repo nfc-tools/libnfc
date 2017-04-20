@@ -729,6 +729,7 @@ read:
   }
   // The PN53x command is done and we successfully received the reply
   pnd->last_error = 0;
+  DRIVER_DATA(pnd)->possibly_corrupted_usbdesc |= len > 16;
   return len;
 }
 
