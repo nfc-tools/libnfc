@@ -185,7 +185,8 @@ static void pn533_fix_usbdesc(nfc_device *pnd)
     btXramUsbDesc = (uint8_t *)btXramUsbDesc_asklogo;
     szXramUsbDesc = sizeof(btXramUsbDesc_asklogo);
   }
-  if (szXramUsbDesc == 0)
+#define MAXSZXRAMUSBDESC 61
+  if ((szXramUsbDesc == 0) || (MAXSZXRAMUSBDESC > 61))
     return;
   /*
     // Debug routine to check if corruption occurred:
@@ -209,25 +210,16 @@ static void pn533_fix_usbdesc(nfc_device *pnd)
       }
     }
   */
-  // Restore USB descriptors
+  // Abuse the overflow bug to restore USB descriptors in one go
   log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_INFO, "%s", "Fixing USB descriptors corruption");
-  // Don't write more regs at once or it will trigger the bug and corrupt what we're busy reading!
-  uint8_t abtCmdWR[] = { WriteRegister, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+  uint8_t abtCmdWR[19 + MAXSZXRAMUSBDESC] = { GetFirmwareVersion };
+  for (uint8_t i = 0; i < szXramUsbDesc; i++) {
+    abtCmdWR[i + 19] = btXramUsbDesc[i];
+  }
   size_t szCmdWR = sizeof(abtCmdWR);
-  uint8_t nWRreg = ((sizeof(abtCmdWR) - 1) / 3);
-  uint8_t abtRxWR[1];
-  for (uint8_t i = 0x19, j = 0; i < 0x19 + szXramUsbDesc;) {
-    if (j == szXramUsbDesc)
-      break;
-    for (uint8_t k = 0; (k < nWRreg) && (j < szXramUsbDesc); k++) {
-      abtCmdWR[(3 * k) + 2] = i++;
-      abtCmdWR[(3 * k) + 3] = btXramUsbDesc[j++];
-    }
-    if (j == szXramUsbDesc)
-      szCmdWR = ((((szXramUsbDesc - 1) % nWRreg) + 1) * 3) + 1;
-    if (pn53x_transceive(pnd, abtCmdWR, szCmdWR, abtRxWR, sizeof(abtRxWR), -1) < 0) {
-      return; // void
-    }
+  uint8_t abtRxWR[4];
+  if (pn53x_transceive(pnd, abtCmdWR, szCmdWR, abtRxWR, sizeof(abtRxWR), -1) < 0) {
+    return; // void
   }
   DRIVER_DATA(pnd)->possibly_corrupted_usbdesc = false;
 }
