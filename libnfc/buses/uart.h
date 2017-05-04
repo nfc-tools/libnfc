@@ -49,14 +49,15 @@ typedef void *serial_port;
 
 serial_port uart_open(const char *pcPortName);
 void    uart_close(const serial_port sp);
-void    uart_flush_input(const serial_port sp, bool wait);
+int     uart_flush_input(const serial_port sp, bool wait);
 
-void    uart_set_speed(serial_port sp, const uint32_t uiPortSpeed);
+int     uart_set_speed(serial_port sp, const uint32_t uiPortSpeed);
 uint32_t uart_get_speed(const serial_port sp);
 
 int     uart_receive(serial_port sp, uint8_t *pbtRx, const size_t szRx, void *abort_p, int timeout);
 int     uart_send(serial_port sp, const uint8_t *pbtTx, const size_t szTx, int timeout);
 
 char  **uart_list_ports(void);
+void    uart_list_free(char **acPorts);
 
 #endif // __NFC_BUS_UART_H__

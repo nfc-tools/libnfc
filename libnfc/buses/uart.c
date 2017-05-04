@@ -143,10 +143,11 @@ uart_open(const char *pcPortName)
     uart_close_ext(sp, true);
     return INVALID_SERIAL_PORT;
   }
+
   return sp;
 }
 
-void
+int
 uart_flush_input(serial_port sp, bool wait)
 {
   // flush commands may seem to be without effect
@@ -158,34 +159,37 @@ uart_flush_input(serial_port sp, bool wait)
   }
 
   // This line seems to produce absolutely no effect on my system (GNU/Linux 2.6.35)
-  tcflush(UART_DATA(sp)->fd, TCIFLUSH);
+  if (tcflush(UART_DATA(sp)->fd, TCIFLUSH)) {
+    return NFC_EIO;
+  }
   // So, I wrote this byte-eater
   // Retrieve the count of the incoming bytes
   int available_bytes_count = 0;
   int res;
   res = ioctl(UART_DATA(sp)->fd, FIONREAD, &available_bytes_count);
   if (res != 0) {
-    return;
+    return NFC_EIO;
   }
   if (available_bytes_count == 0) {
-    return;
+    return NFC_SUCCESS;
   }
   char *rx = malloc(available_bytes_count);
   if (!rx) {
     perror("malloc");
-    return;
+    return NFC_ESOFT;
   }
   // There is something available, read the data
   if (read(UART_DATA(sp)->fd, rx, available_bytes_count) < 0) {
     perror("uart read");
     free(rx);
-    return;
+    return NFC_EIO;
   }
   log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%d bytes have eaten.", available_bytes_count);
   free(rx);
+  return NFC_SUCCESS;
 }
 
-void
+int
 uart_set_speed(serial_port sp, const uint32_t uiPortSpeed)
 {
   log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Serial port speed requested to be set to %d baud.", uiPortSpeed);
@@ -226,15 +230,17 @@ uart_set_speed(serial_port sp, const uint32_t uiPortSpeed)
     default:
       log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to set serial port speed to %d baud. Speed value must be one of those defined in termios(3).",
               uiPortSpeed);
-      return;
+      return NFC_ESOFT;
   };
 
   // Set port speed (Input and Output)
   cfsetispeed(&(UART_DATA(sp)->termios_new), stPortSpeed);
   cfsetospeed(&(UART_DATA(sp)->termios_new), stPortSpeed);
   if (tcsetattr(UART_DATA(sp)->fd, TCSADRAIN, &(UART_DATA(sp)->termios_new)) == -1) {
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Unable to apply new speed settings.");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to apply new speed settings.");
+	return NFC_EIO;
   }
+  return NFC_SUCCESS;
 }
 
 uint32_t
@@ -430,4 +436,17 @@ oom:
   closedir(pdDir);
 
   return res;
+}
+
+void
+uart_list_free(char ** acPorts)
+{
+  char *acPort;
+  size_t iDevice = 0;
+
+  while ((acPort = acPorts[iDevice++])) {
+    free((void *)acPort);
+  }
+
+  free(acPorts);
 }

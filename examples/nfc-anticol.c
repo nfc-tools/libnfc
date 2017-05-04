@@ -113,7 +113,7 @@ transmit_bits(const uint8_t *pbtTx, const size_t szTxBits)
 
 
 static  bool
-transmit_bytes(const uint8_t *pbtTx, const size_t szTx)
+transmit_bytes(const uint8_t *pbtTx, const size_t szTx, bool wantsReply)
 {
   uint32_t cycles = 0;
   // Show transmitted command
@@ -124,13 +124,13 @@ transmit_bytes(const uint8_t *pbtTx, const size_t szTx)
   int res;
   // Transmit the command bytes
   if (timed) {
-    if ((res = nfc_initiator_transceive_bytes_timed(pnd, pbtTx, szTx, abtRx, sizeof(abtRx), &cycles)) < 0)
+    if ((res = nfc_initiator_transceive_bytes_timed(pnd, pbtTx, szTx, abtRx, wantsReply ? sizeof(abtRx) : 0, &cycles)) < 0)
       return false;
     if ((!quiet_output) && (res > 0)) {
       printf("Response after %u cycles\n", cycles);
     }
   } else {
-    if ((res = nfc_initiator_transceive_bytes(pnd, pbtTx, szTx, abtRx, sizeof(abtRx), 0)) < 0)
+    if ((res = nfc_initiator_transceive_bytes(pnd, pbtTx, szTx, abtRx, wantsReply ? sizeof(abtRx) : 0, -1)) < 0)
       return false;
   }
   szRx = res;
@@ -235,7 +235,7 @@ main(int argc, char *argv[])
   memcpy(abtAtqa, abtRx, 2);
 
   // Anti-collision
-  transmit_bytes(abtSelectAll, 2);
+  transmit_bytes(abtSelectAll, 2, true);
 
   // Check answer
   if ((abtRx[0] ^ abtRx[1] ^ abtRx[2] ^ abtRx[3] ^ abtRx[4]) != 0) {
@@ -248,7 +248,7 @@ main(int argc, char *argv[])
   //Prepare and send CL1 Select-Command
   memcpy(abtSelectTag + 2, abtRx, 5);
   iso14443a_crc_append(abtSelectTag, 7);
-  transmit_bytes(abtSelectTag, 9);
+  transmit_bytes(abtSelectTag, 9, true);
   abtSak = abtRx[0];
 
   // Test if we are dealing with a CL2
@@ -267,7 +267,7 @@ main(int argc, char *argv[])
     abtSelectAll[0] = 0x95;
 
     // Anti-collision
-    transmit_bytes(abtSelectAll, 2);
+    transmit_bytes(abtSelectAll, 2, true);
 
     // Check answer
     if ((abtRx[0] ^ abtRx[1] ^ abtRx[2] ^ abtRx[3] ^ abtRx[4]) != 0) {
@@ -281,7 +281,7 @@ main(int argc, char *argv[])
     abtSelectTag[0] = 0x95;
     memcpy(abtSelectTag + 2, abtRx, 5);
     iso14443a_crc_append(abtSelectTag, 7);
-    transmit_bytes(abtSelectTag, 9);
+    transmit_bytes(abtSelectTag, 9, true);
     abtSak = abtRx[0];
 
     // Test if we are dealing with a CL3
@@ -298,7 +298,7 @@ main(int argc, char *argv[])
 
       // Prepare and send CL3 AC-Command
       abtSelectAll[0] = 0x97;
-      transmit_bytes(abtSelectAll, 2);
+      transmit_bytes(abtSelectAll, 2, true);
 
       // Check answer
       if ((abtRx[0] ^ abtRx[1] ^ abtRx[2] ^ abtRx[3] ^ abtRx[4]) != 0) {
@@ -312,7 +312,7 @@ main(int argc, char *argv[])
       abtSelectTag[0] = 0x97;
       memcpy(abtSelectTag + 2, abtRx, 5);
       iso14443a_crc_append(abtSelectTag, 7);
-      transmit_bytes(abtSelectTag, 9);
+      transmit_bytes(abtSelectTag, 9, true);
       abtSak = abtRx[0];
     }
   }
@@ -323,7 +323,7 @@ main(int argc, char *argv[])
   }
   if ((abtRx[0] & SAK_FLAG_ATS_SUPPORTED) || force_rats) {
     iso14443a_crc_append(abtRats, 2);
-    if (transmit_bytes(abtRats, 4)) {
+    if (transmit_bytes(abtRats, 4, true)) {
       memcpy(abtAts, abtRx, szRx);
       szAts = szRx;
     }
@@ -331,7 +331,7 @@ main(int argc, char *argv[])
 
   // Done, halt the tag now
   iso14443a_crc_append(abtHalt, 2);
-  transmit_bytes(abtHalt, 4);
+  transmit_bytes(abtHalt, 4, false);
 
   printf("\nFound tag with\n UID: ");
   switch (szCL) {
