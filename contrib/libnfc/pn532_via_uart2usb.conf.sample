@@ -1,3 +1,3 @@
 ## Typical configuration file for PN532 board (ie. microbuilder.eu / Adafruit) device
-name = "Adafruit PN532 board via UART"
-connstring = pn532_uart:/dev/ttyUSB0
+device.name = "Adafruit PN532 board via UART"
+device.connstring = pn532_uart:/dev/ttyUSB0
