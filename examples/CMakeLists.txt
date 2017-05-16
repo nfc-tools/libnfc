@@ -1,5 +1,6 @@
 SET(EXAMPLES-SOURCES
   nfc-anticol
+  nfc-barcode
   nfc-dep-initiator
   nfc-dep-target
   nfc-emulate-forum-tag2

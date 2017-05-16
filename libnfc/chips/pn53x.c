@@ -1333,7 +1333,7 @@ pn53x_initiator_transceive_bits(struct nfc_device *pnd, const uint8_t *pbtTx, co
   uint8_t  abtCmd[PN53x_EXTENDED_FRAME__DATA_MAX_LEN] = { InCommunicateThru };
 
   // Check if we should prepare the parity bits ourself
-  if (!pnd->bPar) {
+  if ((!pnd->bPar) && (szTxBits > 0)) {
     // Convert data with parity to a frame
     if ((res = pn53x_wrap_frame(pbtTx, szTxBits, pbtTxPar, abtCmd + 1)) < 0)
       return res;

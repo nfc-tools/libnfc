@@ -33,6 +33,7 @@ Improvements:
  - Add support for PN532 on RPi3 UART
  - Add support for cross-compilation of 32b & 64b versions  of the library for Windows
  - Add pn533_usb to the kernel modules blacklist
+ - Allows for sending empty data in nfc_initiator_transceive_bits
  - driver i2c: respect proper timing specifications
  - driver i2c: add retry on error mechanism
  - nfc-mfclassic: improvements fo magic cards
@@ -42,6 +43,7 @@ Improvements:
  - nfc-mfultralight: add automatic modes and --check-magic
  - nfc-mfultralight: add support for magic gen2 cards
  - nfc-mfultralight: add option to specify UID
+ - nfc-barcode: new command to read NFC Barcodes (Tag-Talks-First)
 
 Changes:
  - nfc_get_supported_baud_rate() takes now a "mode" parameter
