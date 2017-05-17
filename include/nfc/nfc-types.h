@@ -262,6 +262,15 @@ typedef struct {
 } nfc_jewel_info;
 
 /**
+ * @struct nfc_barcode_info
+ * @brief Thinfilm NFC Barcode information
+ */
+typedef struct {
+  size_t   szDataLen;
+  uint8_t  abtData[32];
+} nfc_barcode_info;
+
+/**
  * @union nfc_target_info
  * @brief Union between all kind of tags information structures.
  */
@@ -273,6 +282,7 @@ typedef union {
   nfc_iso14443b2sr_info nsi;
   nfc_iso14443b2ct_info nci;
   nfc_jewel_info nji;
+  nfc_barcode_info nti; // "t" for Thinfilm, "b" already used
   nfc_dep_info ndi;
 } nfc_target_info;
 
@@ -295,6 +305,7 @@ typedef enum {
 typedef enum {
   NMT_ISO14443A = 1,
   NMT_JEWEL,
+  NMT_BARCODE,    // Thinfilm NFC Barcode
   NMT_ISO14443B,
   NMT_ISO14443BI, // pre-ISO14443B aka ISO/IEC 14443 B' or Type B'
   NMT_ISO14443B2SR, // ISO14443-2B ST SRx

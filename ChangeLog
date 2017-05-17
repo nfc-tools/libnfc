@@ -43,11 +43,12 @@ Improvements:
  - nfc-mfultralight: add automatic modes and --check-magic
  - nfc-mfultralight: add support for magic gen2 cards
  - nfc-mfultralight: add option to specify UID
- - nfc-barcode: new command to read NFC Barcodes (Tag-Talks-First)
+ - nfc-barcode: new command to read and decode NFC Barcodes (Tag-Talks-First)
 
 Changes:
  - nfc_get_supported_baud_rate() takes now a "mode" parameter
  - New nfc_get_supported_baud_rate_target_mode()
+ - New NFC modulation type NMT_BARCODE to support Thinfilm NFC Barcode protocol
 
 Special thanks to:
  - Jim Anastassiou, Frédéric Bourgeois, Dario Carluccio, Emmanuel Dreyfus,

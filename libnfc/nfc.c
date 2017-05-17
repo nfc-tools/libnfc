@@ -602,9 +602,10 @@ nfc_initiator_list_passive_targets(nfc_device *pnd,
       break;
     }
     nfc_initiator_deselect_target(pnd);
-    // deselect has no effect on FeliCa and Jewel cards so we'll stop after one...
+    // deselect has no effect on FeliCa, Jewel and Thinfilm cards so we'll stop after one...
     // ISO/IEC 14443 B' cards are polled at 100% probability so it's not possible to detect correctly two cards at the same time
-    if ((nm.nmt == NMT_FELICA) || (nm.nmt == NMT_JEWEL) || (nm.nmt == NMT_ISO14443BI) || (nm.nmt == NMT_ISO14443B2SR) || (nm.nmt == NMT_ISO14443B2CT)) {
+    if ((nm.nmt == NMT_FELICA) || (nm.nmt == NMT_JEWEL) || (nm.nmt == NMT_BARCODE) ||
+        (nm.nmt == NMT_ISO14443BI) || (nm.nmt == NMT_ISO14443B2SR) || (nm.nmt == NMT_ISO14443B2CT)) {
       break;
     }
   }
@@ -1356,6 +1357,8 @@ str_nfc_modulation_type(const nfc_modulation_type nmt)
       return "FeliCa";
     case NMT_JEWEL:
       return "Innovision Jewel";
+    case NMT_BARCODE:
+      return "Thinfilm NFC Barcode";
     case NMT_DEP:
       return "D.E.P.";
   }

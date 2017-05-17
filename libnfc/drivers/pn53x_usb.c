@@ -474,6 +474,7 @@ pn53x_usb_open(const nfc_context *context, const nfc_connstring connstring)
         // empirical tuning
         case ASK_LOGO:
           CHIP_DATA(pnd)->timer_correction = 50;
+          CHIP_DATA(pnd)->progressive_field = true;
           break;
         case SCM_SCL3711:
         case SCM_SCL3712:

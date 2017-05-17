@@ -498,6 +498,22 @@ snprint_nfc_jewel_info(char *dst, size_t size, const nfc_jewel_info *pnji, bool 
   snprint_hex(dst + off, size - off, pnji->btId, 4);
 }
 
+void
+snprint_nfc_barcode_info(char *dst, size_t size, const nfc_barcode_info *pnti, bool verbose)
+{
+  (void) verbose;
+  int off = 0;
+  off += snprintf(dst + off, size - off, "        Size (bits): %lu\n", pnti->szDataLen * 8);
+  off += snprintf(dst + off, size - off, "            Content: ");
+  for (uint8_t i = 0; i < pnti->szDataLen; i++) {
+    off += snprintf(dst + off, size - off, "%02X", pnti->abtData[i]);
+    if ((i % 8 == 7) && (i < (pnti->szDataLen - 1))) {
+      off += snprintf(dst + off, size - off, "\n                     ");
+    }
+  }
+  snprintf(dst + off, size - off, "\n");
+}
+
 #define PI_ISO14443_4_SUPPORTED 0x01
 #define PI_NAD_SUPPORTED        0x01
 #define PI_CID_SUPPORTED        0x02
@@ -636,6 +652,9 @@ snprint_nfc_target(char *dst, size_t size, const nfc_target *pnt, bool verbose)
         break;
       case NMT_JEWEL:
         snprint_nfc_jewel_info(dst + off, size - off, &pnt->nti.nji, verbose);
+        break;
+      case NMT_BARCODE:
+        snprint_nfc_barcode_info(dst + off, size - off, &pnt->nti.nti, verbose);
         break;
       case NMT_FELICA:
         snprint_nfc_felica_info(dst + off, size - off, &pnt->nti.nfi, verbose);

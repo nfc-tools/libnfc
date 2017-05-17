@@ -210,6 +210,7 @@ struct pn53x_data {
   /** Supported modulation type */
   nfc_modulation_type *supported_modulation_as_initiator;
   nfc_modulation_type *supported_modulation_as_target;
+  bool progressive_field;
 };
 
 #define CHIP_DATA(pnd) ((struct pn53x_data*)(pnd->chip_data))
@@ -231,6 +232,8 @@ typedef enum {
   PM_ISO14443B_106 = 0x03,
   /** Jewel Topaz (Innovision Research & Development) (Not supported by PN531) */
   PM_JEWEL_106 = 0x04,
+  /** Thinfilm NFC Barcode (Not supported by PN531) */
+  PM_BARCODE_106 = 0x05,
   /** ISO14443-B http://en.wikipedia.org/wiki/ISO/IEC_14443 (Not supported by PN531 nor PN532) */
   PM_ISO14443B_212 = 0x06,
   /** ISO14443-B http://en.wikipedia.org/wiki/ISO/IEC_14443 (Not supported by PN531 nor PN532) */

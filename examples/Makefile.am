@@ -2,7 +2,6 @@ SUBDIRS = pn53x-tamashell-scripts
 
 bin_PROGRAMS = \
 		nfc-anticol \
-		nfc-barcode \
 		nfc-dep-initiator \
 		nfc-dep-target \
 		nfc-emulate-forum-tag2 \
@@ -34,10 +33,6 @@ nfc_poll_LDADD = $(top_builddir)/libnfc/libnfc.la \
 
 nfc_anticol_SOURCES = nfc-anticol.c
 nfc_anticol_LDADD = $(top_builddir)/libnfc/libnfc.la \
-		    $(top_builddir)/utils/libnfcutils.la
-
-nfc_barcode_SOURCES = nfc-barcode.c
-nfc_barcode_LDADD = $(top_builddir)/libnfc/libnfc.la \
 		    $(top_builddir)/utils/libnfcutils.la
 
 nfc_relay_SOURCES = nfc-relay.c
@@ -92,7 +87,6 @@ quick_start_example2_LDADD =  $(top_builddir)/libnfc/libnfc.la \
 
 dist_man_MANS = \
 		nfc-anticol.1 \
-		nfc-barcode.1 \
 		nfc-dep-initiator.1 \
 		nfc-dep-target.1 \
 		nfc-emulate-tag.1 \

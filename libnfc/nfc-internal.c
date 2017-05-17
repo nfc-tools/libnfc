@@ -201,6 +201,7 @@ prepare_initiator_data(const nfc_modulation nm, uint8_t **ppbtInitiatorData, siz
     break;
     case NMT_ISO14443A:
     case NMT_JEWEL:
+    case NMT_BARCODE:
     case NMT_DEP:
       *ppbtInitiatorData = NULL;
       *pszInitiatorData = 0;

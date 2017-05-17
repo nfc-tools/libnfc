@@ -55,9 +55,6 @@
 static nfc_device *pnd;
 
 bool    verbose = false;
-bool    decode = false;
-bool    rfoff = true;
-uint8_t n = 1;
 
 static void
 print_usage(char *argv[])
@@ -66,64 +63,12 @@ print_usage(char *argv[])
   printf("Options:\n");
   printf("\t-h\tHelp. Print this message.\n");
   printf("\t-q\tVerbose mode.\n");
-  printf("\t-d\tDecode content.\n");
-  printf("\t-r\tKeep RF field on (for slow devices such as ASK LoGO).\n");
-  printf("\t-n\tTry up to n times (default=1, max 255).\n");
 }
 
-static int
-bits2barcode(const uint8_t *pbtData, const size_t szBits, const uint8_t *pbtDataPar, uint8_t *pbtBarcode, const size_t szBarcode)
-{
-  uint8_t uRemainder;
-  size_t  szPos;
-  size_t  szBytes = szBits / 8;
-  size_t  off = 0;
-  uint8_t i;
-  for (i = 0; i < szBarcode; i++) {
-    pbtBarcode[i] = 0;
-  }
-
-  // Reinject S bit
-  pbtBarcode[off / 8] |= 1 << (7 - (off % 8));
-  off++;
-
-  for (szPos = 0; szPos < szBytes; szPos++) {
-    for (i = 0; i < 8; i++) {
-      pbtBarcode[off / 8] |= ((pbtData[szPos] >> i) & 1) << (7 - (off % 8));
-      off++;
-    }
-    pbtBarcode[off / 8] |= pbtDataPar[szPos] << (7 - (off % 8));
-    off++;
-  }
-  uRemainder = szBits % 8;
-  for (i = 0; i < uRemainder; i++) {
-    pbtBarcode[off / 8] |= ((pbtData[szPos] >> i) & 1) << (7 - (off % 8));
-    off++;
-  }
-  return off;
-}
-
-static bool
-validate_crc(uint8_t *pbtBarcode, const size_t szBarcode)
-{
-  if (szBarcode % 128 != 0) {
-    printf("Warning, NFC Barcode seems incomplete, skipping CRC\n");
-    return false;
-  }
-  uint8_t pbtCrc[2];
-  iso14443a_crc(pbtBarcode, (szBarcode / 8) - 2, pbtCrc);
-  if (verbose)
-    printf("Computed CRC: %02X %02X\n", pbtCrc[1], pbtCrc[0]);
-  return (pbtCrc[1] == pbtBarcode[(szBarcode / 8) - 2]) && (pbtCrc[0] == pbtBarcode[(szBarcode / 8) - 1]);
-}
 
 static bool
 decode_barcode(uint8_t *pbtBarcode, const size_t szBarcode)
 {
-  if (szBarcode % 128 != 0) {
-    printf("Warning, NFC Barcode seems incomplete, skipping decoding\n");
-    return false;
-  }
   if (verbose) {
     printf("Manufacturer ID field: %02X\n", pbtBarcode[0]);
     switch (pbtBarcode[0]) {
@@ -180,7 +125,7 @@ decode_barcode(uint8_t *pbtBarcode, const size_t szBarcode)
     default:
       printf("Data Format Field: unknown (%02X)\n", pbtBarcode[1]);
       printf("Data:");
-      for (uint8_t i = 2; i < (szBarcode / 8) - 2; i++) {
+      for (uint8_t i = 2; i < szBarcode - 2; i++) {
         printf("%02x", pbtBarcode[i]);
       }
       printf("\n");
@@ -193,9 +138,6 @@ int
 main(int argc, char *argv[])
 {
   int     arg;
-  uint8_t abtRx[MAX_FRAME_LEN];
-  uint8_t abtRxPar[MAX_FRAME_LEN];
-  uint8_t pbtBarcode[64];
 
   // Get commandline options
   for (arg = 1; arg < argc; arg++) {
@@ -204,16 +146,6 @@ main(int argc, char *argv[])
       exit(EXIT_SUCCESS);
     } else if (0 == strcmp(argv[arg], "-v")) {
       verbose = true;
-    } else if (0 == strcmp(argv[arg], "-d")) {
-      decode = true;
-    } else if (0 == strcmp(argv[arg], "-r")) {
-      rfoff = false;
-    } else if (0 == strcmp(argv[arg], "-n")) {
-      arg++;
-      int tmpn = atoi(argv[arg]);
-      if ((tmpn > 0) && (tmpn < 256)) {
-        n = tmpn;
-      }
     } else {
       ERR("%s is not supported option.", argv[arg]);
       print_usage(argv);
@@ -247,72 +179,19 @@ main(int argc, char *argv[])
 
   printf("NFC reader: %s opened\n\n", nfc_device_get_name(pnd));
 
-  if ((rfoff && (nfc_device_set_property_bool(pnd, NP_ACTIVATE_FIELD, false) < 0)) ||
-      (nfc_device_set_property_bool(pnd, NP_HANDLE_CRC, false) < 0) ||
-      (nfc_device_set_property_bool(pnd, NP_HANDLE_PARITY, false) < 0)) {
-    nfc_perror(pnd, "nfc_device_set_property_bool");
-    nfc_close(pnd);
-    nfc_exit(context);
-    exit(EXIT_FAILURE);
-  }
-
-  for (; n > 0; n--) {
-    int res;
-    if ((res = nfc_initiator_transceive_bits(pnd, NULL, 0, NULL, abtRx, sizeof(abtRx), abtRxPar)) < 0) {
-      if (verbose)
-        nfc_perror(pnd, "nfc_initiator_transceive_bits");
-      if (n == 1) {
-        printf("No NFC Barcode found\n");
-        nfc_close(pnd);
-        nfc_exit(context);
-        exit(EXIT_FAILURE);
-      }
-      continue;
-    }
-    if (verbose)
-      print_hex_par(abtRx, res, abtRxPar);
-    res = bits2barcode(abtRx, res, abtRxPar, pbtBarcode, sizeof(pbtBarcode));
-
-    if (res % 128 != 0) {
-      if (verbose) {
-        printf("Error, NFC Barcode seems incomplete, received %u bits\n", res);
-        print_hex_bits(pbtBarcode, res);
-      }
-      if (n == 1) {
-        printf("Error, NFC Barcode seems incomplete, received %u bits\n", res);
-        nfc_close(pnd);
-        nfc_exit(context);
-        exit(EXIT_FAILURE);
-      }
-      continue;
-    }
-    if (validate_crc(pbtBarcode, res)) {
-      if (verbose) {
-        printf("CRC correct\n");
-      }
-    } else {
-      if (n == 1) {
-        printf("CRC error\n");
-        if (verbose) {
-          print_hex_bits(pbtBarcode, res);
-        }
-        nfc_close(pnd);
-        nfc_exit(context);
-        exit(EXIT_FAILURE);
-      }
-      continue;
-    }
-
-    if (verbose || ! decode) {
-      for (uint8_t i = 0; i < res / 8; i++) {
-        printf("%02x", pbtBarcode[i]);
+  nfc_modulation nm;
+  nm.nmt = NMT_BARCODE;
+  nm.nbr = NBR_106;
+  nfc_target ant[1];
+  // List NFC Barcode targets
+  if ((nfc_initiator_list_passive_targets(pnd, nm, ant, 1)) == 1) {
+    if (verbose) {
+      for (uint8_t i = 0; i < (&ant[0])->nti.nti.szDataLen; i++) {
+        printf("%02x", (&ant[0])->nti.nti.abtData[i]);
       }
       printf("\n");
     }
-    if (decode) {
-      decode_barcode(pbtBarcode, res);
-    }
-    break;
+    decode_barcode((&ant[0])->nti.nti.abtData, (&ant[0])->nti.nti.szDataLen);
   }
   nfc_close(pnd);
   nfc_exit(context);

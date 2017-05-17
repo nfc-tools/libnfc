@@ -40,6 +40,7 @@ void    snprint_nfc_iso14443b2sr_info(char *dst, size_t size, const nfc_iso14443
 void    snprint_nfc_iso14443b2ct_info(char *dst, size_t size, const nfc_iso14443b2ct_info *pnci, bool verbose);
 void    snprint_nfc_felica_info(char *dst, size_t size, const nfc_felica_info *pnfi, bool verbose);
 void    snprint_nfc_jewel_info(char *dst, size_t size, const nfc_jewel_info *pnji, bool verbose);
+void    snprint_nfc_barcode_info(char *dst, size_t size, const nfc_barcode_info *pnti, bool verbose);
 void    snprint_nfc_dep_info(char *dst, size_t size, const nfc_dep_info *pndi, bool verbose);
 void    snprint_nfc_target(char *dst, size_t size, const nfc_target *pnt, bool verbose);
 
