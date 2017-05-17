@@ -48,7 +48,7 @@
 
 #include <nfc/nfc.h>
 
-#include "utils/nfc-utils.h"
+#include "nfc-utils.h"
 
 #define MAX_FRAME_LEN 264
 

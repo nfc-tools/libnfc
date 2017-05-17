@@ -19,7 +19,7 @@ libnfcutils_la_LIBADD = -lnfc
 
 nfc_barcode_SOURCES = nfc-barcode.c
 nfc_barcode_LDADD = $(top_builddir)/libnfc/libnfc.la \
-		    $(top_builddir)/utils/libnfcutils.la
+		    libnfcutils.la
 
 nfc_emulate_forum_tag4_SOURCES = nfc-emulate-forum-tag4.c nfc-utils.h
 nfc_emulate_forum_tag4_LDADD = $(top_builddir)/libnfc/libnfc.la \
