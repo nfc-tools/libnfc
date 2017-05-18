@@ -311,7 +311,7 @@ typedef enum {
   NMT_ISO14443B2SR, // ISO14443-2B ST SRx
   NMT_ISO14443B2CT, // ISO14443-2B ASK CTx
   NMT_FELICA,
-  NMT_DEP,
+  NMT_DEP,        // DEP should be kept last one as it's used as end-of-enum
 } nfc_modulation_type;
 
 /**

@@ -85,7 +85,7 @@ pn53x_init(struct nfc_device *pnd)
   }
 
   if (!CHIP_DATA(pnd)->supported_modulation_as_initiator) {
-    CHIP_DATA(pnd)->supported_modulation_as_initiator = malloc(sizeof(nfc_modulation_type) * 9);
+    CHIP_DATA(pnd)->supported_modulation_as_initiator = malloc(sizeof(nfc_modulation_type) * (NMT_DEP + 1));
     if (! CHIP_DATA(pnd)->supported_modulation_as_initiator)
       return NFC_ESOFT;
     int nbSupportedModulation = 0;
