@@ -131,6 +131,8 @@ NFC_EXPORT int nfc_device_get_supported_baud_rate_target_mode(nfc_device *pnd, c
 NFC_EXPORT int nfc_device_set_property_int(nfc_device *pnd, const nfc_property property, const int value);
 NFC_EXPORT int nfc_device_set_property_bool(nfc_device *pnd, const nfc_property property, const bool bEnable);
 
+NFC_EXPORT int pn53x_transceive(struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szTx, uint8_t *pbtRx, const size_t szRxLen, int timeout);
+
 /* Misc. functions */
 NFC_EXPORT void iso14443a_crc(uint8_t *pbtData, size_t szLen, uint8_t *pbtCrc);
 NFC_EXPORT void iso14443a_crc_append(uint8_t *pbtData, size_t szLen);
