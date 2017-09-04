@@ -324,7 +324,15 @@ pn532_uart_send(nfc_device *pnd, const uint8_t *pbtData, const size_t szData, in
         return res;
       }
       // According to PN532 application note, C106 appendix: to go out Low Vbat mode and enter in normal mode we need to send a SAMConfiguration command
-      if ((res = pn532_SAMConfiguration(pnd, PSM_NORMAL, 1000)) < 0) {
+      for (int i = 0; i < 10; i++) {
+        res = pn532_SAMConfiguration(pnd, PSM_NORMAL, 20);
+        if (res == NFC_ETIMEOUT) {
+          log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Command SAMConfiguration timeout, retry...");
+        } else {
+          break;
+        }
+      }
+      if (res < 0) {
         return res;
       }
     }
