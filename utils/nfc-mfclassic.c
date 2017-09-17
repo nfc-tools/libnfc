@@ -683,6 +683,7 @@ main(int argc, const char *argv[])
 // Testing RATS
   int res;
   if ((res = get_rats()) > 0) {
+    printf("RATS support: yes\n");
     if ((res >= 10) && (abtRx[5] == 0xc1) && (abtRx[6] == 0x05)
         && (abtRx[7] == 0x2f) && (abtRx[8] == 0x2f)
         && ((nt.nti.nai.abtAtqa[1] & 0x02) == 0x00)) {
@@ -694,7 +695,8 @@ main(int argc, const char *argv[])
         && (abtRx[7] == 0x19) && (abtRx[8] == 0x10)) {
       magic2 = true;
     }
-  }
+  } else
+    printf("RATS support: no\n");
   printf("Guessing size: seems to be a %lu-byte card\n", (uiBlocks + 1) * sizeof(mifare_classic_block));
 
   if (bUseKeyFile) {
