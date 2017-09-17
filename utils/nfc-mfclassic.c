@@ -316,7 +316,7 @@ read_card(int read_unlocked)
     //If the user is attempting an unlocked read, but has a direct-write type magic card, they don't
     //need to use the R mode. We'll trigger a warning and let them proceed.
     if (magic2) {
-      printf("Note: This card does not require an unlocked write (R) \n");
+      printf("Note: This card does not require an unlocked read (R) \n");
       read_unlocked = 0;
     } else {
       //If User has requested an unlocked read, but we're unable to unlock the card, we'll error out.
