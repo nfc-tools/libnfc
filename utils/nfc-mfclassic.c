@@ -463,9 +463,11 @@ write_card(bool write_unlocked)
           memcpy(mp.mpd.abtData, mtDump.amb[uiBlock].mbd.abtData, sizeof(mp.mpd.abtData));
         // do not write a block 0 with incorrect BCC - card will be made invalid!
         if (uiBlock == 0) {
-          if ((mp.mpd.abtData[0] ^ mp.mpd.abtData[1] ^ mp.mpd.abtData[2] ^ mp.mpd.abtData[3] ^ mp.mpd.abtData[4]) != 0x00 && !magic_type2a) {
+          uint8_t computed_bcc = mp.mpd.abtData[0] ^ mp.mpd.abtData[1] ^ mp.mpd.abtData[2] ^ mp.mpd.abtData[3];
+          // magic_type2a cards seem to be fine with faulty BCC
+          if ((computed_bcc != mp.mpd.abtData[4]) && !magic_type2a) {
             printf("!\nError: incorrect BCC in MFD file!\n");
-            printf("Expecting BCC=%02X\n", mp.mpd.abtData[0] ^ mp.mpd.abtData[1] ^ mp.mpd.abtData[2] ^ mp.mpd.abtData[3]);
+            printf("Expecting BCC: %02X, found: %02X\n", computed_bcc, mp.mpd.abtData[4]);
             return false;
           }
         }
