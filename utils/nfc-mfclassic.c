@@ -70,6 +70,7 @@ static bool bForceKeyFile;
 static bool bTolerateFailures;
 static bool bFormatCard;
 static bool magic_type2a = false;
+static bool magic_type2b = false;
 static bool unlocked = false;
 static uint8_t uiBlocks;
 static uint8_t keys[] = {
@@ -315,7 +316,7 @@ read_card(int read_unlocked)
   if (read_unlocked) {
     //If the user is attempting an unlocked read, but has a direct-write type magic card, they don't
     //need to use the R mode. We'll trigger a warning and let them proceed.
-    if (magic_type2a) {
+    if (magic_type2a || magic_type2b) {
       printf("Note: This card does not require an unlocked read (R) \n");
       read_unlocked = false;
     } else {
@@ -395,7 +396,7 @@ write_card(bool write_unlocked)
   if (write_unlocked) {
     //If the user is attempting an unlocked write, but has a direct-write type magic card, they don't
     //need to use the W mode. We'll trigger a warning and let them proceed.
-    if (magic_type2a) {
+    if (magic_type2a || magic_type2b) {
       printf("Note: This card does not require an unlocked write (W) \n");
       write_unlocked = false;
     } else {
@@ -449,7 +450,7 @@ write_card(bool write_unlocked)
       }
     } else {
       // The first block 0x00 is read only, skip this
-      if (uiBlock == 0 && !write_unlocked && !magic_type2a)
+      if (uiBlock == 0 && !(write_unlocked || magic_type2a || magic_type2b))
         continue;
 
 
@@ -476,6 +477,21 @@ write_card(bool write_unlocked)
     print_success_or_failure(bFailure, &uiWriteBlocks);
     if ((!bTolerateFailures) && bFailure)
       return false;
+    if (uiBlock == 0 && magic_type2b)
+    {
+      // CUID card must be selected again after writing of block0
+      if (nfc_initiator_select_passive_target(pnd, nmMifare, NULL, 0, &nt) <= 0) {
+        printf("Error: tag disappeared after writing block 0\n");
+        nfc_close(pnd);
+        nfc_exit(context);
+        exit(EXIT_FAILURE);
+      }
+      // Re-authenticate to sector 0 for writing of remaining blocks
+      if (!authenticate(uiBlock)) {
+        printf("!\nError: re-authentication failed for block %02x\n", uiBlock);
+        return false;
+      }
+    }
   }
   printf("|\n");
   printf("Done, %d of %d blocks written.\n", uiWriteBlocks, uiBlocks + 1);
@@ -495,11 +511,10 @@ print_usage(const char *pcProgramName)
 {
   printf("Usage: ");
   printf("%s f|r|R|w|W a|b u|U<01ab23cd> <dump.mfd> [<keys.mfd> [f]]\n", pcProgramName);
-  printf("  f|r|R|w|W     - Perform format (f) or read from (r) or unlocked read from (R) or write to (w) or unlocked write to (W) card\n");
-  printf("                  *** format will reset all keys to FFFFFFFFFFFF and all data to 00 and all ACLs to default\n");
-  printf("                  *** unlocked read does not require authentication and will reveal A and B keys\n");
-  printf("                  *** note that unlocked write will attempt to overwrite block 0 including UID\n");
-  printf("                  *** unlocking only works with special Mifare 1K cards (Chinese clones)\n");
+  printf("  f|r|R|w|W|C   - Perform format (f) or read from (r) or unlocked/gen1 read from (R) or write to (w) or unlocked/gen1\n");
+  printf("                  write to (W) or direct/CUID/gen2 write to (C) card\n");
+  printf("                  *** Options (R), (W) and (C) only work on Chinese magic cards (read manpage to prevent bricking them!)\n");
+  printf("                  *** Format will reset all keys to FFFFFFFFFFFF and all data to 00 and all ACLs to default\n");
   printf("  a|A|b|B       - Use A or B keys for action; Halt on errors (a|b) or tolerate errors (A|B)\n");
   printf("  u|U           - Use any (u) uid or supply a uid specifically as U01ab23cd.\n");
   printf("  <dump.mfd>    - MiFare Dump (MFD) used to write (card to MFD) or (MFD to card)\n");
@@ -547,10 +562,12 @@ main(int argc, const char *argv[])
     bTolerateFailures = tolower((int)((unsigned char) * (argv[2]))) != (int)((unsigned char) * (argv[2]));
     bUseKeyFile = (argc > 5);
     bForceKeyFile = ((argc > 6) && (strcmp((char *)argv[6], "f") == 0));
-  } else if (strcmp(command, "w") == 0 || strcmp(command, "W") == 0 || strcmp(command, "f") == 0) {
+  } else if (strcmp(command, "w") == 0 || strcmp(command, "W") == 0 || strcmp(command, "C") == 0 || strcmp(command, "f") == 0) {
     atAction = ACTION_WRITE;
     if (strcmp(command, "W") == 0)
       unlock = true;
+    if (strcmp(command, "C") == 0)
+      magic_type2b = true;
     bFormatCard = (strcmp(command, "f") == 0);
     bUseKeyA = tolower((int)((unsigned char) * (argv[2]))) == 'a';
     bTolerateFailures = tolower((int)((unsigned char) * (argv[2]))) != (int)((unsigned char) * (argv[2]));

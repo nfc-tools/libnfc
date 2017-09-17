@@ -37,14 +37,32 @@ option to format the card will reset all keys to FFFFFFFFFFFF, all data to 00 an
 
 The
 .B W
-option allows writing of special MIFARE cards that can be 'unlocked' to allow block 0
-to be overwritten. This includes UID and manufacturer data. Take care when amending UIDs to set
-the correct BCC (UID checksum). Currently only 4 byte UIDs are supported.
-
-Similarly, the
+option performs a write operation on special MIFARE Classic cards, that can
+be 'unlocked' to allow block 0 to be modified ('generation 1 Chinese magic
+cards'). Similarly, the
 .B R
 option allows an 'unlocked' read. This bypasses authentication and allows
 reading of the Key A and Key B data regardless of ACLs.
+
+The
+.B C
+option performs a write operation on special MIFARE Classic cards, that allow
+block 0 to be modified by the regular write command ('generation 2 Chinese
+magic cards'/'CUID direct-write cards'). This type of card does not reply to
+the backdoor/unlock command of generation 1 cards and is therefore harder to
+detect.
+
+*** Note that
+.B W
+,
+.B R
+and
+.B C
+options only work on Chinese magic cards (clones of MIFARE Classic cards, that
+have a modifiable block 0). Rewriting block 0 allows for modification of
+manufacturer data such as the UID. Writing bad manufacturer data into block 0
+(e.g. bad BCC) may permanantly brick a Chinese magic card. Currently, only
+4-byte UIDs are supported.
 
 R/W errors on some blocks can be either considered as critical or ignored.
 To halt on first error, specify keys with lowercase (
@@ -66,25 +84,21 @@ hexadecimal UID to the U option. For example U01ab23cd for the 4 byte UID
 parameter instead will use whatever libnfc decides which generally is the lowest
 UID.
 
-*** Note that
-.B W
-and
-.B R
-options only work on special versions of MIFARE 1K cards (Chinese clones).
-
 .SH OPTIONS
 .TP
-.BR f " | " r " | " R " | " w " | " W
+.BR f " | " r " | " R " | " w " | " W " | " C
 Perform format (
 .B f
 ) or read from (
 .B r
-) or unlocked read from (
+) or unlocked/gen1 read from (
 .B R
 ) or write to (
 .B w
-) or unlocked write to (
+) or unlocked/gen1 write to (
 .B W
+) or direct/CUID/gen2 write to (
+C
 ) card.
 .TP
 .BR a " | " A " | " b " | " B
