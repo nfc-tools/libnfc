@@ -1,70 +1,70 @@
-    *-
-    * Free/Libre Near Field Communication (NFC) library
-    *
-    * Libnfc historical contributors:
-    * Copyright (C) 2009      Roel Verdult
-    * Copyright (C) 2009-2013 Romuald Conty
-    * Copyright (C) 2010-2012 Romain Tartière
-    * Copyright (C) 2010-2013 Philippe Teuwen
-    * Copyright (C) 2012-2013 Ludovic Rousseau
-    * Additional contributors of Windows-specific parts:
-    * Copyright (C) 2010      Glenn Ergeerts
-    * Copyright (C) 2013      Alex Lian
-    -*
+## Compile for Windows - 64-BIT (x64)  
+   
+#### Tested using windows 10 pro x64, build 1703.  
+  
+Install latest libusbk release from: (this installs both libusb and libusbk windows components required for running libnfc applications)  
+https://sourceforge.net/projects/libusb-win32/files/libusbK-release/  
+https://sourceforge.net/projects/libusb-win32/files/libusbK-release/libusbK-3.0.7.0-setup.exe  
+  
+#### install mingw64 toolchain on Windows:  
+  
+##### Install latest version of: MSYS2  for 64-bit windows. 
+##### even if msys2 version appears old, the packages it installs are very recent:  
+http://www.msys2.org/  
+ msys2-x86_64-xxxxxxxx.exe  
+  
+  
+##### Open the MSYS shell in mingw-64 mode (64-bit mode)  
+```  
+#update the MSYS system using pacman:  
+pacman -Syu  
 
-Requirements
-============
+#close the shell, re-open and run:  
+pacman -Su   
+  
+#install build tools:  
+pacman -S git make mingw-w64-$(uname -m)-gcc mingw-w64-$(uname -m)-binutils mingw-w64-$(uname -m)-cmake mingw-w64-$(uname -m)-zlib mingw-w64-$(uname -m)-make  
+```  
+  
+#### download and extract: libusb-win32-bin-1.2.6.0.zip   
+##### todo: (this step shouldn't be needed, as libusb0.dll is already in system32, but the logic is broken in the libusb search that cmake uses in: cmake/modules/FindLIBUSB.cmake, so do this step for now)    
+https://sourceforge.net/projects/libusb-win32/files/libusb-win32-releases/1.2.6.0/  
+##### Extract contents to the native program files directory: (not the x86 program files!):   
+C:\Program Files\libusb-win32  
 
-- MinGW-w64 compiler toolchain [1]
-- LibUsb-Win32 1.2.5.0 (or greater) [2]
-- CMake 2.8 [3]
+#### Restart msys2 bash - in mingw-64 mode.  
+  
+```
 
-This was tested on Windows 7 64 bit, but should work on Windows Vista and
-Windows XP and 32 bit as well.
-Only the ACS ACR122 and the ASK Logo readers are tested at the moment, so any feedback about other devices is very welcome.
+#download libnfc source files:  
+cd ~  
+mkdir libnfc-build-win64  
+git clone https://github.com/nfc-tools/libnfc.git
+    
+# launch windows powershell x64 (non-admin)  
+# add some paths for current build session:  
+  
+$env:Path += ";c:\msys64\mingw64\bin;c:\msys64\mingw64\x86_64-w64-mingw32\lib;c:\msys64\mingw64\x86_64-w64-mingw32\include"
+cd C:\msys64\home\<your username>\libnfc-build-win64  
 
-Community forum: http://www.libnfc.org/community/
+#then, run "CMD.exe" from within the powershell, (this ensures the PATH set above is available in the build environment)
+cmd.exe  
 
-Building
-========
+# configure the build with cmake:
+cmake -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release ..\libnfc  
+  
+# run cmake again, same parameters, otherwise errors appear:
+cmake -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release ..\libnfc  
+  
+# build it!
+mingw32-make  
 
-To build the distribution the MinGW Makefiles generator of CMake was used. Here
-is an example of how to generate a distribution with the above mentioned
-requirements fulfilled (it is assumed the CMake binaries are in the system
-path, this is optional during installation of CMake):
+```
+#### put your "libnfc.conf" into c:\program files (x86)\libnfc\config\libnfc.conf   
+todo: it is the wrong location currently for a x64 system, but it works and this will be fixed to use c:\programdata\libnfc\config\libnfc.conf at some point.  
+  
+#### put compiled DLL file to the real system32 directory: (c:\windows\sysnative\libnfc.dll on syswow64 machines)   
+copy .\libnfc\libnfc.dll c:\windows\system32\libnfc.dll  
 
-- Add the following directories to your PATH:
+#### Run the executables found in libnfc\utils or libnfc\examples 
 
-        c:\MinGW64\bin;c:\MinGW64\x86_64-w64-mingw32\lib32;c:\MinGW64\x86_64-w64-mingw32\include
-
-- Now it is possible to run CMake and mingw32-make:
-
-        C:\dev\libnfc-read-only> mkdir ..\libnfc-build
-      C:\dev\libnfc-read-only> cd ..\libnfc-build
-      C:\dev\libnfc-build> cmake-gui .
-
-Now you can configure the build. Press "Configure", specify "MinGW32 Makefiles"
-and then you have the opportunity to set some configuration variables. If you
-don't want a Debug build change the variable CMAKE_BUILD_TYPE to "Release".
-
-If a non-GUI solution is preferred one can use:
-
-    C:\dev\libnfc-build> cmake -G "MinGW Makefiles"
-                                     -DCMAKE_BUILD_TYPE=Release ..\libnfc-read-only
-
-Now run mingw32-make to build:
-
-    C:\dev\libnfc-read-only\bin> mingw32-make
-
-The build will create a shared library for Windows (nfc.dll) to link your applications against. It will compile
-the tools against this shared library.
-
-References
-==========
-[1] the easiest way is to use the TDM-GCC installer.
-        Make sure to select MinGW-w64 in the installer, the regular MinGW does not contain headers for PCSC.
-        http://sourceforge.net/projects/tdm-gcc/files/TDM-GCC%20Installer/tdm64-gcc-4.5.1.exe/download
-
-[2] http://sourceforge.net/projects/libusb-win32/files/
-
-[3] http://www.cmake.org
