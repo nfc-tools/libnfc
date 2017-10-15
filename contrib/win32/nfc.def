@@ -50,3 +50,7 @@ EXPORTS
   str_nfc_modulation_type
   str_nfc_baud_rate
   str_nfc_target
+  pn53x_transceive
+  pn532_SAMConfiguration
+  pn53x_read_register
+  pn53x_write_register
