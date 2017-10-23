@@ -2,6 +2,7 @@ SUBDIRS = pn53x-tamashell-scripts
 
 bin_PROGRAMS = \
 		nfc-anticol \
+		nfc-detect-chinese-magic-card \
 		nfc-dep-initiator \
 		nfc-dep-target \
 		nfc-emulate-forum-tag2 \
@@ -33,6 +34,10 @@ nfc_poll_LDADD = $(top_builddir)/libnfc/libnfc.la \
 
 nfc_anticol_SOURCES = nfc-anticol.c
 nfc_anticol_LDADD = $(top_builddir)/libnfc/libnfc.la \
+		    $(top_builddir)/utils/libnfcutils.la
+
+nfc_detect_chinese_magic_card_SOURCES = nfc-detect-chinese-magic-card.c
+nfc_detect_chinese_magic_card_LDADD = $(top_builddir)/libnfc/libnfc.la \
 		    $(top_builddir)/utils/libnfcutils.la
 
 nfc_relay_SOURCES = nfc-relay.c
