@@ -279,7 +279,7 @@ snprint_nfc_iso14443a_info(char *dst, size_t size, const nfc_iso14443a_info *pna
             off += snprintf(dst + off, size - off, "    * Warning: Type Identification Coding length (%i)", L);
             off += snprintf(dst + off, size - off, " not matching Tk length (%" PRIdPTR ")\n", (pnai->szAtsLen - offset));
           }
-          if ((pnai->szAtsLen - offset - 2) > 0) { // Omit 2 CRC bytes
+          if ((pnai->szAtsLen - offset) != 2) { // Omit 2 CRC bytes
             uint8_t CTC = pnai->abtAts[offset];
             offset++;
             off += snprintf(dst + off, size - off, "    * Chip Type: ");
@@ -322,7 +322,7 @@ snprint_nfc_iso14443a_info(char *dst, size_t size, const nfc_iso14443a_info *pna
                 break;
             }
           }
-          if ((pnai->szAtsLen - offset) > 0) { // Omit 2 CRC bytes
+          if (pnai->szAtsLen != offset) { // Omit 2 CRC bytes
             uint8_t CVC = pnai->abtAts[offset];
             offset++;
             off += snprintf(dst + off, size - off, "    * Chip Status: ");
@@ -356,7 +356,7 @@ snprint_nfc_iso14443a_info(char *dst, size_t size, const nfc_iso14443a_info *pna
                 break;
             }
           }
-          if ((pnai->szAtsLen - offset) > 0) { // Omit 2 CRC bytes
+          if (pnai->szAtsLen != offset) { // Omit 2 CRC bytes
             uint8_t VCS = pnai->abtAts[offset];
             offset++;
             off += snprintf(dst + off, size - off, "    * Specifics (Virtual Card Selection):\n");
