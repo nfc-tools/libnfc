@@ -67,6 +67,7 @@ static mifare_classic_tag mtDump;
 static bool bUseKeyA;
 static bool bUseKeyFile;
 static bool bForceKeyFile;
+static bool overwriteBlockZero = false;
 static bool bTolerateFailures;
 static bool bFormatCard;
 static bool magic2 = false;
@@ -449,7 +450,7 @@ write_card(int write_block_zero)
       }
     } else {
       // The first block 0x00 is read only, skip this
-      if (uiBlock == 0 && ! write_block_zero && ! magic2)
+      if (uiBlock == 0 && ! write_block_zero && ! magic2 && ! overwriteBlockZero)
         continue;
 
 
@@ -495,11 +496,13 @@ print_usage(const char *pcProgramName)
 {
   printf("Usage: ");
   printf("%s f|r|R|w|W a|b u|U<01ab23cd> <dump.mfd> [<keys.mfd> [f]]\n", pcProgramName);
-  printf("  f|r|R|w|W     - Perform format (f) or read from (r) or unlocked read from (R) or write to (w) or unlocked write to (W) card\n");
+  printf("  f|r|R|w|W|wbz - Perform format (f) or read from (r) or unlocked read from (R) or write to (w) or unlocked write to (W) card or write with additionally write to block zero (wbz)\n");
   printf("                  *** format will reset all keys to FFFFFFFFFFFF and all data to 00 and all ACLs to default\n");
   printf("                  *** unlocked read does not require authentication and will reveal A and B keys\n");
   printf("                  *** note that unlocked write will attempt to overwrite block 0 including UID\n");
   printf("                  *** unlocking only works with special Mifare 1K cards (Chinese clones)\n");
+  printf("                  *** Write to block zero (wbz) tries to force to overwrite block 0 which contains the UID information. This will also invoke a normal write (w) task.\n");
+  printf("                      Therefore the write to block 0 requires special chinese cards to work which sometimes can't be detected as a magic2 card. Otherwise an error will occur.\n");
   printf("  a|A|b|B       - Use A or B keys for action; Halt on errors (a|b) or tolerate errors (A|B)\n");
   printf("  u|U           - Use any (u) uid or supply a uid specifically as U01ab23cd.\n");
   printf("  <dump.mfd>    - MiFare Dump (MFD) used to write (card to MFD) or (MFD to card)\n");
@@ -547,10 +550,12 @@ main(int argc, const char *argv[])
     bTolerateFailures = tolower((int)((unsigned char) * (argv[2]))) != (int)((unsigned char) * (argv[2]));
     bUseKeyFile = (argc > 5);
     bForceKeyFile = ((argc > 6) && (strcmp((char *)argv[6], "f") == 0));
-  } else if (strcmp(command, "w") == 0 || strcmp(command, "W") == 0 || strcmp(command, "f") == 0) {
+  } else if (strcmp(command, "w") == 0 || strcmp(command, "W") == 0 || strcmp(command, "f") == 0 || strcmp(command, "wbz") == 0) {
     atAction = ACTION_WRITE;
     if (strcmp(command, "W") == 0)
       unlock = 1;
+    if (strcmp(command, "wbz") == 0)
+      overwriteBlockZero = true;
     bFormatCard = (strcmp(command, "f") == 0);
     bUseKeyA = tolower((int)((unsigned char) * (argv[2]))) == 'a';
     bTolerateFailures = tolower((int)((unsigned char) * (argv[2]))) != (int)((unsigned char) * (argv[2]));
