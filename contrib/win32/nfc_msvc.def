@@ -1,4 +1,4 @@
-LIBRARY libnfc
+LIBRARY nfc
 VERSION 1.7
 
 EXPORTS
