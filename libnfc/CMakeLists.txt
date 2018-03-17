@@ -5,6 +5,9 @@ IF(WIN32)
 
   # Add in the rc for version information in the dll
   LIST(APPEND WINDOWS_SOURCES ${CMAKE_CURRENT_BINARY_DIR}/../windows/libnfc.rc)
+  IF (NOT MINGW)
+    LIST(APPEND WINDOWS_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/../contrib/win32/nfc_msvc.def)
+  ENDIF()
 ENDIF(WIN32)
 
 # Library's chips
@@ -88,13 +91,16 @@ SET_TARGET_PROPERTIES(nfc PROPERTIES SOVERSION 5 VERSION 5.0.1)
 IF(WIN32)
   # Libraries that are windows specific
   TARGET_LINK_LIBRARIES(nfc wsock32)
-
-  ADD_CUSTOM_COMMAND(
-    OUTPUT libnfc.lib
-    COMMAND ${DLLTOOL} -d ${CMAKE_CURRENT_SOURCE_DIR}/../contrib/win32/nfc.def -l ${CMAKE_CURRENT_BINARY_DIR}/libnfc.lib ${CMAKE_CURRENT_BINARY_DIR}/libnfc.dll
-    DEPENDS nfc ${CMAKE_CURRENT_SOURCE_DIR}/../contrib/win32/nfc.def
-  )
-  ADD_CUSTOM_TARGET(win32lib ALL DEPENDS libnfc.lib)
+  IF(MINGW)
+    ADD_CUSTOM_COMMAND(
+      OUTPUT libnfc.lib
+      COMMAND ${DLLTOOL} -d ${CMAKE_CURRENT_SOURCE_DIR}/../contrib/win32/nfc.def -l ${CMAKE_CURRENT_BINARY_DIR}/libnfc.lib ${CMAKE_CURRENT_BINARY_DIR}/libnfc.dll
+      DEPENDS nfc ${CMAKE_CURRENT_SOURCE_DIR}/../contrib/win32/nfc.def
+    )
+    ADD_CUSTOM_TARGET(win32lib ALL DEPENDS libnfc.lib)
+  ELSE()
+    ADD_LIBRARY(win32lib ALIAS nfc)
+  ENDIF()
 
   # On Windows the shared (runtime) library should be either in the same 
   # directory as the excutables or in the path, we add it to same directory

@@ -527,7 +527,7 @@ nfc_initiator_select_passive_target(nfc_device *pnd,
                                     nfc_target *pnt)
 {
   uint8_t *abtInit = NULL;
-  uint8_t abtTmpInit[MAX(12, szInitData)];
+  uint8_t *abtTmpInit = malloc(MAX(12, szInitData));
   size_t  szInit = 0;
   int res;
   if ((res = nfc_device_validate_modulation(pnd, N_INITIATOR, &nm)) != NFC_SUCCESS)
@@ -545,6 +545,8 @@ nfc_initiator_select_passive_target(nfc_device *pnd,
   }
 
   HAL(initiator_select_passive_target, pnd, nm, abtInit, szInit, pnt);
+
+  free(abtTmpInit);
 }
 
 /** @ingroup initiator
