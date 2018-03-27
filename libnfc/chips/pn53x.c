@@ -3715,3 +3715,9 @@ pn53x_data_free(struct nfc_device *pnd)
   }
   free(pnd->chip_data);
 }
+
+uint8_t
+get_last_status(const struct nfc_device *pnd)
+{
+  return CHIP_DATA(pnd)->last_status_byte;
+}
