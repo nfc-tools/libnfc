@@ -141,6 +141,7 @@ NFC_EXPORT uint8_t *iso14443a_locate_historical_bytes(uint8_t *pbtAts, size_t sz
 NFC_EXPORT void nfc_free(void *p);
 NFC_EXPORT const char *nfc_version(void);
 NFC_EXPORT int nfc_device_get_information_about(nfc_device *pnd, char **buf);
+NFC_EXPORT uint8_t nfc_device_get_last_status(const nfc_device *pnd);
 
 /* String converter functions */
 NFC_EXPORT const char *str_nfc_modulation_type(const nfc_modulation_type nmt);

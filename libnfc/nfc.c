@@ -1310,6 +1310,17 @@ nfc_device_get_information_about(nfc_device *pnd, char **buf)
   HAL(device_get_information_about, pnd, buf);
 }
 
+/** @ingroup misc
+ * @brief Get the status byte returned for the last command run on the device
+ * @return Returns the status byte of the last run command
+ * @param pnd \a nfc_device struct pointer that represent currently used device
+ */
+uint8_t
+nfc_device_get_last_status(const nfc_device *pnd)
+{
+  return get_last_status(pnd);
+}
+
 /** @ingroup string-converter
  * @brief Convert \a nfc_baud_rate value to string
  * @return Returns nfc baud rate

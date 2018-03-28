@@ -225,4 +225,6 @@ void prepare_initiator_data(const nfc_modulation nm, uint8_t **ppbtInitiatorData
 
 int connstring_decode(const nfc_connstring connstring, const char *driver_name, const char *bus_name, char **pparam1, char **pparam2);
 
+uint8_t get_last_status(const nfc_device *pnd);
+
 #endif // __NFC_INTERNAL_H__
