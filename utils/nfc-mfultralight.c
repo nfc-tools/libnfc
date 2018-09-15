@@ -9,7 +9,7 @@
  * Copyright (C) 2012-2013 Ludovic Rousseau
  * See AUTHORS file for a more comprehensive list of contributors.
  * Additional contributors of this file:
- * Copyright (C) 2013-2017 Adam Laurie
+ * Copyright (C) 2013-2018 Adam Laurie
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -64,11 +64,14 @@
 #define EV1_NONE 0
 #define EV1_UL11 1
 #define EV1_UL21 2
+#define EV1_NTAG213 3
+#define EV1_NTAG215 4
+#define EV1_NTAG216 5
 
 static nfc_device *pnd;
 static nfc_target nt;
 static mifare_param mp;
-static mifareul_ev1_mf0ul21_tag mtDump; // use the largest tag type for internal storage
+static maxtag mtDump; // use the largest tag type for internal storage
 static uint32_t uiBlocks = 0x10;
 static uint32_t uiReadPages = 0;
 static uint8_t iPWD[4] = { 0x0 };
@@ -119,7 +122,7 @@ read_card(void)
   for (page = 0; page < uiBlocks; page += 4) {
     // Try to read out the data block
     if (nfc_initiator_mifare_cmd(pnd, MC_READ, page, &mp)) {
-      memcpy(mtDump.amb[page / 4].mbd.abtData, mp.mpd.abtData, uiBlocks - page < 4 ? (uiBlocks - page) * 4 : 16);
+      memcpy(mtDump.ul[page / 4].mbd.abtData, mp.mpd.abtData, uiBlocks - page < 4 ? (uiBlocks - page) * 4 : 16);
     } else {
       bFailure = true;
     }
@@ -134,12 +137,24 @@ read_card(void)
   // copy EV1 secrets to dump data
   switch (iEV1Type) {
     case EV1_UL11:
-      memcpy(mtDump.amb[4].mbc11.pwd, iPWD, 4);
-      memcpy(mtDump.amb[4].mbc11.pack, iPACK, 2);
+      memcpy(mtDump.ul[4].mbc11.pwd, iPWD, 4);
+      memcpy(mtDump.ul[4].mbc11.pack, iPACK, 2);
       break;
     case EV1_UL21:
-      memcpy(mtDump.amb[9].mbc21a.pwd, iPWD, 4);
-      memcpy(mtDump.amb[9].mbc21b.pack, iPACK, 2);
+      memcpy(mtDump.ul[9].mbc21a.pwd, iPWD, 4);
+      memcpy(mtDump.ul[9].mbc21b.pack, iPACK, 2);
+      break;
+    case EV1_NTAG213:
+      memcpy(mtDump.nt[43].mbc21356d.pwd, iPWD, 4);
+      memcpy(mtDump.nt[44].mbc21356e.pack, iPACK, 2);
+      break;
+    case EV1_NTAG215:
+      memcpy(mtDump.nt[133].mbc21356d.pwd, iPWD, 4);
+      memcpy(mtDump.nt[134].mbc21356e.pack, iPACK, 2);
+      break;
+    case EV1_NTAG216:
+      memcpy(mtDump.nt[229].mbc21356d.pwd, iPWD, 4);
+      memcpy(mtDump.nt[230].mbc21356e.pack, iPACK, 2);
       break;
     case EV1_NONE:
     default:
@@ -386,7 +401,7 @@ write_card(bool write_otp, bool write_lock, bool write_uid)
     // page (4 bytes). The Ultralight-specific Write command only
     // writes one page at a time.
     uiBlock = page / 4;
-    memcpy(mp.mpd.abtData, mtDump.amb[uiBlock].mbd.abtData + ((page % 4) * 4), 4);
+    memcpy(mp.mpd.abtData, mtDump.ul[uiBlock].mbd.abtData + ((page % 4) * 4), 4);
     memset(mp.mpd.abtData + 4, 0, 12);
     if (!nfc_initiator_mifare_cmd(pnd, MC_WRITE, page, &mp))
       bFailure = true;
@@ -470,7 +485,7 @@ int
 main(int argc, const char *argv[])
 {
   int     iAction = 0;
-  uint8_t iDumpSize = sizeof(mifareul_tag);
+  size_t  iDumpSize = sizeof(mifareul_tag);
   uint8_t iUID[MAX_UID_LEN] = { 0x0 };
   size_t  szUID = 0;
   bool    bOTP = false;
@@ -601,19 +616,36 @@ main(int argc, const char *argv[])
   if (get_ev1_version()) {
     if (!bPWD)
       printf("Tag is EV1 - PASSWORD may be required\n");
-    printf("EV1 storage size: ");
+    printf("EV1 type: ");
     if (abtRx[6] == 0x0b) {
-      printf("48 bytes\n");
-      uiBlocks = 0x14;
+      printf("MF0UL11 (48 bytes)\n");
+      uiBlocks = 20; // total number of 4 byte 'pages'
       iEV1Type = EV1_UL11;
       iDumpSize = sizeof(mifareul_ev1_mf0ul11_tag);
     } else if (abtRx[6] == 0x0e) {
-      printf("128 bytes\n");
-      uiBlocks = 0x29;
+      printf("MF0UL21 (128 user bytes)\n");
+      uiBlocks = 41; 
       iEV1Type = EV1_UL21;
       iDumpSize = sizeof(mifareul_ev1_mf0ul21_tag);
-    } else
-      printf("unknown!\n");
+    } else if (abtRx[6] == 0x0f) {
+      printf("NTAG213 (144 user bytes)\n");
+      uiBlocks = 45;
+      iEV1Type = EV1_NTAG213;
+      iDumpSize = sizeof(mifarentag_213_tag);
+    } else if (abtRx[6] == 0x11) {
+      printf("NTAG215 (504 user bytes)\n");
+      uiBlocks = 135;
+      iEV1Type = EV1_NTAG215;
+      iDumpSize = sizeof(mifarentag_215_tag);
+    } else if (abtRx[6] == 0x13) {
+      printf("NTAG216 (888 user bytes)\n");
+      uiBlocks = 231;
+      iEV1Type = EV1_NTAG216;
+      iDumpSize = sizeof(mifarentag_216_tag);
+    } else {
+      printf("unknown! (0x%02x)\n", abtRx[6]);
+      exit(EXIT_FAILURE);
+    }
   } else {
     // re-init non EV1 tag
     if (nfc_initiator_select_passive_target(pnd, nmMifare, (szUID) ? iUID : NULL, szUID, &nt) <= 0) {

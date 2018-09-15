@@ -9,7 +9,7 @@
  * Copyright (C) 2012-2013 Ludovic Rousseau
  * See AUTHORS file for a more comprehensive list of contributors.
  * Additional contributors of this file:
- * Copyright (C) 2017 Adam Laurie
+ * Copyright (C) 2017-2018 Adam Laurie
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -167,9 +167,61 @@ typedef struct {
   uint8_t  dummy[12];
 } mifareul_block_config21B;
 
+// MIFARE NTAG21[3/5/6] Manufacturer Pages
+typedef struct {
+  uint8_t  sn0[4];
+} mifarentag_block_manuf21356A;
+typedef struct {
+  uint8_t  sn1[4];
+} mifarentag_block_manuf21356B;
+typedef struct {
+  uint8_t  sn2;
+  uint8_t  internal;
+  uint8_t  lock[2];
+} mifarentag_block_manuf21356C;
+typedef struct {
+  uint8_t  cc[4];
+} mifarentag_block_manuf21356D;
+
+// MIFARE NTAG21[3/5/6] Config Pages
+typedef struct {
+  uint8_t  dynlock[3];
+  uint8_t  rfui0;
+} mifarentag_block_config21356A;
+typedef struct {
+  uint8_t  cfg0[4];
+} mifarentag_block_config21356B;
+typedef struct {
+  uint8_t  cfg1[4];
+} mifarentag_block_config21356C;
+typedef struct {
+  uint8_t  pwd[4];
+} mifarentag_block_config21356D;
+typedef struct {
+  uint8_t  pack[2];
+  uint8_t  rfui1[2];
+} mifarentag_block_config21356E;
+
 typedef struct {
   uint8_t  abtData[16];
 } mifareul_block_data;
+
+typedef struct {
+  uint8_t  abtData[4];
+} mifarentag_block_data;
+
+typedef union {
+  mifarentag_block_manuf21356A mbm21356a;
+  mifarentag_block_manuf21356B mbm21356b;
+  mifarentag_block_manuf21356C mbm21356c;
+  mifarentag_block_manuf21356D mbm21356d;
+  mifarentag_block_data mbd;
+  mifarentag_block_config21356A mbc21356a;
+  mifarentag_block_config21356B mbc21356b;
+  mifarentag_block_config21356C mbc21356c;
+  mifarentag_block_config21356D mbc21356d;
+  mifarentag_block_config21356E mbc21356e;
+} mifarentag_block;
 
 typedef union {
   mifareul_block_manufacturer mbm;
@@ -193,6 +245,43 @@ typedef struct {
 typedef struct {
   mifareul_block amb[11];
 } mifareul_ev1_mf0ul21_tag;
+
+// NOT really UL but so similar we can re-use this code
+// if Edwin van Andel doesn't distract us...
+// https://www.nxp.com/docs/en/data-sheet/NTAG213_215_216.pdf
+
+// NTAG213 EEPROM: 180 bytes, organized in 45 pages of 4 byte per page.
+//   26 bytes reserved for manufacturer and configuration data
+//   34 bits used for the read-only locking mechanism
+//   4 bytes available as capability container
+//   144 bytes user programmable read/write memory
+typedef struct {
+  mifarentag_block amb[45];
+} mifarentag_213_tag;
+
+// NTAG215 EEPROM: 540 bytes, organized in 135 pages of 4 byte per page.
+//   26 bytes reserved for manufacturer and configuration data
+//   28 bits used for the read-only locking mechanism
+//   4 bytes available as capability container
+//   504 bytes user programmable read/write memory
+typedef struct {
+  mifarentag_block amb[135];
+} mifarentag_215_tag;
+
+// NTAG216 EEPROM: 924 bytes, organized in 231 pages of 4 byte per page.
+//   26 bytes reserved for manufacturer and configuration data
+//   37 bits used for the read-only locking mechanism
+//   4 bytes available as capability container
+//   888 bytes user programmable read/write memory
+typedef struct {
+  mifarentag_block amb[231];
+} mifarentag_216_tag;
+
+// dummy max size with all structures in it for reading, rounded up to a multiple of 16 bytes
+typedef union {
+  mifareul_block ul[58];
+  mifarentag_block nt[232];
+} maxtag;
 
 // Reset struct alignment to default
 #  pragma pack()
