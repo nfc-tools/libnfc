@@ -61,12 +61,17 @@
 #define MAX_TARGET_COUNT 16
 #define MAX_UID_LEN 10
 
-#define EV1_NONE 0
-#define EV1_UL11 1
-#define EV1_UL21 2
+#define EV1_NONE    0
+#define EV1_UL11    1
+#define EV1_UL21    2
 #define EV1_NTAG213 3
 #define EV1_NTAG215 4
 #define EV1_NTAG216 5
+
+#define NTAG_NONE 0
+#define NTAG_213  1
+#define NTAG_215  2
+#define NTAG_216  3
 
 static nfc_device *pnd;
 static nfc_target nt;
@@ -77,6 +82,7 @@ static uint32_t uiReadPages = 0;
 static uint8_t iPWD[4] = { 0x0 };
 static uint8_t iPACK[2] = { 0x0 };
 static uint8_t iEV1Type = EV1_NONE;
+static uint8_t iNTAGType = NTAG_NONE;
 
 // special unlock command
 uint8_t  abtUnlock1[1] = { 0x40 };
@@ -341,7 +347,10 @@ write_card(bool write_otp, bool write_lock, bool write_uid)
   char    buffer[BUFSIZ];
 
   if (!write_otp) {
-    printf("Write OTP bytes ? [yN] ");
+    if (iNTAGType == NTAG_NONE)
+      printf("Write OTP bytes ? [yN] ");
+    else
+      printf("Write OTP Static Lock bytes ? [yN] ");
     if (!fgets(buffer, BUFSIZ, stdin)) {
       ERR("Unable to read standard input.");
     }
@@ -349,7 +358,10 @@ write_card(bool write_otp, bool write_lock, bool write_uid)
   }
 
   if (!write_lock) {
-    printf("Write Lock bytes ? [yN] ");
+    if (iNTAGType == NTAG_NONE)
+      printf("Write Lock bytes ? [yN] ");
+    else
+      printf("Write Dynamic Lock bytes ? [yN] ");
     if (!fgets(buffer, BUFSIZ, stdin)) {
       ERR("Unable to read standard input.");
     }
@@ -376,13 +388,19 @@ write_card(bool write_otp, bool write_lock, bool write_uid)
     }
   }
 
+  // NTAG Dynamic Lock Bytes are in different locations for each type
   for (uint32_t page = uiSkippedPages; page < uiBlocks; page++) {
-    if ((page == 0x2) && (!write_lock)) {
+    if (((iNTAGType == NTAG_NONE && page == 0x2) || \
+         (iNTAGType == NTAG_213 && page == 0x28) || \
+         (iNTAGType == NTAG_215 && page == 0x82) || \
+         (iNTAGType == NTAG_216 && page == 0xe2)) && (!write_lock)) {
       printf("s");
       uiSkippedPages++;
       continue;
     }
-    if ((page == 0x3) && (!write_otp)) {
+    // NTAG doesn't have OTP blocks but Static Lock Bytes are OTP
+    if (((iNTAGType == NTAG_NONE && page == 0x3) || \
+        (iNTAGType && page == 0x2)) && (!write_otp)) {
       printf("s");
       uiSkippedPages++;
       continue;
@@ -631,16 +649,19 @@ main(int argc, const char *argv[])
       printf("NTAG213 (144 user bytes)\n");
       uiBlocks = 45;
       iEV1Type = EV1_NTAG213;
+      iNTAGType = NTAG_213;
       iDumpSize = sizeof(mifarentag_213_tag);
     } else if (abtRx[6] == 0x11) {
       printf("NTAG215 (504 user bytes)\n");
       uiBlocks = 135;
       iEV1Type = EV1_NTAG215;
+      iNTAGType = NTAG_215;
       iDumpSize = sizeof(mifarentag_215_tag);
     } else if (abtRx[6] == 0x13) {
       printf("NTAG216 (888 user bytes)\n");
       uiBlocks = 231;
       iEV1Type = EV1_NTAG216;
+      iNTAGType = NTAG_216;
       iDumpSize = sizeof(mifarentag_216_tag);
     } else {
       printf("unknown! (0x%02x)\n", abtRx[6]);
