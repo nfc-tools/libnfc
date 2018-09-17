@@ -336,7 +336,7 @@ static bool check_magic()
 }
 
 static  bool
-write_card(bool write_otp, bool write_lock, bool write_uid)
+write_card(bool write_otp, bool write_lock, bool write_dyn_lock, bool write_uid)
 {
   uint32_t uiBlock = 0;
   bool    bFailure = false;
@@ -346,26 +346,31 @@ write_card(bool write_otp, bool write_lock, bool write_uid)
 
   char    buffer[BUFSIZ];
 
-  if (!write_otp) {
-    if (iNTAGType == NTAG_NONE)
-      printf("Write OTP bytes ? [yN] ");
-    else
-      printf("Write OTP Static Lock bytes ? [yN] ");
+  // NTAG does not have explicit OTP bytes
+  if (!write_otp && iNTAGType == NTAG_NONE) {
+    printf("Write OTP Bytes ? [yN] ");
     if (!fgets(buffer, BUFSIZ, stdin)) {
       ERR("Unable to read standard input.");
     }
     write_otp = ((buffer[0] == 'y') || (buffer[0] == 'Y'));
   }
 
+  // Lock Bytes are OTP if set, so warn
   if (!write_lock) {
-    if (iNTAGType == NTAG_NONE)
-      printf("Write Lock bytes ? [yN] ");
-    else
-      printf("Write Dynamic Lock bytes ? [yN] ");
+    printf("Write Lock Bytes (Warning: OTP if set) ? [yN] ");
     if (!fgets(buffer, BUFSIZ, stdin)) {
       ERR("Unable to read standard input.");
     }
     write_lock = ((buffer[0] == 'y') || (buffer[0] == 'Y'));
+  }
+
+  // NTAG and MF0UL21 have additional lock bytes
+  if (!write_dyn_lock && (iNTAGType != NTAG_NONE || iEV1Type == EV1_UL21)) {
+    printf("Write Dynamic Lock Bytes ? [yN] ");
+    if (!fgets(buffer, BUFSIZ, stdin)) {
+      ERR("Unable to read standard input.");
+    }
+    write_dyn_lock = ((buffer[0] == 'y') || (buffer[0] == 'Y'));
   }
 
   if (!write_uid) {
@@ -388,19 +393,23 @@ write_card(bool write_otp, bool write_lock, bool write_uid)
     }
   }
 
-  // NTAG Dynamic Lock Bytes are in different locations for each type
   for (uint32_t page = uiSkippedPages; page < uiBlocks; page++) {
-    if (((iNTAGType == NTAG_NONE && page == 0x2) || \
-         (iNTAGType == NTAG_213 && page == 0x28) || \
-         (iNTAGType == NTAG_215 && page == 0x82) || \
-         (iNTAGType == NTAG_216 && page == 0xe2)) && (!write_lock)) {
+    if ((!write_lock) && page == 0x2) {
       printf("s");
       uiSkippedPages++;
       continue;
     }
-    // NTAG doesn't have OTP blocks but Static Lock Bytes are OTP
-    if (((iNTAGType == NTAG_NONE && page == 0x3) || \
-        (iNTAGType && page == 0x2)) && (!write_otp)) {
+    // NTAG doesn't have OTP blocks
+    if ((iNTAGType == NTAG_NONE && page == 0x3) && (!write_otp)) {
+      printf("s");
+      uiSkippedPages++;
+      continue;
+    }
+    // NTAG and MF0UL21 have Dynamic Lock Bytes
+    if (((iEV1Type == EV1_UL21 && page == 0x24) || \
+        (iNTAGType == NTAG_213 && page == 0x28) || \
+        (iNTAGType == NTAG_215 && page == 0x82) || \
+        (iNTAGType == NTAG_216 && page == 0xe2)) && (!write_dyn_lock)) {
       printf("s");
       uiSkippedPages++;
       continue;
@@ -490,10 +499,11 @@ print_usage(const char *argv[])
   printf("\tr|w                 - Perform read or write\n");
   printf("\t<dump.mfd>          - MiFare Dump (MFD) used to write (card to MFD) or (MFD to card)\n");
   printf("Options:\n");
-  printf("\t--otp               - Don't prompt for OTP writing (Assume yes)\n");
-  printf("\t--lock              - Don't prompt for Lockbit writing (Assume yes)\n");
+  printf("\t--otp               - Don't prompt for OTP Bytes writing (Assume yes)\n");
+  printf("\t--lock              - Don't prompt for Lock Bytes (OTP) writing (Assume yes)\n");
+  printf("\t--dynlock           - Don't prompt for Dynamic Lock Bytes writing (Assume yes)\n");
   printf("\t--uid               - Don't prompt for UID writing (Assume yes)\n");
-  printf("\t--full              - Assume full card write (UID + OTP + Lockbit)\n");
+  printf("\t--full              - Assume full card write (UID + OTP + Lockbytes + Dynamic Lockbytes)\n");
   printf("\t--with-uid <UID>    - Specify UID to read/write from\n");
   printf("\t--pw <PWD>          - Specify 8 HEX digit PASSWORD for EV1\n");
   printf("\t--partial           - Allow source data size to be other than tag capacity\n");
@@ -508,6 +518,7 @@ main(int argc, const char *argv[])
   size_t  szUID = 0;
   bool    bOTP = false;
   bool    bLock = false;
+  bool    bDynLock = false;
   bool    bUID = false;
   bool    bPWD = false;
   bool    bPart = false;
@@ -536,11 +547,14 @@ main(int argc, const char *argv[])
     } else if (0 == strcmp(argv[arg], "--full")) {
       bOTP = true;
       bLock = true;
+      bDynLock = true;
       bUID = true;
     } else if (0 == strcmp(argv[arg], "--otp")) {
       bOTP = true;
     } else if (0 == strcmp(argv[arg], "--lock")) {
       bLock = true;
+    } else if (0 == strcmp(argv[arg], "--dynlock")) {
+      bDynLock = true;
     } else if (0 == strcmp(argv[arg], "--uid")) {
       bUID = true;
     } else if (0 == strcmp(argv[arg], "--check-magic")) {
@@ -638,31 +652,31 @@ main(int argc, const char *argv[])
     if (abtRx[6] == 0x0b) {
       printf("MF0UL11 (48 bytes)\n");
       uiBlocks = 20; // total number of 4 byte 'pages'
+      iDumpSize = uiBlocks * 4;
       iEV1Type = EV1_UL11;
-      iDumpSize = sizeof(mifareul_ev1_mf0ul11_tag);
     } else if (abtRx[6] == 0x0e) {
       printf("MF0UL21 (128 user bytes)\n");
       uiBlocks = 41; 
+      iDumpSize = uiBlocks * 4;
       iEV1Type = EV1_UL21;
-      iDumpSize = sizeof(mifareul_ev1_mf0ul21_tag);
     } else if (abtRx[6] == 0x0f) {
       printf("NTAG213 (144 user bytes)\n");
       uiBlocks = 45;
+      iDumpSize = uiBlocks * 4;
       iEV1Type = EV1_NTAG213;
       iNTAGType = NTAG_213;
-      iDumpSize = sizeof(mifarentag_213_tag);
     } else if (abtRx[6] == 0x11) {
       printf("NTAG215 (504 user bytes)\n");
       uiBlocks = 135;
+      iDumpSize = uiBlocks * 4;
       iEV1Type = EV1_NTAG215;
       iNTAGType = NTAG_215;
-      iDumpSize = sizeof(mifarentag_215_tag);
     } else if (abtRx[6] == 0x13) {
       printf("NTAG216 (888 user bytes)\n");
       uiBlocks = 231;
+      iDumpSize = uiBlocks * 4;
       iEV1Type = EV1_NTAG216;
       iNTAGType = NTAG_216;
-      iDumpSize = sizeof(mifarentag_216_tag);
     } else {
       printf("unknown! (0x%02x)\n", abtRx[6]);
       exit(EXIT_FAILURE);
@@ -702,7 +716,7 @@ main(int argc, const char *argv[])
 
     size_t  szDump;
     if (((szDump = fread(&mtDump, 1, sizeof(mtDump), pfDump)) != iDumpSize && !bPart) || szDump <= 0) {
-      ERR("Could not read from dump file or size mismatch: %s\n", argv[2]);
+      ERR("Could not read from dump file or size mismatch: %s (read %lu, expected %lu)\n", argv[2], szDump, iDumpSize);
       fclose(pfDump);
       exit(EXIT_FAILURE);
     }
@@ -740,7 +754,7 @@ main(int argc, const char *argv[])
     if (!bRF)
       printf("Warning! Read failed - partial data written to file!\n");
   } else if (iAction == 2) {
-    write_card(bOTP, bLock, bUID);
+    write_card(bOTP, bLock, bDynLock, bUID);
   } else if (iAction == 3) {
     if (!check_magic()) {
       printf("Card is not magic\n");

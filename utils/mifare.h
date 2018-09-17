@@ -242,6 +242,7 @@ typedef struct {
 } mifareul_ev1_mf0ul11_tag;
 
 // UL EV1 MF0UL21 tag - 1 manuf block + 8 user blocks + 1/4 lock block + 1 config block
+// (note that tag is actually 3 bytes smaller due to 1/4 block, so don't rely on this for sizing!)
 typedef struct {
   mifareul_block amb[11];
 } mifareul_ev1_mf0ul21_tag;
