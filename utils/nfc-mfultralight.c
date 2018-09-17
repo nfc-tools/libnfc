@@ -64,9 +64,6 @@
 #define EV1_NONE    0
 #define EV1_UL11    1
 #define EV1_UL21    2
-#define EV1_NTAG213 3
-#define EV1_NTAG215 4
-#define EV1_NTAG216 5
 
 #define NTAG_NONE 0
 #define NTAG_213  1
@@ -150,19 +147,25 @@ read_card(void)
       memcpy(mtDump.ul[9].mbc21a.pwd, iPWD, 4);
       memcpy(mtDump.ul[9].mbc21b.pack, iPACK, 2);
       break;
-    case EV1_NTAG213:
+    case EV1_NONE:
+    default:
+      break;
+  }
+  // copy NTAG secrets to dump data
+  switch (iNTAGType) {
+    case NTAG_213:
       memcpy(mtDump.nt[43].mbc21356d.pwd, iPWD, 4);
       memcpy(mtDump.nt[44].mbc21356e.pack, iPACK, 2);
       break;
-    case EV1_NTAG215:
+    case NTAG_215:
       memcpy(mtDump.nt[133].mbc21356d.pwd, iPWD, 4);
       memcpy(mtDump.nt[134].mbc21356e.pack, iPACK, 2);
       break;
-    case EV1_NTAG216:
+    case NTAG_216:
       memcpy(mtDump.nt[229].mbc21356d.pwd, iPWD, 4);
       memcpy(mtDump.nt[230].mbc21356e.pack, iPACK, 2);
       break;
-    case EV1_NONE:
+    case NTAG_NONE:
     default:
       break;
   }
@@ -644,7 +647,7 @@ main(int argc, const char *argv[])
   }
   printf("\n");
 
-  // test if tag is EV1
+  // test if tag is EV1 or NTAG
   if (get_ev1_version()) {
     if (!bPWD)
       printf("Tag is EV1 - PASSWORD may be required\n");
@@ -663,19 +666,16 @@ main(int argc, const char *argv[])
       printf("NTAG213 (144 user bytes)\n");
       uiBlocks = 45;
       iDumpSize = uiBlocks * 4;
-      iEV1Type = EV1_NTAG213;
       iNTAGType = NTAG_213;
     } else if (abtRx[6] == 0x11) {
       printf("NTAG215 (504 user bytes)\n");
       uiBlocks = 135;
       iDumpSize = uiBlocks * 4;
-      iEV1Type = EV1_NTAG215;
       iNTAGType = NTAG_215;
     } else if (abtRx[6] == 0x13) {
       printf("NTAG216 (888 user bytes)\n");
       uiBlocks = 231;
       iDumpSize = uiBlocks * 4;
-      iEV1Type = EV1_NTAG216;
       iNTAGType = NTAG_216;
     } else {
       printf("unknown! (0x%02x)\n", abtRx[6]);
