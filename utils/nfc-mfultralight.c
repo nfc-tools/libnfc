@@ -349,9 +349,8 @@ write_card(bool write_otp, bool write_lock, bool write_dyn_lock, bool write_uid)
 
   char    buffer[BUFSIZ];
 
-  // NTAG does not have explicit OTP bytes
-  if (!write_otp && iNTAGType == NTAG_NONE) {
-    printf("Write OTP Bytes ? [yN] ");
+  if (!write_otp) {
+    printf("Write OTP/Capability Bytes ? [yN] ");
     if (!fgets(buffer, BUFSIZ, stdin)) {
       ERR("Unable to read standard input.");
     }
@@ -402,8 +401,8 @@ write_card(bool write_otp, bool write_lock, bool write_dyn_lock, bool write_uid)
       uiSkippedPages++;
       continue;
     }
-    // NTAG doesn't have OTP blocks
-    if ((iNTAGType == NTAG_NONE && page == 0x3) && (!write_otp)) {
+    // OTP/Capability blocks
+    if ((page == 0x3) && (!write_otp)) {
       printf("s");
       uiSkippedPages++;
       continue;
@@ -650,30 +649,29 @@ main(int argc, const char *argv[])
   // test if tag is EV1 or NTAG
   if (get_ev1_version()) {
     if (!bPWD)
-      printf("Tag is EV1 - PASSWORD may be required\n");
-    printf("EV1 type: ");
+      printf("WARNING: Tag is EV1 or NTAG - PASSWORD may be required\n");
     if (abtRx[6] == 0x0b) {
-      printf("MF0UL11 (48 bytes)\n");
+      printf("EV1 type: MF0UL11 (48 bytes)\n");
       uiBlocks = 20; // total number of 4 byte 'pages'
       iDumpSize = uiBlocks * 4;
       iEV1Type = EV1_UL11;
     } else if (abtRx[6] == 0x0e) {
-      printf("MF0UL21 (128 user bytes)\n");
+      printf("EV1 type: MF0UL21 (128 user bytes)\n");
       uiBlocks = 41; 
       iDumpSize = uiBlocks * 4;
       iEV1Type = EV1_UL21;
     } else if (abtRx[6] == 0x0f) {
-      printf("NTAG213 (144 user bytes)\n");
+      printf("NTAG Type: NTAG213 (144 user bytes)\n");
       uiBlocks = 45;
       iDumpSize = uiBlocks * 4;
       iNTAGType = NTAG_213;
     } else if (abtRx[6] == 0x11) {
-      printf("NTAG215 (504 user bytes)\n");
+      printf("NTAG Type: NTAG215 (504 user bytes)\n");
       uiBlocks = 135;
       iDumpSize = uiBlocks * 4;
       iNTAGType = NTAG_215;
     } else if (abtRx[6] == 0x13) {
-      printf("NTAG216 (888 user bytes)\n");
+      printf("NTAG Type: NTAG216 (888 user bytes)\n");
       uiBlocks = 231;
       iDumpSize = uiBlocks * 4;
       iNTAGType = NTAG_216;

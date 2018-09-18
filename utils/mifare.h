@@ -247,7 +247,7 @@ typedef struct {
   mifareul_block amb[11];
 } mifareul_ev1_mf0ul21_tag;
 
-// NOT really UL but so similar we can re-use this code
+// NTAG is a range of NXP tags some of which are essentially Ultralights so we can support them here
 // if Edwin van Andel doesn't distract us...
 // https://www.nxp.com/docs/en/data-sheet/NTAG213_215_216.pdf
 
