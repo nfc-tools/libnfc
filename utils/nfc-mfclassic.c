@@ -98,13 +98,13 @@ static size_t num_keys = sizeof(keys) / 6;
 static uint8_t abtRx[MAX_FRAME_LEN];
 static int szRxBits;
 
-uint8_t  abtHalt[4] = { 0x50, 0x00, 0x00, 0x00 };
+uint8_t abtHalt[4] = { 0x50, 0x00, 0x00, 0x00 };
 
 // special unlock command
-uint8_t  abtUnlock1[1] = { 0x40 };
-uint8_t  abtUnlock2[1] = { 0x43 };
+uint8_t abtUnlock1[1] = { 0x40 };
+uint8_t abtUnlock2[1] = { 0x43 };
 
-static  bool
+static bool
 transmit_bits(const uint8_t *pbtTx, const size_t szTxBits)
 {
   // Show transmitted command
@@ -122,7 +122,7 @@ transmit_bits(const uint8_t *pbtTx, const size_t szTxBits)
 }
 
 
-static  bool
+static bool
 transmit_bytes(const uint8_t *pbtTx, const size_t szTx)
 {
   // Show transmitted command
@@ -148,7 +148,7 @@ print_success_or_failure(bool bFailure, uint32_t *uiBlockCounter)
     *uiBlockCounter += 1;
 }
 
-static  bool
+static bool
 is_first_block(uint32_t uiBlock)
 {
   // Test if we are in the small or big sectors
@@ -158,7 +158,7 @@ is_first_block(uint32_t uiBlock)
     return ((uiBlock) % 16 == 0);
 }
 
-static  bool
+static bool
 is_trailer_block(uint32_t uiBlock)
 {
   // Test if we are in the small or big sectors
@@ -168,7 +168,7 @@ is_trailer_block(uint32_t uiBlock)
     return ((uiBlock + 1) % 16 == 0);
 }
 
-static  uint32_t
+static uint32_t
 get_trailer_block(uint32_t uiFirstBlock)
 {
   // Test if we are in the small or big sectors
@@ -181,7 +181,7 @@ get_trailer_block(uint32_t uiFirstBlock)
   return trailer_block;
 }
 
-static  bool
+static bool
 authenticate(uint32_t uiBlock)
 {
   mifare_cmd mc;
@@ -277,7 +277,7 @@ static int
 get_rats(void)
 {
   int res;
-  uint8_t  abtRats[2] = { 0xe0, 0x50};
+  uint8_t abtRats[2] = { 0xe0, 0x50};
   // Use raw send/receive methods
   if (nfc_device_set_property_bool(pnd, NP_EASY_FRAMING, false) < 0) {
     nfc_perror(pnd, "nfc_configure");
@@ -305,18 +305,18 @@ get_rats(void)
   return res;
 }
 
-static  bool
+static bool
 read_card(int read_unlocked)
 {
   int32_t iBlock;
-  bool    bFailure = false;
+  bool bFailure = false;
   uint32_t uiReadBlocks = 0;
 
   if (read_unlocked) {
     //If the user is attempting an unlocked read, but has a direct-write type magic card, they don't
     //need to use the R mode. We'll trigger a warning and let them proceed.
     if (magic2) {
-      printf("Note: This card does not require an unlocked write (R) \n");
+      printf("Note: This card does not require an unlocked read (R) \n");
       read_unlocked = 0;
     } else {
       //If User has requested an unlocked read, but we're unable to unlock the card, we'll error out.
@@ -375,7 +375,7 @@ read_card(int read_unlocked)
     }
     // Show if the readout went well for each block
     print_success_or_failure(bFailure, &uiReadBlocks);
-    if ((! bTolerateFailures) && bFailure)
+    if ((!bTolerateFailures) && bFailure)
       return false;
   }
   printf("|\n");
@@ -385,11 +385,11 @@ read_card(int read_unlocked)
   return true;
 }
 
-static  bool
+static bool
 write_card(int write_block_zero)
 {
   uint32_t uiBlock;
-  bool    bFailure = false;
+  bool bFailure = false;
   uint32_t uiWriteBlocks = 0;
 
   if (write_block_zero) {
@@ -449,7 +449,7 @@ write_card(int write_block_zero)
       }
     } else {
       // The first block 0x00 is read only, skip this
-      if (uiBlock == 0 && ! write_block_zero && ! magic2)
+      if (uiBlock == 0 && !write_block_zero && !magic2)
         continue;
 
 
@@ -474,7 +474,7 @@ write_card(int write_block_zero)
     }
     // Show if the write went well for each block
     print_success_or_failure(bFailure, &uiWriteBlocks);
-    if ((! bTolerateFailures) && bFailure)
+    if ((!bTolerateFailures) && bFailure)
       return false;
   }
   printf("|\n");
@@ -659,7 +659,7 @@ main(int argc, const char *argv[])
              fileUid[0], fileUid[1], fileUid[2], fileUid[3]);
       printf("Got card with UID starting as:                     %02x%02x%02x%02x\n",
              pbtUID[0], pbtUID[1], pbtUID[2], pbtUID[3]);
-      if (! bForceKeyFile) {
+      if (!bForceKeyFile) {
         printf("Aborting!\n");
         nfc_close(pnd);
         nfc_exit(context);
