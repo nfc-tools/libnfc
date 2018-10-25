@@ -1278,7 +1278,7 @@ pn53x_initiator_select_passive_target(struct nfc_device *pnd,
                                       const uint8_t *pbtInitData, const size_t szInitData,
                                       nfc_target *pnt)
 {
-  return pn53x_initiator_select_passive_target_ext(pnd, nm, pbtInitData, szInitData, pnt, 0);
+  return pn53x_initiator_select_passive_target_ext(pnd, nm, pbtInitData, szInitData, pnt, 300);
 }
 
 int
