@@ -34,6 +34,11 @@ tag <---> initiator (relay) <---> target (relay) <---> original reader
     Commands are read from file descriptor 3
     Responses are sent to file descriptor 4
 
+\fB-s\fP
+    Swap roles of found devices
+    Usually the first found device is used as target (emulator) and the second
+    as initiator (reader). Using this option these roles are inversed.
+
 \fB-n\fP \fIN\fP
     Adds a waiting time of \fIN\fP seconds (integer) in the loop
 
