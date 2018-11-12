@@ -236,7 +236,7 @@ pn53x_usb_get_device_model(uint16_t vendor_id, uint16_t product_id)
   return UNKNOWN;
 }
 
-static void
+static bool
 pn53x_usb_get_end_points_default(struct usb_device *dev, struct pn53x_usb_data *data)
 {
   for (size_t n = 0; n < sizeof(pn53x_usb_supported_devices) / sizeof(struct pn53x_usb_supported_device); n++) {
@@ -246,13 +246,13 @@ pn53x_usb_get_end_points_default(struct usb_device *dev, struct pn53x_usb_data *
         data->uiEndPointIn = pn53x_usb_supported_devices[n].uiEndPointIn;
         data->uiEndPointOut = pn53x_usb_supported_devices[n].uiEndPointOut;
         data->uiMaxPacketSize = pn53x_usb_supported_devices[n].uiMaxPacketSize;
-      }
 
-      return;
+        return true;
+      }
     }
   }
 
-  return;
+  return false;
 }
 
 int  pn53x_usb_ack(nfc_device *pnd);
@@ -305,13 +305,12 @@ pn53x_usb_scan(const nfc_context *context, nfc_connstring connstrings[], const s
         if ((pn53x_usb_supported_devices[n].vendor_id == dev->descriptor.idVendor) &&
             (pn53x_usb_supported_devices[n].product_id == dev->descriptor.idProduct)) {
           // Make sure there are 2 endpoints available
-          // with libusb-win32 we got some null pointers so be robust before looking at endpoints:
-          if (dev->config == NULL) {
-            // We tolerate null config if we have defaults
-            if (pn53x_usb_supported_devices[n].uiMaxPacketSize == 0)
-              // Nope, we maybe want the next one, let's try to find another
-              continue;
-          } else {
+          // libusb-win32 may return a NULL dev->config,
+          // or the descriptoes may be corrupted, hence
+          // let us assume we will use hardcoded defaults
+          // from n53x_usb_supported_devices if available.
+          // otherwise get data from the descriptors.
+          if (pn53x_usb_supported_devices[n].uiMaxPacketSize == 0) {
             if (dev->config->interface == NULL || dev->config->interface->altsetting == NULL) {
               // Nope, we maybe want the next one, let's try to find another
               continue;
@@ -422,11 +421,9 @@ pn53x_usb_open(const nfc_context *context, const nfc_connstring connstring)
       // Open the USB device
       if ((data.pudh = usb_open(dev)) == NULL)
         continue;
-      // Retrieve end points, using default if dev->config is broken
-      if (dev->config == NULL) {
-        pn53x_usb_get_end_points_default(dev, &data);
-        data.possibly_corrupted_usbdesc = true;
-      } else {
+      // Retrieve end points, using hardcoded defaults if available
+      // or using the descriptors otherwise.
+      if (pn53x_usb_get_end_points_default(dev, &data) == false) {
         pn53x_usb_get_end_points(dev, &data);
       }
       // Set configuration
