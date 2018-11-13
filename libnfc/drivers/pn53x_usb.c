@@ -306,9 +306,9 @@ pn53x_usb_scan(const nfc_context *context, nfc_connstring connstrings[], const s
             (pn53x_usb_supported_devices[n].product_id == dev->descriptor.idProduct)) {
           // Make sure there are 2 endpoints available
           // libusb-win32 may return a NULL dev->config,
-          // or the descriptoes may be corrupted, hence
+          // or the descriptors may be corrupted, hence
           // let us assume we will use hardcoded defaults
-          // from n53x_usb_supported_devices if available.
+          // from pn53x_usb_supported_devices if available.
           // otherwise get data from the descriptors.
           if (pn53x_usb_supported_devices[n].uiMaxPacketSize == 0) {
             if (dev->config->interface == NULL || dev->config->interface->altsetting == NULL) {
