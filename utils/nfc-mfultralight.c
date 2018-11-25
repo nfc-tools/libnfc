@@ -714,7 +714,7 @@ main(int argc, const char *argv[])
 
     size_t  szDump;
     if (((szDump = fread(&mtDump, 1, sizeof(mtDump), pfDump)) != iDumpSize && !bPart) || szDump <= 0) {
-      ERR("Could not read from dump file or size mismatch: %s (read %lu, expected %lu)\n", argv[2], szDump, iDumpSize);
+      ERR("Could not read from dump file or size mismatch: %s (read %lu, expected %lu)\n", argv[2], (unsigned long)szDump, (unsigned long)iDumpSize);
       fclose(pfDump);
       exit(EXIT_FAILURE);
     }

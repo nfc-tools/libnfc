@@ -695,7 +695,7 @@ main(int argc, const char *argv[])
       magic2 = true;
     }
   }
-  printf("Guessing size: seems to be a %lu-byte card\n", (uiBlocks + 1) * sizeof(mifare_classic_block));
+  printf("Guessing size: seems to be a %lu-byte card\n", (unsigned long)((uiBlocks + 1) * sizeof(mifare_classic_block)));
 
   if (bUseKeyFile) {
     FILE *pfKeys = fopen(argv[5], "rb");
