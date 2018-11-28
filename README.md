@@ -48,7 +48,10 @@ http://cutter.sf.net
 Installation
 ============
 
-See the file `INSTALL` for configure, build and install details.
+See the file `INSTALL` for configure, build and install details. It is included in the
+archive but when using the repo must be generated using
+
+    autoreconf -is
 
 Additionnally, you may need to grant permissions to your user to drive your device.
 Under GNU/Linux systems, if you use udev, you could use the provided udev rules.
