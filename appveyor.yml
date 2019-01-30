@@ -4,17 +4,15 @@ branches:
   - master
 clone_folder: c:\projects\libnfc
 image:
-- Visual Studio 2013
-- Visual Studio 2015
 - Visual Studio 2017
 configuration:
 - Release
 - Debug
 platform:
-- x64
+- x86
 environment:
   matrix:
-  - arch: Win64
+  - arch: Win32
   # - arch: #does not work, Release|x64 not a valid target
 matrix:
   fast_finish: true
