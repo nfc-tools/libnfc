@@ -9,11 +9,7 @@ configuration:
 - Release
 - Debug
 platform:
-- x86
-environment:
-  matrix:
-  - arch: Win32
-  # - arch: #does not work, Release|x86 not a valid target
+- Win32
 matrix:
   fast_finish: true
 
