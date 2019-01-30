@@ -8,8 +8,6 @@ image:
 configuration:
 - Release
 - Debug
-platform:
-- Win32
 matrix:
   fast_finish: true
 
