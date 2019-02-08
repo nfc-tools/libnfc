@@ -17,5 +17,5 @@ addons:
     - libcutter-dev
 
 script:
-  - if [ $BLD == autoconf ]; then autoreconf -vfi && ./configure --prefix=$HOME/.local/ && make -j2 && make install; fi
-  - if [ $BLD == cmake ];    then cmake -DCMAKE_INSTALL_PREFIX=~/.local . && make -j2 && make install; fi
+  - if [ $BLD == autoconf ]; then autoreconf -vfi && mkdir build && cd build && ../configure --prefix=$HOME/.local/ && make -j2 && make install; fi
+  - if [ $BLD == cmake ];    then mkdir build && cd build && cmake -DCMAKE_INSTALL_PREFIX=~/.local .. && make -j2 && make install; fi
