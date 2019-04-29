@@ -290,7 +290,7 @@ unlock_card(void)
   return true;
 }
 
-static bool check_magic()
+static bool check_magic(void)
 {
   bool     bFailure = false;
   int      uid_data;
