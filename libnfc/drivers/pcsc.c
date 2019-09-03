@@ -109,35 +109,92 @@ pcsc_free_scardcontext(void)
 #define ICC_TYPE_14443A  5
 #define ICC_TYPE_14443B  6
 
+int pcsc_transmit(struct nfc_device *pnd, const uint8_t *tx, const size_t tx_len, uint8_t *rx, size_t *rx_len)
+{
+  struct pcsc_data *data = pnd->driver_data;
+  DWORD dw_rx_len = *rx_len;
+
+  LOG_HEX(NFC_LOG_GROUP_COM, "TX", tx, tx_len);
+
+  data->last_error = SCardTransmit(data->hCard, &data->ioCard, tx, tx_len,
+                                   NULL, rx, &dw_rx_len);
+  if (data->last_error != SCARD_S_SUCCESS) {
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "PCSC transmit failed");
+    return NFC_EIO;
+  }
+  *rx_len = dw_rx_len;
+
+  LOG_HEX(NFC_LOG_GROUP_COM, "RX", rx, *rx_len);
+
+  return NFC_SUCCESS;
+}
+
+int pcsc_get_status(struct nfc_device *pnd, int *target_present, uint8_t *atr, size_t *atr_len)
+{
+  struct pcsc_data *data = pnd->driver_data;
+  DWORD dw_atr_len = *atr_len, reader_len, state, protocol;
+
+  data->last_error = SCardStatus(data->hCard, NULL, &reader_len, &state, &protocol, atr, &dw_atr_len);
+  if (data->last_error != SCARD_S_SUCCESS
+      && data->last_error != SCARD_W_RESET_CARD) {
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Get status failed");
+    return NFC_EIO;
+  }
+
+  *target_present = state & SCARD_PRESENT;
+  *atr_len = dw_atr_len;
+
+  return NFC_SUCCESS;
+}
+
+int pcsc_reconnect(struct nfc_device *pnd, DWORD share_mode, DWORD protocol, DWORD disposition)
+{
+  struct pcsc_data *data = pnd->driver_data;
+
+  data->last_error = SCardReconnect(data->hCard, share_mode, protocol, disposition, &data->ioCard.dwProtocol);
+  if (data->last_error != SCARD_S_SUCCESS
+      && data->last_error != SCARD_W_RESET_CARD) {
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Reconnect failed");
+    return NFC_EIO;
+  }
+
+  data->dwShareMode = share_mode;
+
+  return NFC_SUCCESS;
+}
+
 uint8_t pcsc_get_icc_type(struct nfc_device *pnd)
 {
+  struct pcsc_data *data = pnd->driver_data;
   uint8_t it = 0;
   DWORD dwItLen = sizeof it;
-  DRIVER_DATA(pnd)->last_error = SCardGetAttrib(DRIVER_DATA(pnd)->hCard, SCARD_ATTR_ICC_TYPE_PER_ATR, &it, &dwItLen);
+  data->last_error = SCardGetAttrib(data->hCard, SCARD_ATTR_ICC_TYPE_PER_ATR, &it, &dwItLen);
   return it;
 }
 
-int pcsc_get_uid(struct nfc_device *pnd, uint8_t *puid, size_t szuid)
+int pcsc_get_uid(struct nfc_device *pnd, uint8_t *uid, size_t uid_len)
 {
-  uint8_t get_data[] = {0xFF, 0xCA, 0x00, 0x00, 0x00}, data[256 + 2];
-  DWORD dwRxLen = sizeof data;
+  const uint8_t get_data[] = {0xFF, 0xCA, 0x00, 0x00, 0x00};
+  uint8_t resp[256 + 2];
+  size_t resp_len = sizeof resp;
 
-  LOG_HEX(NFC_LOG_GROUP_COM, "TX", get_data, sizeof get_data);
-  DRIVER_DATA(pnd)->last_error = SCardTransmit(DRIVER_DATA(pnd)->hCard, &(DRIVER_DATA(pnd)->ioCard), get_data, sizeof get_data, NULL, data, &dwRxLen);
-  if ((DRIVER_DATA(pnd)->last_error != SCARD_S_SUCCESS)
-      || dwRxLen < 2) {
+  pnd->last_error = pcsc_transmit(pnd, get_data, sizeof get_data, resp, &resp_len);
+  if (pnd->last_error != NFC_SUCCESS)
+    return pnd->last_error;
+
+  if (resp_len < 2) {
     log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Reader doesn't support request for UID");
-    pnd->last_error = NFC_EIO;
+    pnd->last_error = NFC_EDEVNOTSUPP;
     return pnd->last_error;
   }
-  LOG_HEX(NFC_LOG_GROUP_COM, "RX", data, dwRxLen);
-  if (szuid < (size_t) dwRxLen - 2) {
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Malformed response code");
-    pnd->last_error = NFC_EINVARG;
+  if (uid_len < resp_len - 2) {
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "UID too big");
+    pnd->last_error = NFC_ESOFT;
     return pnd->last_error;
   }
-  memcpy(puid, data, dwRxLen - 2);
-  return dwRxLen - 2;
+
+  memcpy(uid, resp, resp_len - 2);
+  return resp_len - 2;
 }
 
 int pcsc_props_to_target(uint8_t it, const uint8_t *patr, size_t szatr, const uint8_t *puid, int szuid, const nfc_modulation_type nmt, nfc_target *pnt)
@@ -530,84 +587,81 @@ int pcsc_initiator_init(struct nfc_device *pnd)
 
 int pcsc_initiator_select_passive_target(struct nfc_device *pnd,  const nfc_modulation nm, const uint8_t *pbtInitData, const size_t szInitData, nfc_target *pnt)
 {
-  uint8_t pbAtr[MAX_ATR_SIZE];
+  uint8_t atr[MAX_ATR_SIZE];
   uint8_t uid[10];
-  DWORD dwState, dwProtocol, dwReaderLen, dwAtrLen = sizeof pbAtr;
+  int target_present;
+  size_t atr_len = sizeof atr;
 
   (void) pbtInitData;
   (void) szInitData;
 
   if (nm.nbr != pcsc_supported_brs[0] && nm.nbr != pcsc_supported_brs[1])
     return NFC_EINVARG;
-  DRIVER_DATA(pnd)->last_error = SCardStatus(DRIVER_DATA(pnd)->hCard, NULL, &dwReaderLen, &dwState, &dwProtocol, pbAtr, &dwAtrLen);
-  if ((DRIVER_DATA(pnd)->last_error != SCARD_S_SUCCESS
-        && DRIVER_DATA(pnd)->last_error != SCARD_W_RESET_CARD)
-      || !(dwState & SCARD_PRESENT)) {
+
+  pnd->last_error = pcsc_get_status(pnd, &target_present, atr, &atr_len);
+  if (pnd->last_error != NFC_SUCCESS)
+    return pnd->last_error;
+
+  if (!target_present) {
     log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "No target present");
     return NFC_ENOTSUCHDEV;
   }
-  uint8_t it = pcsc_get_icc_type(pnd);
-  int szuid = pcsc_get_uid(pnd, uid, sizeof uid);
-  if (pcsc_props_to_target(it, pbAtr, dwAtrLen, uid, szuid, nm.nmt, pnt) != NFC_SUCCESS
-      || (DRIVER_DATA(pnd)->last_error = SCardReconnect((DRIVER_DATA(pnd)->hCard), SCARD_SHARE_SHARED, SCARD_PROTOCOL_T0 | SCARD_PROTOCOL_T1, SCARD_LEAVE_CARD, (void *) & (DRIVER_DATA(pnd)->ioCard.dwProtocol))) != SCARD_S_SUCCESS) {
-    // We can not reconnect to this device.
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "PCSC reconnect failed");
-    return NFC_EIO;
+
+  uint8_t icc_type = pcsc_get_icc_type(pnd);
+  int uid_len = pcsc_get_uid(pnd, uid, sizeof uid);
+  if (pcsc_props_to_target(icc_type, atr, atr_len, uid, uid_len, nm.nmt, pnt) != NFC_SUCCESS) {
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Type of target not supported");
+    return NFC_EDEVNOTSUPP;
   }
-  DRIVER_DATA(pnd)->dwShareMode = SCARD_SHARE_SHARED;
+
+  pnd->last_error = pcsc_reconnect(pnd, SCARD_SHARE_SHARED, SCARD_PROTOCOL_T0 | SCARD_PROTOCOL_T1, SCARD_LEAVE_CARD);
+  if (pnd->last_error != NFC_SUCCESS)
+    return pnd->last_error;
+
   return 1;
 }
 
 int pcsc_initiator_deselect_target(struct nfc_device *pnd)
 {
-  DRIVER_DATA(pnd)->last_error = SCardReconnect((DRIVER_DATA(pnd)->hCard), SCARD_SHARE_DIRECT, 0, SCARD_LEAVE_CARD, (void *) & (DRIVER_DATA(pnd)->ioCard.dwProtocol));
-  if (DRIVER_DATA(pnd)->last_error != SCARD_S_SUCCESS
-      && DRIVER_DATA(pnd)->last_error != SCARD_W_RESET_CARD) {
-    // We can not reconnect to this device.
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "PCSC reconnect failed");
-    return NFC_EIO;
-  }
-  DRIVER_DATA(pnd)->dwShareMode = SCARD_SHARE_DIRECT;
-  return NFC_SUCCESS;
+  pnd->last_error = pcsc_reconnect(pnd, SCARD_SHARE_DIRECT, 0, SCARD_LEAVE_CARD);
+  return pnd->last_error;
 }
 
 int pcsc_initiator_transceive_bytes(struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szTx, uint8_t *pbtRx, const size_t szRx, int timeout)
 {
+  size_t resp_len = szRx;
+
   // FIXME: timeout is not handled
   (void) timeout;
 
-  DWORD dwRxLen = szRx;
-
-  LOG_HEX(NFC_LOG_GROUP_COM, "TX", pbtTx, szTx);
-  DRIVER_DATA(pnd)->last_error = SCardTransmit(DRIVER_DATA(pnd)->hCard, &(DRIVER_DATA(pnd)->ioCard), pbtTx, szTx, NULL, pbtRx, &dwRxLen);
-  if (DRIVER_DATA(pnd)->last_error != SCARD_S_SUCCESS) {
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "PCSC transmit failed");
-    pnd->last_error = NFC_EIO;
+  pnd->last_error = pcsc_transmit(pnd, pbtTx, szTx, pbtRx, &resp_len);
+  if (pnd->last_error != NFC_SUCCESS)
     return pnd->last_error;
-  }
-  LOG_HEX(NFC_LOG_GROUP_COM, "RX", pbtRx, dwRxLen);
 
-  return dwRxLen;
+  return resp_len;
 }
 
 int pcsc_initiator_target_is_present(struct nfc_device *pnd, const nfc_target *pnt)
 {
-  uint8_t pbAtr[MAX_ATR_SIZE];
-  DWORD dwState, dwProtocol, dwReaderLen, dwAtrLen = sizeof pbAtr;
+  uint8_t atr[MAX_ATR_SIZE];
+  int target_present;
+  size_t atr_len = sizeof atr;
   nfc_target nt;
 
-  DRIVER_DATA(pnd)->last_error = SCardStatus(DRIVER_DATA(pnd)->hCard, NULL, &dwReaderLen, &dwState, &dwProtocol, pbAtr, &dwAtrLen);
-  if ((DRIVER_DATA(pnd)->last_error != SCARD_S_SUCCESS
-        && DRIVER_DATA(pnd)->last_error != SCARD_W_RESET_CARD)
-      || !(dwState & SCARD_PRESENT)) {
-    pnd->last_error = NFC_EIO;
+  pnd->last_error = pcsc_get_status(pnd, &target_present, atr, &atr_len);
+  if (pnd->last_error != NFC_SUCCESS)
     return pnd->last_error;
+
+  if (!target_present) {
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "No target present");
+    return NFC_ENOTSUCHDEV;
   }
+
   if (pnt) {
-    if (pcsc_props_to_target(ICC_TYPE_UNKNOWN, pbAtr, dwAtrLen, NULL, 0, pnt->nm.nmt, &nt) != NFC_SUCCESS
+    if (pcsc_props_to_target(ICC_TYPE_UNKNOWN, atr, atr_len, NULL, 0, pnt->nm.nmt, &nt) != NFC_SUCCESS
         || pnt->nm.nmt != nt.nm.nmt || pnt->nm.nbr != nt.nm.nbr) {
-      pnd->last_error = NFC_EINVARG;
-      return pnd->last_error;
+      log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Target doesn't meet requirements");
+      return NFC_ENOTSUCHDEV;
     }
   }
   return NFC_SUCCESS;
@@ -636,7 +690,8 @@ int pcsc_device_set_property_bool(struct nfc_device *pnd, const nfc_property pro
       break;
     case NP_ACTIVATE_FIELD:
       if (bEnable == false) {
-        SCardReconnect(DRIVER_DATA(pnd)->hCard, DRIVER_DATA(pnd)->dwShareMode, DRIVER_DATA(pnd)->ioCard.dwProtocol, SCARD_RESET_CARD, (void *) & (DRIVER_DATA(pnd)->ioCard.dwProtocol));
+        struct pcsc_data *data = pnd->driver_data;
+        pcsc_reconnect(pnd, data->dwShareMode, data->ioCard.dwProtocol, SCARD_RESET_CARD);
       }
       return NFC_SUCCESS;
     default:
@@ -667,6 +722,7 @@ int pcsc_get_supported_baud_rate(struct nfc_device *pnd, const nfc_mode mode, co
 int
 pcsc_get_information_about(nfc_device *pnd, char **pbuf)
 {
+  struct pcsc_data *data = pnd->driver_data;
   LPBYTE   name = NULL, version = NULL, type = NULL, serial = NULL;
   DWORD    name_len = SCARD_AUTOALLOCATE, version_len = SCARD_AUTOALLOCATE,
            type_len = SCARD_AUTOALLOCATE, serial_len = SCARD_AUTOALLOCATE;
@@ -678,10 +734,10 @@ pcsc_get_information_about(nfc_device *pnd, char **pbuf)
     return pnd->last_error;
   }
 
-  SCardGetAttrib(DRIVER_DATA(pnd)->hCard, SCARD_ATTR_VENDOR_NAME, (LPBYTE)&name, &name_len);
-  SCardGetAttrib(DRIVER_DATA(pnd)->hCard, SCARD_ATTR_VENDOR_IFD_TYPE, (LPBYTE)&type, &type_len);
-  SCardGetAttrib(DRIVER_DATA(pnd)->hCard, SCARD_ATTR_VENDOR_IFD_VERSION, (LPBYTE)&version, &version_len);
-  SCardGetAttrib(DRIVER_DATA(pnd)->hCard, SCARD_ATTR_VENDOR_IFD_SERIAL_NO, (LPBYTE)&serial, &serial_len);
+  SCardGetAttrib(data->hCard, SCARD_ATTR_VENDOR_NAME, (LPBYTE)&name, &name_len);
+  SCardGetAttrib(data->hCard, SCARD_ATTR_VENDOR_IFD_TYPE, (LPBYTE)&type, &type_len);
+  SCardGetAttrib(data->hCard, SCARD_ATTR_VENDOR_IFD_VERSION, (LPBYTE)&version, &version_len);
+  SCardGetAttrib(data->hCard, SCARD_ATTR_VENDOR_IFD_SERIAL_NO, (LPBYTE)&serial, &serial_len);
 
   *pbuf = malloc(name_len + type_len + version_len + serial_len + 30);
   if (! *pbuf) {
