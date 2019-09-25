@@ -427,14 +427,6 @@ acr122_usb_open(const nfc_context *context, const nfc_connstring connstring)
         goto free_mem;
       }
 
-      res = usb_set_altinterface(data.pudh, 0);
-      if (res < 0) {
-        log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to set alternate setting on USB interface (%s)", _usb_strerror(res));
-        usb_close(data.pudh);
-        // we failed to use the specified device
-        goto free_mem;
-      }
-
       // Allocate memory for the device info and specification, fill it and return the info
       pnd = nfc_device_new(context, connstring);
       if (!pnd) {
