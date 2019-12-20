@@ -41,6 +41,9 @@ option allows writing of special MIFARE cards that can be 'unlocked' to allow bl
 to be overwritten. This includes UID and manufacturer data. Take care when amending UIDs to set
 the correct BCC (UID checksum). Currently only 4 byte UIDs are supported.
 
+Like the .B W option, the .B X option also enables block 0 write, but to some Chinese card
+that allow block 0 write with a normal write command instead of needing to "unlock".
+
 Similarly, the
 .B R
 option allows an 'unlocked' read. This bypasses authentication and allows
@@ -74,7 +77,7 @@ options only work on special versions of MIFARE 1K cards (Chinese clones).
 
 .SH OPTIONS
 .TP
-.BR f " | " r " | " R " | " w " | " W
+.BR f " | " r " | " R " | " w " | " W " | " X
 Perform format (
 .B f
 ) or read from (
@@ -85,6 +88,8 @@ Perform format (
 .B w
 ) or unlocked write to (
 .B W
+) or normal write with block 0 to (
+.B X
 ) card.
 .TP
 .BR a " | " A " | " b " | " B

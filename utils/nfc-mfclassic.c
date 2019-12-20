@@ -70,7 +70,7 @@ static bool bUseKeyFile;
 static bool bForceKeyFile;
 static bool bTolerateFailures;
 static bool bFormatCard;
-static bool magic2 = false;
+static bool chinese_uid_writable_mode = false;
 static bool magic3 = false;
 static bool unlocked = false;
 static bool bForceSizeMismatch;
@@ -219,7 +219,7 @@ authenticate(uint32_t uiBlock)
 
     // Try to authenticate for the current sector
     if (nfc_initiator_mifare_cmd(pnd, mc, uiBlock, &mp)) {
-      return true;    
+      return true;
     }
   // If formatting or not using key file, try to guess the right key
   } else if (bFormatCard || !bUseKeyFile) {
@@ -326,7 +326,7 @@ read_card(int read_unlocked)
   if (read_unlocked) {
     //If the user is attempting an unlocked read, but has a direct-write type magic card, they don't
     //need to use the R mode. We'll trigger a warning and let them proceed.
-    if (magic2) {
+    if (chinese_uid_writable_mode) {
       printf("Note: This card does not require an unlocked read (R) \n");
       read_unlocked = 0;
     } else {
@@ -414,7 +414,7 @@ write_card(int write_block_zero)
   if (write_block_zero) {
     //If the user is attempting an unlocked write, but has a direct-write type magic card, they don't
     //need to use the W mode. We'll trigger a warning and let them proceed.
-    if (magic2) {
+    if (chinese_uid_writable_mode) {
       printf("Note: This card does not require an unlocked write (W) \n");
       write_block_zero = 0;
     } else {
@@ -472,7 +472,7 @@ write_card(int write_block_zero)
         }
       } else {
         // The first block 0x00 is read only, skip this
-        if (uiBlock == 0 && !write_block_zero && !magic2)
+        if (uiBlock == 0 && !write_block_zero && !chinese_uid_writable_mode)
           continue;
 
         // Make sure a earlier write did not fail
@@ -485,7 +485,7 @@ write_card(int write_block_zero)
             memcpy(mp.mpd.abtData, mtDump.amb[uiBlock].mbd.abtData, sizeof(mp.mpd.abtData));
           // do not write a block 0 with incorrect BCC - card will be made invalid!
           if (uiBlock == 0) {
-            if ((mp.mpd.abtData[0] ^ mp.mpd.abtData[1] ^ mp.mpd.abtData[2] ^ mp.mpd.abtData[3] ^ mp.mpd.abtData[4]) != 0x00 && !magic2) {
+            if ((mp.mpd.abtData[0] ^ mp.mpd.abtData[1] ^ mp.mpd.abtData[2] ^ mp.mpd.abtData[3] ^ mp.mpd.abtData[4]) != 0x00 && !chinese_uid_writable_mode) {
               printf("!\nError: incorrect BCC in MFD file!\n");
               printf("Expecting BCC=%02X\n", mp.mpd.abtData[0] ^ mp.mpd.abtData[1] ^ mp.mpd.abtData[2] ^ mp.mpd.abtData[3]);
               return false;
@@ -495,7 +495,7 @@ write_card(int write_block_zero)
             bFailure = true;
             printf("Failure to write to data block %i\n", uiBlock);
           }
-          
+
         } else {
           printf("Failure during write process.\n");
         }
@@ -508,18 +508,18 @@ write_card(int write_block_zero)
   }
 
   //Write Block 0 if necessary
-  if (write_block_zero || magic2 || magic3) {
+  if (write_block_zero || chinese_uid_writable_mode || magic3) {
     for (uiBlock = 0; uiBlock < 4; uiBlock++) {
 
         // The first block 0x00 is read only, skip this
       if (uiBlock == 0) {
           //If the card is not magic, we're gonna skip over
-        if (write_block_zero || magic2 || magic3) {
+        if (write_block_zero || chinese_uid_writable_mode || magic3) {
             //NOP
         } else {
           continue;
         }
-      } 
+      }
 
       if (is_first_block(uiBlock)) {
         if (bFailure) {
@@ -531,7 +531,7 @@ write_card(int write_block_zero)
           bFailure = false;
         }
 
-        fflush(stdout);    
+        fflush(stdout);
           // Try to authenticate for the current sector
           // If we are are writing to a chinese magic card, we've already unlocked
           // If we're writing to a One Time Write, we need to authenticate
@@ -540,8 +540,8 @@ write_card(int write_block_zero)
           if (!authenticate(uiBlock) && !bTolerateFailures) {
             printf("!\nError: authentication failed for block %02x\n", uiBlock);
             return false;
-          } 
-        } 
+          }
+        }
       }
 
           // Make sure a earlier write did not fail
@@ -553,7 +553,7 @@ write_card(int write_block_zero)
           memcpy(mp.mpd.abtData, mtDump.amb[uiBlock].mbd.abtData, sizeof(mp.mpd.abtData));
             // do not write a block 0 with incorrect BCC - card will be made invalid!
         if (uiBlock == 0) {
-          if ((mp.mpd.abtData[0] ^ mp.mpd.abtData[1] ^ mp.mpd.abtData[2] ^ mp.mpd.abtData[3] ^ mp.mpd.abtData[4]) != 0x00 && !magic2) {
+          if ((mp.mpd.abtData[0] ^ mp.mpd.abtData[1] ^ mp.mpd.abtData[2] ^ mp.mpd.abtData[3] ^ mp.mpd.abtData[4]) != 0x00 && !chinese_uid_writable_mode) {
             printf("!\nError: incorrect BCC in MFD file!\n");
             printf("Expecting BCC=%02X\n", mp.mpd.abtData[0] ^ mp.mpd.abtData[1] ^ mp.mpd.abtData[2] ^ mp.mpd.abtData[3]);
             return false;
@@ -563,7 +563,7 @@ write_card(int write_block_zero)
           bFailure = true;
           printf("Failure to write to data block %i\n", uiBlock);
         }
-        
+
       } else {
         printf("Failure during write process.\n");
       }
@@ -571,7 +571,7 @@ write_card(int write_block_zero)
           // Show if the write went well for each block
       print_success_or_failure(bFailure, &uiWriteBlocks);
       if ((! bTolerateFailures) && bFailure)
-        return false;    
+        return false;
 
     }
 
@@ -594,12 +594,13 @@ static void
 print_usage(const char *pcProgramName)
 {
   printf("Usage: ");
-  printf("%s f|r|R|w|W a|b u|U<01ab23cd> <dump.mfd> [<keys.mfd> [f]]\n", pcProgramName);
-  printf("  f|r|R|w|W     - Perform format (f) or read from (r) or unlocked read from (R) or write to (w) or unlocked write to (W) card\n");
+  printf("%s f|r|R|w|W|X a|b u|U<01ab23cd> <dump.mfd> [<keys.mfd> [f]]\n", pcProgramName);
+  printf("  f|r|R|w|W|X   - Perform format (f) or read from (r) or unlocked read from (R) or write to (w) or unlocked write to (W) / (X) card\n");
   printf("                  *** format will reset all keys to FFFFFFFFFFFF and all data to 00 and all ACLs to default\n");
   printf("                  *** unlocked read does not require authentication and will reveal A and B keys\n");
   printf("                  *** note that unlocked write will attempt to overwrite block 0 including UID\n");
   printf("                  *** unlocking only works with special Mifare 1K cards (Chinese clones)\n");
+  printf("                  *** (X) works with some Chinese card that allow block 0 write with normal command.\n");
   printf("  a|A|b|B       - Use A or B keys for action; Halt on errors (a|b) or tolerate errors (A|B)\n");
   printf("  u|U           - Use any (u) uid or supply a uid specifically as U01ab23cd.\n");
   printf("  <dump.mfd>    - MiFare Dump (MFD) used to write (card to MFD) or (MFD to card)\n");
@@ -696,10 +697,12 @@ main(int argc, const char *argv[])
     bTolerateFailures = tolower((int)((unsigned char) * (argv[2]))) != (int)((unsigned char) * (argv[2]));
     bUseKeyFile = (argc > 5);
     bForceKeyFile = ((argc > 6) && (strcmp((char *)argv[6], "f") == 0));
-  } else if (strcmp(command, "w") == 0 || strcmp(command, "W") == 0 || strcmp(command, "f") == 0) {
+  } else if (strcmp(command, "w") == 0 || strcmp(command, "W") == 0 || strcmp(command, "X") == 0 || strcmp(command, "f") == 0) {
     atAction = ACTION_WRITE;
     if (strcmp(command, "W") == 0)
       unlock = 1;
+    if (strcmp(command, "X") == 0)
+      chinese_uid_writable_mode = true;
     bFormatCard = (strcmp(command, "f") == 0);
     bUseKeyA = tolower((int)((unsigned char) * (argv[2]))) == 'a';
     bTolerateFailures = tolower((int)((unsigned char) * (argv[2]))) != (int)((unsigned char) * (argv[2]));
@@ -841,7 +844,7 @@ main(int argc, const char *argv[])
     // Chinese magic emulation card, ATS=0978009102:dabc1910
     if ((res == 9)  && (abtRx[5] == 0xda) && (abtRx[6] == 0xbc)
         && (abtRx[7] == 0x19) && (abtRx[8] == 0x10)) {
-      magic2 = true;
+      chinese_uid_writable_mode = true;
     }
   }
   printf("Guessing size: seems to be a %lu-byte card\n", (uiBlocks + 1) * sizeof(mifare_classic_block));
