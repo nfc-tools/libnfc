@@ -451,56 +451,57 @@ write_card(int write_block_zero)
           return false;
         }
       }
+    }
 
-      if (is_trailer_block(uiBlock)) {
-        if (bFormatCard) {
-          // Copy the default key and reset the access bits
-          memcpy(mp.mpt.abtKeyA, default_key, sizeof(mp.mpt.abtKeyA));
-          memcpy(mp.mpt.abtAccessBits, default_acl, sizeof(mp.mpt.abtAccessBits));
-          memcpy(mp.mpt.abtKeyB, default_key, sizeof(mp.mpt.abtKeyB));
-        } else {
-          // Copy the keys over from our key dump and store the retrieved access bits
-          memcpy(mp.mpt.abtKeyA, mtDump.amb[uiBlock].mbt.abtKeyA, sizeof(mp.mpt.abtKeyA));
-          memcpy(mp.mpt.abtAccessBits, mtDump.amb[uiBlock].mbt.abtAccessBits, sizeof(mp.mpt.abtAccessBits));
-          memcpy(mp.mpt.abtKeyB, mtDump.amb[uiBlock].mbt.abtKeyB, sizeof(mp.mpt.abtKeyB));
-        }
-
-        // Try to write the trailer
-        if (nfc_initiator_mifare_cmd(pnd, MC_WRITE, uiBlock, &mp) == false) {
-          printf("failed to write trailer block %d \n", uiBlock);
-          bFailure = true;
-        }
+    if (is_trailer_block(uiBlock)) {
+      if (bFormatCard) {
+        // Copy the default key and reset the access bits
+        memcpy(mp.mpt.abtKeyA, default_key, sizeof(mp.mpt.abtKeyA));
+        memcpy(mp.mpt.abtAccessBits, default_acl, sizeof(mp.mpt.abtAccessBits));
+        memcpy(mp.mpt.abtKeyB, default_key, sizeof(mp.mpt.abtKeyB));
       } else {
-        // The first block 0x00 is read only, skip this
-        if (uiBlock == 0 && !write_block_zero && !magic2)
-          continue;
+        // Copy the keys over from our key dump and store the retrieved access bits
+        memcpy(mp.mpt.abtKeyA, mtDump.amb[uiBlock].mbt.abtKeyA, sizeof(mp.mpt.abtKeyA));
+        memcpy(mp.mpt.abtAccessBits, mtDump.amb[uiBlock].mbt.abtAccessBits, sizeof(mp.mpt.abtAccessBits));
+        memcpy(mp.mpt.abtKeyB, mtDump.amb[uiBlock].mbt.abtKeyB, sizeof(mp.mpt.abtKeyB));
+      }
 
-        // Make sure a earlier write did not fail
-        if (!bFailure) {
-          // Try to write the data block
-          if (bFormatCard && uiBlock)
+      // Try to write the trailer
+      if (nfc_initiator_mifare_cmd(pnd, MC_WRITE, uiBlock, &mp) == false) {
+        printf("failed to write trailer block %d \n", uiBlock);
+        bFailure = true;
+      }
+    } else {
+      // The first block 0x00 is read only, skip this
+      if (uiBlock == 0 && !write_block_zero && !magic2)
+        continue;
 
-            memset(mp.mpd.abtData, 0x00, sizeof(mp.mpd.abtData));
-          else
-            memcpy(mp.mpd.abtData, mtDump.amb[uiBlock].mbd.abtData, sizeof(mp.mpd.abtData));
-          // do not write a block 0 with incorrect BCC - card will be made invalid!
-          if (uiBlock == 0) {
-            if ((mp.mpd.abtData[0] ^ mp.mpd.abtData[1] ^ mp.mpd.abtData[2] ^ mp.mpd.abtData[3] ^ mp.mpd.abtData[4]) != 0x00 && !magic2) {
-              printf("!\nError: incorrect BCC in MFD file!\n");
-              printf("Expecting BCC=%02X\n", mp.mpd.abtData[0] ^ mp.mpd.abtData[1] ^ mp.mpd.abtData[2] ^ mp.mpd.abtData[3]);
-              return false;
-            }
+      // Make sure a earlier write did not fail
+      if (!bFailure) {
+        // Try to write the data block
+        if (bFormatCard && uiBlock)
+
+          memset(mp.mpd.abtData, 0x00, sizeof(mp.mpd.abtData));
+        else
+          memcpy(mp.mpd.abtData, mtDump.amb[uiBlock].mbd.abtData, sizeof(mp.mpd.abtData));
+        // do not write a block 0 with incorrect BCC - card will be made invalid!
+        if (uiBlock == 0) {
+          if ((mp.mpd.abtData[0] ^ mp.mpd.abtData[1] ^ mp.mpd.abtData[2] ^ mp.mpd.abtData[3] ^ mp.mpd.abtData[4]) != 0x00 && !magic2) {
+            printf("!\nError: incorrect BCC in MFD file!\n");
+            printf("Expecting BCC=%02X\n", mp.mpd.abtData[0] ^ mp.mpd.abtData[1] ^ mp.mpd.abtData[2] ^ mp.mpd.abtData[3]);
+            return false;
           }
-          if (!nfc_initiator_mifare_cmd(pnd, MC_WRITE, uiBlock, &mp)) {
-            bFailure = true;
-            printf("Failure to write to data block %i\n", uiBlock);
-          }
-          
-        } else {
-          printf("Failure during write process.\n");
         }
+        if (!nfc_initiator_mifare_cmd(pnd, MC_WRITE, uiBlock, &mp)) {
+          bFailure = true;
+          printf("Failure to write to data block %i\n", uiBlock);
+        }
+        
+      } else {
+        printf("Failure during write process.\n");
       }
     }
+
     // Show if the write went well for each block
     print_success_or_failure(bFailure, &uiWriteBlocks);
     if ((! bTolerateFailures) && bFailure)
