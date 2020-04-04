@@ -87,6 +87,10 @@
 #include "target-subr.h"
 #include "drivers.h"
 
+#if defined (DRIVER_PCSC_ENABLED)
+#  include "drivers/pcsc.h"
+#endif /* DRIVER_PCSC_ENABLED */
+
 #if defined (DRIVER_ACR122_PCSC_ENABLED)
 #  include "drivers/acr122_pcsc.h"
 #endif /* DRIVER_ACR122_PCSC_ENABLED */
@@ -159,6 +163,9 @@ nfc_drivers_init(void)
 #if defined (DRIVER_PN53X_USB_ENABLED)
   nfc_register_driver(&pn53x_usb_driver);
 #endif /* DRIVER_PN53X_USB_ENABLED */
+#if defined (DRIVER_PCSC_ENABLED)
+  nfc_register_driver(&pcsc_driver);
+#endif /* DRIVER_ACR122_PCSC_ENABLED */
 #if defined (DRIVER_ACR122_PCSC_ENABLED)
   nfc_register_driver(&acr122_pcsc_driver);
 #endif /* DRIVER_ACR122_PCSC_ENABLED */

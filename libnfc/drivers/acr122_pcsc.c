@@ -93,7 +93,7 @@ const struct pn53x_io acr122_pcsc_io;
 // Prototypes
 char   *acr122_pcsc_firmware(nfc_device *pnd);
 
-const char *supported_devices[] = {
+static const char *supported_devices[] = {
   "ACS ACR122",         // ACR122U & Touchatag, last version
   "ACS ACR 38U-CCID",   // Touchatag, early version
   "ACS ACR38U-CCID",    // Touchatag, early version, under MacOSX
