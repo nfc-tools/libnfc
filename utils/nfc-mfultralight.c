@@ -291,10 +291,8 @@ unlock_card(void)
   return true;
 }
 
-static bool check_magic() {
-  // Firstly try to directly read and re-write the first three pages
-  // if this fail try to unlock with chinese magic backdoor
-
+static bool check_magic(void)
+{
   bool directWrite = true;
   // Try to read pages 0, 1, 2
   uint8_t original_b0[12];
