@@ -846,7 +846,7 @@ main(int argc, const char *argv[])
     }
   } else
     printf("RATS support: no\n");
-  printf("Guessing size: seems to be a %lu-byte card\n", (uiBlocks + 1) * sizeof(mifare_classic_block));
+  printf("Guessing size: seems to be a %lu-byte card\n", (unsigned long) ((uiBlocks + 1) * sizeof(mifare_classic_block)));
 
   //If size is 4k check for direct-write card
   if (uiBlocks == 0xff) {
