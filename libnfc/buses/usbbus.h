@@ -35,6 +35,7 @@
 
 #ifndef _WIN32
 // Under POSIX system, we use libusb (>= 0.1.12)
+#include <stdint.h>
 #include <usb.h>
 #define USB_TIMEDOUT ETIMEDOUT
 #define _usb_strerror( X ) strerror(-X)
