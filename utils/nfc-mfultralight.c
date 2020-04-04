@@ -10,6 +10,7 @@
  * See AUTHORS file for a more comprehensive list of contributors.
  * Additional contributors of this file:
  * Copyright (C) 2013-2018 Adam Laurie
+ * Copyright (C) 2018-2019 Daniele Bruneo
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -290,50 +291,48 @@ unlock_card(void)
   return true;
 }
 
-static bool check_magic()
-{
-  bool     bFailure = false;
-  int      uid_data;
+static bool check_magic() {
+  // Firstly try to directly read and re-write the first three pages
+  // if this fail try to unlock with chinese magic backdoor
 
-  for (uint32_t page = 0; page <= 1; page++) {
-    // Show if the readout went well
-    if (bFailure) {
-      // When a failure occured we need to redo the anti-collision
-      if (nfc_initiator_select_passive_target(pnd, nmMifare, NULL, 0, &nt) <= 0) {
-        ERR("tag was removed");
-        return false;
-      }
-      bFailure = false;
-    }
-
-    uid_data = 0x00000000;
-
-    memcpy(mp.mpd.abtData, &uid_data, sizeof uid_data);
-    memset(mp.mpd.abtData + 4, 0, 12);
-
-    //Force the write without checking for errors - otherwise the writes to the sector 0 seem to complain
-    nfc_initiator_mifare_cmd(pnd, MC_WRITE, page, &mp);
-  }
-
-  //Check that the ID is now set to 0x000000000000
+  bool directWrite = true;
+  // Try to read pages 0, 1, 2
+  uint8_t original_b0[12];
+  printf("Checking if UL badge is DirectWrite...\n");
   if (nfc_initiator_mifare_cmd(pnd, MC_READ, 0, &mp)) {
-    //printf("%u", mp.mpd.abtData);
-    bool result = true;
-    for (int i = 0; i <= 7; i++) {
-      if (mp.mpd.abtData[i] != 0x00) result = false;
+    memcpy(original_b0, mp.mpd.abtData, 12);
+    printf(" Original Block 0 (Pages 0-2): ");
+    for(int i=0;i<12;i++){
+      printf("%02x", original_b0[i]);
     }
-
-    if (result) {
-      return true;
-    }
-
+    printf("\n");
+    printf(" Original UID: %02x%02x%02x%02x%02x%02x%02x\n",
+      original_b0[0], original_b0[1], original_b0[2], original_b0[4], original_b0[5], original_b0[6], original_b0[7]);
+  } else {
+    printf("!\nError: unable to read block 0x%02x\n", 0);
+    directWrite = false;
   }
-
-  //Initially check if we can unlock via the MF method
-  if (unlock_card()) {
+  printf(" Attempt to write Block 0 (pages 0-2) ...\n");
+  for (uint32_t page = 0; page <= 2; page++) {
+    printf("  Writing Page %i:", page);
+    memcpy(mp.mpd.abtData, original_b0 + page*4, 4);
+    for(int i=0;i<4;i++){
+      printf(" %02x", mp.mpd.abtData[i]);
+    }
+    printf("\n");
+    if (!nfc_initiator_mifare_cmd(pnd, MC_WRITE, page, &mp)) {
+      printf("  Failure writing Page %i\n", page);
+      directWrite = false;
+      break;
+    }
+  }
+  if(directWrite){
+    printf(" Block 0 written successfully\n");
+    printf("Card is DirectWrite\n");
     return true;
   } else {
-    return false;
+    printf("Card is not DirectWrite\n");
+    return unlock_card();
   }
 
 }
@@ -383,9 +382,9 @@ write_card(bool write_otp, bool write_lock, bool write_dyn_lock, bool write_uid)
     write_uid = ((buffer[0] == 'y') || (buffer[0] == 'Y'));
   }
 
-  printf("Writing %d pages |", uiBlocks);
   /* We may need to skip 2 first pages. */
   if (!write_uid) {
+    printf("Writing %d pages |", uiBlocks);
     printf("ss");
     uiSkippedPages = 2;
   } else {
@@ -393,6 +392,7 @@ write_card(bool write_otp, bool write_lock, bool write_dyn_lock, bool write_uid)
       printf("\nUnable to unlock card - are you sure the card is magic?\n");
       return false;
     }
+    printf("Writing %d pages |", uiBlocks);
   }
 
   for (uint32_t page = uiSkippedPages; page < uiBlocks; page++) {
@@ -527,7 +527,7 @@ main(int argc, const char *argv[])
   bool    bFilename = false;
   FILE   *pfDump;
 
-  if (argc < 3) {
+  if (argc == 0) {
     print_usage(argv);
     exit(EXIT_FAILURE);
   }
@@ -580,7 +580,7 @@ main(int argc, const char *argv[])
       }
     }
   }
-  if (! bFilename) {
+  if (iAction != 3 && !bFilename) {
     ERR("Please supply a Mifare Dump filename");
     exit(EXIT_FAILURE);
   }
@@ -650,7 +650,7 @@ main(int argc, const char *argv[])
   if (get_ev1_version()) {
     if (!bPWD)
       printf("WARNING: Tag is EV1 or NTAG - PASSWORD may be required\n");
-    if (abtRx[6] == 0x0b) {
+    if (abtRx[6] == 0x0b || abtRx[6] == 0x00) {
       printf("EV1 type: MF0UL11 (48 bytes)\n");
       uiBlocks = 20; // total number of 4 byte 'pages'
       iDumpSize = uiBlocks * 4;

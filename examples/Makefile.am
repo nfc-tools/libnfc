@@ -74,6 +74,7 @@ pn53x_sam_LDADD = $(top_builddir)/libnfc/libnfc.la \
 pn53x_tamashell_SOURCES = pn53x-tamashell.c
 pn53x_tamashell_LDADD = $(top_builddir)/libnfc/libnfc.la \
 		        $(top_builddir)/utils/libnfcutils.la
+pn53x_tamashell_CFLAGS = @READLINE_INCLUDES@ -I$(top_srcdir)
 pn53x_tamashell_LDFLAGS = @READLINE_LIBS@
 
 quick_start_example1_SOURCES = doc/quick_start_example1.c
