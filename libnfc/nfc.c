@@ -123,6 +123,10 @@
 #  include "drivers/pn532_i2c.h"
 #endif /* DRIVER_PN532_I2C_ENABLED */
 
+#if defined (DRIVER_PN71XX_ENABLED)
+#  include "drivers/pn71xx.h"
+#endif /* DRIVER_PN71XX_ENABLED */
+
 
 #define LOG_CATEGORY "libnfc.general"
 #define LOG_GROUP    NFC_LOG_GROUP_GENERAL
@@ -133,6 +137,25 @@ struct nfc_driver_list {
 };
 
 const struct nfc_driver_list *nfc_drivers = NULL;
+
+// descritions for debugging
+const char * nfc_property_name[] = {
+  "NP_TIMEOUT_COMMAND",
+  "NP_TIMEOUT_ATR",
+  "NP_TIMEOUT_COM",
+  "NP_HANDLE_CRC",
+  "NP_HANDLE_PARITY",
+  "NP_ACTIVATE_FIELD",
+  "NP_ACTIVATE_CRYPTO1",
+  "NP_INFINITE_SELECT",
+  "NP_ACCEPT_INVALID_FRAMES",
+  "NP_ACCEPT_MULTIPLE_FRAMES",
+  "NP_AUTO_ISO14443_4",
+  "NP_EASY_FRAMING",
+  "NP_FORCE_ISO14443_A",
+  "NP_FORCE_ISO14443_B",
+  "NP_FORCE_SPEED_106"
+};
 
 static void
 nfc_drivers_init(void)
@@ -164,6 +187,9 @@ nfc_drivers_init(void)
 #if defined (DRIVER_ARYGON_ENABLED)
   nfc_register_driver(&arygon_driver);
 #endif /* DRIVER_ARYGON_ENABLED */
+#if defined (DRIVER_PN71XX_ENABLED)
+  nfc_register_driver(&pn71xx_driver);
+#endif /* DRIVER_PN71XX_ENABLED */
 }
 
 static int
@@ -416,6 +442,7 @@ nfc_list_devices(nfc_context *context, nfc_connstring connstrings[], const size_
 int
 nfc_device_set_property_int(nfc_device *pnd, const nfc_property property, const int value)
 {
+  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "set_property_int %s %s", nfc_property_name[property], value ? "True" : "False");
   HAL(device_set_property_int, pnd, property, value);
 }
 
@@ -435,6 +462,7 @@ nfc_device_set_property_int(nfc_device *pnd, const nfc_property property, const 
 int
 nfc_device_set_property_bool(nfc_device *pnd, const nfc_property property, const bool bEnable)
 {
+  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "set_property_bool %s %s", nfc_property_name[property], bEnable ? "True" : "False");
   HAL(device_set_property_bool, pnd, property, bEnable);
 }
 

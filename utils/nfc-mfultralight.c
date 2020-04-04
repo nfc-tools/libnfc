@@ -291,10 +291,8 @@ unlock_card(void)
   return true;
 }
 
-static bool check_magic() {
-  // Firstly try to directly read and re-write the first three pages
-  // if this fail try to unlock with chinese magic backdoor
-
+static bool check_magic(void)
+{
   bool directWrite = true;
   // Try to read pages 0, 1, 2
   uint8_t original_b0[12];
@@ -714,7 +712,7 @@ main(int argc, const char *argv[])
 
     size_t  szDump;
     if (((szDump = fread(&mtDump, 1, sizeof(mtDump), pfDump)) != iDumpSize && !bPart) || szDump <= 0) {
-      ERR("Could not read from dump file or size mismatch: %s (read %lu, expected %lu)\n", argv[2], szDump, iDumpSize);
+      ERR("Could not read from dump file or size mismatch: %s (read %lu, expected %lu)\n", argv[2], (unsigned long)szDump, (unsigned long)iDumpSize);
       fclose(pfDump);
       exit(EXIT_FAILURE);
     }

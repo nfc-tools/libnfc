@@ -503,7 +503,7 @@ snprint_nfc_barcode_info(char *dst, size_t size, const nfc_barcode_info *pnti, b
 {
   (void) verbose;
   int off = 0;
-  off += snprintf(dst + off, size - off, "        Size (bits): %lu\n", pnti->szDataLen * 8);
+  off += snprintf(dst + off, size - off, "        Size (bits): %lu\n", (unsigned long)(pnti->szDataLen * 8));
   off += snprintf(dst + off, size - off, "            Content: ");
   for (uint8_t i = 0; i < pnti->szDataLen; i++) {
     off += snprintf(dst + off, size - off, "%02X", pnti->abtData[i]);
