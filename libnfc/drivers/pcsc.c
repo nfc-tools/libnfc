@@ -76,6 +76,18 @@ struct pcsc_data {
 
 #define DRIVER_DATA(pnd) ((struct pcsc_data*)(pnd->driver_data))
 
+//Doesn't have define in macOS, so define from reader.h
+#define 	SCARD_ATTR_VALUE(Class, Tag)   ((((ULONG)(Class)) << 16) | ((ULONG)(Tag)))
+#define 	SCARD_CLASS_VENDOR_INFO   1
+#define 	SCARD_ATTR_VENDOR_NAME   SCARD_ATTR_VALUE(SCARD_CLASS_VENDOR_INFO, 0x0100)
+#define 	SCARD_ATTR_ICC_TYPE_PER_ATR   SCARD_ATTR_VALUE(SCARD_CLASS_ICC_STATE, 0x0304)
+#define 	SCARD_CLASS_ICC_STATE   9
+#define     SCARD_AUTOALLOCATE (DWORD)(-1)
+#define 	SCARD_ATTR_VENDOR_NAME   SCARD_ATTR_VALUE(SCARD_CLASS_VENDOR_INFO, 0x0100)
+#define 	SCARD_ATTR_VENDOR_IFD_TYPE   SCARD_ATTR_VALUE(SCARD_CLASS_VENDOR_INFO, 0x0101)
+#define 	SCARD_ATTR_VENDOR_IFD_VERSION   SCARD_ATTR_VALUE(SCARD_CLASS_VENDOR_INFO, 0x0102)
+#define 	SCARD_ATTR_VENDOR_IFD_SERIAL_NO   SCARD_ATTR_VALUE(SCARD_CLASS_VENDOR_INFO, 0x0103)
+
 static SCARDCONTEXT _SCardContext;
 static int _iSCardContextRefCount = 0;
 
@@ -291,6 +303,40 @@ pcsc_scan(const nfc_context *context, nfc_connstring connstrings[], const size_t
       int     l = strlen(supported_devices[i]);
       bSupported = 0 == !strncmp(supported_devices[i], acDeviceNames + szPos, l);
     }
+    // Supported Feitian Contactless Reader
+#if defined (__APPLE__)
+    // Feitian R502
+    if (strstr(acDeviceNames + szPos, "Feitian R502") != NULL)
+    {
+      bSupported = true;
+    }
+    // Feitian 502-CL
+    if (strstr(acDeviceNames + szPos, "Feitian 502-CL") != NULL)
+    {
+      bSupported = true;
+    }
+    // Feitian bR500
+    if (strstr(acDeviceNames + szPos, "Feitian bR500") != NULL)
+    {
+      bSupported = true;
+    }
+#else
+    // Feitian R502
+    if (strstr(acDeviceNames + szPos, "Feitian R502 [R502 Contact Reader]") != NULL)
+    {
+      bSupported = true;
+    }
+    // Feitian 502-CL
+    if (strstr(acDeviceNames + szPos, "Feitian 502-CL [R502 Contactless Reader]") != NULL)
+    {
+      bSupported = true;
+    }
+    // Feitian bR500
+    if (strstr(acDeviceNames + szPos, "Feitian bR500") != NULL)
+    {
+      bSupported = true;
+    }
+#endif
 
     if (bSupported) {
       // Supported non-ACR122 device found
@@ -382,7 +428,8 @@ pcsc_open(const nfc_context *context, const nfc_connstring connstring)
   // Test if context succeeded
   if (!(pscc = pcsc_get_scardcontext()))
     goto error;
-  DRIVER_DATA(pnd)->last_error = SCardConnect(*pscc, ndd.pcsc_device_name, SCARD_SHARE_DIRECT, 0, &(DRIVER_DATA(pnd)->hCard), (void *) & (DRIVER_DATA(pnd)->ioCard.dwProtocol));
+  // T1 or T0 protocol.
+  DRIVER_DATA(pnd)->last_error = SCardConnect(*pscc, ndd.pcsc_device_name, SCARD_SHARE_DIRECT, SCARD_PROTOCOL_T0 | SCARD_PROTOCOL_T1, &(DRIVER_DATA(pnd)->hCard), (void *) & (DRIVER_DATA(pnd)->ioCard.dwProtocol));
   if (DRIVER_DATA(pnd)->last_error != SCARD_S_SUCCESS) {
     // We can not connect to this device.
     log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "PCSC connect failed");
@@ -760,10 +807,34 @@ pcsc_get_information_about(nfc_device *pnd, char **pbuf)
           ? "\nserial: " : "", serial_len > 0 ? (char *)serial : "");
 
 error:
+// SCardFreeMemory function not supported in macOS.
+#if defined(__APPLE__)
+  if (name != NULL){
+    free(name);
+    name = NULL;
+  }
+  if (type != NULL){
+    free(type);
+    type = NULL;
+  }
+  if (version != NULL){
+    free(version);
+    version = NULL;
+  }
+  if (serial != NULL){
+    free(serial);
+    serial = NULL;
+  }
+  if (pscc != NULL){
+    SCardReleaseContext(pscc);
+  }
+#else
   SCardFreeMemory(*pscc, name);
   SCardFreeMemory(*pscc, type);
   SCardFreeMemory(*pscc, version);
   SCardFreeMemory(*pscc, serial);
+#endif
+
 
   pnd->last_error = res;
   return pnd->last_error;

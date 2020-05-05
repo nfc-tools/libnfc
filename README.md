@@ -35,12 +35,15 @@ Requirements
 Some NFC drivers depend on third party software:
 
 * pn53x_usb & acr122_usb:
-
-   - libusb-0.1 http://libusb.sf.net
+  
+  - libusb-0.1 http://libusb.sf.net
 
 * acr122_pcsc:
-
-   - pcsc-lite http://pcsclite.alioth.debian.org/
+  
+  - pcsc-lite http://pcsclite.alioth.debian.org/
+- pcsc:
+  
+  - Support build with pcsc driver, which can be using all compatible readers, Feitian R502 and bR500 already passed the test.
 
 The regression test suite depends on the cutter framework:
 http://cutter.sf.net
@@ -97,32 +100,36 @@ Please make sure to include:
 * The version of libnfc
 
 * Information about your system. For instance:
-
-   - What operating system and version
-   - For Linux, what version of the C library
-
+  
+  - What operating system and version
+  - For Linux, what version of the C library
+  
   And anything else you think is relevant.
 
 * A trace with debug activated.
-
+  
   Reproduce the bug with debug, e.g. if it was:
-
+  
         $ nfc-list -v
-
+  
   run it as:
-
+  
         $ LIBNFC_LOG_LEVEL=3 nfc-list -v
 
 * How to reproduce the bug.
-
+  
   Please include a short test program that exhibits the behavior.
+  
   As a last resort, you can also provide a pointer to a larger piece
+  
   of software that can be downloaded.
 
 * If the bug was a crash, the exact text that was printed out
+  
   when the crash occured.
 
 * Further information such as stack traces may be useful, but
+  
   is not necessary.
 
 Patches
@@ -136,16 +143,27 @@ all the information described in "How to Report Bugs".
 Building
 ========
 
-It should be as simple as running these two commands:
+It should be as simple as running these three commands:
 
+    autoreconf -vis
     ./configure
     make
+
+Build with specific  driver, like pcsc driver for compatible readers, go with below commands, tested on linux and macOS:
+
+```
+git clone --recursive https://github.com/nfc-tools/libnfc
+autoreconf -vis
+./configure --with-drivers=pcsc
+make
+```
 
 Troubleshooting
 ===============
 
 Touchatag/ACR122:
 -----------------
+
 If your Touchatag or ACR122 device fails being detected by libnfc, make sure
 that PCSC-lite daemon (`pcscd`) is installed and is running.
 
@@ -158,6 +176,7 @@ pcscd daemon.
 
 ACR122:
 -------
+
 Using an ACR122 device with libnfc and without tag (e.g. to use NFCIP modes or
 card emulation) needs yet another PCSC-lite tweak: You need to allow usage of
 CCID Exchange command.  To do this, edit `libccid_Info.plist` configuration file
@@ -171,13 +190,16 @@ in something like: `/usr/lib/pcsc/drivers/ifd-acsccid.bundle/Contents/Info.plist
 
 SCL3711:
 --------
+
 Libnfc cannot be used concurrently with the PCSC proprietary driver of SCL3711.
 Two possible solutions:
+
 * Either you don't install SCL3711 driver at all
 * Or you stop the PCSC daemon when you want to use libnfc-based tools
 
 PN533 USB device on Linux >= 3.1:
 ---------------------------------
+
 Since Linux kernel version 3.1, a few kernel-modules must not be loaded in order
 to use libnfc : "nfc", "pn533" and "pn533_usb".
 To prevent kernel from loading automatically these modules, you can blacklist
@@ -185,9 +207,29 @@ them in a modprobe conf file. This file is provided within libnfc archive:
 
     sudo cp contrib/linux/blacklist-libnfc.conf /etc/modprobe.d/blacklist-libnfc.conf
 
+## FEITIAN bR500 and R502:
+
+Libnfc can work with PCSC proprietary driver of bR500 and R502 through USB port, most linux already installed PCSC proprietary, then just plug in play, to have pcsc driver support, you may need build with "--with-drivers=pcsc" to re-build libnfc, below reader tested:
+
+- Feitian bR500
+- Feitian R502 Dual interface reader
+- Feitian R502 CL(Contactless) reader
+
+These reader support by CCID from 1.4.25, make sure your CCID driver version higher than 1.4.25.
+
+Using macOS, use below command check your version, to install latest CCID driver from [https://github.com/martinpaljak/osx-ccid-installer/releases](https://github.com/martinpaljak/osx-ccid-installer/releases)
+
+```
+grep -A 1 CFBundleShortVersionString /usr/local/libexec/SmartCardServices/drivers/ifd-ccid.bundle/Contents/Info.plist
+```
+
+Using linux, use below command check your version, to install latest CCID driver from [https://ccid.apdu.fr/](https://ccid.apdu.fr/)
+
+```
+grep -A 1 CFBundleShortVersionString /usr/lib/pcsc/drivers/ifd-ccid.bundle/Contents/Info.plist
+```
 Proprietary Notes
 =================
-
 FeliCa is a registered trademark of the Sony Corporation.
 MIFARE is a trademark of NXP Semiconductors.
 Jewel Topaz is a trademark of Innovision Research & Technology.
