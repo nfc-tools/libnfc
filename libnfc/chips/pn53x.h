@@ -9,6 +9,7 @@
  * Copyright (C) 2012-2013 Ludovic Rousseau
  * See AUTHORS file for a more comprehensive list of contributors.
  * Additional contributors of this file:
+ * Copyright (C) 2020      Adam Laurie
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -322,6 +323,7 @@ int    pn53x_idle(struct nfc_device *pnd);
 
 // NFC device as Initiator functions
 int    pn53x_initiator_init(struct nfc_device *pnd);
+void   pn53x_initiator_init_iclass_modulation(struct nfc_device *pnd);
 int    pn532_initiator_init_secure_element(struct nfc_device *pnd);
 int    pn53x_initiator_select_passive_target(struct nfc_device *pnd,
                                              const nfc_modulation nm,

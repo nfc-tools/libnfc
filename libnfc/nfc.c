@@ -9,6 +9,7 @@
  * Copyright (C) 2012-2013 Ludovic Rousseau
  * See AUTHORS file for a more comprehensive list of contributors.
  * Additional contributors of this file:
+ * Copyright (C) 2020      Adam Laurie
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -206,7 +207,10 @@ int
 nfc_register_driver(const struct nfc_driver *ndr)
 {
   if (!ndr)
+  { 
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "nfc_register_driver returning NFC_EINVARG");
     return NFC_EINVARG;
+  }
 
   struct nfc_driver_list *pndl = (struct nfc_driver_list *)malloc(sizeof(struct nfc_driver_list));
   if (!pndl)
@@ -1296,9 +1300,11 @@ nfc_device_validate_modulation(nfc_device *pnd, const nfc_mode mode, const nfc_m
         if (nbr[j] == nm->nbr)
           return NFC_SUCCESS;
       }
+      log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "nfc_device_validate_modulation returning NFC_EINVARG");
       return NFC_EINVARG;
     }
   }
+  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "nfc_device_validate_modulation returning NFC_EINVARG");
   return NFC_EINVARG;
 }
 
@@ -1396,6 +1402,8 @@ str_nfc_modulation_type(const nfc_modulation_type nmt)
       return "Thinfilm NFC Barcode";
     case NMT_DEP:
       return "D.E.P.";
+    case NMT_END_ENUM:
+      break;
   }
 
   return "???";

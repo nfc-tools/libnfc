@@ -9,6 +9,7 @@
  * Copyright (C) 2012-2013 Ludovic Rousseau
  * See AUTHORS file for a more comprehensive list of contributors.
  * Additional contributors of this file:
+ * Copyright (C) 2020      Adam Laurie
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -71,6 +72,7 @@ print_usage(const char *progname)
   printf("\t  16: ISO14443B'\n");
   printf("\t  32: ISO14443B-2 ST SRx\n");
   printf("\t  64: ISO14443B-2 ASK CTx\n");
+  printf("\t  96: ISO14443B iClass\n");
   printf("\t 128: ISO14443A-3 Jewel\n");
   printf("\t 256: ISO14443A-2 NFC Barcode\n");
   printf("\tSo 511 (default) polls for all types.\n");
@@ -263,6 +265,22 @@ main(int argc, const char *argv[])
         int n;
         if (verbose || (res > 0)) {
           printf("%d ISO14443B-2 ASK CTx passive target(s) found%s\n", res, (res == 0) ? ".\n" : ":");
+        }
+        for (n = 0; n < res; n++) {
+          print_nfc_target(&ant[n], verbose);
+          printf("\n");
+        }
+      }
+    }
+
+    if (mask & 0x60) {
+      nm.nmt = NMT_ISO14443BICLASS;
+      nm.nbr = NBR_106;
+      // List ISO14443B iClass targets
+      if ((res = nfc_initiator_list_passive_targets(pnd, nm, ant, MAX_TARGET_COUNT)) >= 0) {
+        int n;
+        if (verbose || (res > 0)) {
+          printf("%d ISO14443B iClass passive target(s) found%s\n", res, (res == 0) ? ".\n" : ":");
         }
         for (n = 0; n < res; n++) {
           print_nfc_target(&ant[n], verbose);

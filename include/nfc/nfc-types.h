@@ -9,6 +9,7 @@
  * Copyright (C) 2012-2013 Ludovic Rousseau
  * See AUTHORS file for a more comprehensive list of contributors.
  * Additional contributors of this file:
+ * Copyright (C) 2020      Adam Laurie
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -235,6 +236,14 @@ typedef struct {
 } nfc_iso14443bi_info;
 
 /**
+ * @struct nfc_iso14443biclass_info
+ * @brief NFC ISO14443BiClass tag information
+ */
+typedef struct {
+  uint8_t abtUID[8];
+} nfc_iso14443biclass_info;
+
+/**
  * @struct nfc_iso14443b2sr_info
  * @brief NFC ISO14443-2B ST SRx tag information
  */
@@ -284,6 +293,7 @@ typedef union {
   nfc_jewel_info nji;
   nfc_barcode_info nti; // "t" for Thinfilm, "b" already used
   nfc_dep_info ndi;
+  nfc_iso14443biclass_info nic; // iclass - nbi already used
 } nfc_target_info;
 
 /**
@@ -311,7 +321,9 @@ typedef enum {
   NMT_ISO14443B2SR, // ISO14443-2B ST SRx
   NMT_ISO14443B2CT, // ISO14443-2B ASK CTx
   NMT_FELICA,
-  NMT_DEP,        // DEP should be kept last one as it's used as end-of-enum
+  NMT_DEP,
+  NMT_ISO14443BICLASS, // HID iClass 14443B mode
+  NMT_END_ENUM, // dummy for sizing - always should be last
 } nfc_modulation_type;
 
 /**

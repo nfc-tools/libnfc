@@ -9,6 +9,7 @@
  * Copyright (C) 2012-2013 Ludovic Rousseau
  * See AUTHORS file for a more comprehensive list of contributors.
  * Additional contributors of this file:
+ * Copyright (C) 2020      Adam Laurie
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -205,6 +206,8 @@ prepare_initiator_data(const nfc_modulation nm, uint8_t **ppbtInitiatorData, siz
     case NMT_DEP:
       *ppbtInitiatorData = NULL;
       *pszInitiatorData = 0;
+      break;
+   case NMT_END_ENUM:
       break;
   }
 }
