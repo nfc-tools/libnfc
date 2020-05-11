@@ -1390,6 +1390,8 @@ str_nfc_modulation_type(const nfc_modulation_type nmt)
       return "ISO/IEC 14443-4B";
     case NMT_ISO14443BI:
       return "ISO/IEC 14443-4B'";
+    case NMT_ISO14443BICLASS:
+      return "ISO/IEC 14443-2B-3B iClass (Picopass)";
     case NMT_ISO14443B2CT:
       return "ISO/IEC 14443-2B ASK CTx";
     case NMT_ISO14443B2SR:

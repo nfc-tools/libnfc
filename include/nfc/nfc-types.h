@@ -293,7 +293,7 @@ typedef union {
   nfc_jewel_info nji;
   nfc_barcode_info nti; // "t" for Thinfilm, "b" already used
   nfc_dep_info ndi;
-  nfc_iso14443biclass_info nic; // iclass - nbi already used
+  nfc_iso14443biclass_info nhi; // hid iclass / picopass - nii already used
 } nfc_target_info;
 
 /**

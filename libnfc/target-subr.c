@@ -679,7 +679,7 @@ snprint_nfc_target(char *dst, size_t size, const nfc_target *pnt, bool verbose)
         snprint_nfc_iso14443b2sr_info(dst + off, size - off, &pnt->nti.nsi, verbose);
         break;
       case NMT_ISO14443BICLASS:
-        snprint_nfc_iso14443biclass_info(dst + off, size - off, &pnt->nti.nic, verbose);
+        snprint_nfc_iso14443biclass_info(dst + off, size - off, &pnt->nti.nhi, verbose);
         break;
       case NMT_ISO14443B2CT:
         snprint_nfc_iso14443b2ct_info(dst + off, size - off, &pnt->nti.nci, verbose);

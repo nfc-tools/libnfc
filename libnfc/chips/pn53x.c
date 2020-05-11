@@ -581,7 +581,7 @@ pn53x_decode_target_data(const uint8_t *pbtRawData, size_t szRawData, pn53x_type
     case NMT_ISO14443BICLASS:
       // Store the UID
       for(uint8_t i= 0 ; i < 8 ; ++i)
-      	pnti->nic.abtUID[7 - i]= pbtRawData[i]; 
+      	pnti->nhi.abtUID[7 - i]= pbtRawData[i]; 
       break;
 
     case NMT_ISO14443B2CT:
@@ -1062,7 +1062,7 @@ pn53x_initiator_init(struct nfc_device *pnd)
 // iclass requires special modulation settings
 void pn53x_initiator_init_iclass_modulation(struct nfc_device *pnd)
 {
-	// send a bunch of low level commands I reverse engineered from a working iClass reader
+	// send a bunch of low level commands reverse engineered from a working iClass reader
 	// original device was using a PN512
 	//
 	//	    // TxModeReg - Defines the data rate and framing during transmission.
@@ -1196,12 +1196,12 @@ pn53x_initiator_select_passive_target_ext(struct nfc_device *pnd,
 	abtReqt[0]= 0x0c; // iClass SELECT
 	abtAnticol[0]= 0x81; // iClass ANTICOL
         if ((res = pn53x_initiator_transceive_bytes(pnd, abtReqt, sizeof(abtReqt), &abtAnticol[1], sizeof(abtAnticol) - 1, timeout)) < 0) {
-          log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "timeout on iClass anticol");
+          log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "timeout on iClass anticol");
           return res;
 	}
 	// write back anticol handle to get UID
         if ((res = pn53x_initiator_transceive_bytes(pnd, abtAnticol, 9, abtTargetsData, 10, timeout)) < 0) {
-          log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "timeout on iClass get UID");
+          log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "timeout on iClass get UID");
           return res;
 	}
         log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "iClass raw UID: %02x %02x %02x %02x %02x %02x %02x %02x", abtTargetsData[0], abtTargetsData[1], abtTargetsData[2], abtTargetsData[3], abtTargetsData[4], abtTargetsData[5], abtTargetsData[6], abtTargetsData[7]);
@@ -1210,6 +1210,15 @@ pn53x_initiator_select_passive_target_ext(struct nfc_device *pnd,
       if ((res = pn53x_decode_target_data(abtTargetsData, szTargetsData, CHIP_DATA(pnd)->type, nm.nmt, &(nttmp.nti))) < 0) {
         return res;
       }
+    } else {
+
+      if ((res = pn53x_initiator_transceive_bytes(pnd, pbtInitData, szInitData, abtTargetsData, sizeof(abtTargetsData), timeout)) < 0) {
+        if ((res == NFC_ERFTRANS) && (CHIP_DATA(pnd)->last_status_byte == 0x01)) { // Chip timeout
+          continue;
+        } else
+          return res;
+      }
+      szTargetsData = (size_t)res;
     }
 
       if (nm.nmt == NMT_ISO14443B2CT) {
