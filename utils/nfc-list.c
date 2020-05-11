@@ -72,11 +72,11 @@ print_usage(const char *progname)
   printf("\t  16: ISO14443B'\n");
   printf("\t  32: ISO14443B-2 ST SRx\n");
   printf("\t  64: ISO14443B-2 ASK CTx\n");
-  printf("\t  96: ISO14443B iClass\n");
-  printf("\t 128: ISO14443A-3 Jewel\n");
-  printf("\t 256: ISO14443A-2 NFC Barcode\n");
-  printf("\tSo 511 (default) polls for all types.\n");
-  printf("\tNote that if 16, 32 or 64 then 8 is selected too.\n");
+  printf("\t 128: ISO14443B iClass\n");
+  printf("\t 256: ISO14443A-3 Jewel\n");
+  printf("\t 512: ISO14443A-2 NFC Barcode\n");
+  printf("\tSo 1023 (default) polls for all types.\n");
+  printf("\tNote that if 16, 32, 64 or 128 then 8 is selected too.\n");
 }
 
 int
@@ -87,7 +87,7 @@ main(int argc, const char *argv[])
   size_t  i;
   bool verbose = false;
   int res = 0;
-  int mask = 0x1ff;
+  int mask = 0x3ff;
   int arg;
 
   nfc_context *context;
@@ -111,13 +111,13 @@ main(int argc, const char *argv[])
     } else if ((0 == strcmp(argv[arg], "-t")) && (arg + 1 < argc)) {
       arg++;
       mask = atoi(argv[arg]);
-      if ((mask < 1) || (mask > 0x1ff)) {
+      if ((mask < 1) || (mask > 0x3ff)) {
         ERR("%i is invalid value for type bitfield.", mask);
         print_usage(argv[0]);
         exit(EXIT_FAILURE);
       }
       // Force TypeB for all derivatives of B
-      if (mask & 0x70)
+      if (mask & 0xf0)
         mask |= 0x08;
     } else {
       ERR("%s is not supported option.", argv[arg]);
@@ -273,7 +273,7 @@ main(int argc, const char *argv[])
       }
     }
 
-    if (mask & 0x60) {
+    if (mask & 0x80) {
       nm.nmt = NMT_ISO14443BICLASS;
       nm.nbr = NBR_106;
       // List ISO14443B iClass targets
@@ -289,7 +289,7 @@ main(int argc, const char *argv[])
       }
     }
 
-    if (mask & 0x80) {
+    if (mask & 0x100) {
       nm.nmt = NMT_JEWEL;
       nm.nbr = NBR_106;
       // List Jewel targets
@@ -305,7 +305,7 @@ main(int argc, const char *argv[])
       }
     }
 
-    if (mask & 0x100) {
+    if (mask & 0x200) {
       nm.nmt = NMT_BARCODE;
       nm.nbr = NBR_106;
       // List NFC Barcode targets
@@ -320,6 +320,7 @@ main(int argc, const char *argv[])
         }
       }
     }
+
     nfc_close(pnd);
   }
 
