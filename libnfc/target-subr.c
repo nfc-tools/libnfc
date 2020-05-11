@@ -687,8 +687,6 @@ snprint_nfc_target(char *dst, size_t size, const nfc_target *pnt, bool verbose)
       case NMT_DEP:
         snprint_nfc_dep_info(dst + off, size - off, &pnt->nti.ndi, verbose);
         break;
-      case NMT_END_ENUM:
-       break;	
     }
   }
 }

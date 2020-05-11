@@ -1404,8 +1404,6 @@ str_nfc_modulation_type(const nfc_modulation_type nmt)
       return "Thinfilm NFC Barcode";
     case NMT_DEP:
       return "D.E.P.";
-    case NMT_END_ENUM:
-      break;
   }
 
   return "???";

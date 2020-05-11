@@ -323,7 +323,7 @@ typedef enum {
   NMT_FELICA,
   NMT_DEP,
   NMT_ISO14443BICLASS, // HID iClass 14443B mode
-  NMT_END_ENUM, // dummy for sizing - always should be last
+  NMT_END_ENUM = NMT_ISO14443BICLASS, // dummy for sizing - always should alias last
 } nfc_modulation_type;
 
 /**

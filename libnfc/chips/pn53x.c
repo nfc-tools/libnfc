@@ -86,7 +86,7 @@ pn53x_init(struct nfc_device *pnd)
   }
 
   if (!CHIP_DATA(pnd)->supported_modulation_as_initiator) {
-    CHIP_DATA(pnd)->supported_modulation_as_initiator = malloc(sizeof(nfc_modulation_type) * (NMT_END_ENUM));
+    CHIP_DATA(pnd)->supported_modulation_as_initiator = malloc(sizeof(nfc_modulation_type) * (NMT_END_ENUM + 1));
     if (! CHIP_DATA(pnd)->supported_modulation_as_initiator)
       return NFC_ESOFT;
     int nbSupportedModulation = 0;
@@ -629,8 +629,6 @@ pn53x_decode_target_data(const uint8_t *pbtRawData, size_t szRawData, pn53x_type
     // Should not happend...
     case NMT_DEP:
       return NFC_ECHIP;
-    case NMT_END_ENUM:
-      break;
   }
   return NFC_SUCCESS;
 }
@@ -2355,8 +2353,6 @@ pn53x_initiator_target_is_present(struct nfc_device *pnd, const nfc_target *pnt)
     case NMT_ISO14443BICLASS:
       ret = pn53x_ISO14443B_ICLASS_is_present(pnd);
       break;
-    case NMT_END_ENUM:
-      break;
   }
   if (ret == NFC_ETGRELEASED)
     pn53x_current_target_free(pnd);
@@ -2410,7 +2406,6 @@ pn53x_target_init(struct nfc_device *pnd, nfc_target *pnt, uint8_t *pbtRx, const
     case NMT_ISO14443BICLASS:
     case NMT_JEWEL:
     case NMT_BARCODE:
-    case NMT_END_ENUM:
       pnd->last_error = NFC_EDEVNOTSUPP;
       return pnd->last_error;
   }
@@ -2514,7 +2509,6 @@ pn53x_target_init(struct nfc_device *pnd, nfc_target *pnt, uint8_t *pbtRx, const
     case NMT_ISO14443BICLASS:
     case NMT_JEWEL:
     case NMT_BARCODE:
-    case NMT_END_ENUM:
       pnd->last_error = NFC_EDEVNOTSUPP;
       return pnd->last_error;
   }
@@ -2672,8 +2666,6 @@ pn53x_target_receive_bytes(struct nfc_device *pnd, uint8_t *pbtRx, const size_t 
       case NMT_FELICA:
         abtCmd[0] = TgGetInitiatorCommand;
         break;
-      case NMT_END_ENUM:
-	break;
     }
   } else {
     abtCmd[0] = TgGetInitiatorCommand;
@@ -2781,8 +2773,6 @@ pn53x_target_send_bytes(struct nfc_device *pnd, const uint8_t *pbtTx, const size
       case NMT_FELICA:
         abtCmd[0] = TgResponseToInitiator;
         break;
-      case NMT_END_ENUM:
-	break;
     }
   } else {
     abtCmd[0] = TgResponseToInitiator;
@@ -3442,7 +3432,6 @@ pn53x_nm_to_pm(const nfc_modulation nm)
     case NMT_ISO14443B2SR:
     case NMT_ISO14443B2CT:
     case NMT_DEP:
-    case NMT_END_ENUM:
       // Nothing to do...
       break;
   }
@@ -3540,7 +3529,6 @@ pn53x_nm_to_ptt(const nfc_modulation nm)
     case NMT_ISO14443B2CT:
     case NMT_BARCODE:
     case NMT_DEP:
-    case NMT_END_ENUM:
       // Nothing to do...
       break;
   }
@@ -3601,7 +3589,6 @@ pn53x_get_supported_baud_rate(nfc_device *pnd, const nfc_mode mode, const nfc_mo
     case NMT_DEP:
       *supported_br = (nfc_baud_rate *)pn53x_dep_supported_baud_rates;
       break;
-    case NMT_END_ENUM:
     default:
       return NFC_EINVARG;
   }

@@ -195,8 +195,6 @@ prepare_initiator_data(const nfc_modulation nm, uint8_t **ppbtInitiatorData, siz
       *ppbtInitiatorData = NULL;
       *pszInitiatorData = 0;
       break;
-   case NMT_END_ENUM:
-      break;
   }
 }
 
