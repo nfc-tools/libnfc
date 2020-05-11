@@ -180,22 +180,14 @@ prepare_initiator_data(const nfc_modulation nm, uint8_t **ppbtInitiatorData, siz
       *ppbtInitiatorData = (uint8_t *) "\x01\x0b\x3f\x80";
       *pszInitiatorData = 4;
     break;
-    case NMT_ISO14443B2SR:
-      // Get_UID
-      *ppbtInitiatorData = (uint8_t *) "\x0b";
-      *pszInitiatorData = 1;
-    break;
-    case NMT_ISO14443B2CT:
-      // SELECT-ALL
-      *ppbtInitiatorData = (uint8_t *) "\x9F\xFF\xFF";
-      *pszInitiatorData = 3;
-    break;
     case NMT_FELICA:
       // polling payload must be present (see ISO/IEC 18092 11.2.2.5)
       *ppbtInitiatorData = (uint8_t *) "\x00\xff\xff\x01\x00";
       *pszInitiatorData = 5;
     break;
     case NMT_ISO14443A:
+    case NMT_ISO14443B2CT:
+    case NMT_ISO14443B2SR:
     case NMT_ISO14443BICLASS:
     case NMT_JEWEL:
     case NMT_BARCODE:
