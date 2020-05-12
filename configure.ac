@@ -47,6 +47,7 @@ AC_HEADER_STDBOOL
 AC_CHECK_HEADERS([fcntl.h limits.h stdio.h stdlib.h stdint.h stddef.h stdbool.h sys/ioctl.h sys/param.h sys/time.h termios.h])
 AC_CHECK_HEADERS([linux/spi/spidev.h], [spi_available="yes"])
 AC_CHECK_HEADERS([linux/i2c-dev.h], [i2c_available="yes"])
+AC_CHECK_HEADERS([linux_nfc_api.h], [nfc_nci_available="yes"])
 AC_CHECK_FUNCS([memmove memset select strdup strerror strstr strtol usleep],
 	       [AC_DEFINE([_XOPEN_SOURCE], [600], [Enable POSIX extensions if present])])
 
@@ -128,6 +129,16 @@ AM_CONDITIONAL(I2C_ENABLED, [test x"$i2c_required" = x"yes"])
 if test x"$i2c_required" = x"yes"
 then
   AC_SEARCH_LIBS([clock_gettime], [rt])
+fi
+
+# Enable Libnfc-NCI if required
+if test x"$nfc_nci_required" = x"yes"
+then
+  PKG_CHECK_MODULES([LIBNFC_NCI], [libnfc-nci],
+    [AC_MSG_NOTICE([libnfc-nci present])],
+    [AC_MSG_ERROR([libnfc-nci not present but required for some drivers configuration])]
+  )
+  CFLAGS="$CPPFLAGS $LIBNFC_NCI_CFLAGS"
 fi
 
 # Documentation (default: no)

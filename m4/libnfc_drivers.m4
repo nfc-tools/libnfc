@@ -37,7 +37,7 @@ AC_DEFUN([LIBNFC_ARG_WITH_DRIVERS],
                   fi
                   ;;
     all)
-                  DRIVER_BUILD_LIST="acr122_pcsc acr122_usb acr122s arygon pn53x_usb pn532_uart pn71xx pcsc"
+                  DRIVER_BUILD_LIST="acr122_pcsc acr122_usb acr122s arygon pn53x_usb pn532_uart pcsc"
 
                   if test x"$spi_available" = x"yes"
                   then
@@ -46,6 +46,10 @@ AC_DEFUN([LIBNFC_ARG_WITH_DRIVERS],
                   if test x"$i2c_available" = x"yes"
                   then
                       DRIVER_BUILD_LIST="$DRIVER_BUILD_LIST pn532_i2c"
+                  fi
+                  if test x"$nfc_nci_available" = x"yes"
+                  then
+                      DRIVER_BUILD_LIST="$DRIVER_BUILD_LIST pn71xx"
                   fi
                   ;;
   esac
@@ -112,6 +116,7 @@ AC_DEFUN([LIBNFC_ARG_WITH_DRIVERS],
                   DRIVERS_CFLAGS="$DRIVERS_CFLAGS -DDRIVER_PN532_I2C_ENABLED"
                   ;;
     pn71xx)
+                  nfc_nci_required="yes"
                   driver_pn71xx_enabled="yes"
                   DRIVERS_CFLAGS="$DRIVERS_CFLAGS -DDRIVER_PN71XX_ENABLED"
                   ;;
