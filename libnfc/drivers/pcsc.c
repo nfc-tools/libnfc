@@ -760,10 +760,33 @@ pcsc_get_information_about(nfc_device *pnd, char **pbuf)
           ? "\nserial: " : "", serial_len > 0 ? (char *)serial : "");
 
 error:
-  SCardFreeMemory(*pscc, name);
-  SCardFreeMemory(*pscc, type);
-  SCardFreeMemory(*pscc, version);
-  SCardFreeMemory(*pscc, serial);
+// SCardFreeMemory function not supported in macOS.
+#if defined(__APPLE__)
+    if (name != NULL){
+        free(name);
+        name = NULL;
+    }
+    if (type != NULL){
+        free(type);
+        type = NULL;
+    }
+    if (version != NULL){
+        free(version);
+        version = NULL;
+    }
+    if (serial != NULL){
+        free(serial);
+        serial = NULL;
+    }
+    if (pscc != NULL){
+        SCardReleaseContext(pscc);
+    }
+#else
+    SCardFreeMemory(*pscc, name);      SCardFreeMemory(*pscc, name);
+    SCardFreeMemory(*pscc, type);      SCardFreeMemory(*pscc, type);
+    SCardFreeMemory(*pscc, version);      SCardFreeMemory(*pscc, version);
+    SCardFreeMemory(*pscc, serial);      SCardFreeMemory(*pscc, serial);
+#endif
 
   pnd->last_error = res;
   return pnd->last_error;
