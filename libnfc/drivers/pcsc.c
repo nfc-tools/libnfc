@@ -135,7 +135,6 @@ int pcsc_transmit(struct nfc_device *pnd, const uint8_t *tx, const size_t tx_len
     return NFC_EIO;
   }
   *rx_len = dw_rx_len;
-
   LOG_HEX(NFC_LOG_GROUP_COM, "RX", rx, *rx_len);
 
   return NFC_SUCCESS;
@@ -209,7 +208,6 @@ int pcsc_get_uid(struct nfc_device *pnd, uint8_t *uid, size_t uid_len)
   return resp_len - 2;
 }
 
-int pcsc_props_to_target(uint8_t it, const uint8_t *patr, size_t szatr, const uint8_t *puid, int szuid, const nfc_modulation_type nmt, nfc_target *pnt)
 {
   if (NULL != pnt) {
     switch (nmt) {
@@ -228,13 +226,6 @@ int pcsc_props_to_target(uint8_t it, const uint8_t *patr, size_t szatr, const ui
             memcpy(pnt->nti.nai.abtUid, puid, szuid);
             pnt->nti.nai.szUidLen = szuid;
           }
-          /* SAK_ISO14443_4_COMPLIANT */
-          pnt->nti.nai.btSak = 0x20;
-          /* Choose TL, TA, TB, TC according to Mifare DESFire */
-          memcpy(pnt->nti.nai.abtAts, "\x75\x77\x81\x02", 4);
-          /* copy historical bytes */
-          memcpy(pnt->nti.nai.abtAts + 4, patr + 4, (uint8_t)(szatr - 5));
-          pnt->nti.nai.szAtsLen = 4 + (uint8_t)(szatr - 5);
           return NFC_SUCCESS;
         }
         break;
@@ -303,40 +294,7 @@ pcsc_scan(const nfc_context *context, nfc_connstring connstrings[], const size_t
       int     l = strlen(supported_devices[i]);
       bSupported = 0 == !strncmp(supported_devices[i], acDeviceNames + szPos, l);
     }
-    // Supported Feitian Contactless Reader
-#if defined (__APPLE__)
-    // Feitian R502
-    if (strstr(acDeviceNames + szPos, "Feitian R502") != NULL)
-    {
-      bSupported = true;
     }
-    // Feitian 502-CL
-    if (strstr(acDeviceNames + szPos, "Feitian 502-CL") != NULL)
-    {
-      bSupported = true;
-    }
-    // Feitian bR500
-    if (strstr(acDeviceNames + szPos, "Feitian bR500") != NULL)
-    {
-      bSupported = true;
-    }
-#else
-    // Feitian R502
-    if (strstr(acDeviceNames + szPos, "Feitian R502 [R502 Contact Reader]") != NULL)
-    {
-      bSupported = true;
-    }
-    // Feitian 502-CL
-    if (strstr(acDeviceNames + szPos, "Feitian 502-CL [R502 Contactless Reader]") != NULL)
-    {
-      bSupported = true;
-    }
-    // Feitian bR500
-    if (strstr(acDeviceNames + szPos, "Feitian bR500") != NULL)
-    {
-      bSupported = true;
-    }
-#endif
 
     if (bSupported) {
       // Supported non-ACR122 device found
@@ -428,8 +386,6 @@ pcsc_open(const nfc_context *context, const nfc_connstring connstring)
   // Test if context succeeded
   if (!(pscc = pcsc_get_scardcontext()))
     goto error;
-  // T1 or T0 protocol.
-  DRIVER_DATA(pnd)->last_error = SCardConnect(*pscc, ndd.pcsc_device_name, SCARD_SHARE_DIRECT, SCARD_PROTOCOL_T0 | SCARD_PROTOCOL_T1, &(DRIVER_DATA(pnd)->hCard), (void *) & (DRIVER_DATA(pnd)->ioCard.dwProtocol));
   if (DRIVER_DATA(pnd)->last_error != SCARD_S_SUCCESS) {
     // We can not connect to this device.
     log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "PCSC connect failed");
@@ -656,7 +612,6 @@ int pcsc_initiator_select_passive_target(struct nfc_device *pnd,  const nfc_modu
 
   uint8_t icc_type = pcsc_get_icc_type(pnd);
   int uid_len = pcsc_get_uid(pnd, uid, sizeof uid);
-  if (pcsc_props_to_target(icc_type, atr, atr_len, uid, uid_len, nm.nmt, pnt) != NFC_SUCCESS) {
     log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Type of target not supported");
     return NFC_EDEVNOTSUPP;
   }
@@ -681,7 +636,6 @@ int pcsc_initiator_transceive_bytes(struct nfc_device *pnd, const uint8_t *pbtTx
   // FIXME: timeout is not handled
   (void) timeout;
 
-  pnd->last_error = pcsc_transmit(pnd, pbtTx, szTx, pbtRx, &resp_len);
   if (pnd->last_error != NFC_SUCCESS)
     return pnd->last_error;
 
@@ -705,7 +659,6 @@ int pcsc_initiator_target_is_present(struct nfc_device *pnd, const nfc_target *p
   }
 
   if (pnt) {
-    if (pcsc_props_to_target(ICC_TYPE_UNKNOWN, atr, atr_len, NULL, 0, pnt->nm.nmt, &nt) != NFC_SUCCESS
         || pnt->nm.nmt != nt.nm.nmt || pnt->nm.nbr != nt.nm.nbr) {
       log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Target doesn't meet requirements");
       return NFC_ENOTSUCHDEV;
@@ -807,34 +760,10 @@ pcsc_get_information_about(nfc_device *pnd, char **pbuf)
           ? "\nserial: " : "", serial_len > 0 ? (char *)serial : "");
 
 error:
-// SCardFreeMemory function not supported in macOS.
-#if defined(__APPLE__)
-  if (name != NULL){
-    free(name);
-    name = NULL;
-  }
-  if (type != NULL){
-    free(type);
-    type = NULL;
-  }
-  if (version != NULL){
-    free(version);
-    version = NULL;
-  }
-  if (serial != NULL){
-    free(serial);
-    serial = NULL;
-  }
-  if (pscc != NULL){
-    SCardReleaseContext(pscc);
-  }
-#else
   SCardFreeMemory(*pscc, name);
   SCardFreeMemory(*pscc, type);
   SCardFreeMemory(*pscc, version);
   SCardFreeMemory(*pscc, serial);
-#endif
-
 
   pnd->last_error = res;
   return pnd->last_error;
