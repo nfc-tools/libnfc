@@ -130,7 +130,9 @@ nfc_initiator_mifare_cmd(nfc_device *pnd, const mifare_cmd mc, const uint8_t ui8
 
   // When we have executed a read command, copy the received bytes into the param
   if (mc == MC_READ) {
-    if (res == 16) {
+
+    //Check the length of response data, with PCSC reader, there have 2 bytes for SW value
+    if (res == 16 || res == (16 + 2)) {
       memcpy(pmp->mpd.abtData, abtRx, 16);
     } else {
       return false;
