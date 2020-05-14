@@ -134,6 +134,12 @@ int pcsc_transmit(struct nfc_device *pnd, const uint8_t *tx, const size_t tx_len
 {
   struct pcsc_data *data = pnd->driver_data;
   DWORD dw_rx_len = *rx_len;
+  //in libfreefare, tx_len = 1, and it leads to 0x80100008 error, with PC/SC reader, the input tx_len at least two bytes for the SW value
+  //so if found the reader is Feitian reader, we set to 2
+  if (dw_rx_len == 1 && is_pcsc_reader_vendor_feitian(pnd))
+  {
+    dw_rx_len = 2;
+  }
 
   LOG_HEX(NFC_LOG_GROUP_COM, "TX", tx, tx_len);
 
@@ -193,37 +199,20 @@ uint8_t pcsc_get_icc_type(struct nfc_device *pnd)
   return it;
 }
 
-char* pcsc_get_vendor_name(struct nfc_device *pnd){
-  struct pcsc_data *data = pnd->driver_data;
-  LPBYTE vendor_name = NULL;
-  DWORD vendor_name_len = SCARD_AUTOALLOCATE;
-
-  int res = SCardGetAttrib(data->hCard, SCARD_ATTR_VENDOR_NAME, (LPBYTE)&vendor_name, &vendor_name_len);
-  if (!res && vendor_name && vendor_name_len > 0 && vendor_name[0] != '\0') {
-    char *psVendorName = (char *)malloc(sizeof(char) * vendor_name_len);
-    memcpy(psVendorName, vendor_name, vendor_name_len);
-    return psVendorName;
-  }
-  return NULL;
-}
-
 bool is_pcsc_reader_vendor(struct nfc_device *pnd, const char * target_vendor_name)
 {
   bool isTarget = false;
-  char * sReaderVendorName = pcsc_get_vendor_name(pnd);
-  if (sReaderVendorName)
+  if (pnd == NULL || strlen(pnd->name) == 0)
   {
-    isTarget = (strstr(sReaderVendorName, target_vendor_name)) ? true:false;
-    free(sReaderVendorName);
-    sReaderVendorName = NULL;
+    return isTarget;
   }
 
-  return isTarget;
+  return  isTarget = (strstr(pnd->name, target_vendor_name)) ? true:false;
 }
 
 bool is_pcsc_reader_vendor_feitian(struct nfc_device *pnd)
 {
-  return is_pcsc_reader_vendor(pnd, "Feitian") || is_pcsc_reader_vendor(pnd, "FeiTian") ||is_pcsc_reader_vendor(pnd, "feitian");
+  return is_pcsc_reader_vendor(pnd, "Feitian") || is_pcsc_reader_vendor(pnd, "FeiTian") || is_pcsc_reader_vendor(pnd, "feitian") || is_pcsc_reader_vendor(pnd, "FEITIAN");
 }
 
 //get atqa by send apdu
@@ -994,7 +983,10 @@ pcsc_get_information_about(nfc_device *pnd, char **pbuf)
 
 error:
 #ifdef __APPLE__
-  SCardReleaseContext(*pscc);
+  if (pscc != NULL)
+  {
+    SCardReleaseContext(*pscc);
+  }
   if (name != NULL)
   {
     free(name);
@@ -1061,4 +1053,3 @@ const struct nfc_driver pcsc_driver = {
   .idle           = NULL,
   .powerdown      = NULL,
 };
-
