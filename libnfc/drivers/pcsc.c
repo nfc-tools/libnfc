@@ -44,6 +44,27 @@
 #ifdef __APPLE__
 #include <PCSC/winscard.h>
 #include <PCSC/wintypes.h>
+// define from pcsclite for apple
+#define SCARD_AUTOALLOCATE (DWORD)(-1)
+
+#define SCARD_ATTR_VALUE(Class, Tag) ((((ULONG)(Class)) << 16) | ((ULONG)(Tag)))
+
+#define SCARD_CLASS_VENDOR_INFO     1   /**< Vendor information definitions */
+#define SCARD_CLASS_COMMUNICATIONS  2   /**< Communication definitions */
+#define SCARD_CLASS_PROTOCOL        3   /**< Protocol definitions */
+#define SCARD_CLASS_POWER_MGMT      4   /**< Power Management definitions */
+#define SCARD_CLASS_SECURITY        5   /**< Security Assurance definitions */
+#define SCARD_CLASS_MECHANICAL      6   /**< Mechanical characteristic definitions */
+#define SCARD_CLASS_VENDOR_DEFINED  7   /**< Vendor specific definitions */
+#define SCARD_CLASS_IFD_PROTOCOL    8   /**< Interface Device Protocol options */
+#define SCARD_CLASS_ICC_STATE       9   /**< ICC State specific definitions */
+#define SCARD_CLASS_SYSTEM     0x7fff   /**< System-specific definitions */
+
+#define SCARD_ATTR_VENDOR_NAME SCARD_ATTR_VALUE(SCARD_CLASS_VENDOR_INFO, 0x0100) /**< Vendor name. */
+#define SCARD_ATTR_VENDOR_IFD_TYPE SCARD_ATTR_VALUE(SCARD_CLASS_VENDOR_INFO, 0x0101) /**< Vendor-supplied interface device type (model designation of reader). */
+#define SCARD_ATTR_VENDOR_IFD_VERSION SCARD_ATTR_VALUE(SCARD_CLASS_VENDOR_INFO, 0x0102) /**< Vendor-supplied interface device version (DWORD in the form 0xMMmmbbbb where MM = major version, mm = minor version, and bbbb = build number). */
+#define SCARD_ATTR_VENDOR_IFD_SERIAL_NO SCARD_ATTR_VALUE(SCARD_CLASS_VENDOR_INFO, 0x0103) /**< Vendor-supplied interface device serial number. */
+#define SCARD_ATTR_ICC_TYPE_PER_ATR SCARD_ATTR_VALUE(SCARD_CLASS_ICC_STATE, 0x0304) /**< Single byte indicating smart card type */
 #else
 #ifndef _Win32
 #include <reader.h>
@@ -75,18 +96,6 @@ struct pcsc_data {
 };
 
 #define DRIVER_DATA(pnd) ((struct pcsc_data*)(pnd->driver_data))
-
-//Doesn't have define in macOS, so define from reader.h
-#define 	SCARD_ATTR_VALUE(Class, Tag)   ((((ULONG)(Class)) << 16) | ((ULONG)(Tag)))
-#define 	SCARD_CLASS_VENDOR_INFO   1
-#define 	SCARD_ATTR_VENDOR_NAME   SCARD_ATTR_VALUE(SCARD_CLASS_VENDOR_INFO, 0x0100)
-#define 	SCARD_ATTR_ICC_TYPE_PER_ATR   SCARD_ATTR_VALUE(SCARD_CLASS_ICC_STATE, 0x0304)
-#define 	SCARD_CLASS_ICC_STATE   9
-#define     SCARD_AUTOALLOCATE (DWORD)(-1)
-#define 	SCARD_ATTR_VENDOR_NAME   SCARD_ATTR_VALUE(SCARD_CLASS_VENDOR_INFO, 0x0100)
-#define 	SCARD_ATTR_VENDOR_IFD_TYPE   SCARD_ATTR_VALUE(SCARD_CLASS_VENDOR_INFO, 0x0101)
-#define 	SCARD_ATTR_VENDOR_IFD_VERSION   SCARD_ATTR_VALUE(SCARD_CLASS_VENDOR_INFO, 0x0102)
-#define 	SCARD_ATTR_VENDOR_IFD_SERIAL_NO   SCARD_ATTR_VALUE(SCARD_CLASS_VENDOR_INFO, 0x0103)
 
 static SCARDCONTEXT _SCardContext;
 static int _iSCardContextRefCount = 0;
@@ -125,6 +134,12 @@ int pcsc_transmit(struct nfc_device *pnd, const uint8_t *tx, const size_t tx_len
 {
   struct pcsc_data *data = pnd->driver_data;
   DWORD dw_rx_len = *rx_len;
+  //in libfreefare, tx_len = 1, and it leads to 0x80100008 error, with PC/SC reader, the input tx_len at least two bytes for the SW value
+  //so if found the reader is Feitian reader, we set to 2
+  if (dw_rx_len == 1 && is_pcsc_reader_vendor_feitian(pnd))
+  {
+    dw_rx_len = 2;
+  }
 
   LOG_HEX(NFC_LOG_GROUP_COM, "TX", tx, tx_len);
 
@@ -184,6 +199,101 @@ uint8_t pcsc_get_icc_type(struct nfc_device *pnd)
   return it;
 }
 
+bool is_pcsc_reader_vendor(struct nfc_device *pnd, const char * target_vendor_name)
+{
+  bool isTarget = false;
+  if (pnd == NULL || strlen(pnd->name) == 0)
+  {
+    return isTarget;
+  }
+
+  return  isTarget = (strstr(pnd->name, target_vendor_name)) ? true:false;
+}
+
+bool is_pcsc_reader_vendor_feitian(struct nfc_device *pnd)
+{
+  return is_pcsc_reader_vendor(pnd, "Feitian") || is_pcsc_reader_vendor(pnd, "FeiTian") || is_pcsc_reader_vendor(pnd, "feitian") || is_pcsc_reader_vendor(pnd, "FEITIAN");
+}
+
+//get atqa by send apdu
+int pcsc_get_atqa(struct nfc_device *pnd, uint8_t *atqa, size_t atqa_len)
+{
+  const uint8_t get_data[] = {0xFF, 0xCA, 0x03, 0x00, 0x00};
+  uint8_t resp[256 + 2];
+  size_t resp_len = sizeof resp;
+
+  pnd->last_error = pcsc_transmit(pnd, get_data, sizeof get_data, resp, &resp_len);
+  if (pnd->last_error != NFC_SUCCESS)
+    return pnd->last_error;
+
+  if (resp_len < 2) {
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Reader doesn't support request for ATQA");
+    pnd->last_error = NFC_EDEVNOTSUPP;
+    return pnd->last_error;
+  }
+  if (atqa_len < resp_len - 2) {
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "ATQA length is wrong");
+    pnd->last_error = NFC_ESOFT;
+    return pnd->last_error;
+  }
+
+  memcpy(atqa, resp, resp_len - 2);
+  return resp_len - 2;
+}
+
+//get ats by send apdu
+int pcsc_get_ats(struct nfc_device *pnd, uint8_t *ats, size_t ats_len)
+{
+  const uint8_t get_data[] = {0xFF, 0xCA, 0x01, 0x00, 0x00};
+  uint8_t resp[256 + 2];
+  size_t resp_len = sizeof resp;
+
+  pnd->last_error = pcsc_transmit(pnd, get_data, sizeof get_data, resp, &resp_len);
+  if (pnd->last_error != NFC_SUCCESS)
+    return pnd->last_error;
+
+  if (resp_len < 2) {
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Reader doesn't support request for ATS");
+    pnd->last_error = NFC_EDEVNOTSUPP;
+    return pnd->last_error;
+  }
+  if (ats_len < resp_len - 2) {
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "ATS length is wrong");
+    pnd->last_error = NFC_ESOFT;
+    return pnd->last_error;
+  }
+
+  //memcpy(ats, resp + 1, resp_len - 2 - 1);
+  memcpy(ats, resp + 1, resp[0] - 1);
+  return resp_len - 2 - 1;
+}
+
+//get sak by send apdu
+int pcsc_get_sak(struct nfc_device *pnd, uint8_t *sak, size_t sak_len)
+{
+  const uint8_t get_data[] = {0xFF, 0xCA, 0x02, 0x00, 0x00};
+  uint8_t resp[256 + 2];
+  size_t resp_len = sizeof resp;
+
+  pnd->last_error = pcsc_transmit(pnd, get_data, sizeof get_data, resp, &resp_len);
+  if (pnd->last_error != NFC_SUCCESS)
+    return pnd->last_error;
+
+  if (resp_len < 2) {
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Reader doesn't support request for SAK");
+    pnd->last_error = NFC_EDEVNOTSUPP;
+    return pnd->last_error;
+  }
+  if (sak_len < resp_len - 2) {
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "SAK length is wrong");
+    pnd->last_error = NFC_ESOFT;
+    return pnd->last_error;
+  }
+
+  memcpy(sak, resp, resp_len - 2);
+  return resp_len - 2;
+}
+
 int pcsc_get_uid(struct nfc_device *pnd, uint8_t *uid, size_t uid_len)
 {
   const uint8_t get_data[] = {0xFF, 0xCA, 0x00, 0x00, 0x00};
@@ -209,7 +319,7 @@ int pcsc_get_uid(struct nfc_device *pnd, uint8_t *uid, size_t uid_len)
   return resp_len - 2;
 }
 
-int pcsc_props_to_target(uint8_t it, const uint8_t *patr, size_t szatr, const uint8_t *puid, int szuid, const nfc_modulation_type nmt, nfc_target *pnt)
+int pcsc_props_to_target(const struct nfc_device *pnd, uint8_t it, const uint8_t *patr, size_t szatr, const uint8_t *puid, int szuid, const nfc_modulation_type nmt, nfc_target *pnt)
 {
   if (NULL != pnt) {
     switch (nmt) {
@@ -228,13 +338,31 @@ int pcsc_props_to_target(uint8_t it, const uint8_t *patr, size_t szatr, const ui
             memcpy(pnt->nti.nai.abtUid, puid, szuid);
             pnt->nti.nai.szUidLen = szuid;
           }
-          /* SAK_ISO14443_4_COMPLIANT */
-          pnt->nti.nai.btSak = 0x20;
-          /* Choose TL, TA, TB, TC according to Mifare DESFire */
-          memcpy(pnt->nti.nai.abtAts, "\x75\x77\x81\x02", 4);
-          /* copy historical bytes */
-          memcpy(pnt->nti.nai.abtAts + 4, patr + 4, (uint8_t)(szatr - 5));
-          pnt->nti.nai.szAtsLen = 4 + (uint8_t)(szatr - 5);
+          if (is_pcsc_reader_vendor_feitian(pnd))
+          {
+            uint8_t atqa[2];
+            pcsc_get_atqa(pnd,atqa,sizeof(atqa));
+            //memcpy(pnt->nti.nai.abtAtqa,atqa,2);
+            pnt->nti.nai.abtAtqa[0] = atqa[1];
+            pnt->nti.nai.abtAtqa[1] = atqa[0];
+            uint8_t sak[1];
+            pcsc_get_sak(pnd,sak,sizeof(sak));
+            pnt->nti.nai.btSak = sak[0];
+            uint8_t ats[256];
+            int ats_len = pcsc_get_ats(pnd, ats, sizeof(ats));
+            memcpy(pnt->nti.nai.abtAts, ats, ats_len);
+            //memcpy(pnt->nti.nai.abtAts + ats_len, patr + 4, (uint8_t)(szatr - 5));
+            pnt->nti.nai.szAtsLen = ats_len;// + szatr - 5;
+          } else {
+            /* SAK_ISO14443_4_COMPLIANT */
+            pnt->nti.nai.btSak = 0x20;
+            /* Choose TL, TA, TB, TC according to Mifare DESFire */
+            memcpy(pnt->nti.nai.abtAts, "\x75\x77\x81\x02", 4);
+            /* copy historical bytes */
+            memcpy(pnt->nti.nai.abtAts + 4, patr + 4, (uint8_t)(szatr - 5));
+            pnt->nti.nai.szAtsLen = 4 + (uint8_t)(szatr - 5);
+          }
+
           return NFC_SUCCESS;
         }
         break;
@@ -303,40 +431,6 @@ pcsc_scan(const nfc_context *context, nfc_connstring connstrings[], const size_t
       int     l = strlen(supported_devices[i]);
       bSupported = 0 == !strncmp(supported_devices[i], acDeviceNames + szPos, l);
     }
-    // Supported Feitian Contactless Reader
-#if defined (__APPLE__)
-    // Feitian R502
-    if (strstr(acDeviceNames + szPos, "Feitian R502") != NULL)
-    {
-      bSupported = true;
-    }
-    // Feitian 502-CL
-    if (strstr(acDeviceNames + szPos, "Feitian 502-CL") != NULL)
-    {
-      bSupported = true;
-    }
-    // Feitian bR500
-    if (strstr(acDeviceNames + szPos, "Feitian bR500") != NULL)
-    {
-      bSupported = true;
-    }
-#else
-    // Feitian R502
-    if (strstr(acDeviceNames + szPos, "Feitian R502 [R502 Contact Reader]") != NULL)
-    {
-      bSupported = true;
-    }
-    // Feitian 502-CL
-    if (strstr(acDeviceNames + szPos, "Feitian 502-CL [R502 Contactless Reader]") != NULL)
-    {
-      bSupported = true;
-    }
-    // Feitian bR500
-    if (strstr(acDeviceNames + szPos, "Feitian bR500") != NULL)
-    {
-      bSupported = true;
-    }
-#endif
 
     if (bSupported) {
       // Supported non-ACR122 device found
@@ -428,8 +522,7 @@ pcsc_open(const nfc_context *context, const nfc_connstring connstring)
   // Test if context succeeded
   if (!(pscc = pcsc_get_scardcontext()))
     goto error;
-  // T1 or T0 protocol.
-  DRIVER_DATA(pnd)->last_error = SCardConnect(*pscc, ndd.pcsc_device_name, SCARD_SHARE_DIRECT, SCARD_PROTOCOL_T0 | SCARD_PROTOCOL_T1, &(DRIVER_DATA(pnd)->hCard), (void *) & (DRIVER_DATA(pnd)->ioCard.dwProtocol));
+  DRIVER_DATA(pnd)->last_error = SCardConnect(*pscc, ndd.pcsc_device_name, SCARD_SHARE_DIRECT, 0, &(DRIVER_DATA(pnd)->hCard), (void *) & (DRIVER_DATA(pnd)->ioCard.dwProtocol));
   if (DRIVER_DATA(pnd)->last_error != SCARD_S_SUCCESS) {
     // We can not connect to this device.
     log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "PCSC connect failed");
@@ -656,7 +749,7 @@ int pcsc_initiator_select_passive_target(struct nfc_device *pnd,  const nfc_modu
 
   uint8_t icc_type = pcsc_get_icc_type(pnd);
   int uid_len = pcsc_get_uid(pnd, uid, sizeof uid);
-  if (pcsc_props_to_target(icc_type, atr, atr_len, uid, uid_len, nm.nmt, pnt) != NFC_SUCCESS) {
+  if (pcsc_props_to_target(pnd, icc_type, atr, atr_len, uid, uid_len, nm.nmt, pnt) != NFC_SUCCESS) {
     log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Type of target not supported");
     return NFC_EDEVNOTSUPP;
   }
@@ -681,7 +774,75 @@ int pcsc_initiator_transceive_bytes(struct nfc_device *pnd, const uint8_t *pbtTx
   // FIXME: timeout is not handled
   (void) timeout;
 
-  pnd->last_error = pcsc_transmit(pnd, pbtTx, szTx, pbtRx, &resp_len);
+  if (is_pcsc_reader_vendor_feitian(pnd)){
+    LOG_HEX(NFC_LOG_GROUP_COM, "not feitian reader pcsc apdu send", pbtTx, szTx);
+
+    uint8_t apdu_data[256];
+    uint8_t resp[256 + 2];
+    size_t send_size = 0;
+    if (pbtTx[0] == 0x30) {//read data
+      apdu_data[0] = 0xFF;
+      apdu_data[1] = 0xB0;
+      apdu_data[2] = 0x00;
+      apdu_data[3] = pbtTx[1];
+      apdu_data[4] = 0x10;
+      send_size = 5;
+    } else if (pbtTx[0] == 0xA0 || pbtTx[0] == 0xA2) {//write data
+      apdu_data[0] = 0xFF;
+      apdu_data[1] = 0xD6;
+      apdu_data[2] = 0x00;
+      apdu_data[3] = pbtTx[1];
+      apdu_data[4] = szTx - 2;
+      memcpy(apdu_data + 5, pbtTx + 2, szTx - 2);
+      send_size = 5 + szTx - 2;
+    } else if (pbtTx[0] == 0x60 || pbtTx[0] == 0x61 || pbtTx[0] == 0x1A){//Auth command
+      apdu_data[0] = 0xFF;
+      apdu_data[1] = 0x86;
+      apdu_data[2] = 0x00;
+      apdu_data[3] = 0x00;
+      apdu_data[4] = 0x05;
+      apdu_data[5] = 0x01;
+      apdu_data[6] = 0x00;
+      apdu_data[7] = pbtTx[1];//block index
+      apdu_data[8] = pbtTx[0];//type a or type b
+      apdu_data[9] = 0x01;
+      send_size = 10;
+    } else if (pbtTx[0] == 0xC0){//DECREMENT cmd
+      apdu_data[0] = 0xFF;
+      apdu_data[1] = 0xD7;
+      apdu_data[2] = 0x00;
+      apdu_data[3] = pbtTx[1];//block index
+      apdu_data[4] = 0x05;
+      memcpy(apdu_data + 5, pbtTx + 2, szTx - 2);
+      send_size = 5 + szTx - 2;
+    } else if (pbtTx[0] == 0xC1){//INCREMENT cmd
+      apdu_data[0] = 0xFF;
+      apdu_data[1] = 0xD7;
+      apdu_data[2] = 0x00;
+      apdu_data[3] = pbtTx[1];//block index
+      apdu_data[4] = 0x05;
+      memcpy(apdu_data + 5, pbtTx + 2, szTx - 2);
+      send_size = 5 + szTx - 2;
+    } else if (pbtTx[0] == 0xC2){//STORE cmd
+      apdu_data[0] = 0xFF;
+      apdu_data[1] = 0xD8;
+      apdu_data[2] = 0x00;
+      apdu_data[3] = pbtTx[1];
+      apdu_data[4] = szTx - 2;
+      memcpy(apdu_data + 5, pbtTx + 2, szTx - 2);
+      send_size = 5 + szTx - 2;
+    } else {//other cmd
+      memcpy(apdu_data, pbtTx, szTx);
+      send_size = szTx;
+    }
+    LOG_HEX(NFC_LOG_GROUP_COM, "feitian reader pcsc apdu send:", apdu_data, send_size);
+    pnd->last_error = pcsc_transmit(pnd, apdu_data, send_size, resp, &resp_len);
+    LOG_HEX(NFC_LOG_GROUP_COM, "feitian reader pcsc apdu received:", resp, resp_len);
+    
+    memcpy(pbtRx, resp, resp_len);
+  } else {
+    pnd->last_error = pcsc_transmit(pnd, pbtTx, szTx, pbtRx, &resp_len);
+  }
   if (pnd->last_error != NFC_SUCCESS)
     return pnd->last_error;
 
@@ -705,7 +866,7 @@ int pcsc_initiator_target_is_present(struct nfc_device *pnd, const nfc_target *p
   }
 
   if (pnt) {
-    if (pcsc_props_to_target(ICC_TYPE_UNKNOWN, atr, atr_len, NULL, 0, pnt->nm.nmt, &nt) != NFC_SUCCESS
+    if (pcsc_props_to_target(pnd, ICC_TYPE_UNKNOWN, atr, atr_len, NULL, 0, pnt->nm.nmt, &nt) != NFC_SUCCESS
         || pnt->nm.nmt != nt.nm.nmt || pnt->nm.nbr != nt.nm.nbr) {
       log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Target doesn't meet requirements");
       return NFC_ENOTSUCHDEV;
@@ -722,7 +883,21 @@ int pcsc_device_set_property_bool(struct nfc_device *pnd, const nfc_property pro
       // ignore
       return NFC_SUCCESS;
     case NP_AUTO_ISO14443_4:
+    {
+      if (is_pcsc_reader_vendor_feitian(pnd))
+      {
+        //ignore
+        return NFC_SUCCESS;
+      }
+    }
     case NP_EASY_FRAMING:
+    {
+      if (is_pcsc_reader_vendor_feitian(pnd))
+      {
+        //ignore
+        return NFC_SUCCESS;
+      }
+    }
     case NP_FORCE_ISO14443_A:
     case NP_HANDLE_CRC:
     case NP_HANDLE_PARITY:
@@ -772,7 +947,7 @@ pcsc_get_information_about(nfc_device *pnd, char **pbuf)
   struct pcsc_data *data = pnd->driver_data;
   LPBYTE   name = NULL, version = NULL, type = NULL, serial = NULL;
   DWORD    name_len = SCARD_AUTOALLOCATE, version_len = SCARD_AUTOALLOCATE,
-           type_len = SCARD_AUTOALLOCATE, serial_len = SCARD_AUTOALLOCATE;
+  type_len = SCARD_AUTOALLOCATE, serial_len = SCARD_AUTOALLOCATE;
   int res = NFC_SUCCESS;
   SCARDCONTEXT *pscc;
 
@@ -807,26 +982,30 @@ pcsc_get_information_about(nfc_device *pnd, char **pbuf)
           ? "\nserial: " : "", serial_len > 0 ? (char *)serial : "");
 
 error:
-// SCardFreeMemory function not supported in macOS.
-#if defined(__APPLE__)
-  if (name != NULL){
+#ifdef __APPLE__
+  if (pscc != NULL)
+  {
+    SCardReleaseContext(*pscc);
+  }
+  if (name != NULL)
+  {
     free(name);
     name = NULL;
   }
-  if (type != NULL){
+  if (type != NULL)
+  {
     free(type);
     type = NULL;
   }
-  if (version != NULL){
+  if (version != NULL)
+  {
     free(version);
     version = NULL;
   }
-  if (serial != NULL){
+  if (serial != NULL)
+  {
     free(serial);
     serial = NULL;
-  }
-  if (pscc != NULL){
-    SCardReleaseContext(pscc);
   }
 #else
   SCardFreeMemory(*pscc, name);
@@ -834,7 +1013,6 @@ error:
   SCardFreeMemory(*pscc, version);
   SCardFreeMemory(*pscc, serial);
 #endif
-
 
   pnd->last_error = res;
   return pnd->last_error;
@@ -875,4 +1053,3 @@ const struct nfc_driver pcsc_driver = {
   .idle           = NULL,
   .powerdown      = NULL,
 };
-
