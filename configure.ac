@@ -138,7 +138,7 @@ then
     [AC_MSG_NOTICE([libnfc-nci present])],
     [AC_MSG_ERROR([libnfc-nci not present but required for some drivers configuration])]
   )
-  CFLAGS="$CPPFLAGS $LIBNFC_NCI_CFLAGS"
+  CFLAGS="$CFLAGS $LIBNFC_NCI_CFLAGS"
 fi
 
 # Documentation (default: no)
