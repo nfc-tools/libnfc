@@ -174,17 +174,17 @@ prepare_initiator_data(const nfc_modulation nm, uint8_t **ppbtInitiatorData, siz
       // Application Family Identifier (AFI) must equals 0x00 in order to wakeup all ISO14443-B PICCs (see ISO/IEC 14443-3)
       *ppbtInitiatorData = (uint8_t *) "\x00";
       *pszInitiatorData = 1;
-    break;
+      break;
     case NMT_ISO14443BI:
       // APGEN
       *ppbtInitiatorData = (uint8_t *) "\x01\x0b\x3f\x80";
       *pszInitiatorData = 4;
-    break;
+      break;
     case NMT_FELICA:
       // polling payload must be present (see ISO/IEC 18092 11.2.2.5)
       *ppbtInitiatorData = (uint8_t *) "\x00\xff\xff\x01\x00";
       *pszInitiatorData = 5;
-    break;
+      break;
     case NMT_ISO14443A:
     case NMT_ISO14443B2CT:
     case NMT_ISO14443B2SR:

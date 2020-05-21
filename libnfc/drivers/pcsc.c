@@ -138,8 +138,7 @@ int pcsc_transmit(struct nfc_device *pnd, const uint8_t *tx, const size_t tx_len
   DWORD dw_rx_len = *rx_len;
   //in libfreefare, tx_len = 1, and it leads to 0x80100008 error, with PC/SC reader, the input tx_len at least two bytes for the SW value
   //so if found the reader is Feitian reader, we set to 2
-  if (dw_rx_len == 1 && is_pcsc_reader_vendor_feitian(pnd))
-  {
+  if (dw_rx_len == 1 && is_pcsc_reader_vendor_feitian(pnd)) {
     dw_rx_len = 2;
   }
 
@@ -201,15 +200,14 @@ uint8_t pcsc_get_icc_type(const struct nfc_device *pnd)
   return it;
 }
 
-bool is_pcsc_reader_vendor(const struct nfc_device *pnd, const char * target_vendor_name)
+bool is_pcsc_reader_vendor(const struct nfc_device *pnd, const char *target_vendor_name)
 {
   bool isTarget = false;
-  if (pnd == NULL || strlen(pnd->name) == 0)
-  {
+  if (pnd == NULL || strlen(pnd->name) == 0) {
     return isTarget;
   }
 
-  return  isTarget = (strstr(pnd->name, target_vendor_name)) ? true:false;
+  return  isTarget = (strstr(pnd->name, target_vendor_name)) ? true : false;
 }
 
 bool is_pcsc_reader_vendor_feitian(const struct nfc_device *pnd)
@@ -340,15 +338,14 @@ int pcsc_props_to_target(struct nfc_device *pnd, uint8_t it, const uint8_t *patr
             memcpy(pnt->nti.nai.abtUid, puid, szuid);
             pnt->nti.nai.szUidLen = szuid;
           }
-          if (is_pcsc_reader_vendor_feitian(pnd))
-          {
+          if (is_pcsc_reader_vendor_feitian(pnd)) {
             uint8_t atqa[2];
-            pcsc_get_atqa(pnd,atqa,sizeof(atqa));
+            pcsc_get_atqa(pnd, atqa, sizeof(atqa));
             //memcpy(pnt->nti.nai.abtAtqa,atqa,2);
             pnt->nti.nai.abtAtqa[0] = atqa[1];
             pnt->nti.nai.abtAtqa[1] = atqa[0];
             uint8_t sak[1];
-            pcsc_get_sak(pnd,sak,sizeof(sak));
+            pcsc_get_sak(pnd, sak, sizeof(sak));
             pnt->nti.nai.btSak = sak[0];
             uint8_t ats[256];
             int ats_len = pcsc_get_ats(pnd, ats, sizeof(ats));
@@ -776,7 +773,7 @@ int pcsc_initiator_transceive_bytes(struct nfc_device *pnd, const uint8_t *pbtTx
   // FIXME: timeout is not handled
   (void) timeout;
 
-  if (is_pcsc_reader_vendor_feitian(pnd)){
+  if (is_pcsc_reader_vendor_feitian(pnd)) {
     LOG_HEX(NFC_LOG_GROUP_COM, "not feitian reader pcsc apdu send", pbtTx, szTx);
 
     uint8_t apdu_data[256];
@@ -797,7 +794,7 @@ int pcsc_initiator_transceive_bytes(struct nfc_device *pnd, const uint8_t *pbtTx
       apdu_data[4] = szTx - 2;
       memcpy(apdu_data + 5, pbtTx + 2, szTx - 2);
       send_size = 5 + szTx - 2;
-    } else if (pbtTx[0] == 0x60 || pbtTx[0] == 0x61 || pbtTx[0] == 0x1A){//Auth command
+    } else if (pbtTx[0] == 0x60 || pbtTx[0] == 0x61 || pbtTx[0] == 0x1A) { //Auth command
       apdu_data[0] = 0xFF;
       apdu_data[1] = 0x86;
       apdu_data[2] = 0x00;
@@ -809,7 +806,7 @@ int pcsc_initiator_transceive_bytes(struct nfc_device *pnd, const uint8_t *pbtTx
       apdu_data[8] = pbtTx[0];//type a or type b
       apdu_data[9] = 0x01;
       send_size = 10;
-    } else if (pbtTx[0] == 0xC0){//DECREMENT cmd
+    } else if (pbtTx[0] == 0xC0) { //DECREMENT cmd
       apdu_data[0] = 0xFF;
       apdu_data[1] = 0xD7;
       apdu_data[2] = 0x00;
@@ -817,7 +814,7 @@ int pcsc_initiator_transceive_bytes(struct nfc_device *pnd, const uint8_t *pbtTx
       apdu_data[4] = 0x05;
       memcpy(apdu_data + 5, pbtTx + 2, szTx - 2);
       send_size = 5 + szTx - 2;
-    } else if (pbtTx[0] == 0xC1){//INCREMENT cmd
+    } else if (pbtTx[0] == 0xC1) { //INCREMENT cmd
       apdu_data[0] = 0xFF;
       apdu_data[1] = 0xD7;
       apdu_data[2] = 0x00;
@@ -825,7 +822,7 @@ int pcsc_initiator_transceive_bytes(struct nfc_device *pnd, const uint8_t *pbtTx
       apdu_data[4] = 0x05;
       memcpy(apdu_data + 5, pbtTx + 2, szTx - 2);
       send_size = 5 + szTx - 2;
-    } else if (pbtTx[0] == 0xC2){//STORE cmd
+    } else if (pbtTx[0] == 0xC2) { //STORE cmd
       apdu_data[0] = 0xFF;
       apdu_data[1] = 0xD8;
       apdu_data[2] = 0x00;
@@ -840,7 +837,7 @@ int pcsc_initiator_transceive_bytes(struct nfc_device *pnd, const uint8_t *pbtTx
     LOG_HEX(NFC_LOG_GROUP_COM, "feitian reader pcsc apdu send:", apdu_data, send_size);
     pnd->last_error = pcsc_transmit(pnd, apdu_data, send_size, resp, &resp_len);
     LOG_HEX(NFC_LOG_GROUP_COM, "feitian reader pcsc apdu received:", resp, resp_len);
-    
+
     memcpy(pbtRx, resp, resp_len);
   } else {
     pnd->last_error = pcsc_transmit(pnd, pbtTx, szTx, pbtRx, &resp_len);
@@ -938,7 +935,7 @@ pcsc_get_information_about(nfc_device *pnd, char **pbuf)
   struct pcsc_data *data = pnd->driver_data;
   LPBYTE   name = NULL, version = NULL, type = NULL, serial = NULL;
   DWORD    name_len = SCARD_AUTOALLOCATE, version_len = SCARD_AUTOALLOCATE,
-  type_len = SCARD_AUTOALLOCATE, serial_len = SCARD_AUTOALLOCATE;
+           type_len = SCARD_AUTOALLOCATE, serial_len = SCARD_AUTOALLOCATE;
   int res = NFC_SUCCESS;
   SCARDCONTEXT *pscc;
 
@@ -974,27 +971,22 @@ pcsc_get_information_about(nfc_device *pnd, char **pbuf)
 
 error:
 #ifdef __APPLE__
-  if (pscc != NULL)
-  {
+  if (pscc != NULL) {
     SCardReleaseContext(*pscc);
   }
-  if (name != NULL)
-  {
+  if (name != NULL) {
     free(name);
     name = NULL;
   }
-  if (type != NULL)
-  {
+  if (type != NULL) {
     free(type);
     type = NULL;
   }
-  if (version != NULL)
-  {
+  if (version != NULL) {
     free(version);
     version = NULL;
   }
-  if (serial != NULL)
-  {
+  if (serial != NULL) {
     free(serial);
     serial = NULL;
   }

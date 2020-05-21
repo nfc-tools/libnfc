@@ -300,12 +300,12 @@ static bool check_magic(void)
   if (nfc_initiator_mifare_cmd(pnd, MC_READ, 0, &mp)) {
     memcpy(original_b0, mp.mpd.abtData, 12);
     printf(" Original Block 0 (Pages 0-2): ");
-    for(int i=0;i<12;i++){
+    for (int i = 0; i < 12; i++) {
       printf("%02x", original_b0[i]);
     }
     printf("\n");
     printf(" Original UID: %02x%02x%02x%02x%02x%02x%02x\n",
-      original_b0[0], original_b0[1], original_b0[2], original_b0[4], original_b0[5], original_b0[6], original_b0[7]);
+           original_b0[0], original_b0[1], original_b0[2], original_b0[4], original_b0[5], original_b0[6], original_b0[7]);
   } else {
     printf("!\nError: unable to read block 0x%02x\n", 0);
     directWrite = false;
@@ -313,8 +313,8 @@ static bool check_magic(void)
   printf(" Attempt to write Block 0 (pages 0-2) ...\n");
   for (uint32_t page = 0; page <= 2; page++) {
     printf("  Writing Page %i:", page);
-    memcpy(mp.mpd.abtData, original_b0 + page*4, 4);
-    for(int i=0;i<4;i++){
+    memcpy(mp.mpd.abtData, original_b0 + page * 4, 4);
+    for (int i = 0; i < 4; i++) {
       printf(" %02x", mp.mpd.abtData[i]);
     }
     printf("\n");
@@ -324,7 +324,7 @@ static bool check_magic(void)
       break;
     }
   }
-  if(directWrite){
+  if (directWrite) {
     printf(" Block 0 written successfully\n");
     printf("Card is DirectWrite\n");
     return true;
@@ -407,9 +407,9 @@ write_card(bool write_otp, bool write_lock, bool write_dyn_lock, bool write_uid)
     }
     // NTAG and MF0UL21 have Dynamic Lock Bytes
     if (((iEV1Type == EV1_UL21 && page == 0x24) || \
-        (iNTAGType == NTAG_213 && page == 0x28) || \
-        (iNTAGType == NTAG_215 && page == 0x82) || \
-        (iNTAGType == NTAG_216 && page == 0xe2)) && (!write_dyn_lock)) {
+         (iNTAGType == NTAG_213 && page == 0x28) || \
+         (iNTAGType == NTAG_215 && page == 0x82) || \
+         (iNTAGType == NTAG_216 && page == 0xe2)) && (!write_dyn_lock)) {
       printf("s");
       uiSkippedPages++;
       continue;
@@ -655,7 +655,7 @@ main(int argc, const char *argv[])
       iEV1Type = EV1_UL11;
     } else if (abtRx[6] == 0x0e) {
       printf("EV1 type: MF0UL21 (128 user bytes)\n");
-      uiBlocks = 41; 
+      uiBlocks = 41;
       iDumpSize = uiBlocks * 4;
       iEV1Type = EV1_UL21;
     } else if (abtRx[6] == 0x0f) {

@@ -140,7 +140,7 @@ struct nfc_driver_list {
 const struct nfc_driver_list *nfc_drivers = NULL;
 
 // descritions for debugging
-const char * nfc_property_name[] = {
+const char *nfc_property_name[] = {
   "NP_TIMEOUT_COMMAND",
   "NP_TIMEOUT_ATR",
   "NP_TIMEOUT_COM",
@@ -206,8 +206,7 @@ nfc_device_validate_modulation(nfc_device *pnd, const nfc_mode mode, const nfc_m
 int
 nfc_register_driver(const struct nfc_driver *ndr)
 {
-  if (!ndr)
-  { 
+  if (!ndr) {
     log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "nfc_register_driver returning NFC_EINVARG");
     return NFC_EINVARG;
   }

@@ -337,7 +337,7 @@ pn53x_usb_scan(const nfc_context *context, nfc_connstring connstrings[], const s
           // pn53x_usb_get_usb_device_name (dev, udev, pnddDevices[device_found].acDevice, sizeof (pnddDevices[device_found].acDevice));
           log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "device found: Bus %s Device %s", bus->dirname, dev->filename);
           usb_close(udev);
-          if(snprintf(connstrings[device_found], sizeof(nfc_connstring), "%s:%s:%s", PN53X_USB_DRIVER_NAME, bus->dirname, dev->filename) >= (int)sizeof(nfc_connstring)) {
+          if (snprintf(connstrings[device_found], sizeof(nfc_connstring), "%s:%s:%s", PN53X_USB_DRIVER_NAME, bus->dirname, dev->filename) >= (int)sizeof(nfc_connstring)) {
             // truncation occurred, skipping that one
             continue;
           }
