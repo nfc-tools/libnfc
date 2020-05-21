@@ -2655,7 +2655,8 @@ pn53x_target_receive_bytes(struct nfc_device *pnd, uint8_t *pbtRx, const size_t 
             return pnd->last_error;
           }
         }
-      // NO BREAK
+        abtCmd[0] = TgGetInitiatorCommand;
+        break;
       case NMT_JEWEL:
       case NMT_BARCODE:
       case NMT_ISO14443B:
@@ -2762,7 +2763,8 @@ pn53x_target_send_bytes(struct nfc_device *pnd, const uint8_t *pbtTx, const size
             return pnd->last_error;
           }
         }
-      // NO BREAK
+        abtCmd[0] = TgResponseToInitiator;
+        break;
       case NMT_JEWEL:
       case NMT_BARCODE:
       case NMT_ISO14443B:

@@ -73,7 +73,6 @@ static bool bFormatCard;
 static bool magic2 = false;
 static bool magic3 = false;
 static bool unlocked = false;
-static bool bForceSizeMismatch;
 static uint8_t uiBlocks;
 static uint8_t keys[] = {
   0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
