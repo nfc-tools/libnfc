@@ -130,6 +130,8 @@ pcsc_free_scardcontext(void)
 #define ICC_TYPE_14443A  5
 #define ICC_TYPE_14443B  6
 
+bool is_pcsc_reader_vendor_feitian(const struct nfc_device *pnd);
+
 int pcsc_transmit(struct nfc_device *pnd, const uint8_t *tx, const size_t tx_len, uint8_t *rx, size_t *rx_len)
 {
   struct pcsc_data *data = pnd->driver_data;
@@ -190,7 +192,7 @@ int pcsc_reconnect(struct nfc_device *pnd, DWORD share_mode, DWORD protocol, DWO
   return NFC_SUCCESS;
 }
 
-uint8_t pcsc_get_icc_type(struct nfc_device *pnd)
+uint8_t pcsc_get_icc_type(const struct nfc_device *pnd)
 {
   struct pcsc_data *data = pnd->driver_data;
   uint8_t it = 0;
@@ -199,7 +201,7 @@ uint8_t pcsc_get_icc_type(struct nfc_device *pnd)
   return it;
 }
 
-bool is_pcsc_reader_vendor(struct nfc_device *pnd, const char * target_vendor_name)
+bool is_pcsc_reader_vendor(const struct nfc_device *pnd, const char * target_vendor_name)
 {
   bool isTarget = false;
   if (pnd == NULL || strlen(pnd->name) == 0)
@@ -210,7 +212,7 @@ bool is_pcsc_reader_vendor(struct nfc_device *pnd, const char * target_vendor_na
   return  isTarget = (strstr(pnd->name, target_vendor_name)) ? true:false;
 }
 
-bool is_pcsc_reader_vendor_feitian(struct nfc_device *pnd)
+bool is_pcsc_reader_vendor_feitian(const struct nfc_device *pnd)
 {
   return is_pcsc_reader_vendor(pnd, "Feitian") || is_pcsc_reader_vendor(pnd, "FeiTian") || is_pcsc_reader_vendor(pnd, "feitian") || is_pcsc_reader_vendor(pnd, "FEITIAN");
 }
@@ -319,7 +321,7 @@ int pcsc_get_uid(struct nfc_device *pnd, uint8_t *uid, size_t uid_len)
   return resp_len - 2;
 }
 
-int pcsc_props_to_target(const struct nfc_device *pnd, uint8_t it, const uint8_t *patr, size_t szatr, const uint8_t *puid, int szuid, const nfc_modulation_type nmt, nfc_target *pnt)
+int pcsc_props_to_target(struct nfc_device *pnd, uint8_t it, const uint8_t *patr, size_t szatr, const uint8_t *puid, int szuid, const nfc_modulation_type nmt, nfc_target *pnt)
 {
   if (NULL != pnt) {
     switch (nmt) {
@@ -883,21 +885,10 @@ int pcsc_device_set_property_bool(struct nfc_device *pnd, const nfc_property pro
       // ignore
       return NFC_SUCCESS;
     case NP_AUTO_ISO14443_4:
-    {
-      if (is_pcsc_reader_vendor_feitian(pnd))
-      {
-        //ignore
-        return NFC_SUCCESS;
-      }
-    }
     case NP_EASY_FRAMING:
-    {
-      if (is_pcsc_reader_vendor_feitian(pnd))
-      {
-        //ignore
+      if ((bEnable == true) || (is_pcsc_reader_vendor_feitian(pnd)))
         return NFC_SUCCESS;
-      }
-    }
+      break;
     case NP_FORCE_ISO14443_A:
     case NP_HANDLE_CRC:
     case NP_HANDLE_PARITY:
