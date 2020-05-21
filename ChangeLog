@@ -44,6 +44,12 @@ Improvements:
  - nfc-mfultralight: add support for magic gen2 cards
  - nfc-mfultralight: add option to specify UID
  - nfc-barcode: new command to read and decode NFC Barcodes (Tag-Talks-First)
+ - Add RATS support indicator to nfc-mfclassic
+ - Adding pn71xx NXP's NFC Controllers through Linux Libnfc-nci
+ - Added driver for contactless PC/SC readers
+ - add Feitian R502 and bR500 support into pcsc driver
+ - Add HID iClass (Picopass) support (nfc-iclass tool in external nfc-tools)
+
 
 Changes:
  - nfc_get_supported_baud_rate() takes now a "mode" parameter
@@ -56,7 +62,9 @@ Special thanks to:
    Alexander Inyukhin, Arnaud Kapp, David Kreitschmann, Adam Laurie, Ray Lee,
    Maxim Martyanov, Paul Menzel, Boris Moiseev, Yerzhan Mukhamejan,
    Olliver Shinagl, Jairo Andres Suarez, Mati Vait, Marcos Vives Del Sol,
-   Hidde Wieringa, Simon Yorkston, timzi, usk-johnny-s, xantares
+   Hidde Wieringa, Simon Yorkston, timzi, usk-johnny-s, xantares, Hanno
+   Heinrichs, jgeslin, Mikolaj Stawiski, rstular, Khem Raj, Frank Morgner, jpwidera,
+   Feitian Technologies
 
 Feb 24, 2014 - 1.7.1
 --------------------

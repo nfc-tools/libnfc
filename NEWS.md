@@ -4,6 +4,9 @@ API Changes:
 
   * nfc_device_get_supported_baud_rate() now takes also "mode" as argument
   * New nfc_get_supported_baud_rate_target_mode()
+  * added support for HID iClass (Picopass) (nfc-iclass tool can be found in external nfc-tools repo)
+  * added support for contacless PC/SC
+  * added support for Feitian R502 and bR500 PC/SC readers
 
 New in 1.7.1:
 
