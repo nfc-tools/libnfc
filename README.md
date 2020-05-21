@@ -143,20 +143,14 @@ all the information described in "How to Report Bugs".
 Building
 ========
 
-It should be as simple as running these three commands:
+It should be as simple as running these two commands:
 
-    autoreconf -vis
     ./configure
     make
 
-Build with specific  driver, like pcsc driver for compatible readers, go with below commands, tested on linux and macOS:
+To build with specific driver(s), see option `--with-drivers=...` detailed in `./configure --help`.
 
-```
-git clone --recursive https://github.com/nfc-tools/libnfc
-autoreconf -vis
-./configure --with-drivers=pcsc
-make
-```
+Note: if you're using directly the development repository and not the release sources, you will have to execute firstly `autoreconf -vis`.
 
 Troubleshooting
 ===============
@@ -207,27 +201,31 @@ them in a modprobe conf file. This file is provided within libnfc archive:
 
     sudo cp contrib/linux/blacklist-libnfc.conf /etc/modprobe.d/blacklist-libnfc.conf
 
-## FEITIAN bR500 and R502:
+FEITIAN bR500 and R502:
+-----------------------
 
-Libnfc can work with PCSC proprietary driver of bR500 and R502 through USB port, most linux already installed PCSC proprietary, then just plug in play, to have pcsc driver support, you may need build with "--with-drivers=pcsc" to re-build libnfc, below reader tested:
+Libnfc can work with PCSC proprietary driver of bR500 and R502, which is already available on most Linux setups.
+To activate the PCSC support: `./configure --with-drivers=pcsc`.
+Readers known to work:
 
 - Feitian bR500
 - Feitian R502 Dual interface reader
 - Feitian R502 CL(Contactless) reader
 
-These reader support by CCID from 1.4.25, make sure your CCID driver version higher than 1.4.25.
+These readers are support by CCID since v1.4.25, make sure your CCID driver version higher or equal to 1.4.25.
 
-Using macOS, use below command check your version, to install latest CCID driver from [https://github.com/martinpaljak/osx-ccid-installer/releases](https://github.com/martinpaljak/osx-ccid-installer/releases)
+On MacOS, you can check your CCID version with the following command, and if required, you can install latest CCID driver from [https://github.com/martinpaljak/osx-ccid-installer/releases](https://github.com/martinpaljak/osx-ccid-installer/releases)
 
 ```
 grep -A 1 CFBundleShortVersionString /usr/local/libexec/SmartCardServices/drivers/ifd-ccid.bundle/Contents/Info.plist
 ```
 
-Using linux, use below command check your version, to install latest CCID driver from [https://ccid.apdu.fr/](https://ccid.apdu.fr/)
+On Linux, you can check your CCID version with the following command, and if required, you can install latest CCID driver from [https://ccid.apdu.fr/](https://ccid.apdu.fr/)
 
 ```
 grep -A 1 CFBundleShortVersionString /usr/lib/pcsc/drivers/ifd-ccid.bundle/Contents/Info.plist
 ```
+
 Proprietary Notes
 =================
 FeliCa is a registered trademark of the Sony Corporation.
