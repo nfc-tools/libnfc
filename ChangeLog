@@ -1,5 +1,6 @@
-TBD - 1.7.x
------------
+May 21, 2020 - 1.7.2
+--------------------
+
 Fixes:
  - Remove unreachable code
  - nfc_emulate_uid: cleaner exit on interrupt
@@ -13,6 +14,7 @@ Fixes:
  - Fix improper device name initialization
  - Fix setenv()/unsetenv() for Windows
  - Fix win32/nfc.def according to nfc.h
+ - Fix missing timeout in pn53x_initiator_select_passive_target()
  - nfc-mfclassic: fix option to tolerate write errors
  - nfc-poll: fix card removing check
  - nfc-relay-picc: fix wrong open mode for file descriptor
@@ -27,34 +29,37 @@ Improvements:
  - Drop PCRE dependency on Windows
  - Remove deprecated readdir_r
  - Markdown conversion of the text files
+ - Use hardcoded PN533 descriptors to be more robust on Windows
  - Add support for SCL3712
  - Add support for ACR1222U-C1
  - Add support for NetBSD
  - Add support for PN532 on RPi3 UART
  - Add support for cross-compilation of 32b & 64b versions  of the library for Windows
  - Add pn533_usb to the kernel modules blacklist
+ - Add support for pn71xx NXP's NFC Controllers through Linux Libnfc-nci (untested)
+ - Add support for contactless PC/SC readers (only as initiator)
+ - Add support for Feitian R502 and bR500 into pcsc driver
+ - Add support for HID iClass (Picopass) support (nfc-iclass tool in external nfc-tools repo)
  - Allows for sending empty data in nfc_initiator_transceive_bits
  - driver i2c: respect proper timing specifications
  - driver i2c: add retry on error mechanism
  - nfc-mfclassic: improvements fo magic cards
  - nfc-mfclassic: add option to specify UID
  - nfc-mfclassic/nfc-mfsetuid: add support for new gen (1b) of magic 4K cards
+ - nfc-mfclassic: Add RATS support indicator
  - nfc-mfsetuid: allow to write complete Block0, instead of only UID
  - nfc-mfultralight: add automatic modes and --check-magic
  - nfc-mfultralight: add support for magic gen2 cards
  - nfc-mfultralight: add option to specify UID
+ - nfc-mfultralight: add support for Ultralight NTAG213/215/216
  - nfc-barcode: new command to read and decode NFC Barcodes (Tag-Talks-First)
- - Add RATS support indicator to nfc-mfclassic
- - Adding pn71xx NXP's NFC Controllers through Linux Libnfc-nci
- - Added driver for contactless PC/SC readers
- - add Feitian R502 and bR500 support into pcsc driver
- - Add HID iClass (Picopass) support (nfc-iclass tool in external nfc-tools)
-
 
 Changes:
- - nfc_get_supported_baud_rate() takes now a "mode" parameter
- - New nfc_get_supported_baud_rate_target_mode()
- - New NFC modulation type NMT_BARCODE to support Thinfilm NFC Barcode protocol
+ - nfc_device_get_supported_baud_rate() takes now a "mode" parameter
+ - New nfc_device_get_supported_baud_rate_target_mode()
+ - New NFC modulation type NMT_BARCODE and nfc_barcode_info struct to support Thinfilm NFC Barcode protocol
+ - New NFC modulation type NMT_ISO14443BICLASS and NMT_ISO14443BICLASS struct to support HID iClass (Picopass)
+ - pn53x_transceive() is now part of public API
 
 Special thanks to:
  - Jim Anastassiou, Frédéric Bourgeois, Dario Carluccio, Emmanuel Dreyfus,
