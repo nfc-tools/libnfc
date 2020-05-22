@@ -291,8 +291,8 @@ typedef union {
   nfc_iso14443b2sr_info nsi;
   nfc_iso14443b2ct_info nci;
   nfc_jewel_info nji;
-  nfc_barcode_info nti; // "t" for Thinfilm, "b" already used
   nfc_dep_info ndi;
+  nfc_barcode_info nti; // "t" for Thinfilm, "b" already used
   nfc_iso14443biclass_info nhi; // hid iclass / picopass - nii already used
 } nfc_target_info;
 
@@ -315,13 +315,13 @@ typedef enum {
 typedef enum {
   NMT_ISO14443A = 1,
   NMT_JEWEL,
-  NMT_BARCODE,    // Thinfilm NFC Barcode
   NMT_ISO14443B,
   NMT_ISO14443BI, // pre-ISO14443B aka ISO/IEC 14443 B' or Type B'
   NMT_ISO14443B2SR, // ISO14443-2B ST SRx
   NMT_ISO14443B2CT, // ISO14443-2B ASK CTx
   NMT_FELICA,
   NMT_DEP,
+  NMT_BARCODE,    // Thinfilm NFC Barcode
   NMT_ISO14443BICLASS, // HID iClass 14443B mode
   NMT_END_ENUM = NMT_ISO14443BICLASS, // dummy for sizing - always should alias last
 } nfc_modulation_type;
