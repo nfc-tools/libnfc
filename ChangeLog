@@ -1,4 +1,14 @@
-May 21, 2020 - 1.7.2
+May 22, 2020 - 1.8.0
+--------------------
+
+Fixes:
+ - Restore nfc_modulation_type enum order to keep compatibility with libnfc 1.7.1
+
+Changes:
+ - Bump revision due to changes in API introduced in v1.7.2
+ - Bump library version to 6.0.0
+
+May 21, 2020 - 1.7.2 (avoid using it, incompatible with 1.7.1)
 --------------------
 
 Fixes:

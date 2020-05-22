@@ -1,3 +1,9 @@
+New in 1.8.0:
+
+API Changes:
+ - Restore nfc_modulation_type enum order to keep compatibility with libnfc 1.7.1
+ - Bump library version to 6.0.0
+
 New in 1.7.2:
 
 Drivers:
