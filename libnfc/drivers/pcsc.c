@@ -103,7 +103,7 @@ static int _iSCardContextRefCount = 0;
 const nfc_baud_rate pcsc_supported_brs[] = {NBR_106, NBR_424, 0};
 const nfc_modulation_type pcsc_supported_mts[] = {NMT_ISO14443A, NMT_ISO14443B, 0};
 
-SCARDCONTEXT *
+static SCARDCONTEXT *
 pcsc_get_scardcontext(void)
 {
   if (_iSCardContextRefCount == 0) {
@@ -115,7 +115,7 @@ pcsc_get_scardcontext(void)
   return &_SCardContext;
 }
 
-void
+static void
 pcsc_free_scardcontext(void)
 {
   if (_iSCardContextRefCount) {
@@ -132,7 +132,7 @@ pcsc_free_scardcontext(void)
 
 bool is_pcsc_reader_vendor_feitian(const struct nfc_device *pnd);
 
-int pcsc_transmit(struct nfc_device *pnd, const uint8_t *tx, const size_t tx_len, uint8_t *rx, size_t *rx_len)
+static int pcsc_transmit(struct nfc_device *pnd, const uint8_t *tx, const size_t tx_len, uint8_t *rx, size_t *rx_len)
 {
   struct pcsc_data *data = pnd->driver_data;
   DWORD dw_rx_len = *rx_len;
@@ -157,7 +157,7 @@ int pcsc_transmit(struct nfc_device *pnd, const uint8_t *tx, const size_t tx_len
   return NFC_SUCCESS;
 }
 
-int pcsc_get_status(struct nfc_device *pnd, int *target_present, uint8_t *atr, size_t *atr_len)
+static int pcsc_get_status(struct nfc_device *pnd, int *target_present, uint8_t *atr, size_t *atr_len)
 {
   struct pcsc_data *data = pnd->driver_data;
   DWORD dw_atr_len = *atr_len, reader_len, state, protocol;
@@ -175,7 +175,7 @@ int pcsc_get_status(struct nfc_device *pnd, int *target_present, uint8_t *atr, s
   return NFC_SUCCESS;
 }
 
-int pcsc_reconnect(struct nfc_device *pnd, DWORD share_mode, DWORD protocol, DWORD disposition)
+static int pcsc_reconnect(struct nfc_device *pnd, DWORD share_mode, DWORD protocol, DWORD disposition)
 {
   struct pcsc_data *data = pnd->driver_data;
 
@@ -191,7 +191,7 @@ int pcsc_reconnect(struct nfc_device *pnd, DWORD share_mode, DWORD protocol, DWO
   return NFC_SUCCESS;
 }
 
-uint8_t pcsc_get_icc_type(const struct nfc_device *pnd)
+static uint8_t pcsc_get_icc_type(const struct nfc_device *pnd)
 {
   struct pcsc_data *data = pnd->driver_data;
   uint8_t it = 0;
@@ -200,7 +200,7 @@ uint8_t pcsc_get_icc_type(const struct nfc_device *pnd)
   return it;
 }
 
-bool is_pcsc_reader_vendor(const struct nfc_device *pnd, const char *target_vendor_name)
+static bool is_pcsc_reader_vendor(const struct nfc_device *pnd, const char *target_vendor_name)
 {
   bool isTarget = false;
   if (pnd == NULL || strlen(pnd->name) == 0) {
@@ -216,7 +216,7 @@ bool is_pcsc_reader_vendor_feitian(const struct nfc_device *pnd)
 }
 
 //get atqa by send apdu
-int pcsc_get_atqa(struct nfc_device *pnd, uint8_t *atqa, size_t atqa_len)
+static int pcsc_get_atqa(struct nfc_device *pnd, uint8_t *atqa, size_t atqa_len)
 {
   const uint8_t get_data[] = {0xFF, 0xCA, 0x03, 0x00, 0x00};
   uint8_t resp[256 + 2];
@@ -242,7 +242,7 @@ int pcsc_get_atqa(struct nfc_device *pnd, uint8_t *atqa, size_t atqa_len)
 }
 
 //get ats by send apdu
-int pcsc_get_ats(struct nfc_device *pnd, uint8_t *ats, size_t ats_len)
+static int pcsc_get_ats(struct nfc_device *pnd, uint8_t *ats, size_t ats_len)
 {
   const uint8_t get_data[] = {0xFF, 0xCA, 0x01, 0x00, 0x00};
   uint8_t resp[256 + 2];
@@ -269,7 +269,7 @@ int pcsc_get_ats(struct nfc_device *pnd, uint8_t *ats, size_t ats_len)
 }
 
 //get sak by send apdu
-int pcsc_get_sak(struct nfc_device *pnd, uint8_t *sak, size_t sak_len)
+static int pcsc_get_sak(struct nfc_device *pnd, uint8_t *sak, size_t sak_len)
 {
   const uint8_t get_data[] = {0xFF, 0xCA, 0x02, 0x00, 0x00};
   uint8_t resp[256 + 2];
@@ -294,7 +294,7 @@ int pcsc_get_sak(struct nfc_device *pnd, uint8_t *sak, size_t sak_len)
   return resp_len - 2;
 }
 
-int pcsc_get_uid(struct nfc_device *pnd, uint8_t *uid, size_t uid_len)
+static int pcsc_get_uid(struct nfc_device *pnd, uint8_t *uid, size_t uid_len)
 {
   const uint8_t get_data[] = {0xFF, 0xCA, 0x00, 0x00, 0x00};
   uint8_t resp[256 + 2];
@@ -319,7 +319,7 @@ int pcsc_get_uid(struct nfc_device *pnd, uint8_t *uid, size_t uid_len)
   return resp_len - 2;
 }
 
-int pcsc_props_to_target(struct nfc_device *pnd, uint8_t it, const uint8_t *patr, size_t szatr, const uint8_t *puid, int szuid, const nfc_modulation_type nmt, nfc_target *pnt)
+static int pcsc_props_to_target(struct nfc_device *pnd, uint8_t it, const uint8_t *patr, size_t szatr, const uint8_t *puid, int szuid, const nfc_modulation_type nmt, nfc_target *pnt)
 {
   if (NULL != pnt) {
     switch (nmt) {
@@ -712,19 +712,19 @@ static const char *stringify_error(const LONG pcscError)
   return strError;
 }
 
-const char *
+static const char *
 pcsc_strerror(const struct nfc_device *pnd)
 {
   return stringify_error(DRIVER_DATA(pnd)->last_error);
 }
 
-int pcsc_initiator_init(struct nfc_device *pnd)
+static int pcsc_initiator_init(struct nfc_device *pnd)
 {
   (void) pnd;
   return NFC_SUCCESS;
 }
 
-int pcsc_initiator_select_passive_target(struct nfc_device *pnd,  const nfc_modulation nm, const uint8_t *pbtInitData, const size_t szInitData, nfc_target *pnt)
+static int pcsc_initiator_select_passive_target(struct nfc_device *pnd,  const nfc_modulation nm, const uint8_t *pbtInitData, const size_t szInitData, nfc_target *pnt)
 {
   uint8_t atr[MAX_ATR_SIZE];
   uint8_t uid[10];
@@ -760,13 +760,13 @@ int pcsc_initiator_select_passive_target(struct nfc_device *pnd,  const nfc_modu
   return 1;
 }
 
-int pcsc_initiator_deselect_target(struct nfc_device *pnd)
+static int pcsc_initiator_deselect_target(struct nfc_device *pnd)
 {
   pnd->last_error = pcsc_reconnect(pnd, SCARD_SHARE_DIRECT, 0, SCARD_LEAVE_CARD);
   return pnd->last_error;
 }
 
-int pcsc_initiator_transceive_bytes(struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szTx, uint8_t *pbtRx, const size_t szRx, int timeout)
+static int pcsc_initiator_transceive_bytes(struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szTx, uint8_t *pbtRx, const size_t szRx, int timeout)
 {
   size_t resp_len = szRx;
 
@@ -848,7 +848,7 @@ int pcsc_initiator_transceive_bytes(struct nfc_device *pnd, const uint8_t *pbtTx
   return resp_len;
 }
 
-int pcsc_initiator_target_is_present(struct nfc_device *pnd, const nfc_target *pnt)
+static int pcsc_initiator_target_is_present(struct nfc_device *pnd, const nfc_target *pnt)
 {
   uint8_t atr[MAX_ATR_SIZE];
   int target_present;
@@ -874,7 +874,7 @@ int pcsc_initiator_target_is_present(struct nfc_device *pnd, const nfc_target *p
   return NFC_SUCCESS;
 }
 
-int pcsc_device_set_property_bool(struct nfc_device *pnd, const nfc_property property, const bool bEnable)
+static int pcsc_device_set_property_bool(struct nfc_device *pnd, const nfc_property property, const bool bEnable)
 {
   (void) pnd;
   switch (property) {
@@ -910,7 +910,7 @@ int pcsc_device_set_property_bool(struct nfc_device *pnd, const nfc_property pro
   return NFC_EDEVNOTSUPP;
 }
 
-int pcsc_get_supported_modulation(struct nfc_device *pnd, const nfc_mode mode, const nfc_modulation_type **const supported_mt)
+static int pcsc_get_supported_modulation(struct nfc_device *pnd, const nfc_mode mode, const nfc_modulation_type **const supported_mt)
 {
   (void) pnd;
   if (mode == N_TARGET || NULL == supported_mt)
@@ -919,7 +919,7 @@ int pcsc_get_supported_modulation(struct nfc_device *pnd, const nfc_mode mode, c
   return NFC_SUCCESS;
 }
 
-int pcsc_get_supported_baud_rate(struct nfc_device *pnd, const nfc_mode mode, const nfc_modulation_type nmt, const nfc_baud_rate **const supported_br)
+static int pcsc_get_supported_baud_rate(struct nfc_device *pnd, const nfc_mode mode, const nfc_modulation_type nmt, const nfc_baud_rate **const supported_br)
 {
   (void) pnd;
   (void) nmt;
@@ -929,7 +929,7 @@ int pcsc_get_supported_baud_rate(struct nfc_device *pnd, const nfc_mode mode, co
   return NFC_SUCCESS;
 }
 
-int
+static int
 pcsc_get_information_about(nfc_device *pnd, char **pbuf)
 {
   struct pcsc_data *data = pnd->driver_data;
