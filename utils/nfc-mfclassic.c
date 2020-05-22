@@ -620,7 +620,7 @@ print_usage(const char *pcProgramName)
 }
 
 
-bool is_directwrite()
+bool is_directwrite(void)
 {
   printf("Checking if Badge is DirectWrite...\n");
 
