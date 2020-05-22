@@ -760,11 +760,13 @@ static int pcsc_initiator_select_passive_target(struct nfc_device *pnd,  const n
   return 1;
 }
 
+#if 0
 static int pcsc_initiator_deselect_target(struct nfc_device *pnd)
 {
   pnd->last_error = pcsc_reconnect(pnd, SCARD_SHARE_DIRECT, 0, SCARD_LEAVE_CARD);
   return pnd->last_error;
 }
+#endif
 
 static int pcsc_initiator_transceive_bytes(struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szTx, uint8_t *pbtRx, const size_t szRx, int timeout)
 {
