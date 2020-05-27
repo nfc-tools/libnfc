@@ -5,7 +5,7 @@
  * Copyright (C) 2019      Frank Morgner
  * See AUTHORS file for a more comprehensive list of contributors.
  * Additional contributors of this file:
- *
+ * Copyright (C) 2020      Feitian Technologies
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
  * Free Software Foundation, either version 3 of the License, or (at your
@@ -70,6 +70,11 @@
 #include <reader.h>
 #endif
 #include <winscard.h>
+#endif
+
+#ifdef WIN32
+#include <windows.h>
+#define usleep(x) Sleep((x + 999) / 1000)
 #endif
 
 #define PCSC_DRIVER_NAME "pcsc"
@@ -252,7 +257,7 @@ static int pcsc_get_ats(struct nfc_device *pnd, uint8_t *ats, size_t ats_len)
   if (pnd->last_error != NFC_SUCCESS)
     return pnd->last_error;
 
-  if (resp_len < 2) {
+  if (resp_len <= 2) {
     log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Reader doesn't support request for ATS");
     pnd->last_error = NFC_EDEVNOTSUPP;
     return pnd->last_error;
@@ -263,8 +268,7 @@ static int pcsc_get_ats(struct nfc_device *pnd, uint8_t *ats, size_t ats_len)
     return pnd->last_error;
   }
 
-  //memcpy(ats, resp + 1, resp_len - 2 - 1);
-  memcpy(ats, resp + 1, resp[0] - 1);
+  memcpy(ats, resp + 1, resp_len - 2 - 1);//data expect TL and SW1SW2
   return resp_len - 2 - 1;
 }
 
@@ -349,9 +353,9 @@ static int pcsc_props_to_target(struct nfc_device *pnd, uint8_t it, const uint8_
             pnt->nti.nai.btSak = sak[0];
             uint8_t ats[256];
             int ats_len = pcsc_get_ats(pnd, ats, sizeof(ats));
+            ats_len = (ats_len > 0 ? ats_len : 0);//The reader may not support to get ATS
             memcpy(pnt->nti.nai.abtAts, ats, ats_len);
-            //memcpy(pnt->nti.nai.abtAts + ats_len, patr + 4, (uint8_t)(szatr - 5));
-            pnt->nti.nai.szAtsLen = ats_len;// + szatr - 5;
+            pnt->nti.nai.szAtsLen = ats_len;
           } else {
             /* SAK_ISO14443_4_COMPLIANT */
             pnt->nti.nai.btSak = 0x20;
@@ -521,7 +525,7 @@ pcsc_open(const nfc_context *context, const nfc_connstring connstring)
   // Test if context succeeded
   if (!(pscc = pcsc_get_scardcontext()))
     goto error;
-  DRIVER_DATA(pnd)->last_error = SCardConnect(*pscc, ndd.pcsc_device_name, SCARD_SHARE_DIRECT, 0, &(DRIVER_DATA(pnd)->hCard), (void *) & (DRIVER_DATA(pnd)->ioCard.dwProtocol));
+  DRIVER_DATA(pnd)->last_error = SCardConnect(*pscc, ndd.pcsc_device_name, SCARD_SHARE_DIRECT, 0 | 1, &(DRIVER_DATA(pnd)->hCard), (void *) & (DRIVER_DATA(pnd)->ioCard.dwProtocol));
   if (DRIVER_DATA(pnd)->last_error != SCARD_S_SUCCESS) {
     // We can not connect to this device.
     log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "PCSC connect failed");
@@ -797,6 +801,21 @@ static int pcsc_initiator_transceive_bytes(struct nfc_device *pnd, const uint8_t
       memcpy(apdu_data + 5, pbtTx + 2, szTx - 2);
       send_size = 5 + szTx - 2;
     } else if (pbtTx[0] == 0x60 || pbtTx[0] == 0x61 || pbtTx[0] == 0x1A) { //Auth command
+      //load pin first
+      {
+        apdu_data[0] = 0xFF;
+        apdu_data[1] = 0x82;
+        apdu_data[2] = 0x00;
+        apdu_data[3] = 0x01;
+        apdu_data[4] = 0x06;
+        memcpy(apdu_data + 5, pbtTx + 2, 6);
+        send_size = 11;
+        pnd->last_error = pcsc_transmit(pnd, apdu_data, send_size, resp, &resp_len);
+        memset(apdu_data, 0, sizeof(apdu_data));
+        memset(resp, 0, sizeof(resp));
+        usleep(500000);//delay 500ms
+      }
+      // then auth
       apdu_data[0] = 0xFF;
       apdu_data[1] = 0x86;
       apdu_data[2] = 0x00;
@@ -884,6 +903,9 @@ static int pcsc_device_set_property_bool(struct nfc_device *pnd, const nfc_prope
       // ignore
       return NFC_SUCCESS;
     case NP_AUTO_ISO14443_4:
+      if ((bEnable == true) || (is_pcsc_reader_vendor_feitian(pnd)))
+        return NFC_SUCCESS;
+      break;
     case NP_EASY_FRAMING:
       if ((bEnable == true) || (is_pcsc_reader_vendor_feitian(pnd)))
         return NFC_SUCCESS;
@@ -936,8 +958,13 @@ pcsc_get_information_about(nfc_device *pnd, char **pbuf)
 {
   struct pcsc_data *data = pnd->driver_data;
   LPBYTE   name = NULL, version = NULL, type = NULL, serial = NULL;
+#ifdef __APPLE__
+  DWORD    name_len = 0, version_len = 0,
+           type_len = 0, serial_len = 0;
+#else
   DWORD    name_len = SCARD_AUTOALLOCATE, version_len = SCARD_AUTOALLOCATE,
            type_len = SCARD_AUTOALLOCATE, serial_len = SCARD_AUTOALLOCATE;
+#endif
   int res = NFC_SUCCESS;
   SCARDCONTEXT *pscc;
 
