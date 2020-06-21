@@ -157,6 +157,14 @@ then
 fi
 AM_CONDITIONAL(DOC_ENABLED, [test x"$enable_doc" = xyes])
 
+# Example build (default: yes)
+AC_ARG_ENABLE([example],AS_HELP_STRING([--enable-example],[Enable example build.]),[enable_example=$enableval],[enable_example="yes"])
+
+AC_MSG_CHECKING(for example build)
+AC_MSG_RESULT($enable_example)
+
+AM_CONDITIONAL(EXAMPLE_ENABLED, [test x"$enable_example" = xyes])
+
 # Dependencies
 PKG_CONFIG_REQUIRES=""
 
@@ -175,7 +183,10 @@ if test x$ac_cv_with_cutter = xyes -a x$ac_cv_use_cutter = xno; then
 fi
 AM_CONDITIONAL([WITH_CUTTER], [test "$ac_cv_use_cutter" != "no"])
 
+if test x"$enable_example" = "xyes"
+then
 AC_CHECK_READLINE
+fi
 
 # Help us to write great code ;-)
 CFLAGS="$CFLAGS -Wall -pedantic -Wextra"
