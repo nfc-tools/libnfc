@@ -143,8 +143,14 @@ static int pcsc_transmit(struct nfc_device *pnd, const uint8_t *tx, const size_t
   DWORD dw_rx_len = *rx_len;
   //in libfreefare, tx_len = 1, and it leads to 0x80100008 error, with PC/SC reader, the input tx_len at least two bytes for the SW value
   //so if found the reader is Feitian reader, we set to 2
-  if (dw_rx_len == 1 && is_pcsc_reader_vendor_feitian(pnd)) {
-    dw_rx_len = 2;
+  if (is_pcsc_reader_vendor_feitian(pnd))
+  {
+    if (dw_rx_len == 1)
+    {
+      dw_rx_len = 2;
+    } else {
+      dw_rx_len += 2;//in libfreefare, some data length send not include sw1 and sw2, so add it.
+    }
   }
 
   LOG_HEX(NFC_LOG_GROUP_COM, "TX", tx, tx_len);
