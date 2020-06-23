@@ -426,7 +426,8 @@ write_card(int write_block_zero)
 
   printf("Writing %d blocks |", uiBlocks + 1);
   // Completely write the card, end to start, but skipping block 0
-  for (uiBlock = 4; uiBlock <= uiBlocks; uiBlock++) {
+  for (uiBlock = 0; uiBlock <= uiBlocks; uiBlock++) {
+      printf("{%d}",uiBlock);
     // Authenticate everytime we reach the first sector of a new block
     if (is_first_block(uiBlock)) {
       if (bFailure) {
@@ -438,6 +439,7 @@ write_card(int write_block_zero)
         bFailure = false;
       }
 
+      printf("[%d]",uiBlock);
       fflush(stdout);
 
       // Try to authenticate for the current sector
@@ -450,8 +452,10 @@ write_card(int write_block_zero)
           return false;
         }
       }
+    }
 
       if (is_trailer_block(uiBlock)) {
+	      printf("t");
         if (bFormatCard) {
           // Copy the default key and reset the access bits
           memcpy(mp.mpt.abtKeyA, default_key, sizeof(mp.mpt.abtKeyA));
@@ -471,7 +475,7 @@ write_card(int write_block_zero)
         }
       } else {
         // The first block 0x00 is read only, skip this
-        if (uiBlock == 0 && !write_block_zero && !magic2)
+        if (uiBlock == 0 && !write_block_zero && !magic2) 
           continue;
 
         // Make sure a earlier write did not fail
@@ -482,6 +486,7 @@ write_card(int write_block_zero)
             memset(mp.mpd.abtData, 0x00, sizeof(mp.mpd.abtData));
           else
             memcpy(mp.mpd.abtData, mtDump.amb[uiBlock].mbd.abtData, sizeof(mp.mpd.abtData));
+	  printf("(%d)%d",uiBlock,sizeof(mp.mpd.abtData));
           // do not write a block 0 with incorrect BCC - card will be made invalid!
           if (uiBlock == 0) {
             if ((mp.mpd.abtData[0] ^ mp.mpd.abtData[1] ^ mp.mpd.abtData[2] ^ mp.mpd.abtData[3] ^ mp.mpd.abtData[4]) != 0x00 && !magic2) {
@@ -499,7 +504,7 @@ write_card(int write_block_zero)
           printf("Failure during write process.\n");
         }
       }
-    }
+    //}
     // Show if the write went well for each block
     print_success_or_failure(bFailure, &uiWriteBlocks);
     if ((! bTolerateFailures) && bFailure)
