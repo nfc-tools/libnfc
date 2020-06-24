@@ -426,7 +426,7 @@ write_card(int write_block_zero)
 
   printf("Writing %d blocks |", uiBlocks + 1);
   // Completely write the card, end to start, but skipping block 0
-  for (uiBlock = 0; uiBlock <= uiBlocks; uiBlock++) {
+  for (uiBlock = 4; uiBlock <= uiBlocks; uiBlock++) {
       printf("{%d}",uiBlock);
     // Authenticate everytime we reach the first sector of a new block
     if (is_first_block(uiBlock)) {
@@ -515,6 +515,7 @@ write_card(int write_block_zero)
   if (write_block_zero || magic2 || magic3) {
     for (uiBlock = 0; uiBlock < 4; uiBlock++) {
 
+      printf("-%d-",uiBlock);
       // The first block 0x00 is read only, skip this
       if (uiBlock == 0) {
         //If the card is not magic, we're gonna skip over
@@ -555,6 +556,7 @@ write_card(int write_block_zero)
           memset(mp.mpd.abtData, 0x00, sizeof(mp.mpd.abtData));
         else
           memcpy(mp.mpd.abtData, mtDump.amb[uiBlock].mbd.abtData, sizeof(mp.mpd.abtData));
+      printf("<%d>",uiBlock);
         // do not write a block 0 with incorrect BCC - card will be made invalid!
         if (uiBlock == 0) {
           if ((mp.mpd.abtData[0] ^ mp.mpd.abtData[1] ^ mp.mpd.abtData[2] ^ mp.mpd.abtData[3] ^ mp.mpd.abtData[4]) != 0x00 && !magic2) {
