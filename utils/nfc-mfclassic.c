@@ -473,14 +473,6 @@ write_card(int write_block_zero)
             memset(mp.mpd.abtData, 0x00, sizeof(mp.mpd.abtData));
           else
             memcpy(mp.mpd.abtData, mtDump.amb[uiBlock].mbd.abtData, sizeof(mp.mpd.abtData));
-          // do not write a block 0 with incorrect BCC - card will be made invalid!
-          if (uiBlock == 0) {
-            if ((mp.mpd.abtData[0] ^ mp.mpd.abtData[1] ^ mp.mpd.abtData[2] ^ mp.mpd.abtData[3] ^ mp.mpd.abtData[4]) != 0x00 && !magic2) {
-              printf("!\nError: incorrect BCC in MFD file!\n");
-              printf("Expecting BCC=%02X\n", mp.mpd.abtData[0] ^ mp.mpd.abtData[1] ^ mp.mpd.abtData[2] ^ mp.mpd.abtData[3]);
-              return false;
-            }
-          }
           if (!nfc_initiator_mifare_cmd(pnd, MC_WRITE, uiBlock, &mp)) {
             bFailure = true;
             printf("Failure to write to data block %i\n", uiBlock);
