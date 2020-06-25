@@ -644,7 +644,7 @@ static bool is_directwrite(bool test_write)
     printf(" Original UID: %02x%02x%02x%02x\n",
            original_b0[0], original_b0[1], original_b0[2], original_b0[3]);
   } else {
-    printf("!\nError: unable to read block 0x%02x\n", 0);
+    printf("!\nError: unable to read block 0x00\n");
     return false;
   }
 
@@ -654,7 +654,7 @@ static bool is_directwrite(bool test_write)
   printf(" Attempt to write Block 0 ...\n");
   memcpy(mp.mpd.abtData, original_b0, sizeof(original_b0));
   if (!nfc_initiator_mifare_cmd(pnd, MC_WRITE, 0, &mp)) {
-    printf("Failure to write to data block %i\n", 0);
+    printf("Failure to write to data block 0\n");
     return false;
   }
   printf(" Block 0 written successfully\n");
