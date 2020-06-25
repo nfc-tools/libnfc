@@ -491,17 +491,16 @@ write_card(int write_block_zero)
 
   //Write Block 0 if requested to do so
   if (write_block_zero) {
-    for (uiBlock = 0; uiBlock < 1; uiBlock++) {
-
-      if (is_first_block(uiBlock)) {
-        if (bFailure) {
-          // When a failure occured we need to redo the anti-collision
-          if (nfc_initiator_select_passive_target(pnd, nmMifare, NULL, 0, &nt) <= 0) {
+    uiBlock = 0;
+    is_first_block(0);
+    if (bFailure) {
+        // When a failure occured we need to redo the anti-collision
+        if (nfc_initiator_select_passive_target(pnd, nmMifare, NULL, 0, &nt) <= 0) {
             printf("!\nError: tag was removed\n");
             return false;
-          }
-          bFailure = false;
         }
+        bFailure = false;
+    }
 
         fflush(stdout);
         // Try to authenticate for the current sector
@@ -509,12 +508,11 @@ write_card(int write_block_zero)
         // If we're writing to a One Time Write, we need to authenticate
         // If we're writing something else, we'll need to authenticate
         if ((write_block_zero && magic3) || !write_block_zero) {
-          if (!authenticate(uiBlock) && !bTolerateFailures) {
-            printf("!\nError: authentication failed for block %02x\n", uiBlock);
+          if (!authenticate(0) && !bTolerateFailures) {
+            printf("!\nError: authentication failed for block 00\n");
             return false;
           }
         }
-      }
 
       // Make sure a earlier write did not fail
       if (!bFailure) {
@@ -531,7 +529,7 @@ write_card(int write_block_zero)
           }
         if (!nfc_initiator_mifare_cmd(pnd, MC_WRITE, uiBlock, &mp)) {
           bFailure = true;
-          printf("Failure to write to data block %i\n", uiBlock);
+          printf("Failure to write to data block 0\n");
         }
 
       } else {
@@ -544,7 +542,6 @@ write_card(int write_block_zero)
         return false;
 
     }
-  }
 
   printf("|\n");
   printf("Done, %d of %d blocks written.\n", uiWriteBlocks, uiBlocks + 1);
