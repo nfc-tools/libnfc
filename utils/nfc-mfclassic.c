@@ -688,7 +688,7 @@ main(int argc, const char *argv[])
       unlock = 1;
     bUseKeyA = tolower((int)((unsigned char) * (argv[2]))) == 'a';
     bTolerateFailures = tolower((int)((unsigned char) * (argv[2]))) != (int)((unsigned char) * (argv[2]));
-    bUseKeyFile = (argc > 5);
+    bUseKeyFile = (argc > 5) && strcmp(argv[5], "v");
     bForceKeyFile = ((argc > 6) && (strcmp((char *)argv[6], "f") == 0));
   } else if (strcmp(command, "w") == 0 || strcmp(command, "W") == 0 || strcmp(command, "f") == 0) {
     atAction = ACTION_WRITE;
@@ -697,7 +697,7 @@ main(int argc, const char *argv[])
     bFormatCard = (strcmp(command, "f") == 0);
     bUseKeyA = tolower((int)((unsigned char) * (argv[2]))) == 'a';
     bTolerateFailures = tolower((int)((unsigned char) * (argv[2]))) != (int)((unsigned char) * (argv[2]));
-    bUseKeyFile = (argc > 5);
+    bUseKeyFile = (argc > 5) && strcmp(argv[5], "v");
     bForceKeyFile = ((argc > 6) && (strcmp((char *)argv[6], "f") == 0));
   }
   if (argv[3][0] == 'U') {
@@ -725,7 +725,7 @@ main(int argc, const char *argv[])
     if (argv[7]) {
       if (strcmp(argv[7], "v") == 0) verbose = true;
     } else {
-      if (strcmp(argv[6], "v") == 0) verbose = true;
+      if ((strcmp(argv[6], "v")) || (strcmp(argv[5], "v")) == 0) verbose = true;
     }
     if (!verbose) {
       int fd = open("/dev/null", O_WRONLY);
