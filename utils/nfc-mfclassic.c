@@ -587,6 +587,7 @@ print_usage(const char *pcProgramName)
   printf("                  *** unlocked read does not require authentication and will reveal A and B keys\n");
   printf("                  *** note that unlocked write will attempt to overwrite block 0 including UID\n");
   printf("                  *** unlocking only works with special Mifare 1K cards (Chinese clones)\n");
+  printf("                  *** unlocking (w) also works for rewriting block 0 in gen2 clones\n");
   printf("  a|A|b|B       - Use A or B keys for action; Halt on errors (a|b) or tolerate errors (A|B)\n");
   printf("  u|U           - Use any (u) uid or supply a uid specifically as U01ab23cd.\n");
   printf("  <dump.mfd>    - MiFare Dump (MFD) used to write (card to MFD) or (MFD to card)\n");
