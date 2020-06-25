@@ -260,6 +260,8 @@ unlock_card(void)
   // now send unlock
   if (!transmit_bits(abtUnlock1, 7)) {
     printf("Warning: Unlock command [1/2]: failed / not acknowledged.\n");
+    printf("Trying to rewrite block 0 on a gen2 tag.\n");
+    magic2 = true;
   } else {
     if (transmit_bytes(abtUnlock2, 1)) {
       printf("Card unlocked\n");
@@ -270,6 +272,15 @@ unlock_card(void)
   }
 
   // reset reader
+  if (!unlocked) {
+    if (nfc_initiator_select_passive_target(pnd, nmMifare, nt.nti.nai.abtUid, nt.nti.nai.szUidLen, NULL) <= 0) {
+      printf("Error: tag was removed\n");
+      nfc_close(pnd);
+      nfc_exit(context);
+      exit(EXIT_FAILURE);
+    }
+    return true;
+  }
   // Configure the CRC
   if (nfc_device_set_property_bool(pnd, NP_HANDLE_CRC, true) < 0) {
     nfc_perror(pnd, "nfc_device_set_property_bool");
@@ -438,7 +449,7 @@ write_card(int write_block_zero)
       // If we are are writing to a chinese magic card, we've already unlocked
       // If we're writing to a One Time Write card, we need to authenticate
       // If we're writing something else, we'll need to authenticate
-      if ((write_block_zero && magic3) || !write_block_zero) {
+      if ((write_block_zero && (magic2 || magic3)) || !write_block_zero) {
         if (!authenticate(uiBlock) && !bTolerateFailures) {
           printf("!\nError: authentication failed for block %02x\n", uiBlock);
           return false;
@@ -507,7 +518,7 @@ write_card(int write_block_zero)
         // If we are are writing to a chinese magic card, we've already unlocked
         // If we're writing to a One Time Write, we need to authenticate
         // If we're writing something else, we'll need to authenticate
-        if ((write_block_zero && magic3) || !write_block_zero) {
+        if ((write_block_zero && (magic2 || magic3)) || !write_block_zero) {
           if (!authenticate(0) && !bTolerateFailures) {
             printf("!\nError: authentication failed for block 00\n");
             return false;
