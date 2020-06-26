@@ -490,7 +490,18 @@ write_card(int write_block_zero)
       return false;
 
   }
-
+  if (magic2 || magic3) {
+    if (nfc_initiator_init(pnd) < 0) {
+      nfc_perror(pnd, "nfc_initiator_init");
+      nfc_close(pnd);
+      nfc_exit(context);
+      exit(EXIT_FAILURE);
+    };
+    if (nfc_initiator_select_passive_target(pnd, nmMifare, NULL, 0, &nt) <= 0) {
+      printf("!\nError: tag was removed\n");
+      return false;
+    }
+  }
   // Completely write the card, but skipping block 0
   for (uiBlock = 1; uiBlock <= uiBlocks; uiBlock++) {
     // Authenticate everytime we reach the first sector of a new block
