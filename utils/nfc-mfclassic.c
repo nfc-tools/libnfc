@@ -248,7 +248,7 @@ authenticate(uint32_t uiBlock)
 }
 
 static bool
-unlock_card(void)
+unlock_card(bool write)
 {
   // Configure the CRC
   if (nfc_device_set_property_bool(pnd, NP_HANDLE_CRC, false) < 0) {
@@ -266,8 +266,10 @@ unlock_card(void)
   // now send unlock
   if (!transmit_bits(abtUnlock1, 7)) {
     printf("Warning: Unlock command [1/2]: failed / not acknowledged.\n");
-    printf("Trying to rewrite block 0 on a gen2 tag.\n");
-    magic2 = true;
+    if (write) {
+      printf("Trying to rewrite block 0 on a gen2 tag.\n");
+      magic2 = true;
+    }
   } else {
     if (transmit_bytes(abtUnlock2, 1)) {
       printf("Card unlocked\n");
@@ -333,7 +335,7 @@ get_rats(void)
 }
 
 static bool
-read_card(int read_unlocked)
+read_card(bool read_unlocked)
 {
   int32_t iBlock;
   bool bFailure = false;
@@ -347,7 +349,7 @@ read_card(int read_unlocked)
       read_unlocked = 0;
     } else {
       //If User has requested an unlocked read, but we're unable to unlock the card, we'll error out.
-      if (!unlock_card()) {
+      if (!unlock_card(false)) {
         return false;
       }
     }
@@ -420,7 +422,7 @@ read_card(int read_unlocked)
 }
 
 static bool
-write_card(int write_block_zero)
+write_card(bool write_block_zero)
 {
   uint32_t uiBlock;
   bool bFailure = false;
@@ -429,7 +431,7 @@ write_card(int write_block_zero)
   //Determine if we have to unlock the card
   if (write_block_zero) {
     if (!magic2 && !magic3) {
-      if (!unlock_card()) {
+      if (!unlock_card(true)) {
         return false;
       }
     }
@@ -663,7 +665,7 @@ main(int argc, const char *argv[])
   uint8_t _tag_uid[4];
   uint8_t *tag_uid = _tag_uid;
 
-  int    unlock = 0;
+  bool    unlock = false;
 
   if (argc < 2) {
     print_usage(argv[0]);
@@ -678,7 +680,7 @@ main(int argc, const char *argv[])
   if (strcmp(command, "r") == 0 || strcmp(command, "R") == 0) {
     atAction = ACTION_READ;
     if (strcmp(command, "R") == 0)
-      unlock = 1;
+      unlock = true;
     bUseKeyA = tolower((int)((unsigned char) * (argv[2]))) == 'a';
     bTolerateFailures = tolower((int)((unsigned char) * (argv[2]))) != (int)((unsigned char) * (argv[2]));
     bUseKeyFile = (argc > 5) && strcmp(argv[5], "v");
@@ -686,7 +688,7 @@ main(int argc, const char *argv[])
   } else if (strcmp(command, "w") == 0 || strcmp(command, "W") == 0 || strcmp(command, "f") == 0) {
     atAction = ACTION_WRITE;
     if (strcmp(command, "W") == 0)
-      unlock = 1;
+      unlock = true;
     bFormatCard = (strcmp(command, "f") == 0);
     bUseKeyA = tolower((int)((unsigned char) * (argv[2]))) == 'a';
     bTolerateFailures = tolower((int)((unsigned char) * (argv[2]))) != (int)((unsigned char) * (argv[2]));
