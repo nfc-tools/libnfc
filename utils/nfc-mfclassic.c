@@ -620,7 +620,7 @@ static bool is_directwrite(bool test_write)
   bUseKeyFile = false;
   // Try to authenticate for the current sector
   if (!authenticate(0)) {
-    printf("!\nError: authentication failed for block 0x%02x\n", 0);
+    printf("!\nError: authentication failed for block 0x00\n");
     bUseKeyFile = orig_bUseKeyFile;
     return false;
   }
