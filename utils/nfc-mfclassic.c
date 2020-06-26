@@ -440,14 +440,6 @@ write_card(int write_block_zero)
   if (write_block_zero) {
     uiBlock = 0;
     is_first_block(0);
-    if (bFailure) {
-      // When a failure occured we need to redo the anti-collision
-      if (nfc_initiator_select_passive_target(pnd, nmMifare, NULL, 0, &nt) <= 0) {
-        printf("!\nError: tag was removed\n");
-        return false;
-      }
-      bFailure = false;
-    }
 
     fflush(stdout);
     // Try to authenticate for the current sector
@@ -461,12 +453,7 @@ write_card(int write_block_zero)
       }
     }
 
-    // Make sure a earlier write did not fail
-    if (!bFailure) {
       // Try to write the data block
-      if (bFormatCard && uiBlock)
-        memset(mp.mpd.abtData, 0x00, sizeof(mp.mpd.abtData));
-      else
         memcpy(mp.mpd.abtData, mtDump.amb[uiBlock].mbd.abtData, sizeof(mp.mpd.abtData));
       // do not write a block 0 with incorrect BCC - card will be made invalid!
       if ((mp.mpd.abtData[0] ^ mp.mpd.abtData[1] ^ mp.mpd.abtData[2] ^ mp.mpd.abtData[3] ^ mp.mpd.abtData[4]) != 0x00 && !magic2) {
@@ -478,12 +465,6 @@ write_card(int write_block_zero)
         bFailure = true;
         printf("Failure to write to data block 0\n");
       }
-
-    }
-    else {
-      printf("Failure during write process.\n");
-    }
-
     // Show if the write went well for block 0
     print_success_or_failure(bFailure, &uiWriteBlocks);
     if ((!bTolerateFailures) && bFailure)
