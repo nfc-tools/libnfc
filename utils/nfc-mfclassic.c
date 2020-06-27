@@ -438,55 +438,12 @@ write_card(bool write_block_zero)
   }
 
   printf("Writing %d blocks |", uiBlocks + write_block_zero);
-  //Write Block 0 if requested to do so
-  if (write_block_zero) {
-    uiBlock = 0;
-    is_first_block(0);
-
-    fflush(stdout);
-    // Try to authenticate for the current sector
-    // If we are are writing to a chinese magic card, we've already unlocked
-    // If we're writing to a One Time Write, we need to authenticate
-    // If we're writing something else, we'll need to authenticate
-    if ((write_block_zero && (magic2 || magic3)) || !write_block_zero) {
-      if (!authenticate(0) && !bTolerateFailures) {
-        printf("!\nError: authentication failed for block 00\n");
-        return false;
-      }
+  // Completely write the card, but skipping block 0 if we don't need to write on it
+  for (uiBlock = 0; uiBlock <= uiBlocks; uiBlock++) {
+    //Determine if we have to write block 0
+    if (!write_block_zero && uiBlock == 0) {
+      continue;
     }
-
-      // Try to write the data block
-        memcpy(mp.mpd.abtData, mtDump.amb[uiBlock].mbd.abtData, sizeof(mp.mpd.abtData));
-      // do not write a block 0 with incorrect BCC - card will be made invalid!
-      if ((mp.mpd.abtData[0] ^ mp.mpd.abtData[1] ^ mp.mpd.abtData[2] ^ mp.mpd.abtData[3] ^ mp.mpd.abtData[4]) != 0x00 && !magic2) {
-        printf("!\nError: incorrect BCC in MFD file!\n");
-        printf("Expecting BCC=%02X\n", mp.mpd.abtData[0] ^ mp.mpd.abtData[1] ^ mp.mpd.abtData[2] ^ mp.mpd.abtData[3]);
-        return false;
-      }
-      if (!nfc_initiator_mifare_cmd(pnd, MC_WRITE, uiBlock, &mp)) {
-        bFailure = true;
-        printf("Failure to write to data block 0\n");
-      }
-    // Show if the write went well for block 0
-    print_success_or_failure(bFailure, &uiWriteBlocks);
-    if ((!bTolerateFailures) && bFailure)
-      return false;
-
-  }
-  if (magic2 || magic3) {
-    if (nfc_initiator_init(pnd) < 0) {
-      nfc_perror(pnd, "nfc_initiator_init");
-      nfc_close(pnd);
-      nfc_exit(context);
-      exit(EXIT_FAILURE);
-    };
-    if (nfc_initiator_select_passive_target(pnd, nmMifare, NULL, 0, &nt) <= 0) {
-      printf("!\nError: tag was removed\n");
-      return false;
-    }
-  }
-  // Completely write the card, but skipping block 0
-  for (uiBlock = 1; uiBlock <= uiBlocks; uiBlock++) {
     // Authenticate everytime we reach the first sector of a new block
     if (uiBlock == 1 || is_first_block(uiBlock)) {
       if (bFailure) {
@@ -539,11 +496,30 @@ write_card(bool write_block_zero)
             memset(mp.mpd.abtData, 0x00, sizeof(mp.mpd.abtData));
           else
             memcpy(mp.mpd.abtData, mtDump.amb[uiBlock].mbd.abtData, sizeof(mp.mpd.abtData));
+          // do not write a block 0 with incorrect BCC - card will be made invalid!
+          if (uiBlock == 0) {
+            if ((mp.mpd.abtData[0] ^ mp.mpd.abtData[1] ^ mp.mpd.abtData[2] ^ mp.mpd.abtData[3] ^ mp.mpd.abtData[4]) != 0x00) {
+              printf("!\nError: incorrect BCC in MFD file!\n");
+              printf("Expecting BCC=%02X\n", mp.mpd.abtData[0] ^ mp.mpd.abtData[1] ^ mp.mpd.abtData[2] ^ mp.mpd.abtData[3]);
+              return false;
+            }
+          }
           if (!nfc_initiator_mifare_cmd(pnd, MC_WRITE, uiBlock, &mp)) {
             bFailure = true;
             printf("Failure to write to data block %i\n", uiBlock);
           }
-
+          if (uiBlock == 0 && (magic2 || magic3)) {
+            if (nfc_initiator_init(pnd) < 0) {
+              nfc_perror(pnd, "nfc_initiator_init");
+              nfc_close(pnd);
+              nfc_exit(context);
+              exit(EXIT_FAILURE);
+            };
+            if (nfc_initiator_select_passive_target(pnd, nmMifare, NULL, 0, &nt) <= 0) {
+              printf("!\nError: tag was removed\n");
+              return false;
+            }
+          }
         } else {
           printf("Failure during write process.\n");
         }
