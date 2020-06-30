@@ -822,9 +822,17 @@ main(int argc, const char *argv[])
       }
       printf("Done.\n");
       fclose(pfDump);
+    } else {
+      nfc_close(pnd);
+      nfc_exit(context);
+      exit(EXIT_FAILURE);
     }
   } else if (atAction == ACTION_WRITE) {
-    write_card(unlock);
+    if (!write_card(unlock)) {
+      nfc_close(pnd);
+      nfc_exit(context);
+      exit(EXIT_FAILURE);
+    }
   }
 
   nfc_close(pnd);
