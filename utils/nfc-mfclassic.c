@@ -582,57 +582,6 @@ print_usage(const char *pcProgramName)
 }
 
 
-static bool is_directwrite(bool test_write)
-{
-  printf("Checking if Badge is DirectWrite...\n");
-
-  // Set default keys
-  memcpy(mtDump.amb[0].mbt.abtKeyA, default_key, sizeof(default_key));
-  memcpy(mtDump.amb[0].mbt.abtAccessBits, default_acl, sizeof(mp.mpt.abtAccessBits));
-  memcpy(mtDump.amb[0].mbt.abtKeyB, default_key, sizeof(default_key));
-
-  // Temporarly override bUseKeyFile
-  bool orig_bUseKeyFile = bUseKeyFile;
-  bUseKeyFile = false;
-  // Try to authenticate for the current sector
-  if (!authenticate(0)) {
-    printf("!\nError: authentication failed for block 0x00\n");
-    bUseKeyFile = orig_bUseKeyFile;
-    return false;
-  }
-  // restore bUseKeyFile
-  bUseKeyFile = orig_bUseKeyFile;
-
-  // Try to read block 0
-  uint8_t original_b0[16];
-  if (nfc_initiator_mifare_cmd(pnd, MC_READ, 0, &mp)) {
-    memcpy(original_b0, mp.mpd.abtData, sizeof(mp.mpd.abtData));
-    printf(" Original Block 0: ");
-    for (int i = 0; i < 16; i++) {
-      printf("%02x", original_b0[i]);
-    }
-    printf("\n");
-    printf(" Original UID: %02x%02x%02x%02x\n",
-           original_b0[0], original_b0[1], original_b0[2], original_b0[3]);
-  } else {
-    printf("!\nError: unable to read block 0x00\n");
-    return false;
-  }
-
-  if(!test_write)
-    return true;
-
-  printf(" Attempt to write Block 0 ...\n");
-  memcpy(mp.mpd.abtData, original_b0, sizeof(original_b0));
-  if (!nfc_initiator_mifare_cmd(pnd, MC_WRITE, 0, &mp)) {
-    printf("Failure to write to data block 0\n");
-    return false;
-  }
-  printf(" Block 0 written successfully\n");
-
-  return true;
-}
-
 int
 main(int argc, const char *argv[])
 {
@@ -850,19 +799,6 @@ main(int argc, const char *argv[])
     printf("RATS support: no\n");
   printf("Guessing size: seems to be a %lu-byte card\n", (unsigned long)((uiBlocks + 1) * sizeof(mifare_classic_block)));
 
-  //If size is 4k check for direct-write card
-  if (uiBlocks == 0xff) {
-    if (is_directwrite(atAction == ACTION_WRITE)) {
-      printf("Card is DirectWrite\n");
-      magic3 = true;
-    } else {
-      printf("Card is not DirectWrite\n");
-      // reset after error
-      if (nfc_initiator_select_passive_target(pnd, nmMifare, nt.nti.nai.abtUid, nt.nti.nai.szUidLen, NULL) <= 0) {
-        ERR("tag was removed");
-      }
-    }
-  }
 
   //Check to see if we have a One Time Write badge (magic3)
   if (pbtUID[0] == 0xaa && pbtUID[1] == 0x55 &&
