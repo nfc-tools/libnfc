@@ -97,10 +97,6 @@ main(int argc, const char *argv[])
     exit(EXIT_FAILURE);
   }
 
-  // Display libnfc version
-  acLibnfcVersion = nfc_version();
-  printf("%s uses libnfc %s\n", argv[0], acLibnfcVersion);
-
   // Get commandline options
   for (arg = 1; arg < argc; arg++) {
     if (0 == strcmp(argv[arg], "-h")) {
@@ -125,6 +121,13 @@ main(int argc, const char *argv[])
       exit(EXIT_FAILURE);
     }
   }
+
+  // Display libnfc version
+  if (verbose) {
+    acLibnfcVersion = nfc_version();
+    printf("%s uses libnfc %s\n", argv[0], acLibnfcVersion);
+  }
+
 
   /* Lazy way to open an NFC device */
 #if 0
