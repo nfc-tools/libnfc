@@ -195,6 +195,8 @@ conf_parse_file(const char *filename,
           free(key);
           free(value);
         } else {
+          free(key);
+          free(value);
           log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Parse error on line #%d: %s", lineno, line);
         }
       }

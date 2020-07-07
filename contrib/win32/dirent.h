@@ -283,27 +283,12 @@ static DIR *opendir (const char *dirname);
 static _WDIR *_wopendir (const wchar_t *dirname);
 
 static struct dirent *readdir (DIR *dirp);
-static struct _wdirent *_wreaddir (_WDIR *dirp);
 
 static int readdir_r(
     DIR *dirp, struct dirent *entry, struct dirent **result);
-static int _wreaddir_r(
-    _WDIR *dirp, struct _wdirent *entry, struct _wdirent **result);
 
 static int closedir (DIR *dirp);
 static int _wclosedir (_WDIR *dirp);
-
-static void rewinddir (DIR* dirp);
-static void _wrewinddir (_WDIR* dirp);
-
-static int scandir (const char *dirname, struct dirent ***namelist,
-    int (*filter)(const struct dirent*),
-    int (*compare)(const void *, const void *));
-
-static int alphasort (const struct dirent **a, const struct dirent **b);
-
-static int versionsort (const struct dirent **a, const struct dirent **b);
-
 
 /* For compatibility with Symbian */
 #define wdirent _wdirent
@@ -449,91 +434,6 @@ _wopendir(
 }
 
 /*
- * Read next directory entry.
- *
- * Returns pointer to static directory entry which may be overwritten by
- * subsequent calls to _wreaddir().
- */
-static struct _wdirent*
-_wreaddir(
-    _WDIR *dirp)
-{
-    struct _wdirent *entry;
-
-    /*
-     * Read directory entry to buffer.  We can safely ignore the return value
-     * as entry will be set to NULL in case of error.
-     */
-    (void) _wreaddir_r (dirp, &dirp->ent, &entry);
-
-    /* Return pointer to statically allocated directory entry */
-    return entry;
-}
-
-/*
- * Read next directory entry.
- *
- * Returns zero on success.  If end of directory stream is reached, then sets
- * result to NULL and returns zero.
- */
-static int
-_wreaddir_r(
-    _WDIR *dirp,
-    struct _wdirent *entry,
-    struct _wdirent **result)
-{
-    WIN32_FIND_DATAW *datap;
-
-    /* Read next directory entry */
-    datap = dirent_next (dirp);
-    if (datap) {
-        size_t n;
-        DWORD attr;
-
-        /*
-         * Copy file name as wide-character string.  If the file name is too
-         * long to fit in to the destination buffer, then truncate file name
-         * to PATH_MAX characters and zero-terminate the buffer.
-         */
-        n = 0;
-        while (n < PATH_MAX  &&  datap->cFileName[n] != 0) {
-            entry->d_name[n] = datap->cFileName[n];
-            n++;
-        }
-        entry->d_name[n] = 0;
-
-        /* Length of file name excluding zero terminator */
-        entry->d_namlen = n;
-
-        /* File type */
-        attr = datap->dwFileAttributes;
-        if ((attr & FILE_ATTRIBUTE_DEVICE) != 0) {
-            entry->d_type = DT_CHR;
-        } else if ((attr & FILE_ATTRIBUTE_DIRECTORY) != 0) {
-            entry->d_type = DT_DIR;
-        } else {
-            entry->d_type = DT_REG;
-        }
-
-        /* Reset dummy fields */
-        entry->d_ino = 0;
-        entry->d_off = 0;
-        entry->d_reclen = sizeof (struct _wdirent);
-
-        /* Set result address */
-        *result = entry;
-
-    } else {
-
-        /* Return NULL to indicate end of directory */
-        *result = NULL;
-
-    }
-
-    return /*OK*/0;
-}
-
-/*
  * Close directory stream opened by opendir() function.  This invalidates the
  * DIR structure as well as any directory entry read previously by
  * _wreaddir().
@@ -569,25 +469,6 @@ _wclosedir(
 
     }
     return ok;
-}
-
-/*
- * Rewind directory stream such that _wreaddir() returns the very first
- * file name again.
- */
-static void
-_wrewinddir(
-    _WDIR* dirp)
-{
-    if (dirp) {
-        /* Release existing search handle */
-        if (dirp->handle != INVALID_HANDLE_VALUE) {
-            FindClose (dirp->handle);
-        }
-
-        /* Open new search handle */
-        dirent_first (dirp);
-    }
 }
 
 /* Get first directory entry (internal) */
@@ -856,175 +737,6 @@ closedir(
     }
     return ok;
 }
-
-/*
- * Rewind directory stream to beginning.
- */
-static void
-rewinddir(
-    DIR* dirp)
-{
-    /* Rewind wide-character string directory stream */
-    _wrewinddir (dirp->wdirp);
-}
-
-/*
- * Scan directory for entries.
- */
-static int
-scandir(
-    const char *dirname,
-    struct dirent ***namelist,
-    int (*filter)(const struct dirent*),
-    int (*compare)(const void*, const void*))
-{
-    struct dirent **files = NULL;
-    size_t size = 0;
-    size_t allocated = 0;
-    const size_t init_size = 1;
-    DIR *dir = NULL;
-    struct dirent *entry;
-    struct dirent *tmp = NULL;
-    size_t i;
-    int result = 0;
-
-    /* Open directory stream */
-    dir = opendir (dirname);
-    if (dir) {
-
-        /* Read directory entries to memory */
-        while (1) {
-
-            /* Enlarge pointer table to make room for another pointer */
-            if (size >= allocated) {
-                void *p;
-                size_t num_entries;
-
-                /* Compute number of entries in the enlarged pointer table */
-                if (size < init_size) {
-                    /* Allocate initial pointer table */
-                    num_entries = init_size;
-                } else {
-                    /* Double the size */
-                    num_entries = size * 2;
-                }
-
-                /* Allocate first pointer table or enlarge existing table */
-                p = realloc (files, sizeof (void*) * num_entries);
-                if (p != NULL) {
-                    /* Got the memory */
-                    files = (dirent**) p;
-                    allocated = num_entries;
-                } else {
-                    /* Out of memory */
-                    result = -1;
-                    break;
-                }
-
-            }
-
-            /* Allocate room for temporary directory entry */
-            if (tmp == NULL) {
-                tmp = (struct dirent*) malloc (sizeof (struct dirent));
-                if (tmp == NULL) {
-                    /* Cannot allocate temporary directory entry */
-                    result = -1;
-                    break;
-                }
-            }
-
-            /* Read directory entry to temporary area */
-            if (readdir_r (dir, tmp, &entry) == /*OK*/0) {
-
-                /* Did we get an entry? */
-                if (entry != NULL) {
-                    int pass;
-
-                    /* Determine whether to include the entry in result */
-                    if (filter) {
-                        /* Let the filter function decide */
-                        pass = filter (tmp);
-                    } else {
-                        /* No filter function, include everything */
-                        pass = 1;
-                    }
-
-                    if (pass) {
-                        /* Store the temporary entry to pointer table */
-                        files[size++] = tmp;
-                        tmp = NULL;
-
-                        /* Keep up with the number of files */
-                        result++;
-                    }
-
-                } else {
-
-                    /*
-                     * End of directory stream reached => sort entries and
-                     * exit.
-                     */
-                    qsort (files, size, sizeof (void*), compare);
-                    break;
-
-                }
-
-            } else {
-                /* Error reading directory entry */
-                result = /*Error*/ -1;
-                break;
-            }
-
-        }
-
-    } else {
-        /* Cannot open directory */
-        result = /*Error*/ -1;
-    }
-
-    /* Release temporary directory entry */
-    if (tmp) {
-        free (tmp);
-    }
-
-    /* Release allocated memory on error */
-    if (result < 0) {
-        for (i = 0; i < size; i++) {
-            free (files[i]);
-        }
-        free (files);
-        files = NULL;
-    }
-
-    /* Close directory stream */
-    if (dir) {
-        closedir (dir);
-    }
-
-    /* Pass pointer table to caller */
-    if (namelist) {
-        *namelist = files;
-    }
-    return result;
-}
-
-/* Alphabetical sorting */
-static int
-alphasort(
-    const struct dirent **a, const struct dirent **b)
-{
-    return strcoll ((*a)->d_name, (*b)->d_name);
-}
-
-/* Sort versions */
-static int
-versionsort(
-    const struct dirent **a, const struct dirent **b)
-{
-    /* FIXME: implement strverscmp and use that */
-    return alphasort (a, b);
-}
-
 
 /* Convert multi-byte string to wide character string */
 static int

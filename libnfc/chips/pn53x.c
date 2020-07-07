@@ -1208,7 +1208,7 @@ pn53x_initiator_select_passive_target_ext(struct nfc_device *pnd,
         // send ICLASS_ACTIVATE_ALL command - will get timeout as we don't expect response
         uint8_t abtReqt[] = { 0x0a }; // iClass ACTIVATE_ALL
         uint8_t abtAnticol[11];
-        if ((res = pn53x_initiator_transceive_bytes(pnd, abtReqt, sizeof(abtReqt), NULL, 0, timeout)) < 0) {
+        if (pn53x_initiator_transceive_bytes(pnd, abtReqt, sizeof(abtReqt), NULL, 0, timeout) < 0) {
           log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "got expected timeout on iClass activate all");
           //if ((res == NFC_ERFTRANS) && (CHIP_DATA(pnd)->last_status_byte == 0x01)) { // Chip timeout
           //  continue;
@@ -2064,7 +2064,7 @@ static int pn53x_ISO14443A_Barcode_is_present(struct nfc_device *pnd)
     }
     uint8_t abtRx[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
     uint8_t abtRxPar[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
-    if ((ret = nfc_initiator_transceive_bits(pnd, NULL, 0, NULL, abtRx, sizeof(abtRx), abtRxPar)) < 1) {
+    if (nfc_initiator_transceive_bits(pnd, NULL, 0, NULL, abtRx, sizeof(abtRx), abtRxPar) < 1) {
       failures++;
     } else {
       nfc_device_set_property_bool(pnd, NP_HANDLE_CRC, true);

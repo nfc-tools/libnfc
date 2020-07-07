@@ -48,7 +48,7 @@
 #    define ENOTSUP       WSAEOPNOTSUPP
 #    define ECONNABORTED  WSAECONNABORTED
 #  else
-#if !defined(_MSC_VER) || (_MSC_VER < 1910) // VS2017 don't like snprintf macro
+#ifndef _MSC_VER
 #    define snprintf sprintf_s
 #endif
 #    define strdup _strdup

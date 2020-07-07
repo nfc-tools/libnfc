@@ -60,3 +60,7 @@ utils/nfc-mfultralight
 utils/nfc-read-forum-tag3
 utils/nfc-relay-picc
 utils/nfc-scan-device
+
+.vs/
+
+CMakeSettings.json

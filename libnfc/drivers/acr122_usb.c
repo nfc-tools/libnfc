@@ -60,7 +60,9 @@ Thanks to d18c7db and Okko for example code
 #include <sys/select.h>
 #include <errno.h>
 #include <string.h>
-
+#ifdef _MSC_VER
+#include <sys/types.h>
+#endif
 #include <nfc/nfc.h>
 
 #include "nfc-internal.h"
