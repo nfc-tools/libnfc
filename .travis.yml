@@ -21,6 +21,19 @@ matrix:
           packages:
             - libusb-dev
             - doxygen
+            - cmake
+      script:
+        - mkdir build && cd build && cmake -DCMAKE_INSTALL_PREFIX=~/.local .. && make -j2 && make install
+        
+    - os: linux
+      dist: bionic
+      compiler:
+        - clang
+      addons:
+        apt:
+          packages:
+            - libusb-dev
+            - doxygen
       script:
         - autoreconf -vfi && mkdir build && cd build && ../configure --prefix=$HOME/.local/ && make -j2 && make install
 
