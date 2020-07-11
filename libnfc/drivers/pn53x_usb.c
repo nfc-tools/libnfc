@@ -43,7 +43,9 @@ Thanks to d18c7db and Okko for example code
 #include <sys/select.h>
 #include <errno.h>
 #include <string.h>
-
+#ifdef _MSC_VER
+#include <sys/types.h>
+#endif
 #include <nfc/nfc.h>
 
 #include "nfc-internal.h"
@@ -817,7 +819,7 @@ pn53x_usb_set_property_bool(nfc_device *pnd, const nfc_property property, const 
       if (NP_ACTIVATE_FIELD == property) {
         /* Switch on/off LED2 and Progressive Field GPIO according to ACTIVATE_FIELD option */
         log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Switch progressive field %s", bEnable ? "On" : "Off");
-        if ((res = pn53x_write_register(pnd, PN53X_SFR_P3, _BV(P31) | _BV(P34), bEnable ? _BV(P34) : _BV(P31))) < 0)
+        if (pn53x_write_register(pnd, PN53X_SFR_P3, _BV(P31) | _BV(P34), bEnable ? _BV(P34) : _BV(P31)) < 0)
           return NFC_ECHIP;
       }
       break;

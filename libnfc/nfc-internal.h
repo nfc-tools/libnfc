@@ -34,7 +34,9 @@
 
 #include <stdbool.h>
 #include <err.h>
+#if !defined(_MSC_VER)
 #  include <sys/time.h>
+#endif
 
 #include "nfc/nfc.h"
 

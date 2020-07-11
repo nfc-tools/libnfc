@@ -7,6 +7,8 @@
 *.lo
 *.o
 *~
+.vs/
+CMakeSettings.json
 Doxyfile
 INSTALL
 aclocal.m4
