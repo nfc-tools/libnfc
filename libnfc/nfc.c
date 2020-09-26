@@ -579,6 +579,7 @@ nfc_initiator_select_passive_target(nfc_device *pnd,
     free(abtTmpInit);
   } else if (nm.nmt == NMT_ISO14443A) {
     abtInit = abtTmpInit;
+    free(abtTmpInit);
     iso14443_cascade_uid(pbtInitData, szInitData, abtInit, &szInit);
   } else {
     abtInit = abtTmpInit;
@@ -587,8 +588,6 @@ nfc_initiator_select_passive_target(nfc_device *pnd,
     szInit = szInitData;
   }
   HAL(initiator_select_passive_target, pnd, nm, abtInit, szInit, pnt);
-
-  free(abtTmpInit);
 }
 
 /** @ingroup initiator
