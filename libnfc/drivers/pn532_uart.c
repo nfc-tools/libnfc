@@ -136,7 +136,7 @@ pn532_uart_scan(const nfc_context *context, nfc_connstring connstrings[], const 
       CHIP_DATA(pnd)->power_mode = LOWVBAT;
 
 #ifndef WIN32
-      // pipe-based abort mecanism
+      // pipe-based abort mechanism
       if (pipe(DRIVER_DATA(pnd)->iAbortFds) < 0) {
         uart_close(DRIVER_DATA(pnd)->port);
         pn53x_data_free(pnd);
@@ -191,7 +191,7 @@ pn532_uart_close(nfc_device *pnd)
   uart_close(DRIVER_DATA(pnd)->port);
 
 #ifndef WIN32
-  // Release file descriptors used for abort mecanism
+  // Release file descriptors used for abort mechanism
   close(DRIVER_DATA(pnd)->iAbortFds[0]);
   close(DRIVER_DATA(pnd)->iAbortFds[1]);
 #endif
@@ -277,7 +277,7 @@ pn532_uart_open(const nfc_context *context, const nfc_connstring connstring)
   pnd->driver = &pn532_uart_driver;
 
 #ifndef WIN32
-  // pipe-based abort mecanism
+  // pipe-based abort mechanism
   if (pipe(DRIVER_DATA(pnd)->iAbortFds) < 0) {
     uart_close(DRIVER_DATA(pnd)->port);
     pn53x_data_free(pnd);

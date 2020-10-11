@@ -598,7 +598,7 @@ read:
   if (timeout == USB_INFINITE_TIMEOUT) {
     usb_timeout = USB_TIMEOUT_PER_PASS;
   } else {
-    // A user-provided timeout is set, we have to cut it in multiple chunk to be able to keep an nfc_abort_command() mecanism
+    // A user-provided timeout is set, we have to cut it in multiple chunk to be able to keep an nfc_abort_command() mechanism
     remaining_time -= USB_TIMEOUT_PER_PASS;
     if (remaining_time <= 0) {
       pnd->last_error = NFC_ETIMEOUT;

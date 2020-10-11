@@ -527,7 +527,7 @@ acr122s_close(nfc_device *pnd)
   uart_close(DRIVER_DATA(pnd)->port);
 
 #ifndef WIN32
-  // Release file descriptors used for abort mecanism
+  // Release file descriptors used for abort mechanism
   close(DRIVER_DATA(pnd)->abort_fds[0]);
   close(DRIVER_DATA(pnd)->abort_fds[1]);
 #endif

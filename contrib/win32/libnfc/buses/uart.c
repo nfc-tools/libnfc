@@ -183,7 +183,7 @@ uart_receive(serial_port sp, uint8_t *pbtRx, const size_t szRx, void *abort_p, i
   log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Timeouts are set to %lu ms", timeout_ms);
 
   // TODO Enhance the reception method
-  // - According to MSDN, it could be better to implement nfc_abort_command() mecanism using Cancello()
+  // - According to MSDN, it could be better to implement nfc_abort_command() mechanism using Cancello()
   volatile bool *abort_flag_p = (volatile bool *)abort_p;
   do {
     log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "ReadFile");
