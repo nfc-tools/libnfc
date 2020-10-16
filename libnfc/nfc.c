@@ -81,6 +81,7 @@
 #include <stddef.h>
 #include <string.h>
 #include <assert.h>
+#include <alloca.h>
 
 #include <nfc/nfc.h>
 
@@ -566,25 +567,21 @@ nfc_initiator_select_passive_target(nfc_device *pnd,
 {
   uint8_t *abtInit = NULL;
   uint8_t maxAbt = MAX(12, szInitData);
-  uint8_t *abtTmpInit = malloc(sizeof(uint8_t) * maxAbt);
+  uint8_t *abtTmpInit = alloca(sizeof(uint8_t) * maxAbt);
   size_t  szInit = 0;
   int res;
   if ((res = nfc_device_validate_modulation(pnd, N_INITIATOR, &nm)) != NFC_SUCCESS) {
-    free(abtTmpInit);
     return res;
   }
   if (szInitData == 0) {
     // Provide default values, if any
     prepare_initiator_data(nm, &abtInit, &szInit);
-    free(abtTmpInit);
   } else if (nm.nmt == NMT_ISO14443A) {
     abtInit = abtTmpInit;
-    free(abtTmpInit);
     iso14443_cascade_uid(pbtInitData, szInitData, abtInit, &szInit);
   } else {
     abtInit = abtTmpInit;
     memcpy(abtInit, pbtInitData, szInitData);
-    free(abtTmpInit);
     szInit = szInitData;
   }
   HAL(initiator_select_passive_target, pnd, nm, abtInit, szInit, pnt);
