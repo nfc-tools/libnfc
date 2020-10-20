@@ -351,9 +351,15 @@ static int pcsc_props_to_target(struct nfc_device *pnd, uint8_t it, const uint8_
           if (is_pcsc_reader_vendor_feitian(pnd)) {
             uint8_t atqa[2];
             pcsc_get_atqa(pnd, atqa, sizeof(atqa));
-            //memcpy(pnt->nti.nai.abtAtqa,atqa,2);
-            pnt->nti.nai.abtAtqa[0] = atqa[1];
-            pnt->nti.nai.abtAtqa[1] = atqa[0];
+            //ATQA Coding of NXP Contactless Card ICs
+            if(ataq[0] = 0x00 || atqa[0] == 0x03)
+            {
+              memcpy(pnt->nti.nai.abtAtqa,atqa,2);
+            }else {
+              pnt->nti.nai.abtAtqa[0] = atqa[1];
+              pnt->nti.nai.abtAtqa[1] = atqa[0];
+            }
+
             uint8_t sak[1];
             pcsc_get_sak(pnd, sak, sizeof(sak));
             pnt->nti.nai.btSak = sak[0];
