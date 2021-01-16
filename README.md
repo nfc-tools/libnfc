@@ -201,13 +201,6 @@ them in a modprobe conf file. This file is provided within libnfc archive:
 
     sudo cp contrib/linux/blacklist-libnfc.conf /etc/modprobe.d/blacklist-libnfc.conf
 
-PN532 UART on macOS:
---------------------
-
-- Receiving error: "Unable to set serial port speed to 115200 baud. Speed value must be one of those defined in termios(3)."
-  - The PN532 High Speed UART (HSU) requires a baud rate of 115200, however macOS may use the incorrect `termios.h` (valid path: /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/termios.h) preventing the detection of the `B115200` definition producing the error above.
-  - Solution: Either add `-I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/termios.h` as an include path before the rest of your includes or manually add `#define B115200 115200`.
-
 FEITIAN bR500 and R502:
 -----------------------
 

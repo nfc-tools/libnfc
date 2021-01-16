@@ -47,7 +47,11 @@
 #include <fcntl.h>
 #include <limits.h>
 #include <stdio.h>
+#ifdef __APPLE__
+#include <sys/termios.h>
+#else
 #include <termios.h>
+#endif
 #include <unistd.h>
 #include <stdlib.h>
 
@@ -94,6 +98,19 @@ const char *serial_ports_device_radix[] = { "ttyUSB", "ttyS", "ttyACM", "ttyAMA"
 
 // Work-around to claim uart interface using the c_iflag (software input processing) from the termios struct
 #  define CCLAIMED 0x80000000
+
+// If macOS and still haven't detected required baud rates, set them as we do have support for some
+#ifdef __APPLE__
+#ifndef  B57600
+#define  B57600  57600
+#endif
+#ifndef B115200
+#define B115200 115200
+#endif
+#ifndef B230400
+#define B230400 230400
+#endif
+#endif
 
 struct serial_port_unix {
   int 			fd; 			// Serial port file descriptor
