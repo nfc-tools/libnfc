@@ -304,7 +304,7 @@ pn532_uart_wakeup(nfc_device *pnd)
 {
   /* High Speed Unit (HSU) wake up consist to send 0x55 and wait a "long" delay for PN532 being wakeup. */
   const uint8_t pn532_wakeup_preamble[] = { 0x55, 0x55, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-  int res = uart_send(DRIVER_DATA(pnd)->port, pn532_wakeup_preamble, sizeof(pn532_wakeup_preamble), 0);
+  int res = uart_send_single(DRIVER_DATA(pnd)->port, pn532_wakeup_preamble, sizeof(pn532_wakeup_preamble), 0);
   CHIP_DATA(pnd)->power_mode = NORMAL; // PN532 should now be awake
   return res;
 }
@@ -348,7 +348,7 @@ pn532_uart_send(nfc_device *pnd, const uint8_t *pbtData, const size_t szData, in
     return pnd->last_error;
   }
 
-  res = uart_send(DRIVER_DATA(pnd)->port, abtFrame, szFrame, timeout);
+  res = uart_send_single(DRIVER_DATA(pnd)->port, abtFrame, szFrame, timeout);
   if (res != 0) {
     log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Unable to transmit data. (TX)");
     pnd->last_error = res;
@@ -507,7 +507,7 @@ pn532_uart_ack(nfc_device *pnd)
       return res;
     }
   }
-  return (uart_send(DRIVER_DATA(pnd)->port, pn53x_ack_frame, sizeof(pn53x_ack_frame),  0));
+  return (uart_send_single(DRIVER_DATA(pnd)->port, pn53x_ack_frame, sizeof(pn53x_ack_frame),  0));
 }
 
 static int

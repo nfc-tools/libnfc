@@ -368,6 +368,22 @@ select:
 }
 
 /**
+ * @brief Send \a pbtTx content to UART one byte at a time
+ *
+ * @return 0 on success, otherwise a driver error is returned
+ */
+int
+uart_send_single(serial_port sp, const uint8_t *pbtTx, const size_t szTx, int timeout)
+{
+  (void) timeout;
+  int error = 0;
+  for (int i = 0; i < szTx; i++)
+    error |= uart_send(sp, pbtTx+i, 1, timeout);
+
+  return error ? NFC_EIO : NFC_SUCCESS;
+}
+
+/**
  * @brief Send \a pbtTx content to UART
  *
  * @return 0 on success, otherwise a driver error is returned
