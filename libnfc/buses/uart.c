@@ -395,7 +395,11 @@ uart_send_single(serial_port sp, const uint8_t *pbtTx, const size_t szTx, int ti
   (void) timeout;
   int error = 0;
   for (int i = 0; i < szTx; i++)
+  {
     error |= uart_send(sp, pbtTx+i, 1, timeout);
+    usleep(9);
+  }
+
 
   return error ? NFC_EIO : NFC_SUCCESS;
 }
