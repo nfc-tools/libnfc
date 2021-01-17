@@ -240,6 +240,26 @@ uart_send(serial_port sp, const uint8_t *pbtTx, const size_t szTx, int timeout)
   return 0;
 }
 
+/**
+ * @brief Send \a pbtTx content to UART one byte at a time
+ *
+ * @return 0 on success, otherwise a driver error is returned
+ */
+int
+uart_send_single(serial_port sp, const uint8_t *pbtTx, const size_t szTx, int timeout)
+{
+  (void) timeout;
+  int error = 0;
+  for (int i = 0; i < szTx; i++)
+  {
+    error |= uart_send(sp, pbtTx+i, 1, timeout);
+    usleep(9); // ceil(1_000_000us / 115200baud)
+  }
+
+  return error ? NFC_EIO : 0;
+}
+
+
 BOOL is_port_available(int nPort)
 {
   TCHAR szPort[15];
