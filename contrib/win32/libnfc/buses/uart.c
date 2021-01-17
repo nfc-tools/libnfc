@@ -253,7 +253,7 @@ uart_send_single(serial_port sp, const uint8_t *pbtTx, const size_t szTx, int ti
   for (int i = 0; i < szTx; i++)
   {
     error |= uart_send(sp, pbtTx+i, 1, timeout);
-    usleep(9); // ceil(1_000_000us / 115200baud)
+    delay_ms(1); // ceil(1_000_000us / 115200baud) = 9us but no usleep on windows
   }
 
   return error ? NFC_EIO : 0;
