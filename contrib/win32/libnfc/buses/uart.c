@@ -237,7 +237,7 @@ uart_send(serial_port sp, const uint8_t *pbtTx, const size_t szTx, int timeout)
   }
   if (!dwTxLen)
     return NFC_EIO;
-  return 0;
+  return NFC_SUCCESS;
 }
 
 /**
@@ -249,16 +249,20 @@ int
 uart_send_single(serial_port sp, const uint8_t *pbtTx, const size_t szTx, int timeout)
 {
   (void) timeout;
-  int error = 0;
+  int ret;
   for (int i = 0; i < szTx; i++)
   {
-    error |= uart_send(sp, pbtTx+i, 1, timeout);
+    ret = uart_send(sp, pbtTx+i, 1, timeout);
+
+    // if we didn't transmit byte, bail out
+    if (ret != NFC_SUCCESS)
+      return ret;
+
     delay_ms(1); // ceil(1_000_000us / 115200baud) = 9us but no usleep on windows
   }
 
-  return error ? NFC_EIO : 0;
+  return NFC_SUCCESS;
 }
-
 
 BOOL is_port_available(int nPort)
 {

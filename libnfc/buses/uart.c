@@ -385,26 +385,6 @@ select:
 }
 
 /**
- * @brief Send \a pbtTx content to UART one byte at a time
- *
- * @return 0 on success, otherwise a driver error is returned
- */
-int
-uart_send_single(serial_port sp, const uint8_t *pbtTx, const size_t szTx, int timeout)
-{
-  (void) timeout;
-  int error = 0;
-  for (int i = 0; i < szTx; i++)
-  {
-    error |= uart_send(sp, pbtTx+i, 1, timeout);
-    usleep(9);
-  }
-
-
-  return error ? NFC_EIO : NFC_SUCCESS;
-}
-
-/**
  * @brief Send \a pbtTx content to UART
  *
  * @return 0 on success, otherwise a driver error is returned
@@ -418,6 +398,30 @@ uart_send(serial_port sp, const uint8_t *pbtTx, const size_t szTx, int timeout)
     return NFC_SUCCESS;
   else
     return NFC_EIO;
+}
+
+/**
+ * @brief Send \a pbtTx content to UART one byte at a time
+ *
+ * @return 0 on success, otherwise a driver error is returned
+ */
+int
+uart_send_single(serial_port sp, const uint8_t *pbtTx, const size_t szTx, int timeout)
+{
+  (void) timeout;
+  int ret;
+  for (int i = 0; i < szTx; i++)
+  {
+    ret = uart_send(sp, pbtTx+i, 1, timeout);
+
+    // if we didn't transmit byte, bail out
+    if (ret != NFC_SUCCESS)
+      return ret;
+
+    usleep(9); // sleep for ceil(1_000_000us / 115200baud) = 9us
+  }
+
+  return NFC_SUCCESS;
 }
 
 char **
