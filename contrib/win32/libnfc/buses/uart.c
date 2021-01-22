@@ -240,30 +240,6 @@ uart_send(serial_port sp, const uint8_t *pbtTx, const size_t szTx, int timeout)
   return NFC_SUCCESS;
 }
 
-/**
- * @brief Send \a pbtTx content to UART one byte at a time
- *
- * @return 0 on success, otherwise a driver error is returned
- */
-int
-uart_send_single(serial_port sp, const uint8_t *pbtTx, const size_t szTx, int timeout)
-{
-  (void) timeout;
-  int ret;
-  for (int i = 0; i < szTx; i++)
-  {
-    ret = uart_send(sp, pbtTx+i, 1, timeout);
-
-    // if we didn't transmit byte, bail out
-    if (ret != NFC_SUCCESS)
-      return ret;
-
-    delay_ms(1); // ceil(1_000_000us / 115200baud) = 9us but no usleep on windows
-  }
-
-  return NFC_SUCCESS;
-}
-
 BOOL is_port_available(int nPort)
 {
   TCHAR szPort[15];

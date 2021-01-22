@@ -394,14 +394,22 @@ uart_send(serial_port sp, const uint8_t *pbtTx, const size_t szTx, int timeout)
 {
   (void) timeout;
   LOG_HEX(LOG_GROUP, "TX", pbtTx, szTx);
+
+#ifndef __APPLE__
   if ((int) szTx == write(UART_DATA(sp)->fd, pbtTx, szTx))
     return NFC_SUCCESS;
   else
     return NFC_EIO;
+#else
+  // macOS's termios write() to a uart is async so we need to determine how to make it sync
+  // see https://github.com/nfc-tools/libnfc/pull/633
+  // there is probably a proper way to do this, if so, please share!
+  return uart_send_single(sp, pbtTx, szTx, timeout);
+#endif
 }
 
 /**
- * @brief Send \a pbtTx content to UART one byte at a time
+ * @brief Send \a pbtTx content to UART one byte at a time with a delay (to support macOS' async write)
  *
  * @return 0 on success, otherwise a driver error is returned
  */
@@ -409,14 +417,11 @@ int
 uart_send_single(serial_port sp, const uint8_t *pbtTx, const size_t szTx, int timeout)
 {
   (void) timeout;
-  int ret;
+
   for (int i = 0; i < szTx; i++)
   {
-    ret = uart_send(sp, pbtTx+i, 1, timeout);
-
-    // if we didn't transmit byte, bail out
-    if (ret != NFC_SUCCESS)
-      return ret;
+    if (write(UART_DATA(sp)->fd, pbtTx+i, 1) != 1)
+      return NFC_EIO;
 
     usleep(9); // sleep for ceil(1_000_000us / 115200baud) = 9us
   }
