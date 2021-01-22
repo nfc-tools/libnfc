@@ -40,7 +40,7 @@ Some NFC drivers depend on third party software:
 
 * acr122_pcsc:
   
-  - pcsc-lite http://pcsclite.alioth.debian.org/
+  - pcsc-lite https://pcsclite.apdu.fr/
 - pcsc:
   
   - Support build with pcsc driver, which can be using all compatible readers, Feitian R502 and bR500 already passed the test.
