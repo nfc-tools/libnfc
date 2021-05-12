@@ -352,7 +352,7 @@ static int pcsc_props_to_target(struct nfc_device *pnd, uint8_t it, const uint8_
             uint8_t atqa[2];
             pcsc_get_atqa(pnd, atqa, sizeof(atqa));
             //ATQA Coding of NXP Contactless Card ICs
-            if(atqa[0] = 0x00 || atqa[0] == 0x03)
+            if(atqa[0] == 0x00 || atqa[0] == 0x03)
             {
               memcpy(pnt->nti.nai.abtAtqa,atqa,2);
             }else {
