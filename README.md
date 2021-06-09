@@ -54,7 +54,7 @@ Building
 Note: If working directly from a git clone of the repository, some of the files need to be generated first. To do this run
 `autoreconf -vls`
 
-Alternatively use a .tar.bz2 or zip version of a packaged release (which already contains ./configure):
+Alternatively use a .tar.bz2 version of a packaged release (which already contains ./configure):
 https://github.com/nfc-tools/libnfc/releases/
 
 The build should be as simple as running these commands:
