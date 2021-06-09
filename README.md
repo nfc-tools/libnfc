@@ -48,12 +48,29 @@ Some NFC drivers depend on third party software:
 The regression test suite depends on the cutter framework:
 http://cutter.sf.net
 
+Building
+========
+
+Note: If working directly from a git clone of the repository, some of the files need to be generated first. To do this run
+`autoreconf -vls`
+
+Alternatively use a .tar.bz2 version of a packaged release (which already contains ./configure):
+https://github.com/nfc-tools/libnfc/releases/
+
+The build should be as simple as running these commands:
+
+    ./configure
+    make
+
+
+To build with specific driver(s), see option `--with-drivers=...` detailed in `./configure --help`.
+
 Installation
 ============
+    
+    make install
 
-See the file `INSTALL` for configure, build and install details.
-
-Additionnally, you may need to grant permissions to your user to drive your device.
+You may need to grant permissions to your user to drive your device.
 Under GNU/Linux systems, if you use udev, you could use the provided udev rules.
   e.g. under Debian, Ubuntu, etc.
 
@@ -139,18 +156,6 @@ Patches can be posted to https://github.com/nfc-tools/libnfc/issues
 
 If the patch fixes a bug, it is usually a good idea to include
 all the information described in "How to Report Bugs".
-
-Building
-========
-
-It should be as simple as running these two commands:
-
-    ./configure
-    make
-
-To build with specific driver(s), see option `--with-drivers=...` detailed in `./configure --help`.
-
-Note: if you're using directly the development repository and not the release sources, you will have to execute firstly `autoreconf -vis`.
 
 Troubleshooting
 ===============
