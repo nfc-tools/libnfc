@@ -1,0 +1,50 @@
+.Dd June 9, 2021
+.Dt NFC-ST25TB-INFO 1 URM
+.Sh NAME
+.Nm nfc-st25tb-info
+.Nd Read ISO-14443-B ST25TB* and legacy SR* cards
+.Sh SYNOPSIS
+.Nm
+.Sh DESCRIPTION
+.Nm 
+is a demonstration tool that try to dump the content of ISO-14443-B ST25TB* and legacy SR* cards.
+.Pp
+It includes, in theory, cards from STMicroelectronics, like ST25TB512-AC, ST25TB512-AT, ST25TB02K and ST25TB04K (at this time, not supported by Proxmark3). Legacy STMicroelectronics cards like SRT512, SRI512, or others SR* can also be dumped (supported by Proxmark3).
+.Sh IMPORTANT
+This example has been developed using PN533 USB hardware as initiator.
+.Pp
+It was tested with these cards:
+.Pp
+- ST25TB512-AC - (BE/Brussels/STIB ; AliExpress ones)
+.br
+- ST25TB512-AT - (FR/Lille/Ilevia ; FR/Reims/Citura)
+.br
+- SRT512 - legacy - (FR/Bordeaux/TBM)
+.br
+- SRI512 - legacy - (anonymous vending machine)
+.Sh TODO
+At this time, neither reading to file, neither loading from file is supported. Dealing with counters logic is dangerous and cannot be undo.
+.Sh BUGS
+Please report any bugs on the
+.Em libnfc
+issue tracker at:
+.Em https://github.com/nfc-tools/libnfc/issues
+.Sh LICENCE
+-
+.Em libnfc
+is licensed under the GNU Lesser General Public License (LGPL), version 3.
+.br
+-
+.Em libnfc-utils
+and 
+.Em libnfc-examples
+are covered by the BSD 2-Clause license.
+.br
+-
+.Em nfc-st25tb-info
+is covered by Creative Commons Attribution 4.0 International (CC BY 4.0).
+.Sh AUTHOR
+.An Benjamin Delpy Aq benjamin@gentilkiwi.net
+.Pp
+This manual page was written by Benjamin Delpy.
+It is licensed under the terms of the GNU GPL (version 2 or later).

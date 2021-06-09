@@ -10,6 +10,7 @@ bin_PROGRAMS = \
 		nfc-mfsetuid \
 		nfc-poll \
 		nfc-relay \
+		nfc-st25tb-info \
 		pn53x-diagnose \
 		pn53x-sam
 
@@ -63,6 +64,9 @@ nfc_mfsetuid_SOURCES = nfc-mfsetuid.c
 nfc_mfsetuid_LDADD = $(top_builddir)/libnfc/libnfc.la \
 			  $(top_builddir)/utils/libnfcutils.la
 
+nfc_st25tb_info_SOURCES = nfc-st25tb-info.c
+nfc_st25tb_info_LDADD = $(top_builddir)/libnfc/libnfc.la
+
 pn53x_diagnose_SOURCES = pn53x-diagnose.c
 pn53x_diagnose_LDADD = $(top_builddir)/libnfc/libnfc.la \
 		       $(top_builddir)/utils/libnfcutils.la
@@ -95,6 +99,7 @@ dist_man_MANS = \
 		nfc-poll.1 \
 		nfc-relay.1 \
 		nfc-mfsetuid.1 \
+		nfc-st25tb-info.1 \
 		pn53x-diagnose.1 \
 		pn53x-sam.1 \
 		pn53x-tamashell.1 \
