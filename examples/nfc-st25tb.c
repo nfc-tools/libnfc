@@ -68,7 +68,7 @@
 #include <getopt.h>
 #endif
 
-#define ST25TB_SR_BLOCK_MAX_SIZE	4 // for static arrays
+#define ST25TB_SR_BLOCK_MAX_SIZE	((uint8_t) 4) // for static arrays
 typedef void(*get_info_specific) (uint8_t * systemArea);
 
 typedef struct _st_data {
@@ -382,19 +382,19 @@ void get_info_st25tb512(uint8_t * systemArea)
 	printf("  | ST reserved  : ");
 	for(i = 0; i < 15; i++)
 	{
-		printf("%hhu", ((*(uint32_t *) systemArea) >> i) & 1);
+		printf("%hhu", (uint8_t) (((*(uint32_t *) systemArea) >> i) & 1));
 	}
 	printf("\n  | b15          : %hhu - %sOTP (?)\n  | OTP_Lock_Reg : ", b, b ? "not " : "");
 	for(i = 16; i < 32; i++)
 	{
-		printf("%hhu", ((*(uint32_t *) systemArea) >> i) & 1);
+		printf("%hhu", (uint8_t) (((*(uint32_t *) systemArea) >> i) & 1));
 	}
 	printf("\n");
 	for(i = 16; i < 32; i++)
 	{
 		if(!(((*(uint32_t *) systemArea) >> i) & 1))
 		{
-			printf("     block 0x%02hhx is write protected\n", i - 16);
+			printf("     block 0x%02hhx is write protected\n", ((uint8_t) (i - 16)));
 		}
 	}
 }
@@ -408,17 +408,17 @@ void get_info_st25tb2k_4k(uint8_t * systemArea)
 	printf("  | ST reserved  : ");
 	for(i = 0; i < 15; i++)
 	{
-		printf("%hhu", ((*(uint32_t *) systemArea) >> i) & 1);
+		printf("%hhu", (uint8_t) (((*(uint32_t *) systemArea) >> i) & 1));
 	}
 	printf("\n  | b15          : %hhu - %sOTP (?)\n  | OTP_Lock_RegU: ", b, b ? "not " : "");
 	for(i = 16; i < 24; i++)
 	{
-		printf("%hhu", ((*(uint32_t *) systemArea) >> i) & 1);
+		printf("%hhu", (uint8_t) (((*(uint32_t *) systemArea) >> i) & 1));
 	}
 	printf("\n  | OTP_Lock_Reg : ");
 	for(i = 24; i < 32; i++)
 	{
-		printf("%hhu", ((*(uint32_t *) systemArea) >> i) & 1);
+		printf("%hhu", (uint8_t) (((*(uint32_t *) systemArea) >> i) & 1));
 	}
 	printf("\n");
 	if(!(((*(uint32_t *) systemArea) >> 24) & 1))
@@ -429,7 +429,7 @@ void get_info_st25tb2k_4k(uint8_t * systemArea)
 	{
 		if(!(((*(uint32_t *) systemArea) >> i) & 1))
 		{
-			printf("     block 0x%02hhx is write protected\n", i - 16);
+			printf("     block 0x%02hhx is write protected\n", ((uint8_t) (i - 16)));
 		}
 	}
 }
@@ -441,19 +441,19 @@ void get_info_sr176_legacy(uint8_t * systemArea)
 	printf("  | Fixed Chip_ID: 0x%1x\n  | ST reserved  : ", systemArea[0] & 0x0f);
 	for(i = 4; i < 8; i++)
 	{
-		printf("%hhu", ((*(uint16_t *) systemArea) >> i) & 1);
+		printf("%hhu", (uint8_t) (((*(uint16_t *) systemArea) >> i) & 1));
 	}
 	printf("\n  | OTP_Lock_Reg : ");
 	for(i = 8; i < 16; i++)
 	{
-		printf("%hhu", ((*(uint16_t *) systemArea) >> i) & 1);
+		printf("%hhu", (uint8_t) (((*(uint16_t *) systemArea) >> i) & 1));
 	}
 	printf("\n");
 	for(i = 8; i < 16; i++)
 	{
 		if(((*(uint16_t *) systemArea) >> i) & 1)
 		{
-			printf("     blocks 0x%02hhx and 0x%02hhx are write protected\n", (i - 8) * 2, ((i - 8) * 2) + 1);
+			printf("     blocks 0x%02hhx and 0x%02hhx are write protected\n", (uint8_t) ((i - 8) * 2), (uint8_t) (((i - 8) * 2) + 1));
 		}
 	}
 }
@@ -467,19 +467,19 @@ void get_info_sri_srt_512_legacy(uint8_t * systemArea)
 	printf("  | Fixed Chip_ID: 0x%02hhx\n  | ST reserved  : ", systemArea[0]);
 	for(i = 8; i < 15; i++)
 	{
-		printf("%hhu", ((*(uint32_t *) systemArea) >> i) & 1);
+		printf("%hhu", (uint8_t) (((*(uint32_t *) systemArea) >> i) & 1));
 	}
 	printf("\n  | b15          : %hhu - %sOTP (?)\n  | OTP_Lock_Reg : ", b, b ? "not " : "");
 	for(i = 16; i < 32; i++)
 	{
-		printf("%hhu", ((*(uint32_t *) systemArea) >> i) & 1);
+		printf("%hhu", (uint8_t) (((*(uint32_t *) systemArea) >> i) & 1));
 	}
 	printf("\n");
 	for(i = 16; i < 32; i++)
 	{
 		if(!(((*(uint32_t *) systemArea) >> i) & 1))
 		{
-			printf("     block 0x%02hhx is write protected\n", i - 16);
+			printf("     block 0x%02hhx is write protected\n", (uint8_t) (i - 16));
 		}
 	}
 }
@@ -491,12 +491,12 @@ void get_info_sri2k_4k_srix4k_srix512_legacy(uint8_t * systemArea)
 	printf("  | Fixed Chip_ID: 0x%02hhx\n  | ST reserved  : ", systemArea[0]);
 	for(i = 8; i < 24; i++)
 	{
-		printf("%hhu", ((*(uint32_t *) systemArea) >> i) & 1);
+		printf("%hhu", (uint8_t) (((*(uint32_t *) systemArea) >> i) & 1));
 	}
 	printf("\n  | OTP_Lock_Reg : ");
 	for(i = 24; i < 32; i++)
 	{
-		printf("%hhu", ((*(uint32_t *) systemArea) >> i) & 1);
+		printf("%hhu", (uint8_t) (((*(uint32_t *) systemArea) >> i) & 1));
 	}
 	printf("\n");
 	if(!(((*(uint32_t *) systemArea) >> 24) & 1))
@@ -507,7 +507,7 @@ void get_info_sri2k_4k_srix4k_srix512_legacy(uint8_t * systemArea)
 	{
 		if(!(((*(uint32_t *) systemArea) >> i) & 1))
 		{
-			printf("     block 0x%02hhx is write protected\n", i - 16);
+			printf("     block 0x%02hhx is write protected\n", (uint8_t) (i - 16));
 		}
 	}
 }
@@ -574,9 +574,9 @@ const st_data * get_info(const nfc_target *pnt, bool bPrintIt)
 				printf("ChipId  : 0x%02hhx - %s%s\nSerial  : 0x", currentData->chipId, currentData->szName, currentData->bIsLegacy ? " (legacy)" : "");
 				if(currentData->bIsLegacy)
 				{
-					printf("%1hhx", p[5] & 0x03);
+					printf("%1hhx", (uint8_t) (p[5] & 0x03));
 				}
-				printf("%02hhx%02hhx%02hhx%02hhx%02hhx\n|blk sz : %hhu bits\n|nb blks: %hhu\n|sys idx: %hhu\n", p[4], p[3], p[2], p[1], p[0], currentData->blockSize * 8, currentData->nbNormalBlock, currentData->bnSystem);
+				printf("%02hhx%02hhx%02hhx%02hhx%02hhx\n|blk sz : %hhu bits\n|nb blks: %hhu\n|sys idx: %hhu\n", p[4], p[3], p[2], p[1], p[0], (uint8_t) (currentData->blockSize * 8), currentData->nbNormalBlock, currentData->bnSystem);
 			}
 		}
 		else printf("WARNI - Last byte of UID isn\'t 0xd0, but 0x%02hhx (not ST25TB / SR series?)\n", p[7]);
