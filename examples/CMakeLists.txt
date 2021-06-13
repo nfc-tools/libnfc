@@ -8,6 +8,7 @@ SET(EXAMPLES-SOURCES
   nfc-mfsetuid
   nfc-poll
   nfc-relay
+  nfc-st25tb
   pn53x-diagnose
   pn53x-sam
   pn53x-tamashell
