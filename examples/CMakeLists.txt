@@ -41,6 +41,10 @@ IF(WIN32)
   INCLUDE(InstallRequiredSystemLibraries)
   CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/cmake/FixBundle.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/FixBundle.cmake @ONLY)
   INSTALL(SCRIPT ${CMAKE_CURRENT_BINARY_DIR}/FixBundle.cmake)
+  
+  IF(${source} MATCHES "nfc-st25tb")
+    LIST(APPEND TARGETS ${CMAKE_CURRENT_SOURCE_DIR}/../contrib/win32/getopt.c)
+  ENDIF()
 ENDIF(WIN32)
 
 IF(NOT WIN32)
