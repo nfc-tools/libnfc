@@ -52,7 +52,7 @@ Building
 ========
 
 Note: If working directly from a git clone of the repository, some of the files need to be generated first. To do this run
-`autoreconf -vls`
+`autoreconf -vis`
 
 Alternatively use a .tar.bz2 version of a packaged release (which already contains ./configure):
 https://github.com/nfc-tools/libnfc/releases/
