@@ -416,8 +416,8 @@ write_card(bool write_block_zero)
   // Completely write the card, but skipping block 0 if we don't need to write on it
   for (uiBlock = 0; uiBlock <= uiBlocks; uiBlock++) {
     //Determine if we have to write block 0
-    if (!write_block_zero && uiBlock == 0) {
-      continue;
+    //if (!write_block_zero && uiBlock == 0) {
+      //continue;
     }
     // Authenticate everytime we reach the first sector of a new block
     if (uiBlock == 1 || is_first_block(uiBlock)) {
