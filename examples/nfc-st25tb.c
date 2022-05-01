@@ -50,7 +50,7 @@
  *
  * Tested with
  * - ST25TB512-AC - (BE/Brussels/STIB ; AliExpress ones)
- * - ST25TB512-AT - (FR/Lille/Ilevia ; FR/Reims/Citura)
+ * - ST25TB512-AT - (FR/Lille/Ilevia ; FR/Reims/Citura ; FR/Dijon/Divia ; FR/Strasbourg/CTS)
  * - SRT512 - legacy - (FR/Bordeaux/TBM)
  * - SRI512 - legacy - (anonymous vending machine)
  */
