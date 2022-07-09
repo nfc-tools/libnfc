@@ -59,7 +59,9 @@ Thanks to d18c7db and Okko for example code
 #include <inttypes.h>
 #include <sys/select.h>
 #include <string.h>
-
+#ifdef _MSC_VER
+#include <sys/types.h>
+#endif
 #include <nfc/nfc.h>
 
 #include "nfc-internal.h"
@@ -264,6 +266,7 @@ struct acr122_usb_supported_device {
 const struct acr122_usb_supported_device acr122_usb_supported_devices[] = {
   { 0x072F, 0x2200, "ACS ACR122" },
   { 0x072F, 0x90CC, "Touchatag" },
+  { 0x072F, 0x2214, "ACS ACR1222" },
 };
 
 // Find transfer endpoints for bulk transfers
@@ -332,7 +335,10 @@ acr122_usb_scan(const nfc_context *context, nfc_connstring connstrings[], const 
           // acr122_usb_get_usb_device_name (dev, udev, pnddDevices[device_found].acDevice, sizeof (pnddDevices[device_found].acDevice));
           log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "device found: Bus %s Device %s Name %s", bus->dirname, dev->filename, acr122_usb_supported_devices[n].name);
           usbbus_close(udev);
-          snprintf(connstrings[device_found], sizeof(nfc_connstring), "%s:%s:%s", ACR122_USB_DRIVER_NAME, bus->dirname, dev->filename);
+          if (snprintf(connstrings[device_found], sizeof(nfc_connstring), "%s:%s:%s", ACR122_USB_DRIVER_NAME, bus->dirname, dev->filename) >= (int)sizeof(nfc_connstring)) {
+            // truncation occurred, skipping that one
+            continue;
+          }
           device_found++;
           // Test if we reach the maximum "wanted" devices
           if (device_found == connstrings_len) {
@@ -428,12 +434,15 @@ acr122_usb_open(const nfc_context *context, const nfc_connstring connstring)
         goto free_mem;
       }
 
-      res = usbbus_set_interface_alt_setting(data.pudh, 0, 0);
-      if (res < 0) {
-        log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to set alternate setting on USB interface (%s)", usbbus_strerror(res));
-        usbbus_close(data.pudh);
-        // we failed to use the specified device
-        goto free_mem;
+      // Check if there are more than 0 alternative interfaces and claim the first one
+      if (dev->config->interface->altsetting->bAlternateSetting > 0) {
+        res = usbbus_set_interface_alt_setting(data.pudh, 0, 0);
+        if (res < 0) {
+          log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to set alternate setting on USB interface (%s)", usbbus_strerror(res));
+          usbbus_close(data.pudh);
+          // we failed to use the specified device
+          goto free_mem;
+        }
       }
 
       // Allocate memory for the device info and specification, fill it and return the info
@@ -589,7 +598,7 @@ read:
   if (timeout == USBBUS_INFINITE_TIMEOUT) {
     usbbus_timeout = USBBUS_TIMEOUT_PER_PASS;
   } else {
-    // A user-provided timeout is set, we have to cut it in multiple chunk to be able to keep an nfc_abort_command() mecanism
+    // A user-provided timeout is set, we have to cut it in multiple chunk to be able to keep an nfc_abort_command() mechanism
     remaining_time -= USBBUS_TIMEOUT_PER_PASS;
     if (remaining_time <= 0) {
       pnd->last_error = NFC_ETIMEOUT;

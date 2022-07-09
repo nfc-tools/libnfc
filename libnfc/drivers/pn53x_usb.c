@@ -5,7 +5,7 @@
  * Copyright (C) 2009      Roel Verdult
  * Copyright (C) 2009-2013 Romuald Conty
  * Copyright (C) 2010-2012 Romain Tartière
- * Copyright (C) 2010-2013 Philippe Teuwen
+ * Copyright (C) 2010-2017 Philippe Teuwen
  * Copyright (C) 2012-2013 Ludovic Rousseau
  * See AUTHORS file for a more comprehensive list of contributors.
  * Additional contributors of this file:
@@ -42,7 +42,9 @@ Thanks to d18c7db and Okko for example code
 #include <inttypes.h>
 #include <sys/select.h>
 #include <string.h>
-
+#ifdef _MSC_VER
+#include <sys/types.h>
+#endif
 #include <nfc/nfc.h>
 
 #include "nfc-internal.h"
@@ -59,6 +61,8 @@ Thanks to d18c7db and Okko for example code
 
 #define DRIVER_DATA(pnd) ((struct pn53x_usb_data*)(pnd->driver_data))
 
+const nfc_modulation_type no_target_support[] = {0};
+
 typedef enum {
   UNKNOWN,
   NXP_PN531,
@@ -66,6 +70,7 @@ typedef enum {
   NXP_PN533,
   ASK_LOGO,
   SCM_SCL3711,
+  SCM_SCL3712,
   SONY_RCS360
 } pn53x_usb_model;
 
@@ -77,6 +82,7 @@ struct pn53x_usb_data {
   uint32_t uiEndPointOut;
   uint32_t uiMaxPacketSize;
   volatile bool abort_flag;
+  bool possibly_corrupted_usbdesc;
 };
 
 // Internal io struct
@@ -123,16 +129,104 @@ struct pn53x_usb_supported_device {
   uint16_t product_id;
   pn53x_usb_model model;
   const char *name;
+  /* hardcoded known values for buggy hardware whose configuration vanishes */
+  uint32_t uiEndPointIn;
+  uint32_t uiEndPointOut;
+  uint32_t uiMaxPacketSize;
 };
 
 const struct pn53x_usb_supported_device pn53x_usb_supported_devices[] = {
-  { 0x04CC, 0x0531, NXP_PN531,   "Philips / PN531" },
-  { 0x04CC, 0x2533, NXP_PN533,   "NXP / PN533" },
-  { 0x04E6, 0x5591, SCM_SCL3711, "SCM Micro / SCL3711-NFC&RW" },
-  { 0x054c, 0x0193, SONY_PN531,  "Sony / PN531" },
-  { 0x1FD3, 0x0608, ASK_LOGO,    "ASK / LoGO" },
-  { 0x054C, 0x02E1, SONY_RCS360, "Sony / FeliCa S360 [PaSoRi]" }
+  { 0x04CC, 0x0531, NXP_PN531,   "Philips / PN531",             0x84, 0x04, 0x40 },
+  { 0x04CC, 0x2533, NXP_PN533,   "NXP / PN533",                 0x84, 0x04, 0x40 },
+  { 0x04E6, 0x5591, SCM_SCL3711, "SCM Micro / SCL3711-NFC&RW",  0x84, 0x04, 0x40 },
+  { 0x04E6, 0x5594, SCM_SCL3712, "SCM Micro / SCL3712-NFC&RW",  0, 0, 0 }, // to check on real device
+  { 0x054c, 0x0193, SONY_PN531,  "Sony / PN531",                0x84, 0x04, 0x40 },
+  { 0x1FD3, 0x0608, ASK_LOGO,    "ASK / LoGO",                  0x84, 0x04, 0x40 },
+  { 0x054C, 0x02E1, SONY_RCS360, "Sony / FeliCa S360 [PaSoRi]", 0x84, 0x04, 0x40 }
 };
+
+// PN533 USB descriptors backup buffers
+
+const uint8_t btXramUsbDesc_scl3711[] = {
+  0x09, 0x02, 0x20, 0x00, 0x01, 0x01, 0x00, 0x80, 0x32, 0x09, 0x04, 0x00,
+  0x00, 0x02, 0xff, 0xff, 0xff, 0x00, 0x07, 0x05, 0x04, 0x02, 0x40, 0x00,
+  0x04, 0x07, 0x05, 0x84, 0x02, 0x40, 0x00, 0x04, 0x1e, 0x03, 0x53, 0x00,
+  0x43, 0x00, 0x4c, 0x00, 0x33, 0x00, 0x37, 0x00, 0x31, 0x00, 0x31, 0x00,
+  0x2d, 0x00, 0x4e, 0x00, 0x46, 0x00, 0x43, 0x00, 0x26, 0x00, 0x52, 0x00,
+  0x57,
+};
+const uint8_t btXramUsbDesc_nxppn533[] = {
+  0x09, 0x02, 0x20, 0x00, 0x01, 0x01, 0x00, 0x80, 0x32, 0x09, 0x04, 0x00,
+  0x00, 0x02, 0xff, 0xff, 0xff, 0x00, 0x07, 0x05, 0x04, 0x02, 0x40, 0x00,
+  0x04, 0x07, 0x05, 0x84, 0x02, 0x40, 0x00, 0x04, 0x0c, 0x03, 0x50, 0x00,
+  0x4e, 0x00, 0x35, 0x00, 0x33, 0x00, 0x33, 0x00, 0x04, 0x03, 0x09, 0x04,
+  0x08, 0x03, 0x4e, 0x00, 0x58, 0x00, 0x50, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00,
+};
+const uint8_t btXramUsbDesc_asklogo[] = {
+  0x09, 0x02, 0x20, 0x00, 0x01, 0x01, 0x00, 0x80, 0x96, 0x09, 0x04, 0x00,
+  0x00, 0x02, 0xff, 0xff, 0xff, 0x00, 0x07, 0x05, 0x04, 0x02, 0x40, 0x00,
+  0x04, 0x07, 0x05, 0x84, 0x02, 0x40, 0x00, 0x04, 0x0a, 0x03, 0x4c, 0x00,
+  0x6f, 0x00, 0x47, 0x00, 0x4f, 0x00, 0x04, 0x03, 0x09, 0x04, 0x08, 0x03,
+  0x41, 0x00, 0x53, 0x00, 0x4b, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00,
+};
+
+static void pn533_fix_usbdesc(nfc_device *pnd)
+{
+  // PN533 USB descriptors may have been corrupted by large commands/responses
+  // so they need to be restored before closing usb connection.
+  // cf PN5331B3HNC270 Release Note
+  uint32_t szXramUsbDesc = 0;
+  uint8_t *btXramUsbDesc = NULL;
+  if (DRIVER_DATA(pnd)->model == NXP_PN533) {
+    btXramUsbDesc = (uint8_t *)btXramUsbDesc_nxppn533;
+    szXramUsbDesc = sizeof(btXramUsbDesc_nxppn533);
+  } else if (DRIVER_DATA(pnd)->model == SCM_SCL3711) {
+    btXramUsbDesc = (uint8_t *)btXramUsbDesc_scl3711;
+    szXramUsbDesc = sizeof(btXramUsbDesc_scl3711);
+  } else if (DRIVER_DATA(pnd)->model == ASK_LOGO) {
+    btXramUsbDesc = (uint8_t *)btXramUsbDesc_asklogo;
+    szXramUsbDesc = sizeof(btXramUsbDesc_asklogo);
+  }
+#define MAXSZXRAMUSBDESC 61
+  if ((szXramUsbDesc == 0) || (MAXSZXRAMUSBDESC > 61))
+    return;
+#if 0
+  // Debug routine to check if corruption occurred:
+  // Don't read more regs at once or it will trigger the bug and corrupt what we're busy reading!
+  uint8_t abtCmdRR[] = { ReadRegister, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+  uint8_t nRRreg = ((sizeof(abtCmdRR) - 1) / 2);
+  uint8_t abtRxRR[1 + nRRreg];
+  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_INFO, "%s", "Checking USB descriptors corruption in XRAM");
+  for (uint8_t i = 0x19, j = 0; i < 0x19 + szXramUsbDesc;) {
+    for (uint8_t k = 0; k < nRRreg; k++) {
+      abtCmdRR[(2 * k) + 2] = i++;
+    }
+    if (pn53x_transceive(pnd, abtCmdRR, sizeof(abtCmdRR), abtRxRR, sizeof(abtRxRR), -1) < 0) {
+      return;  // void
+    }
+    for (int k = 0; (k < nRRreg) && (j < szXramUsbDesc); k++) {
+      //printf("0x%02x, ", abtRxRR[1 + k]);
+      if (btXramUsbDesc[j] != abtRxRR[1 + k])
+        log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_INFO, "XRAM corruption @ addr 0x00%02X: got %02x, expected %02x", 0x0019 + (j - 1), abtRxRR[1 + k], btXramUsbDesc[j]);
+      j++;
+    }
+  }
+#endif
+  // Abuse the overflow bug to restore USB descriptors in one go
+  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_INFO, "%s", "Fixing USB descriptors corruption");
+  uint8_t abtCmdWR[19 + MAXSZXRAMUSBDESC] = { GetFirmwareVersion };
+  for (uint8_t i = 0; i < szXramUsbDesc; i++) {
+    abtCmdWR[i + 19] = btXramUsbDesc[i];
+  }
+  size_t szCmdWR = sizeof(abtCmdWR);
+  uint8_t abtRxWR[4];
+  if (pn53x_transceive(pnd, abtCmdWR, szCmdWR, abtRxWR, sizeof(abtRxWR), -1) < 0) {
+    return; // void
+  }
+  DRIVER_DATA(pnd)->possibly_corrupted_usbdesc = false;
+}
 
 static pn53x_usb_model
 pn53x_usb_get_device_model(uint16_t vendor_id, uint16_t product_id)
@@ -144,6 +238,25 @@ pn53x_usb_get_device_model(uint16_t vendor_id, uint16_t product_id)
   }
 
   return UNKNOWN;
+}
+
+static bool
+pn53x_usb_get_end_points_default(struct usbbus_device *dev, struct pn53x_usb_data *data)
+{
+  for (size_t n = 0; n < sizeof(pn53x_usb_supported_devices) / sizeof(struct pn53x_usb_supported_device); n++) {
+    if ((dev->descriptor.idVendor == pn53x_usb_supported_devices[n].vendor_id) &&
+        (dev->descriptor.idProduct == pn53x_usb_supported_devices[n].product_id)) {
+      if (pn53x_usb_supported_devices[n].uiMaxPacketSize != 0) {
+        data->uiEndPointIn = pn53x_usb_supported_devices[n].uiEndPointIn;
+        data->uiEndPointOut = pn53x_usb_supported_devices[n].uiEndPointOut;
+        data->uiMaxPacketSize = pn53x_usb_supported_devices[n].uiMaxPacketSize;
+
+        return true;
+      }
+    }
+  }
+
+  return false;
 }
 
 int  pn53x_usb_ack(nfc_device *pnd);
@@ -196,14 +309,20 @@ pn53x_usb_scan(const nfc_context *context, nfc_connstring connstrings[], const s
         if ((pn53x_usb_supported_devices[n].vendor_id == dev->descriptor.idVendor) &&
             (pn53x_usb_supported_devices[n].product_id == dev->descriptor.idProduct)) {
           // Make sure there are 2 endpoints available
-          // with libusb-win32 we got some null pointers so be robust before looking at endpoints:
-          if (dev->config == NULL || dev->config->interface == NULL || dev->config->interface->altsetting == NULL) {
-            // Nope, we maybe want the next one, let's try to find another
-            continue;
-          }
-          if (dev->config->interface->altsetting->bNumEndpoints < 2) {
-            // Nope, we maybe want the next one, let's try to find another
-            continue;
+          // libusb-win32 may return a NULL dev->config,
+          // or the descriptors may be corrupted, hence
+          // let us assume we will use hardcoded defaults
+          // from pn53x_usb_supported_devices if available.
+          // otherwise get data from the descriptors.
+          if (pn53x_usb_supported_devices[n].uiMaxPacketSize == 0) {
+            if (dev->config->interface == NULL || dev->config->interface->altsetting == NULL) {
+              // Nope, we maybe want the next one, let's try to find another
+              continue;
+            }
+            if (dev->config->interface->altsetting->bNumEndpoints < 2) {
+              // Nope, we maybe want the next one, let's try to find another
+              continue;
+            }
           }
 
           usbbus_device_handle *udev = usbbus_open(dev);
@@ -222,7 +341,10 @@ pn53x_usb_scan(const nfc_context *context, nfc_connstring connstrings[], const s
           // pn53x_usb_get_usb_device_name (dev, udev, pnddDevices[device_found].acDevice, sizeof (pnddDevices[device_found].acDevice));
           log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "device found: Bus %s Device %s", bus->dirname, dev->filename);
           usbbus_close(udev);
-          snprintf(connstrings[device_found], sizeof(nfc_connstring), "%s:%s:%s", PN53X_USB_DRIVER_NAME, bus->dirname, dev->filename);
+          if (snprintf(connstrings[device_found], sizeof(nfc_connstring), "%s:%s:%s", PN53X_USB_DRIVER_NAME, bus->dirname, dev->filename) >= (int)sizeof(nfc_connstring)) {
+            // truncation occurred, skipping that one
+            continue;
+          }
           device_found++;
           // Test if we reach the maximum "wanted" devices
           if (device_found == connstrings_len) {
@@ -284,6 +406,7 @@ pn53x_usb_open(const nfc_context *context, const nfc_connstring connstring)
     .pudh = NULL,
     .uiEndPointIn = 0,
     .uiEndPointOut = 0,
+    .possibly_corrupted_usbdesc = false,
   };
   struct usbbus_bus *bus;
   struct usbbus_device *dev;
@@ -305,8 +428,16 @@ pn53x_usb_open(const nfc_context *context, const nfc_connstring connstring)
       // Open the USB device
       if ((data.pudh = usbbus_open(dev)) == NULL)
         continue;
-      // Retrieve end points
-      pn53x_usb_get_end_points(dev, &data);
+
+      //To retrieve real USB endpoints configuration:
+      //pn53x_usb_get_end_points(dev, &data);
+      //printf("DEBUG ENDPOINTS    In:0x%x  Out:0x%x  Size:0x%x\n", data.uiEndPointIn, data.uiEndPointOut, data.uiMaxPacketSize);
+
+      // Retrieve end points, using hardcoded defaults if available
+      // or using the descriptors otherwise.
+      if (pn53x_usb_get_end_points_default(dev, &data) == false) {
+        pn53x_usb_get_end_points(dev, &data);
+      }
       // Set configuration
       int res = usbbus_set_configuration(data.pudh, 1);
       if (res < 0) {
@@ -349,11 +480,13 @@ pn53x_usb_open(const nfc_context *context, const nfc_connstring connstring)
       }
 
       switch (DRIVER_DATA(pnd)->model) {
-          // empirical tuning
+        // empirical tuning
         case ASK_LOGO:
           CHIP_DATA(pnd)->timer_correction = 50;
+          CHIP_DATA(pnd)->progressive_field = true;
           break;
         case SCM_SCL3711:
+        case SCM_SCL3712:
         case NXP_PN533:
           CHIP_DATA(pnd)->timer_correction = 46;
           break;
@@ -407,6 +540,9 @@ pn53x_usb_close(nfc_device *pnd)
     pn53x_write_register(pnd, PN53X_SFR_P3, 0xFF, _BV(P30) | _BV(P31) | _BV(P32) | _BV(P33) | _BV(P35));
   }
 
+  if (DRIVER_DATA(pnd)->possibly_corrupted_usbdesc)
+    pn533_fix_usbdesc(pnd);
+
   pn53x_idle(pnd);
 
   int res;
@@ -433,6 +569,7 @@ pn53x_usb_send(nfc_device *pnd, const uint8_t *pbtData, const size_t szData, con
     return pnd->last_error;
   }
 
+  DRIVER_DATA(pnd)->possibly_corrupted_usbdesc |= szData > 17;
   if ((res = pn53x_usb_bulk_write(DRIVER_DATA(pnd), abtFrame, szFrame, timeout)) < 0) {
     pnd->last_error = res;
     return pnd->last_error;
@@ -452,8 +589,8 @@ pn53x_usb_send(nfc_device *pnd, const uint8_t *pbtData, const size_t szData, con
     // For some reasons (eg. send another command while a previous one is
     // running), the PN533 sometimes directly replies the response packet
     // instead of ACK frame, so we send a NACK frame to force PN533 to resend
-    // response packet. With this hack, the nextly executed function (ie.
-    // pn53x_usb_receive()) will be able to retreive the correct response
+    // response packet. With this hack, the next executed function (ie.
+    // pn53x_usb_receive()) will be able to retrieve the correct response
     // packet.
     // FIXME Sony reader is also affected by this bug but NACK is not supported
     if ((res = pn53x_usb_bulk_write(DRIVER_DATA(pnd), (uint8_t *)pn53x_nack_frame, sizeof(pn53x_nack_frame), timeout)) < 0) {
@@ -463,7 +600,6 @@ pn53x_usb_send(nfc_device *pnd, const uint8_t *pbtData, const size_t szData, con
       return pnd->last_error;
     }
   }
-
   return NFC_SUCCESS;
 }
 
@@ -487,7 +623,7 @@ read:
   if (timeout == USBBUS_INFINITE_TIMEOUT) {
     usbbus_timeout = USBBUS_TIMEOUT_PER_PASS;
   } else {
-    // A user-provided timeout is set, we have to cut it in multiple chunk to be able to keep an nfc_abort_command() mecanism
+    // A user-provided timeout is set, we have to cut it in multiple chunk to be able to keep an nfc_abort_command() mechanism
     remaining_time -= USBBUS_TIMEOUT_PER_PASS;
     if (remaining_time <= 0) {
       pnd->last_error = NFC_ETIMEOUT;
@@ -601,6 +737,7 @@ read:
   }
   // The PN53x command is done and we successfully received the reply
   pnd->last_error = 0;
+  DRIVER_DATA(pnd)->possibly_corrupted_usbdesc |= len > 16;
   return len;
 }
 
@@ -664,6 +801,8 @@ pn53x_usb_init(nfc_device *pnd)
     /* ie. Switch LED1 on and turn off progressive field */
     pn53x_write_register(pnd, PN53X_SFR_P3, 0xFF, _BV(P30) | _BV(P31) | _BV(P33) | _BV(P35));
   }
+  if (DRIVER_DATA(pnd)->possibly_corrupted_usbdesc)
+    pn533_fix_usbdesc(pnd);
 
   return NFC_SUCCESS;
 }
@@ -680,11 +819,18 @@ pn53x_usb_set_property_bool(nfc_device *pnd, const nfc_property property, const 
       if (NP_ACTIVATE_FIELD == property) {
         /* Switch on/off LED2 and Progressive Field GPIO according to ACTIVATE_FIELD option */
         log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Switch progressive field %s", bEnable ? "On" : "Off");
-        if ((res = pn53x_write_register(pnd, PN53X_SFR_P3, _BV(P31) | _BV(P34), bEnable ? _BV(P34) : _BV(P31))) < 0)
+        if (pn53x_write_register(pnd, PN53X_SFR_P3, _BV(P31) | _BV(P34), bEnable ? _BV(P34) : _BV(P31)) < 0)
           return NFC_ECHIP;
       }
       break;
     case SCM_SCL3711:
+      if (NP_ACTIVATE_FIELD == property) {
+        // Switch on/off LED according to ACTIVATE_FIELD option
+        if ((res = pn53x_write_register(pnd, PN53X_SFR_P3, _BV(P32), bEnable ? 0 : _BV(P32))) < 0)
+          return res;
+      }
+      break;
+    case SCM_SCL3712:
       if (NP_ACTIVATE_FIELD == property) {
         // Switch on/off LED according to ACTIVATE_FIELD option
         if ((res = pn53x_write_register(pnd, PN53X_SFR_P3, _BV(P32), bEnable ? 0 : _BV(P32))) < 0)
@@ -706,6 +852,16 @@ static int
 pn53x_usb_abort_command(nfc_device *pnd)
 {
   DRIVER_DATA(pnd)->abort_flag = true;
+  return NFC_SUCCESS;
+}
+
+static int
+pn53x_usb_get_supported_modulation(nfc_device *pnd, const nfc_mode mode, const nfc_modulation_type **const supported_mt)
+{
+  if ((DRIVER_DATA(pnd)->model != ASK_LOGO) || (mode != N_TARGET))
+    return pn53x_get_supported_modulation(pnd, mode, supported_mt);
+  else // ASK_LOGO has no N_TARGET support
+    *supported_mt = no_target_support;
   return NFC_SUCCESS;
 }
 
@@ -742,7 +898,7 @@ const struct nfc_driver pn53x_usb_driver = {
 
   .device_set_property_bool     = pn53x_usb_set_property_bool,
   .device_set_property_int      = pn53x_set_property_int,
-  .get_supported_modulation     = pn53x_get_supported_modulation,
+  .get_supported_modulation     = pn53x_usb_get_supported_modulation,
   .get_supported_baud_rate      = pn53x_get_supported_baud_rate,
   .device_get_information_about = pn53x_get_information_about,
 

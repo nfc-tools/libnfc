@@ -196,7 +196,7 @@ spi_send_receive(spi_port sp, const uint8_t *pbtTx, const size_t szTx, uint8_t *
     struct spi_ioc_transfer tr_send = {
       .tx_buf = (unsigned long) pbtTx,
       .rx_buf = 0,
-      .len = szTx ,
+      .len = szTx,
       .delay_usecs = 0,
       .speed_hz = 0,
       .bits_per_word = 0,
@@ -283,10 +283,7 @@ spi_list_ports(void)
 
   DIR *pdDir = opendir("/dev");
   struct dirent *pdDirEnt;
-  struct dirent entry;
-  struct dirent *result;
-  while ((readdir_r(pdDir, &entry, &result) == 0) && (result != NULL)) {
-    pdDirEnt = &entry;
+  while ((pdDirEnt = readdir(pdDir)) != NULL) {
 #if !defined(__APPLE__)
     if (!isdigit(pdDirEnt->d_name[strlen(pdDirEnt->d_name) - 1]))
       continue;

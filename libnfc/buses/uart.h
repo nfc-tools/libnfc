@@ -33,7 +33,9 @@
 #ifndef __NFC_BUS_UART_H__
 #  define __NFC_BUS_UART_H__
 
+#if !defined(_MSC_VER)
 #  include <sys/time.h>
+#endif
 
 #  include <stdio.h>
 #  include <string.h>

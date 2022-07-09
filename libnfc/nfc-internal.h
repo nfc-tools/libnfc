@@ -34,7 +34,9 @@
 
 #include <stdbool.h>
 #include <err.h>
+#if !defined(_MSC_VER)
 #  include <sys/time.h>
+#endif
 
 #include "nfc/nfc.h"
 
@@ -148,7 +150,7 @@ struct nfc_driver {
   int (*device_set_property_bool)(struct nfc_device *pnd, const nfc_property property, const bool bEnable);
   int (*device_set_property_int)(struct nfc_device *pnd, const nfc_property property, const int value);
   int (*get_supported_modulation)(struct nfc_device *pnd, const nfc_mode mode, const nfc_modulation_type **const supported_mt);
-  int (*get_supported_baud_rate)(struct nfc_device *pnd, const nfc_modulation_type nmt, const nfc_baud_rate **const supported_br);
+  int (*get_supported_baud_rate)(struct nfc_device *pnd, const nfc_mode mode, const nfc_modulation_type nmt, const nfc_baud_rate **const supported_br);
   int (*device_get_information_about)(struct nfc_device *pnd, char **buf);
 
   int (*abort_command)(struct nfc_device *pnd);
@@ -203,6 +205,8 @@ struct nfc_device {
   bool    bPar;
   /** Should the chip handle frames encapsulation and chaining */
   bool    bEasyFraming;
+  /** Should the chip try forever on select? */
+  bool    bInfiniteSelect;
   /** Should the chip switch automatically activate ISO14443-4 when
       selecting tags supporting it? */
   bool    bAutoIso14443_4;

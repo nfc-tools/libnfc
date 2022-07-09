@@ -433,7 +433,7 @@ pn532_spi_receive(nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, int
     goto error;
   }
 
-  pnd->last_error = spi_send_receive(DRIVER_DATA(pnd)->port, &pn532_spi_cmd_dataread, 1, abtRxBuf , 4, true);
+  pnd->last_error = spi_send_receive(DRIVER_DATA(pnd)->port, &pn532_spi_cmd_dataread, 1, abtRxBuf, 4, true);
 
   if (pnd->last_error < 0) {
     goto error;

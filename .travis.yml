@@ -1,0 +1,81 @@
+language: c
+
+matrix:
+  include:
+    - os: windows
+      compiler:
+        - clang
+      before_install:
+        - mkdir build && cd build && wget "https://sourceforge.net/projects/libusb-win32/files/libusb-win32-releases/1.2.6.0/libusb-win32-bin-1.2.6.0.zip" && 7z x libusb-win32-bin-1.2.6.0.zip -o"$PROGRAMFILES" && mv "$PROGRAMFILES/libusb-win32-bin-1.2.6.0" "$PROGRAMFILES/libusb-win32"
+      install:
+        choco install doxygen.install ninja
+      script:
+        cmake -GNinja .. && cmake --build .
+
+    - os: linux
+      dist: bionic
+      compiler:
+        - clang
+      addons:
+        apt:
+          packages:
+            - libusb-dev
+            - doxygen
+            - cmake
+      script:
+        - mkdir build && cd build && cmake -DCMAKE_INSTALL_PREFIX=~/.local .. && make -j2 && make install
+        
+    - os: linux
+      dist: bionic
+      compiler:
+        - clang
+      addons:
+        apt:
+          packages:
+            - libusb-dev
+            - doxygen
+      script:
+        - autoreconf -vfi && mkdir build && cd build && ../configure --prefix=$HOME/.local/ && make -j2 && make install
+
+    - os: linux
+      dist: bionic
+      compiler:
+        - gcc
+      addons:
+        apt:
+          packages:
+            - libusb-dev
+            - doxygen
+            - cmake
+      script:
+        - mkdir build && cd build && cmake -DCMAKE_INSTALL_PREFIX=~/.local .. && make -j2 && make install
+
+    - os: linux
+      dist: bionic
+      compiler:
+        - gcc
+      addons:
+        apt:
+          packages:
+            - libusb-dev
+            - doxygen
+      script:
+        - autoreconf -vfi && mkdir build && cd build && ../configure --prefix=$HOME/.local/ && make -j2 && make install
+
+    - os: osx
+      osx_image: xcode12
+      compiler:
+        - clang
+      before_install:
+        - brew install doxygen libusb-compat
+      script:
+        - mkdir build && cd build && cmake -DCMAKE_INSTALL_PREFIX=~/.local .. && make -j2 && make install
+
+    - os: osx
+      osx_image: xcode12
+      compiler:
+        - clang
+      before_install:
+        - brew install doxygen libusb-compat m4
+      script:
+        - autoreconf -vfi && mkdir build && cd build && ../configure --prefix=$HOME/.local/ && make -j2 && make install

@@ -9,6 +9,7 @@
  * Copyright (C) 2012-2013 Ludovic Rousseau
  * See AUTHORS file for a more comprehensive list of contributors.
  * Additional contributors of this file:
+ * Copyright (C) 2020      Adam Laurie
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -101,14 +102,15 @@ main(int argc, const char *argv[])
 
   const uint8_t uiPollNr = 20;
   const uint8_t uiPeriod = 2;
-  const nfc_modulation nmModulations[5] = {
+  const nfc_modulation nmModulations[6] = {
     { .nmt = NMT_ISO14443A, .nbr = NBR_106 },
     { .nmt = NMT_ISO14443B, .nbr = NBR_106 },
     { .nmt = NMT_FELICA, .nbr = NBR_212 },
     { .nmt = NMT_FELICA, .nbr = NBR_424 },
     { .nmt = NMT_JEWEL, .nbr = NBR_106 },
+    { .nmt = NMT_ISO14443BICLASS, .nbr = NBR_106 },
   };
-  const size_t szModulations = 5;
+  const size_t szModulations = 6;
 
   nfc_target nt;
   int res = 0;
@@ -145,9 +147,15 @@ main(int argc, const char *argv[])
 
   if (res > 0) {
     print_nfc_target(&nt, verbose);
+    printf("Waiting for card removing...");
+    fflush(stdout);
+    while (0 == nfc_initiator_target_is_present(pnd, NULL)) {}
+    nfc_perror(pnd, "nfc_initiator_target_is_present");
+    printf("done.\n");
   } else {
     printf("No target found.\n");
   }
+
   nfc_close(pnd);
   nfc_exit(context);
   exit(EXIT_SUCCESS);

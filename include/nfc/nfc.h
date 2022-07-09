@@ -28,13 +28,11 @@
  * @file nfc.h
  * @brief libnfc interface
  *
- * Provide all usefull functions (API) to handle NFC devices.
+ * Provide all useful functions (API) to handle NFC devices.
  */
 
 #ifndef _LIBNFC_H_
 #  define _LIBNFC_H_
-
-#  include <sys/time.h>
 
 #  include <stdint.h>
 #  include <stdbool.h>
@@ -127,6 +125,7 @@ NFC_EXPORT const char *nfc_device_get_name(nfc_device *pnd);
 NFC_EXPORT const char *nfc_device_get_connstring(nfc_device *pnd);
 NFC_EXPORT int nfc_device_get_supported_modulation(nfc_device *pnd, const nfc_mode mode,  const nfc_modulation_type **const supported_mt);
 NFC_EXPORT int nfc_device_get_supported_baud_rate(nfc_device *pnd, const nfc_modulation_type nmt, const nfc_baud_rate **const supported_br);
+NFC_EXPORT int nfc_device_get_supported_baud_rate_target_mode(nfc_device *pnd, const nfc_modulation_type nmt, const nfc_baud_rate **const supported_br);
 
 /* Properties accessors */
 NFC_EXPORT int nfc_device_set_property_int(nfc_device *pnd, const nfc_property property, const int value);

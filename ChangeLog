@@ -1,5 +1,88 @@
-TBD - 1.7.0.99~rc1
-------------------
+May 22, 2020 - 1.8.0
+--------------------
+
+Fixes:
+ - Restore nfc_modulation_type enum order to keep compatibility with libnfc 1.7.1
+
+Changes:
+ - Bump revision due to changes in API introduced in v1.7.2
+ - Bump library version to 6.0.0
+
+May 21, 2020 - 1.7.2 (avoid using it, incompatible with 1.7.1)
+--------------------
+
+Fixes:
+ - Remove unreachable code
+ - nfc_emulate_uid: cleaner exit on interrupt
+ - Fix reporting of modulations and baud rates by nfc-scan-device -v
+ - Fix out-of-bounds access in nfc-mfultralight
+ - Several Cygwin compilation fixes
+ - Fix comparison when nfc_initiator_target_is_present() with a specified target
+ - Fix nfc_initiator_poll_target without tag on PN532
+ - Export iso14443b* symbols
+ - Fix udev rule which was executed too early
+ - Fix improper device name initialization
+ - Fix setenv()/unsetenv() for Windows
+ - Fix win32/nfc.def according to nfc.h
+ - Fix missing timeout in pn53x_initiator_select_passive_target()
+ - nfc-mfclassic: fix option to tolerate write errors
+ - nfc-poll: fix card removing check
+ - nfc-relay-picc: fix wrong open mode for file descriptor
+
+Improvements:
+ - Allow ISO14443A to be used at higher baud rates
+ - nfc_initiator_select_passive_target() now checks against
+   reported modulations and baud rates for current device
+ - More serial devices on MAC OS X
+ - Add section to README to help to configure libnfc
+ - Various cmake improvements
+ - Drop PCRE dependency on Windows
+ - Remove deprecated readdir_r
+ - Markdown conversion of the text files
+ - Use hardcoded PN533 descriptors to be more robust on Windows
+ - Add support for SCL3712
+ - Add support for ACR1222U-C1
+ - Add support for NetBSD
+ - Add support for PN532 on RPi3 UART
+ - Add support for cross-compilation of 32b & 64b versions  of the library for Windows
+ - Add pn533_usb to the kernel modules blacklist
+ - Add support for pn71xx NXP's NFC Controllers through Linux Libnfc-nci (untested)
+ - Add support for contactless PC/SC readers (only as initiator)
+ - Add support for Feitian R502 and bR500 into pcsc driver
+ - Add support for HID iClass (Picopass) support (nfc-iclass tool in external nfc-tools repo)
+ - Allows for sending empty data in nfc_initiator_transceive_bits
+ - driver i2c: respect proper timing specifications
+ - driver i2c: add retry on error mechanism
+ - nfc-mfclassic: improvements fo magic cards
+ - nfc-mfclassic: add option to specify UID
+ - nfc-mfclassic/nfc-mfsetuid: add support for new gen (1b) of magic 4K cards
+ - nfc-mfclassic: Add RATS support indicator
+ - nfc-mfsetuid: allow to write complete Block0, instead of only UID
+ - nfc-mfultralight: add automatic modes and --check-magic
+ - nfc-mfultralight: add support for magic gen2 cards
+ - nfc-mfultralight: add option to specify UID
+ - nfc-mfultralight: add support for Ultralight NTAG213/215/216
+ - nfc-barcode: new command to read and decode NFC Barcodes (Tag-Talks-First)
+
+Changes:
+ - nfc_device_get_supported_baud_rate() takes now a "mode" parameter
+ - New nfc_device_get_supported_baud_rate_target_mode()
+ - New NFC modulation type NMT_BARCODE and nfc_barcode_info struct to support Thinfilm NFC Barcode protocol
+ - New NFC modulation type NMT_ISO14443BICLASS and NMT_ISO14443BICLASS struct to support HID iClass (Picopass)
+ - pn53x_transceive() is now part of public API
+
+Special thanks to:
+ - Jim Anastassiou, Frédéric Bourgeois, Dario Carluccio, Emmanuel Dreyfus,
+   Julien Ehrhart, S. Fabri, John Galt, Christoph Gritschenberger,
+   Alexander Inyukhin, Arnaud Kapp, David Kreitschmann, Adam Laurie, Ray Lee,
+   Maxim Martyanov, Paul Menzel, Boris Moiseev, Yerzhan Mukhamejan,
+   Olliver Shinagl, Jairo Andres Suarez, Mati Vait, Marcos Vives Del Sol,
+   Hidde Wieringa, Simon Yorkston, timzi, usk-johnny-s, xantares, Hanno
+   Heinrichs, jgeslin, Mikolaj Stawiski, rstular, Khem Raj, Frank Morgner, jpwidera,
+   Feitian Technologies
+
+Feb 24, 2014 - 1.7.1
+--------------------
 
 Fixes:
  - Fix several issues reported by Coverity Scan
@@ -7,6 +90,10 @@ Fixes:
  - More robust when several conflicting uart drivers are in the config
  - Fix racing condition with uart_flush_input()
  - Silent pn53x_check_communication error messages when scanning
+ - Fix nfc_target_init(), was returning success in case of timeout
+ - Windows: fix several compilation issues
+ - On tag selection, save current target info also for ISO14443B*
+ - nfc-read-forum-tag3: fix incomplete NDEF retrieval and size of output file
 
 Improvements:
  - nfc-list: New option to choose which technologies to poll for
@@ -14,6 +101,27 @@ Improvements:
  - New LIBNFC_DEVICE env var to use one reader and exclude all other readers
    while LIBNFC_DEFAULT_DEVICE only prepends it to the configured devices list
  - New LIBNFC_AUTO_SCAN env var to enable(default)/disable auto scan
+ - On tag selection, save current target info even if pnt=NULL
+ - On tag selection, grant NP_INFINITE_SELECT also for ISO14443B*
+ - Save & restore NP_INFINITE_SELECT status when changing it internally
+ - nfc-mfclassic: add format/wipe command (thanks to Adam Laurie)
+ - nfc-jewel: new utility to read/write Topaz/Jewel tags (thanks to Pim 't Hart)
+ - nfc_initiator_select_passive_target() provides defaults if pbtInitData=NULL
+ - nfc-read-forum-tag3: add -q option, add full parsing of NDEF Attribute Block
+
+Fixes & improvements specific to nfc_initiator_target_is_present():
+ - Supports fully PN532 & PN533, not tested on other chips
+ - Fix usage after nfc_initiator_poll_target()
+ - Set correctly last_error
+ - Fix issue when there was no saved target
+ - Allow NULL pointer to tag
+ - Fix issues in case of tear off conditions
+ - Now works with:
+    * MFUL, MFC, MFC Mini, MFC 7-byte (re-selection: you'll need to auth again)
+    * ISO14443-4A, ISO14443-4B
+    * ISO14443-4B', ASK CTx, ST SRx
+    * Jewel
+    * FeliCa
 
 Sep 03, 2013 - 1.7.0
 --------------------

@@ -9,6 +9,7 @@
  * Copyright (C) 2012-2013 Ludovic Rousseau
  * See AUTHORS file for a more comprehensive list of contributors.
  * Additional contributors of this file:
+ * Copyright (C) 2020      Adam Laurie
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -210,6 +211,7 @@ struct pn53x_data {
   /** Supported modulation type */
   nfc_modulation_type *supported_modulation_as_initiator;
   nfc_modulation_type *supported_modulation_as_target;
+  bool progressive_field;
 };
 
 #define CHIP_DATA(pnd) ((struct pn53x_data*)(pnd->chip_data))
@@ -231,6 +233,8 @@ typedef enum {
   PM_ISO14443B_106 = 0x03,
   /** Jewel Topaz (Innovision Research & Development) (Not supported by PN531) */
   PM_JEWEL_106 = 0x04,
+  /** Thinfilm NFC Barcode (Not supported by PN531) */
+  PM_BARCODE_106 = 0x05,
   /** ISO14443-B http://en.wikipedia.org/wiki/ISO/IEC_14443 (Not supported by PN531 nor PN532) */
   PM_ISO14443B_212 = 0x06,
   /** ISO14443-B http://en.wikipedia.org/wiki/ISO/IEC_14443 (Not supported by PN531 nor PN532) */
@@ -319,6 +323,7 @@ int    pn53x_idle(struct nfc_device *pnd);
 
 // NFC device as Initiator functions
 int    pn53x_initiator_init(struct nfc_device *pnd);
+void   pn53x_initiator_init_iclass_modulation(struct nfc_device *pnd);
 int    pn532_initiator_init_secure_element(struct nfc_device *pnd);
 int    pn53x_initiator_select_passive_target(struct nfc_device *pnd,
                                              const nfc_modulation nm,
@@ -392,7 +397,7 @@ int    pn53x_check_ack_frame(struct nfc_device *pnd, const uint8_t *pbtRxFrame, 
 int    pn53x_check_error_frame(struct nfc_device *pnd, const uint8_t *pbtRxFrame, const size_t szRxFrameLen);
 int    pn53x_build_frame(uint8_t *pbtFrame, size_t *pszFrame, const uint8_t *pbtData, const size_t szData);
 int    pn53x_get_supported_modulation(nfc_device *pnd, const nfc_mode mode, const nfc_modulation_type **const supported_mt);
-int    pn53x_get_supported_baud_rate(nfc_device *pnd, const nfc_modulation_type nmt, const nfc_baud_rate **const supported_br);
+int    pn53x_get_supported_baud_rate(nfc_device *pnd, const nfc_mode mode, const nfc_modulation_type nmt, const nfc_baud_rate **const supported_br);
 int    pn53x_get_information_about(nfc_device *pnd, char **pbuf);
 
 void   *pn53x_data_new(struct nfc_device *pnd, const struct pn53x_io *io);

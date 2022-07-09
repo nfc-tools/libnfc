@@ -1,0 +1,22 @@
+## Typical configuration file for PN532 device on R-Pi 3 connected using miniUART
+## Note: Changes have been made to R-Pi 3 with the addition of Bluetooth LE
+## The UART is now being used by the BLE module. Instead of disabling it, you can 
+## use the PN532 device with the "mini UART", which is still hijacked by the linux kernel 
+## as a serial console
+##
+## Tested recipe with PN532 breakout from Adafruit
+##
+## To enable uart on GPIO, add this line to bottom of /boot/config.txt
+## enable_uart=1
+##
+## Stop and disable serial console:
+## $ sudo systemctl stop serial-getty@ttyS0.service
+## $ sudo systemctl disable serial-getty@ttyS0.service
+##
+## Remove console from /boot/cmdline.txt by removing: 
+## console=serial0,115200 Save and reboot for changes to take effect.
+##
+name = "PN532 board via UART"
+connstring = pn532_uart:/dev/ttyS0
+allow_intrusive_scan = true
+

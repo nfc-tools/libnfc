@@ -2,7 +2,13 @@ ACLOCAL_AMFLAGS = -I m4
 
 AM_CFLAGS = $(LIBNFC_CFLAGS)
 
-SUBDIRS = libnfc utils examples include contrib cmake test
+SUBDIRS = libnfc utils
+
+if EXAMPLE_ENABLED
+SUBDIRS += examples
+endif
+
+SUBDIRS += include contrib cmake test
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libnfc.pc
@@ -10,8 +16,12 @@ pkgconfig_DATA = libnfc.pc
 EXTRA_DIST = \
 	CMakeLists.txt \
 	Doxyfile \
-	README-Windows.txt \
-	libnfc.conf.sample
+	HACKING.md \
+	NEWS.md \
+	README.md \
+	README-Windows.md \
+	libnfc.conf.sample \
+	mingw-cross-compile.sh
 
 CLEANFILES = Doxygen.log coverage.info libnfc.pc
 
@@ -34,7 +44,7 @@ style:
 	find . -name "*.[ch]" -exec astyle --formatted --mode=c --suffix=none \
 	    --indent=spaces=2 --indent-switches --indent-preprocessor \
 	    --keep-one-line-blocks --max-instatement-indent=60 \
-	    --brackets=linux --pad-oper --unpad-paren --pad-header \
+	    --style=linux --pad-oper --unpad-paren --pad-header \
 	    --align-pointer=name {} \;
 
 cppcheck:

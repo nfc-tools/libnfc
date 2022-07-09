@@ -9,6 +9,7 @@
  * Copyright (C) 2012-2013 Ludovic Rousseau
  * See AUTHORS file for a more comprehensive list of contributors.
  * Additional contributors of this file:
+ * Copyright (C) 2020      Adam Laurie
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -71,9 +72,11 @@ print_usage(const char *progname)
   printf("\t  16: ISO14443B'\n");
   printf("\t  32: ISO14443B-2 ST SRx\n");
   printf("\t  64: ISO14443B-2 ASK CTx\n");
-  printf("\t 128: Jewel\n");
-  printf("\tSo 255 (default) polls for all types.\n");
-  printf("\tNote that if 16, 32 or 64 then 8 is selected too.\n");
+  printf("\t 128: ISO14443B iClass\n");
+  printf("\t 256: ISO14443A-3 Jewel\n");
+  printf("\t 512: ISO14443A-2 NFC Barcode\n");
+  printf("\tSo 1023 (default) polls for all types.\n");
+  printf("\tNote that if 16, 32, 64 or 128 then 8 is selected too.\n");
 }
 
 int
@@ -84,7 +87,7 @@ main(int argc, const char *argv[])
   size_t  i;
   bool verbose = false;
   int res = 0;
-  int mask = 0xff;
+  int mask = 0x3ff;
   int arg;
 
   nfc_context *context;
@@ -93,10 +96,6 @@ main(int argc, const char *argv[])
     ERR("Unable to init libnfc (malloc)");
     exit(EXIT_FAILURE);
   }
-
-  // Display libnfc version
-  acLibnfcVersion = nfc_version();
-  printf("%s uses libnfc %s\n", argv[0], acLibnfcVersion);
 
   // Get commandline options
   for (arg = 1; arg < argc; arg++) {
@@ -108,13 +107,13 @@ main(int argc, const char *argv[])
     } else if ((0 == strcmp(argv[arg], "-t")) && (arg + 1 < argc)) {
       arg++;
       mask = atoi(argv[arg]);
-      if ((mask < 1) || (mask > 255)) {
+      if ((mask < 1) || (mask > 0x3ff)) {
         ERR("%i is invalid value for type bitfield.", mask);
         print_usage(argv[0]);
         exit(EXIT_FAILURE);
       }
       // Force TypeB for all derivatives of B
-      if (mask & 0x70)
+      if (mask & 0xf0)
         mask |= 0x08;
     } else {
       ERR("%s is not supported option.", argv[arg]);
@@ -122,6 +121,13 @@ main(int argc, const char *argv[])
       exit(EXIT_FAILURE);
     }
   }
+
+  // Display libnfc version
+  if (verbose) {
+    acLibnfcVersion = nfc_version();
+    printf("%s uses libnfc %s\n", argv[0], acLibnfcVersion);
+  }
+
 
   /* Lazy way to open an NFC device */
 #if 0
@@ -271,13 +277,13 @@ main(int argc, const char *argv[])
     }
 
     if (mask & 0x80) {
-      nm.nmt = NMT_JEWEL;
+      nm.nmt = NMT_ISO14443BICLASS;
       nm.nbr = NBR_106;
-      // List Jewel targets
+      // List ISO14443B iClass targets
       if ((res = nfc_initiator_list_passive_targets(pnd, nm, ant, MAX_TARGET_COUNT)) >= 0) {
         int n;
         if (verbose || (res > 0)) {
-          printf("%d Jewel passive target(s) found%s\n", res, (res == 0) ? ".\n" : ":");
+          printf("%d ISO14443B iClass passive target(s) found%s\n", res, (res == 0) ? ".\n" : ":");
         }
         for (n = 0; n < res; n++) {
           print_nfc_target(&ant[n], verbose);
@@ -285,6 +291,39 @@ main(int argc, const char *argv[])
         }
       }
     }
+
+    if (mask & 0x100) {
+      nm.nmt = NMT_JEWEL;
+      nm.nbr = NBR_106;
+      // List Jewel targets
+      if ((res = nfc_initiator_list_passive_targets(pnd, nm, ant, MAX_TARGET_COUNT)) >= 0) {
+        int n;
+        if (verbose || (res > 0)) {
+          printf("%d ISO14443A-3 Jewel passive target(s) found%s\n", res, (res == 0) ? ".\n" : ":");
+        }
+        for (n = 0; n < res; n++) {
+          print_nfc_target(&ant[n], verbose);
+          printf("\n");
+        }
+      }
+    }
+
+    if (mask & 0x200) {
+      nm.nmt = NMT_BARCODE;
+      nm.nbr = NBR_106;
+      // List NFC Barcode targets
+      if ((res = nfc_initiator_list_passive_targets(pnd, nm, ant, MAX_TARGET_COUNT)) >= 0) {
+        int n;
+        if (verbose || (res > 0)) {
+          printf("%d ISO14443A-2 NFC Barcode passive target(s) found%s\n", res, (res == 0) ? ".\n" : ":");
+        }
+        for (n = 0; n < res; n++) {
+          print_nfc_target(&ant[n], verbose);
+          printf("\n");
+        }
+      }
+    }
+
     nfc_close(pnd);
   }
 

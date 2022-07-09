@@ -3,10 +3,14 @@
 nfc-mfclassic \- MIFARE Classic command line tool
 .SH SYNOPSIS
 .B nfc-mfclassic
-.RI \fR\fBr\fR|\fR\fBR\fR|\fBw\fR\fR|\fBW\fR
+.RI \fR\fBf\fR|\fR\fBr\fR|\fR\fBR\fR|\fBw\fR\fR|\fBW\fR
 .RI \fR\fBa\fR|\fR\fBA\fR|\fBb\fR\fR|\fBB\fR
+.RI \fR\fBu\fR\fR|\fBU\fR<\fBuid\fR>\fR
 .IR DUMP
-.IR [KEYS]
+.RI [
+.IR KEYS
+.RI [\fR\fBf\fR]
+.RI ]
 
 .SH DESCRIPTION
 .B nfc-mfclassic
@@ -26,6 +30,10 @@ to store the keys and data for all sectors.
 
 Be cautious that some parts of a MIFARE Classic memory are used for r/w access
 of the rest of the memory, so please read the tag documentation before experimenting too much!
+
+The
+.B f
+option to format the card will reset all keys to FFFFFFFFFFFF, all data to 00 and all ACLs to default.
 
 The
 .B W
@@ -49,6 +57,15 @@ or
 .B B
 ).
 
+When using multiple tags infront of a reader, the
+.B U
+option can be used to supply the UID of tag to be read or written. Append the
+hexadecimal UID to the U option. For example U01ab23cd for the 4 byte UID
+0x01 0xab 0x23 0xcd. Using the
+.B u
+parameter instead will use whatever libnfc decides which generally is the lowest
+UID.
+
 *** Note that
 .B W
 and
@@ -57,8 +74,10 @@ options only work on special versions of MIFARE 1K cards (Chinese clones).
 
 .SH OPTIONS
 .TP
-.BR r " | " R " | " w " | " W
-Perform read from (
+.BR f " | " r " | " R " | " w " | " W
+Perform format (
+.B f
+) or read from (
 .B r
 ) or unlocked read from (
 .B R
@@ -81,18 +100,30 @@ Halt on errors (
 B
 ).
 .TP
+.BR u " | " U
+Use the default UID (
+.B u
+) or supply a valid 4 byte UID (
+.B U<uid>
+).
+.TP
 .IR DUMP
 MiFare Dump (MFD) used to write (card to MFD) or (MFD to card)
 .TP
 .IR KEYS
 MiFare Dump (MFD) that contains the keys (optional). Data part of the dump is ignored.
+.TP
+.B f
+Force using the keyfile
+.IR KEYS
+even if UID does not match (optional).
 
 .SH BUGS
 Please report any bugs on the
 .B libnfc
 issue tracker at:
 .br
-.BR http://code.google.com/p/libnfc/issues
+.BR https://github.com/nfc-tools/libnfc/issues
 .SH LICENCE
 .B libnfc
 is licensed under the GNU Lesser General Public License (LGPL), version 3.

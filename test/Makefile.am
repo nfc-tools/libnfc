@@ -45,7 +45,7 @@ test_register_endianness_la_LIBADD = $(top_builddir)/libnfc/libnfc.la
 echo-cutter:
 		@echo $(CUTTER)
 
-EXTRA_DIST = run-test.sh
 CLEANFILES = *.gcno
 
 endif
+EXTRA_DIST = run-test.sh

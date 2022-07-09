@@ -10,6 +10,7 @@ bin_PROGRAMS = \
 		nfc-mfsetuid \
 		nfc-poll \
 		nfc-relay \
+		nfc-st25tb \
 		pn53x-diagnose \
 		pn53x-sam
 
@@ -63,6 +64,9 @@ nfc_mfsetuid_SOURCES = nfc-mfsetuid.c
 nfc_mfsetuid_LDADD = $(top_builddir)/libnfc/libnfc.la \
 			  $(top_builddir)/utils/libnfcutils.la
 
+nfc_st25tb_SOURCES = nfc-st25tb.c
+nfc_st25tb_LDADD = $(top_builddir)/libnfc/libnfc.la
+
 pn53x_diagnose_SOURCES = pn53x-diagnose.c
 pn53x_diagnose_LDADD = $(top_builddir)/libnfc/libnfc.la \
 		       $(top_builddir)/utils/libnfcutils.la
@@ -74,6 +78,7 @@ pn53x_sam_LDADD = $(top_builddir)/libnfc/libnfc.la \
 pn53x_tamashell_SOURCES = pn53x-tamashell.c
 pn53x_tamashell_LDADD = $(top_builddir)/libnfc/libnfc.la \
 		        $(top_builddir)/utils/libnfcutils.la
+pn53x_tamashell_CFLAGS = @READLINE_INCLUDES@ -I$(top_srcdir)
 pn53x_tamashell_LDFLAGS = @READLINE_LIBS@
 
 quick_start_example1_SOURCES = doc/quick_start_example1.c

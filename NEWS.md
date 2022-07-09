@@ -1,3 +1,31 @@
+New in 1.8.0:
+
+API Changes:
+ - Restore nfc_modulation_type enum order to keep compatibility with libnfc 1.7.1
+ - Bump library version to 6.0.0
+
+New in 1.7.2:
+
+Drivers:
+
+  * New driver for pn71xx NXP's NFC Controllers through Linux Libnfc-nci (untested)
+  * New driver for contactless PC/SC readers (only as initiator)
+
+API Changes:
+
+  * nfc_device_get_supported_baud_rate() now takes also "mode" as argument
+  * New nfc_device_get_supported_baud_rate_target_mode()
+  * New NFC modulation type NMT_BARCODE and nfc_barcode_info struct to support Thinfilm NFC Barcode protocol
+  * New NFC modulation type NMT_ISO14443BICLASS and NMT_ISO14443BICLASS struct to support HID iClass (Picopass)
+  * pn53x_transceive() is now part of public API
+
+New in 1.7.1:
+
+API Changes:
+
+  * nfc_initiator_select_passive_target() provides defaults if pbtInitData=NULL
+  * nfc_initiator_target_is_present() allow NULL pointer to tag
+
 New in 1.7.0:
 
 Drivers:

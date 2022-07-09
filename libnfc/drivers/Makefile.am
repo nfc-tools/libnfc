@@ -7,6 +7,10 @@ libnfcdrivers_la_SOURCES =
 libnfcdrivers_la_CFLAGS = @DRIVERS_CFLAGS@ -I$(top_srcdir)/libnfc -I$(top_srcdir)/libnfc/buses
 libnfcdrivers_la_LIBADD =
 
+if DRIVER_PCSC_ENABLED
+libnfcdrivers_la_SOURCES += pcsc.c pcsc.h
+endif
+
 if DRIVER_ACR122_PCSC_ENABLED
 libnfcdrivers_la_SOURCES += acr122_pcsc.c acr122_pcsc.h
 endif
@@ -37,6 +41,11 @@ endif
 
 if DRIVER_PN532_I2C_ENABLED
 libnfcdrivers_la_SOURCES += pn532_i2c.c pn532_i2c.h
+endif
+
+if DRIVER_PN71XX_ENABLED
+libnfcdrivers_la_LIBADD += @LIBNFC_NCI_LIBS@
+libnfcdrivers_la_SOURCES += pn71xx.c pn71xx.h
 endif
 
 if PCSC_ENABLED
