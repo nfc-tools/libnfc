@@ -135,6 +135,8 @@ i2c_read(i2c_device id, uint8_t *pbtRx, const size_t szRx)
 
   if (recCount < 0) {
     res = NFC_EIO;
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR,
+            "Error: read only %d bytes (%d expected) (%s).", (int)recCount, (int) szRx, strerror(errno));
   } else {
     if (recCount < (ssize_t)szRx) {
       res = NFC_EINVARG;
@@ -167,7 +169,7 @@ i2c_write(i2c_device id, const uint8_t *pbtTx, const size_t szTx)
     return NFC_SUCCESS;
   } else {
     log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR,
-            "Error: wrote only %d bytes (%d expected).", (int)writeCount, (int) szTx);
+            "Error: wrote only %d bytes (%d expected) (%s).", (int)writeCount, (int) szTx, strerror(errno));
     return NFC_EIO;
   }
 }
@@ -189,29 +191,27 @@ i2c_list_ports(void)
   size_t szRes = 1;
 
   res[0] = NULL;
-  DIR *dir;
-  if ((dir = opendir("/dev")) == NULL) {
+  DIR *pdDir;
+  if ((pdDir = opendir("/dev")) == NULL) {
     perror("opendir error: /dev");
     return res;
   }
-  struct dirent entry;
-  struct dirent *result;
-
-  while ((readdir_r(dir, &entry, &result) == 0) && (result != NULL)) {
+  struct dirent *pdDirEnt;
+  while ((pdDirEnt = readdir(pdDir)) != NULL) {
     const char **p = i2c_ports_device_radix;
     while (*p) {
-      if (!strncmp(entry.d_name, *p, strlen(*p))) {
+      if (!strncmp(pdDirEnt->d_name, *p, strlen(*p))) {
         char **res2 = realloc(res, (szRes + 1) * sizeof(char *));
         if (!res2) {
           perror("malloc");
           goto oom;
         }
         res = res2;
-        if (!(res[szRes - 1] = malloc(6 + strlen(entry.d_name)))) {
+        if (!(res[szRes - 1] = malloc(6 + strlen(pdDirEnt->d_name)))) {
           perror("malloc");
           goto oom;
         }
-        sprintf(res[szRes - 1], "/dev/%s", entry.d_name);
+        sprintf(res[szRes - 1], "/dev/%s", pdDirEnt->d_name);
 
         szRes++;
         res[szRes - 1] = NULL;
@@ -220,7 +220,7 @@ i2c_list_ports(void)
     }
   }
 oom:
-  closedir(dir);
+  closedir(pdDir);
 
   return res;
 }

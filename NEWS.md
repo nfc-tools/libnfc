@@ -1,0 +1,394 @@
+New in 1.8.0:
+
+API Changes:
+ - Restore nfc_modulation_type enum order to keep compatibility with libnfc 1.7.1
+ - Bump library version to 6.0.0
+
+New in 1.7.2:
+
+Drivers:
+
+  * New driver for pn71xx NXP's NFC Controllers through Linux Libnfc-nci (untested)
+  * New driver for contactless PC/SC readers (only as initiator)
+
+API Changes:
+
+  * nfc_device_get_supported_baud_rate() now takes also "mode" as argument
+  * New nfc_device_get_supported_baud_rate_target_mode()
+  * New NFC modulation type NMT_BARCODE and nfc_barcode_info struct to support Thinfilm NFC Barcode protocol
+  * New NFC modulation type NMT_ISO14443BICLASS and NMT_ISO14443BICLASS struct to support HID iClass (Picopass)
+  * pn53x_transceive() is now part of public API
+
+New in 1.7.1:
+
+API Changes:
+
+  * nfc_initiator_select_passive_target() provides defaults if pbtInitData=NULL
+  * nfc_initiator_target_is_present() allow NULL pointer to tag
+
+New in 1.7.0:
+
+Drivers:
+
+  * New PN532 over I2C driver, see contrib/libnfc/pn532_i2c_on_rpi.conf.sample
+
+API Changes:
+
+  * New function iso14443b_crc_append()
+
+New in 1.7.0-rc7:
+
+Drivers:
+
+  * New PN532 over SPI driver, see contrib/libnfc/pn532_spi_on_rpi.conf.sample
+
+API Changes:
+
+  * Functions
+    - nfc_initiator_target_is_present() & str_nfc_target():
+      now take a pointer to nfc_target as argument
+    - nfc_init(): upon malloc error, doesn't force exit() anymore
+      so now you should test if context != NULL after nfc_init() call
+
+New in 1.7.0-rc5:
+
+API Changes:
+
+  * Functions
+    - New nfc_register_driver() function allowing to hook custom drivers.
+
+New in 1.7.0-rc3:
+
+API Changes:
+
+  * Functions
+    - Add timeout param to nfc_emulate_target()
+
+New in 1.7.0-rc2:
+
+Configuration:
+  libnfc can now use a configuration file for special setups, or features
+  activation. This file (/etc/nfc/libnfc.conf under GNU/Linux systems)
+  supports already some keywords:
+    - "allow_autoscan" to enable/disable device auto-detection feature;
+    - "allow_intrusive_scan" to enable/disable intrusive auto-detection
+      (ie. serial port probing);
+    - "log_level" to select library verbosity;
+    - "device.name" and "device.connstring" to define a user device,
+      this is the recommended method if user has a not easily detectable
+      device (ie. a serial one).
+  It is also possible to define devices using dedicated configuration files and
+  put them into device search directory (/etc/nfc/devices.d under GNU/Linux).
+  Example for the OpenPCD2: create /etc/nfc/devices.d/openpcd2.conf with:
+    name = "OpenPCD2"
+    connstring = "pn532_uart:/dev/ttyACM0"
+    optional = true
+  The keyword "optional" does not mandate the device to be present always
+  (it detects if the reader is indeed present before using it)
+
+API Changes:
+
+  * Types
+    - New NFC_ESOFT error to handle software errors (allocations, pipe
+      creation, etc.)
+
+  * Functions
+    - Remove nfc_get_default_device() function: the default device is now the
+      first in nfc_list_devices() or could be open using NULL connstring with
+      nfc_open() function.
+    - New enum-to-string converter functions str_nfc_modulation_type() and
+      str_nfc_baud_rate()
+    - New str_nfc_target() to convert nfc_target struct into allocated string
+    - New nfc_device_get_information_about() function to retreive some device's
+      information
+    - No more in/out function parameter: nfc_initiator_transceive_*() now
+      take a constant size for Rx buffer
+    - New nfc_initiator_target_is_present() to test is the previously selected
+      target is available in the field
+    - nfc_initiator_transceive_bytes() returns NFC_EMFCAUTHFAIL when AUTH
+      command failed on a Mifare Classic
+    - New nfc_initiator_init_secure_element() to initiate a connection with
+      secure element (Only supported with a PN532 with SAM equipped)
+
+New in 1.6.0-rc1:
+
+API Changes:
+
+  * Types
+    - '_t' suffix removed from all types (e.g. nfc_device_t is now nfc_device)
+    - All errors removed in flavour of NFC_EIO, NFC_EINVARG, NFC_EDEVNOTSUPP,
+      NFC_ENOTSUCHDEV, NFC_EOVFLOW, NFC_ETIMEOUT, NFC_EOPABORTED, NFC_ENOTIMPL,
+      NFC_ETGRELEASED, NFC_ERFTRANS, NFC_ECHIP and NFC_SUCCESS
+    - nfc_device_desc_t replaced by nfc_connstring: libnfc now uses connection
+      strings to describe a device
+    - byte_t typedef removed, libnfc now uses uint8_t from C99
+    - nfc_device is now an opaque type
+    - nfc_properties replaces nfc_options
+
+  * Functions
+    - New nfc_get_default_device() function that allows to grab the connstring
+      stored in LIBNFC_DEFAULT_DEVICE environnement variable or returns the
+      first available device if not set
+    - New nfc_device_get_connstring() accessor function to know the device
+      connstring
+    - New nfc_device_set_property_bool() function that replace nfc_configure()
+    - New nfc_device_set_property_int() function to set integer property
+    - nfc_device_name() renamed to nfc_device_get_name() for the sake of
+      consistency
+    - New nfc_device_get_last_error() function, an accessor to last error occured
+    - Whole libnfc's functions now return 0 (NFC_SUCCESS) or positive value if
+      appropriated on success and libnfc's error code on failure
+    - nfc_connect(), nfc_disconnect() renamed to nfc_open(), nfc_close()
+      respectively
+    - Add 2 new functions: initialization and deinitialization functions:
+      nfc_init() and nfc_exit()
+    - New nfc_device_get_supported_modulation() and
+      nfc_device_get_supported_baud_rate() functions
+
+  * Dependencies
+    - log4c is not anymore used for debugging facility. It was a bad choice,
+      sorry for inconvenience.
+
+New in 1.5.1:
+
+API Changes
+
+  * Types
+    - Communication-level errors DEIO and DETIMEOUT are now know as ECOMIO,
+      ECOMTIMEOUT respectively
+    - Common device-level errors DEINVAL and DEABORT are now know as EINVALARG,
+      EOPABORT respectively
+    - New errors:  EFRAACKMISMATCH, EFRAISERRFRAME, EDEVNOTSUP and ENOTIMPL
+
+  * Functions
+    - nfc_abort_command() returns a boolean
+    - timeout (struct timeval) pointer added to
+      nfc_initiator_transceive_bytes(), nfc_target_send_bytes() and
+      nfc_target_receive_bytes()
+    - timed functions nfc_initiator_transceive_bytes_timed() and
+      nfc_initiator_transceive_bits_timed() now takes uint32_t as cycles
+      pointer
+    - nfc_initiator_poll_targets() renamed to nfc_initiator_poll_target() and
+      only return one target
+
+New in 1.5.0:
+
+Installed files
+  - nfc-message.h have been removed, internal macros are not part of API.
+  - New nfc-emulation.h file offers a middle level API to handle emulation (see
+    nfc-emulate-forum-tag4 example)
+
+API Changes
+
+  * Types
+    - New error: DEABORT raised when operation is aborted by user (using
+      nfc_abort_command())
+    - nfc_chip_t type removed from public API (have been renamed to pn53x_type
+      in chips/pn53x)
+    - nfc_device_spec_t removed, each driver can use his own way to keep a
+      connection pointer
+
+  * Structures
+    - nfc_device_t now have a nfc_driver_t struct pointer (named .driver) and
+      void pointer (.driver_data) to handle device specific wrapping
+    - nfc_device_t now have a void pointer (.chip_data) to keep some chip
+      specific data
+    - nfc_device_t now have an file descriptor array to manage to abort request
+    - nfc_device_t does have .nc member (nfc_chip_t) anymore (different chips
+      handling in now in chip level)
+    - nfc_device_t does have .nds member (nfc_device_spec_t) anymore, each
+      driver handle its communication using driver_data pointer
+    - nfc_device_t does have .bActive member (bool) anymore, this variable was
+      almost not used and was not efficient
+    - nfc_device_t does have chip's register caches anymore, this is handle in
+      chip level (using chip_data pointer)
+    - driver_callbacks structure have been removed from public API
+    - New nfc_emulator structure used by the new emulation API (see
+      nfc_emulate_target())
+    - New nfc_emulation_state_machine structure used by the new emulation API,
+      it handles an I/O function and data pointer to create a software based
+      state-machine.
+
+  * Functions
+    - New nfc_abort_command() function to abort current running command.
+    - New nfc_initiator_transceive_bits_timed() and
+      nfc_initiator_transceive_bytes_timed() to transceive bits/bytes and
+      measure the time to have a reply
+    - New nfc_emulate_target() function to start a target emulation using an
+      nfc_emulator structure (it contains a custom state-machine
+      (nfc_emulation_state_machine struct) and a custom target (nfc_target_t)
+      (see nfc-emulate-forum-tag4 to have a look on how-to use it)
+
+
+
+New in 1.4.1:
+
+API Changes
+
+  * Types
+    - New error: ETGUIDNOTSUP raised when UID is not 4 bytes long or does not
+      start with 0x08 (Security restriction present in the NXP PN53x chips)
+
+
+
+New in 1.4.0:
+
+API Changes
+
+  * Types
+    - New nfc_device_option value (enum): NDO_FORCE_ISO14443_A to force the
+      chip to switch in ISO14443-A
+    - New nfc_dep_mode_t (enum) for DEP mode:
+        NDM_UNDEFINED, NDM_PASSIVE, NDM_ACTIVE
+    - New nfc_modulation_type_t (enum) that lists modulation types:
+        NMT_ISO14443A, NMT_ISO14443B, NMT_FELICA, NMT_JEWEL, NMT_DEP
+    - New nfc_baud_rate_t (enum): list of baud rates:
+        NBR_UNDEFINED, NBR_106, NBR_212, NBR_424, NBR_847
+    - nfc_target_type_t have been removed from API (use nfc_modulation_t
+      instead)
+
+  * Structures
+    - nfc_device_t now have a boolean bAutoIso14443_4 to keep the locally the
+      state of NDO_AUTO_ISO14443_4 (should not be directly set, use
+      nfc_configure() with NDO_AUTO_ISO14443_4)
+    - nfc_device_t now have an uint8_t ui8Parameters to cache PN53x parameters
+    - nfc_device_t now have a byte_t btSupportByte to cache supported
+      modulations
+    - nfc_dep_info_t have completely changed, please see API documentation
+    - nfc_iso14443b_info_t have completely changed, please see API
+      documentation
+    - nfc_modulation_t have completely changed: it now contains a
+      nfc_modulation_type_t and nfc_baud_rate_t couple. Initialization example:
+        nfc_modulation_t nm = {
+          .nmt = NMT_ISO14443A,
+          .nbr = NBR_106,
+        };
+    - nfc_target_t now contains new nfc_modulation_t instead of
+      nfc_target_type_t. Initialization example:
+        nfc_target_t nt = {
+          .nm.nmt = NMT_ISO14443A,
+          .nm.nbr = NBR_UNDEFINED,
+          .nti.nai.abtAtqa = { 0x03, 0x44 },
+          .nti.nai.abtUid = { 0x08, 0xab, 0xcd, 0xef },
+          .nti.nai.btSak = 0x20,
+          .nti.nai.szUidLen = 4,
+          .nti.nai.abtAts = { 0x75, 0x77, 0x81, 0x02, 0x80 },
+          .nti.nai.szAtsLen = 5,
+        };
+
+  * Functions
+    - nfc_initiator_select_passive_target() now use new nfc_modulation_t and
+      nfc_target_t instead of nfc_target_info_t
+    - nfc_initiator_list_passive_targets() now use new nfc_modulation_t and
+      nfc_target_t instead of nfc_target_info_t
+    - nfc_initiator_poll_targets() use new nfc_modulation_t instead of
+      nfc_target_type_t
+    - nfc_initiator_select_dep_target() completely changed, use now
+      nfc_dep_mode_t, nfc_baudrate_t, nfc_dep_info_t and nfc_target_t, please
+      see API documentation
+    - nfc_target_init() have an additional argument: nfc_target_t to describe
+      the wanted target
+    - append_iso14443a_crc() was renamed to iso14443a_crc_append()
+    - New iso14443a_locate_historical_bytes() to locate historical bytes in ATS
+
+
+
+New in 1.3.9 (since 1.3.4):
+
+Installed files
+
+  - mifaretag.h and mifareultag.h are removed, Mifare features are not a part
+    of libnfc API anymore (these features are always available in examples/)
+
+API Changes
+
+  * Types  
+    - New nfc_device_option_t value (enum): NDO_AUTO_14443_4, an option to
+      enable/disable auto-switching to ISO/IEC 14443-4 if device is compliliant
+    - New nfc_device_option_t value (enum): NDO_EASY_FRAMING, an option to
+      enable/disable automatic frames encapsulation and chaining
+    - New nfc_target_type_t (enum), with values like NTT_MIFARE,
+      NTT_ISO14443B_106, NTT_DEP_ACTIVE_424, etc.
+    - Mifare related types have been removed from API: mifare_cmd,
+      mifare_param_auth, mifare_param_data, mifare_param_value, mifare_param
+
+  * Structures
+    - nfc_device_t now have boolean bEasyFraming to enable/disable "easy
+      framing" feature (should not be directly set, use nfc_configure() with
+      NDO_EASY_FRAMING)
+    - nfc_device_t now have integer iLastError to handle last error
+    - New chip_callbacks to handle error lookup per chip
+    - driver_callbacks now have a pointer to chip_callbacks
+    - New nfc_target_t that contains nfc_target_info_t and nfc_target_type_t
+
+  * Functions
+    - nfc_initiator_select_tag() became nfc_initiator_select_passive_target()
+    - New nfc_initiator_list_passive_targets() returns a list of detected
+      target on desired modulation
+    - (experimental) New nfc_initiator_poll_targets() returns targets that are
+      detected during hardware polling (available only with PN532)
+    - nfc_initiator_transceive_dep_bytes(), nfc_target_receive_dep_bytes() and
+      nfc_target_send_dep_bytes() have been removed from API, use
+      NDO_EASY_FRAMING option to switch from raw mode to "easy framing"
+    - nfc_initiator_mifare_cmd() have been removed: no more Mifare related
+      stuff in libnfc's API
+    - New nfc_strerror(), nfc_strerror_r() and nfc_perror() to report errors
+    - New append_iso14443a_crc() to append iso14443a_crc() to a string
+
+
+New in 1.3.4 (since 1.2.1):
+
+Installed files
+
+  - Headers are now installed in include/nfc instead of include/libnfc
+  - libnfc.h have been renamed to nfc.h
+  - defines.h and types.h have been merge into nfc-types.h
+  - bitutils.h is not installed anymore, some functions are now in
+    examples/nfc-utils.c
+  - devices.h, dev_acr122.h, dev_arygon.h, dev_pn531.h, dev_pn533.h and rs232.h
+    are not installed anymore
+  - New header mifareultag.h, like mifaretag.h for Mifare UltraLight
+  - New header nfc-messages.h with messages macros (DBG, ERR, INFO)
+
+API Changes
+
+  * Types
+    - uint32_t which was used as size now are size_t
+    - chip_type became nfc_chip_t (enum)
+    - init_modulation became nfc_modulation_t (enum), and now have
+      NM_ACTIVE_DEP and NM_PASSIVE_DEP modulation values added
+
+  * Structures
+    - dev_info became nfc_device_t
+    - dev_config_option became nfc_device_option_t
+    - New nfc_device_desc_t to describe the way to access to a NFC device.
+      Initialisation example: 
+        nfc_device_desc_t ndd = {
+          ndd.pcDriver = "ARYGON";
+          ndd.pcPort = "/dev/ttyUSB0";
+          ndd.uiSpeed = 115200;
+        };
+    - dev_callbacks became driver_callbacks and now have two function pointers
+      more: pick_device() and list_devices()
+    - New nfc_dep_info_t to handle DEP targets info
+    - tag_info_iso14443a became nfc_iso14443a_info_t
+    - tag_info_iso14443b became nfc_iso14443b_info_t
+    - tag_info_felica became nfc_felica_info_t
+    - tag_info_jewel became nfc_jewel_info_t
+    - tag_info became nfc_target_info_t, and now have extended union to
+      nfc_dep_info_t
+
+  * Functions
+    - nfc_connect() now takes 1 nfc_devive_desc_t argument (can be NULL)
+    - New nfc_list_devices(), it find available NFC devices using all know
+      drivers
+    - (experimental) New nfc_initiator_select_dep(), it looks for DEP targets
+    - (experimental) New nfc_initiator_transceive_dep_bytes(), like
+      nfc_initiator_transceive_bytes() for DEP targets
+    - (experimental) New nfc_target_receive_dep_bytes() and
+      nfc_target_send_dep_bytes(), to receive/send bytes to DEP target
+      (configured as initiator) while local NFC device is configured as target
+    - New nfc_device_name() returns the device's name
+    - New iso14443a_crc() computes CRC as described in ISO/IEC 14443
+    - New nfc_version() returns the actual version of libnfc (with SVN
+      revision, if available)

@@ -91,7 +91,6 @@ struct arygon_data {
 
 // ARYGON frames
 static const uint8_t arygon_error_none[] = "FF000000\x0d\x0a";
-static const uint8_t arygon_error_incomplete_command[] = "FF0C0000\x0d\x0a";
 static const uint8_t arygon_error_unknown_mode[] = "FF060000\x0d\x0a";
 
 // Prototypes
@@ -109,7 +108,7 @@ arygon_scan(const nfc_context *context, nfc_connstring connstrings[], const size
 
   while ((acPort = acPorts[iDevice++])) {
     sp = uart_open(acPort);
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Trying to find ARYGON device on serial port: %s at %d bauds.", acPort, ARYGON_DEFAULT_SPEED);
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Trying to find ARYGON device on serial port: %s at %d baud.", acPort, ARYGON_DEFAULT_SPEED);
 
     if ((sp != INVALID_SERIAL_PORT) && (sp != CLAIMED_SERIAL_PORT)) {
       // We need to flush input to be sure first reply does not comes from older byte transceive
@@ -159,7 +158,7 @@ arygon_scan(const nfc_context *context, nfc_connstring connstrings[], const size
       }
 
 #ifndef WIN32
-      // pipe-based abort mecanism
+      // pipe-based abort mechanism
       if (pipe(DRIVER_DATA(pnd)->iAbortFds) < 0) {
         uart_close(DRIVER_DATA(pnd)->port);
         pn53x_data_free(pnd);
@@ -212,7 +211,7 @@ arygon_close_step2(nfc_device *pnd)
   uart_close(DRIVER_DATA(pnd)->port);
 
 #ifndef WIN32
-  // Release file descriptors used for abort mecanism
+  // Release file descriptors used for abort mechanism
   close(DRIVER_DATA(pnd)->iAbortFds[0]);
   close(DRIVER_DATA(pnd)->iAbortFds[1]);
 #endif
@@ -253,7 +252,7 @@ arygon_open(const nfc_context *context, const nfc_connstring connstring)
   serial_port sp;
   nfc_device *pnd = NULL;
 
-  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Attempt to open: %s at %d bauds.", ndd.port, ndd.speed);
+  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Attempt to open: %s at %d baud.", ndd.port, ndd.speed);
   sp = uart_open(ndd.port);
 
   if (sp == INVALID_SERIAL_PORT)
@@ -305,7 +304,7 @@ arygon_open(const nfc_context *context, const nfc_connstring connstring)
   pnd->driver = &arygon_driver;
 
 #ifndef WIN32
-  // pipe-based abort mecanism
+  // pipe-based abort mechanism
   if (pipe(DRIVER_DATA(pnd)->iAbortFds) < 0) {
     uart_close(DRIVER_DATA(pnd)->port);
     pn53x_data_free(pnd);

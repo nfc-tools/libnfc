@@ -1,11 +1,14 @@
 SET(UTILS-SOURCES 
+  nfc-barcode
   nfc-emulate-forum-tag4
+  nfc-jewel
   nfc-list
   nfc-mfclassic
   nfc-mfultralight
   nfc-read-forum-tag3
   nfc-relay-picc
   nfc-scan-device
+  mfcuk
 )
 
 ADD_LIBRARY(nfcutils STATIC 
@@ -21,10 +24,15 @@ FOREACH(source ${UTILS-SOURCES})
     SET(RC_COMMENT "${PACKAGE_NAME} utility")
     SET(RC_INTERNAL_NAME ${source})
     SET(RC_ORIGINAL_NAME ${source}.exe)
-    SET(RC_FILE_TYPE VFT_APP)
+    # RC_FILE_TYPE: VFT_APP
+    SET(RC_FILE_TYPE 0x00000001L)
     CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/../contrib/win32/version.rc.in ${CMAKE_CURRENT_BINARY_DIR}/../windows/${source}.rc @ONLY)
     LIST(APPEND TARGETS ${CMAKE_CURRENT_BINARY_DIR}/../windows/${source}.rc)
   ENDIF(WIN32)
+
+  IF(${source} MATCHES "nfc-jewel")
+    LIST(APPEND TARGETS jewel)
+  ENDIF(${source} MATCHES "nfc-jewel")
 
   IF((${source} MATCHES "nfc-mfultralight") OR (${source} MATCHES "nfc-mfclassic"))
     LIST(APPEND TARGETS mifare)
@@ -35,6 +43,12 @@ FOREACH(source ${UTILS-SOURCES})
       LIST(APPEND TARGETS ../contrib/win32/stdlib)
       INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/../contrib/win32)
     ENDIF(${source} MATCHES "nfc-scan-device")
+    IF((${source} MATCHES "nfc-read-forum-tag3") OR (${source} MATCHES "mfcuk"))
+      LIST(APPEND TARGETS ${CMAKE_CURRENT_SOURCE_DIR}/../contrib/win32/getopt.c)
+    ENDIF() #mfcuk added (@xavave)
+      IF(${source} MATCHES "mfcuk")
+      LIST(APPEND TARGETS mfcuk_mifare crypto1 crapto1 mfcuk_utils mfcuk_finger mifare)
+    ENDIF()
   ENDIF(WIN32)
 
   ADD_EXECUTABLE(${source} ${TARGETS})

@@ -47,10 +47,10 @@
 void
 iso14443a_crc(uint8_t *pbtData, size_t szLen, uint8_t *pbtCrc)
 {
-  uint8_t  bt;
   uint32_t wCrc = 0x6363;
 
   do {
+    uint8_t  bt;
     bt = *pbtData++;
     bt = (bt ^ (uint8_t)(wCrc & 0x00FF));
     bt = (bt ^ (bt << 4));
@@ -78,10 +78,10 @@ iso14443a_crc_append(uint8_t *pbtData, size_t szLen)
 void
 iso14443b_crc(uint8_t *pbtData, size_t szLen, uint8_t *pbtCrc)
 {
-  uint8_t  bt;
   uint32_t wCrc = 0xFFFF;
 
   do {
+    uint8_t  bt;
     bt = *pbtData++;
     bt = (bt ^ (uint8_t)(wCrc & 0x00FF));
     bt = (bt ^ (bt << 4));

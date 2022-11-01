@@ -7,6 +7,7 @@
  * Copyright (C) 2010-2012 Romain Tartière
  * Copyright (C) 2010-2013 Philippe Teuwen
  * Copyright (C) 2012-2013 Ludovic Rousseau
+ * Copyright (C) 2022      Kenspeckle
  * See AUTHORS file for a more comprehensive list of contributors.
  * Additional contributors of this file:
  *
@@ -24,634 +25,326 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-
-/**
- * @file usbbus.c
- * @brief libusb 0.1 driver wrapper
- */
-
-#ifdef HAVE_CONFIG_H
-#  include "config.h"
-#endif // HAVE_CONFIG_H
-
+#include <stdbool.h>
+#include <string.h>
 #include <stdlib.h>
-#include <libusb.h>
-#include <stdint.h>
 #include "usbbus.h"
 #include "log.h"
-#define LOG_CATEGORY "libnfc.buses.usbbus"
+
+
+#define LOG_CATEGORY "libnfc.bus.usbbus"
 #define LOG_GROUP    NFC_LOG_GROUP_DRIVER
-
-/*
- * This file embeds partially libusb-compat-0.1 by:
- * Copyright (C) 2008 Daniel Drake <dsd@gentoo.org>
- * Copyright (c) 2000-2003 Johannes Erdfelt <johannes@erdfelt.com>
- * This layer will be removed ASAP before integration in the main trunk
- */
-
-
-#define LIST_ADD(begin, ent) \
-  do { \
-    if (begin) { \
-      ent->next = begin; \
-      ent->next->prev = ent; \
-    } else \
-      ent->next = NULL; \
-    ent->prev = NULL; \
-    begin = ent; \
-  } while(0)
-
-#define LIST_DEL(begin, ent) \
-  do { \
-    if (ent->prev) \
-      ent->prev->next = ent->next; \
-    else \
-      begin = ent->next; \
-    if (ent->next) \
-      ent->next->prev = ent->prev; \
-    ent->prev = NULL; \
-    ent->next = NULL; \
-  } while (0)
-
-#define USBBUS_DT_CONFIG_SIZE 9
-#define USBBUS_DT_INTERFACE_SIZE 9
-#define USBBUS_DT_ENDPOINT_AUDIO_SIZE 9
 
 static libusb_context *ctx = NULL;
 
-struct usbbus_bus *usb_busses = NULL;
+uint8_t get_usb_num_configs(struct libusb_device *dev);
 
-static void _usb_finalize(void)
-{
-  if (ctx) {
-    libusb_exit(ctx);
-    ctx = NULL;
-  }
-}
-
-static void usb_init(void)
-{
-  if (!ctx) {
-    int r;
-    r = libusb_init(&ctx);
-    if (r < 0) {
-      return;
-    }
-
-    atexit(_usb_finalize);
-  }
-}
-
-static int find_busses(struct usbbus_bus **ret)
-{
-  libusb_device **dev_list = NULL;
-  struct usbbus_bus *busses = NULL;
-  struct usbbus_bus *bus;
-  int dev_list_len = 0;
-  int i;
-  int r;
-
-  r = libusb_get_device_list(ctx, &dev_list);
-  if (r < 0) {
-    return r;
-  }
-
-  if (r == 0) {
-    libusb_free_device_list(dev_list, 1);
-    /* no buses */
-    return 0;
-  }
-
-  /* iterate over the device list, identifying the individual busses.
-   * we use the location field of the usbbus_bus structure to store the
-   * bus number. */
-
-  dev_list_len = r;
-  for (i = 0; i < dev_list_len; i++) {
-    libusb_device *dev = dev_list[i];
-    uint8_t bus_num = libusb_get_bus_number(dev);
-
-    /* if we already know about it, continue */
-    if (busses) {
-      bus = busses;
-      int found = 0;
-      do {
-        if (bus_num == bus->location) {
-          found = 1;
-          break;
-        }
-      } while ((bus = bus->next) != NULL);
-      if (found)
-        continue;
-    }
-
-    /* add it to the list of busses */
-    bus = malloc(sizeof(*bus));
-    if (!bus)
-      goto err;
-
-    memset(bus, 0, sizeof(*bus));
-    bus->location = bus_num;
-    snprintf(bus->dirname, USBBUS_PATH_MAX, "%03d", bus_num);
-    LIST_ADD(busses, bus);
-  }
-
-  libusb_free_device_list(dev_list, 1);
-  *ret = busses;
-  return 0;
-
-err:
-  bus = busses;
-  while (bus) {
-    struct usbbus_bus *tbus = bus->next;
-    free(bus);
-    bus = tbus;
-  }
-  return LIBUSB_ERROR_NO_MEM;
-}
-
-static int usb_find_busses(void)
-{
-  struct usbbus_bus *new_busses = NULL;
-  struct usbbus_bus *bus;
-  int changes = 0;
-  int r;
-
-  /* libusb-1.0 initialization might have failed, but we can't indicate
-   * this with libusb-0.1, so trap that situation here */
-  if (!ctx)
-    return 0;
-
-  r = find_busses(&new_busses);
-  if (r < 0) {
-    return r;
-  }
-
-  /* walk through all busses we already know about, removing duplicates
-   * from the new list. if we do not find it in the new list, the bus
-   * has been removed. */
-
-  bus = usb_busses;
-  while (bus) {
-    struct usbbus_bus *tbus = bus->next;
-    struct usbbus_bus *nbus = new_busses;
-    int found = 0;
-
-    while (nbus) {
-      struct usbbus_bus *tnbus = nbus->next;
-
-      if (bus->location == nbus->location) {
-        LIST_DEL(new_busses, nbus);
-        free(nbus);
-        found = 1;
-        break;
-      }
-      nbus = tnbus;
-    }
-
-    if (!found) {
-      /* bus removed */
-      changes++;
-      LIST_DEL(usb_busses, bus);
-      free(bus);
-    }
-
-    bus = tbus;
-  }
-
-  /* anything remaining in new_busses is a new bus */
-  bus = new_busses;
-  while (bus) {
-    struct usbbus_bus *tbus = bus->next;
-    LIST_DEL(new_busses, bus);
-    LIST_ADD(usb_busses, bus);
-    changes++;
-    bus = tbus;
-  }
-
-  return changes;
-}
-
-static int find_devices(libusb_device **dev_list, int dev_list_len,
-                        struct usbbus_bus *bus, struct usbbus_device **ret)
-{
-  struct usbbus_device *devices = NULL;
-  struct usbbus_device *dev;
-  int i;
-
-  for (i = 0; i < dev_list_len; i++) {
-    libusb_device *newlib_dev = dev_list[i];
-    uint8_t bus_num = libusb_get_bus_number(newlib_dev);
-
-    if (bus_num != bus->location)
-      continue;
-
-    dev = malloc(sizeof(*dev));
-    if (!dev)
-      goto err;
-
-    /* No need to reference the device now, just take the pointer. We
-     * increase the reference count later if we keep the device. */
-    dev->dev = newlib_dev;
-
-    dev->bus = bus;
-    dev->devnum = libusb_get_device_address(newlib_dev);
-    snprintf(dev->filename, USBBUS_PATH_MAX, "%03d", dev->devnum);
-    LIST_ADD(devices, dev);
-  }
-
-  *ret = devices;
-  return 0;
-
-err:
-  dev = devices;
-  while (dev) {
-    struct usbbus_device *tdev = dev->next;
-    free(dev);
-    dev = tdev;
-  }
-  return LIBUSB_ERROR_NO_MEM;
-}
-
-static void clear_endpoint_descriptor(struct usbbus_endpoint_descriptor *ep)
-{
-  if (ep->extra)
-    free(ep->extra);
-}
-
-static void clear_interface_descriptor(struct usbbus_interface_descriptor *iface)
-{
-  if (iface->extra)
-    free(iface->extra);
-  if (iface->endpoint) {
-    int i;
-    for (i = 0; i < iface->bNumEndpoints; i++)
-      clear_endpoint_descriptor(iface->endpoint + i);
-    free(iface->endpoint);
-  }
-}
-
-static void clear_interface(struct usbbus_interface *iface)
-{
-  if (iface->altsetting) {
-    int i;
-    for (i = 0; i < iface->num_altsetting; i++)
-      clear_interface_descriptor(iface->altsetting + i);
-    free(iface->altsetting);
-  }
-}
-
-static void clear_config_descriptor(struct usbbus_config_descriptor *config)
-{
-  if (config->extra)
-    free(config->extra);
-  if (config->interface) {
-    int i;
-    for (i = 0; i < config->bNumInterfaces; i++)
-      clear_interface(config->interface + i);
-    free(config->interface);
-  }
-}
-
-static void clear_device(struct usbbus_device *dev)
-{
-  int i;
-  for (i = 0; i < dev->descriptor.bNumConfigurations; i++)
-    clear_config_descriptor(dev->config + i);
-}
-
-static int copy_endpoint_descriptor(struct usbbus_endpoint_descriptor *dest,
-                                    const struct libusb_endpoint_descriptor *src)
-{
-  memcpy(dest, src, USBBUS_DT_ENDPOINT_AUDIO_SIZE);
-
-  dest->extralen = src->extra_length;
-  if (src->extra_length) {
-    dest->extra = malloc(src->extra_length);
-    if (!dest->extra)
-      return LIBUSB_ERROR_NO_MEM;
-    memcpy(dest->extra, src->extra, src->extra_length);
-  }
-
-  return 0;
-}
-
-static int copy_interface_descriptor(struct usbbus_interface_descriptor *dest,
-                                     const struct libusb_interface_descriptor *src)
-{
-  int i;
-  int num_endpoints = src->bNumEndpoints;
-  size_t alloc_size = sizeof(struct usbbus_endpoint_descriptor) * num_endpoints;
-
-  memcpy(dest, src, USBBUS_DT_INTERFACE_SIZE);
-  dest->endpoint = malloc(alloc_size);
-  if (!dest->endpoint)
-    return LIBUSB_ERROR_NO_MEM;
-  memset(dest->endpoint, 0, alloc_size);
-
-  for (i = 0; i < num_endpoints; i++) {
-    int r = copy_endpoint_descriptor(dest->endpoint + i, &src->endpoint[i]);
-    if (r < 0) {
-      clear_interface_descriptor(dest);
-      return r;
-    }
-  }
-
-  dest->extralen = src->extra_length;
-  if (src->extra_length) {
-    dest->extra = malloc(src->extra_length);
-    if (!dest->extra) {
-      clear_interface_descriptor(dest);
-      return LIBUSB_ERROR_NO_MEM;
-    }
-    memcpy(dest->extra, src->extra, src->extra_length);
-  }
-
-  return 0;
-}
-
-static int copy_interface(struct usbbus_interface *dest,
-                          const struct libusb_interface *src)
-{
-  int i;
-  int num_altsetting = src->num_altsetting;
-  size_t alloc_size = sizeof(struct usbbus_interface_descriptor)
-                      * num_altsetting;
-
-  dest->num_altsetting = num_altsetting;
-  dest->altsetting = malloc(alloc_size);
-  if (!dest->altsetting)
-    return LIBUSB_ERROR_NO_MEM;
-  memset(dest->altsetting, 0, alloc_size);
-
-  for (i = 0; i < num_altsetting; i++) {
-    int r = copy_interface_descriptor(dest->altsetting + i,
-                                      &src->altsetting[i]);
-    if (r < 0) {
-      clear_interface(dest);
-      return r;
-    }
-  }
-
-  return 0;
-}
-
-static int copy_config_descriptor(struct usbbus_config_descriptor *dest,
-                                  const struct libusb_config_descriptor *src)
-{
-  int i;
-  int num_interfaces = src->bNumInterfaces;
-  size_t alloc_size = sizeof(struct usbbus_interface) * num_interfaces;
-
-  memcpy(dest, src, USBBUS_DT_CONFIG_SIZE);
-  dest->interface = malloc(alloc_size);
-  if (!dest->interface)
-    return LIBUSB_ERROR_NO_MEM;
-  memset(dest->interface, 0, alloc_size);
-
-  for (i = 0; i < num_interfaces; i++) {
-    int r = copy_interface(dest->interface + i, &src->interface[i]);
-    if (r < 0) {
-      clear_config_descriptor(dest);
-      return r;
-    }
-  }
-
-  dest->extralen = src->extra_length;
-  if (src->extra_length) {
-    dest->extra = malloc(src->extra_length);
-    if (!dest->extra) {
-      clear_config_descriptor(dest);
-      return LIBUSB_ERROR_NO_MEM;
-    }
-    memcpy(dest->extra, src->extra, src->extra_length);
-  }
-
-  return 0;
-}
-
-static int initialize_device(struct usbbus_device *dev)
-{
-  libusb_device *newlib_dev = dev->dev;
-  int num_configurations;
-  size_t alloc_size;
-  int r;
-  int i;
-
-  /* device descriptor is identical in both libs */
-  r = libusb_get_device_descriptor(newlib_dev,
-                                   (struct libusb_device_descriptor *) &dev->descriptor);
-  if (r < 0) {
-    return r;
-  }
-
-  num_configurations = dev->descriptor.bNumConfigurations;
-  alloc_size = sizeof(struct usbbus_config_descriptor) * num_configurations;
-  dev->config = malloc(alloc_size);
-  if (!dev->config)
-    return LIBUSB_ERROR_NO_MEM;
-  memset(dev->config, 0, alloc_size);
-
-  for (i = 0; i < num_configurations; i++) {
-    struct libusb_config_descriptor *newlib_config;
-    r = libusb_get_config_descriptor(newlib_dev, i, &newlib_config);
-    if (r < 0) {
-      clear_device(dev);
-      free(dev->config);
-      return r;
-    }
-    r = copy_config_descriptor(dev->config + i, newlib_config);
-    libusb_free_config_descriptor(newlib_config);
-    if (r < 0) {
-      clear_device(dev);
-      free(dev->config);
-      return r;
-    }
-  }
-  dev->num_children = 0;
-  dev->children = NULL;
-
-  libusb_ref_device(newlib_dev);
-  return 0;
-}
-
-static void free_device(struct usbbus_device *dev)
-{
-  clear_device(dev);
-  libusb_unref_device(dev->dev);
-  free(dev);
-}
-
-static int usb_find_devices(void)
-{
-  struct usbbus_bus *bus;
-  libusb_device **dev_list;
-  int dev_list_len;
-  int changes = 0;
-
-  /* libusb-1.0 initialization might have failed, but we can't indicate
-   * this with libusb-0.1, so trap that situation here */
-  if (!ctx)
-    return 0;
-
-  dev_list_len = libusb_get_device_list(ctx, &dev_list);
-  if (dev_list_len < 0)
-    return dev_list_len;
-
-  for (bus = usb_busses; bus; bus = bus->next) {
-    int r;
-    struct usbbus_device *new_devices = NULL;
-    struct usbbus_device *dev;
-
-    r = find_devices(dev_list, dev_list_len, bus, &new_devices);
-    if (r < 0) {
-      libusb_free_device_list(dev_list, 1);
-      return r;
-    }
-
-    /* walk through the devices we already know about, removing duplicates
-     * from the new list. if we do not find it in the new list, the device
-     * has been removed. */
-    dev = bus->devices;
-    while (dev) {
-      int found = 0;
-      struct usbbus_device *tdev = dev->next;
-      struct usbbus_device *ndev = new_devices;
-
-      while (ndev) {
-        if (ndev->devnum == dev->devnum) {
-          LIST_DEL(new_devices, ndev);
-          free(ndev);
-          found = 1;
-          break;
-        }
-        ndev = ndev->next;
-      }
-
-      if (!found) {
-        LIST_DEL(bus->devices, dev);
-        free_device(dev);
-        changes++;
-      }
-
-      dev = tdev;
-    }
-
-    /* anything left in new_devices is a new device */
-    dev = new_devices;
-    while (dev) {
-      struct usbbus_device *tdev = dev->next;
-      r = initialize_device(dev);
-      if (r < 0) {
-        dev = tdev;
-        continue;
-      }
-      LIST_DEL(new_devices, dev);
-      LIST_ADD(bus->devices, dev);
-      changes++;
-      dev = tdev;
-    }
-  }
-
-  libusb_free_device_list(dev_list, 1);
-  return changes;
-}
-
-int usbbus_prepare(void)
+int usbbus_prepare()
 {
   static bool usb_initialized = false;
+  int res;
   if (!usb_initialized) {
 
 #ifdef ENVVARS
     char *env_log_level = getenv("LIBNFC_LOG_LEVEL");
     // Set libusb debug only if asked explicitely:
-    // LIBUSB_LOG_LEVEL=12288 (= NFC_LOG_PRIORITY_DEBUG * 2 ^ NFC_LOG_GROUP_LIBUSB)
-    if (env_log_level && (((atoi(env_log_level) >> (NFC_LOG_GROUP_LIBUSB * 2)) & 0x00000003) >= NFC_LOG_PRIORITY_DEBUG)) {
-      setenv("USB_DEBUG", "255", 1);
+    // LIBUSB_LOG_LEVEL=12288 // (= NFC_LOG_PRIORITY_DEBUG * 2 ^ NFC_LOG_GROUP_LIBUSB)
+    if (env_log_level
+        && (((atoi(env_log_level) >> (NFC_LOG_GROUP_LIBUSB * 2)) & 0x00000003) >= NFC_LOG_PRIORITY_DEBUG)) {
+      setenv("USB_DEBUG", "255", 0);
     }
 #endif
 
-    usb_init();
+    res = libusb_init(&ctx);
+    if (res != 0) {
+      log_put(LOG_GROUP,
+              LOG_CATEGORY,
+              NFC_LOG_PRIORITY_ERROR,
+              "Unable to init libusb (%s)",
+              libusb_strerror(res));
+      return res;
+    }
     usb_initialized = true;
   }
 
-  int res;
-  // usb_find_busses will find all of the busses on the system. Returns the
-  // number of changes since previous call to this function (total of new
-  // busses and busses removed).
-  if ((res = usb_find_busses()) < 0) {
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to find USB busses (%s)", usbbus_strerror(res));
-    return -1;
-  }
   // usb_find_devices will find all of the devices on each bus. This should be
   // called after usb_find_busses. Returns the number of changes since the
   // previous call to this function (total of new device and devices removed).
-  if ((res = usb_find_devices()) < 0) {
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to find USB devices (%s)", usbbus_strerror(res));
+  libusb_device **tmp_devices;
+  ssize_t num_devices = libusb_get_device_list(ctx, &tmp_devices);
+  libusb_free_device_list(tmp_devices, (int) num_devices);
+  if (num_devices <= 0) {
+    log_put(LOG_GROUP,
+            LOG_CATEGORY,
+            NFC_LOG_PRIORITY_ERROR,
+            "Unable to find USB devices (%s)",
+            libusb_strerror((int) num_devices));
     return -1;
   }
   return 0;
 }
 
-usbbus_device_handle *usbbus_open(struct usbbus_device *dev)
+
+//TODO 
+//release things again at the end of the program libusb
+
+size_t usbbus_usb_scan(nfc_connstring connstrings[],
+                       const size_t connstrings_len,
+                       struct usbbus_device *nfc_usb_devices,
+                       const size_t num_nfc_usb_devices,
+                       char *usb_driver_name)
 {
-  int r;
-  usbbus_device_handle *udev;
-  r = libusb_open((libusb_device *) dev->dev, (libusb_device_handle **)&udev);
-  if (r < 0) {
-    return NULL;
+  usbbus_prepare();
+
+  size_t device_found = 0;
+  struct libusb_device **devices;
+  ssize_t num_devices = libusb_get_device_list(ctx, &devices);
+  for (size_t i = 0; i < num_devices; i++) {
+    struct libusb_device *dev = devices[i];
+
+    for (size_t nfc_dev_idx = 0; nfc_dev_idx < num_nfc_usb_devices; nfc_dev_idx++) {
+      if (nfc_usb_devices[nfc_dev_idx].vendor_id == usbbus_get_vendor_id(dev)
+          && nfc_usb_devices[nfc_dev_idx].product_id == usbbus_get_product_id(dev)) {
+
+        size_t valid_config_idx = 1;
+
+        // Make sure there are 2 endpoints available
+        // with libusb-win32 we got some null pointers so be robust before looking at endpoints
+        if (nfc_usb_devices[nfc_dev_idx].max_packet_size == 0) {
+
+          bool found_valid_config = false;
+
+          for (size_t config_idx = 0; config_idx < get_usb_num_configs(dev); i++) {
+            struct libusb_config_descriptor *usb_config;
+            int r = libusb_get_config_descriptor(dev, config_idx, &usb_config);
+
+            if (r != 0
+                || usb_config->interface == NULL
+                || usb_config->interface->altsetting == NULL
+                || usb_config->interface->altsetting->bNumEndpoints < 2) {
+              // Nope, we maybe want the next one, let's try to find another
+              libusb_free_config_descriptor(usb_config);
+              continue;
+            }
+
+            libusb_free_config_descriptor(usb_config);
+
+            found_valid_config = true;
+            valid_config_idx = config_idx;
+            break;
+          }
+          if (!found_valid_config) {
+            libusb_unref_device(dev);
+            continue;
+          }
+        }
+
+        libusb_device_handle *udev;
+        int res = libusb_open(dev, &udev);
+        if (res < 0 && udev == NULL) {
+          libusb_unref_device(dev);
+          continue;
+        }
+
+        // Set configuration
+        res = libusb_set_configuration(udev, (int) valid_config_idx);
+        if (res < 0) {
+          log_put(LOG_GROUP,
+                  LOG_CATEGORY,
+                  NFC_LOG_PRIORITY_ERROR,
+                  "Unable to set USB configuration (%s)",
+                  libusb_strerror(res));
+          libusb_close(udev);
+          libusb_unref_device(dev);
+          // we failed to use the device
+          continue;
+        }
+
+        log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "device found: Vendor-Id: %d Product-Id %d",
+                usbbus_get_vendor_id(dev), usbbus_get_product_id(dev));
+        libusb_close(udev);
+
+        uint8_t dev_address = libusb_get_device_address(dev);
+        printf("%s:%03d:%03d",
+               "Test",
+               dev_address,
+               (int) valid_config_idx);
+        size_t size_new_str = snprintf(
+                                connstrings[device_found],
+                                sizeof(connstrings[device_found]),
+                                "%s:%03d:%03d",
+                                usb_driver_name,
+                                dev_address,
+                                (int) valid_config_idx);
+
+        if (size_new_str >= (int) sizeof(nfc_connstring)) {
+          // truncation occurred, skipping that one
+          libusb_unref_device(dev);
+          continue;
+        }
+        device_found++;
+        // Test if we reach the maximum "wanted" devices
+        if (device_found == connstrings_len) {
+          libusb_free_device_list(devices, 0);
+          return device_found;
+        }
+      }
+    }
   }
-  return (usbbus_device_handle *)udev;
+  libusb_free_device_list(devices, 0);
+  return device_found;
 }
 
-void usbbus_close(usbbus_device_handle *dev)
+void usbbus_get_usb_endpoints(struct libusb_device *dev,
+                              uint8_t *endpoint_in,
+                              uint8_t *endpoint_out,
+                              uint16_t *max_packet_size)
 {
-  libusb_close((libusb_device_handle *)dev);
+
+  bool endpoint_in_set = false;
+  bool endpoint_out_set = false;
+  size_t num_configs = get_usb_num_configs(dev);
+  for (size_t config_idx = 0; config_idx < num_configs; config_idx++) {
+    struct libusb_config_descriptor *usb_config;
+
+    int r = libusb_get_config_descriptor(dev, config_idx, &usb_config);
+    if (r != 0) {
+      continue;
+    }
+
+    if (!usb_config->interface) {
+      continue;
+    }
+    for (size_t interface_idx = 0; interface_idx < usb_config->bNumInterfaces; interface_idx++) {
+      struct libusb_interface interface = usb_config->interface[interface_idx];
+      if (!interface.altsetting) {
+        continue;
+      }
+      for (size_t settings_idx = 0; settings_idx < interface.num_altsetting; settings_idx++) {
+        struct libusb_interface_descriptor settings = interface.altsetting[settings_idx];
+        if (!settings.endpoint) {
+          continue;
+        }
+
+        // 3 Endpoints maximum: Interrupt In, Bulk In, Bulk Out
+        for (size_t endpoint_idx = 0; endpoint_idx < settings.bNumEndpoints; endpoint_idx++) {
+          struct libusb_endpoint_descriptor endpoint = settings.endpoint[endpoint_idx];
+
+          // Only accept bulk transfer endpoints (ignore interrupt endpoints)
+          if (endpoint.bmAttributes != LIBUSB_ENDPOINT_TRANSFER_TYPE_BULK) {
+            continue;
+          }
+
+          // Copy the endpoint to a local var, makes it more readable code
+          uint8_t endpoint_address = endpoint.bEndpointAddress;
+
+          // Test if we dealing with a bulk IN endpoint
+          if ((endpoint_address & LIBUSB_ENDPOINT_DIR_MASK) == LIBUSB_ENDPOINT_IN && !endpoint_in_set) {
+            *endpoint_in = endpoint_address;
+            *max_packet_size = endpoint.wMaxPacketSize;
+            endpoint_in_set = true;
+          }
+          // Test if we dealing with a bulk OUT endpoint
+          if ((endpoint_address & LIBUSB_ENDPOINT_DIR_MASK) == LIBUSB_ENDPOINT_OUT && !endpoint_out_set) {
+            *endpoint_out = endpoint_address;
+            *max_packet_size = endpoint.wMaxPacketSize;
+            endpoint_out_set = true;
+          }
+
+          if (endpoint_in_set && endpoint_out_set) {
+            libusb_free_config_descriptor(usb_config);
+            return;
+          }
+        }
+      }
+    }
+
+    libusb_free_config_descriptor(usb_config);
+  }
 }
 
-int usbbus_set_configuration(usbbus_device_handle *dev, int configuration)
+uint8_t get_usb_num_configs(struct libusb_device *dev)
 {
-  return libusb_set_configuration((libusb_device_handle *)dev, configuration);
+  struct libusb_device_descriptor descriptor;
+  libusb_get_device_descriptor(dev, &descriptor);
+  return descriptor.bNumConfigurations;
 }
 
-int usbbus_get_string_simple(usbbus_device_handle *dev, int index, char *buf, size_t buflen)
+void usbbus_get_usb_device_name(struct libusb_device *dev, libusb_device_handle *udev, char *buffer, size_t len)
 {
-  return libusb_get_string_descriptor_ascii((libusb_device_handle *)dev, index & 0xff,
-                                            (unsigned char *) buf, (int) buflen);
+  struct libusb_device_descriptor descriptor;
+  libusb_get_device_descriptor(dev, &descriptor);
+  if (descriptor.iManufacturer || descriptor.iProduct) {
+    if (udev) {
+      libusb_get_string_descriptor_ascii(udev, descriptor.iManufacturer & 0xff, (unsigned char *) buffer, len);
+      if (strlen(buffer) > 0) {
+        strncpy(buffer + strlen(buffer), " / ", 4);
+      }
+      libusb_get_string_descriptor_ascii(udev,
+                                         descriptor.iProduct & 0xff,
+                                         (unsigned char *) buffer + strlen(buffer),
+                                         len - strlen(buffer));
+    }
+  }
 }
 
-int usbbus_bulk_transfer(usbbus_device_handle *dev, int ep, char *bytes, int size, int *actual_length, int timeout)
+
+void usbbus_get_device(uint8_t dev_address, struct libusb_device **dev, struct libusb_device_handle **dev_handle)
 {
-  return libusb_bulk_transfer((libusb_device_handle *)dev, ep & 0xff, (unsigned char *)bytes, size, actual_length, timeout);
+  struct libusb_device **device_list;
+  ssize_t num_devices = libusb_get_device_list(ctx, &device_list);
+  for (size_t i = 0; i < num_devices; i++) {
+    if (libusb_get_device_address(device_list[i]) != dev_address) {
+      continue;
+    } else {
+      *dev = device_list[i];
+      int res = libusb_open(*dev, dev_handle);
+      if (res != 0 || dev_handle == NULL) {
+        log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR,
+                "Unable to open libusb device (%s)", libusb_strerror(res));
+        continue;
+      }
+    }
+  }
+
+  // libusb works with a reference counter which is set to 1 for each device when calling libusb_get_device_list and increased
+  // by libusb_open. Thus we decrease the counter by 1 for all devices and only the "real" device will survive
+  libusb_free_device_list(device_list, num_devices);
 }
 
-int usbbus_claim_interface(usbbus_device_handle *dev, int interface)
+
+void usbbus_close(struct libusb_device *dev, struct libusb_device_handle *dev_handle)
 {
-  return libusb_claim_interface((libusb_device_handle *)dev, interface);
+  libusb_close(dev_handle);
+  libusb_unref_device(dev);
+  libusb_exit(ctx);
 }
 
-int usbbus_release_interface(usbbus_device_handle *dev, int interface)
+uint16_t usbbus_get_vendor_id(struct libusb_device *dev)
 {
-  return libusb_release_interface((libusb_device_handle *)dev, interface);
+  struct libusb_device_descriptor descriptor;
+  libusb_get_device_descriptor(dev, &descriptor);
+  return descriptor.idVendor;
 }
 
-int usbbus_set_interface_alt_setting(usbbus_device_handle *dev, int interface, int alternate)
+uint16_t usbbus_get_product_id(struct libusb_device *dev)
 {
-  return libusb_set_interface_alt_setting((libusb_device_handle *)dev, interface, alternate);
+  struct libusb_device_descriptor descriptor;
+  libusb_get_device_descriptor(dev, &descriptor);
+  return descriptor.idProduct;
 }
 
-int usbbus_reset(usbbus_device_handle *dev)
+
+int usbbus_get_num_alternate_settings(struct libusb_device *dev, uint8_t config_idx)
 {
-  return libusb_reset_device((libusb_device_handle *)dev);
+  struct libusb_config_descriptor *usb_config;
+  int r = libusb_get_config_descriptor(dev, config_idx, &usb_config);
+  if (r != 0 || usb_config == NULL) {
+    return -1;
+  }
+  libusb_free_config_descriptor(usb_config);
+  return usb_config->interface->num_altsetting;
 }
 
-const char *usbbus_strerror(int errcode)
-{
-  return libusb_strerror((enum libusb_error)errcode);
-}
 
-struct usbbus_bus *usbbus_get_busses(void)
-{
-  return usb_busses;
-}
 

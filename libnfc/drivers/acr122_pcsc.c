@@ -59,7 +59,7 @@
 #  define IOCTL_CCID_ESCAPE_SCARD_CTL_CODE SCARD_CTL_CODE(3500)
 #elif defined(__APPLE__)
 #  define IOCTL_CCID_ESCAPE_SCARD_CTL_CODE (((0x31) << 16) | ((3500) << 2))
-#elif defined (__FreeBSD__) || defined (__OpenBSD__)
+#elif defined (__FreeBSD__) || defined (__OpenBSD__) || defined (__NetBSD__)
 #  define IOCTL_CCID_ESCAPE_SCARD_CTL_CODE (((0x31) << 16) | ((3500) << 2))
 #elif defined (__linux__)
 #  include <reader.h>
@@ -93,7 +93,7 @@ const struct pn53x_io acr122_pcsc_io;
 // Prototypes
 char   *acr122_pcsc_firmware(nfc_device *pnd);
 
-const char *supported_devices[] = {
+static const char *supported_devices[] = {
   "ACS ACR122",         // ACR122U & Touchatag, last version
   "ACS ACR 38U-CCID",   // Touchatag, early version
   "ACS ACR38U-CCID",    // Touchatag, early version, under MacOSX
@@ -400,15 +400,14 @@ acr122_pcsc_receive(nfc_device *pnd, uint8_t *pbtData, const size_t szData, int 
 {
   // FIXME: timeout is not handled
   (void) timeout;
-
   int len;
-  uint8_t  abtRxCmd[5] = { 0xFF, 0xC0, 0x00, 0x00 };
 
   if (DRIVER_DATA(pnd)->ioCard.dwProtocol == SCARD_PROTOCOL_T0) {
     /*
      * Retrieve the PN532 response.
      */
     DWORD dwRxLen = sizeof(DRIVER_DATA(pnd)->abtRx);
+    uint8_t  abtRxCmd[5] = { 0xFF, 0xC0, 0x00, 0x00 };
     abtRxCmd[4] = DRIVER_DATA(pnd)->abtRx[1];
     if (SCardTransmit(DRIVER_DATA(pnd)->hCard, &(DRIVER_DATA(pnd)->ioCard), abtRxCmd, sizeof(abtRxCmd), NULL, DRIVER_DATA(pnd)->abtRx, &dwRxLen) != SCARD_S_SUCCESS) {
       pnd->last_error = NFC_EIO;

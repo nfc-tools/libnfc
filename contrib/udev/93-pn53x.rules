@@ -1,0 +1,22 @@
+# udev rules file for PN531 and PN533 devices (for udev 0.98 version)
+# to be installed in /etc/udev/rules.d
+
+SUBSYSTEM!="usb|usb_device", GOTO="pn53x_rules_end"
+ACTION!="add", GOTO="pn53x_rules_end"
+
+# PN531
+ATTRS{idVendor}=="04cc", ATTRS{idProduct}=="0531", MODE="0664", GROUP="plugdev"
+ATTRS{idVendor}=="054c", ATTRS{idProduct}=="0193", MODE="0664", GROUP="plugdev"
+
+# PN533
+ATTRS{idVendor}=="04cc", ATTRS{idProduct}=="2533", MODE="0664", GROUP="plugdev"
+ATTRS{idVendor}=="04e6", ATTRS{idProduct}=="5591", MODE="0664", GROUP="plugdev"
+ATTRS{idVendor}=="04e6", ATTRS{idProduct}=="5594", MODE="0664", GROUP="plugdev"
+ATTRS{idVendor}=="1fd3", ATTRS{idProduct}=="0608", MODE="0664", GROUP="plugdev"
+ATTRS{idVendor}=="054c", ATTRS{idProduct}=="02e1", MODE="0664", GROUP="plugdev"
+
+# ACR122 / Touchatag
+ATTRS{idVendor}=="072f", ATTRS{idProduct}=="2200", MODE="0664", GROUP="plugdev"
+ATTRS{idVendor}=="072f", ATTRS{idProduct}=="90cc", MODE="0664", GROUP="plugdev"
+
+LABEL="pn53x_rules_end"

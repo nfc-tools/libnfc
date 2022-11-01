@@ -59,6 +59,13 @@
 // I2C address of the PN532 chip.
 #define PN532_I2C_ADDR 0x24
 
+/*
+ * When sending lots of data, the pn532 occasionally fails to respond in time.
+ * Since it happens so rarely, lets try to fix it by re-sending the data. This
+ * define allows for fine tuning the number of retries.
+ */
+#define PN532_SEND_RETRIES 3
+
 // Internal data structs
 const struct pn53x_io pn532_i2c_io;
 
@@ -67,13 +74,9 @@ struct pn532_i2c_data {
   volatile bool abort_flag;
 };
 
-/* Delay for the loop waiting for READY frame (in ms) */
-#define PN532_RDY_LOOP_DELAY 90
-
-const struct timespec rdyDelay = {
-  .tv_sec = 0,
-  .tv_nsec = PN532_RDY_LOOP_DELAY * 1000 * 1000
-};
+/* preamble and start bytes, see pn532-internal.h for details */
+const uint8_t pn53x_preamble_and_start[] = { 0x00, 0x00, 0xff };
+#define PN53X_PREAMBLE_AND_START_LEN	(sizeof(pn53x_preamble_and_start) / sizeof(pn53x_preamble_and_start[0]))
 
 /* Private Functions Prototypes */
 
@@ -95,6 +98,70 @@ static size_t pn532_i2c_scan(const nfc_context *context, nfc_connstring connstri
 
 
 #define DRIVER_DATA(pnd) ((struct pn532_i2c_data*)(pnd->driver_data))
+
+/*
+ * Bus free time (in ms) between a STOP condition and START condition. See
+ * tBuf in the PN532 data sheet, section 12.25: Timing for the I2C interface,
+ * table 320. I2C timing specification, page 211, rev. 3.2 - 2007-12-07.
+ */
+#define PN532_BUS_FREE_TIME 5
+static struct timespec __transaction_stop;
+
+/**
+ * @brief Wrapper around i2c_read to ensure proper timing by respecting the
+ * 	  minimal free bus time between a STOP condition and a START condition.
+ *
+ * @note This is not thread safe, but since libnfc is single threaded
+ * 	 this should be okay.
+ *
+ * @param id I2C device
+ * @param buf pointer on buffer used to store data
+ * @param len length of the buffer
+ * @return length (in bytes) of read data, or driver error code (negative value)
+ */
+static ssize_t pn532_i2c_read(const i2c_device id,
+                              uint8_t *buf, const size_t len)
+{
+  struct timespec transaction_start, bus_free_time = { 0, 0 };
+  ssize_t ret;
+
+  clock_gettime(CLOCK_MONOTONIC, &transaction_start);
+  bus_free_time.tv_nsec = (PN532_BUS_FREE_TIME * 1000 * 1000) -
+                          (transaction_start.tv_nsec - __transaction_stop.tv_nsec);
+  nanosleep(&bus_free_time, NULL);
+
+  ret = i2c_read(id, buf, len);
+  clock_gettime(CLOCK_MONOTONIC, &__transaction_stop);
+  return ret;
+}
+
+/**
+ * @brief Wrapper around i2c_write to ensure proper timing by respecting the
+ * 	  minimal free bus time between a STOP condition and a START condition.
+ *
+ * @note This is not thread safe, but since libnfc is single threaded
+ * 	 this should be okay.
+ *
+ * @param id I2C device
+ * @param buf pointer on buffer containing data
+ * @param len length of the buffer
+ * @return NFC_SUCCESS on success, otherwise driver error code
+ */
+static ssize_t pn532_i2c_write(const i2c_device id,
+                               const uint8_t *buf, const size_t len)
+{
+  struct timespec transaction_start, bus_free_time = { 0, 0 };
+  ssize_t ret;
+
+  clock_gettime(CLOCK_MONOTONIC, &transaction_start);
+  bus_free_time.tv_nsec = (PN532_BUS_FREE_TIME * 1000 * 1000) -
+                          (transaction_start.tv_nsec - __transaction_stop.tv_nsec);
+  nanosleep(&bus_free_time, NULL);
+
+  ret = i2c_write(id, buf, len);
+  clock_gettime(CLOCK_MONOTONIC, &__transaction_stop);
+  return ret;
+}
 
 /**
  * @brief Scan all available I2C buses to find PN532 devices.
@@ -308,6 +375,7 @@ static int
 pn532_i2c_send(nfc_device *pnd, const uint8_t *pbtData, const size_t szData, int timeout)
 {
   int res = 0;
+  uint8_t retries;
 
   // Discard any existing data ?
 
@@ -334,15 +402,22 @@ pn532_i2c_send(nfc_device *pnd, const uint8_t *pbtData, const size_t szData, int
       break;
   };
 
-  uint8_t abtFrame[PN532_BUFFER_LEN] = { 0x00, 0x00, 0xff };       // Every packet must start with "00 00 ff"
+  uint8_t abtFrame[PN532_BUFFER_LEN];
   size_t szFrame = 0;
 
+  memcpy(abtFrame, pn53x_preamble_and_start, PN53X_PREAMBLE_AND_START_LEN);	// Every packet must start with the preamble and start bytes.
   if ((res = pn53x_build_frame(abtFrame, &szFrame, pbtData, szData)) < 0) {
     pnd->last_error = res;
     return pnd->last_error;
   }
 
-  res = i2c_write(DRIVER_DATA(pnd)->dev, abtFrame, szFrame);
+  for (retries = PN532_SEND_RETRIES; retries > 0; retries--) {
+    res = pn532_i2c_write(DRIVER_DATA(pnd)->dev, abtFrame, szFrame);
+    if (res >= 0)
+      break;
+
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Failed to transmit data. Retries left: %d.", retries - 1);
+  }
 
   if (res < 0) {
     log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Unable to transmit data. (TX)");
@@ -400,10 +475,7 @@ pn532_i2c_wait_rdyframe(nfc_device *pnd, uint8_t *pbtData, const size_t szDataLe
   }
 
   do {
-    // Wait a little bit before reading
-    nanosleep(&rdyDelay, (struct timespec *) NULL);
-
-    int recCount = i2c_read(DRIVER_DATA(pnd)->dev, i2cRx, szDataLen + 1);
+    int recCount = pn532_i2c_read(DRIVER_DATA(pnd)->dev, i2cRx, szDataLen + 1);
 
     if (DRIVER_DATA(pnd)->abort_flag) {
       // Reset abort flag
@@ -477,9 +549,7 @@ pn532_i2c_receive(nfc_device *pnd, uint8_t *pbtData, const size_t szDataLen, int
     goto error;
   }
 
-  const uint8_t pn53x_preamble[3] = { 0x00, 0x00, 0xff };
-
-  if (0 != (memcmp(frameBuf, pn53x_preamble, 3))) {
+  if (0 != (memcmp(frameBuf, pn53x_preamble_and_start, PN53X_PREAMBLE_AND_START_LEN))) {
     log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Frame preamble+start code mismatch");
     pnd->last_error = NFC_EIO;
     goto error;
@@ -572,7 +642,7 @@ error:
 int
 pn532_i2c_ack(nfc_device *pnd)
 {
-  return i2c_write(DRIVER_DATA(pnd)->dev, pn53x_ack_frame, sizeof(pn53x_ack_frame));
+  return pn532_i2c_write(DRIVER_DATA(pnd)->dev, pn53x_ack_frame, sizeof(pn53x_ack_frame));
 }
 
 /**

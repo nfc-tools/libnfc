@@ -123,7 +123,7 @@ uart_set_speed(serial_port sp, const uint32_t uiPortSpeed)
 {
   struct serial_port_windows *spw;
 
-  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Serial port speed requested to be set to %d bauds.", uiPortSpeed);
+  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Serial port speed requested to be set to %d baud.", uiPortSpeed);
   // Set port speed (Input and Output)
   switch (uiPortSpeed) {
     case 9600:
@@ -135,7 +135,7 @@ uart_set_speed(serial_port sp, const uint32_t uiPortSpeed)
     case 460800:
       break;
     default:
-      log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to set serial port speed to %d bauds. Speed value must be one of these constants: 9600 (default), 19200, 38400, 57600, 115200, 230400 or 460800.", uiPortSpeed);
+      log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to set serial port speed to %d baud. Speed value must be one of these constants: 9600 (default), 19200, 38400, 57600, 115200, 230400 or 460800.", uiPortSpeed);
       return;
   };
   spw = (struct serial_port_windows *) sp;
@@ -183,7 +183,7 @@ uart_receive(serial_port sp, uint8_t *pbtRx, const size_t szRx, void *abort_p, i
   log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Timeouts are set to %lu ms", timeout_ms);
 
   // TODO Enhance the reception method
-  // - According to MSDN, it could be better to implement nfc_abort_command() mecanism using Cancello()
+  // - According to MSDN, it could be better to implement nfc_abort_command() mechanism using Cancello()
   volatile bool *abort_flag_p = (volatile bool *)abort_p;
   do {
     log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "ReadFile");

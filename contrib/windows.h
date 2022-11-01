@@ -49,7 +49,9 @@
 #    define ENOTSUP       WSAEOPNOTSUPP
 #    define ECONNABORTED  WSAECONNABORTED
 #  else
+#ifndef _MSC_VER
 #    define snprintf sprintf_s
+#endif
 #    define strdup _strdup
 #  endif
 

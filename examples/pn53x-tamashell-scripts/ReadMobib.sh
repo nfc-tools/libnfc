@@ -1,8 +1,10 @@
 #!/bin/sh
 
+#DEBUG='//;'
+
 cat << EOF | \
     pn53x-tamashell |\
-    awk '\
+    awk $DEBUG'\
         /^> #.*:/{
             sub(/^> #/,"")
             n=$0
@@ -21,27 +23,33 @@ cat << EOF | \
 # Select one typeB target
 4A010300
 
+# SELECT AID "1TIC.ICA"
+4001 00a4 0400 08 315449432e494341
+
 # Select ICC file
-4001 80a4 0800 04 3f00 0002
+4001 00a4 0000 02 3f00
+4001 00a4 0000 02 0002
 #ICC:
-4001 80b2 0104 1d
+4001 00b2 0104 1d
 
 # Select Holder file
-4001 80a4 0800 04 3f00 3f1c
+4001 00a4 0000 02 3f1c
 #Holder1:
-4001 80b2 0104 1d
+4001 00b2 0104 1d
 #Holder2:
-4001 80b2 0204 1d
+4001 00b2 0204 1d
 
 # Select EnvHol file
-4001 00a4 0800 04 2000 2001
+4001 00a4 0000 00
+4001 00a4 0000 02 2000
+4001 00a4 0000 02 2001
 #EnvHol1:
 4001 00b2 0104 1d
 #EnvHol2:
 4001 00b2 0204 1d
 
 # Select EvLog file
-4001 00a4 0800 04 2000 2010
+4001 00a4 0000 02 2010
 #EvLog1:
 4001 00b2 0104 1d
 #EvLog2:
@@ -50,12 +58,12 @@ cat << EOF | \
 4001 00b2 0304 1d
 
 # Select ConList file
-4001 00a4 0800 04 2000 2050
+4001 00a4 0000 02 2050
 #ConList:
 4001 00b2 0104 1d
 
 # Select Contra file
-4001 00a4 0800 04 2000 2020
+4001 00a4 0000 02 2020
 #Contra1:
 4001 00b2 0104 1d
 #Contra2:
@@ -82,17 +90,19 @@ cat << EOF | \
 4001 00b2 0c04 1d
 
 # Select Counter file
-4001 00a4 0800 04 2000 2069
+4001 00a4 0000 02 2069
 #Counter:
 4001 00b2 0104 1d
 
 # Select LoadLog file
-4001 00a4 0800 04 1000 1014
+4001 00a4 0000 00
+4001 00a4 0000 02 1000
+4001 00a4 0000 02 1014
 #LoadLog:
 4001 00b2 0104 1d
 
 # Select Purcha file
-4001 00a4 08 0004 1000 1015
+4001 00a4 0000 02 1015
 #Purcha1:
 4001 00b2 0104 1d
 #Purcha2:
@@ -101,7 +111,9 @@ cat << EOF | \
 4001 00b2 0304 1d
 
 # Select SpecEv file
-4001 00a4 08 0004 2000 2040
+4001 00a4 0000 00
+4001 00a4 0000 02 2000
+4001 00a4 0000 02 2040
 #SpecEv1:
 4001 00b2 0104 1d
 #SpecEv2:

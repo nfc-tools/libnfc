@@ -79,7 +79,10 @@ intr_hdlr(int sig)
   if (pnd != NULL) {
     printf("\nAborting current command...\n");
     nfc_abort_command(pnd);
+    nfc_close(pnd);
   }
+  nfc_exit(context);
+  exit(EXIT_SUCCESS);
 }
 
 static void
@@ -237,7 +240,4 @@ main(int argc, char *argv[])
       }
     }
   }
-  nfc_close(pnd);
-  nfc_exit(context);
-  exit(EXIT_SUCCESS);
 }

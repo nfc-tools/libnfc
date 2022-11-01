@@ -34,21 +34,24 @@
 // Handle platform specific includes
 #include "contrib/windows.h"
 
+//There is no setenv()and unsetenv() in windows,but we can use putenv() instead.
 int setenv(const char *name, const char *value, int overwrite)
 {
-  int exists = GetEnvironmentVariableA(name, NULL, 0);
-  if ((exists && overwrite) || (!exists)) {
-    if (!SetEnvironmentVariableA(name, value)) {
-      // Set errno here correctly
-      return -1;
-    }
-    return 0;
+  char *env = getenv(name);
+  if ((env && overwrite) || (!env)) {
+    char *str[32];
+    strcpy(str, name);
+    strcat(str, "=");
+    strcat(str, value);
+    return putenv(str);
   }
-  // Exists and overwrite is 0.
   return -1;
 }
 
 void unsetenv(const char *name)
 {
-  SetEnvironmentVariableA(name, NULL);
+  char *str[32];
+  strcpy(str, name);
+  strcat(str, "=");
+  putenv(str);
 }

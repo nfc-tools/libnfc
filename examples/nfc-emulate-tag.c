@@ -266,9 +266,9 @@ main(int argc, char *argv[])
     },
     .nti = {
       .nai = {
-        abtAtqa = { 0x03, 0x44 },
-        abtUid = { 0x08, 0xab, 0xcd, 0xef },
-        btSak = 0x20,
+        .abtAtqa = { 0x03, 0x44 },
+        .abtUid = { 0x08, 0xab, 0xcd, 0xef },
+        .btSak = 0x20,
         .szUidLen = 4,
         .abtAts = { 0x75, 0x77, 0x81, 0x02, 0x80 },
         .szAtsLen = 5,

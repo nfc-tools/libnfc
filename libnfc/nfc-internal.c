@@ -9,6 +9,7 @@
  * Copyright (C) 2012-2013 Ludovic Rousseau
  * See AUTHORS file for a more comprehensive list of contributors.
  * Additional contributors of this file:
+ * Copyright (C) 2020      Adam Laurie
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -169,38 +170,27 @@ void
 prepare_initiator_data(const nfc_modulation nm, uint8_t **ppbtInitiatorData, size_t *pszInitiatorData)
 {
   switch (nm.nmt) {
-    case NMT_ISO14443B: {
+    case NMT_ISO14443B:
       // Application Family Identifier (AFI) must equals 0x00 in order to wakeup all ISO14443-B PICCs (see ISO/IEC 14443-3)
       *ppbtInitiatorData = (uint8_t *) "\x00";
       *pszInitiatorData = 1;
-    }
-    break;
-    case NMT_ISO14443BI: {
+      break;
+    case NMT_ISO14443BI:
       // APGEN
       *ppbtInitiatorData = (uint8_t *) "\x01\x0b\x3f\x80";
       *pszInitiatorData = 4;
-    }
-    break;
-    case NMT_ISO14443B2SR: {
-      // Get_UID
-      *ppbtInitiatorData = (uint8_t *) "\x0b";
-      *pszInitiatorData = 1;
-    }
-    break;
-    case NMT_ISO14443B2CT: {
-      // SELECT-ALL
-      *ppbtInitiatorData = (uint8_t *) "\x9F\xFF\xFF";
-      *pszInitiatorData = 3;
-    }
-    break;
-    case NMT_FELICA: {
+      break;
+    case NMT_FELICA:
       // polling payload must be present (see ISO/IEC 18092 11.2.2.5)
       *ppbtInitiatorData = (uint8_t *) "\x00\xff\xff\x01\x00";
       *pszInitiatorData = 5;
-    }
-    break;
+      break;
     case NMT_ISO14443A:
+    case NMT_ISO14443B2CT:
+    case NMT_ISO14443B2SR:
+    case NMT_ISO14443BICLASS:
     case NMT_JEWEL:
+    case NMT_BARCODE:
     case NMT_DEP:
       *ppbtInitiatorData = NULL;
       *pszInitiatorData = 0;
@@ -242,7 +232,6 @@ connstring_decode(const nfc_connstring connstring, const char *driver_name, cons
   int res = sscanf(connstring, format, param0, param1, param2);
 
   if (res < 1 || ((0 != strcmp(param0, driver_name)) &&
-                  (bus_name != NULL) &&
                   (0 != strcmp(param0, bus_name)))) {
     // Driver name does not match.
     res = 0;

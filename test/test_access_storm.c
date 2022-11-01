@@ -45,7 +45,7 @@ test_access_storm(void)
         .nbr = NBR_106,
       };
       res = nfc_initiator_list_passive_targets(device, nm, ant, MAX_TARGET_COUNT);
-      cut_assert_operator_int(res, >= , 0, cut_message("nfc_initiator_list_passive_targets"));
+      cut_assert_operator_int(res, >=, 0, cut_message("nfc_initiator_list_passive_targets"));
 
       nfc_close(device);
     }

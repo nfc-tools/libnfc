@@ -74,14 +74,23 @@
 #endif
 
 #  if defined(__APPLE__)
-const char *serial_ports_device_radix[] = { "tty.SLAB_USBtoUART", "tty.usbserial-", NULL };
+const char *serial_ports_device_radix[] = { "tty.SLAB_USBtoUART", "tty.usbserial", "tty.usbmodem", NULL };
 #  elif defined (__FreeBSD__) || defined (__OpenBSD__) || defined(__FreeBSD_kernel__)
 const char *serial_ports_device_radix[] = { "cuaU", "cuau", NULL };
-#  elif defined (__linux__)
+#  elif defined (__NetBSD__)
+const char *serial_ports_device_radix[] = { "tty0", "ttyC", "ttyS", "ttyU", "ttyY", NULL };
+#  elif defined (__linux__) || defined (__CYGWIN__)
 const char *serial_ports_device_radix[] = { "ttyUSB", "ttyS", "ttyACM", "ttyAMA", "ttyO", NULL };
 #  else
 #    error "Can't determine serial string for your system"
 #  endif
+
+// As of 2015/Feb/22, Cygwin does not handle FIONREAD on physical serial devices.
+// We'll use TIOCINQ instead which is pretty much the same.
+#ifdef __CYGWIN__
+#  include <sys/termios.h>
+#  define FIONREAD TIOCINQ
+#endif
 
 // Work-around to claim uart interface using the c_iflag (software input processing) from the termios struct
 #  define CCLAIMED 0x80000000
@@ -179,7 +188,7 @@ uart_flush_input(serial_port sp, bool wait)
 void
 uart_set_speed(serial_port sp, const uint32_t uiPortSpeed)
 {
-  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Serial port speed requested to be set to %d bauds.", uiPortSpeed);
+  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Serial port speed requested to be set to %d baud.", uiPortSpeed);
 
   // Portability note: on some systems, B9600 != 9600 so we have to do
   // uint32_t <=> speed_t associations by hand.
@@ -215,7 +224,7 @@ uart_set_speed(serial_port sp, const uint32_t uiPortSpeed)
       break;
 #  endif
     default:
-      log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to set serial port speed to %d bauds. Speed value must be one of those defined in termios(3).",
+      log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to set serial port speed to %d baud. Speed value must be one of those defined in termios(3).",
               uiPortSpeed);
       return;
   };
@@ -385,32 +394,31 @@ uart_list_ports(void)
   size_t szRes = 1;
 
   res[0] = NULL;
-  DIR *dir;
-  if ((dir = opendir("/dev")) == NULL) {
+  DIR *pdDir;
+  if ((pdDir = opendir("/dev")) == NULL) {
     perror("opendir error: /dev");
     return res;
   }
-  struct dirent entry;
-  struct dirent *result;
-  while ((readdir_r(dir, &entry, &result) == 0) && (result != NULL)) {
+  struct dirent *pdDirEnt;
+  while ((pdDirEnt = readdir(pdDir)) != NULL) {
 #if !defined(__APPLE__)
-    if (!isdigit(entry.d_name[strlen(entry.d_name) - 1]))
+    if (!isdigit(pdDirEnt->d_name[strlen(pdDirEnt->d_name) - 1]))
       continue;
 #endif
     const char **p = serial_ports_device_radix;
     while (*p) {
-      if (!strncmp(entry.d_name, *p, strlen(*p))) {
+      if (!strncmp(pdDirEnt->d_name, *p, strlen(*p))) {
         char **res2 = realloc(res, (szRes + 1) * sizeof(char *));
         if (!res2) {
           perror("malloc");
           goto oom;
         }
         res = res2;
-        if (!(res[szRes - 1] = malloc(6 + strlen(entry.d_name)))) {
+        if (!(res[szRes - 1] = malloc(6 + strlen(pdDirEnt->d_name)))) {
           perror("malloc");
           goto oom;
         }
-        sprintf(res[szRes - 1], "/dev/%s", entry.d_name);
+        sprintf(res[szRes - 1], "/dev/%s", pdDirEnt->d_name);
 
         szRes++;
         res[szRes - 1] = NULL;
@@ -419,7 +427,7 @@ uart_list_ports(void)
     }
   }
 oom:
-  closedir(dir);
+  closedir(pdDir);
 
   return res;
 }

@@ -3,6 +3,9 @@
 nfc-read-forum-tag3 \- Extract NDEF Message from a NFC Forum Tag Type 3
 .SH SYNOPSIS
 .B nfc-read-forum-tag3
+.RI [
+.RI \fR\fB\-q\fR
+.RI ]
 .RI \fR\fB\-o\fR
 .IR FILE 
 .SH DESCRIPTION
@@ -12,15 +15,22 @@ This utility extracts (if available) NDEF Messages contained in a NFC Forum Tag 
 .
 .SH OPTIONS
 \fR\fB\-o\fR 
-output extracted NDEF Message to
 .IR FILE
+: output extracted NDEF Message to
+.IR FILE
+(use
+\fR\fB\-o \-\fR 
+to output to stdout)
+
+\fR\fB\-q\fR 
+: be quiet, don't display Attribute Block parsing info
 
 .SH BUGS
 Please report any bugs on the
 .B libnfc
 issue tracker at:
 .br
-.BR http://code.google.com/p/libnfc/issues
+.BR https://github.com/nfc-tools/libnfc/issues
 .SH LICENCE
 .B libnfc
 is licensed under the GNU Lesser General Public License (LGPL), version 3.

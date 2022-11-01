@@ -99,6 +99,7 @@ print_usage(char *argv[])
   printf("\t-q\tQuiet mode. Suppress printing of relayed data (improves timing).\n");
   printf("\t-t\tTarget mode only (the one on reader side). Data expected from FD3 to FD4.\n");
   printf("\t-i\tInitiator mode only (the one on tag side). Data expected from FD3 to FD4.\n");
+  printf("\t-s\tSwap roles of found devices.\n");
   printf("\t-n N\tAdds a waiting time of N seconds (integer) in the relay to mimic long distance.\n");
 }
 
@@ -226,7 +227,7 @@ main(int argc, char *argv[])
       nfc_exit(context);
       exit(EXIT_FAILURE);
     }
-    if ((fd4 = fdopen(4, "r")) == NULL) {
+    if ((fd4 = fdopen(4, "w")) == NULL) {
       ERR("Could not open file descriptor 4");
       nfc_exit(context);
       exit(EXIT_FAILURE);
