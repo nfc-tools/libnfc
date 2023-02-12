@@ -113,7 +113,7 @@ main(int argc, const char *argv[])
         exit(EXIT_FAILURE);
       }
       // Force TypeB for all derivatives of B
-      if (mask & 0xf0)
+      if (mask & 0xd0)
         mask |= 0x08;
     } else {
       ERR("%s is not supported option.", argv[arg]);
