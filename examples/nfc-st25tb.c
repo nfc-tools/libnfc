@@ -50,7 +50,7 @@
  *
  * Tested with
  * - ST25TB512-AC - (BE/Brussels/STIB ; AliExpress ones)
- * - ST25TB512-AT - (FR/Lille/Ilevia ; FR/Reims/Citura)
+ * - ST25TB512-AT - (FR/Lille/Ilevia ; FR/Reims/Citura ; FR/Dijon/Divia ; FR/Strasbourg/CTS)
  * - SRT512 - legacy - (FR/Bordeaux/TBM)
  * - SRI512 - legacy - (anonymous vending machine)
  */
@@ -94,7 +94,7 @@ int main(int argc, char *argv[])
 	nfc_context *context = NULL;
 	nfc_device *pnd = NULL;
 	nfc_target nt = {0};
-	nfc_modulation nm = {NMT_ISO14443B, NBR_106};
+	nfc_modulation nm = {NMT_ISO14443B2SR, NBR_106};
 	const st_data * stcurrent;
 	int opt, res;
 	bool bIsBlock = false, bIsRead = false, bIsWrite = false, bIsBadCli = false;
@@ -205,45 +205,35 @@ int main(int argc, char *argv[])
 				{
 					printf("Reader  : %s - via %s\n  ...wait for card...\n", nfc_device_get_name(pnd), nfc_device_get_connstring(pnd));
 					
-					res = nfc_initiator_list_passive_targets(pnd, nm, &nt, 1);
-					if(res == 0) // we don't really wanted a NMT_ISO14443B
+					if (nfc_initiator_select_passive_target(pnd, nm, NULL, 0, &nt) > 0)
 					{
-						nm.nmt = NMT_ISO14443B2SR; // we want a NMT_ISO14443B2SR, but needed to ask for NMT_ISO14443B before
-						if (nfc_initiator_select_passive_target(pnd, nm, NULL, 0, &nt) > 0)
+						stcurrent = get_info(&nt, true);
+						if(stcurrent)
 						{
-							stcurrent = get_info(&nt, true);
-							if(stcurrent)
-							{
-								printf("\n");
+							printf("\n");
 
-								if(bIsBlock && (bIsRead || bIsWrite))
+							if(bIsBlock && (bIsRead || bIsWrite))
+							{
+								if(bIsRead)
 								{
-									if(bIsRead)
-									{
-										get_block_at(pnd, blockNumber, NULL, 0, true);
-									}
-									
-									if(bIsWrite)
-									{
-										set_block_at_confirmed(pnd, blockNumber, data, cbData, true);
-									}
+									get_block_at(pnd, blockNumber, NULL, 0, true);
 								}
-								else if(!bIsRead && !bIsWrite && !bIsBlock)
+								
+								if(bIsWrite)
 								{
-									for(i = 0; i < stcurrent->nbNormalBlock; i++)
-									{
-										get_block_at(pnd, i, NULL, 0, true);
-									}
-									display_system_info(pnd, stcurrent);
+									set_block_at_confirmed(pnd, blockNumber, data, cbData, true);
 								}
+							}
+							else if(!bIsRead && !bIsWrite && !bIsBlock)
+							{
+								for(i = 0; i < stcurrent->nbNormalBlock; i++)
+								{
+									get_block_at(pnd, i, NULL, 0, true);
+								}
+								display_system_info(pnd, stcurrent);
 							}
 						}
 					}
-					else if(res > 0)
-					{
-						printf("ERROR - We got a NMT_ISO14443B ?\n");
-					}
-					else printf("ERROR - nfc_initiator_list_passive_targets: %i\n", res);
 				}
 				else printf("ERROR - nfc_initiator_init: %i\n", res);
 				
@@ -607,3 +597,4 @@ void print_hex(const uint8_t *pbtData, const size_t szBytes)
 		printf("%02hhx ", pbtData[szPos]);
 	}
 }
+
