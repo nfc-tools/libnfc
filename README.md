@@ -102,6 +102,17 @@ file per device in a nfc/devices.d directory:
     printf 'name = "My first device"\nconnstring = "pn532_uart:/dev/ttyACM0"\n' | sudo tee /etc/nfc/devices.d/first.conf
     printf 'name = "My second device"\nconnstring = "pn532_uart:/dev/ttyACM1"\n' | sudo tee /etc/nfc/devices.d/second.conf
 
+Environment Variables
+=====================
+You can override certain configuration options at runtime using the following environment variables:
++ `LIBNFC_DEFAULT_DEVICE=<connstring>`:  `LIBNFC_DEFAULT_DEVICE=pn532_uart:/dev/ttyACM0` will use pn532 on /dev/ttyACM0 as default device
++ `LIBNFC_DEVICE=<connstring>` will ignore all devices in the config files and use only the one defined in the variable
++ `LIBNFC_AUTO_SCAN=<true|false>` overrides `allow_autoscan` option in the config file
++ `LIBNFC_INTRUSIVE_SCAN=<true|false>` overrides `allow_intrusive_scan` option in the config file
++ `LIBNFC_LOG_LEVEL=<0|1|2|3>` overrides `log_level` option in the config file
+
+To obtain the connstring of a recognized device, you can use `nfc-scan-device`: `LIBNFC_AUTO_SCAN=true nfc-scan-device` will show the names & connstrings of all found devices.
+
 How to report bugs
 ==================
 
