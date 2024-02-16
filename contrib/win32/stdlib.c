@@ -34,24 +34,25 @@
 // Handle platform specific includes
 #include "contrib/windows.h"
 
-//There is no setenv()and unsetenv() in windows,but we can use putenv() instead.
+// There is no setenv() and unsetenv() in windows,but we can use _putenv_s()
+// instead.
 int setenv(const char *name, const char *value, int overwrite)
 {
-  char *env = getenv(name);
-  if ((env && overwrite) || (!env)) {
-    char *str[32];
-    strcpy(str, name);
-    strcat(str, "=");
-    strcat(str, value);
-    return putenv(str);
+  // FIXME: assert(setenv("a=b", "", 0) == -1) failed.
+  if (overwrite == 0) {
+    size_t sz;
+    // Test for existence.
+    errno_t ret = getenv_s(&sz, NULL, 0, name);
+    if (sz != 0)
+      return 0;
+    if (ret != 0)
+      return -1;
   }
-  return -1;
+  return _putenv_s(name, value) ? -1 : 0;
 }
 
-void unsetenv(const char *name)
+int unsetenv(const char *name)
 {
-  char *str[32];
-  strcpy(str, name);
-  strcat(str, "=");
-  putenv(str);
+  // FIXME: assert(unsetenv("a=b") == -1) failed.
+  return _putenv_s(name, "") ? -1 : 0;
 }
