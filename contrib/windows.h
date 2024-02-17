@@ -59,6 +59,6 @@
  * These declarations get rid of the "implicit declaration warning."
  */
 int setenv(const char *name, const char *value, int overwrite);
-void unsetenv(const char *name);
+int unsetenv(const char *name);
 
 #endif
