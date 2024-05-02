@@ -56,14 +56,12 @@ FOREACH(source ${UTILS-SOURCES})
 ENDFOREACH(source)
 
 #install required libraries
-IF(WIN32)
+IF(ENABLE_FIXUP_BUNDLE)
   INCLUDE(InstallRequiredSystemLibraries)
   CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/cmake/FixBundle.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/FixBundle.cmake @ONLY)
   INSTALL(SCRIPT ${CMAKE_CURRENT_BINARY_DIR}/FixBundle.cmake)
-ENDIF(WIN32)
+ENDIF(ENABLE_FIXUP_BUNDLE)
 
-IF(NOT WIN32)
-  # Manuals for the examples
-  FILE(GLOB manuals "${CMAKE_CURRENT_SOURCE_DIR}/*.1")
-  INSTALL(FILES ${manuals} DESTINATION ${SHARE_INSTALL_PREFIX}/man/man1 COMPONENT manuals)
-ENDIF(NOT WIN32)
+# Manuals for the utils
+FILE(GLOB manuals "${CMAKE_CURRENT_SOURCE_DIR}/*.1")
+INSTALL(FILES ${manuals} DESTINATION ${CMAKE_INSTALL_MANDIR}/man1 COMPONENT manuals)
