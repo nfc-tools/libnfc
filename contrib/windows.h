@@ -33,26 +33,28 @@
 #ifndef __WINDOWS_H__
 #define __WINDOWS_H__
 
-#  include <windows.h>
-#  include <winerror.h>
-#  include "win32/err.h"
-#  if defined (__MINGW32__)
-/*
- * Cheating here on the snprintf to incorporate the format argument
- * into the VA_ARGS. Else we get MinGW errors regarding number of arguments
- * if doing a fixed string with no arguments.
-*/
-#    define snprintf(S, n, ...) sprintf(S, __VA_ARGS__)
-#    define pipe(fds) _pipe(fds, 5000, _O_BINARY)
-#    define ETIMEDOUT     WSAETIMEDOUT
-#    define ENOTSUP       WSAEOPNOTSUPP
-#    define ECONNABORTED  WSAECONNABORTED
-#  else
-#ifndef _MSC_VER
-#    define snprintf sprintf_s
+#define WIN32_LEAN_AND_MEAN
+#include <fcntl.h>
+#include <windows.h>
+
+#ifdef __MINGW32__
+
+#if __MINGW64_VERSION_MAJOR < 3
+#include <winerror.h>
+#define ETIMEDOUT WSAETIMEDOUT
+#define ENOTSUP WSAEOPNOTSUPP
+#define ECONNABORTED WSAECONNABORTED
 #endif
-#    define strdup _strdup
-#  endif
+
+#if __MINGW64_VERSION_MAJOR < 8
+#define NEED_LIBNFC_SNPRINTF
+#define snprintf libnfc_snprintf
+#endif
+
+#endif
+
+#define pipe(fds) _pipe(fds, 4096, _O_BINARY)
+#define strdup _strdup
 
 /*
  * setenv and unsetenv are not Windows compliant nor implemented in MinGW.

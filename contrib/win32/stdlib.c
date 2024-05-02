@@ -31,7 +31,9 @@
  * @brief Windows System compatibility
  */
 
-// Handle platform specific includes
+#include <stddef.h>
+#include <stdlib.h>
+
 #include "contrib/windows.h"
 
 // This implementation of setenv() and unsetenv() using _putenv_s() as the
@@ -55,3 +57,45 @@ int unsetenv(const char *name)
 {
   return _putenv_s(name, "");
 }
+
+#ifdef NEED_LIBNFC_SNPRINTF
+
+#include <stdarg.h>
+#include <stdio.h>
+
+int libnfc_vsnprintf(char *s, size_t n, const char *format, va_list arg)
+{
+  int retval;
+
+  /* _vsnprintf() does not work with zero length buffer
+   * so count number of character by _vscprintf() call */
+  if (n == 0)
+    return _vscprintf(format, arg);
+
+  retval = _vsnprintf(s, n, format, arg);
+
+  /* _vsnprintf() does not fill trailing null byte if there is not place for it
+   */
+  if (retval < 0 || (size_t)retval == n)
+    s[n - 1] = '\0';
+
+  /* _vsnprintf() returns negative number if buffer is too small
+   * so count number of character by _vscprintf() call */
+  if (retval < 0)
+    retval = _vscprintf(format, arg);
+
+  return retval;
+}
+
+int libnfc_snprintf(char *buffer, size_t n, const char *format, ...)
+{
+  int retval;
+  va_list argptr;
+
+  va_start(argptr, format);
+  retval = libnfc_vsnprintf(buffer, n, format, argptr);
+  va_end(argptr);
+  return retval;
+}
+
+#endif
