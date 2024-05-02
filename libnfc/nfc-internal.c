@@ -43,7 +43,6 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <inttypes.h>
 
 #define LOG_GROUP    NFC_LOG_GROUP_GENERAL
 #define LOG_CATEGORY "libnfc.general"
