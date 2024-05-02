@@ -5,9 +5,11 @@ IF(WIN32)
 
   # Add in the rc for version information in the dll
   LIST(APPEND WINDOWS_SOURCES ${CMAKE_CURRENT_BINARY_DIR}/../windows/libnfc.rc)
-  IF (NOT MINGW)
+  IF(MSVC)
     LIST(APPEND WINDOWS_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/../contrib/win32/nfc_msvc.def)
-  ENDIF()
+  ELSE(MSVC)
+    LIST(APPEND WINDOWS_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/../contrib/win32/nfc.def)
+  ENDIF(MSVC)
 ENDIF(WIN32)
 
 # Library's chips
