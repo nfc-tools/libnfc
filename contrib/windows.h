@@ -35,7 +35,6 @@
 
 #  include <windows.h>
 #  include <winerror.h>
-#  include "win32/err.h"
 #  if defined (__MINGW32__)
 /*
  * Cheating here on the snprintf to incorporate the format argument

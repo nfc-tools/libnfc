@@ -54,12 +54,6 @@
 #include <string.h>
 #include <ctype.h>
 
-#ifndef _WIN32
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#endif
-
 #include <nfc/nfc.h>
 
 #include "mifare.h"

@@ -26,23 +26,20 @@
 
 /**
  * @file unistd.h
- * @brief This file intended to serve as a drop-in replacement for unistd.h on Windows
+ * @brief This file intended to serve as a drop-in replacement for unistd.h on
+ * Windows
  */
 
 #ifndef _UNISTD_H_
 #define _UNISTD_H_
 
+#ifdef __MINGW32__
+#include_next <unistd.h>
+#else
 #include "contrib/windows.h"
-
+#include "getopt.h"
 // Needed by Sleep() under Windows
-#  include <winbase.h>
-#  define sleep(X) Sleep( X * 1000)
-
-// With MinGW, getopt(3) is provided as separate header
-#if defined(WIN32) && defined(__GNUC__) /* mingw compiler */
-#include <getopt.h>
+#define sleep(X) Sleep(X * 1000)
 #endif
 
-
 #endif /* _UNISTD_H_ */
-
