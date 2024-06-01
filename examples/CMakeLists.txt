@@ -42,11 +42,11 @@ FOREACH(source ${EXAMPLES-SOURCES})
 ENDFOREACH(source)
 
 #install required libraries
-IF(WIN32)
+IF(FIXUP_BUNDLE)
   INCLUDE(InstallRequiredSystemLibraries)
   CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/cmake/FixBundle.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/FixBundle.cmake @ONLY)
   INSTALL(SCRIPT ${CMAKE_CURRENT_BINARY_DIR}/FixBundle.cmake)
-ENDIF(WIN32)
+ENDIF(FIXUP_BUNDLE)
 
 IF(NOT WIN32)
   # Manuals for the examples
