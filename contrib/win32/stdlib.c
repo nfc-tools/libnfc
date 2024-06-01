@@ -58,11 +58,12 @@ int unsetenv(const char *name)
   return _putenv_s(name, "");
 }
 
-#ifdef NEED_LIBNFC_SNPRINTF
+#ifdef USE_LIBNFC_SNPRINTF
 
 #include <stdarg.h>
 #include <stdio.h>
 
+// The implementation of libnfc_snprintf() is taken from mingw-w64-crt
 int libnfc_vsnprintf(char *s, size_t n, const char *format, va_list arg)
 {
   int retval;

@@ -34,22 +34,21 @@
 #define __WINDOWS_H__
 
 #define WIN32_LEAN_AND_MEAN
-#include <fcntl.h>
 #include <windows.h>
 
-#ifdef __MINGW32__
-#if __MINGW64_VERSION_MAJOR < 3
+#if defined(__MINGW32__) && __MINGW64_VERSION_MAJOR < 3
 #include <winerror.h>
 #define ETIMEDOUT WSAETIMEDOUT
 #define ENOTSUP WSAEOPNOTSUPP
 #define ECONNABORTED WSAECONNABORTED
 #endif
-#endif
 
-#if defined(_MSC_VER) && _MSC_VER < 1900 ||                                    \
-    defined(__MINGW32__) && __MINGW64_VERSION_MAJOR < 8
-#define NEED_LIBNFC_SNPRINTF
+#if defined(_MSC_VER) && _MSC_VER < 1900 || \
+    defined(__MINGW32__) && __MINGW64_VERSION_MAJOR < 8 && !defined(_UCRT)
+#define USE_LIBNFC_SNPRINTF
 #define snprintf libnfc_snprintf
+
+int libnfc_snprintf(char *buffer, size_t n, const char *format, ...);
 #endif
 
 #define pipe(fds) _pipe(fds, 4096, _O_BINARY)
