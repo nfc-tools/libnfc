@@ -57,22 +57,6 @@
 #define LOG_GROUP    NFC_LOG_GROUP_COM
 #define LOG_CATEGORY "libnfc.bus.uart"
 
-#ifndef _WIN32
-// Needed by sleep() under Unix
-#  include <unistd.h>
-#  include <time.h>
-#  define msleep(x) do { \
-    struct timespec xsleep; \
-    xsleep.tv_sec = x / 1000; \
-    xsleep.tv_nsec = (x - xsleep.tv_sec * 1000) * 1000 * 1000; \
-    nanosleep(&xsleep, NULL); \
-  } while (0)
-#else
-// Needed by Sleep() under Windows
-#  include <winbase.h>
-#  define msleep Sleep
-#endif
-
 #  if defined(__APPLE__)
 const char *serial_ports_device_radix[] = { "tty.SLAB_USBtoUART", "tty.usbserial", "tty.usbmodem", NULL };
 #  elif defined (__FreeBSD__) || defined (__OpenBSD__) || defined(__FreeBSD_kernel__)

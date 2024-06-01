@@ -64,10 +64,6 @@
 #include <string.h>
 #include <nfc/nfc.h>
 
-#if defined(WIN32) /* mingw compiler */
-#include <getopt.h>
-#endif
-
 #define ST25TB_SR_BLOCK_MAX_SIZE	((uint8_t) 4) // for static arrays
 typedef void(*get_info_specific) (uint8_t * systemArea);
 

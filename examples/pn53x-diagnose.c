@@ -43,7 +43,6 @@
 #  include "config.h"
 #endif // HAVE_CONFIG_H
 
-#include <err.h>
 #include <stdlib.h>
 #include <string.h>
 
