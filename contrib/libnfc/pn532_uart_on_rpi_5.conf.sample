@@ -1,0 +1,21 @@
+## Typical configuration file for PN532 device on R-Pi 5 connected using miniUART
+## Note: Changes have been made to R-Pi 5 with the removal of the /dev/ttyS0 address
+## in favor of /dev/ttyAMA0. Additionally, the /boot/cmdline.txt has been replaced
+## with /boot/firmware/cmdline.txt.
+##
+## Tested recipe with generic PN532 module (common clones of the Elechouse module)
+##
+## To enable uart on GPIO, add this line to bottom of /boot/config.txt
+## enable_uart=1
+##
+## Stop and disable serial console:
+## $ sudo systemctl stop serial-getty@ttyAMA0.service
+## $ sudo systemctl disable serial-getty@ttyAMA0.service
+##
+## Remove console from /boot/firmware/cmdline.txt by removing: 
+## console=serial0,115200 Save and reboot for changes to take effect.
+##
+name = "PN532 board via UART"
+connstring = pn532_uart:/dev/ttyAMA0
+allow_intrusive_scan = true
+
