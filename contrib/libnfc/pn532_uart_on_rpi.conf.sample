@@ -1,5 +1,9 @@
 ## Typical configuration file for PN532 device on R-Pi connected using UART
 ## Note: to use UART port on R-Pi, you have to disable linux serial console:
 ##   http://learn.adafruit.com/adafruit-nfc-rfid-on-raspberry-pi/freeing-uart-on-the-pi
+##
+## For more information about UART differences between R-Pi models, visit:
+##   https://www.raspberrypi.com/documentation/computers/configuration.html#configure-uarts
+##
 name = "PN532 board via UART"
 connstring = pn532_uart:/dev/ttyAMA0
