@@ -34,6 +34,7 @@
 #define __WINDOWS_H__
 
 #define WIN32_LEAN_AND_MEAN
+#include <fcntl.h>
 #include <windows.h>
 
 #if defined(__MINGW32__) && __MINGW64_VERSION_MAJOR < 3
