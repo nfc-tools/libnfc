@@ -67,7 +67,6 @@ ENDIF(LIBNFC_CONFFILES_MODE)
 option (BUILD_EXAMPLES "build examples ON/OFF" ON)
 option (BUILD_UTILS "build utils ON/OFF" ON)
 option (BUILD_DEBPKG "build debian package ON/OFF" OFF)
-option (FIXUP_BUNDLE "generate a standalone application" OFF)
 option (LIBNFC_MAN "install man-pages" ON)
 
 # Doxygen

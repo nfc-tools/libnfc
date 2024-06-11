@@ -55,13 +55,6 @@ FOREACH(source ${UTILS-SOURCES})
   INSTALL(TARGETS ${source} RUNTIME DESTINATION bin COMPONENT utils)
 ENDFOREACH(source)
 
-#install required libraries
-IF(FIXUP_BUNDLE)
-  INCLUDE(InstallRequiredSystemLibraries)
-  CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/cmake/FixBundle.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/FixBundle.cmake @ONLY)
-  INSTALL(SCRIPT ${CMAKE_CURRENT_BINARY_DIR}/FixBundle.cmake)
-ENDIF(FIXUP_BUNDLE)
-
 IF(LIBNFC_MAN)
   # Manuals for the examples
   FILE(GLOB manuals "${CMAKE_CURRENT_SOURCE_DIR}/*.1")
