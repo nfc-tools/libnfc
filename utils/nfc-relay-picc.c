@@ -50,20 +50,17 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <inttypes.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
 #include <signal.h>
-
 #include <unistd.h>
 
 #include <nfc/nfc.h>
 
 #include "nfc-utils.h"
-
-#define MAX_FRAME_LEN 264
-#define MAX_DEVICE_COUNT 2
 
 static uint8_t abtCapdu[MAX_FRAME_LEN];
 static size_t szCapduLen;
@@ -72,7 +69,7 @@ static size_t szRapduLen;
 static nfc_device *pndInitiator;
 static nfc_device *pndTarget;
 static bool quitting = false;
-static bool quiet_output = false;
+static bool verbose = true;
 static bool initiator_only_mode = false;
 static bool target_only_mode = false;
 static bool swap_devices = false;
@@ -91,7 +88,7 @@ intr_hdlr(int sig)
 }
 
 static void
-print_usage(char *argv[])
+print_usage(char **argv)
 {
   printf("Usage: %s [OPTIONS]\n", argv[0]);
   printf("Options:\n");
@@ -158,46 +155,46 @@ static int scan_hex_fd3(uint8_t *pbtData, size_t *pszBytes, const char *pchPrefi
 }
 
 int
-main(int argc, char *argv[])
+main(int argc, char **argv)
 {
-  int     arg;
-  const char *acLibnfcVersion = nfc_version();
-  nfc_target ntRealTarget;
-
   // Get commandline options
-  for (arg = 1; arg < argc; arg++) {
-    if (0 == strcmp(argv[arg], "-h")) {
-      print_usage(argv);
-      exit(EXIT_SUCCESS);
-    } else if (0 == strcmp(argv[arg], "-q")) {
-      quiet_output = true;
-    } else if (0 == strcmp(argv[arg], "-t")) {
-      printf("INFO: %s\n", "Target mode only.");
-      initiator_only_mode = false;
-      target_only_mode = true;
-    } else if (0 == strcmp(argv[arg], "-i")) {
-      printf("INFO: %s\n", "Initiator mode only.");
-      initiator_only_mode = true;
-      target_only_mode = false;
-    } else if (0 == strcmp(argv[arg], "-s")) {
-      printf("INFO: %s\n", "Swapping devices.");
-      swap_devices = true;
-    } else if (0 == strcmp(argv[arg], "-n")) {
-      if (++arg == argc || (sscanf(argv[arg], "%10u", &waiting_time) < 1)) {
-        ERR("Missing or wrong waiting time value: %s.", argv[arg]);
+  for (int opt; (opt = getopt(argc, argv, "hin:qst")) != -1;) {
+    switch (opt) {
+      case 'i':
+        puts("INFO: Initiator mode only.");
+        initiator_only_mode = true;
+        target_only_mode = false;
+        break;
+      case 'n':
+        waiting_time = atoi(optarg);
+        printf("Waiting time: %u secs.\n", waiting_time);
+        break;
+      case 'q':
+        verbose = false;
+        break;
+      case 's':
+        puts("INFO: Swapping devices.");
+        swap_devices = true;
+        break;
+      case 't':
+        puts("INFO: Target mode only.");
+        initiator_only_mode = false;
+        target_only_mode = true;
+        break;
+      case 'h':
+        print_usage(argv);
+        exit(EXIT_SUCCESS);
+      case '?':
         print_usage(argv);
         exit(EXIT_FAILURE);
-      }
-      printf("Waiting time: %u secs.\n", waiting_time);
-    } else {
-      ERR("%s is not supported option.", argv[arg]);
-      print_usage(argv);
-      exit(EXIT_FAILURE);
     }
   }
 
-  // Display libnfc version
-  printf("%s uses libnfc %s\n", argv[0], acLibnfcVersion);
+  if (verbose) {
+    // Display libnfc version
+    const char *acLibnfcVersion = nfc_version();
+    printf("%s uses libnfc %s\n", argv[0], acLibnfcVersion);
+  }
 
   signal(SIGINT, intr_hdlr);
 
@@ -208,6 +205,7 @@ main(int argc, char *argv[])
     exit(EXIT_FAILURE);
   }
 
+  nfc_target ntRealTarget;
   nfc_connstring connstrings[MAX_DEVICE_COUNT];
   // List available devices
   size_t szFound = nfc_list_devices(context, connstrings, MAX_DEVICE_COUNT);
@@ -439,7 +437,7 @@ main(int argc, char *argv[])
       }
     }
     // Show transmitted response
-    if (!quiet_output) {
+    if (verbose) {
       printf("Forwarding C-APDU: ");
       print_hex(abtCapdu, szCapduLen);
     }
@@ -464,13 +462,13 @@ main(int argc, char *argv[])
     if (ret) {
       // Redirect the answer back to the external reader
       if (waiting_time != 0) {
-        if (!quiet_output) {
+        if (verbose) {
           printf("Waiting %us to simulate longer relay...\n", waiting_time);
         }
         sleep(waiting_time);
       }
       // Show transmitted response
-      if (!quiet_output) {
+      if (verbose) {
         printf("Forwarding R-APDU: ");
         print_hex(abtRapdu, szRapduLen);
       }

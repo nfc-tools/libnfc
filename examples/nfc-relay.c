@@ -44,18 +44,17 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <inttypes.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
 #include <signal.h>
+#include <unistd.h>
 
 #include <nfc/nfc.h>
 
 #include "utils/nfc-utils.h"
-
-#define MAX_FRAME_LEN 264
-#define MAX_DEVICE_COUNT 2
 
 static uint8_t abtReaderRx[MAX_FRAME_LEN];
 static uint8_t abtReaderRxPar[MAX_FRAME_LEN];
@@ -77,7 +76,7 @@ intr_hdlr(int sig)
 }
 
 static void
-print_usage(char *argv[])
+print_usage(char **argv)
 {
   printf("Usage: %s [OPTIONS]\n", argv[0]);
   printf("Options:\n");
@@ -86,26 +85,26 @@ print_usage(char *argv[])
 }
 
 int
-main(int argc, char *argv[])
+main(int argc, char **argv)
 {
-  int     arg;
-  bool    quiet_output = false;
-  const char *acLibnfcVersion = nfc_version();
+  bool verbose = true;
 
   // Get commandline options
-  for (arg = 1; arg < argc; arg++) {
-    if (0 == strcmp(argv[arg], "-h")) {
-      print_usage(argv);
-      exit(EXIT_SUCCESS);
-    } else if (0 == strcmp(argv[arg], "-q")) {
-      quiet_output = true;
-    } else {
-      ERR("%s is not supported option.", argv[arg]);
-      print_usage(argv);
-      exit(EXIT_FAILURE);
+  for (int opt; (opt = getopt(argc, argv, "hq")) != -1;) {
+    switch (opt) {
+      case 'q':
+        verbose = false;
+        break;
+      case 'h':
+        print_usage(argv);
+        exit(EXIT_SUCCESS);
+      case '?':
+        print_usage(argv);
+        exit(EXIT_FAILURE);
     }
   }
 
+  const char *acLibnfcVersion = nfc_version();
   // Display libnfc version
   printf("%s uses libnfc %s\n", argv[0], acLibnfcVersion);
 
@@ -217,7 +216,7 @@ main(int argc, char *argv[])
           nfc_exit(context);
           exit(EXIT_FAILURE);
         }
-        if (!quiet_output)
+        if (verbose)
           printf("\n");
         if (nfc_device_set_property_bool(pndReader, NP_ACTIVATE_FIELD, true) < 0) {
           nfc_perror(pndReader, "nfc_device_set_property_bool");
@@ -228,7 +227,7 @@ main(int argc, char *argv[])
         }
       }
       // Print the reader frame to the screen
-      if (!quiet_output) {
+      if (verbose) {
         printf("R: ");
         print_hex_par(abtReaderRx, (size_t) szReaderRxBits, abtReaderRxPar);
       }
@@ -244,7 +243,7 @@ main(int argc, char *argv[])
           exit(EXIT_FAILURE);
         }
         // Print the tag frame to the screen
-        if (!quiet_output) {
+        if (verbose) {
           printf("T: ");
           print_hex_par(abtTagRx, szTagRxBits, abtTagRxPar);
         }

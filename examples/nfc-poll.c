@@ -46,17 +46,17 @@
 
 #include <inttypes.h>
 #include <signal.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include <nfc/nfc.h>
 #include <nfc/nfc-types.h>
 
 #include "utils/nfc-utils.h"
-
-#define MAX_DEVICE_COUNT 16
 
 static nfc_device *pnd = NULL;
 static nfc_context *context;
@@ -72,32 +72,38 @@ static void stop_polling(int sig)
   }
 }
 
-static void
-print_usage(const char *progname)
+static void print_usage(const char *progname)
 {
   printf("usage: %s [-v]\n", progname);
+  printf("\t-h\tHelp. Print this message.\n");
   printf("  -v\t verbose display\n");
 }
 
 int
-main(int argc, const char *argv[])
+main(int argc, char **argv)
 {
   bool verbose = false;
+
+  // Get commandline options
+  for (int opt; (opt = getopt(argc, argv, "hv")) != -1;) {
+    switch (opt) {
+      case 'v':
+        verbose = true;
+        break;
+      case 'h':
+        print_usage(argv[0]);
+        exit(EXIT_SUCCESS);
+      case '?':
+        print_usage(argv[0]);
+        exit(EXIT_FAILURE);
+    }
+  }
 
   signal(SIGINT, stop_polling);
 
   // Display libnfc version
   const char *acLibnfcVersion = nfc_version();
-
   printf("%s uses libnfc %s\n", argv[0], acLibnfcVersion);
-  if (argc != 1) {
-    if ((argc == 2) && (0 == strcmp("-v", argv[1]))) {
-      verbose = true;
-    } else {
-      print_usage(argv[0]);
-      exit(EXIT_FAILURE);
-    }
-  }
 
   const uint8_t uiPollNr = 20;
   const uint8_t uiPeriod = 2;

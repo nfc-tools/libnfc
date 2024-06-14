@@ -53,8 +53,10 @@
 #  include "config.h"
 #endif // HAVE_CONFIG_H
 
-#include <errno.h>
+#include <inttypes.h>
 #include <signal.h>
+#include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 
@@ -68,11 +70,11 @@ static nfc_context *context;
 static void
 print_usage(char *progname)
 {
-  fprintf(stderr, "usage: %s [-q] -o FILE\n", progname);
-  fprintf(stderr, "\nOptions:\n");
-  fprintf(stderr, "  -o FILE    Extract NDEF message if available in FILE\n");
-  fprintf(stderr, "  -o -       Extract NDEF message if available to stdout\n");
-  fprintf(stderr, "  -q         Be quiet, don't display Attribute Block parsing info\n");
+  printf("usage: %s [-q] -o FILE\n", progname);
+  printf("Options:\n");
+  printf("  -o FILE    Extract NDEF message if available in FILE\n");
+  printf("  -o -       Extract NDEF message if available to stdout\n");
+  printf("  -q         Be quiet, don't display Attribute Block parsing info\n");
 }
 
 static void stop_select(int sig)
@@ -161,13 +163,10 @@ nfc_forum_tag_type3_check(nfc_device *dev, const nfc_target *nt, const uint16_t 
 }
 
 int
-main(int argc, char *argv[])
+main(int argc, char **argv)
 {
-  (void)argc;
-  (void)argv;
-
   int ch;
-  bool quiet = false;
+  bool verbose = true;
   char *ndef_output = NULL;
   while ((ch = getopt(argc, argv, "hqo:")) != -1) {
     switch (ch) {
@@ -175,7 +174,7 @@ main(int argc, char *argv[])
         print_usage(argv[0]);
         exit(EXIT_SUCCESS);
       case 'q':
-        quiet = true;
+        verbose = true;
         break;
       case 'o':
         ndef_output = optarg;
@@ -220,7 +219,7 @@ main(int argc, char *argv[])
     exit(EXIT_FAILURE);
   }
 
-  if (!quiet) {
+  if (verbose) {
     fprintf(message_stream, "NFC device: %s opened\n", nfc_device_get_name(pnd));
   }
 
@@ -241,7 +240,7 @@ main(int argc, char *argv[])
     exit(EXIT_FAILURE);
   }
 
-  if (!quiet) {
+  if (verbose) {
     fprintf(message_stream, "Place your NFC Forum Tag Type 3 in the field...\n");
   }
 
@@ -311,7 +310,7 @@ main(int argc, char *argv[])
     ndef_calculated_checksum += data[n];
   const uint16_t ndef_checksum = (data[14] << 8) + data[15];
 
-  if (!quiet) {
+  if (verbose) {
     fprintf(message_stream, "NDEF Attribute Block:\n");
     fprintf(message_stream, "* Mapping version: %d.%d\n", ndef_major_version, ndef_minor_version);
     fprintf(message_stream, "* Maximum nr of blocks to read  by Check  Command: %3d block%s\n", ndef_nbr, ndef_nbr > 1 ? "s" : "");
@@ -388,7 +387,7 @@ main(int argc, char *argv[])
     nfc_exit(context);
     exit(EXIT_FAILURE);
   } else {
-    if (!quiet) {
+    if (verbose) {
       fprintf(stderr, "%i bytes written to %s\n", ndef_data_len, ndef_output);
     }
   }

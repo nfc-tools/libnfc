@@ -47,6 +47,7 @@
 #  include "config.h"
 #endif // HAVE_CONFIG_H
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stddef.h>
@@ -58,14 +59,13 @@
 
 #include "utils/nfc-utils.h"
 
-#define MAX_FRAME_LEN (264)
 #define SAK_ISO14443_4_COMPLIANT 0x20
 
 static uint8_t abtRx[MAX_FRAME_LEN];
 static int szRx;
 static nfc_context *context;
 static nfc_device *pnd;
-static bool quiet_output = false;
+static bool verbose = true;
 static bool init_mfc_auth = false;
 
 static void
@@ -88,7 +88,7 @@ target_io(nfc_target *pnt, const uint8_t *pbtInput, const size_t szInput, uint8_
   *pszOutput = 0;
 
   // Show transmitted command
-  if (!quiet_output) {
+  if (verbose) {
     printf("    In: ");
     print_hex(pbtInput, szInput);
   }
@@ -101,7 +101,7 @@ target_io(nfc_target *pnt, const uint8_t *pbtInput, const size_t szInput, uint8_
         pbtOutput[15] = pbtInput[1];
         break;
       case 0x50: // HLTA (ISO14443-3)
-        if (!quiet_output) {
+        if (verbose) {
           printf("Initiator HLTA me. Bye!\n");
         }
         loop = false;
@@ -124,20 +124,20 @@ target_io(nfc_target *pnt, const uint8_t *pbtInput, const size_t szInput, uint8_
         }
         break;
       case 0xc2: // S-block DESELECT
-        if (!quiet_output) {
+        if (verbose) {
           printf("Initiator DESELECT me. Bye!\n");
         }
         loop = false;
         break;
       default: // Unknown
-        if (!quiet_output) {
+        if (verbose) {
           printf("Unknown frame, emulated target abort.\n");
         }
         loop = false;
     }
   }
   // Show transmitted command
-  if ((!quiet_output) && *pszOutput) {
+  if (verbose && *pszOutput) {
     printf("    Out: ");
     print_hex(pbtOutput, *pszOutput);
   }
@@ -183,11 +183,32 @@ nfc_target_emulate_tag(nfc_device *dev, nfc_target *pnt)
   return true;
 }
 
-int
-main(int argc, char *argv[])
+static void
+print_usage(char **argv)
 {
-  (void) argc;
-  const char *acLibnfcVersion;
+  printf("Usage: %s [OPTIONS] [UID]\n", argv[0]);
+  printf("Options:\n");
+  printf("\t-h\tHelp. Print this message.\n");
+  printf("\t-q\tQuiet mode. Silent output: received and sent frames will not be shown (improves timing).\n");
+}
+
+int
+main(int argc, char **argv)
+{
+  // Get commandline options
+  for (int opt; (opt = getopt(argc, argv, "hq")) != -1;) {
+    switch (opt) {
+      case 'q':
+        verbose = false;
+        break;
+      case 'h':
+        print_usage(argv);
+        exit(EXIT_SUCCESS);
+      case '?':
+        print_usage(argv);
+        exit(EXIT_FAILURE);
+    }
+  }
 
   signal(SIGINT, intr_hdlr);
 
@@ -198,6 +219,7 @@ main(int argc, char *argv[])
   }
 
   // Display libnfc version
+  const char *acLibnfcVersion;
   acLibnfcVersion = nfc_version();
   printf("%s uses libnfc %s\n", argv[0], acLibnfcVersion);
 

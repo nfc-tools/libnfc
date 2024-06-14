@@ -49,14 +49,13 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
+#include <unistd.h>
 
 #include <nfc/nfc.h>
 
 #include "utils/nfc-utils.h"
 
 #define SAK_FLAG_ATS_SUPPORTED 0x20
-
-#define MAX_FRAME_LEN 264
 
 static uint8_t abtRx[MAX_FRAME_LEN];
 static int szRxBits;
@@ -69,7 +68,7 @@ static uint8_t szAts = 0;
 static size_t szCL = 1;//Always start with Cascade Level 1 (CL1)
 static nfc_device *pnd;
 
-bool    quiet_output = false;
+bool    verbose = true;
 bool    force_rats = false;
 bool    timed = false;
 bool    iso_ats_supported = false;
@@ -87,7 +86,7 @@ transmit_bits(const uint8_t *pbtTx, const size_t szTxBits)
 {
   uint32_t cycles = 0;
   // Show transmitted command
-  if (!quiet_output) {
+  if (verbose) {
     printf("Sent bits:     ");
     print_hex_bits(pbtTx, szTxBits);
   }
@@ -95,7 +94,7 @@ transmit_bits(const uint8_t *pbtTx, const size_t szTxBits)
   if (timed) {
     if ((szRxBits = nfc_initiator_transceive_bits_timed(pnd, pbtTx, szTxBits, NULL, abtRx, sizeof(abtRx), NULL, &cycles)) < 0)
       return false;
-    if ((!quiet_output) && (szRxBits > 0)) {
+    if (verbose && (szRxBits > 0)) {
       printf("Response after %u cycles\n", cycles);
     }
   } else {
@@ -103,7 +102,7 @@ transmit_bits(const uint8_t *pbtTx, const size_t szTxBits)
       return false;
   }
   // Show received answer
-  if (!quiet_output) {
+  if (verbose) {
     printf("Received bits: ");
     print_hex_bits(abtRx, szRxBits);
   }
@@ -117,7 +116,7 @@ transmit_bytes(const uint8_t *pbtTx, const size_t szTx)
 {
   uint32_t cycles = 0;
   // Show transmitted command
-  if (!quiet_output) {
+  if (verbose) {
     printf("Sent bits:     ");
     print_hex(pbtTx, szTx);
   }
@@ -126,7 +125,7 @@ transmit_bytes(const uint8_t *pbtTx, const size_t szTx)
   if (timed) {
     if ((res = nfc_initiator_transceive_bytes_timed(pnd, pbtTx, szTx, abtRx, sizeof(abtRx), &cycles)) < 0)
       return false;
-    if ((!quiet_output) && (res > 0)) {
+    if (verbose && (res > 0)) {
       printf("Response after %u cycles\n", cycles);
     }
   } else {
@@ -135,7 +134,7 @@ transmit_bytes(const uint8_t *pbtTx, const size_t szTx)
   }
   szRx = res;
   // Show received answer
-  if (!quiet_output) {
+  if (verbose) {
     printf("Received bits: ");
     print_hex(abtRx, szRx);
   }
@@ -144,7 +143,7 @@ transmit_bytes(const uint8_t *pbtTx, const size_t szTx)
 }
 
 static void
-print_usage(char *argv[])
+print_usage(char **argv)
 {
   printf("Usage: %s [OPTIONS]\n", argv[0]);
   printf("Options:\n");
@@ -155,25 +154,26 @@ print_usage(char *argv[])
 }
 
 int
-main(int argc, char *argv[])
+main(int argc, char **argv)
 {
-  int     arg;
-
   // Get commandline options
-  for (arg = 1; arg < argc; arg++) {
-    if (0 == strcmp(argv[arg], "-h")) {
-      print_usage(argv);
-      exit(EXIT_SUCCESS);
-    } else if (0 == strcmp(argv[arg], "-q")) {
-      quiet_output = true;
-    } else if (0 == strcmp(argv[arg], "-f")) {
-      force_rats = true;
-    } else if (0 == strcmp(argv[arg], "-t")) {
-      timed = true;
-    } else {
-      ERR("%s is not supported option.", argv[arg]);
-      print_usage(argv);
-      exit(EXIT_FAILURE);
+  for (int opt; (opt = getopt(argc, argv, "fhqt")) != -1;) {
+    switch (opt) {
+      case 'f':
+        force_rats = true;
+        break;
+      case 'q':
+        verbose = false;
+        break;
+      case 't':
+        timed = true;
+        break;
+      case 'h':
+        print_usage(argv);
+        exit(EXIT_SUCCESS);
+      case '?':
+        print_usage(argv);
+        exit(EXIT_FAILURE);
     }
   }
 

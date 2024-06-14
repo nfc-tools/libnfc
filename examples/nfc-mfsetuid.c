@@ -49,20 +49,21 @@
 #  include "config.h"
 #endif // HAVE_CONFIG_H
 
+#include <inttypes.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
+#include <unistd.h>
 
 #include <nfc/nfc.h>
 
 #include "utils/nfc-utils.h"
 
 #define SAK_FLAG_ATS_SUPPORTED 0x20
-
-#define MAX_FRAME_LEN 264
 
 static uint8_t abtRx[MAX_FRAME_LEN];
 static int szRxBits;
@@ -74,7 +75,7 @@ static uint8_t szAts = 0;
 static size_t szCL = 1;//Always start with Cascade Level 1 (CL1)
 static nfc_device *pnd;
 
-bool    quiet_output = false;
+bool    verbose = true;
 bool    iso_ats_supported = false;
 
 // ISO14443A Anti-Collision Commands
@@ -98,7 +99,7 @@ static  bool
 transmit_bits(const uint8_t *pbtTx, const size_t szTxBits)
 {
   // Show transmitted command
-  if (!quiet_output) {
+  if (verbose) {
     printf("Sent bits:     ");
     print_hex_bits(pbtTx, szTxBits);
   }
@@ -107,7 +108,7 @@ transmit_bits(const uint8_t *pbtTx, const size_t szTxBits)
     return false;
 
   // Show received answer
-  if (!quiet_output) {
+  if (verbose) {
     printf("Received bits: ");
     print_hex_bits(abtRx, szRxBits);
   }
@@ -120,7 +121,7 @@ static  bool
 transmit_bytes(const uint8_t *pbtTx, const size_t szTx)
 {
   // Show transmitted command
-  if (!quiet_output) {
+  if (verbose) {
     printf("Sent bits:     ");
     print_hex(pbtTx, szTx);
   }
@@ -130,7 +131,7 @@ transmit_bytes(const uint8_t *pbtTx, const size_t szTx)
     return false;
 
   // Show received answer
-  if (!quiet_output) {
+  if (verbose) {
     printf("Received bits: ");
     print_hex(abtRx, res);
   }
@@ -139,7 +140,7 @@ transmit_bytes(const uint8_t *pbtTx, const size_t szTx)
 }
 
 static void
-print_usage(char *argv[])
+print_usage(char **argv)
 {
   printf("Usage: %s [OPTIONS] [UID|BLOCK0]\n", argv[0]);
   printf("Options:\n");
@@ -154,43 +155,41 @@ print_usage(char *argv[])
 }
 
 int
-main(int argc, char *argv[])
+main(int argc, char **argv)
 {
-  int      arg, i;
   bool     format = false;
-  unsigned int c;
-  char     tmp[3] = { 0x00, 0x00, 0x00 };
-
-
   // Get commandline options
-  for (arg = 1; arg < argc; arg++) {
-    if (0 == strcmp(argv[arg], "-h")) {
-      print_usage(argv);
-      exit(EXIT_SUCCESS);
-    } else if (0 == strcmp(argv[arg], "-f")) {
-      format = true;
-    } else if (0 == strcmp(argv[arg], "-q")) {
-      quiet_output = true;
-    } else if (strlen(argv[arg]) == 8) {
-      for (i = 0 ; i < 4 ; ++i) {
-        memcpy(tmp, argv[arg] + i * 2, 2);
-        sscanf(tmp, "%02x", &c);
-        abtData[i] = (char) c;
-      }
-      abtData[4] = abtData[0] ^ abtData[1] ^ abtData[2] ^ abtData[3];
-      iso14443a_crc_append(abtData, 16);
-    } else if (strlen(argv[arg]) == 32) {
-      for (i = 0 ; i < 16 ; ++i) {
-        memcpy(tmp, argv[arg] + i * 2, 2);
-        sscanf(tmp, "%02x", &c);
-        abtData[i] = (char) c;
-      }
-      abtData[4] = abtData[0] ^ abtData[1] ^ abtData[2] ^ abtData[3];
-      iso14443a_crc_append(abtData, 16);
-    } else {
-      ERR("%s is not supported option.", argv[arg]);
-      print_usage(argv);
-      exit(EXIT_FAILURE);
+  for (int opt; (opt = getopt(argc, argv, "fhq")) != -1;) {
+    switch (opt) {
+      case 'f':
+        format = true;
+        break;
+      case 'q':
+        verbose = false;
+        break;
+      case 'h':
+        print_usage(argv);
+        exit(EXIT_SUCCESS);
+      case '?':
+        print_usage(argv);
+        exit(EXIT_FAILURE);
+    }
+  }
+  if (optind != argc) {
+    switch (strlen(argv[optind])) {
+    case 32:
+      sscanf(argv[optind] + 8,
+             "%2" SCNx8 "%2" SCNx8 "%2" SCNx8 "%2" SCNx8
+             "%2" SCNx8 "%2" SCNx8 "%2" SCNx8 "%2" SCNx8
+             "%2" SCNx8 "%2" SCNx8 "%2" SCNx8 "%2" SCNx8,
+             abtData +  4, abtData +  5, abtData +  6, abtData +  7,
+             abtData +  8, abtData +  9, abtData + 10, abtData + 11,
+             abtData + 12, abtData + 13, abtData + 14, abtData + 15);
+    case 8:
+      sscanf(argv[optind],
+             "%2" SCNx8 "%2" SCNx8 "%2" SCNx8 "%2" SCNx8,
+             abtData, abtData + 1, abtData + 2, abtData + 3);
+      break;
     }
   }
 

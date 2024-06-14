@@ -43,22 +43,24 @@
 #  include "config.h"
 #endif // HAVE_CONFIG_H
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include <nfc/nfc.h>
 
 #include "nfc-utils.h"
 
+#undef MAX_DEVICE_COUNT
 #define MAX_DEVICE_COUNT 16
-#define MAX_TARGET_COUNT 16
 
 static nfc_device *pnd;
 
 static void
-print_usage(const char *argv[])
+print_usage(const char **argv)
 {
   printf("Usage: %s [OPTIONS]\n", argv[0]);
   printf("Options:\n");
@@ -68,28 +70,29 @@ print_usage(const char *argv[])
 }
 
 int
-main(int argc, const char *argv[])
+main(int argc, const char **argv)
 {
   const char *acLibnfcVersion;
-  size_t  i;
   bool verbose = false;
 
   nfc_context *context;
 
   // Get commandline options
-  for (int arg = 1; arg < argc; arg++) {
-    if (0 == strcmp(argv[arg], "-h")) {
-      print_usage(argv);
-      exit(EXIT_SUCCESS);
-    } else if (0 == strcmp(argv[arg], "-v")) {
-      verbose = true;
-    } else if (0 == strcmp(argv[arg], "-i")) {
-      // This has to be done before the call to nfc_init()
-      setenv("LIBNFC_INTRUSIVE_SCAN", "yes", 1);
-    } else {
-      ERR("%s is not supported option.", argv[arg]);
-      print_usage(argv);
-      exit(EXIT_FAILURE);
+  for (int opt; (opt = getopt(argc, argv, "fhqt")) != -1;) {
+    switch (opt) {
+      case 'v':
+        verbose = true;
+        break;
+      case 'i':
+        // This has to be done before the call to nfc_init()
+        setenv("LIBNFC_INTRUSIVE_SCAN", "yes", 1);
+        break;
+      case 'h':
+        print_usage(argv);
+        exit(EXIT_SUCCESS);
+      case '?':
+        print_usage(argv);
+        exit(EXIT_FAILURE);
     }
   }
 
@@ -114,7 +117,7 @@ main(int argc, const char *argv[])
 
   printf("%d NFC device(s) found:\n", (int)szDeviceFound);
   char *strinfo = NULL;
-  for (i = 0; i < szDeviceFound; i++) {
+  for (size_t i = 0; i < szDeviceFound; i++) {
     pnd = nfc_open(context, connstrings[i]);
     if (pnd != NULL) {
       printf("- %s:\n    %s\n", nfc_device_get_name(pnd), nfc_device_get_connstring(pnd));

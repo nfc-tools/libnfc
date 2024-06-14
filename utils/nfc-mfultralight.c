@@ -59,7 +59,6 @@
 #include "nfc-utils.h"
 #include "mifare.h"
 
-#define MAX_TARGET_COUNT 16
 #define MAX_UID_LEN 10
 
 #define EV1_NONE    0
@@ -92,8 +91,6 @@ uint8_t  abtPWAuth[7] = { 0x1B, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 
 //Halt command
 uint8_t  abtHalt[4] = { 0x50, 0x00, 0x00, 0x00 };
-
-#define MAX_FRAME_LEN 264
 
 static uint8_t abtRx[MAX_FRAME_LEN];
 static int szRxBits;
@@ -492,7 +489,7 @@ static size_t str_to_uid(const char *str, uint8_t *uid)
 }
 
 static void
-print_usage(const char *argv[])
+print_usage(const char **argv)
 {
   printf("Usage: %s r|w <dump.mfd> [OPTIONS]\n", argv[0]);
   printf("Arguments:\n");
@@ -510,7 +507,7 @@ print_usage(const char *argv[])
 }
 
 int
-main(int argc, const char *argv[])
+main(int argc, const char **argv)
 {
   int     iAction = 0;
   size_t  iDumpSize = sizeof(mifareul_tag);

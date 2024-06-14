@@ -60,9 +60,7 @@
 #include "libnfc/chips/pn53x.h"
 #include "libnfc/nfc-internal.h"
 
-#define MAX_FRAME_LEN 264
-
-int main(int argc, const char *argv[])
+int main(int argc, const char **argv)
 {
   nfc_device *pnd;
   uint8_t abtRx[MAX_FRAME_LEN];

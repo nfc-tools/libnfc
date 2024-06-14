@@ -49,18 +49,19 @@
 #  include "config.h"
 #endif // HAVE_CONFIG_H
 
+#include <inttypes.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
 #include <signal.h>
+#include <unistd.h>
 
 #include <nfc/nfc.h>
 
 #include "utils/nfc-utils.h"
-
-#define MAX_FRAME_LEN 264
 
 static uint8_t abtRecv[MAX_FRAME_LEN];
 static int szRecvBits;
@@ -69,7 +70,7 @@ static nfc_context *context;
 
 // ISO14443A Anti-Collision response
 uint8_t  abtAtqa[2] = { 0x04, 0x00 };
-uint8_t  abtUidBcc[5] = { 0xDE, 0xAD, 0xBE, 0xEF, 0x22 };
+uint8_t  abtUidBcc[5] = { 0x10, 0x23, 0x45, 0x67 };
 uint8_t  abtSak[9] = { 0x08, 0xb6, 0xdd };
 
 static void
@@ -86,48 +87,40 @@ intr_hdlr(int sig)
 }
 
 static void
-print_usage(char *argv[])
+print_usage(char **argv)
 {
   printf("Usage: %s [OPTIONS] [UID]\n", argv[0]);
   printf("Options:\n");
   printf("\t-h\tHelp. Print this message.\n");
   printf("\t-q\tQuiet mode. Silent output: received and sent frames will not be shown (improves timing).\n");
   printf("\n");
-  printf("\t[UID]\tUID to emulate, specified as 8 HEX digits (default is DEADBEEF).\n");
+  printf("\t[UID]\tUID to emulate, specified as 8 HEX digits (default is 01234567).\n");
 }
 
 int
-main(int argc, char *argv[])
+main(int argc, char **argv)
 {
   uint8_t *pbtTx = NULL;
   size_t  szTxBits;
-  bool    quiet_output = false;
-
-  int     arg,
-          i;
+  bool    verbose = true;
 
   // Get commandline options
-  for (arg = 1; arg < argc; arg++) {
-    if (0 == strcmp(argv[arg], "-h")) {
-      print_usage(argv);
-      exit(EXIT_SUCCESS);
-    } else if (0 == strcmp(argv[arg], "-q")) {
-      printf("Quiet mode.\n");
-      quiet_output = true;
-    } else if ((arg == argc - 1) && (strlen(argv[arg]) == 8)) {         // See if UID was specified as HEX string
-      uint8_t  abtTmp[3] = { 0x00, 0x00, 0x00 };
-      printf("[+] Using UID: %s\n", argv[arg]);
-      abtUidBcc[4] = 0x00;
-      for (i = 0; i < 4; ++i) {
-        memcpy(abtTmp, argv[arg] + i * 2, 2);
-        abtUidBcc[i] = (uint8_t) strtol((char *) abtTmp, NULL, 16);
-        abtUidBcc[4] ^= abtUidBcc[i];
-      }
-    } else {
-      ERR("%s is not supported option.", argv[arg]);
-      print_usage(argv);
-      exit(EXIT_FAILURE);
+  for (int opt; (opt = getopt(argc, argv, "hq")) != -1;) {
+    switch (opt) {
+      case 'q':
+        verbose = false;
+        break;
+      case 'h':
+        print_usage(argv);
+        exit(EXIT_SUCCESS);
+      case '?':
+        print_usage(argv);
+        exit(EXIT_FAILURE);
     }
+  }
+  if (optind != argc && strlen(argv[optind]) == 8) {
+    sscanf(argv[optind], "%2" SCNx8 "%2" SCNx8 "%2" SCNx8 "%2" SCNx8,
+           abtUidBcc, abtUidBcc + 1, abtUidBcc + 2, abtUidBcc + 3);
   }
 
   signal(SIGINT, intr_hdlr);
@@ -188,6 +181,9 @@ main(int argc, char *argv[])
   printf("[+] Done, the emulated tag is initialized with UID: %02X%02X%02X%02X\n\n", abtUidBcc[0], abtUidBcc[1],
          abtUidBcc[2], abtUidBcc[3]);
 
+  // Calculate BCC
+  abtUidBcc.bytes[4] = abtUidBcc.bytes[0] ^ abtUidBcc.bytes[1] ^
+                       abtUidBcc.bytes[2] ^ abtUidBcc.bytes[3];
   while (true) {
     // Test if we received a frame
     if ((szRecvBits = nfc_target_receive_bits(pnd, abtRecv, sizeof(abtRecv), 0)) > 0) {
@@ -197,7 +193,7 @@ main(int argc, char *argv[])
           pbtTx = abtAtqa;
           szTxBits = 16;
           // New anti-collsion session started
-          if (!quiet_output)
+          if (verbose)
             printf("\n");
           break;
 
@@ -216,7 +212,7 @@ main(int argc, char *argv[])
           break;
       }
 
-      if (!quiet_output) {
+      if (verbose) {
         printf("R: ");
         print_hex_bits(abtRecv, (size_t) szRecvBits);
       }
@@ -229,7 +225,7 @@ main(int argc, char *argv[])
           nfc_exit(context);
           exit(EXIT_FAILURE);
         }
-        if (!quiet_output) {
+        if (verbose) {
           printf("T: ");
           print_hex_bits(pbtTx, szTxBits);
         }

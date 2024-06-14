@@ -64,6 +64,7 @@
 
 #include <errno.h>
 #include <signal.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stddef.h>
@@ -77,7 +78,7 @@
 
 static nfc_device *pnd;
 static nfc_context *context;
-static bool quiet_output = false;
+static bool verbose = true;
 // Version of the emulated type4 tag:
 static int type4v = 2;
 
@@ -136,7 +137,7 @@ nfcforum_tag4_io(struct nfc_emulator *emulator, const uint8_t *data_in, const si
   }
 
   // Show transmitted command
-  if (!quiet_output) {
+  if (verbose) {
     printf("    In: ");
     print_hex(data_in, data_in_len);
   }
@@ -219,7 +220,7 @@ nfcforum_tag4_io(struct nfc_emulator *emulator, const uint8_t *data_in, const si
         memcpy(data_out, "\x90\x00", res = 2);
         break;
       default: // Unknown
-        if (!quiet_output) {
+        if (verbose) {
           printf("Unknown frame, emulated target abort.\n");
         }
         res = -ENOTSUP;
@@ -229,7 +230,7 @@ nfcforum_tag4_io(struct nfc_emulator *emulator, const uint8_t *data_in, const si
   }
 
   // Show transmitted command
-  if (!quiet_output) {
+  if (verbose) {
     if (res < 0) {
       ERR("%s (%d)", strerror(-res), -res);
     } else {
@@ -311,12 +312,14 @@ ndef_message_save(char *filename, struct nfcforum_tag4_ndef_data *tag_data)
 static void
 usage(char *progname)
 {
-  fprintf(stderr, "usage: %s [-1] [infile [outfile]]\n", progname);
-  fprintf(stderr, "      -1: force Tag Type 4 v1.0 (default is v2.0)\n");
+  printf("usage: %s [OPTIONS] [infile [outfile]]\n", progname);
+  printf("Options:\n");
+  printf("  -1: force Tag Type 4 v1.0 (default is v2.0)\n");
+  printf("  -q: Quiet mode.\n");
 }
 
 int
-main(int argc, char *argv[])
+main(int argc, char **argv)
 {
   int options = 0;
   nfc_target nt = {

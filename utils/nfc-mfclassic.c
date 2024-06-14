@@ -93,9 +93,6 @@ static const nfc_modulation nmMifare = {
 };
 
 static size_t num_keys = sizeof(keys) / 6;
-
-#define MAX_FRAME_LEN 264
-
 static uint8_t abtRx[MAX_FRAME_LEN];
 static int szRxBits;
 
@@ -517,11 +514,7 @@ static void
 print_usage(const char *pcProgramName)
 {
   printf("Usage: ");
-  #ifndef _WIN32
   printf("%s f|r|R|w|W a|b u|U<01ab23cd> <dump.mfd> [<keys.mfd> [f] [v]]\n", pcProgramName);
-  #else
-  printf("%s f|r|R|w|W a|b u|U<01ab23cd> <dump.mfd> [<keys.mfd> [f]]\n", pcProgramName);
-  #endif
   printf("  f|r|R|w|W     - Perform format (f) or read from (r) or unlocked read from (R) or write to (w) or block 0 write to (W) card\n");
   printf("                  *** format will reset all keys to FFFFFFFFFFFF and all data to 00 and all ACLs to default\n");
   printf("                  *** unlocked read does not require authentication and will reveal A and B keys\n");
@@ -532,9 +525,7 @@ print_usage(const char *pcProgramName)
   printf("  <dump.mfd>    - MiFare Dump (MFD) used to write (card to MFD) or (MFD to card)\n");
   printf("  <keys.mfd>    - MiFare Dump (MFD) that contain the keys (optional)\n");
   printf("  f             - Force using the keyfile even if UID does not match (optional)\n");
-  #ifndef _WIN32
   printf("  v             - Sends libnfc log output to console (optional)\n");
-  #endif
   printf("Examples: \n\n");
   printf("  Read card to file, using key A:\n\n");
   printf("    %s r a u mycard.mfd\n\n", pcProgramName);
@@ -551,7 +542,7 @@ print_usage(const char *pcProgramName)
 
 
 int
-main(int argc, const char *argv[])
+main(int argc, const char **argv)
 {
   action_t atAction = ACTION_USAGE;
   uint8_t *pbtUID;
@@ -606,21 +597,6 @@ main(int argc, const char *argv[])
   } else {
     tag_uid = NULL;
   }
-
-  #ifndef _WIN32
-    // Send noise from lib to /dev/null
-    bool verbose = false;
-    if (argv[7]) {
-      if (strcmp(argv[7], "v") == 0) verbose = true;
-    } else {
-      if ((strcmp(argv[6], "v")) || (strcmp(argv[5], "v")) == 0) verbose = true;
-    }
-    if (!verbose) {
-      int fd = open("/dev/null", O_WRONLY);
-      dup2(fd, 2);
-      close(fd);
-    }
-  #endif
 
   if (atAction == ACTION_USAGE) {
     print_usage(argv[0]);

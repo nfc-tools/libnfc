@@ -198,7 +198,7 @@ write_card(void)
 }
 
 int
-main(int argc, const char *argv[])
+main(int argc, const char **argv)
 {
   bool    bReadAction;
   FILE   *pfDump;

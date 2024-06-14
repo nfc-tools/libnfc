@@ -85,7 +85,7 @@ const st_data * get_info(const nfc_target *pnt, bool bPrintIt);
 void display_system_info(nfc_device *pnd, const st_data * stdata);
 void print_hex(const uint8_t *pbtData, const size_t szBytes);
 
-int main(int argc, char *argv[])
+int main(int argc, char **argv)
 {
 	nfc_context *context = NULL;
 	nfc_device *pnd = NULL;

@@ -44,17 +44,16 @@
 #  include "config.h"
 #endif // HAVE_CONFIG_H
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include <nfc/nfc.h>
 
 #include "nfc-utils.h"
-
-#define MAX_DEVICE_COUNT 16
-#define MAX_TARGET_COUNT 16
 
 static nfc_device *pnd;
 
@@ -79,46 +78,42 @@ print_usage(const char *progname)
 }
 
 int
-main(int argc, const char *argv[])
+main(int argc, char **argv)
 {
-  (void) argc;
   const char *acLibnfcVersion;
-  size_t  i;
   bool verbose = false;
   int res = 0;
   int mask = 0x3ff;
-  int arg;
+
+  // Get commandline options
+  for (int opt; (opt = getopt(argc, argv, "ht:v")) != -1;) {
+    switch (opt) {
+      case 'v':
+        verbose = true;
+        break;
+      case 't':
+        mask = atoi(optarg);
+        if(mask < 1 || mask > 0x3ff) {
+          ERR("%i is invalid value for type bitfield.", mask);
+          exit(EXIT_FAILURE);
+        }
+        // Force TypeB for all derivatives of B
+        if (mask & 0xd0)
+          mask |= 0x08;
+      case 'h':
+        print_usage(argv[0]);
+        exit(EXIT_SUCCESS);
+      case '?':
+        print_usage(argv[0]);
+        exit(EXIT_FAILURE);
+    }
+  }
 
   nfc_context *context;
   nfc_init(&context);
   if (context == NULL) {
     ERR("Unable to init libnfc (malloc)");
     exit(EXIT_FAILURE);
-  }
-
-  // Get commandline options
-  for (arg = 1; arg < argc; arg++) {
-    if (0 == strcmp(argv[arg], "-h")) {
-      print_usage(argv[0]);
-      exit(EXIT_SUCCESS);
-    } else if (0 == strcmp(argv[arg], "-v")) {
-      verbose = true;
-    } else if ((0 == strcmp(argv[arg], "-t")) && (arg + 1 < argc)) {
-      arg++;
-      mask = atoi(argv[arg]);
-      if ((mask < 1) || (mask > 0x3ff)) {
-        ERR("%i is invalid value for type bitfield.", mask);
-        print_usage(argv[0]);
-        exit(EXIT_FAILURE);
-      }
-      // Force TypeB for all derivatives of B
-      if (mask & 0xd0)
-        mask |= 0x08;
-    } else {
-      ERR("%s is not supported option.", argv[arg]);
-      print_usage(argv[0]);
-      exit(EXIT_FAILURE);
-    }
   }
 
   // Display libnfc version
@@ -146,7 +141,7 @@ main(int argc, const char *argv[])
     printf("No NFC device found.\n");
   }
 
-  for (i = 0; i < szDeviceFound; i++) {
+  for (size_t i = 0; i < szDeviceFound; i++) {
     nfc_target ant[MAX_TARGET_COUNT];
     pnd = nfc_open(context, connstrings[i]);
 

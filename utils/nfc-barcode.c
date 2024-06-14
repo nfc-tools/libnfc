@@ -45,24 +45,23 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
+#include <unistd.h>
 
 #include <nfc/nfc.h>
 
 #include "nfc-utils.h"
-
-#define MAX_FRAME_LEN 264
 
 static nfc_device *pnd;
 
 bool    verbose = false;
 
 static void
-print_usage(char *argv[])
+print_usage(char **argv)
 {
   printf("Usage: %s [OPTIONS]\n", argv[0]);
   printf("Options:\n");
   printf("\t-h\tHelp. Print this message.\n");
-  printf("\t-q\tVerbose mode.\n");
+  printf("\t-v\tVerbose mode.\n");
 }
 
 
@@ -135,21 +134,20 @@ decode_barcode(uint8_t *pbtBarcode, const size_t szBarcode)
 }
 
 int
-main(int argc, char *argv[])
+main(int argc, char **argv)
 {
-  int     arg;
-
   // Get commandline options
-  for (arg = 1; arg < argc; arg++) {
-    if (0 == strcmp(argv[arg], "-h")) {
-      print_usage(argv);
-      exit(EXIT_SUCCESS);
-    } else if (0 == strcmp(argv[arg], "-v")) {
-      verbose = true;
-    } else {
-      ERR("%s is not supported option.", argv[arg]);
-      print_usage(argv);
-      exit(EXIT_FAILURE);
+  for (int opt; (opt = getopt(argc, argv, "hv")) != -1;) {
+    switch (opt) {
+      case 'v':
+        verbose = true;
+        break;
+      case 'h':
+        print_usage(argv);
+        exit(EXIT_SUCCESS);
+      case '?':
+        print_usage(argv);
+        exit(EXIT_FAILURE);
     }
   }
 
