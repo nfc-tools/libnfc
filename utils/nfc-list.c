@@ -80,7 +80,6 @@ print_usage(const char *progname)
 int
 main(int argc, char **argv)
 {
-  const char *acLibnfcVersion;
   bool verbose = false;
   int res = 0;
   int mask = 0x3ff;
@@ -118,10 +117,9 @@ main(int argc, char **argv)
 
   // Display libnfc version
   if (verbose) {
-    acLibnfcVersion = nfc_version();
+    const char *acLibnfcVersion = nfc_version();
     printf("%s uses libnfc %s\n", argv[0], acLibnfcVersion);
   }
-
 
   /* Lazy way to open an NFC device */
 #if 0

@@ -219,8 +219,7 @@ main(int argc, char **argv)
   }
 
   // Display libnfc version
-  const char *acLibnfcVersion;
-  acLibnfcVersion = nfc_version();
+  const char *acLibnfcVersion = nfc_version();
   printf("%s uses libnfc %s\n", argv[0], acLibnfcVersion);
 
   // Try to open the NFC reader
