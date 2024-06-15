@@ -61,7 +61,7 @@ static void
 print_usage(const char *progname)
 {
   printf("usage: %s [-v] [-t X]\n", progname);
-  printf("  -v\tQuiet mode.\n");
+  printf("  -v\tVerbose mode.\n");
   printf("  -t X\tpoll only for types according to bitfield X:\n");
   printf("\t   1: ISO14443A\n");
   printf("\t   2: Felica (212 kbps)\n");

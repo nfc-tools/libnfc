@@ -64,9 +64,9 @@ print_usage(char **argv)
 {
   printf("Usage: %s [OPTIONS]\n", argv[0]);
   printf("Options:\n");
-  printf("\t-i\tAllow intrusive scan.\n");
   printf("\t-h\tPrint this help message.\n");
   printf("\t-v\tSet verbose display.\n");
+  printf("\t-i\tAllow intrusive scan.\n");
 }
 
 int

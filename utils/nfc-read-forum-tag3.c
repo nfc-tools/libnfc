@@ -174,7 +174,7 @@ main(int argc, char **argv)
         print_usage(argv[0]);
         exit(EXIT_SUCCESS);
       case 'q':
-        verbose = true;
+        verbose = false;
         break;
       case 'o':
         ndef_output = optarg;

@@ -180,10 +180,7 @@ main(int argc, char **argv)
   }
   printf("[+] Done, the emulated tag is initialized with UID: %02X%02X%02X%02X\n\n", abtUidBcc[0], abtUidBcc[1],
          abtUidBcc[2], abtUidBcc[3]);
-
-  // Calculate BCC
-  abtUidBcc.bytes[4] = abtUidBcc.bytes[0] ^ abtUidBcc.bytes[1] ^
-                       abtUidBcc.bytes[2] ^ abtUidBcc.bytes[3];
+  abtUidBcc[4] = abtUidBcc[0] ^ abtUidBcc[1] ^ abtUidBcc[2] ^ abtUidBcc[3];
   while (true) {
     // Test if we received a frame
     if ((szRecvBits = nfc_target_receive_bits(pnd, abtRecv, sizeof(abtRecv), 0)) > 0) {

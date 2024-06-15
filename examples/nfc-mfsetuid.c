@@ -189,6 +189,8 @@ main(int argc, char **argv)
       sscanf(argv[optind],
              "%2" SCNx8 "%2" SCNx8 "%2" SCNx8 "%2" SCNx8,
              abtData, abtData + 1, abtData + 2, abtData + 3);
+      abtData[4] = abtData[0] ^ abtData[1] ^ abtData[2] ^ abtData[3];
+      iso14443a_crc_append(abtData, 16);
       break;
     }
   }
