@@ -146,12 +146,12 @@ print_usage(char **argv)
   printf("Options:\n");
   printf("\t-h\tHelp. Print this message.\n");
   printf("\t-f\tFormat. Delete all data (set to 0xFF) and reset ACLs to default.\n");
-  printf("\t-q\tQuiet mode.\n");
-  printf("\n\tSpecify UID (4 HEX bytes) to set UID, or leave blank for default '01234567'.\n");
-  printf("\n\tSpecify BLOCK0 (16 HEX bytes) to set content of Block0. CRC (Byte 4) is recalculated an overwritten'.\n");
-  printf("\tThis utility can be used to recover cards that have been damaged by writing bad\n");
-  printf("\tdata (e.g. wrong BCC), thus making them non-selectable by most tools/readers.\n");
-  printf("\n\t*** Note: this utility only works with special Mifare 1K cards (Chinese clones).\n\n");
+  printf("\t-q\tQuiet mode.\n\n");
+  printf("\tSpecify UID (4 HEX bytes) to set UID, or leave blank for default '01234567'.\n");
+  printf("\tSpecify BLOCK0 (16 HEX bytes) to set content of Block0. CRC (Byte 4) is recalculated an overwritten'.\n\n");
+  printf("This utility can be used to recover cards that have been damaged by writing bad\n");
+  printf("data (e.g. wrong BCC), thus making them non-selectable by most tools/readers.\n");
+  printf("*** Note: this utility only works with special Mifare 1K cards (Chinese clones).\n");
 }
 
 int
