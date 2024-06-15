@@ -53,12 +53,22 @@
 #include <string.h>
 #include <ctype.h>
 #include <time.h>
+#include <unistd.h>
 
 #include <nfc/nfc.h>
 
 #include "utils/nfc-utils.h"
 #include "libnfc/chips/pn53x.h"
 #include "libnfc/nfc-internal.h"
+
+static void
+print_usage(char **argv)
+{
+  printf("Usage: %s [OPTIONS]\n", argv[0]);
+  printf("Options:\n");
+  printf("\t-h         Help. Print this message.\n");
+  printf("\t-r [file]  Read from file.\n");
+}
 
 int main(int argc, char **argv)
 {
@@ -69,10 +79,21 @@ int main(int argc, char **argv)
   size_t szTx;
   FILE *input = NULL;
 
-  if (argc >= 2) {
-    if ((input = fopen(argv[1], "r")) == NULL) {
-      ERR("%s", "Cannot open file.");
-      exit(EXIT_FAILURE);
+  // Get commandline options
+  for (int opt; (opt = getopt(argc, argv, "hr")) != -1;) {
+    switch (opt) {
+      case 'r':
+        if ((input = fopen(optarg, "r")) == NULL) {
+          ERR("%s", "Cannot open file.");
+          exit(EXIT_FAILURE);
+        }
+        break;
+      case 'h':
+        print_usage(argv);
+        exit(EXIT_SUCCESS);
+      case '?':
+        print_usage(argv);
+        exit(EXIT_FAILURE);
     }
   }
 

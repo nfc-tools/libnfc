@@ -1,3 +1,5 @@
+INCLUDE(CheckIncludeFiles)
+
 SET(EXAMPLES-SOURCES
   nfc-anticol
   nfc-dep-initiator
@@ -15,6 +17,11 @@ SET(EXAMPLES-SOURCES
 )
 
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/../libnfc)
+
+CHECK_INCLUDE_FILES("readline/readline.h;readline/history.h" HAVE_READLINE)
+IF(HAVE_READLINE)
+  ADD_DIFINITIONS(-DHAVE_READLINE)
+ENDIF(HAVE_READLINE)
 
 # Examples
 FOREACH(source ${EXAMPLES-SOURCES})

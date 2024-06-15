@@ -73,11 +73,6 @@ main(int argc, char **argv)
   uint8_t  abtRx[MAX_FRAME_LEN];
   uint8_t  abtTx[] = "Hello World!";
 
-  if (argc > 1) {
-    printf("Usage: %s\n", argv[0]);
-    exit(EXIT_FAILURE);
-  }
-
   nfc_init(&context);
   if (context == NULL) {
     ERR("Unable to init libnfc (malloc)");
