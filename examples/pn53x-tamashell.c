@@ -131,7 +131,7 @@ int main(int argc, const char **argv)
       } else {
         ret = fgets(cmd, n, stdin);
       }
-      if (ret == NULL || strlen(cmd) <= 0) {
+      if (ret == NULL || strlen(cmd) == 0) {
         printf("Bye!\n");
         free(cmd);
         break;

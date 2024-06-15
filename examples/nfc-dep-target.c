@@ -72,11 +72,6 @@ main(int argc, const char **argv)
   int  szRx;
   uint8_t  abtTx[] = "Hello Mars!";
 
-  if (argc > 1) {
-    printf("Usage: %s\n", argv[0]);
-    exit(EXIT_FAILURE);
-  }
-
   nfc_init(&context);
   if (context == NULL) {
     ERR("Unable to init libnfc (malloc)");

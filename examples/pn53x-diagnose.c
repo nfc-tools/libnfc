@@ -66,11 +66,6 @@ main(int argc, const char **argv)
   const uint8_t pncmd_diagnose_rom_test[] = { Diagnose, 0x01 };
   const uint8_t pncmd_diagnose_ram_test[] = { Diagnose, 0x02 };
 
-  if (argc > 1) {
-    printf("Usage: %s", argv[0]);
-    exit(EXIT_FAILURE);
-  }
-
   nfc_context *context;
   nfc_init(&context);
   if (context == NULL) {

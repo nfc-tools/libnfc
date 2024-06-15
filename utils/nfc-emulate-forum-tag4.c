@@ -70,6 +70,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
+#include <unistd.h>
 
 #include <nfc/nfc.h>
 #include <nfc/nfc-emulation.h>
@@ -309,8 +310,7 @@ ndef_message_save(char *filename, struct nfcforum_tag4_ndef_data *tag_data)
   return tag_data->ndef_file_len - 2;
 }
 
-static void
-usage(char *progname)
+static void print_usage(char *progname)
 {
   printf("usage: %s [OPTIONS] [infile [outfile]]\n", progname);
   printf("Options:\n");
@@ -321,7 +321,31 @@ usage(char *progname)
 int
 main(int argc, char **argv)
 {
-  int options = 0;
+  const char *infile = NULL, *outfile = NULL;
+  for (int opt; (opt = getopt(argc, argv, "1hq")) != -1;) {
+    switch (opt) {
+      case '1':
+        type4v = 1;
+        nfcforum_capability_container[2] = 0x10;
+        break;
+      case 'q':
+        verbose = false;
+        break;
+      case 'h':
+        print_usage(argv[0]);
+        exit(EXIT_SUCCESS);
+      case '?':
+        print_usage(argv[0]);
+        exit(EXIT_FAILURE);
+    }
+  }
+  switch (argc - optind) {
+    case 2:
+      outfile = argv[optind + 1];
+    case 1:
+      infile = argv[optind];
+      break;
+  }
   nfc_target nt = {
     .nm = {
       .nmt = NMT_ISO14443A,
@@ -367,26 +391,10 @@ main(int argc, char **argv)
     .user_data = &nfcforum_tag4_data,
   };
 
-  if ((argc > (1 + options)) && (0 == strcmp("-h", argv[1 + options]))) {
-    usage(argv[0]);
-    exit(EXIT_SUCCESS);
-  }
-
-  if ((argc > (1 + options)) && (0 == strcmp("-1", argv[1 + options]))) {
-    type4v = 1;
-    nfcforum_capability_container[2] = 0x10;
-    options += 1;
-  }
-
-  if (argc > (3 + options)) {
-    usage(argv[0]);
-    exit(EXIT_FAILURE);
-  }
-
   // If some file is provided load it
-  if (argc >= (2 + options)) {
-    if (ndef_message_load(argv[1 + options], &nfcforum_tag4_data) < 0) {
-      printf("Can't load NDEF file '%s'\n", argv[1 + options]);
+  if (infile) {
+    if (ndef_message_load(infile, &nfcforum_tag4_data) < 0) {
+      printf("Can't load NDEF file '%s'\n", infile);
       exit(EXIT_FAILURE);
     }
   }
@@ -418,9 +426,9 @@ main(int argc, char **argv)
     exit(EXIT_FAILURE);
   }
 
-  if (argc == (3 + options)) {
-    if (ndef_message_save(argv[2 + options], &nfcforum_tag4_data) < 0) {
-      printf("Can't save NDEF file '%s'", argv[2 + options]);
+  if (outfile) {
+    if (ndef_message_save(outfile, &nfcforum_tag4_data) < 0) {
+      printf("Can't save NDEF file '%s'", outfile);
       nfc_close(pnd);
       nfc_exit(context);
       exit(EXIT_FAILURE);
