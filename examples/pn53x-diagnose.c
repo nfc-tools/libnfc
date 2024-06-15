@@ -53,7 +53,7 @@
 #include "libnfc/chips/pn53x.h"
 
 int
-main(int argc, const char **argv)
+main(int argc, char **argv)
 {
   size_t  i;
   nfc_device *pnd = NULL;

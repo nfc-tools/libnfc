@@ -542,7 +542,7 @@ print_usage(const char *pcProgramName)
 
 
 int
-main(int argc, const char **argv)
+main(int argc, char **argv)
 {
   action_t atAction = ACTION_USAGE;
   uint8_t *pbtUID;

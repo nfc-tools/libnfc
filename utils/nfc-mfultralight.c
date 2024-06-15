@@ -489,7 +489,7 @@ static size_t str_to_uid(const char *str, uint8_t *uid)
 }
 
 static void
-print_usage(const char **argv)
+print_usage(char **argv)
 {
   printf("Usage: %s r|w <dump.mfd> [OPTIONS]\n", argv[0]);
   printf("Arguments:\n");
@@ -507,7 +507,7 @@ print_usage(const char **argv)
 }
 
 int
-main(int argc, const char **argv)
+main(int argc, char **argv)
 {
   int     iAction = 0;
   size_t  iDumpSize = sizeof(mifareul_tag);

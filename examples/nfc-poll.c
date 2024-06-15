@@ -72,7 +72,8 @@ static void stop_polling(int sig)
   }
 }
 
-static void print_usage(const char *progname)
+static void
+print_usage(const char *progname)
 {
   printf("usage: %s [-v]\n", progname);
   printf("  -h\tHelp. Print this message.\n");

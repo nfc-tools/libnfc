@@ -310,7 +310,8 @@ ndef_message_save(char *filename, struct nfcforum_tag4_ndef_data *tag_data)
   return tag_data->ndef_file_len - 2;
 }
 
-static void print_usage(char *progname)
+static void
+print_usage(char *progname)
 {
   printf("usage: %s [OPTIONS] [infile [outfile]]\n", progname);
   printf("Options:\n");

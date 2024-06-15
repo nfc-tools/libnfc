@@ -60,7 +60,7 @@
 #include "libnfc/chips/pn53x.h"
 #include "libnfc/nfc-internal.h"
 
-int main(int argc, const char **argv)
+int main(int argc, char **argv)
 {
   nfc_device *pnd;
   uint8_t abtRx[MAX_FRAME_LEN];

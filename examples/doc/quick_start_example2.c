@@ -18,7 +18,7 @@
 #include "utils/nfc-utils.h"
 
 int
-main(int argc, const char **argv)
+main(int argc, char **argv)
 {
   nfc_device *pnd;
   nfc_target nt;

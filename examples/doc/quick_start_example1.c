@@ -21,7 +21,7 @@ print_hex(const uint8_t *pbtData, const size_t szBytes)
 }
 
 int
-main(int argc, const char **argv)
+main(int argc, char **argv)
 {
   nfc_device *pnd;
   nfc_target nt;

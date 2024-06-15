@@ -104,8 +104,8 @@ main(int argc, char **argv)
     }
   }
 
-  const char *acLibnfcVersion = nfc_version();
   // Display libnfc version
+  const char *acLibnfcVersion = nfc_version();
   printf("%s uses libnfc %s\n", argv[0], acLibnfcVersion);
 
   signal(SIGINT, intr_hdlr);

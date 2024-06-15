@@ -99,6 +99,7 @@ main(int argc, char **argv)
         // Force TypeB for all derivatives of B
         if (mask & 0xd0)
           mask |= 0x08;
+        break;
       case 'h':
         print_usage(argv[0]);
         exit(EXIT_SUCCESS);

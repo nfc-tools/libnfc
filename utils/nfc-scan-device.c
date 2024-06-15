@@ -60,17 +60,17 @@
 static nfc_device *pnd;
 
 static void
-print_usage(const char **argv)
+print_usage(char **argv)
 {
   printf("Usage: %s [OPTIONS]\n", argv[0]);
   printf("Options:\n");
+  printf("\t-i\tAllow intrusive scan.\n");
   printf("\t-h\tPrint this help message.\n");
   printf("\t-v\tSet verbose display.\n");
-  printf("\t-i\tAllow intrusive scan.\n");
 }
 
 int
-main(int argc, const char **argv)
+main(int argc, char **argv)
 {
   const char *acLibnfcVersion;
   bool verbose = false;
@@ -78,7 +78,7 @@ main(int argc, const char **argv)
   nfc_context *context;
 
   // Get commandline options
-  for (int opt; (opt = getopt(argc, argv, "fhqt")) != -1;) {
+  for (int opt; (opt = getopt(argc, argv, "ihv")) != -1;) {
     switch (opt) {
       case 'v':
         verbose = true;

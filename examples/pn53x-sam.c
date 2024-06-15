@@ -77,7 +77,7 @@ wait_one_minute(void)
 }
 
 int
-main(int argc, const char **argv)
+main(int argc, char **argv)
 {
   (void) argc;
   (void) argv;

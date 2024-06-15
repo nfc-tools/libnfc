@@ -67,7 +67,7 @@ static void stop_dep_communication(int sig)
 }
 
 int
-main(int argc, const char **argv)
+main(int argc, char **argv)
 {
   nfc_target nt;
   uint8_t  abtRx[MAX_FRAME_LEN];
