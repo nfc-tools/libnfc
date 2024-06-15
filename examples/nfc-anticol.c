@@ -148,7 +148,7 @@ print_usage(char **argv)
   printf("Usage: %s [OPTIONS]\n", argv[0]);
   printf("Options:\n");
   printf("\t-h\tHelp. Print this message.\n");
-  printf("\t-q\tQuiet mode. Suppress output of READER and EMULATOR data (improves timing).\n");
+  printf("\t-q\tQuiet mode.\n");
   printf("\t-f\tForce RATS.\n");
   printf("\t-t\tMeasure response time (in cycles).\n");
 }

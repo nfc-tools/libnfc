@@ -77,7 +77,7 @@ print_usage(const char *progname)
 {
   printf("usage: %s [-v]\n", progname);
   printf("  -h\tHelp. Print this message.\n");
-  printf("  -v\t verbose display\n");
+  printf("  -v\tVerbose mode.\n");
 }
 
 int
@@ -102,9 +102,11 @@ main(int argc, char **argv)
 
   signal(SIGINT, stop_polling);
 
-  // Display libnfc version
-  const char *acLibnfcVersion = nfc_version();
-  printf("%s uses libnfc %s\n", argv[0], acLibnfcVersion);
+  if (verbose) {
+    // Display libnfc version
+    const char *acLibnfcVersion = nfc_version();
+    printf("%s uses libnfc %s\n", argv[0], acLibnfcVersion);
+  }
 
   const uint8_t uiPollNr = 20;
   const uint8_t uiPeriod = 2;

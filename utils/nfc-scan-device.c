@@ -102,9 +102,11 @@ main(int argc, char **argv)
     exit(EXIT_FAILURE);
   }
 
-  // Display libnfc version
-  acLibnfcVersion = nfc_version();
-  printf("%s uses libnfc %s\n", argv[0], acLibnfcVersion);
+  if (verbose) {
+    // Display libnfc version
+    acLibnfcVersion = nfc_version();
+    printf("%s uses libnfc %s\n", argv[0], acLibnfcVersion);
+  }
 
   nfc_connstring connstrings[MAX_DEVICE_COUNT];
   size_t szDeviceFound = nfc_list_devices(context, connstrings, MAX_DEVICE_COUNT);

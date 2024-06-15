@@ -81,7 +81,7 @@ print_usage(char **argv)
   printf("Usage: %s [OPTIONS]\n", argv[0]);
   printf("Options:\n");
   printf("\t-h\tHelp. Print this message.\n");
-  printf("\t-q\tQuiet mode. Suppress output of READER and EMULATOR data (improves timing).\n");
+  printf("\t-q\tQuiet mode.\n");
 }
 
 int
@@ -104,9 +104,11 @@ main(int argc, char **argv)
     }
   }
 
-  // Display libnfc version
-  const char *acLibnfcVersion = nfc_version();
-  printf("%s uses libnfc %s\n", argv[0], acLibnfcVersion);
+  if (verbose) {
+    // Display libnfc version
+    const char *acLibnfcVersion = nfc_version();
+    printf("%s uses libnfc %s\n", argv[0], acLibnfcVersion);
+  }
 
   signal(SIGINT, intr_hdlr);
 

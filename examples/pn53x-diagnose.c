@@ -57,7 +57,6 @@ main(int argc, char **argv)
 {
   size_t  i;
   nfc_device *pnd = NULL;
-  const char *acLibnfcVersion;
   bool    result;
 
   uint8_t  abtRx[PN53x_EXTENDED_FRAME__DATA_MAX_LEN];
@@ -74,7 +73,7 @@ main(int argc, char **argv)
   }
 
   // Display libnfc version
-  acLibnfcVersion = nfc_version();
+  const char *acLibnfcVersion = nfc_version();
   printf("%s uses libnfc %s\n", argv[0], acLibnfcVersion);
 
   nfc_connstring connstrings[MAX_DEVICE_COUNT];

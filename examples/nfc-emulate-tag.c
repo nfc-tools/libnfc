@@ -189,7 +189,7 @@ print_usage(char **argv)
   printf("Usage: %s [OPTIONS] [UID]\n", argv[0]);
   printf("Options:\n");
   printf("\t-h\tHelp. Print this message.\n");
-  printf("\t-q\tQuiet mode. Silent output: received and sent frames will not be shown (improves timing).\n");
+  printf("\t-q\tQuiet mode.\n");
 }
 
 int
@@ -218,9 +218,11 @@ main(int argc, char **argv)
     exit(EXIT_FAILURE);
   }
 
-  // Display libnfc version
-  const char *acLibnfcVersion = nfc_version();
-  printf("%s uses libnfc %s\n", argv[0], acLibnfcVersion);
+  if (verbose) {
+    // Display libnfc version
+    const char *acLibnfcVersion = nfc_version();
+    printf("%s uses libnfc %s\n", argv[0], acLibnfcVersion);
+  }
 
   // Try to open the NFC reader
   pnd = nfc_open(context, NULL);

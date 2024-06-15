@@ -74,7 +74,7 @@ print_usage(char *progname)
   printf("Options:\n");
   printf("  -o FILE    Extract NDEF message if available in FILE\n");
   printf("  -o -       Extract NDEF message if available to stdout\n");
-  printf("  -q         Be quiet, don't display Attribute Block parsing info\n");
+  printf("  -q         Quiet mode.\n");
 }
 
 static void stop_select(int sig)

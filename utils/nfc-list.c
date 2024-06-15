@@ -61,8 +61,8 @@ static void
 print_usage(const char *progname)
 {
   printf("usage: %s [-v] [-t X]\n", progname);
-  printf("  -v\t verbose display\n");
-  printf("  -t X\t poll only for types according to bitfield X:\n");
+  printf("  -v\tQuiet mode.\n");
+  printf("  -t X\tpoll only for types according to bitfield X:\n");
   printf("\t   1: ISO14443A\n");
   printf("\t   2: Felica (212 kbps)\n");
   printf("\t   4: Felica (424 kbps)\n");
@@ -116,8 +116,8 @@ main(int argc, char **argv)
     exit(EXIT_FAILURE);
   }
 
-  // Display libnfc version
   if (verbose) {
+    // Display libnfc version
     const char *acLibnfcVersion = nfc_version();
     printf("%s uses libnfc %s\n", argv[0], acLibnfcVersion);
   }

@@ -92,7 +92,7 @@ print_usage(char **argv)
   printf("Usage: %s [OPTIONS] [UID]\n", argv[0]);
   printf("Options:\n");
   printf("\t-h\tHelp. Print this message.\n");
-  printf("\t-q\tQuiet mode. Silent output: received and sent frames will not be shown (improves timing).\n");
+  printf("\t-q\tQuiet mode.\n");
   printf("\n");
   printf("\t[UID]\tUID to emulate, specified as 8 HEX digits (default is 01234567).\n");
 }

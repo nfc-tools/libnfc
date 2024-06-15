@@ -93,7 +93,7 @@ print_usage(char **argv)
   printf("Usage: %s [OPTIONS]\n", argv[0]);
   printf("Options:\n");
   printf("\t-h\tHelp. Print this message.\n");
-  printf("\t-q\tQuiet mode. Suppress printing of relayed data (improves timing).\n");
+  printf("\t-q\tQuiet mode.\n");
   printf("\t-t\tTarget mode only (the one on reader side). Data expected from FD3 to FD4.\n");
   printf("\t-i\tInitiator mode only (the one on tag side). Data expected from FD3 to FD4.\n");
   printf("\t-s\tSwap roles of found devices.\n");
