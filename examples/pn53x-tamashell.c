@@ -131,7 +131,7 @@ int main(int argc, char **argv)
   while (1) {
     int offset = 0;
     char *cmd;
-#if defined(HAVE_READLINE)
+#ifdef HAVE_READLINE
     if (input == NULL) { // means we use stdin
       cmd = readline(prompt);
       // NULL if ctrl-d
@@ -147,19 +147,22 @@ int main(int argc, char **argv)
       cmd = malloc(n);
       printf("%s", prompt);
       fflush(0);
+#ifdef HAVE_READLINE
       if (input != NULL) {
+#endif //HAVE_READLINE
         ret = fgets(cmd, n, input);
+        printf("%s", cmd);
+#ifdef HAVE_READLINE
       } else {
         ret = fgets(cmd, n, stdin);
       }
+#endif //HAVE_READLINE
       if (ret == NULL || strlen(cmd) == 0) {
         printf("Bye!\n");
         free(cmd);
         break;
       }
-      // FIXME print only if read from redirected stdin (i.e. script)
-      printf("%s", cmd);
-#if defined(HAVE_READLINE)
+#ifdef HAVE_READLINE
     }
 #endif //HAVE_READLINE
     if (cmd[0] == 'q') {
