@@ -569,7 +569,7 @@ main(int argc, char **argv)
   }
   optind = 2;
   int idx;
-  for (int opt; (opt = getopt_long(argc, argv, "fhp:u:", long_options, &idx)) != -1;) {
+  for (int opt; (opt = getopt_long(argc, argv, "fhu:", long_options, &idx)) != -1;) {
     switch (opt) {
       case 0:
         if (strcmp(long_options[idx], "pw")) {
