@@ -50,9 +50,9 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
-
 #include <string.h>
 #include <ctype.h>
+#include <unistd.h>
 
 #include <nfc/nfc.h>
 
@@ -513,8 +513,8 @@ typedef enum {
 static void
 print_usage(const char *pcProgramName)
 {
-  printf("Usage: ");
-  printf("%s f|r|R|w|W a|b u|U<01ab23cd> <dump.mfd> [<keys.mfd> [f] [v]]\n", pcProgramName);
+  printf("Usage:\n");
+  printf("%s f|r|R|w|W a|A|b|B u|U<01ab23cd> <dump.mfd> [<keys.mfd> [f]]\n", pcProgramName);
   printf("  f|r|R|w|W     - Perform format (f) or read from (r) or unlocked read from (R) or write to (w) or block 0 write to (W) card\n");
   printf("                  *** format will reset all keys to FFFFFFFFFFFF and all data to 00 and all ACLs to default\n");
   printf("                  *** unlocked read does not require authentication and will reveal A and B keys\n");
@@ -522,22 +522,21 @@ print_usage(const char *pcProgramName)
   printf("                  *** block 0 write only works with special Mifare cards (Chinese clones)\n");
   printf("  a|A|b|B       - Use A or B keys for action; Halt on errors (a|b) or tolerate errors (A|B)\n");
   printf("  u|U           - Use any (u) uid or supply a uid specifically as U01ab23cd.\n");
-  printf("  <dump.mfd>    - MiFare Dump (MFD) used to write (card to MFD) or (MFD to card)\n");
+  printf("  <dump.mfd>    - MiFare Dump (MFD) used to read (card to MFD) or write (MFD to card)\n");
   printf("  <keys.mfd>    - MiFare Dump (MFD) that contain the keys (optional)\n");
-  printf("  f             - Force using the keyfile even if UID does not match (optional)\n");
-  printf("  v             - Sends libnfc log output to console (optional)\n");
-  printf("Examples: \n\n");
-  printf("  Read card to file, using key A:\n\n");
-  printf("    %s r a u mycard.mfd\n\n", pcProgramName);
-  printf("  Write file to blank card, using key A:\n\n");
-  printf("    %s w a u mycard.mfd\n\n", pcProgramName);
-  printf("  Write new data and/or keys to previously written card, using key A:\n\n");
-  printf("    %s w a u newdata.mfd mycard.mfd\n\n", pcProgramName);
-  printf("  Format/wipe card (note two passes required to ensure writes for all ACL cases):\n\n");
+  printf("  f             - Force using the keyfile even if UID does not match (optional)\n\n");
+  printf("Examples: \n");
+  printf("  Read card to file, using key A:\n");
+  printf("    %s r a u mycard.mfd\n", pcProgramName);
+  printf("  Write file to blank card, using key A:\n");
+  printf("    %s w a u mycard.mfd\n", pcProgramName);
+  printf("  Write new data and/or keys to previously written card, using key A:\n");
+  printf("    %s w a u newdata.mfd mycard.mfd\n", pcProgramName);
+  printf("  Format/wipe card (note two passes required to ensure writes for all ACL cases):\n");
   printf("    %s f A u dummy.mfd keyfile.mfd f\n", pcProgramName);
-  printf("    %s f B u dummy.mfd keyfile.mfd f\n\n", pcProgramName);
-  printf("  Read card to file, using key A and uid 0x01 0xab 0x23 0xcd:\n\n");
-  printf("    %s r a U01ab23cd mycard.mfd\n\n", pcProgramName);
+  printf("    %s f B u dummy.mfd keyfile.mfd f\n", pcProgramName);
+  printf("  Read card to file, using key A and uid 0x01 0xab 0x23 0xcd:\n");
+  printf("    %s r a U01ab23cd mycard.mfd\n", pcProgramName);
 }
 
 
@@ -567,7 +566,7 @@ main(int argc, char **argv)
       unlock = true;
     bUseKeyA = tolower((int)((unsigned char) * (argv[2]))) == 'a';
     bTolerateFailures = tolower((int)((unsigned char) * (argv[2]))) != (int)((unsigned char) * (argv[2]));
-    bUseKeyFile = (argc > 5) && strcmp(argv[5], "v");
+    bUseKeyFile = (argc > 5);
     bForceKeyFile = ((argc > 6) && (strcmp((char *)argv[6], "f") == 0));
   } else if (strcmp(command, "w") == 0 || strcmp(command, "W") == 0 || strcmp(command, "f") == 0) {
     atAction = ACTION_WRITE;
@@ -576,7 +575,7 @@ main(int argc, char **argv)
     bFormatCard = (strcmp(command, "f") == 0);
     bUseKeyA = tolower((int)((unsigned char) * (argv[2]))) == 'a';
     bTolerateFailures = tolower((int)((unsigned char) * (argv[2]))) != (int)((unsigned char) * (argv[2]));
-    bUseKeyFile = (argc > 5) && strcmp(argv[5], "v");
+    bUseKeyFile = (argc > 5);
     bForceKeyFile = ((argc > 6) && (strcmp((char *)argv[6], "f") == 0));
   }
   if (argv[3][0] == 'U') {

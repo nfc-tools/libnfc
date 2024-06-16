@@ -53,6 +53,7 @@
 
 #include <string.h>
 #include <ctype.h>
+#include <getopt.h>
 
 #include <nfc/nfc.h>
 
@@ -69,6 +70,12 @@
 #define NTAG_213  1
 #define NTAG_215  2
 #define NTAG_216  3
+
+typedef enum {
+  ACTION_READ,
+  ACTION_WRITE,
+  ACTION_CHECK
+} action_t;
 
 static nfc_device *pnd;
 static nfc_target nt;
@@ -322,7 +329,7 @@ static bool check_magic(void)
     }
   }
   if (directWrite) {
-    printf(" Block 0 written successfully\n");
+    printf("Block 0 written successfully\n");
     printf("Card is DirectWrite\n");
     return true;
   } else {
@@ -491,17 +498,19 @@ static size_t str_to_uid(const char *str, uint8_t *uid)
 static void
 print_usage(char **argv)
 {
-  printf("Usage: %s r|w <dump.mfd> [OPTIONS]\n", argv[0]);
-  printf("Arguments:\n");
-  printf("\tr|w                 - Perform read or write\n");
+  printf("Usage:\n");
+  printf("%s r|w <dump.mfd> [OPTIONS]\n", argv[0]);
+  printf("%s c\n", argv[0]);
+  printf("Actions:\n");
+  printf("\tr|w|c               - Perform read, write or check card\n");
   printf("\t<dump.mfd>          - MiFare Dump (MFD) used to write (card to MFD) or (MFD to card)\n");
   printf("Options:\n");
-  printf("\t--otp               - Don't prompt for OTP Bytes writing (Assume yes)\n");
-  printf("\t--lock              - Don't prompt for Lock Bytes (OTP) writing (Assume yes)\n");
-  printf("\t--dynlock           - Don't prompt for Dynamic Lock Bytes writing (Assume yes)\n");
-  printf("\t--uid               - Don't prompt for UID writing (Assume yes)\n");
-  printf("\t--full              - Assume full card write (UID + OTP + Lockbytes + Dynamic Lockbytes)\n");
-  printf("\t--with-uid <UID>    - Specify UID to read/write from\n");
+  printf("\t--otp               - Prompt for OTP Bytes writing (Assume no)\n");
+  printf("\t--lock              - Prompt for Lock Bytes (OTP) writing (Assume no)\n");
+  printf("\t--dynlock           - Prompt for Dynamic Lock Bytes writing (Assume no)\n");
+  printf("\t--uid               - Prompt for UID writing (Assume no)\n");
+  printf("\t--full              - Assume full card write (UID + OTP + Lock Bytes + Dynamic Lock Bytes)\n");
+  printf("\t--with-uid <UID>    - Specify 8 HEX digit to read/write from\n");
   printf("\t--pw <PWD>          - Specify 8 HEX digit PASSWORD for EV1\n");
   printf("\t--partial           - Allow source data size to be other than tag capacity\n");
 }
@@ -509,75 +518,84 @@ print_usage(char **argv)
 int
 main(int argc, char **argv)
 {
-  int     iAction = 0;
-  size_t  iDumpSize = sizeof(mifareul_tag);
-  uint8_t iUID[MAX_UID_LEN] = { 0x0 };
-  size_t  szUID = 0;
-  bool    bOTP = false;
-  bool    bLock = false;
-  bool    bDynLock = false;
-  bool    bUID = false;
-  bool    bPWD = false;
-  bool    bPart = false;
-  bool    bFilename = false;
-  FILE   *pfDump;
+  action_t action;
+  size_t   iDumpSize = sizeof(mifareul_tag);
+  uint8_t  iUID[MAX_UID_LEN] = { 0x0 };
+  size_t   szUID = 0;
+  FILE     *pfDump;
+  int      bOTP = 0;
+  int      bLock = 0;
+  int      bDynLock = 0;
+  int      bUID = 0;
+  int      bPWD = 0;
+  int      bPart = 0;
+  int      bFilename = 0;
 
-  if (argc == 0) {
+  static struct option long_options[] = {
+      {  "dynlock",       no_argument, &bDynLock,   1 },
+      {     "lock",       no_argument,    &bLock,   1 },
+      {      "otp",       no_argument,     &bOTP,   1 },
+      {  "partial",       no_argument,    &bPart,   1 },
+      {      "uid",       no_argument,     &bUID,   1 },
+      {     "full",       no_argument,      NULL, 'f' },
+      {     "help",       no_argument,      NULL, 'h' },
+      {       "pw", required_argument,     &bPWD,   1 },
+      { "with-uid", required_argument,      NULL, 'u' },
+      { 0, 0, 0, 0 }
+  };
+  // Get commandline options
+  if (argc < 2) {
+    print_usage(argv);
+    exit(EXIT_SUCCESS);
+  }
+  switch (argv[1][0]) {
+  case 'r':
+    action = ACTION_READ;
+    break;
+  case 'w':
+    action = ACTION_WRITE;
+    break;
+  case 'c':
+    action = ACTION_CHECK;
+    break;
+  default:
+    ERR("%s is not a supported action.", argv[1]);
     print_usage(argv);
     exit(EXIT_FAILURE);
   }
-
-  DBG("\nChecking arguments and settings\n");
-
-  // Get commandline options
-  for (int arg = 1; arg < argc; arg++) {
-    if (0 == strcmp(argv[arg], "r")) {
-      iAction = 1;
-    } else if (0 == strcmp(argv[arg], "w")) {
-      iAction = 2;
-    } else if (0 == strcmp(argv[arg], "--with-uid")) {
-      if (arg + 1 == argc) {
-        ERR("Please supply a UID of 4, 7 or 10 bytes long. Ex: a1:b2:c3:d4");
-        exit(EXIT_FAILURE);
-      }
-      szUID = str_to_uid(argv[++arg], iUID);
-    } else if (0 == strcmp(argv[arg], "--full")) {
-      bOTP = true;
-      bLock = true;
-      bDynLock = true;
-      bUID = true;
-    } else if (0 == strcmp(argv[arg], "--otp")) {
-      bOTP = true;
-    } else if (0 == strcmp(argv[arg], "--lock")) {
-      bLock = true;
-    } else if (0 == strcmp(argv[arg], "--dynlock")) {
-      bDynLock = true;
-    } else if (0 == strcmp(argv[arg], "--uid")) {
-      bUID = true;
-    } else if (0 == strcmp(argv[arg], "--check-magic")) {
-      iAction = 3;
-    } else if (0 == strcmp(argv[arg], "--partial")) {
-      bPart = true;
-    } else if (0 == strcmp(argv[arg], "--pw")) {
-      bPWD = true;
-      if (arg + 1 == argc || strlen(argv[++arg]) != 8 || ! ev1_load_pwd(iPWD, argv[arg])) {
-        ERR("Please supply a PASSWORD of 8 HEX digits");
-        exit(EXIT_FAILURE);
-      }
-    } else {
-      //Skip validation of the filename
-      if (arg != 2) {
-        ERR("%s is not a supported option.", argv[arg]);
-        print_usage(argv);
-        exit(EXIT_FAILURE);
-      } else {
-        bFilename = true;
-      }
-    }
-  }
-  if (iAction != 3 && !bFilename) {
+  if (action != ACTION_CHECK && argc < 3) {
     ERR("Please supply a Mifare Dump filename");
     exit(EXIT_FAILURE);
+  }
+  optind = 2;
+  int idx;
+  for (int opt; (opt = getopt_long(argc, argv, "fhp:u:", long_options, &idx)) != -1;) {
+    switch (opt) {
+      case 0:
+        if (strcmp(long_options[idx], "pw")) {
+          if (strlen(optarg) != 8) {
+            ERR("Please supply a password of 8 HEX digits");
+            exit(EXIT_FAILURE);
+          }
+          ev1_load_pwd(iPWD, optarg);
+        }
+        break;
+      case 'f':
+        bOTP = 1;
+        bLock = 1;
+        bDynLock = 1;
+        bUID = 1;
+        break;
+      case 'u':
+        szUID = str_to_uid(optarg, iUID);
+        break;
+      case 'h':
+        print_usage(argv);
+        exit(EXIT_SUCCESS);
+      case '?':
+        print_usage(argv);
+        exit(EXIT_FAILURE);
+    }
   }
 
   nfc_context *context;
@@ -697,9 +715,9 @@ main(int argc, char **argv)
     }
   }
 
-  if (iAction == 1) {
+  if (action == ACTION_READ) {
     memset(&mtDump, 0x00, sizeof(mtDump));
-  } else if (iAction == 2) {
+  } else if (action == ACTION_WRITE) {
     pfDump = fopen(argv[2], "rb");
 
     if (pfDump == NULL) {
@@ -717,14 +735,14 @@ main(int argc, char **argv)
       printf("Performing partial write\n");
     fclose(pfDump);
     DBG("Successfully opened the dump file\n");
-  } else if (iAction == 3) {
+  } else if (action == ACTION_CHECK) {
     DBG("Switching to Check Magic Mode\n");
   } else {
     ERR("Unable to determine operating mode");
     exit(EXIT_FAILURE);
   }
 
-  if (iAction == 1) {
+  if (action == ACTION_READ) {
     bool bRF = read_card();
     printf("Writing data to file: %s ... ", argv[2]);
     fflush(stdout);
@@ -746,9 +764,9 @@ main(int argc, char **argv)
     printf("Done.\n");
     if (!bRF)
       printf("Warning! Read failed - partial data written to file!\n");
-  } else if (iAction == 2) {
+  } else if (action == ACTION_WRITE) {
     write_card(bOTP, bLock, bDynLock, bUID);
-  } else if (iAction == 3) {
+  } else if (action == ACTION_CHECK) {
     if (!check_magic()) {
       printf("Card is not magic\n");
       nfc_close(pnd);
