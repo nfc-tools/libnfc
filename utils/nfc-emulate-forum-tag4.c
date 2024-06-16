@@ -316,7 +316,7 @@ usage(char *progname)
 }
 
 int
-main(int argc, char *argv[])
+main(int argc, char **argv)
 {
   int options = 0;
   nfc_target nt = {

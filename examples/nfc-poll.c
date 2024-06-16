@@ -44,7 +44,6 @@
 #  include "config.h"
 #endif // HAVE_CONFIG_H
 
-#include <err.h>
 #include <inttypes.h>
 #include <signal.h>
 #include <stdio.h>
@@ -56,8 +55,6 @@
 #include <nfc/nfc-types.h>
 
 #include "utils/nfc-utils.h"
-
-#define MAX_DEVICE_COUNT 16
 
 static nfc_device *pnd = NULL;
 static nfc_context *context;
@@ -81,7 +78,7 @@ print_usage(const char *progname)
 }
 
 int
-main(int argc, const char *argv[])
+main(int argc, char **argv)
 {
   bool verbose = false;
 

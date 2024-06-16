@@ -54,10 +54,6 @@
 
 #include "utils/nfc-utils.h"
 
-#define SAK_FLAG_ATS_SUPPORTED 0x20
-
-#define MAX_FRAME_LEN 264
-
 static uint8_t abtRx[MAX_FRAME_LEN];
 static int szRxBits;
 static size_t szRx = sizeof(abtRx);
@@ -80,7 +76,6 @@ uint8_t  abtSelectAll[2] = { 0x93, 0x20 };
 uint8_t  abtSelectTag[9] = { 0x93, 0x70, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 uint8_t  abtRats[4] = { 0xe0, 0x50, 0x00, 0x00 };
 uint8_t  abtHalt[4] = { 0x50, 0x00, 0x00, 0x00 };
-#define CASCADE_BIT 0x04
 
 static  bool
 transmit_bits(const uint8_t *pbtTx, const size_t szTxBits)
@@ -144,7 +139,7 @@ transmit_bytes(const uint8_t *pbtTx, const size_t szTx)
 }
 
 static void
-print_usage(char *argv[])
+print_usage(char **argv)
 {
   printf("Usage: %s [OPTIONS]\n", argv[0]);
   printf("Options:\n");
@@ -155,7 +150,7 @@ print_usage(char *argv[])
 }
 
 int
-main(int argc, char *argv[])
+main(int argc, char **argv)
 {
   int     arg;
 

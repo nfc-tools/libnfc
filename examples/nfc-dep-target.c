@@ -51,8 +51,6 @@
 
 #include "utils/nfc-utils.h"
 
-#define MAX_FRAME_LEN 264
-
 static nfc_device *pnd;
 static nfc_context *context;
 
@@ -68,7 +66,7 @@ static void stop_dep_communication(int sig)
 }
 
 int
-main(int argc, const char *argv[])
+main(int argc, char **argv)
 {
   uint8_t  abtRx[MAX_FRAME_LEN];
   int  szRx;
@@ -84,7 +82,6 @@ main(int argc, const char *argv[])
     ERR("Unable to init libnfc (malloc)");
     exit(EXIT_FAILURE);
   }
-#define MAX_DEVICE_COUNT 2
   nfc_connstring connstrings[MAX_DEVICE_COUNT];
   size_t szDeviceFound = nfc_list_devices(context, connstrings, MAX_DEVICE_COUNT);
   // Little hack to allow using nfc-dep-initiator & nfc-dep-target from

@@ -62,10 +62,6 @@
 
 #include "nfc-utils.h"
 
-#if defined(WIN32) /* mingw compiler */
-#include <getopt.h>
-#endif
-
 static nfc_device *pnd;
 static nfc_context *context;
 
@@ -165,7 +161,7 @@ nfc_forum_tag_type3_check(nfc_device *dev, const nfc_target *nt, const uint16_t 
 }
 
 int
-main(int argc, char *argv[])
+main(int argc, char **argv)
 {
   (void)argc;
   (void)argv;

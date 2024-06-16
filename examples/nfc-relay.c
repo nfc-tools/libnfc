@@ -54,9 +54,6 @@
 
 #include "utils/nfc-utils.h"
 
-#define MAX_FRAME_LEN 264
-#define MAX_DEVICE_COUNT 2
-
 static uint8_t abtReaderRx[MAX_FRAME_LEN];
 static uint8_t abtReaderRxPar[MAX_FRAME_LEN];
 static int szReaderRxBits;
@@ -77,7 +74,7 @@ intr_hdlr(int sig)
 }
 
 static void
-print_usage(char *argv[])
+print_usage(char **argv)
 {
   printf("Usage: %s [OPTIONS]\n", argv[0]);
   printf("Options:\n");
@@ -86,7 +83,7 @@ print_usage(char *argv[])
 }
 
 int
-main(int argc, char *argv[])
+main(int argc, char **argv)
 {
   int     arg;
   bool    quiet_output = false;
@@ -109,11 +106,7 @@ main(int argc, char *argv[])
   // Display libnfc version
   printf("%s uses libnfc %s\n", argv[0], acLibnfcVersion);
 
-#ifdef WIN32
-  signal(SIGINT, (void (__cdecl *)(int)) intr_hdlr);
-#else
   signal(SIGINT, intr_hdlr);
-#endif
 
   nfc_context *context;
   nfc_init(&context);

@@ -50,14 +50,12 @@
 
 #include "nfc-utils.h"
 
-#define MAX_FRAME_LEN 264
-
 static nfc_device *pnd;
 
 bool    verbose = false;
 
 static void
-print_usage(char *argv[])
+print_usage(char **argv)
 {
   printf("Usage: %s [OPTIONS]\n", argv[0]);
   printf("Options:\n");
@@ -135,7 +133,7 @@ decode_barcode(uint8_t *pbtBarcode, const size_t szBarcode)
 }
 
 int
-main(int argc, char *argv[])
+main(int argc, char **argv)
 {
   int     arg;
 

@@ -58,7 +58,6 @@
 
 #include "utils/nfc-utils.h"
 
-#define MAX_FRAME_LEN (264)
 #define SAK_ISO14443_4_COMPLIANT 0x20
 
 static uint8_t abtRx[MAX_FRAME_LEN];
@@ -184,16 +183,12 @@ nfc_target_emulate_tag(nfc_device *dev, nfc_target *pnt)
 }
 
 int
-main(int argc, char *argv[])
+main(int argc, char **argv)
 {
   (void) argc;
   const char *acLibnfcVersion;
 
-#ifdef WIN32
-  signal(SIGINT, (void (__cdecl *)(int)) intr_hdlr);
-#else
   signal(SIGINT, intr_hdlr);
-#endif
 
   nfc_init(&context);
   if (context == NULL) {

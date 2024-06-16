@@ -50,15 +50,8 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
-
 #include <string.h>
 #include <ctype.h>
-
-#ifndef _WIN32
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#endif
 
 #include <nfc/nfc.h>
 
@@ -99,8 +92,6 @@ static const nfc_modulation nmMifare = {
 };
 
 static size_t num_keys = sizeof(keys) / 6;
-
-#define MAX_FRAME_LEN 264
 
 static uint8_t abtRx[MAX_FRAME_LEN];
 static int szRxBits;
@@ -557,7 +548,7 @@ print_usage(const char *pcProgramName)
 
 
 int
-main(int argc, const char *argv[])
+main(int argc, char **argv)
 {
   action_t atAction = ACTION_USAGE;
   uint8_t *pbtUID;

@@ -56,7 +56,6 @@
 #include "utils/nfc-utils.h"
 #include "libnfc/chips/pn53x.h"
 
-#define MAX_FRAME_LEN 264
 #define TIMEOUT 60              // secs.
 
 static void
@@ -78,7 +77,7 @@ wait_one_minute(void)
 }
 
 int
-main(int argc, const char *argv[])
+main(int argc, char **argv)
 {
   (void) argc;
   (void) argv;

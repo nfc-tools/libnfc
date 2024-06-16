@@ -52,8 +52,6 @@
 
 #include "utils/nfc-utils.h"
 
-#define MAX_FRAME_LEN 264
-
 static nfc_device *pnd;
 static nfc_context *context;
 
@@ -69,7 +67,7 @@ static void stop_dep_communication(int sig)
 }
 
 int
-main(int argc, const char *argv[])
+main(int argc, char **argv)
 {
   nfc_target nt;
   uint8_t  abtRx[MAX_FRAME_LEN];

@@ -92,6 +92,12 @@
 #define MAX(a,b) (((a) > (b)) ? (a) : (b))
 #endif
 
+#define CASCADE_BIT 0x04
+#define MAX_FRAME_LEN 264
+#define MAX_DEVICE_COUNT 2
+#define MAX_TARGET_COUNT 16
+#define SAK_FLAG_ATS_SUPPORTED 0x20
+
 uint8_t  oddparity(const uint8_t bt);
 void    oddparity_bytes_ts(const uint8_t *pbtData, const size_t szLen, uint8_t *pbtPar);
 

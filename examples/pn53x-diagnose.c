@@ -43,7 +43,6 @@
 #  include "config.h"
 #endif // HAVE_CONFIG_H
 
-#include <err.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -52,10 +51,8 @@
 #include "utils/nfc-utils.h"
 #include "libnfc/chips/pn53x.h"
 
-#define MAX_DEVICE_COUNT 16
-
 int
-main(int argc, const char *argv[])
+main(int argc, char **argv)
 {
   size_t  i;
   nfc_device *pnd = NULL;

@@ -60,8 +60,6 @@
 
 #include "utils/nfc-utils.h"
 
-#define MAX_FRAME_LEN 264
-
 static uint8_t abtRecv[MAX_FRAME_LEN];
 static int szRecvBits;
 static nfc_device *pnd;
@@ -86,7 +84,7 @@ intr_hdlr(int sig)
 }
 
 static void
-print_usage(char *argv[])
+print_usage(char **argv)
 {
   printf("Usage: %s [OPTIONS] [UID]\n", argv[0]);
   printf("Options:\n");
@@ -97,7 +95,7 @@ print_usage(char *argv[])
 }
 
 int
-main(int argc, char *argv[])
+main(int argc, char **argv)
 {
   uint8_t *pbtTx = NULL;
   size_t  szTxBits;
@@ -130,11 +128,7 @@ main(int argc, char *argv[])
     }
   }
 
-#ifdef WIN32
-  signal(SIGINT, (void (__cdecl *)(int)) intr_hdlr);
-#else
   signal(SIGINT, intr_hdlr);
-#endif
 
   nfc_init(&context);
   if (context == NULL) {

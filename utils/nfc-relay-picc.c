@@ -55,15 +55,11 @@
 #include <stdint.h>
 #include <string.h>
 #include <signal.h>
-
 #include <unistd.h>
 
 #include <nfc/nfc.h>
 
 #include "nfc-utils.h"
-
-#define MAX_FRAME_LEN 264
-#define MAX_DEVICE_COUNT 2
 
 static uint8_t abtCapdu[MAX_FRAME_LEN];
 static size_t szCapduLen;
@@ -91,7 +87,7 @@ intr_hdlr(int sig)
 }
 
 static void
-print_usage(char *argv[])
+print_usage(char **argv)
 {
   printf("Usage: %s [OPTIONS]\n", argv[0]);
   printf("Options:\n");
@@ -158,7 +154,7 @@ static int scan_hex_fd3(uint8_t *pbtData, size_t *pszBytes, const char *pchPrefi
 }
 
 int
-main(int argc, char *argv[])
+main(int argc, char **argv)
 {
   int     arg;
   const char *acLibnfcVersion = nfc_version();
@@ -199,11 +195,7 @@ main(int argc, char *argv[])
   // Display libnfc version
   printf("%s uses libnfc %s\n", argv[0], acLibnfcVersion);
 
-#ifdef WIN32
-  signal(SIGINT, (void (__cdecl *)(int)) intr_hdlr);
-#else
   signal(SIGINT, intr_hdlr);
-#endif
 
   nfc_context *context;
   nfc_init(&context);

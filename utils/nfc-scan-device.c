@@ -43,7 +43,6 @@
 #  include "config.h"
 #endif // HAVE_CONFIG_H
 
-#include <err.h>
 #include <stdio.h>
 #include <stddef.h>
 #include <stdlib.h>
@@ -53,13 +52,13 @@
 
 #include "nfc-utils.h"
 
+#undef MAX_DEVICE_COUNT
 #define MAX_DEVICE_COUNT 16
-#define MAX_TARGET_COUNT 16
 
 static nfc_device *pnd;
 
 static void
-print_usage(const char *argv[])
+print_usage(char **argv)
 {
   printf("Usage: %s [OPTIONS]\n", argv[0]);
   printf("Options:\n");
@@ -69,7 +68,7 @@ print_usage(const char *argv[])
 }
 
 int
-main(int argc, const char *argv[])
+main(int argc, char **argv)
 {
   const char *acLibnfcVersion;
   size_t  i;
