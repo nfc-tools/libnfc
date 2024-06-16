@@ -315,8 +315,9 @@ print_usage(char *progname)
 {
   printf("usage: %s [OPTIONS] [infile [outfile]]\n", progname);
   printf("Options:\n");
-  printf("  -1: force Tag Type 4 v1.0 (default is v2.0)\n");
-  printf("  -q: Quiet mode.\n");
+  printf("\t-h: Help. Print this message.\n");
+  printf("\t-1: force Tag Type 4 v1.0 (default is v2.0)\n");
+  printf("\t-q: Quiet mode.\n");
 }
 
 int
