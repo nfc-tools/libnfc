@@ -85,6 +85,10 @@
 #define LOG_GROUP    NFC_LOG_GROUP_DRIVER
 #define LOG_CATEGORY "libnfc.driver.pcsc"
 
+#ifndef MAX_ATR_SIZE
+#define MAX_ATR_SIZE 33
+#endif
+
 static const char *supported_devices[] = {
   "ACS ACR122",         // ACR122U & Touchatag, last version
   "ACS ACR 38U-CCID",   // Touchatag, early version
