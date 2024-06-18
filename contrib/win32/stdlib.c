@@ -31,27 +31,72 @@
  * @brief Windows System compatibility
  */
 
-// Handle platform specific includes
+#include <stddef.h>
+#include <stdlib.h>
+
 #include "contrib/windows.h"
 
-//There is no setenv()and unsetenv() in windows,but we can use putenv() instead.
+// This implementation of setenv() and unsetenv() using _putenv_s() as the
+// underlying function.
+// NOTE: unlike the POSIX functions, they return errno instead of -1 when they
+// fail, and they allow name to contain '=', which is not allowed by the POSIX
+// standard.
 int setenv(const char *name, const char *value, int overwrite)
 {
-  char *env = getenv(name);
-  if ((env && overwrite) || (!env)) {
-    char *str[32];
-    strcpy(str, name);
-    strcat(str, "=");
-    strcat(str, value);
-    return putenv(str);
+  if (!overwrite) {
+    size_t sz;
+    // Test for existence.
+    getenv_s(&sz, NULL, 0, name);
+    if (sz != 0)
+      return 0;
   }
-  return -1;
+  return _putenv_s(name, value);
 }
 
-void unsetenv(const char *name)
+int unsetenv(const char *name)
 {
-  char *str[32];
-  strcpy(str, name);
-  strcat(str, "=");
-  putenv(str);
+  return _putenv_s(name, "");
 }
+
+#ifdef USE_LIBNFC_SNPRINTF
+
+#include <stdarg.h>
+#include <stdio.h>
+
+// The implementation of libnfc_snprintf() is taken from mingw-w64-crt
+int libnfc_vsnprintf(char *s, size_t n, const char *format, va_list arg)
+{
+  int retval;
+
+  /* _vsnprintf() does not work with zero length buffer
+   * so count number of character by _vscprintf() call */
+  if (n == 0)
+    return _vscprintf(format, arg);
+
+  retval = _vsnprintf(s, n, format, arg);
+
+  /* _vsnprintf() does not fill trailing null byte if there is not place for it
+   */
+  if (retval < 0 || (size_t)retval == n)
+    s[n - 1] = '\0';
+
+  /* _vsnprintf() returns negative number if buffer is too small
+   * so count number of character by _vscprintf() call */
+  if (retval < 0)
+    retval = _vscprintf(format, arg);
+
+  return retval;
+}
+
+int libnfc_snprintf(char *buffer, size_t n, const char *format, ...)
+{
+  int retval;
+  va_list argptr;
+
+  va_start(argptr, format);
+  retval = libnfc_vsnprintf(buffer, n, format, argptr);
+  va_end(argptr);
+  return retval;
+}
+
+#endif
