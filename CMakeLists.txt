@@ -95,6 +95,7 @@ ENDIF(NOT DEFINED SHARE_INSTALL_PREFIX)
 
 # Workarounds for libusb in C99
 ADD_DEFINITIONS(-Du_int8_t=uint8_t -Du_int16_t=uint16_t)
+SET(C_STANDARD 99)
 
 IF(NOT WIN32)
   # Set some pkg-config variables
