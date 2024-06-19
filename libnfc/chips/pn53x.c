@@ -50,6 +50,9 @@
 #define LOG_CATEGORY "libnfc.chip.pn53x"
 #define LOG_GROUP NFC_LOG_GROUP_CHIP
 
+#define SAK_ISO14443_4_COMPLIANT 0x20
+#define SAK_ISO18092_COMPLIANT   0x40
+
 const uint8_t pn53x_ack_frame[] = { 0x00, 0x00, 0xff, 0x00, 0xff, 0x00 };
 const uint8_t pn53x_nack_frame[] = { 0x00, 0x00, 0xff, 0xff, 0x00, 0x00 };
 static const uint8_t pn53x_error_frame[] = { 0x00, 0x00, 0xff, 0x01, 0xff, 0x7f, 0x81, 0x00 };
@@ -2367,8 +2370,6 @@ pn53x_initiator_target_is_present(struct nfc_device *pnd, const nfc_target *pnt)
   return pnd->last_error = ret;
 }
 
-#define SAK_ISO14443_4_COMPLIANT 0x20
-#define SAK_ISO18092_COMPLIANT   0x40
 int
 pn53x_target_init(struct nfc_device *pnd, nfc_target *pnt, uint8_t *pbtRx, const size_t szRxLen, int timeout)
 {
