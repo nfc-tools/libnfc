@@ -67,15 +67,10 @@
 #define SCARD_ATTR_VENDOR_IFD_SERIAL_NO SCARD_ATTR_VALUE(SCARD_CLASS_VENDOR_INFO, 0x0103) /**< Vendor-supplied interface device serial number. */
 #define SCARD_ATTR_ICC_TYPE_PER_ATR SCARD_ATTR_VALUE(SCARD_CLASS_ICC_STATE, 0x0304) /**< Single byte indicating smart card type */
 #else
-#ifndef _Win32
+#ifndef _WIN32
 #include <reader.h>
 #endif
 #include <winscard.h>
-#endif
-
-#ifdef WIN32
-#include <windows.h>
-#define usleep(x) Sleep((x + 999) / 1000)
 #endif
 
 #define PCSC_DRIVER_NAME "pcsc"
@@ -84,6 +79,8 @@
 
 #define LOG_GROUP    NFC_LOG_GROUP_DRIVER
 #define LOG_CATEGORY "libnfc.driver.pcsc"
+
+#define SAK_ISO14443_4_COMPLIANT 0x20
 
 static const char *supported_devices[] = {
   "ACS ACR122",         // ACR122U & Touchatag, last version
@@ -370,8 +367,7 @@ static int pcsc_props_to_target(struct nfc_device *pnd, uint8_t it, const uint8_
             memcpy(pnt->nti.nai.abtAts, ats, ats_len);
             pnt->nti.nai.szAtsLen = ats_len;
           } else {
-            /* SAK_ISO14443_4_COMPLIANT */
-            pnt->nti.nai.btSak = 0x20;
+            pnt->nti.nai.btSak = SAK_ISO14443_4_COMPLIANT;
             /* Choose TL, TA, TB, TC according to Mifare DESFire */
             memcpy(pnt->nti.nai.abtAts, "\x75\x77\x81\x02", 4);
             /* copy historical bytes */
@@ -826,7 +822,7 @@ static int pcsc_initiator_transceive_bytes(struct nfc_device *pnd, const uint8_t
         pnd->last_error = pcsc_transmit(pnd, apdu_data, send_size, resp, &resp_len);
         memset(apdu_data, 0, sizeof(apdu_data));
         memset(resp, 0, sizeof(resp));
-        usleep(500000);//delay 500ms
+        msleep(500);
       }
       // then auth
       apdu_data[0] = 0xFF;
