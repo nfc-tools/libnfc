@@ -225,7 +225,7 @@ acr122s_send_frame(nfc_device *pnd, uint8_t *frame, int timeout)
 }
 
 /**
- * Receive response frame after a successfull acr122s_send_command().
+ * Receive response frame after a successful acr122s_send_command().
  *
  * @param: pnd is target nfc device
  * @param: frame is buffer where received response frame will be stored
@@ -261,7 +261,7 @@ acr122s_recv_frame(nfc_device *pnd, uint8_t *frame, size_t frame_size, void *abo
 
   struct xfr_block_res *res = (struct xfr_block_res *) &frame[1];
   if ((uint8_t)(res->seq + 1) != DRIVER_DATA(pnd)->seq) {
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Invalid response sequence number.");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Invalid response sequence number.");
     pnd->last_error = NFC_EIO;
     return pnd->last_error;
   }
@@ -272,7 +272,7 @@ acr122s_recv_frame(nfc_device *pnd, uint8_t *frame, size_t frame_size, void *abo
 #define APDU_OVERHEAD (FRAME_OVERHEAD + 5)
 
 /**
- * Convert host uint32 to litle endian uint32
+ * Convert host uint32 to little endian uint32
  */
 static uint32_t
 le32(uint32_t val)
@@ -417,7 +417,7 @@ acr122s_scan(const nfc_context *context, nfc_connstring connstrings[], const siz
   size_t device_found = 0;
   serial_port sp;
   char **acPorts = uart_list_ports();
-  const char *acPort;
+  char *acPort;
   int     iDevice = 0;
 
   while ((acPort = acPorts[iDevice++])) {
@@ -437,7 +437,7 @@ acr122s_scan(const nfc_context *context, nfc_connstring connstrings[], const siz
         uart_close(sp);
         iDevice = 0;
         while ((acPort = acPorts[iDevice++])) {
-          free((void *)acPort);
+          free(acPort);
         }
         free(acPorts);
         return 0;
@@ -451,7 +451,7 @@ acr122s_scan(const nfc_context *context, nfc_connstring connstrings[], const siz
         nfc_device_free(pnd);
         iDevice = 0;
         while ((acPort = acPorts[iDevice++])) {
-          free((void *)acPort);
+          free(acPort);
         }
         free(acPorts);
         return 0;
@@ -465,7 +465,7 @@ acr122s_scan(const nfc_context *context, nfc_connstring connstrings[], const siz
         nfc_device_free(pnd);
         iDevice = 0;
         while ((acPort = acPorts[iDevice++])) {
-          free((void *)acPort);
+          free(acPort);
         }
         free(acPorts);
         return 0;
@@ -480,7 +480,7 @@ acr122s_scan(const nfc_context *context, nfc_connstring connstrings[], const siz
         nfc_device_free(pnd);
         iDevice = 0;
         while ((acPort = acPorts[iDevice++])) {
-          free((void *)acPort);
+          free(acPort);
         }
         free(acPorts);
         return 0;
@@ -512,7 +512,7 @@ acr122s_scan(const nfc_context *context, nfc_connstring connstrings[], const siz
   }
   iDevice = 0;
   while ((acPort = acPorts[iDevice++])) {
-    free((void *)acPort);
+    free(acPort);
   }
   free(acPorts);
   return device_found;
@@ -621,11 +621,10 @@ acr122s_open(const nfc_context *context, const nfc_connstring connstring)
   }
   CHIP_DATA(pnd)->type = PN532;
 
-#if 1
   // Retrieve firmware version
   char version[DEVICE_NAME_LENGTH];
   if (acr122s_get_firmware_version(pnd, version, sizeof(version)) != 0) {
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Cannot get reader firmware.");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Cannot get reader firmware.");
     acr122s_close(pnd);
     return NULL;
   }
@@ -637,18 +636,17 @@ acr122s_open(const nfc_context *context, const nfc_connstring connstring)
     return NULL;
   }
 
-  snprintf(pnd->name, sizeof(pnd->name), "%s", version);
+  strncpy(pnd->name, version, DEVICE_NAME_LENGTH);
 
   // Activate SAM before operating
   if (acr122s_activate_sam(pnd) != 0) {
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Cannot activate SAM.");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Cannot activate SAM.");
     acr122s_close(pnd);
     return NULL;
   }
-#endif
 
   if (pn53x_init(pnd) < 0) {
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Failed initializing PN532 chip.");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Failed initializing PN532 chip.");
     acr122s_close(pnd);
     return NULL;
   }
@@ -668,7 +666,7 @@ acr122s_send(nfc_device *pnd, const uint8_t *buf, const size_t buf_len, int time
 
   int ret;
   if ((ret = acr122s_send_frame(pnd, cmd, timeout)) != 0) {
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Unable to transmit data. (TX)");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to transmit data. (TX)");
     pnd->last_error = ret;
     return pnd->last_error;
   }
@@ -696,7 +694,7 @@ acr122s_receive(nfc_device *pnd, uint8_t *buf, size_t buf_len, int timeout)
   }
 
   if (pnd->last_error < 0) {
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Unable to receive data. (RX)");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to receive data. (RX)");
     return -1;
   }
 

@@ -625,14 +625,14 @@ read:
     }
   }
   if (res < 10) {
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Invalid RDR_to_PC_DataBlock frame");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Invalid RDR_to_PC_DataBlock frame");
     // try to interrupt current device state
     acr122_usb_ack(pnd);
     pnd->last_error = NFC_EIO;
     return pnd->last_error;
   }
   if (abtRxBuf[offset] != attempted_response) {
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Frame header mismatch");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Frame header mismatch");
     pnd->last_error = NFC_EIO;
     return pnd->last_error;
   }
@@ -645,22 +645,22 @@ read:
       // Do not check status; my ACR122U seemingly has status=0 in this case,
       // even though the spec says it should have had bmCommandStatus=1
       // and bmICCStatus=1.
-      log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "Command timed out");
+      log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Command timed out");
       pnd->last_error = NFC_ETIMEOUT;
       return pnd->last_error;
   }
 
   if (!((len > 1) && (abtRxBuf[10] == 0xd5))) { // In case we didn't get an immediate answer:
     if (len != 2) {
-      log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Wrong reply");
+      log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Wrong reply");
       pnd->last_error = NFC_EIO;
       return pnd->last_error;
     }
     if (abtRxBuf[10] != SW1_More_Data_Available) {
       if ((abtRxBuf[10] == SW1_Warning_with_NV_changed) && (abtRxBuf[11] == PN53x_Specific_Application_Level_Error_Code)) {
-        log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "PN532 has detected an error at the application level");
+        log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "PN532 has detected an error at the application level");
       } else if ((abtRxBuf[10] == SW1_Warning_with_NV_changed) && (abtRxBuf[11] == 0x00)) {
-        log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "PN532 didn't reply");
+        log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "PN532 didn't reply");
       } else {
         log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unexpected Status Word (SW1: %02x SW2: %02x)", abtRxBuf[10], abtRxBuf[11]);
       }
@@ -687,7 +687,7 @@ read:
   }
   offset = 0;
   if (abtRxBuf[offset] != attempted_response) {
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Frame header mismatch");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Frame header mismatch");
     pnd->last_error = NFC_EIO;
     return pnd->last_error;
   }
@@ -696,14 +696,14 @@ read:
   // XXX In CCID specification, len is a 32-bits (dword), do we need to decode more than 1 byte ? (0-255 bytes for PN532 reply)
   len = abtRxBuf[offset++];
   if ((abtRxBuf[offset] != 0x00) && (abtRxBuf[offset + 1] != 0x00) && (abtRxBuf[offset + 2] != 0x00)) {
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Not implemented: only 1-byte length is supported, please report this bug with a full trace.");
-    pnd->last_error = NFC_EIO;
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Not implemented: only 1-byte length is supported, please report this bug with a full trace.");
+    pnd->last_error = NFC_ENOTIMPL;
     return pnd->last_error;
   }
   offset += 3;
 
   if (len < 4) {
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Too small reply");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Too small reply");
     pnd->last_error = NFC_EIO;
     return pnd->last_error;
   }
@@ -722,14 +722,14 @@ read:
 
   // TFI + PD0 (CC+1)
   if (abtRxBuf[offset] != 0xD5) {
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "TFI Mismatch");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "TFI Mismatch");
     pnd->last_error = NFC_EIO;
     return pnd->last_error;
   }
   offset += 1;
 
   if (abtRxBuf[offset] != CHIP_DATA(pnd)->last_command + 1) {
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Command Code verification failed");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Command Code verification failed");
     pnd->last_error = NFC_EIO;
     return pnd->last_error;
   }
@@ -746,7 +746,7 @@ acr122_usb_ack(nfc_device *pnd)
   (void) pnd;
   int res = 0;
   uint8_t acr122_ack_frame[] = { GetFirmwareVersion }; // We can't send a PN532's ACK frame, so we use a normal command to cancel current command
-  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "ACR122 Abort");
+  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "ACR122 Abort");
   if ((res = acr122_build_frame_from_tama(pnd, acr122_ack_frame, sizeof(acr122_ack_frame))) < 0)
     return res;
   if ((res = acr122_usb_bulk_write(DRIVER_DATA(pnd), (unsigned char *) & (DRIVER_DATA(pnd)->tama_frame), res, 1000)) < 0)
@@ -792,7 +792,7 @@ acr122_usb_init(nfc_device *pnd)
     0x00, 0x00, 0x00, 0x00, // Blinking duration control
   };
 
-  log_put (LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "ACR122 Get LED state");
+  log_put (LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "ACR122 Get LED state");
   if ((res = acr122_usb_bulk_write (DRIVER_DATA (pnd), (uint8_t *) acr122u_get_led_state_frame, sizeof (acr122u_get_led_state_frame), 1000)) < 0)
     return res;
 
@@ -813,14 +813,14 @@ acr122_usb_init(nfc_device *pnd)
   if ((res = acr122_usb_bulk_read(DRIVER_DATA(pnd), abtRxBuf, sizeof(abtRxBuf), 1000)) < 0)
     return res;
 
-  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "ACR122 PICC Operating Parameters");
+  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "ACR122 PICC Operating Parameters");
   if ((res = acr122_usb_send_apdu(pnd, 0x00, 0x51, 0x00, NULL, 0, 0, abtRxBuf, sizeof(abtRxBuf))) < 0)
     return res;
 
   res = 0;
   for (i = 0; i < 3; i++) {
     if (res < 0)
-      log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "PN532 init failed, trying again...");
+      log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "PN532 init failed, trying again...");
     if ((res = pn53x_init(pnd)) >= 0)
       break;
   }

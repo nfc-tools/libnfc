@@ -371,7 +371,7 @@ nfc_list_devices(nfc_context *context, nfc_connstring connstrings[], const size_
       // do it silently
       if (env_log_level) {
         if ((old_env_log_level = malloc(strlen(env_log_level) + 1)) == NULL) {
-          log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Unable to malloc()");
+          log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to malloc()");
           return 0;
         }
         strcpy(old_env_log_level, env_log_level);
