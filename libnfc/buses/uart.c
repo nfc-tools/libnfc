@@ -57,22 +57,6 @@
 #define LOG_GROUP    NFC_LOG_GROUP_COM
 #define LOG_CATEGORY "libnfc.bus.uart"
 
-#ifndef _WIN32
-// Needed by sleep() under Unix
-#  include <unistd.h>
-#  include <time.h>
-#  define msleep(x) do { \
-    struct timespec xsleep; \
-    xsleep.tv_sec = x / 1000; \
-    xsleep.tv_nsec = (x - xsleep.tv_sec * 1000) * 1000 * 1000; \
-    nanosleep(&xsleep, NULL); \
-  } while (0)
-#else
-// Needed by Sleep() under Windows
-#  include <winbase.h>
-#  define msleep Sleep
-#endif
-
 #  if defined(__APPLE__)
 const char *serial_ports_device_radix[] = { "tty.SLAB_USBtoUART", "tty.usbserial", "tty.usbmodem", NULL };
 #  elif defined (__FreeBSD__) || defined (__OpenBSD__) || defined(__FreeBSD_kernel__)
@@ -233,7 +217,7 @@ uart_set_speed(serial_port sp, const uint32_t uiPortSpeed)
   cfsetispeed(&(UART_DATA(sp)->termios_new), stPortSpeed);
   cfsetospeed(&(UART_DATA(sp)->termios_new), stPortSpeed);
   if (tcsetattr(UART_DATA(sp)->fd, TCSADRAIN, &(UART_DATA(sp)->termios_new)) == -1) {
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Unable to apply new speed settings.");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to apply new speed settings.");
   }
 }
 
@@ -338,13 +322,13 @@ select:
     }
     // Read time-out
     if (res == 0) {
-      log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "Timeout!");
+      log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Timeout!");
       return NFC_ETIMEOUT;
     }
 
     if (FD_ISSET(iAbortFd, &rfds)) {
       // Abort requested
-      log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "Abort!");
+      log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Abort!");
       close(iAbortFd);
       return NFC_EOPABORTED;
     }

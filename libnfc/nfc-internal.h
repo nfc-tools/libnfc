@@ -33,13 +33,8 @@
 #define __NFC_INTERNAL_H__
 
 #include <stdbool.h>
-#include <err.h>
-#if !defined(_MSC_VER)
-#  include <sys/time.h>
-#endif
 
 #include "nfc/nfc.h"
-
 #include "log.h"
 
 /**
@@ -61,6 +56,22 @@
 #endif
 #ifndef MAX
 #define MAX(a,b) (((a) > (b)) ? (a) : (b))
+#endif
+
+#ifndef _WIN32
+// Needed by sleep() under Unix
+#  include <unistd.h>
+#  include <time.h>
+#  define msleep(x) do { \
+    struct timespec xsleep; \
+    xsleep.tv_sec = x / 1000; \
+    xsleep.tv_nsec = (x - xsleep.tv_sec * 1000) * 1000 * 1000; \
+    nanosleep(&xsleep, NULL); \
+  } while (0)
+#else
+// Needed by Sleep() under Windows
+#  include <windows.h>
+#  define msleep Sleep
 #endif
 
 /*
