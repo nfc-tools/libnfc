@@ -78,6 +78,11 @@ SET(builddir "${CMAKE_BINARY_DIR}")
 SET(top_srcdir "${CMAKE_SOURCE_DIR}")
 INCLUDE(UseDoxygen)
 
+SET(prefix ${CMAKE_INSTALL_PREFIX})
+SET(exec_prefix ${CMAKE_INSTALL_PREFIX})
+SET(libdir ${CMAKE_INSTALL_LIBDIR})
+SET(includedir ${CMAKE_INSTALL_INSTALLDIR})
+
 INCLUDE(GNUInstallDirs)
 
 # Additonnal GCC flags
@@ -113,11 +118,7 @@ IF(MINGW)
   ENDIF (NOT DLLTOOL)
 ENDIF(MINGW)
 
-# Set some pkg-config variables
-SET(prefix ${CMAKE_INSTALL_PREFIX})
-SET(exec_prefix ${CMAKE_INSTALL_PREFIX})
-SET(libdir ${CMAKE_INSTALL_LIBDIR})
-SET(includedir ${CMAKE_INSTALL_INSTALLDIR})
+# pkg-config
 SET(PACKAGE "libnfc")
 IF(NOT WIN32)
   IF(CMAKE_SYSTEM_NAME MATCHES "FreeBSD")
