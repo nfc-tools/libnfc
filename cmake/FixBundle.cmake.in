@@ -6,6 +6,6 @@ SET(bundle "${CMAKE_INSTALL_PREFIX}/bin/nfc-list@CMAKE_EXECUTABLE_SUFFIX@")
 # set other_libs to a list of additional libs that cannot be reached by dependency analysis
 SET(other_libs "")
 
-SET(dirs "@LIBUSB_LIBRARY_DIR@")
+SET(dirs "@LIBUSB_LIBRARY_DIRS@")
 
 fixup_bundle("${bundle}" "${other_libs}" "${dirs}")
