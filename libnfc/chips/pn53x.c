@@ -50,6 +50,9 @@
 #define LOG_CATEGORY "libnfc.chip.pn53x"
 #define LOG_GROUP NFC_LOG_GROUP_CHIP
 
+#define SAK_ISO14443_4_COMPLIANT 0x20
+#define SAK_ISO18092_COMPLIANT   0x40
+
 const uint8_t pn53x_ack_frame[] = { 0x00, 0x00, 0xff, 0x00, 0xff, 0x00 };
 const uint8_t pn53x_nack_frame[] = { 0x00, 0x00, 0xff, 0xff, 0x00, 0x00 };
 static const uint8_t pn53x_error_frame[] = { 0x00, 0x00, 0xff, 0x01, 0xff, 0x7f, 0x81, 0x00 };
@@ -179,7 +182,7 @@ pn53x_transceive(struct nfc_device *pnd, const uint8_t *pbtTx, const size_t szTx
   if (timeout > 0) {
     log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Timeout value: %d", timeout);
   } else if (timeout == 0) {
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "No timeout");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "No timeout");
   } else if (timeout == -1) {
     timeout = CHIP_DATA(pnd)->timeout_command;
   } else {
@@ -1993,7 +1996,7 @@ static int pn53x_Diagnose06(struct nfc_device *pnd)
 static int pn53x_ISO14443A_4_is_present(struct nfc_device *pnd)
 {
   int ret;
-  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "target_is_present(): Ping -4A");
+  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "target_is_present(): Ping -4A");
   if (CHIP_DATA(pnd)->type == PN533) {
     ret = pn53x_Diagnose06(pnd);
     if ((ret == NFC_ETIMEOUT) || (ret == NFC_ETGRELEASED)) {
@@ -2034,7 +2037,7 @@ static int pn53x_ISO14443A_4_is_present(struct nfc_device *pnd)
 static int pn53x_ISO14443A_Jewel_is_present(struct nfc_device *pnd)
 {
   int ret;
-  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "target_is_present(): Ping Jewel");
+  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "target_is_present(): Ping Jewel");
   uint8_t abtCmd[1] = {0x78};
   int failures = 0;
   while (failures < 2) {
@@ -2054,7 +2057,7 @@ static int pn53x_ISO14443A_Jewel_is_present(struct nfc_device *pnd)
 static int pn53x_ISO14443A_Barcode_is_present(struct nfc_device *pnd)
 {
   int ret;
-  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "target_is_present(): Ping Barcode");
+  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "target_is_present(): Ping Barcode");
 
   // We turn RF field off first for a better detection rate but this doesn't work well with ASK LoGO
   if ((! CHIP_DATA(pnd)->progressive_field) && (ret = nfc_device_set_property_bool(pnd, NP_ACTIVATE_FIELD, false)) < 0) {
@@ -2088,7 +2091,7 @@ static int pn53x_ISO14443A_Barcode_is_present(struct nfc_device *pnd)
 static int pn53x_ISO14443A_MFUL_is_present(struct nfc_device *pnd)
 {
   int ret;
-  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "target_is_present(): Ping MFUL");
+  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "target_is_present(): Ping MFUL");
   // Limitation: test on MFULC non-authenticated with read of first sector forbidden will fail
   if (CHIP_DATA(pnd)->type == PN533) {
     ret = pn53x_Diagnose06(pnd);
@@ -2113,7 +2116,7 @@ static int pn53x_ISO14443A_MFUL_is_present(struct nfc_device *pnd)
 static int pn53x_ISO14443A_MFC_is_present(struct nfc_device *pnd)
 {
   int ret;
-  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "target_is_present(): Ping MFC");
+  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "target_is_present(): Ping MFC");
   if ((CHIP_DATA(pnd)->type == PN533) && (CHIP_DATA(pnd)->current_target->nti.nai.btSak != 0x09)) {
     // MFC Mini (atqa0004/sak09) fails on PN533, so we exclude it
     ret = pn53x_Diagnose06(pnd);
@@ -2142,7 +2145,7 @@ static int pn53x_ISO14443A_MFC_is_present(struct nfc_device *pnd)
 static int pn53x_DEP_is_present(struct nfc_device *pnd)
 {
   int ret;
-  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "target_is_present(): Ping DEP");
+  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "target_is_present(): Ping DEP");
   if ((CHIP_DATA(pnd)->type == PN531) || (CHIP_DATA(pnd)->type == PN532) || (CHIP_DATA(pnd)->type == PN533))
     ret = pn53x_Diagnose06(pnd);
   else
@@ -2152,7 +2155,7 @@ static int pn53x_DEP_is_present(struct nfc_device *pnd)
 
 static int pn53x_Felica_is_present(struct nfc_device *pnd)
 {
-  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "target_is_present(): Ping Felica");
+  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "target_is_present(): Ping Felica");
   // if (CHIP_DATA(pnd)->type == PN533) { ret = pn53x_Diagnose06(pnd); } else...
   // Because ping fails now & then, better not to use Diagnose at all
   // Limitation: does not work on Felica Lite cards (neither Diagnose nor our method)
@@ -2173,7 +2176,7 @@ static int pn53x_Felica_is_present(struct nfc_device *pnd)
 static int pn53x_ISO14443B_4_is_present(struct nfc_device *pnd)
 {
   int ret;
-  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "target_is_present(): Ping -4B");
+  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "target_is_present(): Ping -4B");
   if (CHIP_DATA(pnd)->type == PN533) { // Not supported on PN532 even if the doc is same as for PN533
     ret = pn53x_Diagnose06(pnd);
   } else {
@@ -2206,7 +2209,7 @@ static int pn53x_ISO14443B_4_is_present(struct nfc_device *pnd)
 static int pn53x_ISO14443B_I_is_present(struct nfc_device *pnd)
 {
   int ret;
-  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "target_is_present(): Ping B'");
+  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "target_is_present(): Ping B'");
   // Sending ATTRIB in raw:
   if ((ret = pn53x_set_property_bool(pnd, NP_EASY_FRAMING, false)) < 0)
     return ret;
@@ -2235,7 +2238,7 @@ static int pn53x_ISO14443B_I_is_present(struct nfc_device *pnd)
 static int pn53x_ISO14443B_SR_is_present(struct nfc_device *pnd)
 {
   int ret;
-  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "target_is_present(): Ping B2 ST SRx");
+  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "target_is_present(): Ping B2 ST SRx");
   // Sending Get_UID in raw: (EASY_FRAMING is already supposed to be false)
   uint8_t abtCmd[1] = {0x0b};
   int failures = 0;
@@ -2258,7 +2261,7 @@ static int pn53x_ISO14443B_SR_is_present(struct nfc_device *pnd)
 static int pn53x_ISO14443B_ICLASS_is_present(struct nfc_device *pnd)
 {
   int timeout = 300;
-  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "target_is_present(): Ping B iClass");
+  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "target_is_present(): Ping B iClass");
   pn53x_initiator_init_iclass_modulation(pnd);
   //
   // Some work to do before getting the UID...
@@ -2281,7 +2284,7 @@ static int pn53x_ISO14443B_ICLASS_is_present(struct nfc_device *pnd)
 static int pn53x_ISO14443B_CT_is_present(struct nfc_device *pnd)
 {
   int ret;
-  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "target_is_present(): Ping B2 ASK CTx");
+  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "target_is_present(): Ping B2 ASK CTx");
   // Sending SELECT in raw: (EASY_FRAMING is already supposed to be false)
   uint8_t abtCmd[3] = {0x9f};
   memcpy(abtCmd + 1, CHIP_DATA(pnd)->current_target->nti.nci.abtUID, 2);
@@ -2307,13 +2310,13 @@ pn53x_initiator_target_is_present(struct nfc_device *pnd, const nfc_target *pnt)
 {
   // Check if there is a saved target
   if (CHIP_DATA(pnd)->current_target == NULL) {
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "target_is_present(): no saved target");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "target_is_present(): no saved target");
     return pnd->last_error = NFC_EINVARG;
   }
 
   // Check if the argument target nt is equals to current saved target
   if ((pnt != NULL) && (!pn53x_current_target_is(pnd, pnt))) {
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "target_is_present(): another target");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "target_is_present(): another target");
     return pnd->last_error = NFC_ETGRELEASED;
   }
 
@@ -2330,7 +2333,7 @@ pn53x_initiator_target_is_present(struct nfc_device *pnd, const nfc_target *pnt)
       } else if (CHIP_DATA(pnd)->current_target->nti.nai.btSak & 0x08) {
         ret = pn53x_ISO14443A_MFC_is_present(pnd);
       } else {
-        log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "target_is_present(): card type A not supported");
+        log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "target_is_present(): card type A not supported");
         ret = NFC_EDEVNOTSUPP;
       }
       break;
@@ -2367,8 +2370,6 @@ pn53x_initiator_target_is_present(struct nfc_device *pnd, const nfc_target *pnt)
   return pnd->last_error = ret;
 }
 
-#define SAK_ISO14443_4_COMPLIANT 0x20
-#define SAK_ISO18092_COMPLIANT   0x40
 int
 pn53x_target_init(struct nfc_device *pnd, nfc_target *pnt, uint8_t *pbtRx, const size_t szRxLen, int timeout)
 {
@@ -3310,12 +3311,12 @@ pn53x_check_ack_frame(struct nfc_device *pnd, const uint8_t *pbtRxFrame, const s
 {
   if (szRxFrameLen >= sizeof(pn53x_ack_frame)) {
     if (0 == memcmp(pbtRxFrame, pn53x_ack_frame, sizeof(pn53x_ack_frame))) {
-      log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "PN53x ACKed");
+      log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "PN53x ACKed");
       return NFC_SUCCESS;
     }
   }
   pnd->last_error = NFC_EIO;
-  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Unexpected PN53x reply!");
+  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unexpected PN53x reply!");
   return pnd->last_error;
 }
 
@@ -3324,7 +3325,7 @@ pn53x_check_error_frame(struct nfc_device *pnd, const uint8_t *pbtRxFrame, const
 {
   if (szRxFrameLen >= sizeof(pn53x_error_frame)) {
     if (0 == memcmp(pbtRxFrame, pn53x_error_frame, sizeof(pn53x_error_frame))) {
-      log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "PN53x sent an error frame");
+      log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "PN53x sent an error frame");
       pnd->last_error = NFC_EIO;
       return pnd->last_error;
     }

@@ -130,11 +130,7 @@ main(int argc, char *argv[])
     }
   }
 
-#ifdef WIN32
-  signal(SIGINT, (void (__cdecl *)(int)) intr_hdlr);
-#else
   signal(SIGINT, intr_hdlr);
-#endif
 
   nfc_init(&context);
   if (context == NULL) {
