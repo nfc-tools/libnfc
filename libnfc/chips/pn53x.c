@@ -1267,6 +1267,7 @@ pn53x_initiator_select_passive_target_ext(struct nfc_device *pnd,
         szTargetsData = (size_t)res;
       }
       found = true;
+      res = 1; // TargetCount to 1 as only one target is supported here
       break;
     } while (pnd->bInfiniteSelect);
     if (! found)
@@ -1347,6 +1348,7 @@ pn53x_initiator_select_passive_target_ext(struct nfc_device *pnd,
         return res;
       }
       found = true;
+      res = 1; // TargetCount to 1 as only one target is supported here
       break;
     } while (pnd->bInfiniteSelect);
     if (! found) {
@@ -1377,6 +1379,7 @@ pn53x_initiator_select_passive_target_ext(struct nfc_device *pnd,
         return res;
       }
     }
+    res = abtTargetsData[0]; // TargetCount to abtTargetsData[0] (Tg from InListPassiveTarget answer)
   }
   if (pn53x_current_target_new(pnd, &nttmp) == NULL) {
     pnd->last_error = NFC_ESOFT;
@@ -1386,7 +1389,7 @@ pn53x_initiator_select_passive_target_ext(struct nfc_device *pnd,
   if (pnt) {
     memcpy(pnt, &nttmp, sizeof(nfc_target));
   }
-  return abtTargetsData[0];
+  return res;
 }
 
 int
