@@ -205,7 +205,8 @@ int main(int argc, char *argv[])
 				{
 					printf("Reader  : %s - via %s\n  ...wait for card...\n", nfc_device_get_name(pnd), nfc_device_get_connstring(pnd));
 					
-					if (nfc_initiator_select_passive_target(pnd, nm, NULL, 0, &nt) > 0)
+					res = nfc_initiator_select_passive_target(pnd, nm, NULL, 0, &nt);
+					if (res > 0)
 					{
 						stcurrent = get_info(&nt, true);
 						if(stcurrent)
@@ -234,6 +235,7 @@ int main(int argc, char *argv[])
 							}
 						}
 					}
+					else printf("ERROR - nfc_initiator_select_passive_target: %i\n", res);
 				}
 				else printf("ERROR - nfc_initiator_init: %i\n", res);
 				
