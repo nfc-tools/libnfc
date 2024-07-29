@@ -7,6 +7,7 @@
  * Copyright (C) 2010-2012 Romain Tartière
  * Copyright (C) 2010-2013 Philippe Teuwen
  * Copyright (C) 2012-2013 Ludovic Rousseau
+ * Copyright (C) 2022      Kenspeckle
  * See AUTHORS file for a more comprehensive list of contributors.
  * Additional contributors of this file:
  *
@@ -25,30 +26,32 @@
  *
  */
 
-/**
- * @file usbbus.h
- * @brief libusb 0.1 driver header
- */
+#ifndef __NFC_BUS_USBBUS_H__
+#define __NFC_BUS_USBBUS_H__
 
-#ifndef __NFC_BUS_USB_H__
-#  define __NFC_BUS_USB_H__
+#include <libusb-1.0/libusb.h>
+#include <stdlib.h>
+#include "nfc/nfc-types.h"
 
-#ifndef _WIN32
-// Under POSIX system, we use libusb (>= 0.1.12)
-#include <stdint.h>
-#include <usb.h>
-#define USB_TIMEDOUT ETIMEDOUT
-#define _usb_strerror( X ) strerror(-X)
-#else
-// Under Windows we use libusb-win32 (>= 1.2.5)
-#include <lusb0_usb.h>
-#define USB_TIMEDOUT 116
-#define _usb_strerror( X ) usb_strerror()
+#define EMPTY_STRING ((unsigned char *)"\0")
+
+struct usbbus_device {
+  uint16_t vendor_id;
+  uint16_t product_id;
+  const char *name;
+  uint16_t max_packet_size;
+};
+
+
+
+int usbbus_prepare();
+
+size_t usbbus_usb_scan(nfc_connstring connstrings[], size_t connstrings_len, struct usbbus_device * nfc_usb_devices, size_t num_nfc_usb_devices, char * usb_driver_name);
+void usbbus_get_usb_endpoints(struct libusb_device *dev, uint8_t * endpoint_in, uint8_t * endpoint_out, uint16_t * max_packet_size);
+void usbbus_get_usb_device_name(struct libusb_device * dev, libusb_device_handle *udev, char *buffer, size_t len);
+void usbbus_get_device(uint8_t dev_address, struct libusb_device ** dev, struct libusb_device_handle ** dev_handle);
+void usbbus_close(struct libusb_device * dev, struct libusb_device_handle * dev_handle);
+uint16_t usbbus_get_vendor_id(struct libusb_device * dev);
+uint16_t usbbus_get_product_id(struct libusb_device * dev);
+int usbbus_get_num_alternate_settings(struct libusb_device *dev, uint8_t config_idx);
 #endif
-
-#include <stdbool.h>
-#include <string.h>
-
-int usb_prepare(void);
-
-#endif // __NFC_BUS_USB_H__
