@@ -1,0 +1,22 @@
+## Typical configuration file for PN532 device on R-Pi 5
+## Note: Changes have been made to R-Pi 5 with the removal of the mini UART
+## (/dev/ttyS0), hence the module can be accessed through the original R-Pi
+## UART address (/dev/ttyAMA0).
+##
+## For more information about UART differences between R-Pi models, visit:
+##   https://www.raspberrypi.com/documentation/computers/configuration.html#configure-uarts
+##
+## This configuration is almost identical to pn532_uart_on_rpi.conf.sample
+## except the allow_intrusive_scan option from the R-Pi 3 sample.
+##
+## Tested recipe with generic PN532 module (common Elechouse module clones)
+##
+## To enable uart on GPIO, add this line to bottom of /boot/firmware/config.txt
+## enable_uart=1
+##
+## If you are using an earlier version of Raspberry Pi OS (prior to Bookworm),
+## the config file is available instead on /boot/config.txt.
+##
+name = "PN532 board via UART"
+connstring = pn532_uart:/dev/ttyAMA0
+allow_intrusive_scan = true

@@ -4,19 +4,27 @@
 ## use the PN532 device with the "mini UART", which is still hijacked by the linux kernel 
 ## as a serial console
 ##
+## For more information about UART differences between R-Pi models, visit:
+##   https://www.raspberrypi.com/documentation/computers/configuration.html#configure-uarts
+##
 ## Tested recipe with PN532 breakout from Adafruit
 ##
-## To enable uart on GPIO, add this line to bottom of /boot/config.txt
+## To enable uart on GPIO, add this line to bottom of /boot/firmware/config.txt
 ## enable_uart=1
+##
+## If you are using an earlier version of Raspberry Pi OS (prior to Bookworm),
+## the config file is available instead on /boot/config.txt.
 ##
 ## Stop and disable serial console:
 ## $ sudo systemctl stop serial-getty@ttyS0.service
 ## $ sudo systemctl disable serial-getty@ttyS0.service
 ##
-## Remove console from /boot/cmdline.txt by removing: 
+## Remove console from /boot/firmware/cmdline.txt by removing: 
 ## console=serial0,115200 Save and reboot for changes to take effect.
+##
+## If you are using an earlier version of Raspberry Pi OS (prior to Bookworm),
+## the config file is available instead on /boot/cmdline.txt.
 ##
 name = "PN532 board via UART"
 connstring = pn532_uart:/dev/ttyS0
 allow_intrusive_scan = true
-
