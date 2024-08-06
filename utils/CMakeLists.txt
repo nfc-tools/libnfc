@@ -1,4 +1,4 @@
-SET(UTILS-SOURCES 
+SET(SOURCES
   nfc-barcode
   nfc-emulate-forum-tag4
   nfc-jewel
@@ -16,7 +16,7 @@ ADD_LIBRARY(nfcutils STATIC
 TARGET_LINK_LIBRARIES(nfcutils nfc)
 
 # Examples
-FOREACH(source ${UTILS-SOURCES})
+FOREACH(source ${SOURCES})
   SET (TARGETS ${source}.c)
 
   IF(WIN32)
@@ -52,18 +52,11 @@ FOREACH(source ${UTILS-SOURCES})
   TARGET_LINK_LIBRARIES(${source} nfc)
   TARGET_LINK_LIBRARIES(${source} nfcutils)
 
-  INSTALL(TARGETS ${source} RUNTIME DESTINATION bin COMPONENT utils)
+  INSTALL(TARGETS ${source} RUNTIME COMPONENT utils)
 ENDFOREACH(source)
 
-#install required libraries
-IF(WIN32)
-  INCLUDE(InstallRequiredSystemLibraries)
-  CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/cmake/FixBundle.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/FixBundle.cmake @ONLY)
-  INSTALL(SCRIPT ${CMAKE_CURRENT_BINARY_DIR}/FixBundle.cmake)
-ENDIF(WIN32)
-
-IF(NOT WIN32)
+IF(BUILD_MANUAL)
   # Manuals for the examples
   FILE(GLOB manuals "${CMAKE_CURRENT_SOURCE_DIR}/*.1")
-  INSTALL(FILES ${manuals} DESTINATION ${SHARE_INSTALL_PREFIX}/man/man1 COMPONENT manuals)
-ENDIF(NOT WIN32)
+  INSTALL(FILES ${manuals} DESTINATION ${CMAKE_INSTALL_MANDIR}/man1 COMPONENT manuals)
+ENDIF(BUILD_MANUAL)

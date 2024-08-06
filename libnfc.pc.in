@@ -3,8 +3,8 @@ exec_prefix=@exec_prefix@
 libdir=@libdir@
 includedir=@includedir@
 
-Name: libnfc
-Description: Near Field Communication (NFC) library
+Name: @PACKAGE_NAME@
+Description: @PACKAGE_DESCRIPTION@
 Version: @VERSION@
 Requires: @PKG_CONFIG_REQUIRES@
 Libs: -L${libdir} -lnfc

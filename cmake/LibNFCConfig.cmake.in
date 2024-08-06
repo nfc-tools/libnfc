@@ -5,30 +5,27 @@
 #  LIBNFC_FOUND              - True if LibNFC was found on your system
 #  LIBNFC_USE_FILE           - The file making LibNFC usable
 #  LIBNFC_DEFINITIONS        - Definitions needed to build with LibNFC
-#  LIBNFC_INCLUDE_DIR        - Directory where nfc/nfc.h can be found
 #  LIBNFC_INCLUDE_DIRS       - List of directories of LibNFC and it's dependencies
 #  LIBNFC_LIBRARY            - LibNFC library location
 #  LIBNFC_LIBRARIES          - List of libraries to link against LibNFC library
 #  LIBNFC_LIBRARY_DIRS       - List of directories containing LibNFC' libraries
-#  LIBNFC_ROOT_DIR           - The base directory of LibNFC
 #  LIBNFC_VERSION_STRING     - A human-readable string containing the version
 #  LIBNFC_VERSION_MAJOR      - The major version of LibNFC
 #  LIBNFC_VERSION_MINOR      - The minor version of LibNFC
 #  LIBNFC_VERSION_PATCH      - The patch version of LibNFC
 
-set ( LIBNFC_FOUND 1 )
-set ( LIBNFC_USE_FILE     "@LIBNFC_USE_FILE@" )
+@PACKAGE_INIT@
+
+set ( LIBNFC_FOUND TRUE )
+set ( LIBNFC_USE_FILE     "${CMAKE_CURRENT_LIST_DIR}/@LIBNFC_USE_FILE@" )
 
 set ( LIBNFC_DEFINITIONS  "@LIBNFC_DEFINITIONS@" )
-set ( LIBNFC_INCLUDE_DIR  "@LIBNFC_INCLUDE_DIR@" )
-set ( LIBNFC_INCLUDE_DIRS "@LIBNFC_INCLUDE_DIRS@" )
+set ( LIBNFC_INCLUDE_DIRS "@PACKAGE_INCLUDE_INSTALL_DIRS@" )
 set ( LIBNFC_LIBRARY      "@LIBNFC_LIBRARY@" )
 set ( LIBNFC_LIBRARIES    "@LIBNFC_LIBRARIES@" )
-set ( LIBNFC_LIBRARY_DIRS "@LIBNFC_LIBRARY_DIRS@" )
-set ( LIBNFC_ROOT_DIR     "@LIBNFC_ROOT_DIR@" )
+set ( LIBNFC_LIBRARY_DIRS "@PACKAGE_LIBRARY_INSTALL_DIRS@" )
 
-set ( LIBNFC_VERSION_STRING "@LIBNFC_VERSION_STRING@" )
-set ( LIBNFC_VERSION_MAJOR  "@LIBNFC_VERSION_MAJOR@" )
-set ( LIBNFC_VERSION_MINOR  "@LIBNFC_VERSION_MINOR@" )
-set ( LIBNFC_VERSION_PATCH  "@LIBNFC_VERSION_PATCH@" )
-
+set ( LIBNFC_VERSION_STRING "@VERSION@" )
+set ( LIBNFC_VERSION_MAJOR  @VERSION_MAJOR@ )
+set ( LIBNFC_VERSION_MINOR  @VERSION_MINOR@ )
+set ( LIBNFC_VERSION_PATCH  @VERSION_PATCH@ )
