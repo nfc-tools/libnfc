@@ -262,7 +262,20 @@ SET(CPACK_COMPONENT_HEADERS_DEPENDS libraries)
 SET(CPACK_COMPONENT_EXAMPLES_DEPENDS libraries)
 
 # Binary Package
-SET(CPACK_GENERATOR "ZIP" CACHE STRING "Default binary package generator")
+if(WIN32)
+    set(CPACK_GENERATOR ZIP WIX)
+elseif(APPLE)
+    set(CPACK_GENERATOR TGZ productbuild)
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    set(CPACK_GENERATOR TGZ RPM DEB)
+
+    # Automatically include runtime dependencies (libc, libstdc++) fro Debian
+    # (RPM includes these dependencies automagically)
+    # YMMV, therefore commented
+    # set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS "TRUE")
+else()
+    set(CPACK_GENERATOR TGZ)
+endif()
 # Source Package
 SET(CPACK_SOURCE_GENERATOR "SOURCE_ZIP" CACHE STRING "Default source package generator")
 SET(CPACK_SOURCE_PACKAGE_FILE_NAME "libnfc-${VERSION}")
