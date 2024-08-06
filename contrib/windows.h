@@ -33,32 +33,42 @@
 #ifndef __WINDOWS_H__
 #define __WINDOWS_H__
 
-#  include <windows.h>
-#  include <winerror.h>
-#  include "win32/err.h"
-#  if defined (__MINGW32__)
+#define WIN32_LEAN_AND_MEAN
+#include <fcntl.h>
+#include <windows.h>
+
+#if defined(__MINGW32__)
+
+#if __MINGW64_VERSION_MAJOR < 3
+#include <winerror.h>
+#define ETIMEDOUT WSAETIMEDOUT
+#define ENOTSUP WSAEOPNOTSUPP
+#define ECONNABORTED WSAECONNABORTED
+#endif
+
+#if __MINGW64_VERSION_MAJOR < 8 && !defined(_UCRT)
 /*
  * Cheating here on the snprintf to incorporate the format argument
  * into the VA_ARGS. Else we get MinGW errors regarding number of arguments
  * if doing a fixed string with no arguments.
 */
-#    define snprintf(S, n, ...) sprintf(S, __VA_ARGS__)
-#    define pipe(fds) _pipe(fds, 5000, _O_BINARY)
-#    define ETIMEDOUT     WSAETIMEDOUT
-#    define ENOTSUP       WSAEOPNOTSUPP
-#    define ECONNABORTED  WSAECONNABORTED
-#  else
-#ifndef _MSC_VER
-#    define snprintf sprintf_s
+#define snprintf(S, n, ...) sprintf(S, __VA_ARGS__)
 #endif
-#    define strdup _strdup
-#  endif
+
+#endif
+
+#if defined(_MSC_VER) && _MSC_VER < 1900
+#define snprintf sprintf_s
+#endif
+
+#define pipe(fds) _pipe(fds, 4096, _O_BINARY)
+#define strdup _strdup
 
 /*
  * setenv and unsetenv are not Windows compliant nor implemented in MinGW.
  * These declarations get rid of the "implicit declaration warning."
  */
 int setenv(const char *name, const char *value, int overwrite);
-void unsetenv(const char *name);
+int unsetenv(const char *name);
 
 #endif
