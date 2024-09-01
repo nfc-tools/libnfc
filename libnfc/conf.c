@@ -30,7 +30,6 @@
 
 #include "conf.h"
 
-#ifdef CONFFILES
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -45,16 +44,8 @@
 #define LOG_CATEGORY "libnfc.config"
 #define LOG_GROUP    NFC_LOG_GROUP_CONFIG
 
-#ifndef LIBNFC_SYSCONFDIR
-// If this define does not already exists, we build it using SYSCONFDIR
-#ifndef SYSCONFDIR
-#error "SYSCONFDIR is not defined but required."
-#endif // SYSCONFDIR
-#define LIBNFC_SYSCONFDIR      SYSCONFDIR"/nfc"
-#endif // LIBNFC_SYSCONFDIR
-
-#define LIBNFC_CONFFILE        LIBNFC_SYSCONFDIR"/libnfc.conf"
-#define LIBNFC_DEVICECONFDIR   LIBNFC_SYSCONFDIR"/devices.d"
+#define LIBNFC_CONFFILE      LIBNFC_CONFDIR "/libnfc.conf"
+#define LIBNFC_DEVICECONFDIR LIBNFC_CONFDIR "/devices.d"
 
 static int
 escaped_value(const char line[BUFSIZ], int i, char **value)
@@ -298,6 +289,3 @@ conf_load(nfc_context *context)
   conf_parse_file(LIBNFC_CONFFILE, conf_keyvalue_context, context);
   conf_devices_load(LIBNFC_DEVICECONFDIR, context);
 }
-
-#endif // CONFFILES
-

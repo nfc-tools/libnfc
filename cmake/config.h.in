@@ -1,0 +1,8 @@
+#ifdef _WIN32
+#include "contrib/windows.h"
+#endif
+
+#cmakedefine PACKAGE_VERSION "@PACKAGE_VERSION@"
+#cmakedefine GIT_REVISION "@GIT_REVISION@"
+#cmakedefine LIBNFC_CONFDIR "@LIBNFC_CONFDIR@"
+#cmakedefine _XOPEN_SOURCE @_XOPEN_SOURCE@

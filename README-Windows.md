@@ -49,8 +49,8 @@ don't want a Debug build change the variable CMAKE_BUILD_TYPE to "Release".
 
 If a non-GUI solution is preferred one can use:
 
-    C:\dev\libnfc-build> cmake -G "MinGW Makefiles"
-                                     -DCMAKE_BUILD_TYPE=Release ..\libnfc-read-only
+    C:\dev\libnfc-build> cmake -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release
+                                     -DLIBNFC_CONFDIR="./config" ..\libnfc-read-only
 
 Now run mingw32-make to build:
 
