@@ -79,10 +79,10 @@ SET(builddir "${CMAKE_BINARY_DIR}")
 SET(top_srcdir "${CMAKE_SOURCE_DIR}")
 INCLUDE(UseDoxygen)
 
-SET(prefix ${CMAKE_INSTALL_PREFIX})
-SET(exec_prefix ${CMAKE_INSTALL_PREFIX})
-SET(libdir ${CMAKE_INSTALL_FULL_LIBDIR})
-SET(includedir ${CMAKE_INSTALL_FULL_INCLUDEDIR})
+set(prefix ${CMAKE_INSTALL_PREFIX})
+set(exec_prefix \${prefix})
+set(includedir \${prefix}/${CMAKE_INSTALL_INCLUDEDIR})
+set(libdir \${prefix}/${CMAKE_INSTALL_LIBDIR})
 
 # Additonnal GCC flags
 IF(CMAKE_COMPILER_IS_GNUCC)
