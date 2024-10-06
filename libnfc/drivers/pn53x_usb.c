@@ -196,7 +196,7 @@ static void pn533_fix_usbdesc(nfc_device *pnd)
   uint8_t abtCmdRR[] = { ReadRegister, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
   uint8_t nRRreg = ((sizeof(abtCmdRR) - 1) / 2);
   uint8_t abtRxRR[1 + nRRreg];
-  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_INFO, "%s", "Checking USB descriptors corruption in XRAM");
+  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_INFO, "Checking USB descriptors corruption in XRAM");
   for (uint8_t i = 0x19, j = 0; i < 0x19 + szXramUsbDesc;) {
     for (uint8_t k = 0; k < nRRreg; k++) {
       abtCmdRR[(2 * k) + 2] = i++;
@@ -213,7 +213,7 @@ static void pn533_fix_usbdesc(nfc_device *pnd)
   }
 #endif
   // Abuse the overflow bug to restore USB descriptors in one go
-  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_INFO, "%s", "Fixing USB descriptors corruption");
+  log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_INFO, "Fixing USB descriptors corruption");
   uint8_t abtCmdWR[19 + MAXSZXRAMUSBDESC] = { GetFirmwareVersion };
   for (uint8_t i = 0; i < szXramUsbDesc; i++) {
     abtCmdWR[i + 19] = btXramUsbDesc[i];
@@ -257,7 +257,11 @@ pn53x_usb_get_end_points_default(struct usb_device *dev, struct pn53x_usb_data *
   return false;
 }
 
-int  pn53x_usb_ack(nfc_device *pnd);
+int
+pn53x_usb_ack(nfc_device *pnd)
+{
+  return pn53x_usb_bulk_write(DRIVER_DATA(pnd), (uint8_t *) pn53x_ack_frame, sizeof(pn53x_ack_frame), 1000);
+}
 
 // Find transfer endpoints for bulk transfers
 static void
@@ -655,7 +659,7 @@ read:
 
   const uint8_t pn53x_preamble[3] = { 0x00, 0x00, 0xff };
   if (0 != (memcmp(abtRxBuf, pn53x_preamble, 3))) {
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Frame preamble+start code mismatch");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Frame preamble+start code mismatch");
     pnd->last_error = NFC_EIO;
     return pnd->last_error;
   }
@@ -663,7 +667,7 @@ read:
 
   if ((0x01 == abtRxBuf[offset]) && (0xff == abtRxBuf[offset + 1])) {
     // Error frame
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Application level error detected");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Application level error detected");
     pnd->last_error = NFC_EIO;
     return pnd->last_error;
   } else if ((0xff == abtRxBuf[offset]) && (0xff == abtRxBuf[offset + 1])) {
@@ -674,7 +678,7 @@ read:
     len = (abtRxBuf[offset] << 8) + abtRxBuf[offset + 1] - 2;
     if (((abtRxBuf[offset] + abtRxBuf[offset + 1] + abtRxBuf[offset + 2]) % 256) != 0) {
       // TODO: Retry
-      log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Length checksum mismatch");
+      log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Length checksum mismatch");
       pnd->last_error = NFC_EIO;
       return pnd->last_error;
     }
@@ -683,7 +687,7 @@ read:
     // Normal frame
     if (256 != (abtRxBuf[offset] + abtRxBuf[offset + 1])) {
       // TODO: Retry
-      log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Length checksum mismatch");
+      log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Length checksum mismatch");
       pnd->last_error = NFC_EIO;
       return pnd->last_error;
     }
@@ -701,14 +705,14 @@ read:
 
   // TFI + PD0 (CC+1)
   if (abtRxBuf[offset] != 0xD5) {
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "TFI Mismatch");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "TFI Mismatch");
     pnd->last_error = NFC_EIO;
     return pnd->last_error;
   }
   offset += 1;
 
   if (abtRxBuf[offset] != CHIP_DATA(pnd)->last_command + 1) {
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Command Code verification failed");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Command Code verification failed");
     pnd->last_error = NFC_EIO;
     return pnd->last_error;
   }
@@ -724,14 +728,14 @@ read:
   }
 
   if (btDCS != abtRxBuf[offset]) {
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Data checksum mismatch");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Data checksum mismatch");
     pnd->last_error = NFC_EIO;
     return pnd->last_error;
   }
   offset += 1;
 
   if (0x00 != abtRxBuf[offset]) {
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Frame postamble mismatch");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Frame postamble mismatch");
     pnd->last_error = NFC_EIO;
     return pnd->last_error;
   }
@@ -739,12 +743,6 @@ read:
   pnd->last_error = 0;
   DRIVER_DATA(pnd)->possibly_corrupted_usbdesc |= len > 16;
   return len;
-}
-
-int
-pn53x_usb_ack(nfc_device *pnd)
-{
-  return pn53x_usb_bulk_write(DRIVER_DATA(pnd), (uint8_t *) pn53x_ack_frame, sizeof(pn53x_ack_frame), 1000);
 }
 
 int
@@ -758,7 +756,7 @@ pn53x_usb_init(nfc_device *pnd)
   // ...and we don't care about error
   pnd->last_error = 0;
   if (SONY_RCS360 == DRIVER_DATA(pnd)->model) {
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "SONY RC-S360 initialization.");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "SONY RC-S360 initialization.");
     const uint8_t abtCmd2[] = { 0x18, 0x01 };
     pn53x_transceive(pnd, abtCmd2, sizeof(abtCmd2), NULL, 0, -1);
     pn53x_usb_ack(pnd);
@@ -768,7 +766,7 @@ pn53x_usb_init(nfc_device *pnd)
     return res;
 
   if (ASK_LOGO == DRIVER_DATA(pnd)->model) {
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "%s", "ASK LoGO initialization.");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "ASK LoGO initialization.");
     /* Internal registers */
     /* Disable 100mA current limit, Power on Secure IC (SVDD) */
     pn53x_write_register(pnd, PN53X_REG_Control_switch_rng, 0xFF, SYMBOL_CURLIMOFF | SYMBOL_SIC_SWITCH_EN | SYMBOL_RANDOM_DATAREADY);

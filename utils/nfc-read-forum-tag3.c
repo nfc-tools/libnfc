@@ -62,10 +62,6 @@
 
 #include "nfc-utils.h"
 
-#if defined(WIN32) /* mingw compiler */
-#include <getopt.h>
-#endif
-
 static nfc_device *pnd;
 static nfc_context *context;
 
