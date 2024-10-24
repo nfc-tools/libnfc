@@ -62,7 +62,7 @@ print_usage(char *argv[])
   printf("Usage: %s [OPTIONS]\n", argv[0]);
   printf("Options:\n");
   printf("\t-h\tHelp. Print this message.\n");
-  printf("\t-q\tVerbose mode.\n");
+  printf("\t-v\tVerbose mode.\n");
 }
 
 
