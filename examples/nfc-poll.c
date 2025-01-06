@@ -44,7 +44,6 @@
 #  include "config.h"
 #endif // HAVE_CONFIG_H
 
-#include <err.h>
 #include <inttypes.h>
 #include <signal.h>
 #include <stdio.h>

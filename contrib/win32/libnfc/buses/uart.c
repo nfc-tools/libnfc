@@ -45,9 +45,7 @@
 #define LOG_GROUP    NFC_LOG_GROUP_COM
 #define LOG_CATEGORY "libnfc.bus.uart_win32"
 
-// Handle platform specific includes
 #include "contrib/windows.h"
-#define delay_ms( X ) Sleep( X )
 
 struct serial_port_windows {
   HANDLE  hPort;                // Serial port handle
@@ -143,7 +141,7 @@ uart_set_speed(serial_port sp, const uint32_t uiPortSpeed)
   // Set baud rate
   spw->dcb.BaudRate = uiPortSpeed;
   if (!SetCommState(spw->hPort, &spw->dcb)) {
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Unable to apply new speed settings.");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to apply new speed settings.");
     return;
   }
   PurgeComm(spw->hPort, PURGE_RXABORT | PURGE_RXCLEAR);
