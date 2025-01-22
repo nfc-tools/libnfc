@@ -47,7 +47,11 @@
 #include <fcntl.h>
 #include <limits.h>
 #include <stdio.h>
+#ifdef __APPLE__
+#include <sys/termios.h>
+#else
 #include <termios.h>
+#endif
 #include <unistd.h>
 #include <stdlib.h>
 
@@ -94,6 +98,19 @@ const char *serial_ports_device_radix[] = { "ttyUSB", "ttyS", "ttyACM", "ttyAMA"
 
 // Work-around to claim uart interface using the c_iflag (software input processing) from the termios struct
 #  define CCLAIMED 0x80000000
+
+// If macOS and still haven't detected required baud rates, set them as we do have support for some
+#ifdef __APPLE__
+#ifndef  B57600
+#define  B57600  57600
+#endif
+#ifndef B115200
+#define B115200 115200
+#endif
+#ifndef B230400
+#define B230400 230400
+#endif
+#endif
 
 struct serial_port_unix {
   int 			fd; 			// Serial port file descriptor
@@ -377,10 +394,39 @@ uart_send(serial_port sp, const uint8_t *pbtTx, const size_t szTx, int timeout)
 {
   (void) timeout;
   LOG_HEX(LOG_GROUP, "TX", pbtTx, szTx);
+
+#ifndef __APPLE__
   if ((int) szTx == write(UART_DATA(sp)->fd, pbtTx, szTx))
     return NFC_SUCCESS;
   else
     return NFC_EIO;
+#else
+  // macOS's termios write() to a uart is async so we need to determine how to make it sync
+  // see https://github.com/nfc-tools/libnfc/pull/633
+  // there is probably a proper way to do this, if so, please share!
+  return uart_send_single(sp, pbtTx, szTx, timeout);
+#endif
+}
+
+/**
+ * @brief Send \a pbtTx content to UART one byte at a time with a delay (to support macOS' async write)
+ *
+ * @return 0 on success, otherwise a driver error is returned
+ */
+int
+uart_send_single(serial_port sp, const uint8_t *pbtTx, const size_t szTx, int timeout)
+{
+  (void) timeout;
+
+  for (int i = 0; i < szTx; i++)
+  {
+    if (write(UART_DATA(sp)->fd, pbtTx+i, 1) != 1)
+      return NFC_EIO;
+
+    usleep(9); // sleep for ceil(1_000_000us / 115200baud) = 9us
+  }
+
+  return NFC_SUCCESS;
 }
 
 char **

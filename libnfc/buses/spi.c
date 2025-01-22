@@ -49,7 +49,11 @@
 #include <fcntl.h>
 #include <limits.h>
 #include <stdio.h>
+#ifdef __APPLE__
+#include <sys/termios.h>
+#else
 #include <termios.h>
+#endif
 #include <unistd.h>
 
 #include <nfc/nfc.h>

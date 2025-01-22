@@ -230,7 +230,7 @@ Readers known to work:
 
 These readers are support by CCID since v1.4.25, make sure your CCID driver version higher or equal to 1.4.25.
 
-On MacOS, you can check your CCID version with the following command, and if required, you can install latest CCID driver from [https://github.com/martinpaljak/osx-ccid-installer/releases](https://github.com/martinpaljak/osx-ccid-installer/releases)
+On macOS, you can check your CCID version with the following command, and if required, you can install latest CCID driver from [https://github.com/martinpaljak/osx-ccid-installer/releases](https://github.com/martinpaljak/osx-ccid-installer/releases)
 
 ```
 grep -A 1 CFBundleShortVersionString /usr/local/libexec/SmartCardServices/drivers/ifd-ccid.bundle/Contents/Info.plist
