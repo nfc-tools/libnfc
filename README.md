@@ -18,11 +18,9 @@ General Information
 
 libnfc is a library which allows userspace application access to NFC devices.
 
-The official web site is:
-  http://www.nfc-tools.org/
+The official web site is gone, browse a copy via the [WayBackMachine](https://web.archive.org/web/20210815064122/http://nfc-tools.org/index.php/Main_Page).
 
-The official forum site is:
-  http://www.libnfc.org/community/
+The official forum site is gone, browse a copy via the [WayBackMachine](https://web.archive.org/web/20210225042232/http://forums.nfc-tools.org/).
 
 The official development site is:
   https://github.com/nfc-tools/libnfc
