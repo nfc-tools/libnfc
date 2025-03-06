@@ -237,7 +237,7 @@ uart_send(serial_port sp, const uint8_t *pbtTx, const size_t szTx, int timeout)
   }
   if (!dwTxLen)
     return NFC_EIO;
-  return 0;
+  return NFC_SUCCESS;
 }
 
 BOOL is_port_available(int nPort)
