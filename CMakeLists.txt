@@ -1,9 +1,5 @@
 cmake_minimum_required (VERSION 2.6)
 
-if (NOT DEFINED CMAKE_BUILD_TYPE)
-  set (CMAKE_BUILD_TYPE Release CACHE STRING "Build type")
-endif ()
-
 project (libnfc C)
 
 SET(VERSION_MAJOR "1")
@@ -15,6 +11,9 @@ SET(VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}")
 SET(PACKAGE_NAME "libnfc")
 SET(PACKAGE_VERSION ${VERSION})
 SET(PACKAGE_STRING "${PACKAGE_NAME} ${PACKAGE_VERSION}")
+SET(PACKAGE_DESCRIPTION "Near Field Communication (NFC) library")
+
+INCLUDE(GNUInstallDirs)
 
 # config.h
 IF(WIN32)
@@ -67,31 +66,23 @@ ENDIF(LIBNFC_CONFFILES_MODE)
 option (BUILD_EXAMPLES "build examples ON/OFF" ON)
 option (BUILD_UTILS "build utils ON/OFF" ON)
 
-option (BUILD_DEBPKG "build debian package ON/OFF" OFF)
+if(MSVC)
+  option (BUILD_MANUAL "build man-pages ON/OFF" OFF)
+else(MSVC)
+  option (BUILD_MANUAL "build man-pages ON/OFF" ON)
+endif(MSVC)
 
+option (INSTALL_BUNDLE "Assemble a standalone bundle application" OFF)
 
 # Doxygen
 SET(builddir "${CMAKE_BINARY_DIR}")
 SET(top_srcdir "${CMAKE_SOURCE_DIR}")
 INCLUDE(UseDoxygen)
 
-IF(DEFINED CMAKE_INSTALL_LIBDIR)
-  SET(libdir ${CMAKE_INSTALL_LIBDIR})
-ELSE(DEFINED CMAKE_INSTALL_LIBDIR)
-  SET(CMAKE_INSTALL_LIBDIR lib)
-  SET(libdir ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR})
-ENDIF(DEFINED CMAKE_INSTALL_LIBDIR)
-
-IF(DEFINED INCLUDE_INSTALL_DIR)
-  SET(includedir ${INCLUDE_INSTALL_DIR})
-ELSE(DEFINED INCLUDE_INSTALL_DIR)
-  SET(INCLUDE_INSTALL_DIR include)
-  SET(includedir ${CMAKE_INSTALL_PREFIX}/${INCLUDE_INSTALL_DIR})
-ENDIF(DEFINED INCLUDE_INSTALL_DIR)
-
-IF(NOT DEFINED SHARE_INSTALL_PREFIX)
-  SET(SHARE_INSTALL_PREFIX share)
-ENDIF(NOT DEFINED SHARE_INSTALL_PREFIX)
+set(prefix ${CMAKE_INSTALL_PREFIX})
+set(exec_prefix \${prefix})
+set(includedir \${prefix}/${CMAKE_INSTALL_INCLUDEDIR})
+set(libdir \${prefix}/${CMAKE_INSTALL_LIBDIR})
 
 # Additonnal GCC flags
 IF(CMAKE_COMPILER_IS_GNUCC)
@@ -126,28 +117,36 @@ IF(MINGW)
   ENDIF (NOT DLLTOOL)
 ENDIF(MINGW)
 
+# pkg-config
 IF(NOT WIN32)
-  # Set some pkg-config variables
-  SET(prefix ${CMAKE_INSTALL_PREFIX})
-  SET(exec_prefix ${CMAKE_INSTALL_PREFIX})
-  SET(PACKAGE "libnfc")
-  IF(LIBNFC_DRIVER_PN53X_USB)
-    SET(PKG_REQ ${PKG_REQ} "libusb")
-  ENDIF(LIBNFC_DRIVER_PN53X_USB)
-  IF(LIBNFC_DRIVER_ACR122_USB)
-    SET(PKG_REQ ${PKG_REQ} "libusb")
-  ENDIF(LIBNFC_DRIVER_ACR122_USB)
+  IF(CMAKE_SYSTEM_NAME MATCHES "FreeBSD")
+    IF(LIBNFC_DRIVER_PN53X_USB)
+      SET(PKG_REQ ${PKG_REQ} "libusb-0.1")
+    ENDIF(LIBNFC_DRIVER_PN53X_USB)
+    IF(LIBNFC_DRIVER_ACR122_USB)
+      SET(PKG_REQ ${PKG_REQ} "libusb-0.1")
+    ENDIF(LIBNFC_DRIVER_ACR122_USB)
+  ELSE(CMAKE_SYSTEM_NAME MATCHES "FreeBSD")
+    IF(LIBNFC_DRIVER_PN53X_USB)
+      SET(PKG_REQ ${PKG_REQ} "libusb")
+    ENDIF(LIBNFC_DRIVER_PN53X_USB)
+    IF(LIBNFC_DRIVER_ACR122_USB)
+      SET(PKG_REQ ${PKG_REQ} "libusb")
+    ENDIF(LIBNFC_DRIVER_ACR122_USB)
+  ENDIF(CMAKE_SYSTEM_NAME MATCHES "FreeBSD")
   IF(LIBNFC_DRIVER_PCSC)
     SET(PKG_REQ ${PKG_REQ} "libpcsclite")
   ENDIF(LIBNFC_DRIVER_PCSC)
   IF(LIBNFC_DRIVER_ACR122_PCSC)
     SET(PKG_REQ ${PKG_REQ} "libpcsclite")
   ENDIF(LIBNFC_DRIVER_ACR122_PCSC)
-  # CMake lists are separated by a semi colon, replace with colon
-  STRING(REPLACE ";" "," PKG_CONFIG_REQUIRES "${PKG_REQ}")
-  CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/libnfc.pc.in ${CMAKE_CURRENT_BINARY_DIR}/libnfc.pc @ONLY) 
-  INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/libnfc.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
 ENDIF(NOT WIN32)
+LIST(SORT PKG_REQ)
+LIST(REMOVE_DUPLICATES PKG_REQ)
+# CMake lists are separated by a semi colon, replace with colon
+STRING(REPLACE ";" "," PKG_CONFIG_REQUIRES "${PKG_REQ}")
+CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/libnfc.pc.in ${CMAKE_CURRENT_BINARY_DIR}/libnfc.pc @ONLY)
+INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/libnfc.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
 
 INCLUDE(LibnfcDrivers)
 
@@ -167,16 +166,15 @@ IF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     ENDIF(I2C_REQUIRED)
   ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 
-IF(PCSC_INCLUDE_DIRS)
+IF(PCSC_FOUND)
   INCLUDE_DIRECTORIES(${PCSC_INCLUDE_DIRS})
   LINK_DIRECTORIES(${PCSC_LIBRARY_DIRS})
-ENDIF(PCSC_INCLUDE_DIRS)
+ENDIF(PCSC_FOUND)
 
-IF(LIBUSB_INCLUDE_DIRS)
+IF(LIBUSB_FOUND)
   INCLUDE_DIRECTORIES(${LIBUSB_INCLUDE_DIRS})
   LINK_DIRECTORIES(${LIBUSB_LIBRARY_DIRS})
-  SET(LIBUSB_FOUND TRUE)
-ENDIF(LIBUSB_INCLUDE_DIRS)
+ENDIF(LIBUSB_FOUND)
 
 # version.rc for Windows
 IF(WIN32)
@@ -202,72 +200,40 @@ if (BUILD_EXAMPLES)
   add_subdirectory (examples)
 endif ()
 
-if (NOT MSVC)
-  # config script install path
-  if ( NOT DEFINED LIBNFC_CMAKE_CONFIG_DIR )
-    set ( LIBNFC_CMAKE_CONFIG_DIR lib${LIB_SUFFIX}/cmake/libnfc )
-  endif ()
+set(INCLUDE_INSTALL_DIRS ${includedir})
+set(LIBNFC_CMAKE_CONFIG_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/LibNFC)
+set(LIBNFC_DEFINITIONS "")
+set(LIBNFC_LIBRARIES ${LIBNFC_LIBRARY})
+list(APPEND LIBNFC_LIBRARIES ${PKG_REQ})
+set(LIBNFC_LIBRARY nfc)
+set(LIBNFC_USE_FILE UseLibNFC.cmake)
+set(LIBRARY_INSTALL_DIRS ${libdir})
 
-  set ( LIBNFC_INCLUDE_DIR ${includedir} )
-  set ( LIBNFC_INCLUDE_DIRS ${LIBNFC_INCLUDE_DIR} )
-  list ( APPEND LIBNFC_INCLUDE_DIRS ${LIBUSB_INCLUDE_DIRS} )
-  set ( LIBNFC_LIBRARY nfc )
-  set ( LIBNFC_LIBRARIES ${LIBNFC_LIBRARY} )
-  list ( APPEND LIBNFC_LIBRARIES ${LIBUSB_LIBRARIES} )
-  set ( LIBNFC_LIBRARY_DIRS ${libdir} )
-  set ( LIBNFC_ROOT_DIR ${prefix} )
-  set ( LIBNFC_VERSION_STRING ${VERSION} )
-  set ( LIBNFC_VERSION_MAJOR ${VERSION_MAJOR} )
-  set ( LIBNFC_VERSION_MINOR ${VERSION_MINOR} )
-  set ( LIBNFC_VERSION_PATCH ${VERSION_PATCH} )
+include(CMakePackageConfigHelpers)
+configure_package_config_file(
+  cmake/LibNFCConfig.cmake.in
+  ${CMAKE_CURRENT_BINARY_DIR}/LibNFCConfig.cmake
+  INSTALL_DESTINATION ${LIBNFC_CMAKE_CONFIG_DIR}
+  PATH_VARS INCLUDE_INSTALL_DIRS LIBRARY_INSTALL_DIRS
+)
+write_basic_package_version_file(
+  LibNFCConfigVersion.cmake
+  VERSION ${VERSION}
+  COMPATIBILITY AnyNewerVersion
+)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/LibNFCConfig.cmake
+              ${CMAKE_CURRENT_BINARY_DIR}/LibNFCConfigVersion.cmake
+              ${CMAKE_CURRENT_SOURCE_DIR}/cmake/UseLibNFC.cmake
+        DESTINATION ${LIBNFC_CMAKE_CONFIG_DIR}
+)
 
-  set ( LIBNFC_USE_FILE ${CMAKE_INSTALL_PREFIX}/${LIBNFC_CMAKE_CONFIG_DIR}/UseLibNFC.cmake )
+#install required libraries
+IF(INSTALL_BUNDLE)
+  CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/cmake/FixBundle.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/FixBundle.cmake @ONLY)
+  INSTALL(SCRIPT ${CMAKE_CURRENT_BINARY_DIR}/FixBundle.cmake)
+ENDIF(INSTALL_BUNDLE)
 
-
-          
-  if(CMAKE_VERSION VERSION_LESS 2.8.8)
-    configure_file ( cmake/LibNFCConfig.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/LibNFCConfig.cmake @ONLY )
-    configure_file ( cmake/LibNFCConfigVersion.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/LibNFCConfigVersion.cmake @ONLY )
-  else ()
-    include(CMakePackageConfigHelpers)
-    configure_package_config_file (
-      cmake/LibNFCConfig.cmake.in
-      ${CMAKE_CURRENT_BINARY_DIR}/LibNFCConfig.cmake
-      INSTALL_DESTINATION ${LIBNFC_CMAKE_CONFIG_DIR}
-      PATH_VARS
-        LIBNFC_USE_FILE
-        LIBNFC_ROOT_DIR
-        LIBNFC_INCLUDE_DIR
-        LIBNFC_INCLUDE_DIRS
-        LIBNFC_LIBRARY_DIRS
-        NO_CHECK_REQUIRED_COMPONENTS_MACRO
-    )
-    write_basic_package_version_file (
-      LibNFCConfigVersion.cmake 
-      VERSION ${LIBNFC_VERSION_STRING} 
-      COMPATIBILITY AnyNewerVersion
-    )
-  endif ()
-   
-  install ( FILES ${CMAKE_CURRENT_BINARY_DIR}/LibNFCConfig.cmake
-                  ${CMAKE_CURRENT_BINARY_DIR}/LibNFCConfigVersion.cmake
-                  cmake/UseLibNFC.cmake
-            DESTINATION ${LIBNFC_CMAKE_CONFIG_DIR}
-          )
-   
-endif ()
-
-# Binary Package
-IF(WIN32)
-  SET(CPACK_GENERATOR "ZIP")
-ELSE(WIN32)
-  SET(CPACK_GENERATOR "TBZ2")
-  IF(BUILD_DEBPKG)
-    SET(CPACK_GENERATOR "DEB")
-  ENDIF(BUILD_DEBPKG)
-ENDIF(WIN32)
-
-SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Near Field Communication (NFC) library")
+SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY ${PACKAGE_DESCRIPTION})
 SET(CPACK_PACKAGE_VENDOR "Roel Verdult")
 SET(CPACK_PACKAGE_CONTACT "Roel Verdult <roel@libnfc.org>")
 
@@ -295,13 +261,25 @@ SET(CPACK_COMPONENT_HEADERS_DISABLED TRUE)
 SET(CPACK_COMPONENT_HEADERS_DEPENDS libraries)
 SET(CPACK_COMPONENT_EXAMPLES_DEPENDS libraries)
 
-# Source Package
-IF(WIN32)
-  SET(CPACK_SOURCE_GENERATOR "ZIP")
-ELSE(WIN32)
-  SET(CPACK_SOURCE_GENERATOR "ZIP;TBZ2")
-ENDIF(WIN32)
+# Binary Package
+if(WIN32)
+    set(CPACK_GENERATOR ZIP WIX)
+elseif(APPLE)
+    set(CPACK_GENERATOR TGZ productbuild)
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    set(CPACK_GENERATOR TGZ RPM DEB)
 
+    # Automatically include runtime dependencies (libc, libstdc++) fro Debian
+    # (RPM includes these dependencies automagically)
+    # YMMV, therefore commented
+    # set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS "TRUE")
+else()
+    set(CPACK_GENERATOR TGZ)
+endif()
+# Source Package
+SET(CPACK_SOURCE_GENERATOR "SOURCE_ZIP" CACHE STRING "Default source package generator")
 SET(CPACK_SOURCE_PACKAGE_FILE_NAME "libnfc-${VERSION}")
 SET(CPACK_SOURCE_IGNORE_FILES "~$" "/\\\\.git/" "bin/")
+
+INCLUDE(InstallRequiredSystemLibraries)
 INCLUDE(CPack)

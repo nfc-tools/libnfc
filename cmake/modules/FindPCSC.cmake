@@ -13,7 +13,6 @@ FIND_PACKAGE (PkgConfig)
 IF(PKG_CONFIG_FOUND)
     # Will find PC/SC library on Linux/BSDs using PkgConfig
     PKG_CHECK_MODULES(PCSC libpcsclite)
-#   PKG_CHECK_MODULES(PCSC QUIET libpcsclite)   # IF CMake >= 2.8.2?
 ENDIF(PKG_CONFIG_FOUND)
 
 IF(NOT PCSC_FOUND)
