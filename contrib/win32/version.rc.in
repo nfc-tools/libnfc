@@ -1,25 +1,25 @@
+#include <winver.h>
+
 1 VERSIONINFO
  FILEVERSION @VERSION_MAJOR@,@VERSION_MINOR@,@VERSION_PATCH@,0
  PRODUCTVERSION @VERSION_MAJOR@,@VERSION_MINOR@,@VERSION_PATCH@,0
- FILEFLAGSMASK 0x3fL
- FILEFLAGS 0x0L
- FILEOS 0x00040004L
+ FILEFLAGSMASK VS_FFI_FILEFLAGSMASK
+ FILEFLAGS @RC_FILE_FLAGS@
+ FILEOS VOS_NT
  FILETYPE @RC_FILE_TYPE@
- FILESUBTYPE 0x0L
 BEGIN
     BLOCK "StringFileInfo"
     BEGIN
         BLOCK "040904e4" 
         BEGIN
-            VALUE "Comments", "@RC_COMMENT@\0"
-            VALUE "CompanyName", "libnfc.org\0"
-            VALUE "FileDescription", "\0"
-            VALUE "FileVersion", "@VERSION_MAJOR@.@VERSION_MINOR@.@VERSION_PATCH@.0\0"
-            VALUE "InternalName", "@RC_INTERNAL_NAME@ @WIN32_MODE@\0"
-            VALUE "LegalCopyright", "Copyright (C) @CURRENT_YEAR@\0"
-            VALUE "OriginalFilename", "@RC_ORIGINAL_NAME@\0"
-            VALUE "ProductName", "@PACKAGE_NAME@ @WIN32_MODE@\0"
-            VALUE "ProductVersion", "@VERSION_MAJOR@.@VERSION_MINOR@.@VERSION_PATCH@.0\0"
+            VALUE "Comments", "@RC_COMMENT@"
+            VALUE "CompanyName", "libnfc.org"
+            VALUE "FileVersion", "@VERSION@"
+            VALUE "InternalName", "@RC_INTERNAL_NAME@"
+            VALUE "LegalCopyright", "Copyright (C) @CURRENT_YEAR@"
+            VALUE "OriginalFilename", "@RC_ORIGINAL_NAME@"
+            VALUE "ProductName", "@PACKAGE_NAME@ @WIN32_MODE@"
+            VALUE "ProductVersion", "@VERSION@"
         END
     END
     BLOCK "VarFileInfo"

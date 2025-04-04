@@ -31,27 +31,28 @@
  * @brief Windows System compatibility
  */
 
-// Handle platform specific includes
+#include <stddef.h>
+#include <stdlib.h>
+
 #include "contrib/windows.h"
 
-//There is no setenv()and unsetenv() in windows,but we can use putenv() instead.
+// Use _putenv_s() as the underlying function to implement setenv() and
+// unsetenv() on Windows
+// NOTE: unlike POSIX, they return errno instead of -1 when they fail
+
 int setenv(const char *name, const char *value, int overwrite)
 {
-  char *env = getenv(name);
-  if ((env && overwrite) || (!env)) {
-    char *str[32];
-    strcpy(str, name);
-    strcat(str, "=");
-    strcat(str, value);
-    return putenv(str);
+  if (!overwrite) {
+    size_t sz;
+    // Test for existence.
+    getenv_s(&sz, NULL, 0, name);
+    if (sz != 0)
+      return 0;
   }
-  return -1;
+  return _putenv_s(name, value);
 }
 
-void unsetenv(const char *name)
+int unsetenv(const char *name)
 {
-  char *str[32];
-  strcpy(str, name);
-  strcat(str, "=");
-  putenv(str);
+  return _putenv_s(name, "");
 }

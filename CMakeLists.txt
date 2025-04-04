@@ -102,30 +102,6 @@ ENDIF(CMAKE_COMPILER_IS_GNUCC)
 # Workarounds for libusb in C99
 ADD_DEFINITIONS(-Du_int8_t=uint8_t -Du_int16_t=uint16_t)
 
-IF(MINGW)
-  IF (CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
-    IF(CMAKE_SYSTEM_PROCESSOR STREQUAL "x86")
-        # force MinGW-w64 in 32bit mode
-        MESSAGE("Building 32-bit Windows DLL")
-        #SET(CMAKE_C_FLAGS "-m32 ${CMAKE_C_FLAGS}")
-        #SET(CMAKE_MODULE_LINKER_FLAGS "--Wl,--enable-stdcall-fixup ${CMAKE_SHARED_LINKER_FLAGS}")
-        #SET(CMAKE_SHARED_LINKER_FLAGS "--Wl,--enable-stdcall-fixup ${CMAKE_SHARED_LINKER_FLAGS}")
-        #SET(CMAKE_EXE_LINKER_FLAGS "--Wl,--enable-stdcall-fixup ${CMAKE_EXE_LINKER_FLAGS}")
-        SET(CMAKE_RC_FLAGS "--target=pe-i386 --output-format=coff ${CMAKE_RC_FLAGS}")
-    ELSEIF((CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64") OR (CMAKE_SYSTEM_PROCESSOR STREQUAL "AMD64"))
-        MESSAGE("Building 64-bit Windows DLL")
-        SET(CMAKE_RC_FLAGS "--target=pe-x86-64 --output-format=coff ${CMAKE_RC_FLAGS}")
-    ELSE(CMAKE_SYSTEM_PROCESSOR STREQUAL "x86")
-        MESSAGE(FATAL_ERROR "Unknown Processor: ${CMAKE_SYSTEM_PROCESSOR}")
-    ENDIF(CMAKE_SYSTEM_PROCESSOR STREQUAL "x86")
-  ENDIF(CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
-
-  FIND_PROGRAM(DLLTOOL dlltool CMAKE_FIND_ROOT_PATH_BOTH)
-  IF (NOT DLLTOOL)
-    MESSAGE(FATAL_ERROR "Could not find dlltool command")
-  ENDIF (NOT DLLTOOL)
-ENDIF(MINGW)
-
 IF(NOT WIN32)
   # Set some pkg-config variables
   SET(prefix ${CMAKE_INSTALL_PREFIX})
@@ -178,17 +154,9 @@ IF(LIBUSB_INCLUDE_DIRS)
   SET(LIBUSB_FOUND TRUE)
 ENDIF(LIBUSB_INCLUDE_DIRS)
 
-# version.rc for Windows
 IF(WIN32)
   # Date for filling in rc file information
   STRING(TIMESTAMP CURRENT_YEAR %Y)
-  SET(prefix ${CMAKE_INSTALL_PREFIX})
-  SET(RC_COMMENT "${PACKAGE_NAME} library")
-  SET(RC_INTERNAL_NAME "${PACKAGE_NAME} ${WIN32_MODE}")
-  SET(RC_ORIGINAL_NAME ${PACKAGE_NAME}.dll)
-  # RC_FILE_TYPE: VFT_DLL
-  SET(RC_FILE_TYPE 0x00000002L)
-  CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/contrib/win32/version.rc.in ${CMAKE_CURRENT_BINARY_DIR}/windows/libnfc.rc @ONLY)
 ENDIF(WIN32)
 
 ADD_SUBDIRECTORY(libnfc)
