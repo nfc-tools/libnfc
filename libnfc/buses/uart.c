@@ -92,9 +92,6 @@ const char *serial_ports_device_radix[] = { "ttyUSB", "ttyS", "ttyACM", "ttyAMA"
 #  define FIONREAD TIOCINQ
 #endif
 
-// Work-around to claim uart interface using the c_iflag (software input processing) from the termios struct
-#  define CCLAIMED 0x80000000
-
 struct serial_port_unix {
   int 			fd; 			// Serial port file descriptor
   struct termios 	termios_backup; 	// Terminal info before using the port
@@ -124,7 +121,7 @@ uart_open(const char *pcPortName)
     return INVALID_SERIAL_PORT;
   }
   // Make sure the port is not claimed already
-  if (sp->termios_backup.c_iflag & CCLAIMED) {
+  if (lockf(sp->fd, F_TLOCK, 0)) {
     uart_close_ext(sp, false);
     return CLAIMED_SERIAL_PORT;
   }
@@ -132,7 +129,7 @@ uart_open(const char *pcPortName)
   sp->termios_new = sp->termios_backup;
 
   sp->termios_new.c_cflag = CS8 | CLOCAL | CREAD;
-  sp->termios_new.c_iflag = CCLAIMED | IGNPAR;
+  sp->termios_new.c_iflag = IGNPAR;
   sp->termios_new.c_oflag = 0;
   sp->termios_new.c_lflag = 0;
 
@@ -282,6 +279,7 @@ uart_close_ext(const serial_port sp, const bool restore_termios)
   if (UART_DATA(sp)->fd >= 0) {
     if (restore_termios)
       tcsetattr(UART_DATA(sp)->fd, TCSANOW, &UART_DATA(sp)->termios_backup);
+    lockf(UART_DATA(sp)->fd, F_ULOCK, 0);
     close(UART_DATA(sp)->fd);
   }
   free(sp);
