@@ -697,7 +697,7 @@ read:
   len = abtRxBuf[offset++];
   if ((abtRxBuf[offset] != 0x00) && (abtRxBuf[offset + 1] != 0x00) && (abtRxBuf[offset + 2] != 0x00)) {
     log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Not implemented: only 1-byte length is supported, please report this bug with a full trace.");
-    pnd->last_error = NFC_EIO;
+    pnd->last_error = NFC_ENOTIMPL;
     return pnd->last_error;
   }
   offset += 3;

@@ -103,7 +103,7 @@ arygon_scan(const nfc_context *context, nfc_connstring connstrings[], const size
   size_t device_found = 0;
   serial_port sp;
   char **acPorts = uart_list_ports();
-  const char *acPort;
+  char *acPort;
   int     iDevice = 0;
 
   while ((acPort = acPorts[iDevice++])) {

@@ -257,7 +257,11 @@ pn53x_usb_get_end_points_default(struct usb_device *dev, struct pn53x_usb_data *
   return false;
 }
 
-int  pn53x_usb_ack(nfc_device *pnd);
+int
+pn53x_usb_ack(nfc_device *pnd)
+{
+  return pn53x_usb_bulk_write(DRIVER_DATA(pnd), (uint8_t *) pn53x_ack_frame, sizeof(pn53x_ack_frame), 1000);
+}
 
 // Find transfer endpoints for bulk transfers
 static void
@@ -739,12 +743,6 @@ read:
   pnd->last_error = 0;
   DRIVER_DATA(pnd)->possibly_corrupted_usbdesc |= len > 16;
   return len;
-}
-
-int
-pn53x_usb_ack(nfc_device *pnd)
-{
-  return pn53x_usb_bulk_write(DRIVER_DATA(pnd), (uint8_t *) pn53x_ack_frame, sizeof(pn53x_ack_frame), 1000);
 }
 
 int
