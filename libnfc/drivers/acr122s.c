@@ -225,7 +225,7 @@ acr122s_send_frame(nfc_device *pnd, uint8_t *frame, int timeout)
 }
 
 /**
- * Receive response frame after a successfull acr122s_send_command().
+ * Receive response frame after a successful acr122s_send_command().
  *
  * @param: pnd is target nfc device
  * @param: frame is buffer where received response frame will be stored
@@ -272,7 +272,7 @@ acr122s_recv_frame(nfc_device *pnd, uint8_t *frame, size_t frame_size, void *abo
 #define APDU_OVERHEAD (FRAME_OVERHEAD + 5)
 
 /**
- * Convert host uint32 to litle endian uint32
+ * Convert host uint32 to little endian uint32
  */
 static uint32_t
 le32(uint32_t val)
@@ -417,7 +417,7 @@ acr122s_scan(const nfc_context *context, nfc_connstring connstrings[], const siz
   size_t device_found = 0;
   serial_port sp;
   char **acPorts = uart_list_ports();
-  const char *acPort;
+  char *acPort;
   int     iDevice = 0;
 
   while ((acPort = acPorts[iDevice++])) {
@@ -621,7 +621,6 @@ acr122s_open(const nfc_context *context, const nfc_connstring connstring)
   }
   CHIP_DATA(pnd)->type = PN532;
 
-#if 1
   // Retrieve firmware version
   char version[DEVICE_NAME_LENGTH];
   if (acr122s_get_firmware_version(pnd, version, sizeof(version)) != 0) {
@@ -637,7 +636,7 @@ acr122s_open(const nfc_context *context, const nfc_connstring connstring)
     return NULL;
   }
 
-  snprintf(pnd->name, sizeof(pnd->name), "%s", version);
+  strncpy(pnd->name, version, DEVICE_NAME_LENGTH);
 
   // Activate SAM before operating
   if (acr122s_activate_sam(pnd) != 0) {
@@ -645,7 +644,6 @@ acr122s_open(const nfc_context *context, const nfc_connstring connstring)
     acr122s_close(pnd);
     return NULL;
   }
-#endif
 
   if (pn53x_init(pnd) < 0) {
     log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "%s", "Failed initializing PN532 chip.");

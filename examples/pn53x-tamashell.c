@@ -54,24 +54,11 @@
 #include <ctype.h>
 #include <time.h>
 
-#ifndef _WIN32
-#  include <time.h>
-#  define msleep(x) do { \
-    struct timespec xsleep; \
-    xsleep.tv_sec = x / 1000; \
-    xsleep.tv_nsec = (x - xsleep.tv_sec * 1000) * 1000 * 1000; \
-    nanosleep(&xsleep, NULL); \
-  } while (0)
-#else
-#  include <winbase.h>
-#  define msleep Sleep
-#endif
-
-
 #include <nfc/nfc.h>
 
 #include "utils/nfc-utils.h"
 #include "libnfc/chips/pn53x.h"
+#include "libnfc/nfc-internal.h"
 
 #define MAX_FRAME_LEN 264
 

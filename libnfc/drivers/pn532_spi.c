@@ -54,22 +54,6 @@
 #define LOG_CATEGORY "libnfc.driver.pn532_spi"
 #define LOG_GROUP    NFC_LOG_GROUP_DRIVER
 
-#ifndef _WIN32
-// Needed by sleep() under Unix
-#  include <unistd.h>
-#  include <time.h>
-#  define msleep(x) do { \
-    struct timespec xsleep; \
-    xsleep.tv_sec = x / 1000; \
-    xsleep.tv_nsec = (x - xsleep.tv_sec * 1000) * 1000 * 1000; \
-    nanosleep(&xsleep, NULL); \
-  } while (0)
-#else
-// Needed by Sleep() under Windows
-#  include <winbase.h>
-#  define msleep Sleep
-#endif
-
 // Internal data structs
 const struct pn53x_io pn532_spi_io;
 struct pn532_spi_data {

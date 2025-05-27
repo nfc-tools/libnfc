@@ -45,9 +45,7 @@
 #define LOG_GROUP    NFC_LOG_GROUP_COM
 #define LOG_CATEGORY "libnfc.bus.uart_win32"
 
-// Handle platform specific includes
 #include "contrib/windows.h"
-#define delay_ms( X ) Sleep( X )
 
 struct serial_port_windows {
   HANDLE  hPort;                // Serial port handle
