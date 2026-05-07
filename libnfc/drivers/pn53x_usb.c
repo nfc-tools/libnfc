@@ -77,7 +77,7 @@ typedef enum {
 
 // Internal data struct
 struct pn53x_usb_data {
-  usb_dev_handle *pudh;
+  libusb_device_handle *pudh;
   pn53x_usb_model model;
   uint32_t uiEndPointIn;
   uint32_t uiEndPointOut;
@@ -90,36 +90,40 @@ struct pn53x_usb_data {
 const struct pn53x_io pn53x_usb_io;
 
 // Prototypes
-bool pn53x_usb_get_usb_device_name(struct usb_device *dev, usb_dev_handle *udev, char *buffer, size_t len);
+bool pn53x_usb_get_usb_device_name(libusb_device *dev, libusb_device_handle *udev, char *buffer, size_t len);
 int pn53x_usb_init(nfc_device *pnd);
 
 static int
 pn53x_usb_bulk_read(struct pn53x_usb_data *data, uint8_t abtRx[], const size_t szRx, const int timeout)
 {
-  int res = usb_bulk_read(data->pudh, data->uiEndPointIn, (char *) abtRx, szRx, timeout);
-  if (res > 0) {
-    LOG_HEX(NFC_LOG_GROUP_COM, "RX", abtRx, res);
-  } else if (res < 0) {
-    if (res != -USB_TIMEDOUT)
-      log_put(NFC_LOG_GROUP_COM, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to read from USB (%s)", _usb_strerror(res));
+  int transferred;
+  int res = libusb_bulk_transfer(data->pudh, data->uiEndPointIn, abtRx, szRx, &transferred, timeout);
+  if (res == 0) {
+    LOG_HEX(NFC_LOG_GROUP_COM, "RX", abtRx, transferred);
+    return transferred;
+  } else {
+    if (res != LIBUSB_ERROR_TIMEOUT)
+      log_put(NFC_LOG_GROUP_COM, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to read from USB (%s)", libusb_strerror(res));
+    return res;
   }
-  return res;
 }
 
 static int
 pn53x_usb_bulk_write(struct pn53x_usb_data *data, uint8_t abtTx[], const size_t szTx, const int timeout)
 {
   LOG_HEX(NFC_LOG_GROUP_COM, "TX", abtTx, szTx);
-  int res = usb_bulk_write(data->pudh, data->uiEndPointOut, (char *) abtTx, szTx, timeout);
-  if (res > 0) {
+  int transferred;
+  int res = libusb_bulk_transfer(data->pudh, data->uiEndPointOut, abtTx, szTx, &transferred, timeout);
+  if (res == 0) {
     // HACK This little hack is a well know problem of USB, see http://www.libusb.org/ticket/6 for more details
-    if ((res % data->uiMaxPacketSize) == 0) {
-      usb_bulk_write(data->pudh, data->uiEndPointOut, "\0", 0, timeout);
+    if ((transferred % data->uiMaxPacketSize) == 0) {
+      libusb_bulk_transfer(data->pudh, data->uiEndPointOut, (unsigned char *)"\0", 0, &transferred, timeout);
     }
+    return transferred;
   } else {
-    log_put(NFC_LOG_GROUP_COM, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to write to USB (%s)", _usb_strerror(res));
+    log_put(NFC_LOG_GROUP_COM, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to write to USB (%s)", libusb_strerror(res));
+    return res;
   }
-  return res;
 }
 
 struct pn53x_usb_supported_device {
@@ -239,11 +243,13 @@ pn53x_usb_get_device_model(uint16_t vendor_id, uint16_t product_id)
 }
 
 static bool
-pn53x_usb_get_end_points_default(struct usb_device *dev, struct pn53x_usb_data *data)
+pn53x_usb_get_end_points_default(libusb_device *dev, struct pn53x_usb_data *data)
 {
+  struct libusb_device_descriptor desc;
+  libusb_get_device_descriptor(dev, &desc);
   for (size_t n = 0; n < sizeof(pn53x_usb_supported_devices) / sizeof(struct pn53x_usb_supported_device); n++) {
-    if ((dev->descriptor.idVendor == pn53x_usb_supported_devices[n].vendor_id) &&
-        (dev->descriptor.idProduct == pn53x_usb_supported_devices[n].product_id)) {
+    if ((desc.idVendor == pn53x_usb_supported_devices[n].vendor_id) &&
+        (desc.idProduct == pn53x_usb_supported_devices[n].product_id)) {
       if (pn53x_usb_supported_devices[n].uiMaxPacketSize != 0) {
         data->uiEndPointIn = pn53x_usb_supported_devices[n].uiEndPointIn;
         data->uiEndPointOut = pn53x_usb_supported_devices[n].uiEndPointOut;
@@ -261,32 +267,37 @@ int  pn53x_usb_ack(nfc_device *pnd);
 
 // Find transfer endpoints for bulk transfers
 static void
-pn53x_usb_get_end_points(struct usb_device *dev, struct pn53x_usb_data *data)
+pn53x_usb_get_end_points(libusb_device *dev, struct pn53x_usb_data *data)
 {
   uint32_t uiIndex;
   uint32_t uiEndPoint;
-  struct usb_interface_descriptor *puid = dev->config->interface->altsetting;
+  struct libusb_config_descriptor *config;
+  if (libusb_get_config_descriptor(dev, 0, &config) != 0)
+    return;
+  const struct libusb_interface_descriptor *puid = &config->interface[0].altsetting[0];
 
   // 3 Endpoints maximum: Interrupt In, Bulk In, Bulk Out
   for (uiIndex = 0; uiIndex < puid->bNumEndpoints; uiIndex++) {
     // Only accept bulk transfer endpoints (ignore interrupt endpoints)
-    if (puid->endpoint[uiIndex].bmAttributes != USB_ENDPOINT_TYPE_BULK)
+    if ((puid->endpoint[uiIndex].bmAttributes & LIBUSB_TRANSFER_TYPE_MASK) != LIBUSB_TRANSFER_TYPE_BULK)
       continue;
 
     // Copy the endpoint to a local var, makes it more readable code
     uiEndPoint = puid->endpoint[uiIndex].bEndpointAddress;
 
     // Test if we dealing with a bulk IN endpoint
-    if ((uiEndPoint & USB_ENDPOINT_DIR_MASK) == USB_ENDPOINT_IN) {
+    if ((uiEndPoint & LIBUSB_ENDPOINT_DIR_MASK) == LIBUSB_ENDPOINT_IN) {
       data->uiEndPointIn = uiEndPoint;
       data->uiMaxPacketSize = puid->endpoint[uiIndex].wMaxPacketSize;
     }
     // Test if we dealing with a bulk OUT endpoint
-    if ((uiEndPoint & USB_ENDPOINT_DIR_MASK) == USB_ENDPOINT_OUT) {
+    if ((uiEndPoint & LIBUSB_ENDPOINT_DIR_MASK) == LIBUSB_ENDPOINT_OUT) {
       data->uiEndPointOut = uiEndPoint;
       data->uiMaxPacketSize = puid->endpoint[uiIndex].wMaxPacketSize;
     }
   }
+
+  libusb_free_config_descriptor(config);
 }
 
 static size_t
@@ -294,91 +305,94 @@ pn53x_usb_scan(const nfc_context *context, nfc_connstring connstrings[], const s
 {
   (void)context;
 
-  usb_prepare();
-
   size_t device_found = 0;
-  uint32_t uiBusIndex = 0;
-  struct usb_bus *bus;
-  for (bus = usb_get_busses(); bus; bus = bus->next) {
-    struct usb_device *dev;
 
-    for (dev = bus->devices; dev; dev = dev->next, uiBusIndex++) {
-      for (size_t n = 0; n < sizeof(pn53x_usb_supported_devices) / sizeof(struct pn53x_usb_supported_device); n++) {
-        if ((pn53x_usb_supported_devices[n].vendor_id == dev->descriptor.idVendor) &&
-            (pn53x_usb_supported_devices[n].product_id == dev->descriptor.idProduct)) {
-          // Make sure there are 2 endpoints available
-          // libusb-win32 may return a NULL dev->config,
-          // or the descriptors may be corrupted, hence
-          // let us assume we will use hardcoded defaults
-          // from pn53x_usb_supported_devices if available.
-          // otherwise get data from the descriptors.
-          if (pn53x_usb_supported_devices[n].uiMaxPacketSize == 0) {
-            if (dev->config->interface == NULL || dev->config->interface->altsetting == NULL) {
-              // Nope, we maybe want the next one, let's try to find another
-              continue;
-            }
-            if (dev->config->interface->altsetting->bNumEndpoints < 2) {
-              // Nope, we maybe want the next one, let's try to find another
-              continue;
-            }
-          }
+  libusb_context *ctx = usb_get_context();
+  if (ctx == NULL)
+    return 0;
 
-          usb_dev_handle *udev = usb_open(dev);
-          if (udev == NULL)
+  libusb_device **devs;
+  ssize_t cnt = libusb_get_device_list(ctx, &devs);
+  if (cnt < 0) {
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to get USB device list (%s)", libusb_strerror((int)cnt));
+    return 0;
+  }
+
+  for (ssize_t i = 0; i < cnt; i++) {
+    libusb_device *dev = devs[i];
+    struct libusb_device_descriptor desc;
+    if (libusb_get_device_descriptor(dev, &desc) != 0)
+      continue;
+
+    for (size_t n = 0; n < sizeof(pn53x_usb_supported_devices) / sizeof(struct pn53x_usb_supported_device); n++) {
+      if ((pn53x_usb_supported_devices[n].vendor_id == desc.idVendor) &&
+          (pn53x_usb_supported_devices[n].product_id == desc.idProduct)) {
+        // Make sure there are 2 endpoints available
+        // If no hardcoded defaults exist, verify from descriptors.
+        if (pn53x_usb_supported_devices[n].uiMaxPacketSize == 0) {
+          struct libusb_config_descriptor *config;
+          if (libusb_get_config_descriptor(dev, 0, &config) != 0)
             continue;
-
-          // Set configuration
-          int res = usb_set_configuration(udev, 1);
-          if (res < 0) {
-            log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to set USB configuration (%s)", _usb_strerror(res));
-            usb_close(udev);
-            // we failed to use the device
+          bool valid = (config->interface != NULL &&
+                        config->interface->altsetting != NULL &&
+                        config->interface->altsetting->bNumEndpoints >= 2);
+          libusb_free_config_descriptor(config);
+          if (!valid)
             continue;
-          }
+        }
 
-          // pn53x_usb_get_usb_device_name (dev, udev, pnddDevices[device_found].acDevice, sizeof (pnddDevices[device_found].acDevice));
-          log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "device found: Bus %s Device %s", bus->dirname, dev->filename);
-          usb_close(udev);
-          if (snprintf(connstrings[device_found], sizeof(nfc_connstring), "%s:%s:%s", PN53X_USB_DRIVER_NAME, bus->dirname, dev->filename) >= (int)sizeof(nfc_connstring)) {
-            // truncation occurred, skipping that one
-            continue;
-          }
-          device_found++;
-          // Test if we reach the maximum "wanted" devices
-          if (device_found == connstrings_len) {
-            return device_found;
-          }
+        libusb_device_handle *udev;
+        if (libusb_open(dev, &udev) != 0)
+          continue;
+
+        uint8_t bus_number = libusb_get_bus_number(dev);
+        uint8_t device_address = libusb_get_device_address(dev);
+        log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "device found: Bus %03d Device %03d", bus_number, device_address);
+        libusb_close(udev);
+        if (snprintf(connstrings[device_found], sizeof(nfc_connstring), "%s:%03d:%03d", PN53X_USB_DRIVER_NAME, bus_number, device_address) >= (int)sizeof(nfc_connstring)) {
+          // truncation occurred, skipping that one
+          continue;
+        }
+        device_found++;
+        // Test if we reach the maximum "wanted" devices
+        if (device_found == connstrings_len) {
+          libusb_free_device_list(devs, 1);
+          return device_found;
         }
       }
     }
   }
 
+  libusb_free_device_list(devs, 1);
   return device_found;
 }
 
 struct pn53x_usb_descriptor {
-  char *dirname;
-  char *filename;
+  char *dirname;   // bus number formatted as "%03d"
+  char *filename;  // device address formatted as "%03d"
 };
 
 bool
-pn53x_usb_get_usb_device_name(struct usb_device *dev, usb_dev_handle *udev, char *buffer, size_t len)
+pn53x_usb_get_usb_device_name(libusb_device *dev, libusb_device_handle *udev, char *buffer, size_t len)
 {
   *buffer = '\0';
 
-  if (dev->descriptor.iManufacturer || dev->descriptor.iProduct) {
+  struct libusb_device_descriptor desc;
+  libusb_get_device_descriptor(dev, &desc);
+
+  if (desc.iManufacturer || desc.iProduct) {
     if (udev) {
-      usb_get_string_simple(udev, dev->descriptor.iManufacturer, buffer, len);
+      libusb_get_string_descriptor_ascii(udev, desc.iManufacturer, (unsigned char *)buffer, len);
       if (strlen(buffer) > 0)
         strcpy(buffer + strlen(buffer), " / ");
-      usb_get_string_simple(udev, dev->descriptor.iProduct, buffer + strlen(buffer), len - strlen(buffer));
+      libusb_get_string_descriptor_ascii(udev, desc.iProduct, (unsigned char *)(buffer + strlen(buffer)), len - strlen(buffer));
     }
   }
 
   if (!*buffer) {
     for (size_t n = 0; n < sizeof(pn53x_usb_supported_devices) / sizeof(struct pn53x_usb_supported_device); n++) {
-      if ((pn53x_usb_supported_devices[n].vendor_id == dev->descriptor.idVendor) &&
-          (pn53x_usb_supported_devices[n].product_id == dev->descriptor.idProduct)) {
+      if ((pn53x_usb_supported_devices[n].vendor_id == desc.idVendor) &&
+          (pn53x_usb_supported_devices[n].product_id == desc.idProduct)) {
         strncpy(buffer, pn53x_usb_supported_devices[n].name, len);
         buffer[len - 1] = '\0';
         return true;
@@ -406,113 +420,123 @@ pn53x_usb_open(const nfc_context *context, const nfc_connstring connstring)
     .uiEndPointOut = 0,
     .possibly_corrupted_usbdesc = false,
   };
-  struct usb_bus *bus;
-  struct usb_device *dev;
 
-  usb_prepare();
+  libusb_context *ctx = usb_get_context();
+  if (ctx == NULL)
+    goto free_mem;
 
-  for (bus = usb_get_busses(); bus; bus = bus->next) {
-    if (connstring_decode_level > 1)  {
-      // A specific bus have been specified
-      if (0 != strcmp(bus->dirname, desc.dirname))
+  libusb_device **devs = NULL;
+  ssize_t cnt = libusb_get_device_list(ctx, &devs);
+  if (cnt < 0)
+    goto free_mem;
+
+  for (ssize_t i = 0; i < cnt; i++) {
+    libusb_device *dev = devs[i];
+
+    if (connstring_decode_level > 1) {
+      // A specific bus has been specified
+      char bus_str[4];
+      snprintf(bus_str, sizeof(bus_str), "%03d", libusb_get_bus_number(dev));
+      if (0 != strcmp(bus_str, desc.dirname))
         continue;
     }
-    for (dev = bus->devices; dev; dev = dev->next) {
-      if (connstring_decode_level > 2)  {
-        // A specific dev have been specified
-        if (0 != strcmp(dev->filename, desc.filename))
-          continue;
-      }
-      // Open the USB device
-      if ((data.pudh = usb_open(dev)) == NULL)
+    if (connstring_decode_level > 2) {
+      // A specific device has been specified
+      char dev_str[4];
+      snprintf(dev_str, sizeof(dev_str), "%03d", libusb_get_device_address(dev));
+      if (0 != strcmp(dev_str, desc.filename))
         continue;
+    }
 
-      //To retrieve real USB endpoints configuration:
-      //pn53x_usb_get_end_points(dev, &data);
-      //printf("DEBUG ENDPOINTS    In:0x%x  Out:0x%x  Size:0x%x\n", data.uiEndPointIn, data.uiEndPointOut, data.uiMaxPacketSize);
+    struct libusb_device_descriptor device_desc;
+    if (libusb_get_device_descriptor(dev, &device_desc) != 0)
+      continue;
 
-      // Retrieve end points, using hardcoded defaults if available
-      // or using the descriptors otherwise.
-      if (pn53x_usb_get_end_points_default(dev, &data) == false) {
-        pn53x_usb_get_end_points(dev, &data);
-      }
-      // Set configuration
-      int res = usb_set_configuration(data.pudh, 1);
-      if (res < 0) {
-        log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to set USB configuration (%s)", _usb_strerror(res));
-        if (EPERM == -res) {
-          log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_INFO, "Warning: Please double check USB permissions for device %04x:%04x", dev->descriptor.idVendor, dev->descriptor.idProduct);
-        }
-        usb_close(data.pudh);
-        // we failed to use the specified device
-        goto free_mem;
-      }
+    // Open the USB device
+    if (libusb_open(dev, &data.pudh) != 0)
+      continue;
 
-      res = usb_claim_interface(data.pudh, 0);
-      if (res < 0) {
-        log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to claim USB interface (%s)", _usb_strerror(res));
-        usb_close(data.pudh);
-        // we failed to use the specified device
-        goto free_mem;
+    // Retrieve end points, using hardcoded defaults if available
+    // or using the descriptors otherwise.
+    if (pn53x_usb_get_end_points_default(dev, &data) == false) {
+      pn53x_usb_get_end_points(dev, &data);
+    }
+    // Set configuration
+    int res = libusb_set_configuration(data.pudh, 1);
+    if (res < 0) {
+      log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to set USB configuration (%s)", libusb_strerror(res));
+      if (LIBUSB_ERROR_ACCESS == res) {
+        log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_INFO, "Warning: Please double check USB permissions for device %04x:%04x", device_desc.idVendor, device_desc.idProduct);
       }
-      data.model = pn53x_usb_get_device_model(dev->descriptor.idVendor, dev->descriptor.idProduct);
-      // Allocate memory for the device info and specification, fill it and return the info
-      pnd = nfc_device_new(context, connstring);
-      if (!pnd) {
-        perror("malloc");
-        goto error;
-      }
-      pn53x_usb_get_usb_device_name(dev, data.pudh, pnd->name, sizeof(pnd->name));
-
-      pnd->driver_data = malloc(sizeof(struct pn53x_usb_data));
-      if (!pnd->driver_data) {
-        perror("malloc");
-        goto error;
-      }
-      *DRIVER_DATA(pnd) = data;
-
-      // Alloc and init chip's data
-      if (pn53x_data_new(pnd, &pn53x_usb_io) == NULL) {
-        perror("malloc");
-        goto error;
-      }
-
-      switch (DRIVER_DATA(pnd)->model) {
-        // empirical tuning
-        case ASK_LOGO:
-          CHIP_DATA(pnd)->timer_correction = 50;
-          CHIP_DATA(pnd)->progressive_field = true;
-          break;
-        case SCM_SCL3711:
-        case SCM_SCL3712:
-        case NXP_PN533:
-          CHIP_DATA(pnd)->timer_correction = 46;
-          break;
-        case NXP_PN531:
-          CHIP_DATA(pnd)->timer_correction = 50;
-          break;
-        case SONY_PN531:
-          CHIP_DATA(pnd)->timer_correction = 54;
-          break;
-        case SONY_RCS360:
-        case UNKNOWN:
-          CHIP_DATA(pnd)->timer_correction = 0;   // TODO: allow user to know if timed functions are available
-          break;
-      }
-      pnd->driver = &pn53x_usb_driver;
-
-      // HACK1: Send first an ACK as Abort command, to reset chip before talking to it:
-      pn53x_usb_ack(pnd);
-
-      // HACK2: Then send a GetFirmware command to resync USB toggle bit between host & device
-      // in case host used set_configuration and expects the device to have reset its toggle bit, which PN53x doesn't do
-      if (pn53x_usb_init(pnd) < 0) {
-        usb_close(data.pudh);
-        goto error;
-      }
-      DRIVER_DATA(pnd)->abort_flag = false;
+      libusb_close(data.pudh);
+      // we failed to use the specified device
       goto free_mem;
     }
+
+    res = libusb_claim_interface(data.pudh, 0);
+    if (res < 0) {
+      log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to claim USB interface (%s)", libusb_strerror(res));
+      libusb_close(data.pudh);
+      // we failed to use the specified device
+      goto free_mem;
+    }
+    data.model = pn53x_usb_get_device_model(device_desc.idVendor, device_desc.idProduct);
+    // Allocate memory for the device info and specification, fill it and return the info
+    pnd = nfc_device_new(context, connstring);
+    if (!pnd) {
+      perror("malloc");
+      goto error;
+    }
+    pn53x_usb_get_usb_device_name(dev, data.pudh, pnd->name, sizeof(pnd->name));
+
+    pnd->driver_data = malloc(sizeof(struct pn53x_usb_data));
+    if (!pnd->driver_data) {
+      perror("malloc");
+      goto error;
+    }
+    *DRIVER_DATA(pnd) = data;
+
+    // Alloc and init chip's data
+    if (pn53x_data_new(pnd, &pn53x_usb_io) == NULL) {
+      perror("malloc");
+      goto error;
+    }
+
+    switch (DRIVER_DATA(pnd)->model) {
+      // empirical tuning
+      case ASK_LOGO:
+        CHIP_DATA(pnd)->timer_correction = 50;
+        CHIP_DATA(pnd)->progressive_field = true;
+        break;
+      case SCM_SCL3711:
+      case SCM_SCL3712:
+      case NXP_PN533:
+        CHIP_DATA(pnd)->timer_correction = 46;
+        break;
+      case NXP_PN531:
+        CHIP_DATA(pnd)->timer_correction = 50;
+        break;
+      case SONY_PN531:
+        CHIP_DATA(pnd)->timer_correction = 54;
+        break;
+      case SONY_RCS360:
+      case UNKNOWN:
+        CHIP_DATA(pnd)->timer_correction = 0;   // TODO: allow user to know if timed functions are available
+        break;
+    }
+    pnd->driver = &pn53x_usb_driver;
+
+    // HACK1: Send first an ACK as Abort command, to reset chip before talking to it:
+    pn53x_usb_ack(pnd);
+
+    // HACK2: Then send a GetFirmware command to resync USB toggle bit between host & device
+    // in case host used set_configuration and expects the device to have reset its toggle bit, which PN53x doesn't do
+    if (pn53x_usb_init(pnd) < 0) {
+      libusb_close(data.pudh);
+      goto error;
+    }
+    DRIVER_DATA(pnd)->abort_flag = false;
+    goto free_mem;
   }
   // We ran out of devices before the index required
   goto free_mem;
@@ -522,6 +546,8 @@ error:
   nfc_device_free(pnd);
   pnd = NULL;
 free_mem:
+  if (devs)
+    libusb_free_device_list(devs, 1);
   free(desc.dirname);
   free(desc.filename);
   return pnd;
@@ -544,13 +570,11 @@ pn53x_usb_close(nfc_device *pnd)
   pn53x_idle(pnd);
 
   int res;
-  if ((res = usb_release_interface(DRIVER_DATA(pnd)->pudh, 0)) < 0) {
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to release USB interface (%s)", _usb_strerror(res));
+  if ((res = libusb_release_interface(DRIVER_DATA(pnd)->pudh, 0)) < 0) {
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to release USB interface (%s)", libusb_strerror(res));
   }
 
-  if ((res = usb_close(DRIVER_DATA(pnd)->pudh)) < 0) {
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to close USB connection (%s)", _usb_strerror(res));
-  }
+  libusb_close(DRIVER_DATA(pnd)->pudh);
   pn53x_data_free(pnd);
   nfc_device_free(pnd);
 }
@@ -635,7 +659,7 @@ read:
 
   res = pn53x_usb_bulk_read(DRIVER_DATA(pnd), abtRxBuf, sizeof(abtRxBuf), usb_timeout);
 
-  if (res == -USB_TIMEDOUT) {
+  if (res == LIBUSB_ERROR_TIMEOUT) {
     if (DRIVER_DATA(pnd)->abort_flag) {
       DRIVER_DATA(pnd)->abort_flag = false;
       pn53x_usb_ack(pnd);

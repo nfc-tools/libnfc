@@ -27,7 +27,7 @@
 
 /**
  * @file usbbus.c
- * @brief libusb 0.1 driver wrapper
+ * @brief libusb 1.0 driver wrapper
  */
 
 #ifdef HAVE_CONFIG_H
@@ -41,39 +41,31 @@
 #define LOG_CATEGORY "libnfc.buses.usbbus"
 #define LOG_GROUP    NFC_LOG_GROUP_DRIVER
 
-int usb_prepare(void)
+static libusb_context *usb_context = NULL;
+
+libusb_context *
+usb_get_context(void)
 {
   static bool usb_initialized = false;
   if (!usb_initialized) {
+    int r = libusb_init(&usb_context);
+    if (r < 0) {
+      log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to initialize libusb (%s)", libusb_strerror(r));
+      return NULL;
+    }
 
 #ifdef ENVVARS
     char *env_log_level = getenv("LIBNFC_LOG_LEVEL");
-    // Set libusb debug only if asked explicitely:
+    // Set libusb debug only if asked explicitly:
     // LIBUSB_LOG_LEVEL=12288 (= NFC_LOG_PRIORITY_DEBUG * 2 ^ NFC_LOG_GROUP_LIBUSB)
     if (env_log_level && (((atoi(env_log_level) >> (NFC_LOG_GROUP_LIBUSB * 2)) & 0x00000003) >= NFC_LOG_PRIORITY_DEBUG)) {
-      setenv("USB_DEBUG", "255", 1);
+      libusb_set_option(usb_context, LIBUSB_OPTION_LOG_LEVEL, LIBUSB_LOG_LEVEL_DEBUG);
     }
 #endif
 
-    usb_init();
     usb_initialized = true;
   }
 
-  int res;
-  // usb_find_busses will find all of the busses on the system. Returns the
-  // number of changes since previous call to this function (total of new
-  // busses and busses removed).
-  if ((res = usb_find_busses()) < 0) {
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to find USB busses (%s)", _usb_strerror(res));
-    return -1;
-  }
-  // usb_find_devices will find all of the devices on each bus. This should be
-  // called after usb_find_busses. Returns the number of changes since the
-  // previous call to this function (total of new device and devices removed).
-  if ((res = usb_find_devices()) < 0) {
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_ERROR, "Unable to find USB devices (%s)", _usb_strerror(res));
-    return -1;
-  }
-  return 0;
+  return usb_context;
 }
 

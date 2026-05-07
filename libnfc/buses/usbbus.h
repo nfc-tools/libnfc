@@ -27,28 +27,17 @@
 
 /**
  * @file usbbus.h
- * @brief libusb 0.1 driver header
+ * @brief libusb 1.0 driver header
  */
 
 #ifndef __NFC_BUS_USB_H__
 #  define __NFC_BUS_USB_H__
 
-#ifndef _WIN32
-// Under POSIX system, we use libusb (>= 0.1.12)
-#include <stdint.h>
-#include <usb.h>
-#define USB_TIMEDOUT ETIMEDOUT
-#define _usb_strerror( X ) strerror(-X)
-#else
-// Under Windows we use libusb-win32 (>= 1.2.5)
-#include <lusb0_usb.h>
-#define USB_TIMEDOUT 116
-#define _usb_strerror( X ) usb_strerror()
-#endif
+#include <libusb.h>
 
 #include <stdbool.h>
 #include <string.h>
 
-int usb_prepare(void);
+libusb_context *usb_get_context(void);
 
 #endif // __NFC_BUS_USB_H__
