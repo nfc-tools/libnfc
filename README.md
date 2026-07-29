@@ -152,7 +152,7 @@ Please make sure to include:
 
 * If the bug was a crash, the exact text that was printed out
   
-  when the crash occured.
+  when the crash occurred.
 
 * Further information such as stack traces may be useful, but
   
