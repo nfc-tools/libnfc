@@ -39,7 +39,7 @@ int setenv(const char *name, const char *value, int overwrite)
 {
   char *env = getenv(name);
   if ((env && overwrite) || (!env)) {
-    char *str[32];
+    char str[32];
     strcpy(str, name);
     strcat(str, "=");
     strcat(str, value);
@@ -50,7 +50,7 @@ int setenv(const char *name, const char *value, int overwrite)
 
 void unsetenv(const char *name)
 {
-  char *str[32];
+  char str[32];
   strcpy(str, name);
   strcat(str, "=");
   putenv(str);
