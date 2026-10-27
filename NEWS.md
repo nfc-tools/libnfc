@@ -135,7 +135,7 @@ API Changes:
     - New nfc_device_set_property_int() function to set integer property
     - nfc_device_name() renamed to nfc_device_get_name() for the sake of
       consistency
-    - New nfc_device_get_last_error() function, an accessor to last error occured
+    - New nfc_device_get_last_error() function, an accessor to last error occurred
     - Whole libnfc's functions now return 0 (NFC_SUCCESS) or positive value if
       appropriated on success and libnfc's error code on failure
     - nfc_connect(), nfc_disconnect() renamed to nfc_open(), nfc_close()
